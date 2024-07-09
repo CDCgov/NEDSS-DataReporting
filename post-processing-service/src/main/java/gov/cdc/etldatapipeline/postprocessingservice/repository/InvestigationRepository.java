@@ -14,6 +14,14 @@ public interface InvestigationRepository extends JpaRepository<InvestigationResu
     @Query(value = "EXEC sp_nrt_investigation_postprocessing :publicHealthCaseUids", nativeQuery = true)
     List<InvestigationResult> executeStoredProcForPublicHealthCaseIds(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
+    @Procedure("sp_page_builder_postprocessing")
+    void executeStoredProcForPageBuilder(@Param("phcUid") Long phcUid, @Param("rdbTableNmLst") String rdbTableNmLst);
+
     @Procedure("sp_f_page_case_postprocessing")
     void executeStoredProcForFPageCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_hepatitis_datamart_postprocessing")
+    void executeStoredProcForHepDatamart(
+            @Param("publicHealthCaseUids") String publicHealthCaseUids,
+            @Param("patientUids") String patientUids);
 }

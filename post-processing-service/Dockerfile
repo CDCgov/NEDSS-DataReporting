@@ -6,6 +6,7 @@ COPY gradlew /usr/src/gradlew
 COPY settings.gradle /usr/src/settings.gradle
 
 #Copy sources
+COPY common-util /usr/src/common-util
 COPY post-processing-service /usr/src/post-processing-service
 
 #cd to root directory

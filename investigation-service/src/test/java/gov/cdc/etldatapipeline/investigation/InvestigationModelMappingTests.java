@@ -8,11 +8,11 @@ import org.modelmapper.ModelMapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class InvestigationModelMappingTests {
+class InvestigationModelMappingTests {
     private final ModelMapper modelMapper = new ModelMapper();
 
     @Test
-    public void testInvestigationReporting() {
+    void testInvestigationReporting() {
         final var investigation = getInvestigation();
 
         InvestigationReporting reporting = modelMapper.map(investigation, InvestigationReporting.class);

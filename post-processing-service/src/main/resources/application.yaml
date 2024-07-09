@@ -7,6 +7,7 @@ spring:
       patient: nrt_patient
       provider: nrt_provider
       notification: nrt_notifications
+      datamart: nbs_Datamart
     consumer:
       maxPollIntervalMs: 30000
       maxConcurrency: 5
@@ -22,6 +23,10 @@ spring:
   jpa:
     properties:
       javax.persistence.query.timeout: -1
+service:
+  fixed-delay:
+    cached-ids: ${FIXED_DELAY_ID:5000}
+    datamart: ${FIXED_DELAY_DM:60000}
 #logging:
 #  # Only one config can be active at a time
 #  config: classpath:logback-config.xml

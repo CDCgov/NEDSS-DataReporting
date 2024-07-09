@@ -63,7 +63,7 @@ public class InvestigationDataProcessingTests {
     }
 
     @Test
-    public void testConfirmationMethod() {
+    void testConfirmationMethod() {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -84,13 +84,13 @@ public class InvestigationDataProcessingTests {
         verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(CONFIRMATION_TOPIC, topicCaptor.getValue());
 
-        Function<InvestigationConfirmationMethod, List<String>> cmDetailsFn = (m) -> Arrays.asList(
+        Function<InvestigationConfirmationMethod, List<String>> cmDetailsFn = m -> Arrays.asList(
                 String.valueOf(m.getPublicHealthCaseUid()),
                 m.getConfirmationMethodCd(),
                 m.getConfirmationMethodDescTxt(),
                 m.getConfirmationMethodTime());
 
-        Function<InvestigationConfirmationMethodKey, List<String>> cmKeyFn = (k) -> Arrays.asList(
+        Function<InvestigationConfirmationMethodKey, List<String>> cmKeyFn = k -> Arrays.asList(
                 String.valueOf(k.getPublicHealthCaseUid()),
                 k.getConfirmationMethodCd());
 

@@ -82,12 +82,12 @@ public class OrganizationService {
                     String reportingKey = transformer.buildOrganizationKey(org);
                     String reportingData = transformer.processData(org, OrganizationType.ORGANIZATION_REPORTING);
                     kafkaTemplate.send(orgReportingOutputTopic, reportingKey, reportingData);
-                    log.info("Organization Reporting: {}", reportingData.toString());
+                    log.info("Organization Reporting: {}", reportingData);
 
                     String elasticKey = transformer.buildOrganizationKey(org);
                     String elasticData = transformer.processData(org, OrganizationType.ORGANIZATION_ELASTIC_SEARCH);
                     kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
-                    log.info("Organization Elastic: {}", elasticData!= null ? elasticData.toString() : "");
+                    log.info("Organization Elastic: {}", elasticData!= null ? elasticData : "");
                 });
             }
             else {

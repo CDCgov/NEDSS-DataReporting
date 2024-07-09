@@ -4,22 +4,24 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 class PostProcessingServiceTest {
 
@@ -35,16 +37,23 @@ class PostProcessingServiceTest {
     private InvestigationRepository investigationRepositoryMock;
     @Mock
     private NotificationRepository notificationRepositoryMock;
+
     @Mock
-    private PageBuilderRepository pageBuilderRepositoryMock;
+    KafkaTemplate<String, String> kafkaTemplate;
+    @Captor
+    private ArgumentCaptor<String> topicCaptor;
+
+    private ProcessDatamartData datamartProcessor;
 
     private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate);
         postProcessingServiceMock = new PostProcessingService(patientRepositoryMock, providerRepositoryMock,
-                organizationRepositoryMock, investigationRepositoryMock, notificationRepositoryMock, pageBuilderRepositoryMock);
+                organizationRepositoryMock, investigationRepositoryMock, notificationRepositoryMock,
+                datamartProcessor);
         Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         listAppender.start();
         logger.addAppender(listAppender);
@@ -170,7 +179,7 @@ class PostProcessingServiceTest {
 
         postProcessingServiceMock.processCachedIds();
         assertFalse(postProcessingServiceMock.idVals.containsKey(expectedPublicHealthCaseId));
-        verify(pageBuilderRepositoryMock).executeStoredProcForPageBuilder(expectedPublicHealthCaseId, expectedRdbTableNames);
+        verify(investigationRepositoryMock).executeStoredProcForPageBuilder(expectedPublicHealthCaseId, expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(7, logs.size());
@@ -194,15 +203,74 @@ class PostProcessingServiceTest {
 
         postProcessingServiceMock.processCachedIds();
 
-        String expectedOrganizationIdsIdsString = "123,124";
-        String expectedNotificationIdsString = "234,235";
-
-        verify(organizationRepositoryMock).executeStoredProcForOrganizationIds(expectedOrganizationIdsIdsString);
+        verify(organizationRepositoryMock).executeStoredProcForOrganizationIds("123,124");
         assertTrue(postProcessingServiceMock.idCache.containsKey(orgTopic));
 
-        verify(notificationRepositoryMock).executeStoredProcForNotificationIds(expectedNotificationIdsString);
-        verify(notificationRepositoryMock, times(1)).executeStoredProcForNotificationIds(expectedNotificationIdsString);
+        verify(notificationRepositoryMock).executeStoredProcForNotificationIds("234,235");
         assertTrue(postProcessingServiceMock.idCache.containsKey(ntfTopic));
+    }
+
+    @Test
+    void testPostProcessDatamart() {
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
+                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10110\"," +
+                "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123", "456");
+        assertTrue(postProcessingServiceMock.dmCache.containsKey("Hepatitis_Datamart"));
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(3, logs.size());
+    }
+
+    @Test
+    void testProduceDatamartTopic() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String dmTopic = "dummy_datamart";
+
+        List<InvestigationResult> invResults = getInvestigationResults(123L, 200L);
+
+        datamartProcessor.datamartTopic = dmTopic;
+        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(kafkaTemplate).send(topicCaptor.capture(), anyString(), anyString());
+        assertEquals(dmTopic, topicCaptor.getValue());
+    }
+
+    @Test
+    void testProduceDatamartTopicWithNoPatient() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String dmTopic = "dummy_datamart";
+
+        // patientKey=1L for no patient data in D_PATIENT
+        List<InvestigationResult> invResults = getInvestigationResults(123L, 1L);
+
+        datamartProcessor.datamartTopic = dmTopic;
+        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testPostProcessPageBuilderWithNoTableCache() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(5, logs.size());
     }
 
     @Test
@@ -223,5 +291,27 @@ class PostProcessingServiceTest {
         String invalidTopic = "dummy_topic";
 
         assertThrows(RuntimeException.class, () -> postProcessingServiceMock.extractIdFromMessage(invalidTopic, invalidKey, invalidKey));
+    }
+
+    @Test
+    void testPostProcessDatamartException() {
+        String topic = "dummy_datamart";
+        String invalidMsg = "invalid_msg";
+
+        assertThrows(RuntimeException.class, () -> postProcessingServiceMock.postProcessDatamart(topic, invalidMsg));
+    }
+
+    private List<InvestigationResult> getInvestigationResults(Long phcUid, Long patientKey) {
+        List<InvestigationResult> investigationResults = new ArrayList<>();
+        InvestigationResult investigationResult = new InvestigationResult();
+        investigationResult.setPublicHealthCaseUid(phcUid);
+        investigationResult.setInvestigationKey(100L);
+        investigationResult.setPatientUid(456L);
+        investigationResult.setPatientKey(patientKey);
+        investigationResult.setConditionCd("10110");
+        investigationResult.setDatamart("Hepatitis_Datamart");
+        investigationResult.setStoredProcedure("sp_hepatitis_datamart_postprocessing");
+        investigationResults.add(investigationResult);
+        return investigationResults;
     }
 }

@@ -10,8 +10,8 @@ import lombok.Data;
 public class InvestigationResult {
 
     @Id
-    @Column(name = "case_uid")
-    private Long caseUid;
+    @Column(name = "public_health_case_uid")
+    private Long publicHealthCaseUid;
 
     @Column(name = "patient_uid")
     private Long patientUid;
