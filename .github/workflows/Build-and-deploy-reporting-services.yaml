@@ -12,6 +12,7 @@ on:
       - "**.md"
 jobs:
   sonar_scan:
+    name: Sonar Scan Analyze
     uses: ./.github/workflows/sonar.yaml
     secrets:
       PASSED_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
