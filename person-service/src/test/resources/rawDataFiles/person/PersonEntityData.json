@@ -1,0 +1,82 @@
+[
+  {
+    "entity_uid": 242790990,
+    "typeCd": "MR",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "1113111",
+    "entity_id_seq": 1,
+    "assigning_authority_cd": "2.16.840.1.113883.3.1147.1.1001"
+  },
+  {
+    "entity_uid": 242790991,
+    "typeCd": "AN",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "313431144414",
+    "entity_id_seq": 2,
+    "assigning_authority_cd": "SSA"
+  },
+  {
+    "entity_uid": 25358107,
+    "typeCd": "SS",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "555555555",
+    "entity_id_seq": 1,
+    "assigning_authority_cd": "SSA"
+  },
+  {
+    "entity_uid": 242790992,
+    "typeCd": "QEC",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "3213432",
+    "entity_id_seq": 3,
+    "assigning_authority_cd": "2.16.840.1.113883.3.1147.1.1001"
+  },
+  {
+    "entity_uid": 242790993,
+    "typeCd": "QEC",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "12314286",
+    "entity_id_seq": 4,
+    "assigning_authority_cd": "2.16.740.1.113883.3.1147.1.1002"
+  },
+  {
+    "entity_uid": 242790994,
+    "typeCd": "PN",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "1113111",
+    "entity_id_seq": 3,
+    "assigning_authority_cd": "2.16.840.1.113883.3.1147.1.1001"
+  },
+  {
+    "entity_uid": 242790995,
+    "typeCd": "PN",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "56743114514",
+    "entity_id_seq": 4,
+    "assigning_authority_cd": "2.16.740.1.113883.3.1147.1.1002"
+  },
+  {
+    "entity_uid": 242790994,
+    "typeCd": "PRN",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "1113111",
+    "entity_id_seq": 5,
+    "assigning_authority_cd": "2.16.840.1.113883.3.1147.1.1001"
+  },
+  {
+    "entity_uid": 242790995,
+    "typeCd": "PRN",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "86741517517",
+    "entity_id_seq": 6,
+    "assigning_authority_cd": "3.16.740.1.113883.3.1147.1.1002"
+  },
+  {
+    "entity_uid": 242790995,
+    "typeCd": "INVALID",
+    "entity_id_seq": 10
+  },
+  {
+    "entity_uid": ""
+  }
+]

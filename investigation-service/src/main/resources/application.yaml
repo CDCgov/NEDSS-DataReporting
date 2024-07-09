@@ -1,0 +1,43 @@
+spring:
+  kafka:
+    input:
+      topic-name: nbs_Public_health_case
+    output:
+      topic-name-reporting: nrt_investigation
+      topic-name-es: elastic_search_investigation
+      topic-name-confirmation: nrt_investigation_confirmation
+      topic-name-observation: nrt_investigation_observation
+      topic-name-notifications: nrt_notifications
+    dlq:
+      topic-name-dlq: nrt_investigation_dlq
+      retry-suffix: _retry
+      dlq-suffix: _dlt
+
+    group-id: ${KAFKA_CONSUMER_APP:investigation-reporting-consumer-app}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    consumer:
+      max-retry: 3
+      maxPollIntervalMs: 30000
+    admin:
+      auto-create: true
+  application:
+    name: investigation-reporting-service
+  datasource:
+    password: ${DB_PASSWORD:-fake.fake.fake.1234}
+    username: ${DB_USERNAME:-sa}
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_ODSE:NBS_ODSE};encrypt=true;trustServerCertificate=true;
+    odse:
+      url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_ODSE:NBS_ODSE};encrypt=true;trustServerCertificate=true;
+    rdb:
+      url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_RDB:RDB};encrypt=true;trustServerCertificate=true;
+  liquibase:
+    change-log: db/changelog/db.changelog-master.yaml
+logging:
+  # Only one config can be active at a time
+  config: classpath:logback-config.xml
+  file:
+    name: InvestigationService.log
+    path: ${DA_LOG_PATH:logs}
+server:
+  port: '8093'

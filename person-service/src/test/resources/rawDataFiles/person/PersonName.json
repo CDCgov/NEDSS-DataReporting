@@ -1,0 +1,38 @@
+[
+  {
+    "lastNm": "Singh",
+    "lastNmSndx": "S520",
+    "middleNm": "Ja",
+    "firstNm": "Surma",
+    "firstNmSndx": "S650",
+    "nm_use_cd": "L",
+    "nmSuffix": null,
+    "nmDegree": null,
+    "pn_person_name_seq": 1,
+    "pn_person_uid": 10000008
+  },
+  {
+    "lastNm": "Singgh",
+    "lastNmSndx": "S520",
+    "middleNm": "Js",
+    "firstNm": "Suurma",
+    "firstNmSndx": "S750",
+    "nm_use_cd": "L",
+    "nmSuffix": "Jr",
+    "nmDegree": "MD",
+    "pn_person_name_seq": 2,
+    "pn_person_uid": 10000009
+  },
+  {
+    "lastNm": "TestNm",
+    "lastNmSndx": "S520",
+    "middleNm": "Middle",
+    "firstNm": "FN",
+    "firstNmSndx": "S750",
+    "nm_use_cd": "L",
+    "nmSuffix": "Jr",
+    "nmDegree": null,
+    "pn_person_name_seq": 1,
+    "pn_person_uid": 10000009
+  }
+]

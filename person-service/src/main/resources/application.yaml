@@ -1,0 +1,48 @@
+spring:
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+      key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+    input:
+      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+    defaultData:
+        topic-name: nbs_default
+    output:
+      providerElastic:
+        topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
+      providerReporting:
+        topic-name: ${PROVIDER_REPORTING:nrt_provider}
+      patientElastic:
+        topic-name: ${PATIENT_ELASTIC:elastic_search_patient}
+      patientReporting:
+        topic-name: ${PATIENT_REPORTING:nrt_patient}
+    dlq:
+      topic-name-dlq: nrt_person_dlq
+      retry-suffix: _retry
+      dlq-suffix: _dlt
+
+    group-id: ${KAFKA_CONSUMER_APP:person-reporting-consumer-app}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    consumer:
+      max-retry: 3
+      maxPollIntervalMs: 30000
+      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    admin:
+      auto-create: true
+  application:
+    name: person-reporting-service
+  datasource:
+    password: ${DB_PASSWORD:-fake.fake.fake.1234}
+    username: ${DB_USERNAME:-sa}
+    url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_ODSE:nbs_odse};encrypt=true;trustServerCertificate=true;
+  liquibase:
+    change-log: db/changelog/db.changelog-master.yaml
+logging:
+  #  Only one config can be active at a time
+  config: classpath:logback-config.xml
+  file:
+    name: PersonService.log
+    path: ${DA_LOG_PATH:logs}
+server:
+  port: '8091'

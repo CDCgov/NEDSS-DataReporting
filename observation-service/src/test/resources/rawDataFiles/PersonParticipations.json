@@ -1,0 +1,38 @@
+[
+  {
+    "act_uid": 10000003,
+    "type_cd": "ORD",
+    "entity_id": 10000055,
+    "subject_class_cd": "PSN",
+    "participation_record_status": "ACTIVE",
+    "participation_last_change_time": "2024-01-25T00:00:00.000",
+    "type_desc_txt": "Orderer",
+    "first_name": "Din",
+    "last_name": "Djarin",
+    "local_id": "PSN10000000AL01",
+    "birth_time": null,
+    "curr_sex_cd": null,
+    "person_cd": "PRV",
+    "person_parent_uid": 12345678,
+    "person_record_status": "ACTIVE",
+    "person_last_chg_time": "2009-11-01T00:00:00.000"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "PATSBJ",
+    "entity_id": 10000066,
+    "subject_class_cd": "PSN",
+    "participation_record_status": "ACTIVE",
+    "participation_last_change_time": null,
+    "type_desc_txt": "Patient Subject",
+    "first_name": "Boba",
+    "last_name": "Fett",
+    "local_id": "PSN40000004AL01",
+    "birth_time": "1990-03-13T00:00:00",
+    "curr_sex_cd": "M",
+    "person_cd": "PAT",
+    "person_parent_uid": 23456789,
+    "person_record_status": "ACTIVE",
+    "person_last_chg_time": "2024-01-01T00:00:00.000"
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "act_uid": 234567890,
+    "type_cd": "InvestgrOfPHC",
+    "entity_id": 32143250,
+    "subject_class_cd": "PSN",
+    "participation_record_status": "ACTIVE",
+    "participation_last_change_time": null,
+    "first_name": "Auto Generated",
+    "last_name": "WDS",
+    "local_id": "PSN16198989AL01",
+    "birth_time": null,
+    "curr_sex_cd": null,
+    "person_cd": "PRV",
+    "person_parent_uid": 32143220,
+    "person_record_status": "ACTIVE",
+    "person_last_chg_time": "2016-11-02T08:12:17.053"
+  },
+  {
+    "act_uid": 234567890,
+    "type_cd": "PhysicianOfPHC",
+    "entity_id": 14253651,
+    "subject_class_cd": "PSN",
+    "participation_record_status": "ACTIVE",
+    "participation_last_change_time": "2024-01-15T10:20:52.783",
+    "first_name": "THULANI",
+    "last_name": "STEWART",
+    "local_id": "PSN11553135AL01",
+    "birth_time": null,
+    "curr_sex_cd": null,
+    "person_cd": "PRV",
+    "person_parent_uid": 14253651,
+    "person_record_status": "ACTIVE",
+    "person_last_chg_time": "2009-11-08T04:13:29.750"
+  },
+  {
+    "act_uid": 234567890,
+    "type_cd": "SubjOfPHC",
+    "entity_id": 321432537,
+    "subject_class_cd": "PSN",
+    "participation_record_status": "ACTIVE",
+    "participation_last_change_time": null,
+    "first_name": "Nicole",
+    "last_name": "Bates",
+    "local_id": "PSN48038544AL01",
+    "birth_time": "1990-03-03T00:00:00",
+    "curr_sex_cd": "U",
+    "person_cd": "PAT",
+    "person_parent_uid": 321432524,
+    "person_record_status": "ACTIVE",
+    "person_last_chg_time": "2024-01-15T10:20:57.597"
+  }
+]

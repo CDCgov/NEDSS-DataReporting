@@ -1,0 +1,135 @@
+﻿Reporting Table (After Post-prcs),Elastic (Sproc Output),Nested Status ,ODSE Source/Features Team  Addition,SRTE Source,Notes
+patient_uid,patient_uid,No,Person.Person_UID,,
+,person_uid,No,Person.Person_UID,,
+patient_mpr_uid,person_parent_uid,No,Person.PERSON_PARENT_UID,,
+record_status,record_status_cd,No,Person.RECORD_STATUS_CD,,
+local_id,local_id,No,Person.LOCAL_ID,,
+general_comments,description,No,Person.DESCRIPTION,,
+dob,birth_time,No,Person.birth_time,,
+age_reported,age_reported,No,Person.AGE_REPORTED,,Review for transformation
+age_reported_unit,age_reported_unit_cd,No,Person.AGE_REPORTED_UNIT_CD,,Review for transformation
+birth_sex,birth_gender_cd,No,PERSON.BIRTH_GENDER_CD,,
+current_sex,curr_sex_cd,No,Person.curr_sex_cd,,Review for transformation
+deceased_indicator,deceased_ind_cd,No,Person.DECEASED_IND_CD,,
+deceased_date,deceased_time,No,Person.DECEASED_TIME,,
+marital_status,marital_status_cd,No,Person.MARITAL_STATUS_CD,,
+ethnicity,ethnic_group_ind,No,Person.ETHNIC_GROUP_IND,,
+entry_method,electronic_ind,No,Person.electronic_ind,,
+last_chg_user_id,last_chg_user_id,No,Person.last_chg_user_id,,
+last_chg_time,last_chg_time,No,Person.last_chg_time,,
+add_user_id,add_user_id,No,Person.add_user_id,,
+add_time,add_time,No,Person.add_time,,
+add_user_name,,Function,AUTH_USER.ADD_USER_FIRST_NAME/ADD_USER_LAST_NAME,,
+last_chg_user_name,,Function,AUTH_USER.CHG_USER_LAST_NAME/CHG_USER_FIRST_NAME,,
+speaks_english,speaks_english_cd,No,PERSON.SPEAKS_ENGLISH_CD,,
+unk_ethnic_rsn,ethnic_unk_reason_cd,No,PERSON.ETHNIC_UNK_REASON_CD,,
+curr_sex_unk_rsn,sex_unk_reason_cd,No,PERSON.SEX_UNK_REASON_CD,,
+preferred_gender,preferred_gender_cd,No,PERSON.PREFERRED_GENDER_CD,,
+addl_gender_info,additional_gender_cd,No,PERSON.ADDITIONAL_GENDER_CD,,
+primary_occupation,occupation_cd,No,PERSON.OCCUPATION_CD,,
+primary_language,prim_lang_cd,No,PERSON.PRIM_LANG_CD,,
+,as_of_date_admin,No,Person.as_of_date_admin,,
+,as_of_date_ethnicity,No,Person.as_of_date_ethnicity,,
+,as_of_date_general,No,Person.as_of_date_general,,
+,as_of_date_morbidity,No,Person.as_of_date_morbidity,,
+,as_of_date_sex,No,Person.as_of_date_sex,,
+,cd,No,Person.cd,,
+,first_nm,No,Person.first_nm,,
+,middle_nm,No,Person.middle_nm,,
+,last_nm,No,Person.last_nm,,
+,nmsuffix,No,Person.nm_suffix,,
+,record_status_time,No,Person.record_status_time,,
+,status_cd,No,Person.status_cd,,
+,status_time,No,Person.status_time,,
+,version_ctrl_nbr,No,Person.version_ctrl_nbr,,
+,edx_ind,No,Person.edx_ind,,
+,dedup_match_ind,No,Person.dedup_match_ind,,
+,multiple_birth_ind,No,Person.MULTIPLE_BIRTH_IND,,
+,adults_in_house_nbr,No,Person.ADULTS_IN_HOUSE_NBR,,
+,birth_order_nbr,No,Person.BIRTH_ORDER_NBR,,
+,children_in_house_nbr,No,Person.CHILDREN_IN_HOUSE_NBR,,
+,education_level_cd,No,Person.EDUCATION_LEVEL_CD,,
+,pn_person_uid,Yes-Name,Person_name.person_uid,,
+first_name,firstnm,Yes-Name,Person_name.first_nm,,Post-Processing Needed
+middle_name,middleNm,Yes-Name,Person_name.middle_nm,,Post-Processing Needed
+last_name,lastNm,Yes-Name,Person_name.last_nm,,Post-Processing Needed
+name_suffix,nmSuffix,Yes-Name,Person_name.nm_suffix,,Post-Processing Needed
+alias_nickname,,Yes-Name,Person_name.first_nm,,Post-Processing Needed
+,nmdegree,Yes-Name,Person_name.nm_degree,,Post-Processing Needed
+,person_nm_seq,Yes-Name,Person_name.person_nm_seq,,Post-Processing Needed
+,nm_use_cd,Yes-Name,Person_name.Nm_Use_cd,,
+street_address_1,streetAddr1,Yes-Address,Postal_Locator.STREET_ADDR1,,Post-Processing Needed
+street_address_2,streetAddr2,Yes-Address,Postal_Locator.STREET_ADDR2,,Post-Processing Needed
+city,city,Yes-Address,Postal_Locator.CITY_DESC_TXT,,Post-Processing Needed
+state,state_desc,Yes-Address,,STATE_CODE.CODE_DESC_TXT,Post-Processing Needed
+state_code,state,Yes-Address,Postal_Locator.STATE_CD,,Post-Processing Needed
+zip,zip,Yes-Address,Postal_Locator.ZIP_CD,,Post-Processing Needed
+county,,Yes-Address,,STATE_COUNTY_CODE_VALUE.CODE_DESC_TXT,Post-Processing Needed
+county_code,cntyCd,Yes-Address,Postal_Locator.CNTY_CD,,Post-Processing Needed
+country,cntryCd,Yes-Address,Postal_Locator.CNTRY_CD,COUNTRY_CODE.CODE_SHORT_DESC_TXT,Post-Processing Needed
+within_city_limits,within_city_limits_ind,Yes-Address,Postal_Locator.WITHIN_CITY_LIMITS_IND,,Post-Processing Needed
+birth_country,,Yes-Address,,NBS_SRTE.CODE_VALUE_GENERAL,Post-Processing Needed
+census_tract,,Yes-Address,Postal_Locator.CENSUS_TRACT,,
+,addr_elp_cd,Yes-Address,Entity_locator_participation.cd,,
+,addr_elp_use_cd,Yes-Address,Entity_locator_participation.use_cd,,
+,addr_pl_uid,Yes-Address,Postal_locator.postal_locator_uid,,
+,telephonenbr,Yes-Telephone,Tele_locator.phone_nbr_txt,,"elp.entity_uid = p.person_uid
+              AND elp.class_cd = 'TELE'
+              AND elp.status_cd = 'A'
+              AND tl.phone_nbr_txt IS NOT NULL FOR json path,
+              INCLUDE_NULL_VALUES"
+,extensiontxt,Yes-Telephone,Tele_locator.extension_txt,,
+,ph_elp_cd,Yes-Telephone,Entity_locator_participation.cd,,
+,ph_elp_use_cd,Yes-Telephone,Entity_locator_participation.use_cd,,
+,ph_tl_uid,Yes-Telephone,Tele_locator.tele_locator_uid,,
+phone_home,,Yes-Telephone,Tele_locator.phone_nbr_txt,,Post-Processing Needed
+phone_ext_home,,Yes-Telephone,Tele_locator.EXTENSION_TXT,,Post-Processing Needed
+phone_work,,Yes-Telephone,Tele_locator.phone_nbr_txt,,Post-Processing Needed
+phone_ext_work,,Yes-Telephone,Tele_locator.EXTENSION_TXT,,Post-Processing Needed
+phone_cell,,Yes-Telephone,Tele_locator.PHONE_NBR_TXT,,Post-Processing Needed
+email,emailAddress,Yes-Email,Tele_locator.EMAIL_ADDRESS,,Post-Processing Needed
+,email_elp_cd,Yes-Email,Entity_locator_participation.cd,,
+,email_elp_use_cd,Yes-Email,Entity_locator_participation.use_cd,,
+,email_tl_uid,Yes-Email,Tele_locator.tele_locator_uid,,
+,racecd,Yes-Race,Person_race.raceCd,,
+,racedesctxt,Yes-Race,Person_race.race_desc_txt,,
+,racecategorycd,Yes-Race,Person_race.race_category_cd,,
+,srte_code_desc_txt,Yes-Race,,RACE_CODE.CODE_DESC_TXT,
+,srte_parent_is_cd,Yes-Race,,RACE_CODE.PARENT_IS_CD,
+,pr_person_uid,Yes-Race,Person_race.person_uid,,
+race_calculated,,Yes-Race,,,Post-Processing Needed
+race_calc_details,,Yes-Race,,,Post-Processing Needed
+race_all,,Yes-Race,,,Post-Processing Needed
+race_amer_ind_1,,Yes-Race,,,Post-Processing Needed
+race_amer_ind_2,,Yes-Race,,,Post-Processing Needed
+race_amer_ind_3,,Yes-Race,,,Post-Processing Needed
+race_amer_ind_gt3_ind,,Yes-Race,,,Post-Processing Needed
+race_amer_ind_all,,Yes-Race,,,Post-Processing Needed
+race_asian_1,,Yes-Race,,,Post-Processing Needed
+race_asian_2,,Yes-Race,,,Post-Processing Needed
+race_asian_3,,Yes-Race,,,Post-Processing Needed
+race_asian_gt3_ind,,Yes-Race,,,Post-Processing Needed
+race_asian_all,,Yes-Race,,,Post-Processing Needed
+race_black_1,,Yes-Race,,,Post-Processing Needed
+race_black_2,,Yes-Race,,,Post-Processing Needed
+race_black_3,,Yes-Race,,,Post-Processing Needed
+race_black_gt3_ind,,Yes-Race,,,Post-Processing Needed
+race_black_all,,Yes-Race,,,Post-Processing Needed
+race_nat_hi_1,,Yes-Race,,,Post-Processing Needed
+race_nat_hi_2,,Yes-Race,,,Post-Processing Needed
+race_nat_hi_3,,Yes-Race,,,Post-Processing Needed
+race_nat_hi_gt3_ind,,Yes-Race,,,Post-Processing Needed
+race_nat_hi_all,,Yes-Race,,,Post-Processing Needed
+race_white_1,,Yes-Race,,,Post-Processing Needed
+race_white_2,,Yes-Race,,,Post-Processing Needed
+race_white_3,,Yes-Race,,,Post-Processing Needed
+race_white_gt3_ind,,Yes-Race,,,Post-Processing Needed
+race_white_all,,Yes-Race,,,Post-Processing Needed
+,typeCd,Yes-Entity,Entity_id.type_cd,,
+,recordStatusCd,Yes-Entity,Entity_id.record_status_cd,,
+,entity_uid,Yes-Entity,Entity_id.entity_uid,,
+,entity_id_seq,Yes-Entity,Entity_id.entity_id_seq,,
+,assigning_authority_cd,Yes-Entity,Entity_id.assigning_authority_cd,,
+ssn,,Yes-Entity,ENTITY_ID.ROOT_EXTENSION_TXT,,Post-Processing Needed
+patient_number,,Yes-Entity,ENTITY_ID.ROOT_EXTENSION_TXT,,Post-Processing Needed
+patient_number_auth,,Yes-Entity,ENTITY_ID.ROOT_EXTENSION_TXT,,Post-Processing Needed

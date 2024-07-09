@@ -1,0 +1,28 @@
+{
+  "payload": {
+    "before": {
+      "person_uid": 10000001
+    },
+    "after": {
+      "person_uid": 10000001
+    },
+    "source": {
+      "version": "2.4.1.Final",
+      "connector": "sqlserver",
+      "name": "test",
+      "ts_ms": 1701193932253,
+      "snapshot": "false",
+      "db": "nbs_odse",
+      "sequence": null,
+      "schema": "dbo",
+      "table": "Person",
+      "change_lsn": "000fd2f4:00094c25:0003",
+      "commit_lsn": "000fd2f4:00094c25:0004",
+      "event_serial_no": 2
+    },
+    "person_uid": 10000001,
+    "op": "u",
+    "ts_ms": 1701193934019,
+    "transaction": null
+  }
+}

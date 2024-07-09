@@ -1,0 +1,285 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": [
+      {
+        "type": "string",
+        "optional": true,
+        "field": "assigning_authority_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "emailAddress"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "edx_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "description"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "last_chg_user_id"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "addr_pl_uid"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "state"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "status_time"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "record_status_time"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "entity_id_seq"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "stand_ind_class"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "organization_name"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "ph_elp_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "org_fax"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "streetAddr1"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "streetAddr2"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "local_id"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "on_org_uid"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "addr_elp_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "record_status_cd"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "entity_uid"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "add_time"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "cntryCd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "fax_elp_cd"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "add_user_id"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "electronic_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "recordStatusCd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "telephoneNbr"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "fax_elp_use_cd"
+      },
+      {
+        "type": "int64",
+        "optional": false,
+        "field": "organization_uid"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "ph_tl_uid"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "type_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "zip"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "fax_tl_uid"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "city"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_comments"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "state_desc"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "extensionTxt"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "addr_elp_use_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "status_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "address_comments"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "ph_elp_use_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "last_chg_time"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "cntyCd"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "version_ctrl_nbr"
+      }
+    ]
+  },
+  "payload": {
+    "organization_uid": 10036000,
+    "cd": null,
+    "status_cd": "A",
+    "status_time": "2016-12-27 12:44:19.177",
+    "version_ctrl_nbr": "5",
+    "edx_ind": null,
+    "record_status_time": "2016-12-27 12:44:19.177",
+    "local_id": "ORG10000000AL01",
+    "description": "1.0.5 PHA 8 Bobby H. Bryant-Area Admin. & Admin for Autauga County",
+    "electronic_ind": "N",
+    "stand_ind_class": "Health Care and Social Assistance",
+    "on_org_uid": 10036000,
+    "organization_name": "Autauga County Health Department",
+    "type_cd": "QEC",
+    "entity_uid": 10036000,
+    "entity_id_seq": "2",
+    "assigning_authority_cd": null,
+    "addr_elp_cd": "O",
+    "addr_elp_use_cd": "WP",
+    "addr_pl_uid": 10036001,
+    "city": "Prattville",
+    "state_desc": null,
+    "state": "Alabama",
+    "zip": "36067-0000",
+    "address_comments": "Testing address Comments!",
+    "ph_elp_cd": "PH",
+    "ph_elp_use_cd": "WP",
+    "ph_tl_uid": 10615102,
+    "phone_comments": "Testing phone Comments!",
+    "fax_elp_cd": "fax-cd-1002",
+    "fax_elp_use_cd": "business-use-1002",
+    "fax_tl_uid": 1002,
+    "add_user_id": null,
+    "add_time": "2004-07-22 10:48:53.343",
+    "last_chg_user_id": 10180119,
+    "last_chg_time": "2024-04-05 18:55:54.177",
+    "record_status_cd": "ACTIVE",
+    "recordStatusCd": "ACTIVE",
+    "streetAddr1": "219 North Court Street",
+    "streetAddr2": "Unit#1",
+    "cntyCd": "01001",
+    "cntryCd": "840",
+    "telephoneNbr": "3343613743",
+    "extensionTxt": "1234",
+    "emailAddress": "john.doe@test.com",
+    "org_fax": "7072834657"
+  }
+}

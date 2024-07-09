@@ -1,0 +1,14 @@
+[
+  {
+    "id": 234567890,
+    "act_id_seq": 1,
+    "record_status": null,
+    "root_extension_txt": "12-345-678",
+    "type_cd": "STATE",
+    "type_desc_txt": null,
+    "act_id_add_time": null,
+    "act_id_add_user_id": null,
+    "act_id_last_chg_user_id": null,
+    "act_id_last_change_time": null
+  }
+]

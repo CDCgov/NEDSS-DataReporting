@@ -1,0 +1,54 @@
+[
+  {
+    "telephoneNbr": "4562323422",
+    "extensionTxt": "201",
+    "ph_elp_use_cd": "H",
+    "ph_elp_cd": "PH",
+    "ph_tl_uid": 10000009
+  },
+  {
+    "telephoneNbr": "4562323222",
+    "extensionTxt": "211",
+    "ph_elp_use_cd": "H",
+    "ph_elp_cd": "PH",
+    "ph_tl_uid": 10000010
+  },
+  {
+    "telephoneNbr": "2323222222",
+    "extensionTxt": "231",
+    "ph_elp_use_cd": "WP",
+    "ph_elp_cd": "PH",
+    "ph_tl_uid": 10000011
+  },
+  {
+    "telephoneNbr": "2323222422",
+    "extensionTxt": "232",
+    "ph_elp_use_cd": "WP",
+    "ph_elp_cd": "PH",
+    "ph_tl_uid": 10000012
+  },
+  {
+    "telephoneNbr": "2323252421",
+    "extensionTxt": "",
+    "ph_elp_use_cd": "CP",
+    "ph_elp_cd": "PH",
+    "ph_tl_uid": 10000014
+  },
+  {
+    "telephoneNbr": "2823252423",
+    "extensionTxt": "",
+    "ph_elp_use_cd": "CP",
+    "ph_elp_cd": "PH",
+    "ph_tl_uid": 10000015
+  },
+  {
+    "telephoneNbr": "123212331",
+    "extensionTxt": "",
+    "ph_elp_use_cd": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "ph_elp_cd": "PHONE_NOT_VALID",
+    "tele_locator_uid": 100234015
+  },
+  {
+    "telephoneNbr": ""
+  }
+]

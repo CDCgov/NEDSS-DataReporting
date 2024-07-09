@@ -1,0 +1,35 @@
+[
+  {
+    "act_uid": 10000003,
+    "type_cd": "AUT",
+    "entity_id": 34567890,
+    "subject_class_cd": "ORG",
+    "record_status": "ACTIVE",
+    "type_desc_txt": "Author",
+    "last_change_time": "2024-01-01T00:00:00.000",
+    "name": "LABCORP",
+    "org_last_change_time": "2018-03-15T00:00:00.000"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "ORD",
+    "entity_id": 23456789,
+    "subject_class_cd": "ORG",
+    "record_status": "ACTIVE",
+    "type_desc_txt": "Orderer",
+    "last_change_time": "2024-01-01T00:00:00.000",
+    "name": "Mount-Auburn Health",
+    "org_last_change_time": "2011-09-13T00:00:00.000"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "PRF",
+    "entity_id": 45678901,
+    "subject_class_cd": "ORG",
+    "record_status": "ACTIVE",
+    "type_desc_txt": "Performer",
+    "last_change_time": "2024-01-01T00:00:00.000",
+    "name": "Mount-Auburn Health",
+    "org_last_change_time": "2011-09-13T00:00:00.000"
+  }
+]

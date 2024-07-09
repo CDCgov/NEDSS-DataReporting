@@ -1,0 +1,501 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": [
+      {
+        "type": "int64",
+        "optional": false,
+        "field": "patient_uid"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "addl_gender_info"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "age_reported"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "age_reported_unit"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "add_time"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "add_user_id"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "birth_sex"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "dob"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "current_sex"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "deceased_indicator"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "deceased_date"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "general_comments"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "entry_method"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "ethnicity"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "unk_ethnic_rsn"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "last_chg_user_id"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "last_chg_time"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "local_id"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "marital_status"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "primary_occupation"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "patient_mpr_uid"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "preferred_gender"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "primary_language"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "record_status"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "curr_sex_unk_rsn"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "speaks_english"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "add_user_name"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "last_chg_user_name"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "first_name"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "middle_name"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "last_name"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "name_suffix"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "alias_nickname"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "street_address_1"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "street_address_2"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "city"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "state"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "state_code"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "zip"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "county"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "county_code"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "country"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "within_city_limits"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "birth_country"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "census_tract"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_work"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_ext_work"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_home"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_ext_home"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_cell"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "email"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "ssn"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "patient_number"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "patient_number_auth"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_calculated"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_calc_details"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_all"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_amer_ind_1"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_amer_ind_2"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_amer_ind_3"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_amer_ind_gt3_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_amer_ind_all"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_asian_1"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_asian_2"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_asian_3"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_asian_gt3_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_asian_all"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_black_1"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_black_2"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_black_3"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_black_gt3_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_black_all"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_nat_hi_1"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_nat_hi_2"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_nat_hi_3"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_nat_hi_gt3_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_nat_hi_all"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_white_1"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_white_2"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_white_3"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_white_gt3_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "race_white_all"
+      }
+    ]
+  },
+  "payload": {
+    "patient_uid": 10000001,
+    "addl_gender_info": null,
+    "age_reported": null,
+    "age_reported_unit": null,
+    "add_time": null,
+    "add_user_id": null,
+    "birth_sex": null,
+    "dob": null,
+    "current_sex": null,
+    "deceased_indicator": null,
+    "deceased_date": null,
+    "general_comments": null,
+    "entry_method": null,
+    "ethnicity": null,
+    "unk_ethnic_rsn": null,
+    "last_chg_user_id": null,
+    "last_chg_time": null,
+    "local_id": null,
+    "marital_status": null,
+    "primary_occupation": null,
+    "patient_mpr_uid": null,
+    "preferred_gender": null,
+    "primary_language": null,
+    "record_status": null,
+    "curr_sex_unk_rsn": null,
+    "speaks_english": null,
+    "add_user_name": null,
+    "last_chg_user_name": null,
+    "first_name": "Suurma",
+    "middle_name": "Js",
+    "last_name": "Singgh",
+    "name_suffix": "Jr",
+    "alias_nickname": null,
+    "street_address_1": "123 Main St.",
+    "street_address_2": "",
+    "city": "Atlanta",
+    "state": "Georgia",
+    "state_code": "13",
+    "zip": "30025",
+    "county": "Gwinnett County",
+    "county_code": "13135",
+    "country": "United States",
+    "within_city_limits": "Y",
+    "birth_country": "Canada",
+    "census_tract": null,
+    "phone_work": "2323222422",
+    "phone_ext_work": "232",
+    "phone_home": "4562323222",
+    "phone_ext_home": "211",
+    "phone_cell": "2823252423",
+    "email": "someone2@email.com",
+    "ssn": "313431144414",
+    "patient_number": "56743114514",
+    "patient_number_auth": "2.16.740.1.113883.3.1147.1.1002",
+    "race_calculated": "Asian",
+    "race_calc_details": "Asian",
+    "race_all": "Asian",
+    "race_amer_ind_1": null,
+    "race_amer_ind_2": null,
+    "race_amer_ind_3": null,
+    "race_amer_ind_gt3_ind": null,
+    "race_amer_ind_all": null,
+    "race_asian_1": null,
+    "race_asian_2": null,
+    "race_asian_3": null,
+    "race_asian_gt3_ind": null,
+    "race_asian_all": null,
+    "race_black_1": null,
+    "race_black_2": null,
+    "race_black_3": null,
+    "race_black_gt3_ind": null,
+    "race_black_all": null,
+    "race_nat_hi_1": null,
+    "race_nat_hi_2": null,
+    "race_nat_hi_3": null,
+    "race_nat_hi_gt3_ind": null,
+    "race_nat_hi_all": null,
+    "race_white_1": null,
+    "race_white_2": null,
+    "race_white_3": null,
+    "race_white_gt3_ind": null,
+    "race_white_all": null
+  }
+}

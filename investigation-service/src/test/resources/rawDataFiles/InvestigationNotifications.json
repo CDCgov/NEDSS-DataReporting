@@ -1,0 +1,30 @@
+[
+  {
+    "source_act_uid": 263748597,
+    "public_health_case_uid": 234567890,
+    "source_class_cd": "NOTF",
+    "target_class_cd": "CASE",
+    "act_type_cd": "Notification",
+    "status_cd": "A",
+    "notification_uid": 263748597,
+    "prog_area_cd": "XYZ",
+    "program_jurisdiction_oid": 9630258741,
+    "jurisdiction_cd": "900003",
+    "record_status_time": "2024-05-29T16:05:44.523",
+    "status_time": "2024-05-15T20:25:39.797",
+    "rpt_sent_time": "2024-05-16T20:00:26.380",
+    "notif_status": "APPROVED",
+    "notif_local_id": "NOT10005003GA01",
+    "notif_comments": "test is success",
+    "notif_add_time": "2024-05-15T20:25:39.813",
+    "notif_add_user_id": 96325874,
+    "notif_add_user_name": "Zor-El, Kara",
+    "notif_last_chg_user_id": 96325874,
+    "notif_last_chg_user_name": "Zor-El, Kara",
+    "notif_last_chg_time": "2024-05-29T16:05:44.523",
+    "local_patient_id": "ABC7539512AB01",
+    "local_patient_uid": 75395128,
+    "condition_cd": "11065",
+    "condition_desc": "Novel Coronavirus"
+  }
+]

@@ -1,0 +1,35 @@
+spring:
+  kafka:
+    input:
+      topic-name: nbs_Observation
+    output:
+      topic-name-reporting: nrt_observation
+      topic-name-es: elastic_search_observation
+    dlq:
+      topic-name-dlq: nrt_observation_dlq
+      retry-suffix: _retry
+      dlq-suffix: _dlt
+
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    group-id: ${KAFKA_CONSUMER_APP:observation-reporting-consumer-app}
+    consumer:
+        max-retry: 3
+        maxPollIntervalMs: 30000
+    admin:
+      auto-create: true
+  application:
+    name: observation-reporting-service
+  datasource:
+    password: ${DB_PASSWORD:-fake.fake.fake.1234}
+    username: ${DB_USERNAME:-sa}
+    url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_ODSE:NBS_ODSE};encrypt=true;trustServerCertificate=true;
+  liquibase:
+    change-log: db/changelog/db.changelog-master.yaml
+logging:
+  # Only one config can be active at a time
+  config: classpath:logback-config.xml
+  file:
+    name: ObservationService.log
+    path: ${DA_LOG_PATH:logs}
+server:
+  port: '8094'

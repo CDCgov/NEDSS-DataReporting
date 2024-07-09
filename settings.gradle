@@ -1,0 +1,19 @@
+rootProject.name = 'NEDSS-DataReporting'
+
+// Common utility library
+include 'common-util'
+
+// Data Reporting services
+include 'person-service'
+
+include 'organization-service'
+
+include 'investigation-service'
+
+include 'observation-service'
+
+include 'post-processing-service'
+
+include 'ldfdata-service'
+
+include 'status-service'

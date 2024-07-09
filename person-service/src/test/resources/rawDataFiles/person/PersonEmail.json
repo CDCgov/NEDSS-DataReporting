@@ -1,0 +1,17 @@
+[
+  {
+    "emailAddress": "someone1@email.com",
+    "email_elp_use_cd": "H",
+    "email_elp_cd": "PH",
+    "email_tl_uid": 10000009
+  },
+  {
+    "emailAddress": "someone2@email.com",
+    "email_elp_use_cd": "H",
+    "email_elp_cd": "PH",
+    "email_tl_uid": 10000010
+  },
+  {
+    "emailAddress": ""
+  }
+]

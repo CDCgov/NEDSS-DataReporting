@@ -1,0 +1,13 @@
+[
+  {
+    "act_uid": 100000003,
+    "type_cd": "SPC",
+    "entity_id": 10000005,
+    "subject_class_cd": "MAT",
+    "record_status": "ACTIVE",
+    "type_desc_txt": "Specimen",
+    "last_change_time": "2024-01-01T00:00:00.000",
+    "material_cd": "UNK",
+    "material_cd_desc_txt": "Unknown"
+  }
+]

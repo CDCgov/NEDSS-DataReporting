@@ -1,0 +1,17 @@
+[
+  {
+    "cd": "5199-5",
+    "cd_desc_txt": "HEPATITIS C VIRUS AB SIGNAL\/CUTOFF",
+    "domain_cd_st_1": "Result",
+    "status_cd": "D",
+    "alt_cd": null,
+    "alt_cd_desc_txt": null,
+    "alt_cd_system_cd": null,
+    "display_name": "Positive",
+    "ovc_code": "10828004",
+    "ovc_alt_cd": null,
+    "ovc_alt_cd_desc_txt": null,
+    "ovc_alt_cd_system_cd": null,
+    "result_observation_uid": 56789012
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "streetAddr1": "123 Main St.",
+    "streetAddr2": "",
+    "city": "Atlanta",
+    "zip": "30024",
+    "cntyCd": "13135",
+    "state": "13",
+    "cntryCd": "840",
+    "state_desc": "Georgia",
+    "county": "Gwinnett County",
+    "within_city_limits_ind": null,
+    "country": "United States",
+    "addr_elp_use_cd": "H",
+    "addr_pl_uid": 10000009
+  },
+  {
+    "streetAddr1": "123 Main St.",
+    "streetAddr2": "",
+    "city": "Atlanta",
+    "zip": "30025",
+    "cntyCd": "13135",
+    "state": "13",
+    "cntryCd": "840",
+    "state_desc": "Georgia",
+    "county": "Gwinnett County",
+    "within_city_limits_ind": "Y",
+    "country": "United States",
+    "home_country": "United States",
+    "birth_country": "Canada",
+    "addr_elp_use_cd": "H",
+    "addr_elp_cd": "H",
+    "addr_pl_uid": 10000010
+  },
+  {
+    "streetAddr1": "Test street",
+    "streetAddr2": "",
+    "city": "NYC",
+    "zip": ""
+  }
+]

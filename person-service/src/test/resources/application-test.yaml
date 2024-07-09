@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    username: test
+    url: jdbc:sqlserver://localhost:1433;databaseName=test;
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    password: test
+  jpa:
+    show-sql: 'true'
+    hibernate:
+      ddl-auto: none
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+    streams:
+      application-id: person-reporting-service
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    consumer:
+      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
