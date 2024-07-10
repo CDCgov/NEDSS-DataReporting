@@ -1,13 +1,14 @@
 package gov.cdc.etldatapipeline.person.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
-import gov.cdc.etldatapipeline.person.model.odse.Person;
 import gov.cdc.etldatapipeline.person.repository.PatientRepository;
 import gov.cdc.etldatapipeline.person.repository.ProviderRepository;
 import gov.cdc.etldatapipeline.person.transformer.PersonTransformers;
 import gov.cdc.etldatapipeline.person.transformer.PersonType;
-import gov.cdc.etldatapipeline.person.utils.UtilHelper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.SerializationException;
@@ -81,10 +82,14 @@ public class PersonService {
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
 
         try {
-            Person person = UtilHelper.getInstance().deserializePayload(message, "/payload/after", Person.class);
-            if (person != null) {
-                log.info("Received PersonUid: {} from topic: {}", person.getPersonUid(), topic);
-                List<PatientSp> personDataFromStoredProc = patientRepository.computePatients(person.getPersonUid());
+            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+            JsonNode jsonNode = objectMapper.readTree(message);
+            JsonNode payloadNode = jsonNode.get("payload").path("after");
+            if (payloadNode != null && payloadNode.has("person_uid")) {
+                String personUid = payloadNode.get("person_uid").asText();
+                String cd = payloadNode.get("cd").asText();
+                log.info("Received PersonUid: {} from topic: {}", personUid, topic);
+                List<PatientSp> personDataFromStoredProc = patientRepository.computePatients(personUid);
 
                 personDataFromStoredProc.forEach(personData -> {
                     String reportingKey = transformer.buildPatientKey(personData);
@@ -98,8 +103,8 @@ public class PersonService {
                     log.info("Patient Elastic: {}", elasticData != null ? elasticData.toString() : "");
                 });
 
-                if(person.getCd() != null && person.getCd().equalsIgnoreCase("PRV")) {
-                    List<ProviderSp> providerDataFromStoredProc = providerRepository.computeProviders(person.getPersonUid());
+                if (cd != null && cd.equalsIgnoreCase("PRV")) {
+                    List<ProviderSp> providerDataFromStoredProc = providerRepository.computeProviders(personUid);
 
                     providerDataFromStoredProc.forEach(provider -> {
                         String reportingKey = transformer.buildProviderKey(provider);
@@ -110,14 +115,12 @@ public class PersonService {
                         String elasticKey = transformer.buildProviderKey(provider);
                         String elasticData = transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
                         kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
-                        log.info("Provider Elastic: {}", elasticData!= null ? elasticData.toString() : "");
+                        log.info("Provider Elastic: {}", elasticData != null ? elasticData.toString() : "");
                     });
-                }
-                else {
+                } else {
                     log.debug("There is no provider to process in the incoming data.");
                 }
-            }
-            else {
+            } else {
                 log.debug("Incoming data doesn't contain payload: {}", message);
             }
         } catch (Exception e) {

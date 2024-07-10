@@ -1,11 +1,12 @@
 package gov.cdc.etldatapipeline.organization.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
-import gov.cdc.etldatapipeline.organization.model.odse.Organization;
 import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationType;
-import gov.cdc.etldatapipeline.organization.utils.UtilHelper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.SerializationException;
@@ -69,10 +70,13 @@ public class OrganizationService {
     public void processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         try {
-            Organization organization = UtilHelper.getInstance().deserializePayload(message, "/payload/after", Organization.class);
-            if (organization != null) {
-                log.info("Received OrganizationUid: {} from topic: {}", organization.getOrganizationUid(), topic);
-                Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organization.getOrganizationUid());
+            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());;
+            JsonNode jsonNode = objectMapper.readTree(message);
+            JsonNode payloadNode = jsonNode.get("payload").path("after");
+            if (payloadNode != null && payloadNode.has("organization_uid")) {
+                String organizationUid = payloadNode.get("organization_uid").asText();
+                log.info("Received OrganizationUid: {} from topic: {}", organizationUid, topic);
+                Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
 
                 organizations.forEach(org -> {
                     String reportingKey = transformer.buildOrganizationKey(org);
@@ -85,6 +89,9 @@ public class OrganizationService {
                     kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
                     log.info("Organization Elastic: {}", elasticData!= null ? elasticData.toString() : "");
                 });
+            }
+            else {
+                log.debug("Incoming data doesn't contain payload: {}", message);
             }
         } catch (Exception e) {
             log.error("Error processing organization message: {}", e.getMessage());

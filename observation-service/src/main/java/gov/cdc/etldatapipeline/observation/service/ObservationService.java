@@ -86,28 +86,29 @@ public class ObservationService {
 
     private String processObservation(String value) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
+            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
             JsonNode jsonNode = objectMapper.readTree(value);
-            JsonNode payloadNode = jsonNode.get("payload");
-            if (payloadNode != null && payloadNode.has("after")) {
-                JsonNode afterNode = payloadNode.get("after");
-                if (afterNode != null && afterNode.has("observation_uid")) {
-                    String observationUid = afterNode.get("observation_uid").asText();
-                    observationKey.setObservationUid(Long.valueOf(observationUid));
-                    logger.debug(topicDebugLog, observationUid, observationTopic);
-                    Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
-                    if(observationData.isPresent()) {
-                        ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
-                        ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get());
-                        buildReportingModelForTransformedData(reportingModel, observationTransformed);
-                        pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
-                        return objectMapper.writeValueAsString(observationData.get());
-                    }
+            JsonNode payloadNode = jsonNode.get("payload").path("after");
+            if (payloadNode != null && payloadNode.has("observation_uid")) {
+                String observationUid = payloadNode.get("observation_uid").asText();
+                observationKey.setObservationUid(Long.valueOf(observationUid));
+                logger.debug(topicDebugLog, observationUid, observationTopic);
+                Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
+                if(observationData.isPresent()) {
+                    ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
+                    ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get());
+                    buildReportingModelForTransformedData(reportingModel, observationTransformed);
+                    pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
+                    return objectMapper.writeValueAsString(observationData.get());
+                }
+                else {
+                    logger.info("Observation data is not present for the id: {}", observationUid);
                 }
             }
+            else {
+                logger.info("No observation id to process.");
+            }
         } catch (Exception e) {
-//            kafkaTemplate.send(observationTopicOutputDlq, value);
             logger.error("Error processing observation: {}", e.getMessage());
             throw new RuntimeException(e);
         }
