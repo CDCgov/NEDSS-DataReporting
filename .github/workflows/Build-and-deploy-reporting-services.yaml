@@ -23,7 +23,7 @@ jobs:
     name: Build Person Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: person-reporting-service
+      microservice_name: data-reporting-service/person-reporting-service
       dockerfile_relative_path: -f ./person-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "17"
@@ -39,7 +39,7 @@ jobs:
     name: Build Organization Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: organization-reporting-service
+      microservice_name: data-reporting-service/organization-reporting-service
       dockerfile_relative_path: -f ./organization-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "17"
@@ -55,7 +55,7 @@ jobs:
     name: Build Investigation Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: investigation-reporting-service
+      microservice_name: data-reporting-service/investigation-reporting-service
       dockerfile_relative_path: -f ./investigation-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "17"
@@ -71,7 +71,7 @@ jobs:
     name: Build post-processing Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: post-processing-reporting-service
+      microservice_name: data-reporting-service/post-processing-reporting-service
       dockerfile_relative_path: -f ./post-processing-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "17"
@@ -87,7 +87,7 @@ jobs:
     name: Build Observation Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: observation-reporting-service
+      microservice_name: data-reporting-service/observation-reporting-service
       dockerfile_relative_path: -f ./observation-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "17"
@@ -103,7 +103,7 @@ jobs:
     name: Build LdfData Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: ldfdata-reporting-service
+      microservice_name: data-reporting-service/ldfdata-reporting-service
       dockerfile_relative_path: -f ./ldfdata-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "17"
