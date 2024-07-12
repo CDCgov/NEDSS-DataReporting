@@ -25,7 +25,7 @@ spring:
       javax.persistence.query.timeout: -1
 service:
   fixed-delay:
-    cached-ids: ${FIXED_DELAY_ID:5000}
+    cached-ids: ${FIXED_DELAY_ID:20000}
     datamart: ${FIXED_DELAY_DM:60000}
 #logging:
 #  # Only one config can be active at a time

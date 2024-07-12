@@ -211,6 +211,39 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessCacheIdsPriority() {
+        String orgKey = "{\"payload\":{\"organization_uid\":123}}";
+        String providerKey = "{\"payload\":{\"provider_uid\":124}}";
+        String patientKey = "{\"payload\":{\"patient_uid\":125}}";
+        String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
+        String notificationKey = "{\"payload\":{\"notification_uid\":127}}";
+
+        String orgTopic = "dummy_organization";
+        String providerTopic = "dummy_provider";
+        String patientTopic = "dummy_patient";
+        String invTopic = "dummy_investigation";
+        String notfTopic = "dummy_notifications";
+
+        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
+        postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
+        postProcessingServiceMock.postProcessMessage(patientTopic, patientKey, patientKey);
+        postProcessingServiceMock.postProcessMessage(notfTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
+        postProcessingServiceMock.processCachedIds();
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(17, logs.size());
+
+        List<String> topicLogList = logs.stream().map(ILoggingEvent::getFormattedMessage).filter(m -> m.contains("message topic")).toList();
+        assertTrue(topicLogList.get(0).contains(orgTopic));
+        assertTrue(topicLogList.get(1).contains(providerTopic));
+        assertTrue(topicLogList.get(2).contains(patientTopic));
+        assertTrue(topicLogList.get(3).contains(invTopic));
+        assertTrue(topicLogList.get(4).contains(invTopic));
+        assertTrue(topicLogList.get(5).contains(notfTopic));
+    }
+
+    @Test
     void testPostProcessDatamart() {
         String topic = "dummy_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
