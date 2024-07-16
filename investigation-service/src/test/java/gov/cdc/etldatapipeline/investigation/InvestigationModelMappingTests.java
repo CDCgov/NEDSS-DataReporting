@@ -111,6 +111,14 @@ class InvestigationModelMappingTests {
         assertNull(reporting.getNotificationAddTime());
         assertNull(reporting.getNotificationRecordStatusCd());
         assertNull(reporting.getNotificationLastChgTime());
+
+        assertEquals(investigation.getCaseManagementUid(), reporting.getCaseManagementUid());
+        assertEquals(investigation.getNacPageCaseUid(), reporting.getNacPageCaseUid());
+        assertEquals(investigation.getNacLastChgTime(), reporting.getNacLastChgTime());
+        assertEquals(investigation.getNacAddTime(), reporting.getNacAddTime());
+        assertEquals(investigation.getPersonAsReporterUid(), reporting.getPersonAsReporterUid());
+        assertEquals(investigation.getHospitalUid(), reporting.getHospitalUid());
+        assertEquals(investigation.getOrderingFacilityUid(), reporting.getOrderingFacilityUid());
     }
 
     private Investigation getInvestigation() {

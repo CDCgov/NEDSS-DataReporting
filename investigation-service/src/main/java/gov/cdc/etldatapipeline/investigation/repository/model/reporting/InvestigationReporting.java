@@ -87,6 +87,13 @@ public class InvestigationReporting {
     private String notificationAddTime;
     private String notificationRecordStatusCd;
     private String notificationLastChgTime;
+    private Long caseManagementUid;
+    private Long nacPageCaseUid;
+    private String nacLastChgTime;
+    private String nacAddTime;
+    private Long personAsReporterUid;
+    private Long hospitalUid;
+    private Long orderingFacilityUid;
     private Long investigatorId;
     private Long physicianId;
     private Long patientId;

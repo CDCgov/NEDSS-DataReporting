@@ -286,6 +286,27 @@ public class Investigation {
     @Column(name = "notification_last_chg_time")
     private String notificationLastChgTime;
 
+    @Column(name = "case_management_uid")
+    private Long caseManagementUid;
+
+    @Column(name = "nac_page_case_uid")
+    private Long nacPageCaseUid;
+
+    @Column(name = "nac_last_chg_time")
+    private String nacLastChgTime;
+
+    @Column(name = "nac_add_time")
+    private String nacAddTime;
+
+    @Column(name = "person_as_reporter_uid")
+    private Long personAsReporterUid;
+
+    @Column(name = "hospital_uid")
+    private Long hospitalUid;
+
+    @Column(name = "ordering_facility_uid")
+    private Long orderingFacilityUid;
+
     @Column(name = "act_ids")
     private String actIds;
 
