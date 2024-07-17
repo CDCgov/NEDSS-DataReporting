@@ -73,6 +73,9 @@ public interface PersonExtendedProps {
     default void setAddrPlUid(Long postalLocatorUid) {
     }
 
+    default void setCensusTract(String censusTract) {
+    }
+
     default void setPhoneWork(String phoneWork) {
     }
 

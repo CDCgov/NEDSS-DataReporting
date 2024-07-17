@@ -120,8 +120,8 @@ public class PatientSp {
     private String preferredGenderCd;
     @Column(name = "preferred_gender")
     private String preferredGender;
-    @Column(name = "prim_lang_cd")
-    private String primLangCd;
+    @Column(name = "primary_language")
+    private String primLang;
     @Column(name = "record_status_cd")
     private String recordStatusCd;
     @Column(name = "record_status_time")

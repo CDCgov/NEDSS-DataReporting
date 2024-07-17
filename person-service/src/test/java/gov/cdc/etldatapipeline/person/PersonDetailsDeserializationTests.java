@@ -37,6 +37,7 @@ public class PersonDetailsDeserializationTests {
                 .useCd("H")
                 .cd("H")
                 .postalLocatorUid(10000010L)
+                .censusTract("3389.45")
                 .build();
 
         assertEquals(3, addr.length);

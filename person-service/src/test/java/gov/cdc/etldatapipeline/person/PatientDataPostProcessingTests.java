@@ -63,7 +63,8 @@ public class PatientDataPostProcessingTests {
                 payloadNode.get("ssn").asText(),
                 payloadNode.get("patient_number").asText(),
                 payloadNode.get("patient_number_auth").asText(),
-                payloadNode.get("email").asText());
+                payloadNode.get("email").asText(),
+                payloadNode.get("census_tract").asText());
 
         // Expected
         List<Object> expected = Arrays.asList(
@@ -89,7 +90,8 @@ public class PatientDataPostProcessingTests {
                 "313431144414",
                 "56743114514",
                 "2.16.740.1.113883.3.1147.1.1002",
-                "someone2@email.com");
+                "someone2@email.com",
+                "3389.45");
         // Validate the PatientProvider field processing
         Assertions.assertEquals(expected, actual);
     }

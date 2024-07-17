@@ -82,9 +82,11 @@ public class DataPostProcessor {
     public <T extends PersonExtendedProps> void processPersonTelephone(String telephone, T pf) {
         if (!ObjectUtils.isEmpty(telephone)) {
             Function<String, T> personPhoneFn =
-                    (useCd) -> Arrays.stream(utilHelper.deserializePayload(telephone, Phone[].class))
-                            .filter(phone -> StringUtils.hasText(phone.getUseCd())
-                                    && phone.getUseCd().equalsIgnoreCase(useCd))
+                    (code) -> Arrays.stream(utilHelper.deserializePayload(telephone, Phone[].class))
+                            .filter(phone -> (StringUtils.hasText(phone.getUseCd())
+                                    && phone.getUseCd().equalsIgnoreCase(code)) ||
+                                    (StringUtils.hasText(phone.getCd())
+                                            && phone.getCd().equalsIgnoreCase(code)))
                             .max(Comparator.comparing(Phone::getTeleLocatorUid))
                             .map(n -> n.updatePerson(pf))
                             .orElse(null);

@@ -30,7 +30,8 @@
     "birth_country": "Canada",
     "addr_elp_use_cd": "H",
     "addr_elp_cd": "H",
-    "addr_pl_uid": 10000010
+    "addr_pl_uid": 10000010,
+    "census_tract": "3389.45"
   },
   {
     "streetAddr1": "Test street",

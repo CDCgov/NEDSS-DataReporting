@@ -220,6 +220,7 @@ public class PersonServiceTest {
                 .cntryCd("840")
                 .homeCountry("United States")
                 .birthCountry("Canada")
+                .censusTract("3389.45")
                 .build()
                 .updatePerson(patProv);
 
@@ -231,7 +232,7 @@ public class PersonServiceTest {
         Phone.builder().telephoneNbr("4562323222").extensionTxt("211").cd("H").build().updatePerson(patProv);
 
         // Cell Phone
-        Phone.builder().telephoneNbr("2823252423").cd("CP").build().updatePerson(patProv);
+        Phone.builder().telephoneNbr("2823252423").cd("MC").build().updatePerson(patProv);
 
         // Race
         Race.builder()

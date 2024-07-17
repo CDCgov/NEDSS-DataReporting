@@ -39,6 +39,8 @@ public class Address implements ExtendPerson {
     private Long postalLocatorUid;
     @JsonProperty("address_comments")
     private String addressComments;
+    @JsonProperty("census_tract")
+    private String censusTract;
 
     public <T extends PersonExtendedProps> T updatePerson(T personFull) {
         personFull.setStreetAddress1(streetAddr1);
@@ -58,6 +60,7 @@ public class Address implements ExtendPerson {
         personFull.setAddrElpCd(cd);
         personFull.setAddrElpUseCd(useCd);
         personFull.setAddrPlUid(postalLocatorUid);
+        personFull.setCensusTract(censusTract);
         return personFull;
     }
 }

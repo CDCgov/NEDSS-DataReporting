@@ -35,7 +35,10 @@ public class Phone implements ExtendPerson {
             } else if (useCd.equalsIgnoreCase("H")) {
                 personFull.setPhoneHome(telephoneNbr);
                 personFull.setPhoneExtHome(extensionTxt);
-            } else if (useCd.equalsIgnoreCase("CP")) {
+            }
+        }
+        if (StringUtils.hasText(cd))  {
+            if (cd.equalsIgnoreCase("CP")) {
                 personFull.setPhoneCell(telephoneNbr);
             }
         }
