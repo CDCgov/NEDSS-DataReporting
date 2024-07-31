@@ -145,7 +145,7 @@ public class InvestigationDataProcessingTests {
         notifications.setNotifAddUserId(96325874L);
         notifications.setConditionCd("11065");
 
-        transformer.transformInvestigationData(investigation);
+        transformer.processNotifications(investigation.getInvestigationNotifications(), new ObjectMapper());
         verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(NOTIFICATIONS_TOPIC, topicCaptor.getValue());
 
