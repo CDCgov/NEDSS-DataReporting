@@ -50,12 +50,11 @@ public class ProcessInvestigationDataUtil {
         transformObservationIds(investigation.getObservationNotificationIds(), investigationTransformed, objectMapper);
         transformInvestigationConfirmationMethod(investigation.getInvestigationConfirmationMethod(), objectMapper);
         processInvestigationPageCaseAnswer(investigation.getInvestigationCaseAnswer(), investigationTransformed, objectMapper);
-        transformNotifications(investigation.getInvestigationNotifications(), objectMapper);
 
         return investigationTransformed;
     }
 
-    private void transformNotifications(String investigationNotifications, ObjectMapper objectMapper) {
+    public void processNotifications(String investigationNotifications, ObjectMapper objectMapper) {
         try {
             JsonNode investigationNotificationsJsonArray = investigationNotifications != null ? objectMapper.readTree(investigationNotifications) : null;
             InvestigationNotificationsKey investigationNotificationsKey = new InvestigationNotificationsKey();

@@ -98,6 +98,7 @@ public class InvestigationService {
                     InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigationData.get());
                     buildReportingModelForTransformedData(reportingModel, investigationTransformed);
                     pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting);
+                    processDataUtil.processNotifications(investigationData.get().getInvestigationNotifications(), objectMapper);
                     return objectMapper.writeValueAsString(investigationData.get());
                 }
                 else {
