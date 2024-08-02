@@ -1,13 +1,13 @@
-package gov.cdc.etldatapipeline.organization;
+package gov.cdc.etldatapipeline.organization.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationKey;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
-import gov.cdc.etldatapipeline.organization.service.OrganizationService;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationType;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,12 +19,16 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import java.util.Collections;
 import java.util.Set;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class OrganizationServiceTest {
@@ -51,15 +55,29 @@ public class OrganizationServiceTest {
     }
 
     @Test
-    public void testProcessMessage() throws Exception {
+    void testProcessMessage() throws Exception {
         OrganizationSp orgSp = objectMapper.readValue(readFileData("orgcdc/orgSp.json"), OrganizationSp.class);
-        Mockito.when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
+        when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
 
         OrganizationKey organizationKey = OrganizationKey.builder().organizationUid(orgSp.getOrganizationUid()).build();
-        Mockito.when(transformer.buildOrganizationKey(orgSp)).thenReturn(new CustomJsonGeneratorImpl().generateStringJson(organizationKey));
-        Mockito.when(transformer.processData(orgSp, OrganizationType.ORGANIZATION_REPORTING)).thenReturn(new ObjectMapper().writeValueAsString(""));
+        when(transformer.buildOrganizationKey(orgSp)).thenReturn(new CustomJsonGeneratorImpl().generateStringJson(organizationKey));
+        when(transformer.processData(orgSp, OrganizationType.ORGANIZATION_REPORTING)).thenReturn(new ObjectMapper().writeValueAsString(""));
 
         validateDataTransformation("orgcdc/OrgChangeData.json", orgReportingTopic);
+    }
+
+    @Test
+    void testProcessMessageException() {
+        String invalidPayload = "{\"payload\": {\"after\": }}";
+        assertThrows(RuntimeException.class, () -> organizationService.processMessage(invalidPayload, orgReportingTopic));
+    }
+
+    @Test
+    void testProcessMessageNoDataException() {
+        Long organizationUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"organization_uid\": \"" + organizationUid + "\"}}}";
+        when(orgRepository.computeAllOrganizations(eq(String.valueOf(organizationUid)))).thenReturn(Collections.emptySet());
+        assertThrows(NoDataException.class, () -> organizationService.processMessage(payload, orgReportingTopic));
     }
 
     private void validateDataTransformation(String changeDataFilePath, String expectedTopic) throws JsonProcessingException {

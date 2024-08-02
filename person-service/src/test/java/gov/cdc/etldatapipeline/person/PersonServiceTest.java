@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.person;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.etldatapipeline.person.repository.PatientRepository;
@@ -20,12 +21,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PersonServiceTest {
@@ -106,8 +111,8 @@ public class PersonServiceTest {
     @Test
     public void processProviderElasticSearchData() throws JsonProcessingException {
         ProviderSp providerSp = constructProvider();
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
-        Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
+        when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
+        when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
 
         //Run the Provider ElasticSearch Data Transformation
         tx.processData(providerSp, PersonType.PROVIDER_ELASTIC_SEARCH);
@@ -119,6 +124,23 @@ public class PersonServiceTest {
                 "rawDataFiles/provider/ProviderElasticSearch.json",
                 "rawDataFiles/provider/ProviderKey.json", 1);
     }
+
+    @Test
+    void testProcessMessageException() {
+        String invalidPayload = "{\"payload\": {\"after\": }}";
+        assertThrows(RuntimeException.class, () -> personService.processMessage(invalidPayload, personTopic));
+    }
+
+    @Test
+    void testProcessMessageNoDataException() {
+        Long personUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"person_uid\": \"" + personUid + "\", \"cd\": \"PRV\"}}}";
+        when(patientRepository.computePatients(eq(String.valueOf(personUid)))).thenReturn(Collections.emptyList());
+        when(providerRepository.computeProviders(eq(String.valueOf(personUid)))).thenReturn(Collections.emptyList());
+        assertThrows(NoDataException.class, () -> personService.processMessage(payload, providerTopic));
+    }
+
+
 
     private void validateDataTransformation(
             String incomingChangeData,

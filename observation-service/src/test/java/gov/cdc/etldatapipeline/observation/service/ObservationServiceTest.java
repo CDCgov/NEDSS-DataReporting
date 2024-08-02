@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.observation.service;
 
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.Observation;
@@ -21,6 +22,7 @@ import java.util.Optional;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class ObservationServiceTest {
@@ -72,6 +74,29 @@ class ObservationServiceTest {
         validateData(observationTopic, observationTopicOutput, payload, observation);
 
         verify(observationRepository).computeObservations(eq(String.valueOf(observationUid)));
+    }
+
+    @Test
+    void testProcessMessageException() {
+        String observationTopic = "Observation";
+        String observationTopicOutput = "ObservationOutput";
+        String invalidPayload = "{\"payload\": {\"after\": }}";
+
+        final var observationService = getObservationService(observationTopic, observationTopicOutput);
+        assertThrows(RuntimeException.class, () -> observationService.processMessage(observationTopic, invalidPayload));
+    }
+
+    @Test
+    void testProcessMessageNoDataException() {
+        String observationTopic = "Observation";
+        String observationTopicOutput = "ObservationOutput";
+        Long observationUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
+
+        when(observationRepository.computeObservations(eq(String.valueOf(observationUid)))).thenReturn(Optional.empty());
+
+        final var observationService = getObservationService(observationTopic, observationTopicOutput);
+        assertThrows(NoDataException.class, () -> observationService.processMessage(payload, observationTopic));
     }
 
     private Observation constructObservation(Long observationUid, String obsDomainCdSt1) {

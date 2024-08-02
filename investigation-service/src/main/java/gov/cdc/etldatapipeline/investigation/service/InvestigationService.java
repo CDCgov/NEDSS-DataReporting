@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.investigation.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
@@ -64,7 +65,8 @@ public class InvestigationService {
             exclude = {
                     SerializationException.class,
                     DeserializationException.class,
-                    RuntimeException.class
+                    RuntimeException.class,
+                    NoDataException.class
             }
     )
     @KafkaListener(
@@ -93,18 +95,20 @@ public class InvestigationService {
 
                 logger.debug(topicDebugLog, publicHealthCaseUid, investigationTopic);
                 Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
-                if(investigationData.isPresent()) {
+                if (investigationData.isPresent()) {
                     InvestigationReporting reportingModel = modelMapper.map(investigationData.get(), InvestigationReporting.class);
                     InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigationData.get());
                     buildReportingModelForTransformedData(reportingModel, investigationTransformed);
                     pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting);
                     processDataUtil.processNotifications(investigationData.get().getInvestigationNotifications(), objectMapper);
                     return objectMapper.writeValueAsString(investigationData.get());
-                }
-                else {
-                    logger.info("Investigation data is not present for the id: {}", publicHealthCaseUid);
+                } else {
+                    throw new NoDataException("No investigation data found for id: " + publicHealthCaseUid);
                 }
             }
+        } catch (NoDataException nde) {
+            logger.error(nde.getMessage());
+            throw nde;
         } catch (Exception e) {
             String msg = "Error processing investigation" +
                     (!publicHealthCaseUid.isEmpty() ? " for ids='" + publicHealthCaseUid + "': {}" : ": {}");

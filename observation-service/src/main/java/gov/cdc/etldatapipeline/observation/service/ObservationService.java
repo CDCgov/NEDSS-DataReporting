@@ -4,6 +4,7 @@ package gov.cdc.etldatapipeline.observation.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.Observation;
@@ -72,7 +73,8 @@ public class ObservationService {
             exclude = {
                     SerializationException.class,
                     DeserializationException.class,
-                    RuntimeException.class
+                    RuntimeException.class,
+                    NoDataException.class
             }
     )
     @KafkaListener(
@@ -102,12 +104,15 @@ public class ObservationService {
                     return objectMapper.writeValueAsString(observationData.get());
                 }
                 else {
-                    logger.info("Observation data is not present for the id: {}", observationUid);
+                    throw new NoDataException("No observation data found for id: " + observationUid);
                 }
             }
             else {
                 logger.info("No observation id to process.");
             }
+        } catch (NoDataException nde) {
+            logger.error(nde.getMessage());
+            throw nde;
         } catch (Exception e) {
             logger.error("Error processing observation: {}", e.getMessage());
             throw new RuntimeException(e);

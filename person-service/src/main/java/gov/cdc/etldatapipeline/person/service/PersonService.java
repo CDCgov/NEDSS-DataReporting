@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.person.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.etldatapipeline.person.repository.PatientRepository;
@@ -24,6 +25,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -72,7 +74,8 @@ public class PersonService {
             exclude = {
                     SerializationException.class,
                     DeserializationException.class,
-                    RuntimeException.class
+                    RuntimeException.class,
+                    NoDataException.class
             }
     )
     @KafkaListener(
@@ -95,34 +98,42 @@ public class PersonService {
                     String reportingKey = transformer.buildPatientKey(personData);
                     String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
                     kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
-                    log.info("Patient Reporting: {}", reportingData != null ? reportingData.toString() : "");
+                    log.info("Patient Reporting: {}", reportingData != null ? reportingData : "");
 
                     String elasticKey = transformer.buildPatientKey(personData);
                     String elasticData = transformer.processData(personData, PersonType.PATIENT_ELASTIC_SEARCH);
                     kafkaTemplate.send(patientElasticSearchTopicName, elasticKey, elasticData);
-                    log.info("Patient Elastic: {}", elasticData != null ? elasticData.toString() : "");
+                    log.info("Patient Elastic: {}", elasticData != null ? elasticData : "");
                 });
 
+                List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
                 if (cd != null && cd.equalsIgnoreCase("PRV")) {
-                    List<ProviderSp> providerDataFromStoredProc = providerRepository.computeProviders(personUid);
+                    providerDataFromStoredProc = providerRepository.computeProviders(personUid);
 
                     providerDataFromStoredProc.forEach(provider -> {
                         String reportingKey = transformer.buildProviderKey(provider);
                         String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
                         kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
-                        log.info("Provider Reporting: {}", reportingData.toString());
+                        log.info("Provider Reporting: {}", reportingData);
 
                         String elasticKey = transformer.buildProviderKey(provider);
                         String elasticData = transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
                         kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
-                        log.info("Provider Elastic: {}", elasticData != null ? elasticData.toString() : "");
+                        log.info("Provider Elastic: {}", elasticData != null ? elasticData : "");
                     });
                 } else {
                     log.debug("There is no provider to process in the incoming data.");
                 }
+
+                if (personDataFromStoredProc.isEmpty() && providerDataFromStoredProc.isEmpty()) {
+                    throw new NoDataException("No person or provider data found for id: " + personUid);
+                }
             } else {
                 log.debug("Incoming data doesn't contain payload: {}", message);
             }
+        } catch (NoDataException nde) {
+            log.error(nde.getMessage());
+            throw nde;
         } catch (Exception e) {
             log.error("Error processing person message: {}", e.getMessage());
             throw new RuntimeException(e);

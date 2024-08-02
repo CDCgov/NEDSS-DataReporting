@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.investigation.service;
 
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
@@ -18,8 +19,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.util.Optional;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class InvestigationServiceTest {
@@ -65,6 +65,29 @@ class InvestigationServiceTest {
         validateData(investigationTopic, investigationTopicOutput, payload, investigation);
 
         verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid));
+    }
+
+    @Test
+    void testProcessInvestigationException() {
+        String investigationTopic = "Investigation";
+        String investigationTopicOutput = "InvestigationOutput";
+        String invalidPayload = "{\"payload\": {\"after\": }}";
+
+        final var investigationService = getInvestigationService(investigationTopic, investigationTopicOutput);
+        assertThrows(RuntimeException.class, () -> investigationService.processMessage(invalidPayload, investigationTopic));
+    }
+
+    @Test
+    void testProcessInvestigationNoDataException() {
+        String investigationTopic = "Investigation";
+        String investigationTopicOutput = "InvestigationOutput";
+        Long investigationUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\"}}}";
+
+        when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.empty());
+
+        final var investigationService = getInvestigationService(investigationTopic, investigationTopicOutput);
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, investigationTopic));
     }
 
     private void validateData(String inputTopicName, String outputTopicName,

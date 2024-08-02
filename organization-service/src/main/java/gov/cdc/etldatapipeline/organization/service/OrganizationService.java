@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.organization.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
@@ -61,7 +62,8 @@ public class OrganizationService {
             exclude = {
                     SerializationException.class,
                     DeserializationException.class,
-                    RuntimeException.class
+                    RuntimeException.class,
+                    NoDataException.class
             }
     )
     @KafkaListener(
@@ -70,7 +72,7 @@ public class OrganizationService {
     public void processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());;
+            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
             JsonNode jsonNode = objectMapper.readTree(message);
             JsonNode payloadNode = jsonNode.get("payload").path("after");
             if (payloadNode != null && payloadNode.has("organization_uid")) {
@@ -78,21 +80,28 @@ public class OrganizationService {
                 log.info("Received OrganizationUid: {} from topic: {}", organizationUid, topic);
                 Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
 
-                organizations.forEach(org -> {
-                    String reportingKey = transformer.buildOrganizationKey(org);
-                    String reportingData = transformer.processData(org, OrganizationType.ORGANIZATION_REPORTING);
-                    kafkaTemplate.send(orgReportingOutputTopic, reportingKey, reportingData);
-                    log.info("Organization Reporting: {}", reportingData);
+                if (!organizations.isEmpty()) {
+                    organizations.forEach(org -> {
+                        String reportingKey = transformer.buildOrganizationKey(org);
+                        String reportingData = transformer.processData(org, OrganizationType.ORGANIZATION_REPORTING);
+                        kafkaTemplate.send(orgReportingOutputTopic, reportingKey, reportingData);
+                        log.info("Organization Reporting: {}", reportingData);
 
-                    String elasticKey = transformer.buildOrganizationKey(org);
-                    String elasticData = transformer.processData(org, OrganizationType.ORGANIZATION_ELASTIC_SEARCH);
-                    kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
-                    log.info("Organization Elastic: {}", elasticData!= null ? elasticData : "");
-                });
+                        String elasticKey = transformer.buildOrganizationKey(org);
+                        String elasticData = transformer.processData(org, OrganizationType.ORGANIZATION_ELASTIC_SEARCH);
+                        kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
+                        log.info("Organization Elastic: {}", elasticData!= null ? elasticData : "");
+                    });
+                } else {
+                    throw new NoDataException("No organization data found for id: " + organizationUid);
+                }
             }
             else {
                 log.debug("Incoming data doesn't contain payload: {}", message);
             }
+        } catch (NoDataException nde) {
+            log.error(nde.getMessage());
+            throw nde;
         } catch (Exception e) {
             log.error("Error processing organization message: {}", e.getMessage());
             throw new RuntimeException(e);
