@@ -59,8 +59,8 @@ public class ProcessInvestigationDataUtil {
             JsonNode investigationNotificationsJsonArray = investigationNotifications != null ? objectMapper.readTree(investigationNotifications) : null;
             InvestigationNotificationsKey investigationNotificationsKey = new InvestigationNotificationsKey();
 
-            if(investigationNotificationsJsonArray != null && investigationNotificationsJsonArray.isArray()) {
-                for(JsonNode node : investigationNotificationsJsonArray) {
+            if (investigationNotificationsJsonArray != null && investigationNotificationsJsonArray.isArray()) {
+                for (JsonNode node : investigationNotificationsJsonArray) {
                     Long notificationUid = node.get("notification_uid").asLong();
                     investigationNotificationsKey.setNotificationUid(notificationUid);
 
@@ -68,7 +68,8 @@ public class ProcessInvestigationDataUtil {
 
                     String jsonKey = jsonGenerator.generateStringJson(investigationNotificationsKey);
                     String jsonValue = jsonGenerator.generateStringJson(tempInvestigationNotificationsObject);
-                    kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue);
+                    kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue)
+                            .whenComplete((res, e) -> logger.info("Notification data (uid={}) sent to {}", notificationUid, investigationNotificationsOutputTopicName));
                 }
             }
             else {

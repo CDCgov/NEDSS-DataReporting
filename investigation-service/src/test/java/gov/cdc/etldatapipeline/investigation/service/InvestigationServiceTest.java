@@ -17,6 +17,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,6 +62,7 @@ class InvestigationServiceTest {
 
         final Investigation investigation = constructInvestigation(investigationUid);
         when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
         validateData(investigationTopic, investigationTopicOutput, payload, investigation);
 

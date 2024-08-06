@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -144,6 +145,8 @@ public class InvestigationDataProcessingTests {
         notifications.setNotifStatus("APPROVED");
         notifications.setNotifAddUserId(96325874L);
         notifications.setConditionCd("11065");
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
         transformer.processNotifications(investigation.getInvestigationNotifications(), new ObjectMapper());
         verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());

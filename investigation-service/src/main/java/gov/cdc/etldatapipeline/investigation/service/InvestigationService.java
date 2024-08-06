@@ -24,12 +24,14 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Setter
@@ -96,12 +98,17 @@ public class InvestigationService {
                 logger.debug(topicDebugLog, publicHealthCaseUid, investigationTopic);
                 Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
                 if (investigationData.isPresent()) {
-                    InvestigationReporting reportingModel = modelMapper.map(investigationData.get(), InvestigationReporting.class);
-                    InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigationData.get());
+                    Investigation investigation = investigationData.get();
+                    InvestigationReporting reportingModel = modelMapper.map(investigation, InvestigationReporting.class);
+                    InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation);
                     buildReportingModelForTransformedData(reportingModel, investigationTransformed);
-                    pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting);
-                    processDataUtil.processNotifications(investigationData.get().getInvestigationNotifications(), objectMapper);
-                    return objectMapper.writeValueAsString(investigationData.get());
+                    pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
+                        // only process and send notifications when investigation data has been sent
+                        .whenComplete((res, ex) ->
+                            logger.info("Investigation data (uid={}) sent to {}", investigation.getPublicHealthCaseUid(), investigationTopicReporting))
+                        .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications(), objectMapper))
+                        .join();
+                    return objectMapper.writeValueAsString(investigation);
                 } else {
                     throw new NoDataException("No investigation data found for id: " + publicHealthCaseUid);
                 }
@@ -119,10 +126,10 @@ public class InvestigationService {
     }
 
     // This same method can be used for elastic search as well and that is why the generic model is present
-    private void pushKeyValuePairToKafka(InvestigationKey investigationKey, Object model, String topicName) {
+    private CompletableFuture<SendResult<String, String>> pushKeyValuePairToKafka(InvestigationKey investigationKey, Object model, String topicName) {
         String jsonKey = jsonGenerator.generateStringJson(investigationKey);
         String jsonValue = jsonGenerator.generateStringJson(model);
-        kafkaTemplate.send(topicName, jsonKey, jsonValue);
+        return kafkaTemplate.send(topicName, jsonKey, jsonValue);
     }
 
     private void buildReportingModelForTransformedData(InvestigationReporting reportingModel, InvestigationTransformed investigationTransformed) {
