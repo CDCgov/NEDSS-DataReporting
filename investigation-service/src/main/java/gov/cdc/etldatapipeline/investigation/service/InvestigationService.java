@@ -90,10 +90,14 @@ public class InvestigationService {
                 publicHealthCaseUid = payloadNode.get("public_health_case_uid").asText();
                 investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
 
-                // Calling sp_public_health_case_fact_datamart_event
-                logger.info("Executing stored proc with ids: {} to populate PHС fact datamart", publicHealthCaseUid);
-                investigationRepository.populatePhcFact(publicHealthCaseUid);
-                logger.info("Stored proc executed");
+                try {
+                    // Calling sp_public_health_case_fact_datamart_event
+                    logger.info("Executing stored proc with ids: {} to populate PHС fact datamart", publicHealthCaseUid);
+                    investigationRepository.populatePhcFact(publicHealthCaseUid);
+                    logger.info("Stored proc executed");
+                } catch (Exception dbe) {
+                    logger.warn("Error processing PHC fact datamart: {}", dbe.getMessage());
+                }
 
                 logger.debug(topicDebugLog, publicHealthCaseUid, investigationTopic);
                 Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
