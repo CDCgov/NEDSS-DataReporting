@@ -9,7 +9,6 @@ spring:
       topic-name-observation: nrt_investigation_observation
       topic-name-notifications: nrt_notifications
     dlq:
-      topic-name-dlq: nrt_investigation_dlq
       retry-suffix: _retry
       dlq-suffix: _dlt
 

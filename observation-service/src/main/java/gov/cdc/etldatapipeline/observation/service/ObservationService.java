@@ -47,10 +47,6 @@ public class ObservationService {
     @Value("${spring.kafka.output.topic-name-es}")
     public String observationTopicOutputElasticSearch;
 
-    @Value("${spring.kafka.dlq.topic-name-dlq}")
-    public String observationTopicOutputDlq;
-
-
     private final IObservationRepository iObservationRepository;
     private String topicDebugLog = "Received Observation ID: {} from topic: {}";
     private final KafkaTemplate<String, String> kafkaTemplate;

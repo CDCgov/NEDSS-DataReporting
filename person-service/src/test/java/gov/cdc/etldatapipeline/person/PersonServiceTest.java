@@ -140,8 +140,6 @@ public class PersonServiceTest {
         assertThrows(NoDataException.class, () -> personService.processMessage(payload, providerTopic));
     }
 
-
-
     private void validateDataTransformation(
             String incomingChangeData,
             String inputTopicName,

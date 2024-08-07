@@ -14,7 +14,6 @@ spring:
       organizationReporting:
         topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
     dlq:
-      topic-name-dlq: nrt_organization_dlq
       retry-suffix: _retry
       dlq-suffix: _dlt
 

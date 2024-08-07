@@ -83,7 +83,7 @@ class ObservationServiceTest {
         String invalidPayload = "{\"payload\": {\"after\": }}";
 
         final var observationService = getObservationService(observationTopic, observationTopicOutput);
-        assertThrows(RuntimeException.class, () -> observationService.processMessage(observationTopic, invalidPayload));
+        assertThrows(RuntimeException.class, () -> observationService.processMessage(invalidPayload, observationTopic));
     }
 
     @Test
