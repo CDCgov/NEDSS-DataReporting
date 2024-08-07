@@ -18,7 +18,7 @@ public class LdfData {
     private String activeInd;
 
     @Column(name = "ldf_meta_data_add_time")
-    private Instant metaDataAddTime;
+    private Instant ldfMetaDataAddTime;
 
     @Column(name = "admin_comment")
     private String adminComment;

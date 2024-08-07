@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class LdfDataController {
     private final KafkaProducerService producerService;
 
-    @Value("${spring.kafka.stream.input.ldfdata.topic-name}")
+    @Value("${spring.kafka.input.topic-name}")
     private String topicName;
 
     @GetMapping("/reporting/ldfdata-svc/status")

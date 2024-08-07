@@ -3,20 +3,26 @@ package gov.cdc.etldatapipeline.ldfdata.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfData;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfDataKey;
 import gov.cdc.etldatapipeline.ldfdata.repository.LdfDataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.retrytopic.DltStrategy;
+import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.serializer.DeserializationException;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -27,10 +33,10 @@ import java.util.Optional;
 public class LdfDataService {
     private static final Logger logger = LoggerFactory.getLogger(LdfDataService.class);
 
-    @Value("${spring.kafka.stream.input.ldfdata.topic-name}")
+    @Value("${spring.kafka.input.topic-name}")
     private String ldfDataTopic;
 
-    @Value("${spring.kafka.stream.output.ldfdata.topic-name-reporting}")
+    @Value("${spring.kafka.output.topic-name-reporting}")
     public String ldfDataTopicReporting;
 
     private final LdfDataRepository ldfDataRepository;
@@ -40,13 +46,30 @@ public class LdfDataService {
 
     private String topicDebugLog = "Received business_object_nm={},ldf_uid={},business_object_uid={} from topic: {}";
 
-    @Autowired
-    public void processMessage(StreamsBuilder streamsBuilder) {
-        streamsBuilder.stream(ldfDataTopic, Consumed.with(Serdes.String(), Serdes.String()))
-                .filter((k, v) -> v != null)
-                .mapValues((key, value) -> processLdfData(value))
-                .filter((key, value) -> value != null)
-                .peek((key, value) -> logger.info("Received LDF data: {}", value));
+    @RetryableTopic(
+            attempts = "${spring.kafka.consumer.max-retry}",
+            autoCreateTopics = "false",
+            dltStrategy = DltStrategy.FAIL_ON_ERROR,
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
+            dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
+            // retry topic name, such as topic-retry-1, topic-retry-2, etc
+            topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
+            // time to wait before attempting to retry
+            backoff = @Backoff(delay = 1000, multiplier = 2.0),
+            exclude = {
+                    SerializationException.class,
+                    DeserializationException.class,
+                    RuntimeException.class,
+                    NoDataException.class
+            }
+    )
+    @KafkaListener(
+            topics = "${spring.kafka.input.topic-name}"
+    )
+    public void processMessage(String message,
+                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+        logger.debug(topicDebugLog, message, topic);
+        processLdfData(message);
     }
 
     public String processLdfData(String value) {
@@ -73,16 +96,24 @@ public class LdfDataService {
                     pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
                     return objectMapper.writeValueAsString(ldfData.get());
                 }
+                else {
+                    throw new NoDataException("No LDF data found for id: " + ldfUid);
+                }
             }
+            else {
+                logger.info("No LDF data to process.");
+            }
+        } catch (NoDataException nde) {
+            logger.error(nde.getMessage());
+            throw nde;
         } catch (Exception e) {
-            String msg = "Error processing LDF data" + (
-                    !busObjNm.isEmpty() ?
-                            " for business_object_nm='" + busObjNm +
-                            "',ldf_uid='" + ldfUid +
-                            "',business_object_uid='" + busObjUid +"': {}"
-                            : ": {}"
+            String msg = "Error processing LDF data" + (busObjNm.isEmpty() ? ": {}" :
+                    " for business_object_nm='" + busObjNm +
+                    "',ldf_uid='" + ldfUid +
+                    "',business_object_uid='" + busObjUid +"': {}"
             );
             logger.error(msg, e.getMessage());
+            throw new RuntimeException(e);
         }
         return null;
     }

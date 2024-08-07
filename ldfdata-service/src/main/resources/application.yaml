@@ -1,16 +1,18 @@
 spring:
   kafka:
-    stream:
-      input:
-        ldfdata:
-          topic-name: nbs_state_defined_field_data
-      output:
-        ldfdata:
-          topic-name-reporting: nrt_ldf_data
+    input:
+      topic-name: nbs_state_defined_field_data
+    output:
+      topic-name-reporting: nrt_ldf_data
+    dlq:
+      retry-suffix: _retry
+      dlq-suffix: _dlt
 
-    streams:
-      application-id: ${KAFKA_CONSUMER_APP:ldfdata-reporting-consumer-app}
+    group-id: ${KAFKA_CONSUMER_APP:ldfdata-reporting-consumer-app}
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    consumer:
+      max-retry: 3
+      maxPollIntervalMs: 30000
     admin:
       auto-create: true
   application:
