@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
 import org.junit.jupiter.api.AfterEach;
@@ -41,10 +42,11 @@ class PostProcessingServiceTest {
     private ProcessDatamartData datamartProcessor;
 
     private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+    private AutoCloseable closeable;
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         datamartProcessor = new ProcessDatamartData(kafkaTemplate);
         postProcessingServiceMock = new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor);
@@ -54,9 +56,10 @@ class PostProcessingServiceTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         logger.detachAppender(listAppender);
+        closeable.close();
     }
 
     @ParameterizedTest
@@ -143,14 +146,10 @@ class PostProcessingServiceTest {
 
     @Test
     void testPostProcessNotificationMessage() {
-        String topic = "investigation";
-        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        String topic = "dummy_notifications";
+        String key = "{\"payload\":{\"notification_uid\":123}}";
 
-        topic = "notifications";
-        key = "{\"payload\":{\"notification_uid\":123}}";
         postProcessingServiceMock.postProcessMessage(topic, key, key);
-
         postProcessingServiceMock.processCachedIds();
 
         String expectedNotificationIdsString = "123";
@@ -158,8 +157,8 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(8, logs.size());
-        assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(3, logs.size());
+        assertTrue(logs.get(2).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -192,13 +191,12 @@ class PostProcessingServiceTest {
         String orgKey2 = "{\"payload\":{\"organization_uid\":124}}";
         String orgTopic = "dummy_organization";
 
-        String invTopic = "investigation";
+        String invTopic = "dummy_investigation";
         String invKey1 = "{\"payload\":{\"public_health_case_uid\":234}}";
         String invKey2 = "{\"payload\":{\"public_health_case_uid\":235}}";
 
-
-        String ntfKey1 = "{\"payload\":{\"notification_uid\":234}}";
-        String ntfKey2 = "{\"payload\":{\"notification_uid\":235}}";
+        String ntfKey1 = "{\"payload\":{\"notification_uid\":567}}";
+        String ntfKey2 = "{\"payload\":{\"notification_uid\":568}}";
         String ntfTopic = "dummy_notifications";
 
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey1, orgKey1);
@@ -213,7 +211,10 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForOrganizationIds("123,124");
         assertTrue(postProcessingServiceMock.idCache.containsKey(orgTopic));
 
-        verify(postProcRepositoryMock).executeStoredProcForNotificationIds("234,235");
+        verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds("234,235");
+        assertTrue(postProcessingServiceMock.idCache.containsKey(invTopic));
+
+        verify(postProcRepositoryMock).executeStoredProcForNotificationIds("567,568");
         assertTrue(postProcessingServiceMock.idCache.containsKey(ntfTopic));
     }
 
@@ -248,6 +249,7 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(2).contains(patientTopic));
         assertTrue(topicLogList.get(3).contains(invTopic));
         assertTrue(topicLogList.get(4).contains(invTopic));
+        assertTrue(topicLogList.get(5).contains(notfTopic));
     }
 
     @Test
@@ -326,12 +328,21 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testExtractIdFromMessageException() {
+    void testPostProcessMessageException() {
         String invalidKey = "invalid_key";
         String invalidTopic = "dummy_topic";
 
-        assertThrows(RuntimeException.class, () -> postProcessingServiceMock.extractIdFromMessage(invalidTopic,
+        assertThrows(RuntimeException.class, () -> postProcessingServiceMock.postProcessMessage(invalidTopic,
                 invalidKey, invalidKey));
+    }
+
+    @Test
+    void testPostProcessNoDataException() {
+        String orgKey = "{\"payload\":{}}";
+        String topic = "dummy_organization";
+
+        assertThrows(NoDataException.class, () -> postProcessingServiceMock.postProcessMessage(topic,
+                orgKey, orgKey));
     }
 
     @Test
@@ -351,28 +362,8 @@ class PostProcessingServiceTest {
     void testPostProcessDatamartIncompleteData(String msg) {
         String topic = "dummy_datamart";
 
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
         List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(logs.size()-1).getFormattedMessage().contains("Skipping further processing"));
-    }
-
-    @Test
-    void testPostProcessDatamartNullData() {
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":null}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(logs.size()-1).getFormattedMessage().contains("Skipping further processing"));
-    }
-
-    @Test
-    void testPostProcessDatamartEmptyData() {
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        List<ILoggingEvent> logs = listAppender.list;
+        assertThrows(NoDataException.class, () -> postProcessingServiceMock.postProcessDatamart(topic, msg));
         assertTrue(logs.get(logs.size()-1).getFormattedMessage().contains("Skipping further processing"));
     }
 

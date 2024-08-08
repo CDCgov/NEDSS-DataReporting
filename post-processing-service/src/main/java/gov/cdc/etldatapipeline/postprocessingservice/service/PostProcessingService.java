@@ -3,17 +3,24 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.retrytopic.DltStrategy;
+import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -70,6 +77,23 @@ public class PostProcessingService {
         }
     }
 
+    @RetryableTopic(
+            attempts = "${spring.kafka.consumer.max-retry}",
+            autoCreateTopics = "false",
+            dltStrategy = DltStrategy.FAIL_ON_ERROR,
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
+            dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
+            // retry topic name, such as topic-retry-1, topic-retry-2, etc
+            topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
+            // time to wait before attempting to retry
+            backoff = @Backoff(delay = 1000, multiplier = 2.0),
+            exclude = {
+                    SerializationException.class,
+                    DeserializationException.class,
+                    RuntimeException.class,
+                    NoDataException.class
+            }
+    )
     @KafkaListener(topics = {
             "${spring.kafka.topic.investigation}",
             "${spring.kafka.topic.organization}",
@@ -87,30 +111,45 @@ public class PostProcessingService {
         }
     }
 
+    @RetryableTopic(
+            attempts = "${spring.kafka.consumer.max-retry}",
+            autoCreateTopics = "false",
+            dltStrategy = DltStrategy.FAIL_ON_ERROR,
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
+            dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
+            topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
+            backoff = @Backoff(delay = 1000, multiplier = 2.0),
+            exclude = {
+                    SerializationException.class,
+                    DeserializationException.class,
+                    RuntimeException.class,
+                    NoDataException.class
+            }
+    )
     @KafkaListener(topics = {"${spring.kafka.topic.datamart}"})
     public void postProcessDatamart(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Payload String payload) {
         try {
+            logger.info("Got this payload: {} from the topic: {}", payload, topic);
             JsonNode payloadNode = objectMapper.readTree(payload);
-            logger.info("Got this payload: {} from the topic: {}", payloadNode, topic);
 
             Datamart dmData = objectMapper.readValue(payloadNode.get(PAYLOAD).toString(), Datamart.class);
-            if(Objects.isNull(dmData)) {
-                logger.warn("For payload: {} DataMart object is null. Skipping further processing", payloadNode);
-                return;
+            if (Objects.isNull(dmData)) {
+                throw new NoDataException("For payload: " + payloadNode + " DataMart object is null. Skipping further processing");
             }
             Map<Long, Long> dmMap = new HashMap<>();
-            if(Objects.isNull(dmData.getPublicHealthCaseUid()) || Objects.isNull(dmData.getPatientUid())) {
-                logger.warn("For payload: {} DataMart Public Health Case/Patient Id is null. Skipping further processing", payloadNode);
-                return;
+            if (Objects.isNull(dmData.getPublicHealthCaseUid()) || Objects.isNull(dmData.getPatientUid())) {
+                throw new NoDataException("For payload: " + payloadNode + " DataMart Public Health Case/Patient Id is null. Skipping further processing");
             }
             dmMap.put(dmData.getPublicHealthCaseUid(), dmData.getPatientUid());
-            if(Objects.isNull(dmData.getDatamart())){
-                logger.warn("For payload: {} DataMart is null. Skipping further processing", payloadNode);
-                return;
+            if (Objects.isNull(dmData.getDatamart())) {
+                throw new NoDataException("For payload: " + payload + " DataMart value is null. Skipping further processing");
             }
             dmCache.computeIfAbsent(dmData.getDatamart(), k -> ConcurrentHashMap.newKeySet()).add(dmMap);
+        } catch (NoDataException nde) {
+            logger.warn(nde.getMessage());
+            throw nde;
         } catch (Exception e) {
             logger.error("Error processing datamart message: {}", e.getMessage());
             throw new RuntimeException(e);
@@ -155,7 +194,6 @@ public class PostProcessingService {
                         processTopic(keyTopic, Entity.F_PAGE_CASE, ids,
                                 investigationRepository::executeStoredProcForFPageCase);
                         datamartProcessor.process(invData);
-
                         break;
                     case NOTIFICATIONS:
                         processTopic(keyTopic, entity, ids,
@@ -199,11 +237,14 @@ public class PostProcessingService {
     Long extractIdFromMessage(String topic, String messageKey, String payload) {
         Long id;
         try {
+            logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
             JsonNode keyNode = objectMapper.readTree(messageKey);
             JsonNode payloadNode = objectMapper.readTree(payload);
-            logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
 
             Entity entity = getEntityByTopic(topic);
+            if (Objects.isNull(keyNode.get(PAYLOAD).get(entity.getUidName()))) {
+                throw new NoDataException("Null value found for key '" + entity.getUidName() + "' in topic '" + topic + "'");
+            }
             id = keyNode.get(PAYLOAD).get(entity.getUidName()).asLong();
 
             if (topic.contains(Entity.INVESTIGATION.getName())) {
@@ -212,6 +253,9 @@ public class PostProcessingService {
                     idVals.put(id, tblNode.asText());
                 }
             }
+        } catch (NoDataException nde) {
+            logger.warn(nde.getMessage());
+            throw nde;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -225,7 +269,6 @@ public class PostProcessingService {
                 .findFirst()
                 .orElse(Entity.UNKNOWN);
     }
-
 
     private void processTopic(String keyTopic, Entity entity, List<Long> ids, Consumer<String> repositoryMethod) {
         String idsString = prepareAndLog(keyTopic, entity, ids);
@@ -243,13 +286,13 @@ public class PostProcessingService {
 
     private String prepareAndLog(String keyTopic, Entity entity, List<Long> ids) {
         String idsString = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        logger.info("Processing the {} message topic: {}. Calling stored proc: {}('{}')", entity.getName(), keyTopic,
+        logger.info("Processing the {} message topic: {}. Calling stored proc: {} '{}'", entity.getName(), keyTopic,
                 entity.getStoredProcedure(), idsString);
         return idsString;
     }
 
     private void processId(Long id, String vals, BiConsumer<Long, String> repositoryMethod, Entity entity) {
-        logger.info("Processing PHC ID for {}. Calling stored proc: {}({}, '{}')", entity.getName(),
+        logger.info("Processing PHC ID for {}. Calling stored proc: {} '{}', '{}'", entity.getName(),
                 entity.getStoredProcedure(), id, vals);
         repositoryMethod.accept(id, vals);
         completeLog();
