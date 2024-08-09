@@ -18,7 +18,7 @@ public class LdfData {
     private String activeInd;
 
     @Column(name = "ldf_meta_data_add_time")
-    private Instant ldfMetaDataAddTime;
+    private String ldfMetaDataAddTime;
 
     @Column(name = "admin_comment")
     private String adminComment;
@@ -75,7 +75,7 @@ public class LdfData {
     private String validationJscriptTxt;
 
     @Column(name = "record_status_time")
-    private Instant recordStatusTime;
+    private String recordStatusTime;
 
     @Column(name = "record_status_cd")
     private String recordStatusCd;
@@ -98,20 +98,20 @@ public class LdfData {
     @Column(name = "ldf_meta_data_version_ctrl_num")
     private Integer ldfMetaDataVersionCtrlNum;
 
-    @Column(name = "NBS_QUESTION_UID")
+    @Column(name = "nbs_question_uid")
     private Long nbsQuestionUid;
 
     @Column(name = "business_object_uid")
     private Long businessObjectUid;
 
     @Column(name = "ldf_data_field_add_time")
-    private Instant ldfDataFieldAddTime;
+    private String ldfDataFieldAddTime;
 
     @Column(name = "ldf_field_data_business_object_nm")
     private String ldfFieldDataBusinessObjectNm;
 
     @Column(name = "ldf_data_last_chg_time")
-    private Instant ldfDataLastChgTime;
+    private String ldfDataLastChgTime;
 
     @Column(name = "ldf_value")
     private String ldfValue;
@@ -119,6 +119,12 @@ public class LdfData {
     @Column(name = "ldf_field_data_version_ctrl_num")
     private Integer ldfFieldDataVersionCtrlNum;
 
-    @Column(name = "LDF_COLUMN_TYPE")
+    @Column(name = "ldf_column_type")
     private String ldfColumnType;
+
+    @Column(name = "metadata_record_status_time")
+    private String metadataRecordStatusTime;
+
+    @Column(name = "metadata_record_status_cd")
+    private String metadataRecordStatusCd;
 }

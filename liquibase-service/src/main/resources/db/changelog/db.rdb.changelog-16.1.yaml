@@ -237,3 +237,17 @@ databaseChangeLog:
         - sqlFile:
             path: 033-sp_get_date_dim-001.sql
             splitStatements: false
+  - changeSet:
+      id: 34
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 034-create-nrt_ldf_data-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 35
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 035-sp_nrt_ldf_postprocessing-001.sql
+            splitStatements: false
