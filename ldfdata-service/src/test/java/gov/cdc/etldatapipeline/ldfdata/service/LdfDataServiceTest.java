@@ -16,7 +16,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class LdfDataServiceTest {
@@ -44,7 +43,7 @@ class LdfDataServiceTest {
     }
 
     @Test
-    public void testProcessMessage() {
+    void testProcessMessage() {
         String ldfTopic = "LdfData";
         String ldfTopicOutput = "LdfDataOutput";
 
@@ -57,12 +56,12 @@ class LdfDataServiceTest {
                 "\"business_object_uid\": \"" + busObjUid + "\"}}}";
 
         final LdfData ldfData = constructLdfData(busObjNm, ldfUid, busObjUid);
-        when(ldfDataRepository.computeLdfData(eq(busObjNm), eq(String.valueOf(ldfUid)), eq(String.valueOf(busObjUid))))
+        when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
                 .thenReturn(Optional.of(ldfData));
 
         validateData(ldfTopic, ldfTopicOutput, payload, ldfData);
 
-        verify(ldfDataRepository).computeLdfData(eq(busObjNm), eq(String.valueOf(ldfUid)), eq(String.valueOf(busObjUid)));
+        verify(ldfDataRepository).computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid));
     }
 
     @Test
@@ -88,7 +87,7 @@ class LdfDataServiceTest {
                 "\"ldf_uid\": \"" + ldfUid + "\"," +
                 "\"business_object_uid\": \"" + busObjUid + "\"}}}";
 
-        when(ldfDataRepository.computeLdfData(eq(busObjNm), eq(String.valueOf(ldfUid)), eq(String.valueOf(busObjUid))))
+        when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
                 .thenReturn(Optional.empty());
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
         assertThrows(NoDataException.class, () -> ldfDataService.processMessage(payload, ldfTopic));

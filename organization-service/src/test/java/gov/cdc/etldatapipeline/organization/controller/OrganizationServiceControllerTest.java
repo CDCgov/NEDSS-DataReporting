@@ -34,7 +34,7 @@ class OrganizationServiceControllerTest {
     }
 
     @Test
-    public void testPostOrganization() throws Exception {
+    void testPostOrganization() throws Exception {
         String payload = "{\"payload\": {\"after\": {\"organization_uid\": \"10036000\"}}}";
 
         ResponseEntity<String> response = controller.postOrganization(payload);

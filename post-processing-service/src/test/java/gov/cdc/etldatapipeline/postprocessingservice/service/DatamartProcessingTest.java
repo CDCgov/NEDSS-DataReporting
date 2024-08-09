@@ -94,7 +94,8 @@ class DatamartProcessingTest {
 
     @Test
     void testDatamartProcessException() {
-        assertThrows(RuntimeException.class, () -> datamartProcessor.process(Collections.singletonList(getInvestigationResult(null))));
+        List<InvestigationResult> nullPhcResults = Collections.singletonList(getInvestigationResult(null));
+        assertThrows(RuntimeException.class, () -> datamartProcessor.process(nullPhcResults));
     }
 
     @Test

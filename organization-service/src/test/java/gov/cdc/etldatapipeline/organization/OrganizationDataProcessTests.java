@@ -22,7 +22,7 @@ public class OrganizationDataProcessTests {
     }
 
     @Test
-    public void OrganizationNameProcessTest() {
+    void OrganizationNameProcessTest() {
         Name[] name = utilHelper.deserializePayload(orgSp.getOrganizationName(), Name[].class);
         Name expected = Name.builder()
                 .onOrgUid(10036000L)
@@ -33,7 +33,7 @@ public class OrganizationDataProcessTests {
     }
 
     @Test
-    public void OrganizationAddressProcessTest() {
+    void OrganizationAddressProcessTest() {
         Address[] addr = utilHelper.deserializePayload(orgSp.getOrganizationAddress(), Address[].class);
         Address expected = Address.builder()
                 .addrElpCd("O")
@@ -55,7 +55,7 @@ public class OrganizationDataProcessTests {
     }
 
     @Test
-    public void OrganizationPhoneProcessTest() {
+    void OrganizationPhoneProcessTest() {
         Phone[] phn = utilHelper.deserializePayload(orgSp.getOrganizationTelephone(), Phone[].class);
         Phone expected = Phone.builder()
                 .phTlUid(10615102L)
@@ -72,7 +72,7 @@ public class OrganizationDataProcessTests {
     }
 
     @Test
-    public void OrganizationEntityProcessTest() {
+    void OrganizationEntityProcessTest() {
         Entity[] ets = utilHelper.deserializePayload(orgSp.getOrganizationEntityId(), Entity[].class);
         Entity expected = Entity.builder()
                 .entityUid(10036000L)
@@ -88,7 +88,7 @@ public class OrganizationDataProcessTests {
     }
 
     @Test
-    public void OrganizationFaxProcessTest() {
+    void OrganizationFaxProcessTest() {
         Fax[] fax = utilHelper.deserializePayload(orgSp.getOrganizationFax(), Fax[].class);
         Fax expected = Fax.builder()
                 .faxTlUid(1002L)

@@ -100,7 +100,7 @@ public class InvestigationDataProcessingTests {
     }
 
     @Test
-    public void testObservationNotificationIds() {
+    void testObservationNotificationIds() {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -125,7 +125,7 @@ public class InvestigationDataProcessingTests {
     }
 
     @Test
-    public void testNotifications() {
+    void testNotifications() {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -170,7 +170,7 @@ public class InvestigationDataProcessingTests {
     }
 
     @Test
-    public void testInvestigationCaseAnswer() throws JsonProcessingException {
+    void testInvestigationCaseAnswer() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -195,7 +195,7 @@ public class InvestigationDataProcessingTests {
     }
 
     @Test
-    public void testInvestigationCaseAnswerExistingRecords() throws JsonProcessingException {
+    void testInvestigationCaseAnswerExistingRecords() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -223,7 +223,7 @@ public class InvestigationDataProcessingTests {
     }
 
     @Test
-    public void testInvestigationCaseAnswerInvalidJson() {
+    void testInvestigationCaseAnswerInvalidJson() {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);

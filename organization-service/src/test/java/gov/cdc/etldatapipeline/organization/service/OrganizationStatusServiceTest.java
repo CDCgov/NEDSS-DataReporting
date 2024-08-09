@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 class OrganizationStatusServiceTest {
 
     @Test
-    public void statusTest() {
+    void statusTest() {
         OrganizationStatusService statusService = new OrganizationStatusService();
         Assertions.assertEquals(HttpStatus.OK, statusService.getHealthStatus().getStatusCode());
     }

@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 public class PersonStatusServiceTest {
 
     @Test
-    public void statusTest() {
+    void statusTest() {
         PersonStatusService statusService = new PersonStatusService();
         Assertions.assertEquals(HttpStatus.OK, statusService.getHealthStatus().getStatusCode());
     }

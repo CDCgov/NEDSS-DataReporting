@@ -33,7 +33,7 @@ public class PersonServiceControllerTests {
     }
 
     @Test
-    public void testPostProvider() throws Exception {
+    void testPostProvider() throws Exception {
         String payload = "{\"payload\": {\"after\": {\"cd\": \"PRV\"}}}";
 
         ResponseEntity<String> response = controller.postProvider(payload);
@@ -43,7 +43,7 @@ public class PersonServiceControllerTests {
     }
 
     @Test
-    public void testPostPatient() {
+    void testPostPatient() {
         String payload = "{\"payload\": {\"after\": {\"cd\": \"PAT\"}}}";
 
         ResponseEntity<String> response = controller.postPatient(payload);

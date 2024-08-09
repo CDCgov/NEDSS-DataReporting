@@ -26,7 +26,6 @@ import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,7 +75,7 @@ public class OrganizationServiceTest {
     void testProcessMessageNoDataException() {
         Long organizationUid = 123456789L;
         String payload = "{\"payload\": {\"after\": {\"organization_uid\": \"" + organizationUid + "\"}}}";
-        when(orgRepository.computeAllOrganizations(eq(String.valueOf(organizationUid)))).thenReturn(Collections.emptySet());
+        when(orgRepository.computeAllOrganizations(String.valueOf(organizationUid))).thenReturn(Collections.emptySet());
         assertThrows(NoDataException.class, () -> organizationService.processMessage(payload, orgReportingTopic));
     }
 
