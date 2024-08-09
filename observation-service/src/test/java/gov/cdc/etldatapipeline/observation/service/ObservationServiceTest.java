@@ -69,11 +69,11 @@ class ObservationServiceTest {
         String payload = "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
 
         Observation observation = constructObservation(observationUid, obsDomainCdSt);
-        when(observationRepository.computeObservations(eq(String.valueOf(observationUid)))).thenReturn(Optional.of(observation));
+        when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.of(observation));
 
         validateData(observationTopic, observationTopicOutput, payload, observation);
 
-        verify(observationRepository).computeObservations(eq(String.valueOf(observationUid)));
+        verify(observationRepository).computeObservations(String.valueOf(observationUid));
     }
 
     @Test
@@ -83,7 +83,7 @@ class ObservationServiceTest {
         String invalidPayload = "{\"payload\": {\"after\": }}";
 
         final var observationService = getObservationService(observationTopic, observationTopicOutput);
-        assertThrows(RuntimeException.class, () -> observationService.processMessage(observationTopic, invalidPayload));
+        assertThrows(RuntimeException.class, () -> observationService.processMessage(invalidPayload, observationTopic));
     }
 
     @Test
@@ -93,7 +93,7 @@ class ObservationServiceTest {
         Long observationUid = 123456789L;
         String payload = "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
 
-        when(observationRepository.computeObservations(eq(String.valueOf(observationUid)))).thenReturn(Optional.empty());
+        when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.empty());
 
         final var observationService = getObservationService(observationTopic, observationTopicOutput);
         assertThrows(NoDataException.class, () -> observationService.processMessage(payload, observationTopic));

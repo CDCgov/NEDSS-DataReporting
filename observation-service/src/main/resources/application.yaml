@@ -6,7 +6,6 @@ spring:
       topic-name-reporting: nrt_observation
       topic-name-es: elastic_search_observation
     dlq:
-      topic-name-dlq: nrt_observation_dlq
       retry-suffix: _retry
       dlq-suffix: _dlt
 

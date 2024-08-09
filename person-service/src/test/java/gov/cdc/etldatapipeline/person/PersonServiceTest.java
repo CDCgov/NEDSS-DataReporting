@@ -28,12 +28,11 @@ import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PersonServiceTest {
+class PersonServiceTest {
 
     @Mock
     PatientRepository patientRepository;
@@ -60,7 +59,7 @@ public class PersonServiceTest {
     }
 
     @Test
-    public void processPatientReportingData() throws JsonProcessingException {
+    void processPatientReportingData() throws JsonProcessingException {
         PatientSp patientSp = constructPatient();
         Mockito.when(patientRepository.computePatients(anyString())).thenReturn(List.of(patientSp));
 
@@ -76,7 +75,7 @@ public class PersonServiceTest {
     }
 
     @Test
-    public void processPatientElasticSearchData() throws JsonProcessingException {
+    void processPatientElasticSearchData() throws JsonProcessingException {
         PatientSp patientSp = constructPatient();
         Mockito.when(patientRepository.computePatients(anyString())).thenReturn(List.of(patientSp));
 
@@ -92,7 +91,7 @@ public class PersonServiceTest {
     }
 
     @Test
-    public void processProviderReportingData() throws JsonProcessingException {
+    void processProviderReportingData() throws JsonProcessingException {
         ProviderSp providerSp = constructProvider();
         Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
         Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
@@ -109,7 +108,7 @@ public class PersonServiceTest {
     }
 
     @Test
-    public void processProviderElasticSearchData() throws JsonProcessingException {
+    void processProviderElasticSearchData() throws JsonProcessingException {
         ProviderSp providerSp = constructProvider();
         when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
         when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
@@ -135,12 +134,10 @@ public class PersonServiceTest {
     void testProcessMessageNoDataException() {
         Long personUid = 123456789L;
         String payload = "{\"payload\": {\"after\": {\"person_uid\": \"" + personUid + "\", \"cd\": \"PRV\"}}}";
-        when(patientRepository.computePatients(eq(String.valueOf(personUid)))).thenReturn(Collections.emptyList());
-        when(providerRepository.computeProviders(eq(String.valueOf(personUid)))).thenReturn(Collections.emptyList());
+        when(patientRepository.computePatients(String.valueOf(personUid))).thenReturn(Collections.emptyList());
+        when(providerRepository.computeProviders(String.valueOf(personUid))).thenReturn(Collections.emptyList());
         assertThrows(NoDataException.class, () -> personService.processMessage(payload, providerTopic));
     }
-
-
 
     private void validateDataTransformation(
             String incomingChangeData,

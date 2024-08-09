@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -20,14 +19,14 @@ import java.util.function.Function;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 
-public class PatientDataPostProcessingTests {
+class PatientDataPostProcessingTests {
     private static final String FILE_PREFIX = "rawDataFiles/person/";
     PersonTransformers tx = new PersonTransformers();
 
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    public void consolidatedPatientTransformationTest() throws JsonProcessingException {
+    void consolidatedPatientTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp pat = PatientSp.builder()
@@ -100,7 +99,7 @@ public class PatientDataPostProcessingTests {
     }
 
     @Test
-    public void PatientNameTransformationTest() throws JsonProcessingException {
+    void PatientNameTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp perOp = PatientSp.builder()
@@ -130,7 +129,7 @@ public class PatientDataPostProcessingTests {
     }
 
     @Test
-    public void PatientNameTransformationSet2Test() throws JsonProcessingException {
+    void PatientNameTransformationSet2Test() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp perOp = PatientSp.builder()
@@ -158,7 +157,8 @@ public class PatientDataPostProcessingTests {
         Assertions.assertEquals(expected, actual);
     }
 
-    @Test public void ProviderAddressTransformation() throws JsonProcessingException {
+    @Test
+    void ProviderAddressTransformation() throws JsonProcessingException {
         ProviderSp providerSp = ProviderSp.builder()
                 .personUid(10000001L)
                 .addressNested(readFileData(FILE_PREFIX + "PersonAddress.json"))
@@ -195,7 +195,7 @@ public class PatientDataPostProcessingTests {
     }
 
     @Test
-    public void PatientAddressTransformationTest() throws JsonProcessingException {
+    void PatientAddressTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp perOp = PatientSp.builder()
@@ -238,7 +238,7 @@ public class PatientDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderTelephoneTransformationTest() throws JsonProcessingException {
+    void PatientProviderTelephoneTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp perOp = PatientSp.builder()
@@ -269,7 +269,7 @@ public class PatientDataPostProcessingTests {
 
 
     @Test
-    public void PatientProviderEntityDataTransformationTest() throws JsonProcessingException {
+    void PatientProviderEntityDataTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp perOp = PatientSp.builder()
@@ -294,7 +294,7 @@ public class PatientDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderEmailTransformationTest() throws JsonProcessingException {
+    void PatientProviderEmailTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp perOp = PatientSp.builder()
@@ -302,23 +302,19 @@ public class PatientDataPostProcessingTests {
                 .emailNested(readFileData(FILE_PREFIX + "PersonEmail.json"))
                 .build();
 
-        // PatientProvider Fields to be processed
-        Function<PatientReporting, List<String>> pDetailsFn = (p) -> Collections.singletonList(p.getEmail());
-
         // Process the respective field json to PatientProvider fields
         String processedData = tx.processData(perOp, PersonType.PATIENT_REPORTING);
         JsonNode payloadNode = objectMapper.readTree(processedData).get("payload");
-
-        List<String> actual = Arrays.asList(payloadNode.get("email").asText());
+        PatientReporting pf = objectMapper.treeToValue(payloadNode, PatientReporting.class);
 
         // Expected
-        List<String> expected = List.of("someone2@email.com");
+        String expected = "someone2@email.com";
         // Validate the PatientProvider field processing
-        Assertions.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, pf.getEmail());
     }
 
     @Test
-    public void PatientRaceBreakdownTransformationTest() throws JsonProcessingException {
+    void PatientRaceBreakdownTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         PatientSp perOp = PatientSp.builder()
@@ -327,7 +323,7 @@ public class PatientDataPostProcessingTests {
                 .build();
 
         // PatientProvider Fields to be processed
-        Function<PatientReporting, List<String>> pDetailsFn = (p) -> Arrays.asList(
+        Function<PatientReporting, List<String>> pDetailsFn = p -> Arrays.asList(
                 p.getRaceCalculated(),
                 p.getRaceCalcDetails(),
                 p.getRaceAll(),

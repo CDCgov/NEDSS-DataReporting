@@ -17,7 +17,6 @@ spring:
       patientReporting:
         topic-name: ${PATIENT_REPORTING:nrt_patient}
     dlq:
-      topic-name-dlq: nrt_person_dlq
       retry-suffix: _retry
       dlq-suffix: _dlt
 

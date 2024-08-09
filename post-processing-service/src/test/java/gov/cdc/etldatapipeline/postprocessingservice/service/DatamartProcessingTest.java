@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -38,19 +39,24 @@ class DatamartProcessingTest {
     @Captor
     private ArgumentCaptor<String> messageCaptor;
 
-
     private static final String FILE_PREFIX = "rawDataFiles/";
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private ProcessDatamartData datamartProcessor;
+    private AutoCloseable closeable;
 
     BiFunction<String, List<String>, Boolean> containsWords = (input, words) ->
             words.stream().allMatch(input::contains);
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
@@ -88,7 +94,8 @@ class DatamartProcessingTest {
 
     @Test
     void testDatamartProcessException() {
-        assertThrows(RuntimeException.class, () -> datamartProcessor.process(Collections.singletonList(getInvestigationResult(null))));
+        List<InvestigationResult> nullPhcResults = Collections.singletonList(getInvestigationResult(null));
+        assertThrows(RuntimeException.class, () -> datamartProcessor.process(nullPhcResults));
     }
 
     @Test

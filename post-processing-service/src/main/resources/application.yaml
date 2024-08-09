@@ -8,14 +8,20 @@ spring:
       provider: nrt_provider
       notification: nrt_notifications
       datamart: nbs_Datamart
+    dlq:
+      retry-suffix: -retry
+      dlq-suffix: -dlt
+
+    group-id: ${KAFKA_CONSUMER_APP:post-processing-reporting-consumer-app}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
     consumer:
+      max-retry: 3
       maxPollIntervalMs: 30000
       maxConcurrency: 5
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
     admin:
       auto-create: true
   application:
-    name: data-reporting-post-processing-service
+    name: post-processing-reporting-service
   datasource:
     password: ${DB_PASSWORD:-fake.fake.fake.1234}
     username: ${DB_USERNAME:-sa}

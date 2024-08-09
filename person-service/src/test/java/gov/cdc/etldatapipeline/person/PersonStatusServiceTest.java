@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-public class PersonStatusServiceTest {
+class PersonStatusServiceTest {
 
     @Test
-    public void statusTest() {
+    void statusTest() {
         PersonStatusService statusService = new PersonStatusService();
         Assertions.assertEquals(HttpStatus.OK, statusService.getHealthStatus().getStatusCode());
     }

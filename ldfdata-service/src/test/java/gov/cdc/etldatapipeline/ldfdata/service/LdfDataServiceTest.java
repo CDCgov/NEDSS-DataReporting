@@ -1,14 +1,10 @@
 package gov.cdc.etldatapipeline.ldfdata.service;
 
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.ldfdata.repository.LdfDataRepository;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfData;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfDataKey;
-import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.TestInputTopic;
-import org.apache.kafka.streams.TopologyTestDriver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -18,11 +14,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Optional;
-import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class LdfDataServiceTest {
@@ -50,7 +43,7 @@ class LdfDataServiceTest {
     }
 
     @Test
-    public void testProcessMessage() {
+    void testProcessMessage() {
         String ldfTopic = "LdfData";
         String ldfTopicOutput = "LdfDataOutput";
 
@@ -63,27 +56,47 @@ class LdfDataServiceTest {
                 "\"business_object_uid\": \"" + busObjUid + "\"}}}";
 
         final LdfData ldfData = constructLdfData(busObjNm, ldfUid, busObjUid);
-        when(ldfDataRepository.computeLdfData(eq(busObjNm), eq(String.valueOf(ldfUid)), eq(String.valueOf(busObjUid))))
+        when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
                 .thenReturn(Optional.of(ldfData));
 
         validateData(ldfTopic, ldfTopicOutput, payload, ldfData);
 
-        verify(ldfDataRepository).computeLdfData(eq(busObjNm), eq(String.valueOf(ldfUid)), eq(String.valueOf(busObjUid)));
+        verify(ldfDataRepository).computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid));
+    }
+
+    @Test
+    void testProcessMessageException() {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+        String invalidPayload = "{\"payload\": {\"after\": }}";
+
+        final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(invalidPayload, ldfTopic));
+    }
+
+    @Test
+    void testProcessMessageNoDataException() {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+
+        String busObjNm = "PHC";
+        long ldfUid = 100000001L;
+        long busObjUid = 100000010L;
+        String payload = "{\"payload\": {\"after\": {" +
+                "\"business_object_nm\": \"" + busObjNm + "\"," +
+                "\"ldf_uid\": \"" + ldfUid + "\"," +
+                "\"business_object_uid\": \"" + busObjUid + "\"}}}";
+
+        when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
+                .thenReturn(Optional.empty());
+        final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        assertThrows(NoDataException.class, () -> ldfDataService.processMessage(payload, ldfTopic));
     }
 
     private void validateData(String inputTopicName, String outputTopicName,
                               String payload, LdfData ldfData) {
-        StreamsBuilder builder = new StreamsBuilder();
-
-        final var investigationService = getInvestigationService(inputTopicName, outputTopicName);
-        investigationService.processMessage(builder);
-
-        TopologyTestDriver testDriver = new TopologyTestDriver(builder.build(), new Properties());
-        final Serde<String> serdeString = Serdes.String();
-        TestInputTopic<String, String> inputTopic = testDriver.createInputTopic(
-                inputTopicName, serdeString.serializer(), serdeString.serializer());
-        inputTopic.pipeInput("100000001", payload);
-        testDriver.close();
+        final var ldfDataService = getInvestigationService(inputTopicName, outputTopicName);
+        ldfDataService.processMessage(payload, inputTopicName);
 
         LdfDataKey ldfDataKey = new LdfDataKey();
         ldfDataKey.setLdfUid(ldfData.getLdfUid());

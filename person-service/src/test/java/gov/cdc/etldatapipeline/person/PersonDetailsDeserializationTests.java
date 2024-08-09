@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test;
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PersonDetailsDeserializationTests {
+class PersonDetailsDeserializationTests {
     private static final String FILE_PREFIX = "rawDataFiles/person/";
     UtilHelper utilHelper = UtilHelper.getInstance();
 
     @Test
-    public void testPersonAddressDeserialization() {
+    void testPersonAddressDeserialization() {
         PatientSp perOp = PatientSp.builder()
                 .personUid(10000001L)
                 .addressNested(readFileData(FILE_PREFIX + "PersonAddress.json"))
@@ -44,7 +44,7 @@ public class PersonDetailsDeserializationTests {
     }
 
     @Test
-    public void testPersonEmailDeserialization() {
+    void testPersonEmailDeserialization() {
         PatientSp perOp = PatientSp.builder()
                 .personUid(10000001L)
                 .emailNested(readFileData(FILE_PREFIX + "PersonEmail.json"))
@@ -63,7 +63,7 @@ public class PersonDetailsDeserializationTests {
     }
 
     @Test
-    public void testPersonEntityDataDeserialization() {
+    void testPersonEntityDataDeserialization() {
         PatientSp perOp = PatientSp.builder()
                 .personUid(10000001L)
                 .entityDataNested(readFileData(FILE_PREFIX + "PersonEntityData.json"))
@@ -84,7 +84,7 @@ public class PersonDetailsDeserializationTests {
     }
 
     @Test
-    public void testPersonNameDeserialization() {
+    void testPersonNameDeserialization() {
         PatientSp perOp = PatientSp.builder()
                 .personUid(10000001L)
                 .nameNested(readFileData(FILE_PREFIX + "PersonName.json"))
@@ -109,7 +109,7 @@ public class PersonDetailsDeserializationTests {
     }
 
     @Test
-    public void testPersonPhoneDeserialization() {
+    void testPersonPhoneDeserialization() {
         PatientSp perOp = PatientSp.builder()
                 .personUid(10000001L)
                 .telephoneNested(readFileData(FILE_PREFIX + "PersonTelephone.json"))
@@ -129,7 +129,7 @@ public class PersonDetailsDeserializationTests {
     }
 
     @Test
-    public void testPersonRaceDeserialization() {
+    void testPersonRaceDeserialization() {
         PatientSp perOp = PatientSp.builder()
                 .personUid(10000001L)
                 .raceNested(readFileData(FILE_PREFIX + "PersonRace.json"))

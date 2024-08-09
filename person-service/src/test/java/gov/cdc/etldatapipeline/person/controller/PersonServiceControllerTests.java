@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class PersonServiceControllerTests {
+class PersonServiceControllerTests {
 
     @Mock
     private PersonStatusService dataPipelineStatusService;
@@ -33,7 +33,7 @@ public class PersonServiceControllerTests {
     }
 
     @Test
-    public void testPostProvider() throws Exception {
+    void testPostProvider() {
         String payload = "{\"payload\": {\"after\": {\"cd\": \"PRV\"}}}";
 
         ResponseEntity<String> response = controller.postProvider(payload);
@@ -43,7 +43,7 @@ public class PersonServiceControllerTests {
     }
 
     @Test
-    public void testPostPatient() {
+    void testPostPatient() {
         String payload = "{\"payload\": {\"after\": {\"cd\": \"PAT\"}}}";
 
         ResponseEntity<String> response = controller.postPatient(payload);

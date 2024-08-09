@@ -14,14 +14,14 @@ import java.util.List;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 
-public class ProviderDataPostProcessingTests {
+class ProviderDataPostProcessingTests {
     private static final String FILE_PREFIX = "rawDataFiles/person/";
     PersonTransformers tx = new PersonTransformers();
 
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    public void consolidatedProviderTransformationTest() throws JsonProcessingException {
+    void consolidatedProviderTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         ProviderSp p = ProviderSp.builder()
@@ -86,7 +86,7 @@ public class ProviderDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderNameTransformationTest() throws JsonProcessingException {
+    void PatientProviderNameTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         ProviderSp prov = ProviderSp.builder()
@@ -115,7 +115,7 @@ public class ProviderDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderNameTransformationSet2Test() throws JsonProcessingException {
+    void PatientProviderNameTransformationSet2Test() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         ProviderSp prov = ProviderSp.builder()
@@ -144,7 +144,7 @@ public class ProviderDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderAddressTransformationTest() throws JsonProcessingException {
+    void PatientProviderAddressTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         ProviderSp prov = ProviderSp.builder()
@@ -181,7 +181,7 @@ public class ProviderDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderTelephoneTransformationTest() throws JsonProcessingException {
+    void PatientProviderTelephoneTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         ProviderSp prov = ProviderSp.builder()
@@ -208,7 +208,7 @@ public class ProviderDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderEntityDataTransformationTest() throws JsonProcessingException {
+    void PatientProviderEntityDataTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         ProviderSp prov = ProviderSp.builder()
@@ -233,7 +233,7 @@ public class ProviderDataPostProcessingTests {
     }
 
     @Test
-    public void PatientProviderEmailTransformationTest() throws JsonProcessingException {
+    void PatientProviderEmailTransformationTest() throws JsonProcessingException {
 
         // Build the PatientProvider object with the json serialized data
         ProviderSp prov = ProviderSp.builder()
