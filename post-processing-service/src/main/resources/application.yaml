@@ -9,8 +9,8 @@ spring:
       notification: nrt_notifications
       datamart: nbs_Datamart
     dlq:
-      retry-suffix: _retry
-      dlq-suffix: _dlt
+      retry-suffix: -retry
+      dlq-suffix: -dlt
 
     group-id: ${KAFKA_CONSUMER_APP:post-processing-reporting-consumer-app}
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
