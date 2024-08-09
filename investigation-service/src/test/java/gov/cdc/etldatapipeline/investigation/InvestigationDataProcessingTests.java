@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-public class InvestigationDataProcessingTests {
+class InvestigationDataProcessingTests {
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
 
@@ -115,7 +115,7 @@ public class InvestigationDataProcessingTests {
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getValue());
 
-        Function<InvestigationObservation, List<String>> oDetailsFn = (o) -> Arrays.asList(
+        Function<InvestigationObservation, List<String>> oDetailsFn = o -> Arrays.asList(
                 String.valueOf(o.getPublicHealthCaseUid()),
                 String.valueOf(o.getObservationId()));
 
@@ -152,7 +152,7 @@ public class InvestigationDataProcessingTests {
         verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(NOTIFICATIONS_TOPIC, topicCaptor.getValue());
 
-        Function<InvestigationNotifications, List<String>> nDetailsFn = (n) -> Arrays.asList(
+        Function<InvestigationNotifications, List<String>> nDetailsFn = n -> Arrays.asList(
                 String.valueOf(n.getPublicHealthCaseUid()),
                 String.valueOf(n.getSourceActUid()),
                 String.valueOf(n.getNotificationUid()),

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PersonDetailsDeserializationTests {
+class PersonDetailsDeserializationTests {
     private static final String FILE_PREFIX = "rawDataFiles/person/";
     UtilHelper utilHelper = UtilHelper.getInstance();
 

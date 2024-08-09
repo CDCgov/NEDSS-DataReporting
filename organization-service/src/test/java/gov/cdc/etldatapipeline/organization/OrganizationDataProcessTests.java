@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class OrganizationDataProcessTests {
+class OrganizationDataProcessTests {
     private final ObjectMapper objectMapper = new ObjectMapper();
     UtilHelper utilHelper = UtilHelper.getInstance();
     OrganizationSp orgSp;

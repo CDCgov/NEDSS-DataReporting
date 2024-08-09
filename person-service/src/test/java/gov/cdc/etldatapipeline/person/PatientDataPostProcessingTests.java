@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -20,7 +19,7 @@ import java.util.function.Function;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 
-public class PatientDataPostProcessingTests {
+class PatientDataPostProcessingTests {
     private static final String FILE_PREFIX = "rawDataFiles/person/";
     PersonTransformers tx = new PersonTransformers();
 
@@ -324,7 +323,7 @@ public class PatientDataPostProcessingTests {
                 .build();
 
         // PatientProvider Fields to be processed
-        Function<PatientReporting, List<String>> pDetailsFn = (p) -> Arrays.asList(
+        Function<PatientReporting, List<String>> pDetailsFn = p -> Arrays.asList(
                 p.getRaceCalculated(),
                 p.getRaceCalcDetails(),
                 p.getRaceAll(),

@@ -14,7 +14,7 @@ import java.util.List;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 
-public class ProviderDataPostProcessingTests {
+class ProviderDataPostProcessingTests {
     private static final String FILE_PREFIX = "rawDataFiles/person/";
     PersonTransformers tx = new PersonTransformers();
 

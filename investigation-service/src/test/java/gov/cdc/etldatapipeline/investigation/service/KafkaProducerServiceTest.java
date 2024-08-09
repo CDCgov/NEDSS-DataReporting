@@ -8,7 +8,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 
-public class KafkaProducerServiceTest {
+class KafkaProducerServiceTest {
 
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
