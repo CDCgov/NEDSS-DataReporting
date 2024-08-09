@@ -5,8 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Data;
 
-import java.time.Instant;
-
 @Entity
 @Data
 public class LdfData {
