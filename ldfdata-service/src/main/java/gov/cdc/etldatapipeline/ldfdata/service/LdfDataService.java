@@ -92,7 +92,6 @@ public class LdfDataService {
                 Optional<LdfData> ldfData = ldfDataRepository.computeLdfData(busObjNm, ldfUid, busObjUid);
                 if (ldfData.isPresent()) {
                     ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
-                    ldfDataKey.setBusinessObjectUid(Long.valueOf(busObjUid));
                     pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
                     return objectMapper.writeValueAsString(ldfData.get());
                 }

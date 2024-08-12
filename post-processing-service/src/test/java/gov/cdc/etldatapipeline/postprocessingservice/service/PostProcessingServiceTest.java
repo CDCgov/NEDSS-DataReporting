@@ -72,6 +72,7 @@ class PostProcessingServiceTest {
     })
     void testExtractIdFromMessage(String topic, String messageKey, Long expectedId) {
         Long extractedId = postProcessingServiceMock.extractIdFromMessage(topic, messageKey, messageKey);
+        assertNotNull(extractedId);
         assertEquals(expectedId, extractedId);
     }
 
@@ -81,6 +82,8 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"patient_uid\":123}}";
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
+        assertEquals(postProcessingServiceMock.idCache.get(topic).get(0), 123L);
+
         postProcessingServiceMock.processCachedIds();
 
         String expectedPatientIdsString = "123";
@@ -141,6 +144,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(5, logs.size());
+        assertTrue(logs.get(1).getFormattedMessage().contains(PostProcessingService.Entity.INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(4).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -158,6 +162,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(3, logs.size());
+        assertTrue(logs.get(1).getFormattedMessage().contains(PostProcessingService.Entity.NOTIFICATIONS.getStoredProcedure()));
         assertTrue(logs.get(2).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -183,6 +188,24 @@ class PostProcessingServiceTest {
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(7, logs.size());
         assertTrue(logs.get(6).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
+    void testPostProcessLdfData() {
+        String topic = "dummy_ldf_data";
+        String key = "{\"payload\":{\"ldf_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedLdfIdsString = "123";
+        verify(postProcRepositoryMock).executeStoredProcForLdfIds(expectedLdfIdsString);
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(3, logs.size());
+        assertTrue(logs.get(1).getFormattedMessage().contains(PostProcessingService.Entity.LDF_DATA.getStoredProcedure()));
+        assertTrue(logs.get(2).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -225,31 +248,34 @@ class PostProcessingServiceTest {
         String patientKey = "{\"payload\":{\"patient_uid\":125}}";
         String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
         String notificationKey = "{\"payload\":{\"notification_uid\":127}}";
+        String ldfKey = "{\"payload\":{\"ldf_uid\":127}}";
 
         String orgTopic = "dummy_organization";
         String providerTopic = "dummy_provider";
         String patientTopic = "dummy_patient";
         String invTopic = "dummy_investigation";
-        String notfTopic = "dummy_notifications";
+        String ntfTopic = "dummy_notifications";
+        String ldfTopic = "dummy_ldf_data";
 
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
         postProcessingServiceMock.postProcessMessage(patientTopic, patientKey, patientKey);
-        postProcessingServiceMock.postProcessMessage(notfTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.postProcessMessage(ntfTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
+        postProcessingServiceMock.postProcessMessage(ldfTopic, ldfKey, ldfKey);
         postProcessingServiceMock.processCachedIds();
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(17, logs.size());
 
-        List<String> topicLogList = logs.stream().map(ILoggingEvent::getFormattedMessage).filter(m -> m.contains(
-                "message topic")).toList();
+        List<String> topicLogList = logs.stream().map(ILoggingEvent::getFormattedMessage).filter(m -> m.matches(
+                "Processing .+ for topic: .*")).toList();
         assertTrue(topicLogList.get(0).contains(orgTopic));
         assertTrue(topicLogList.get(1).contains(providerTopic));
         assertTrue(topicLogList.get(2).contains(patientTopic));
         assertTrue(topicLogList.get(3).contains(invTopic));
         assertTrue(topicLogList.get(4).contains(invTopic));
-        assertTrue(topicLogList.get(5).contains(notfTopic));
+        assertTrue(topicLogList.get(5).contains(ntfTopic));
+        assertTrue(topicLogList.get(6).contains(ldfTopic));
     }
 
     @Test

@@ -7,6 +7,7 @@ spring:
       patient: nrt_patient
       provider: nrt_provider
       notification: nrt_notifications
+      ldf_data: nrt_ldf_data
       datamart: nbs_Datamart
     dlq:
       retry-suffix: -retry

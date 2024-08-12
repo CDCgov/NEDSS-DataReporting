@@ -19,4 +19,7 @@ public interface PostProcRepository extends JpaRepository<PostProcSp, Long> {
 
     @Procedure("sp_nrt_notification_postprocessing")
     void executeStoredProcForNotificationIds(@Param("notificationUids") String notificationUids);
+
+    @Procedure("sp_nrt_ldf_postprocessing")
+    void executeStoredProcForLdfIds(@Param("ldf_uids") String ldfUids);
 }

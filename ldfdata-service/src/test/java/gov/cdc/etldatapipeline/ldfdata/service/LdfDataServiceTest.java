@@ -5,6 +5,7 @@ import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.ldfdata.repository.LdfDataRepository;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfData;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfDataKey;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,11 +36,17 @@ class LdfDataServiceTest {
     @Captor
     private ArgumentCaptor<String> messageCaptor;
 
+    private AutoCloseable closeable;
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable=MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
@@ -100,7 +107,6 @@ class LdfDataServiceTest {
 
         LdfDataKey ldfDataKey = new LdfDataKey();
         ldfDataKey.setLdfUid(ldfData.getLdfUid());
-        ldfDataKey.setBusinessObjectUid(ldfData.getBusinessObjectUid());
 
         String expectedKey = jsonGenerator.generateStringJson(ldfDataKey);
         String expectedValue = jsonGenerator.generateStringJson(ldfData);
@@ -110,7 +116,6 @@ class LdfDataServiceTest {
         assertEquals(expectedKey, keyCaptor.getValue());
         assertEquals(expectedValue, messageCaptor.getValue());
         assertTrue(keyCaptor.getValue().contains(String.valueOf(ldfDataKey.getLdfUid())));
-        assertTrue(keyCaptor.getValue().contains(String.valueOf(ldfDataKey.getBusinessObjectUid())));
     }
 
     private LdfDataService getInvestigationService(String inputTopicName, String outputTopicName) {

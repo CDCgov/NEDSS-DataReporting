@@ -11,7 +11,4 @@ public class LdfDataKey {
     @NonNull
     @JsonProperty("ldf_uid")
     private Long ldfUid;
-
-    @JsonProperty("business_object_uid")
-    private Long businessObjectUid;
 }
