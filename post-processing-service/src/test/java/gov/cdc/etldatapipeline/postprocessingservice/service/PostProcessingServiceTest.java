@@ -82,7 +82,7 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"patient_uid\":123}}";
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
-        assertEquals(postProcessingServiceMock.idCache.get(topic).get(0), 123L);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).get(0));
 
         postProcessingServiceMock.processCachedIds();
 
