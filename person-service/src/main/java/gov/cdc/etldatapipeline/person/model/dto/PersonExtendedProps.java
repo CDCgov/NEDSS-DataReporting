@@ -26,7 +26,6 @@ public interface PersonExtendedProps {
     }
 
     default void setAliasNickname(String aliasNickname) {
-
     }
 
     void setStreetAddress1(String streetAddress1);
@@ -84,6 +83,8 @@ public interface PersonExtendedProps {
 
     default void setPhoneHome(String phoneHome) {
     }
+
+    default void setPhoneComments(String phoneComments) {}
 
     default void setPhoneExtHome(String phoneExtHome) {
     }

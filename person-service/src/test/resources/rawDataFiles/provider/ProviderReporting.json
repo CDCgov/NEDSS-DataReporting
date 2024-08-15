@@ -209,7 +209,7 @@
     "address_comments": "",
     "phone_work": "2323222422",
     "phone_ext_work": "232",
-    "phone_comments": null,
+    "phone_comments": "work phone comment",
     "phone_cell": "2823252423",
     "email_work": "someone2@email.com",
     "quick_code": "12314286",

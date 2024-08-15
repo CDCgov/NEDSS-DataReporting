@@ -32,7 +32,7 @@ public class PersonTransformers {
         return jsonGenerator.generateStringJson(processData(null, providerSp, personType));
     }
 
-    public <T extends PersonExtendedProps> T processData(PatientSp patientSp, ProviderSp providerSp,
+    public PersonExtendedProps processData(PatientSp patientSp, ProviderSp providerSp,
                                                          PersonType personType) {
         PersonExtendedProps transformedObj =
                 switch (personType) {
@@ -50,14 +50,14 @@ public class PersonTransformers {
             processor.processPersonEmail(patientSp.getEmailNested(), transformedObj);
             processor.processPersonRace(patientSp.getRaceNested(), transformedObj);
 
-        } else if (personType == PersonType.PROVIDER_REPORTING || personType == PersonType.PROVIDER_ELASTIC_SEARCH) {
+        } else {
             processor.processPersonName(providerSp.getNameNested(), transformedObj);
             processor.processPersonAddress(providerSp.getAddressNested(), transformedObj);
             processor.processPersonTelephone(providerSp.getTelephoneNested(), transformedObj);
             processor.processPersonEntityData(providerSp.getEntityDataNested(), transformedObj);
             processor.processPersonEmail(providerSp.getEmailNested(), transformedObj);
         }
-        return (T) transformedObj;
+        return transformedObj;
     }
 
     public PatientElasticSearch buildPatientElasticSearch(PatientSp p) {
