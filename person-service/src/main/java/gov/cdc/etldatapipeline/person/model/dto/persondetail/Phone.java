@@ -23,6 +23,8 @@ public class Phone implements ExtendPerson {
     private String cd;
     @JsonProperty("ph_tl_uid")
     private Long teleLocatorUid;
+    @JsonProperty("phone_comments")
+    private String phoneComments;
 
     public <T extends PersonExtendedProps> T updatePerson(T personFull) {
         personFull.setPhElpCd(cd);
@@ -32,6 +34,7 @@ public class Phone implements ExtendPerson {
             if (useCd.equalsIgnoreCase("WP")) {
                 personFull.setPhoneWork(telephoneNbr);
                 personFull.setPhoneExtWork(extensionTxt);
+                personFull.setPhoneComments(phoneComments);
             } else if (useCd.equalsIgnoreCase("H")) {
                 personFull.setPhoneHome(telephoneNbr);
                 personFull.setPhoneExtHome(extensionTxt);

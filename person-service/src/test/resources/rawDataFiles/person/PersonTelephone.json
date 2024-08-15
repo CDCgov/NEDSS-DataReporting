@@ -18,14 +18,16 @@
     "extensionTxt": "231",
     "ph_elp_use_cd": "WP",
     "ph_elp_cd": "PH",
-    "ph_tl_uid": 10000011
+    "ph_tl_uid": 10000011,
+    "phone_comments": "work phone comment ignored"
   },
   {
     "telephoneNbr": "2323222422",
     "extensionTxt": "232",
     "ph_elp_use_cd": "WP",
     "ph_elp_cd": "PH",
-    "ph_tl_uid": 10000012
+    "ph_tl_uid": 10000012,
+    "phone_comments": "work phone comment"
   },
   {
     "telephoneNbr": "2323252421",
