@@ -23,7 +23,6 @@ public class Phone implements ExtendPerson {
     private String cd;
     @JsonProperty("ph_tl_uid")
     private Long teleLocatorUid;
-    @JsonProperty("phone_comments")
     private String phoneComments;
 
     public <T extends PersonExtendedProps> T updatePerson(T personFull) {
