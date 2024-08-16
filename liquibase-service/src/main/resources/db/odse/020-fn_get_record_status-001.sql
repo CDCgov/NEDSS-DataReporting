@@ -6,8 +6,9 @@ begin
 	-- Other than LOG_DEL rest of them are all ACTIVE
 select  @record_status_cd =
         case
-            when @record_status_cd = 'LOG_DEL' then  'INACTIVE'
-            when @record_status_cd = 'SUPERCEDED' then  'INACTIVE'
+            when @record_status_cd = 'LOG_DEL' then 'INACTIVE'
+            when @record_status_cd = 'SUPERCEDED' then 'INACTIVE'
+            when @record_status_cd = 'INACTIVE' then 'INACTIVE'
             else 'ACTIVE'
             end
             RETURN @record_status_cd
