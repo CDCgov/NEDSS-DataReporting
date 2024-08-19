@@ -50,7 +50,7 @@ public class PostProcessingService {
     private final ProcessDatamartData datamartProcessor;
 
     static final String PAYLOAD = "payload";
-    static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed";
+    static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
@@ -109,6 +109,7 @@ public class PostProcessingService {
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload String payload) {
         Long id = extractIdFromMessage(topic, key, payload);
+        logger.info("Adding id to cache: {} for topic: {}", id, topic);
         if (id != null) {
             idCache.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(id);
         }
@@ -171,7 +172,10 @@ public class PostProcessingService {
                 List<Long> ids = entry.getValue();
                 idCache.put(keyTopic, new ArrayList<>());
 
+                logger.info("Processing {} ids from topic: {}", ids.size(), keyTopic);
+
                 Entity entity = getEntityByTopic(keyTopic);
+                logger.info("{} data is about to be processed...", entity.getName());
                 switch (entity) {
                     case ORGANIZATION:
                         processTopic(keyTopic, entity, ids,
@@ -231,10 +235,10 @@ public class PostProcessingService {
                     String patients =
                             dmSet.stream().flatMap(m -> m.values().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
-                    logger.info("Processing {} message topic. Calling stored proc: {}('{}','{}')", dmType,
+                    logger.info("Processing {} message topic. Calling stored proc: {} '{}','{}'", dmType,
                             "sp_hepatitis_datamart_postprocessing", cases, patients);
                     investigationRepository.executeStoredProcForHepDatamart(cases, patients);
-                    completeLog();
+                    completeLog("sp_hepatitis_datamart_postprocessing");
                 }
             } else {
                 logger.info("No data to process from the datamart topics.");
@@ -281,14 +285,14 @@ public class PostProcessingService {
     private void processTopic(String keyTopic, Entity entity, List<Long> ids, Consumer<String> repositoryMethod) {
         String idsString = prepareAndLog(keyTopic, entity, ids);
         repositoryMethod.accept(idsString);
-        completeLog();
+        completeLog(entity.getStoredProcedure());
     }
 
     private <T> List<T> processTopic(String keyTopic, Entity entity, List<Long> ids,
                                      Function<String, List<T>> repositoryMethod) {
         String idsString = prepareAndLog(keyTopic, entity, ids);
         List<T> result = repositoryMethod.apply(idsString);
-        completeLog();
+        completeLog(entity.getStoredProcedure());
         return result;
     }
 
@@ -296,7 +300,7 @@ public class PostProcessingService {
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", StringUtils.capitalize(entity.getName()), keyTopic,
                 entity.getStoredProcedure(), id, vals);
         repositoryMethod.accept(id, vals);
-        completeLog();
+        completeLog(entity.getStoredProcedure());
     }
 
     private String prepareAndLog(String keyTopic, Entity entity, List<Long> ids) {
@@ -306,7 +310,7 @@ public class PostProcessingService {
         return idsString;
     }
 
-    private void completeLog() {
-        logger.info(SP_EXECUTION_COMPLETED);
+    private void completeLog(String sp) {
+        logger.info(SP_EXECUTION_COMPLETED, sp);
     }
 }
