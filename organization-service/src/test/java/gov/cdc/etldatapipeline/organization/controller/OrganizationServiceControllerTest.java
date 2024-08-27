@@ -9,9 +9,10 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.util.StringUtils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +30,7 @@ class OrganizationServiceControllerTest {
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
+        final var autoCloseable = MockitoAnnotations.openMocks(this);
         controller = new OrganizationServiceController(dataPipelineStatusService, mockKafkaTemplate);
     }
 
@@ -54,5 +55,16 @@ class OrganizationServiceControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(responseBody, response.getBody());
+    }
+
+    @Test
+    void testPostError() {
+        final String responseError = "Server ERROR";
+
+        when(mockKafkaTemplate.send(anyString(), anyString(), anyString())).thenThrow(new RuntimeException(responseError));
+        ResponseEntity<String> response = controller.postOrganization("{}");
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertTrue(response.getBody().contains(responseError));
     }
 }

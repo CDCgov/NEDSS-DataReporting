@@ -2,11 +2,12 @@ package gov.cdc.etldatapipeline.organization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationElasticSearch;
+import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationKey;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationReporting;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.model.dto.orgdetails.*;
-import gov.cdc.etldatapipeline.organization.transformer.DataPostProcessor;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationType;
 import gov.cdc.etldatapipeline.organization.utils.UtilHelper;
@@ -21,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class OrganizationDataProcessTests {
     private final ObjectMapper objectMapper = new ObjectMapper();
     UtilHelper utilHelper = UtilHelper.getInstance();
-    DataPostProcessor processor = new DataPostProcessor();
     OrganizationSp orgSp;
 
     @BeforeEach
@@ -30,7 +30,7 @@ class OrganizationDataProcessTests {
     }
 
     @Test
-    void OrganizationNameProcessTest() {
+    void testOrganizationNameProcess() {
         Name[] name = utilHelper.deserializePayload(orgSp.getOrganizationName(), Name[].class);
         Name expected = Name.builder()
                 .onOrgUid(10036000L)
@@ -41,7 +41,7 @@ class OrganizationDataProcessTests {
     }
 
     @Test
-    void OrganizationAddressProcessTest() {
+    void testOrganizationAddressProcess() {
         Address[] addr = utilHelper.deserializePayload(orgSp.getOrganizationAddress(), Address[].class);
         Address expected = Address.builder()
                 .addrElpCd("O")
@@ -63,7 +63,7 @@ class OrganizationDataProcessTests {
     }
 
     @Test
-    void OrganizationPhoneProcessTest() {
+    void testOrganizationPhoneProcess() {
         Phone[] phn = utilHelper.deserializePayload(orgSp.getOrganizationTelephone(), Phone[].class);
         Phone expected = Phone.builder()
                 .phTlUid(10615102L)
@@ -80,7 +80,7 @@ class OrganizationDataProcessTests {
     }
 
     @Test
-    void OrganizationEntityProcessTest() {
+    void testOrganizationEntityProcess() {
         Entity[] ets = utilHelper.deserializePayload(orgSp.getOrganizationEntityId(), Entity[].class);
         Entity expected = Entity.builder()
                 .entityUid(10036000L)
@@ -96,7 +96,7 @@ class OrganizationDataProcessTests {
     }
 
     @Test
-    void OrganizationFaxProcessTest() {
+    void testOrganizationFaxProcess() {
         Fax[] fax = utilHelper.deserializePayload(orgSp.getOrganizationFax(), Fax[].class);
         Fax expected = Fax.builder()
                 .faxTlUid(1002L)
@@ -111,11 +111,10 @@ class OrganizationDataProcessTests {
 
     @ParameterizedTest
     @EnumSource(OrganizationType.class)
-    void OrganizationReportingProcessTest(OrganizationType type) throws Exception {
+    void testOrganizationReportingProcess(OrganizationType type) throws Exception {
         OrganizationTransformers transformer = new OrganizationTransformers();
         Object actual = transformer.buildTransformedObject(orgSp, type);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         Object expected =
                 switch (type) {
                     case ORGANIZATION_REPORTING ->
@@ -130,5 +129,26 @@ class OrganizationDataProcessTests {
                 };
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testOrganizationKeySerialization() throws Exception {
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        OrganizationKey organizationKey = OrganizationKey.builder().organizationUid(12345L).build();
+
+        String jsonResult = objectMapper.writeValueAsString(organizationKey);
+        String expectedJson = "{\"organization_uid\":12345}";
+
+        assertEquals(expectedJson, jsonResult);
+    }
+
+    @Test
+    public void testOrganizationKeyDeserialization() throws Exception {
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        String jsonInput = "{\"organization_uid\":12345}";
+
+        OrganizationKey organizationKey = objectMapper.readValue(jsonInput, OrganizationKey.class);
+
+        assertEquals(12345L, organizationKey.getOrganizationUid());
     }
 }
