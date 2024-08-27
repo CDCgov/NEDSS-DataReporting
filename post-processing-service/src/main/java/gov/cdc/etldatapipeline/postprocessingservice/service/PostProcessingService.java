@@ -109,7 +109,6 @@ public class PostProcessingService {
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload String payload) {
         Long id = extractIdFromMessage(topic, key, payload);
-        logger.info("Adding id to cache: {} for topic: {}", id, topic);
         if (id != null) {
             idCache.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(id);
         }
@@ -172,10 +171,9 @@ public class PostProcessingService {
                 List<Long> ids = entry.getValue();
                 idCache.put(keyTopic, new ArrayList<>());
 
-                logger.info("Processing {} ids from topic: {}", ids.size(), keyTopic);
+                logger.info("Processing {} id(s) from topic: {}", ids.size(), keyTopic);
 
                 Entity entity = getEntityByTopic(keyTopic);
-                logger.info("{} data is about to be processed...", entity.getName());
                 switch (entity) {
                     case ORGANIZATION:
                         processTopic(keyTopic, entity, ids,
@@ -277,7 +275,7 @@ public class PostProcessingService {
     private Entity getEntityByTopic(String topic) {
         return Arrays.stream(Entity.values())
                 .filter(entity -> entity.getPriority() > 0)
-                .filter(entity -> topic.contains(entity.getName()))
+                .filter(entity -> topic.endsWith(entity.getName()))
                 .findFirst()
                 .orElse(Entity.UNKNOWN);
     }
