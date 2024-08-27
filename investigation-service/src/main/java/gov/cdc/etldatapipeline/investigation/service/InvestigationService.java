@@ -45,6 +45,9 @@ public class InvestigationService {
     @Value("${spring.kafka.output.topic-name-reporting}")
     public String investigationTopicReporting;
 
+    @Value("${service.phc-datamart-enable}")
+    public boolean phcDatamartEnable;
+
     private final InvestigationRepository investigationRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessInvestigationDataUtil processDataUtil;
@@ -90,7 +93,9 @@ public class InvestigationService {
                 publicHealthCaseUid = payloadNode.get("public_health_case_uid").asText();
                 investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
 
-                processPhcFactDatamart(publicHealthCaseUid);
+                if (phcDatamartEnable) {
+                    processPhcFactDatamart(publicHealthCaseUid);
+                }
 
                 logger.debug(topicDebugLog, publicHealthCaseUid, investigationTopic);
                 Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
