@@ -29,7 +29,6 @@ public class OrganizationServiceController {
         return this.organizationStatusService.getHealthStatus();
     }
 
-
     @PostMapping(value = "/reporting/organization-svc/produce")
     @ResponseBody
     public ResponseEntity<String> postOrganization(@RequestBody String payLoad) {
@@ -42,5 +41,4 @@ public class OrganizationServiceController {
                     .body("Error processing the Organization data. Exception: " + ex.getMessage());
         }
     }
-
 }

@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
-@Data
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OrganizationKey {

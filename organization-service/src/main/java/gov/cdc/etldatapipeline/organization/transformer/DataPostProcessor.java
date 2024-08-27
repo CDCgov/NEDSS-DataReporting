@@ -21,7 +21,6 @@ public class DataPostProcessor {
                     .filter(oName -> !ObjectUtils.isEmpty(oName.getOnOrgUid()))
                     .max(Comparator.comparing(Name::getOnOrgUid))
                     .map(n -> n.updateOrg(org));
-
         }
     }
 

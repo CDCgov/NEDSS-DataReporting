@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-
 @Service
 @Setter
 @Slf4j
@@ -75,7 +74,7 @@ public class OrganizationService {
             ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
             JsonNode jsonNode = objectMapper.readTree(message);
             JsonNode payloadNode = jsonNode.get("payload").path("after");
-            if (payloadNode != null && payloadNode.has("organization_uid")) {
+            if (!payloadNode.isMissingNode() && payloadNode.has("organization_uid")) {
                 String organizationUid = payloadNode.get("organization_uid").asText();
                 log.info("Received OrganizationUid: {} from topic: {}", organizationUid, topic);
                 Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);

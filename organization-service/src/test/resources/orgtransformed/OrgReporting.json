@@ -170,6 +170,8 @@
     "quick_code": "AUTCHD",
     "facility_id": "A4646",
     "facility_id_auth": "OTH",
+    "street_address_1": "219 North Court Street",
+    "street_address_2": "Unit#1",
     "city": "Prattville",
     "state": "Alabama",
     "state_code": "01",
@@ -188,8 +190,6 @@
     "add_time": "2004-07-22 10:48:53.343",
     "last_chg_user_id": 10180119,
     "last_chg_user_name": "ZRY4SFCLNAIUPX, CRPVQBYEAZNDJS6H",
-    "last_chg_time": "2024-04-05 18:55:54.177",
-    "street_address_1": "219 North Court Street",
-    "street_address_2": "Unit#1"
+    "last_chg_time": "2024-04-05 18:55:54.177"
   }
 }

@@ -16,6 +16,10 @@ public class OrganizationTransformers {
     }
 
     public String processData(OrganizationSp organizationSp, OrganizationType organizationType) {
+        return jsonGenerator.generateStringJson(buildTransformedObject(organizationSp, organizationType));
+    }
+
+    public Object buildTransformedObject(OrganizationSp organizationSp, OrganizationType organizationType) {
         Object transformedObj =
                 switch (organizationType) {
                     case ORGANIZATION_REPORTING -> buildOrganizationReporting(organizationSp);
@@ -27,7 +31,7 @@ public class OrganizationTransformers {
         processor.processOrgFax(organizationSp.getOrganizationFax(), transformedObj);
         processor.processOrgEntity(organizationSp.getOrganizationEntityId(), transformedObj);
         processor.processOrgName(organizationSp.getOrganizationName(), transformedObj);
-        return jsonGenerator.generateStringJson(transformedObj);
+        return transformedObj;
     }
 
     public OrganizationElasticSearch buildOrganizationElasticSearch(OrganizationSp orgSp) {

@@ -2,11 +2,18 @@ package gov.cdc.etldatapipeline.organization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationElasticSearch;
+import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationReporting;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.model.dto.orgdetails.*;
+import gov.cdc.etldatapipeline.organization.transformer.DataPostProcessor;
+import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
+import gov.cdc.etldatapipeline.organization.transformer.OrganizationType;
 import gov.cdc.etldatapipeline.organization.utils.UtilHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class OrganizationDataProcessTests {
     private final ObjectMapper objectMapper = new ObjectMapper();
     UtilHelper utilHelper = UtilHelper.getInstance();
+    DataPostProcessor processor = new DataPostProcessor();
     OrganizationSp orgSp;
 
     @BeforeEach
@@ -99,5 +107,28 @@ class OrganizationDataProcessTests {
 
         assertEquals(2, fax.length);
         assertEquals(expected.toString(), fax[0].toString());
+    }
+
+    @ParameterizedTest
+    @EnumSource(OrganizationType.class)
+    void OrganizationReportingProcessTest(OrganizationType type) throws Exception {
+        OrganizationTransformers transformer = new OrganizationTransformers();
+        Object actual = transformer.buildTransformedObject(orgSp, type);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        Object expected =
+                switch (type) {
+                    case ORGANIZATION_REPORTING ->
+                            utilHelper.deserializePayload(
+                            objectMapper.readTree(
+                                    readFileData("orgtransformed/OrgReporting.json")).path("payload").toString(),
+                            OrganizationReporting.class);
+                    case ORGANIZATION_ELASTIC_SEARCH -> utilHelper.deserializePayload(
+                            objectMapper.readTree(
+                                    readFileData("orgtransformed/OrgElastic.json")).path("payload").toString(),
+                            OrganizationElasticSearch.class);
+                };
+
+        assertEquals(expected, actual);
     }
 }
