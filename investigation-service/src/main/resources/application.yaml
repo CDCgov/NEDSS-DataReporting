@@ -38,5 +38,7 @@ logging:
   file:
     name: InvestigationService.log
     path: ${DA_LOG_PATH:logs}
+service:
+  phc-datamart-enable: ${PHC_DM_ENABLE:false}
 server:
   port: '8093'

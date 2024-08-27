@@ -1,10 +1,13 @@
-CREATE   PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max)
+CREATE OR ALTER PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max)
 AS
 BEGIN
 
     BEGIN TRY
 
         DECLARE @batch_id BIGINT;
+
+        /*NBS case answer section
+         * TODO: Bring in null rows*/
 
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
@@ -179,10 +182,11 @@ BEGIN
                results.coinfection_id,
                results.contact_inv_txt,
                pac.prog_area_desc_txt              program_area_description,
-               notification.local_id               notification_local_id,
-               notification.add_time               notification_add_time,
-               notification.record_status_cd       notification_record_status_cd,
-               notification.last_chg_time          notification_last_chg_time,
+               notification.notification_uid,
+               notification.notification_local_id,
+               notification.notification_add_time,
+               notification.notification_record_status_cd,
+               notification.notification_last_chg_time,
                cm.case_management_uid,
                investigation_act_entity.nac_page_case_uid,
                investigation_act_entity.nac_last_chg_time,
@@ -564,8 +568,19 @@ BEGIN
               WHERE
                   phc.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list
                       , ','))) AS results
-                 JOIN act_relationship act_rel WITH (NOLOCK) on act_rel.target_act_uid = results.public_health_case_uid AND act_rel.target_class_cd = 'CASE'
-                 JOIN notification WITH (NOLOCK) on  act_rel.source_act_uid = notification.notification_uid  AND act_rel.source_class_cd = 'NOTF'
+                 LEFT JOIN
+             (SELECT DISTINCT act_rel.target_act_uid,
+                              notification.notification_uid,
+                              notification.local_id               notification_local_id,
+                              notification.add_time               notification_add_time,
+                              notification.record_status_cd       notification_record_status_cd,
+                              notification.last_chg_time          notification_last_chg_time
+              from act_relationship act_rel WITH (NOLOCK)
+                       INNER JOIN notification WITH (NOLOCK) on  act_rel.source_act_uid = notification.notification_uid  AND act_rel.source_class_cd = 'NOTF'
+              where act_rel.target_class_cd = 'CASE'
+              group by target_act_uid,notification_uid, local_id, notification.add_time, notification.record_status_cd,notification.last_chg_time
+             ) as notification
+             on notification.target_act_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.jurisdiction_code jc WITH (NOLOCK) ON results.jurisdiction_cd = jc.code
                  LEFT JOIN act WITH (NOLOCK) ON act.act_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.program_area_code pac WITH (NOLOCK) on results.prog_area_cd = pac.prog_area_cd

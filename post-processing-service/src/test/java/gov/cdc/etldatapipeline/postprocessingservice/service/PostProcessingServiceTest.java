@@ -91,8 +91,8 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
-        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -108,8 +108,8 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
-        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -125,8 +125,8 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
-        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -143,9 +143,9 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(8, logs.size());
-        assertTrue(logs.get(4).getFormattedMessage().contains(PostProcessingService.Entity.INVESTIGATION.getStoredProcedure()));
-        assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(6, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.INVESTIGATION.getStoredProcedure()));
+        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -161,9 +161,9 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
-        assertTrue(logs.get(4).getFormattedMessage().contains(PostProcessingService.Entity.NOTIFICATION.getStoredProcedure()));
-        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.NOTIFICATION.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -186,8 +186,8 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
-        assertTrue(logs.get(9).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(8, logs.size());
+        assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -203,9 +203,9 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
-        assertTrue(logs.get(4).getFormattedMessage().contains(PostProcessingService.Entity.LDF_DATA.getStoredProcedure()));
-        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.LDF_DATA.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -338,7 +338,7 @@ class PostProcessingServiceTest {
 
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(8, logs.size());
+        assertEquals(6, logs.size());
     }
 
     @Test
