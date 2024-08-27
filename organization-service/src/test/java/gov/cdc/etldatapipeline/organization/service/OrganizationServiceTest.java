@@ -11,6 +11,7 @@ import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +46,7 @@ class OrganizationServiceTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+    private AutoCloseable closeable;
 
     private final String orgTopic = "OrgUpdate";
     private final String orgReportingTopic = "OrgReporting";
@@ -52,7 +54,7 @@ class OrganizationServiceTest {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         OrganizationTransformers transformer = new OrganizationTransformers();
         organizationService = new OrganizationService(orgRepository, transformer, kafkaTemplate);
         organizationService.setOrgReportingOutputTopic(orgReportingTopic);
@@ -63,12 +65,19 @@ class OrganizationServiceTest {
         logger.addAppender(listAppender);
     }
 
+    @AfterEach
+    public void tearDown() throws Exception {
+        Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
+        logger.detachAppender(listAppender);
+        closeable.close();
+    }
+
     @Test
     void testProcessMessage() throws Exception {
         OrganizationSp orgSp = objectMapper.readValue(readFileData("orgcdc/orgSp.json"), OrganizationSp.class);
         when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
 
-        validateDataTransformation("orgcdc/OrgChangeData.json");
+        validateDataTransformation();
     }
 
     @ParameterizedTest
@@ -76,7 +85,7 @@ class OrganizationServiceTest {
             "{\"payload\": {}}",
             "{\"payload\": {\"after\": {}}}"
     })
-    void testProcessMessageNoData(String payload) throws Exception {
+    void testProcessMessageNoData(String payload) {
         organizationService.processMessage(payload, orgTopic);
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(0).getFormattedMessage().contains("Incoming data doesn't contain payload"));
@@ -96,8 +105,8 @@ class OrganizationServiceTest {
         assertThrows(NoDataException.class, () -> organizationService.processMessage(payload, orgReportingTopic));
     }
 
-    private void validateDataTransformation(String changeDataFilePath) throws JsonProcessingException {
-        String changeData = readFileData(changeDataFilePath);
+    private void validateDataTransformation() throws JsonProcessingException {
+        String changeData = readFileData("orgcdc/OrgChangeData.json");
         String expectedKey = readFileData("orgtransformed/OrgKey.json");
 
         organizationService.processMessage(changeData, orgTopic);
@@ -118,5 +127,4 @@ class OrganizationServiceTest {
         assertEquals(orgReportingTopic, actualReportingTopic);
         assertEquals(orgElasticTopic, actualElasticTopic);
     }
-
 }

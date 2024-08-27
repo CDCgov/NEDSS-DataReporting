@@ -1,6 +1,7 @@
 package gov.cdc.etldatapipeline.organization.controller;
 
 import gov.cdc.etldatapipeline.organization.service.OrganizationStatusService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -9,7 +10,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.util.StringUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -27,11 +27,17 @@ class OrganizationServiceControllerTest {
     @InjectMocks
     private OrganizationServiceController controller;
 
+    private AutoCloseable closeable;
 
     @BeforeEach
     public void setup() {
-        final var autoCloseable = MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         controller = new OrganizationServiceController(dataPipelineStatusService, mockKafkaTemplate);
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
