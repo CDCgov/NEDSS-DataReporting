@@ -24,13 +24,11 @@ public class OrganizationServiceController {
     }
 
     @GetMapping("/reporting/organization-svc/status")
-    @ResponseBody
     public ResponseEntity<String> getDataPipelineStatusHealth() {
         return this.organizationStatusService.getHealthStatus();
     }
 
     @PostMapping(value = "/reporting/organization-svc/produce")
-    @ResponseBody
     public ResponseEntity<String> postOrganization(@RequestBody String payLoad) {
         try {
             kafkaTemplate.send(orgTopicName,

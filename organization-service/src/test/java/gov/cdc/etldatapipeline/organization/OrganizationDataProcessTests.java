@@ -132,7 +132,7 @@ class OrganizationDataProcessTests {
     }
 
     @Test
-    public void testOrganizationKeySerialization() throws Exception {
+    void testOrganizationKeySerialization() throws Exception {
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         OrganizationKey organizationKey = OrganizationKey.builder().organizationUid(12345L).build();
 
@@ -143,7 +143,7 @@ class OrganizationDataProcessTests {
     }
 
     @Test
-    public void testOrganizationKeyDeserialization() throws Exception {
+    void testOrganizationKeyDeserialization() throws Exception {
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         String jsonInput = "{\"organization_uid\":12345}";
 

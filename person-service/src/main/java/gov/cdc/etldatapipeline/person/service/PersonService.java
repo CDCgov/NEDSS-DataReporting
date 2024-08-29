@@ -39,11 +39,8 @@ public class PersonService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @Value("${spring.kafka.input.topic-name}")
-    private String personTopicName;
-
     @Value("${spring.kafka.output.patientElastic.topic-name}")
-    private String patientElasticSearchTopicName;
+    private String patientElasticSearchOutputTopic;
 
     @Value("${spring.kafka.output.patientReporting.topic-name}")
     private String patientReportingOutputTopic;
@@ -83,44 +80,22 @@ public class PersonService {
     )
     public void processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-
         try {
             ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
             JsonNode jsonNode = objectMapper.readTree(message);
             JsonNode payloadNode = jsonNode.get("payload").path("after");
-            if (payloadNode != null && payloadNode.has("person_uid")) {
+            if (!payloadNode.isMissingNode() && payloadNode.has("person_uid")) {
                 String personUid = payloadNode.get("person_uid").asText();
                 String cd = payloadNode.get("cd").asText();
                 log.info("Received PersonUid: {} from topic: {}", personUid, topic);
                 List<PatientSp> personDataFromStoredProc = patientRepository.computePatients(personUid);
-
-                personDataFromStoredProc.forEach(personData -> {
-                    String reportingKey = transformer.buildPatientKey(personData);
-                    String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
-                    kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
-                    log.info("Patient Reporting: {}", reportingData != null ? reportingData : "");
-
-                    String elasticKey = transformer.buildPatientKey(personData);
-                    String elasticData = transformer.processData(personData, PersonType.PATIENT_ELASTIC_SEARCH);
-                    kafkaTemplate.send(patientElasticSearchTopicName, elasticKey, elasticData);
-                    log.info("Patient Elastic: {}", elasticData != null ? elasticData : "");
-                });
+                processPatientData(personDataFromStoredProc);
 
                 List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
                 if (cd != null && cd.equalsIgnoreCase("PRV")) {
                     providerDataFromStoredProc = providerRepository.computeProviders(personUid);
 
-                    providerDataFromStoredProc.forEach(provider -> {
-                        String reportingKey = transformer.buildProviderKey(provider);
-                        String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
-                        kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
-                        log.info("Provider Reporting: {}", reportingData);
-
-                        String elasticKey = transformer.buildProviderKey(provider);
-                        String elasticData = transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
-                        kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
-                        log.info("Provider Elastic: {}", elasticData != null ? elasticData : "");
-                    });
+                    processProviderData(providerDataFromStoredProc);
                 } else {
                     log.debug("There is no provider to process in the incoming data.");
                 }
@@ -138,5 +113,33 @@ public class PersonService {
             log.error("Error processing person message: {}", e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    private void processProviderData(List<ProviderSp> providerDataFromStoredProc) {
+        providerDataFromStoredProc.forEach(provider -> {
+            String reportingKey = transformer.buildProviderKey(provider);
+            String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
+            kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
+            log.info("Provider Reporting: {}", reportingData);
+
+            String elasticKey = transformer.buildProviderKey(provider);
+            String elasticData = transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
+            kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
+            log.info("Provider Elastic: {}", elasticData != null ? elasticData : "");
+        });
+    }
+
+    private void processPatientData(List<PatientSp> personDataFromStoredProc) {
+        personDataFromStoredProc.forEach(personData -> {
+            String reportingKey = transformer.buildPatientKey(personData);
+            String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
+            kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
+            log.info("Patient Reporting: {}", reportingData != null ? reportingData : "");
+
+            String elasticKey = transformer.buildPatientKey(personData);
+            String elasticData = transformer.processData(personData, PersonType.PATIENT_ELASTIC_SEARCH);
+            kafkaTemplate.send(patientElasticSearchOutputTopic, elasticKey, elasticData);
+            log.info("Patient Elastic: {}", elasticData != null ? elasticData : "");
+        });
     }
 }

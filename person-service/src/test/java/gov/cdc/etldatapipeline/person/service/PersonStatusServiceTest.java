@@ -1,6 +1,5 @@
-package gov.cdc.etldatapipeline.person;
+package gov.cdc.etldatapipeline.person.service;
 
-import gov.cdc.etldatapipeline.person.service.PersonStatusService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
