@@ -3,14 +3,14 @@
     "public_health_case_uid": 234567890,
     "confirmation_method_cd": "LD",
     "confirmation_method_desc_txt": "Laboratory confirmed",
-    "confirmation_method_time": null,
+    "confirmation_method_time": "2024-01-15T10:20:57.001",
     "phc_last_chg_time": "2024-01-15T10:20:57.647"
   },
   {
     "public_health_case_uid": 234567890,
     "confirmation_method_cd": "LR",
     "confirmation_method_desc_txt": "Laboratory report",
-    "confirmation_method_time": null,
+    "confirmation_method_time": "2024-01-15T10:20:57.001",
     "phc_last_chg_time": "2024-01-15T10:20:57.647"
   }
 ]

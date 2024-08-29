@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -46,6 +47,8 @@ class InvestigationDataProcessingTests {
     @Captor
     private ArgumentCaptor<String> messageCaptor;
 
+    private AutoCloseable closeable;
+
     private static final String FILE_PREFIX = "rawDataFiles/";
     private static final String CONFIRMATION_TOPIC = "confirmationTopic";
     private static final String OBSERVATION_TOPIC = "observationTopic";
@@ -59,8 +62,13 @@ class InvestigationDataProcessingTests {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
@@ -79,7 +87,7 @@ class InvestigationDataProcessingTests {
         confirmationMethod.setPublicHealthCaseUid(investigationUid);
         confirmationMethod.setConfirmationMethodCd("LD");
         confirmationMethod.setConfirmationMethodDescTxt("Laboratory confirmed");
-        confirmationMethod.setConfirmationMethodTime("2024-01-15T10:20:57.647");
+        confirmationMethod.setConfirmationMethodTime("2024-01-15T10:20:57.001");
 
         transformer.transformInvestigationData(investigation);
         verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());

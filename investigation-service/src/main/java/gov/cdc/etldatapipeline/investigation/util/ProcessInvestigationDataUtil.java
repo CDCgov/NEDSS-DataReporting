@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.investigation.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
@@ -13,8 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,10 +55,10 @@ public class ProcessInvestigationDataUtil {
 
     public void processNotifications(String investigationNotifications, ObjectMapper objectMapper) {
         try {
-            JsonNode investigationNotificationsJsonArray = investigationNotifications != null ? objectMapper.readTree(investigationNotifications) : null;
+            JsonNode investigationNotificationsJsonArray = parseJsonArray(investigationNotifications, objectMapper);
             InvestigationNotificationsKey investigationNotificationsKey = new InvestigationNotificationsKey();
 
-            if (investigationNotificationsJsonArray != null && investigationNotificationsJsonArray.isArray()) {
+            if (investigationNotificationsJsonArray != null) {
                 for (JsonNode node : investigationNotificationsJsonArray) {
                     Long notificationUid = node.get("notification_uid").asLong();
                     investigationNotificationsKey.setNotificationUid(notificationUid);
@@ -80,25 +79,25 @@ public class ProcessInvestigationDataUtil {
         }
     }
 
-
     private void transformPersonParticipations(String personParticipations, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
         try {
-            JsonNode personParticipationsJsonArray = personParticipations != null ? objectMapper.readTree(personParticipations) : null;
+            JsonNode personParticipationsJsonArray = parseJsonArray(personParticipations, objectMapper);
 
-            if(personParticipationsJsonArray != null && personParticipationsJsonArray.isArray()) {
-                for(JsonNode node : personParticipationsJsonArray) {
+            if (personParticipationsJsonArray != null) {
+                for (JsonNode node : personParticipationsJsonArray) {
                     String typeCode = node.get("type_cd").asText();
                     String subjectClassCode = node.get("subject_class_cd").asText();
                     String personCode = node.get("person_cd").asText();
+                    Long entityId = node.get("entity_id").asLong();
 
-                    if(typeCode.equals("InvestgrOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
-                        investigationTransformed.setInvestigatorId(node.get("entity_id").asLong());
+                    if (typeCode.equals("InvestgrOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
+                        investigationTransformed.setInvestigatorId(entityId);
                     }
-                    if(typeCode.equals("PhysicianOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
-                        investigationTransformed.setPhysicianId(node.get("entity_id").asLong());
+                    if (typeCode.equals("PhysicianOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
+                        investigationTransformed.setPhysicianId(entityId);
                     }
-                    if(typeCode.equals("SubjOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PAT")) {
-                        investigationTransformed.setPatientId(node.get("entity_id").asLong());
+                    if (typeCode.equals("SubjOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PAT")) {
+                        investigationTransformed.setPatientId(entityId);
                     }
                 }
             }
@@ -112,9 +111,9 @@ public class ProcessInvestigationDataUtil {
 
     private void transformOrganizationParticipations(String organizationParticipations, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
         try {
-            JsonNode organizationParticipationsJsonArray = organizationParticipations != null ? objectMapper.readTree(organizationParticipations) : null;
+            JsonNode organizationParticipationsJsonArray = parseJsonArray(organizationParticipations, objectMapper);
 
-            if(organizationParticipationsJsonArray != null && organizationParticipationsJsonArray.isArray()) {
+            if(organizationParticipationsJsonArray != null) {
                 for(JsonNode node : organizationParticipationsJsonArray) {
                     String typeCode = node.get("type_cd").asText();
                     String subjectClassCode = node.get("subject_class_cd").asText();
@@ -134,21 +133,22 @@ public class ProcessInvestigationDataUtil {
 
     private void transformActIds(String actIds, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
         try {
-            JsonNode actIdsJsonArray = actIds != null ? objectMapper.readTree(actIds) : null;
+            JsonNode actIdsJsonArray = parseJsonArray(actIds, objectMapper);
 
-            if(actIdsJsonArray != null && actIdsJsonArray.isArray()) {
+            if(actIdsJsonArray != null) {
                 for(JsonNode node : actIdsJsonArray) {
                     int actIdSeq = node.get("act_id_seq").asInt();
                     String typeCode = node.get("type_cd").asText();
+                    String rootExtension = node.get("root_extension_txt").asText();
 
                     if(typeCode.equals("STATE") && actIdSeq == 1) {
-                        investigationTransformed.setInvStateCaseId(node.get("root_extension_txt").asText());
+                        investigationTransformed.setInvStateCaseId(rootExtension);
                     }
                     if(typeCode.equals("CITY") && actIdSeq == 2) {
-                        investigationTransformed.setCityCountyCaseNbr(node.get("root_extension_txt").asText());
+                        investigationTransformed.setCityCountyCaseNbr(rootExtension);
                     }
                     if(typeCode.equals("LEGACY") && actIdSeq == 3) {
-                        investigationTransformed.setLegacyCaseId(node.get("root_extension_txt").asText());
+                        investigationTransformed.setLegacyCaseId(rootExtension);
                     }
                 }
             }
@@ -162,11 +162,11 @@ public class ProcessInvestigationDataUtil {
 
     private void transformObservationIds(String observationNotificationIds, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
         try {
-            JsonNode investigationObservationIdsJsonArray = observationNotificationIds != null ? objectMapper.readTree(observationNotificationIds) : null;
+            JsonNode investigationObservationIdsJsonArray = parseJsonArray(observationNotificationIds, objectMapper);
             InvestigationObservation investigationObservation = new InvestigationObservation();
             List<Long> observationIds = new ArrayList<>();
 
-            if(investigationObservationIdsJsonArray != null && investigationObservationIdsJsonArray.isArray()) {
+            if(investigationObservationIdsJsonArray != null) {
                 for(JsonNode node : investigationObservationIdsJsonArray) {
                     String sourceClassCode = node.get("source_class_cd").asText();
                     String actTypeCode = node.get("act_type_cd").asText();
@@ -199,47 +199,35 @@ public class ProcessInvestigationDataUtil {
 
     private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod, ObjectMapper objectMapper) {
         try {
-            JsonNode investigationConfirmationMethodJsonArray = investigationConfirmationMethod != null ? objectMapper.readTree(investigationConfirmationMethod) : null;
-            InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
-            InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
-            Long publicHealthCaseUid;
-            Map<String, String> confirmationMethodMap = new HashMap<>();
-            Instant confirmationMethodTime = null;
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod, objectMapper);
 
-            // Redundant time variable in case if confirmation_method_time is null in all rows of the array
-            String phcLastChgTime = null;
+            if(investigationConfirmationMethodJsonArray != null) {
+                InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
+                InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
+                Map<String, String> confirmationMethodMap = new HashMap<>();
+                String confirmationMethodTime = null;
 
+                // Redundant time variable in case if confirmation_method_time is null in all rows of the array
+                String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
+                Long publicHealthCaseUid = investigationConfirmationMethodJsonArray.get(0).get("public_health_case_uid").asLong();
 
-            if(investigationConfirmationMethodJsonArray != null && investigationConfirmationMethodJsonArray.isArray()) {
-                publicHealthCaseUid = investigationConfirmationMethodJsonArray.get(0).get("public_health_case_uid").asLong();
-                phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
                 for(JsonNode node : investigationConfirmationMethodJsonArray) {
-                    String confirmationMethodTimeString = node.get("confirmation_method_time").asText();
-                    Instant currentInstant = null;
-
-                    // While getting data from JSON node, it is considered as literal String and that is why the null check
-                    // has equals for null String instead of null value.
-                    if(confirmationMethodTimeString != null && !confirmationMethodTimeString.equals("null")) {
-                        Date dateTime = sdf.parse(confirmationMethodTimeString);
-                        currentInstant = dateTime.toInstant();
-                    }
-                    if (confirmationMethodTime == null || currentInstant.isAfter(confirmationMethodTime)) {
-                        confirmationMethodTime = currentInstant;
+                    JsonNode timeNode = node.get("confirmation_method_time");
+                    if (timeNode != null && !timeNode.isNull()) {
+                        confirmationMethodTime = timeNode.asText();
                     }
                     confirmationMethodMap.put(node.get("confirmation_method_cd").asText(), node.get("confirmation_method_desc_txt").asText());
                 }
                 investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
                 investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
 
+                investigationConfirmation.setConfirmationMethodTime(
+                        confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
 
-                if(confirmationMethodTime == null) {
-                    investigationConfirmation.setConfirmationMethodTime(phcLastChgTime);
-                }
-                for(String key : confirmationMethodMap.keySet()) {
-                    investigationConfirmation.setConfirmationMethodCd(key);
-                    investigationConfirmation.setConfirmationMethodDescTxt(confirmationMethodMap.get(key));
-                    investigationConfirmationMethodKey.setConfirmationMethodCd(key);
+                for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
+                    investigationConfirmation.setConfirmationMethodCd(entry.getKey());
+                    investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
+                    investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
                     String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
                     String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
                     kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
@@ -255,9 +243,9 @@ public class ProcessInvestigationDataUtil {
 
     private void processInvestigationPageCaseAnswer(String investigationCaseAnswer, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
         try {
-            JsonNode investigationCaseAnswerJsonArray = investigationCaseAnswer != null ? objectMapper.readTree(investigationCaseAnswer) : null;
+            JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer, objectMapper);
 
-            if(investigationCaseAnswerJsonArray != null && investigationCaseAnswerJsonArray.isArray()) {
+            if(investigationCaseAnswerJsonArray != null) {
                 Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
                 List<InvestigationCaseAnswer> investigationCaseAnswerDataIfPresent = investigationCaseAnswerRepository.findByActUid(actUid);
                 List<InvestigationCaseAnswer> investigationCaseAnswerList = new ArrayList<>();
@@ -286,6 +274,15 @@ public class ProcessInvestigationDataUtil {
             }
         } catch (Exception e) {
             logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
+        }
+    }
+
+    private JsonNode parseJsonArray(String jsonString, ObjectMapper objectMapper) throws JsonProcessingException {
+        JsonNode jsonArray = jsonString != null ? objectMapper.readTree(jsonString) : null;
+        if (jsonArray != null) {
+            return jsonArray.isArray() ? jsonArray : null;
+        } else {
+            return null;
         }
     }
 }
