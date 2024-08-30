@@ -1,11 +1,11 @@
 package gov.cdc.etldatapipeline.investigation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
@@ -35,9 +34,6 @@ class InvestigationDataProcessingTests {
     @Mock
     InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
 
-    @Mock
-    private ObjectMapper objectMapper;
-
     @Captor
     private ArgumentCaptor<String> topicCaptor;
 
@@ -48,6 +44,7 @@ class InvestigationDataProcessingTests {
     private ArgumentCaptor<String> messageCaptor;
 
     private AutoCloseable closeable;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String FILE_PREFIX = "rawDataFiles/";
     private static final String CONFIRMATION_TOPIC = "confirmationTopic";
@@ -133,26 +130,17 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testNotifications() {
+    void testProcessNotifications() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
         investigation.setInvestigationNotifications(readFileData(FILE_PREFIX + "InvestigationNotifications.json"));
         transformer.investigationNotificationsOutputTopicName = NOTIFICATIONS_TOPIC;
 
-        InvestigationNotificationsKey notificationsKey = new InvestigationNotificationsKey();
-        notificationsKey.setNotificationUid(263748597L);
+        final var notifications = constructNotifications();
 
-        InvestigationNotifications notifications = new InvestigationNotifications();
-        notifications.setPublicHealthCaseUid(investigationUid);
-        notifications.setSourceActUid(263748597L);
-        notifications.setNotificationUid(263748597L);
-        notifications.setLocalPatientUid(75395128L);
-        notifications.setSourceClassCd("NOTF");
-        notifications.setTargetClassCd("CASE");
-        notifications.setNotifStatus("APPROVED");
-        notifications.setNotifAddUserId(96325874L);
-        notifications.setConditionCd("11065");
+        InvestigationNotificationsKey notificationKey = new InvestigationNotificationsKey();
+        notificationKey.setNotificationUid(notifications.getNotificationUid());
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
@@ -160,29 +148,21 @@ class InvestigationDataProcessingTests {
         verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(NOTIFICATIONS_TOPIC, topicCaptor.getValue());
 
-        Function<InvestigationNotifications, List<String>> nDetailsFn = n -> Arrays.asList(
-                String.valueOf(n.getPublicHealthCaseUid()),
-                String.valueOf(n.getSourceActUid()),
-                String.valueOf(n.getNotificationUid()),
-                String.valueOf(n.getLocalPatientUid()),
-                n.getSourceClassCd(),
-                n.getTargetClassCd(),
-                n.getNotifStatus(),
-                String.valueOf(n.getNotifAddUserId()),
-                n.getConditionCd());
+        var actualNotifications = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationNotifications.class);
+        var actualKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationNotificationsKey.class);
 
-        String actualCombined = String.join(" ",messageCaptor.getAllValues());
-
-        assertTrue(containsWords.apply(keyCaptor.getValue(), Collections.singletonList(String.valueOf(notificationsKey.getNotificationUid()))));
-        assertTrue(containsWords.apply(actualCombined, nDetailsFn.apply(notifications)));
+        assertEquals(notificationKey, actualKey);
+        assertEquals(notifications, actualNotifications);
     }
 
     @Test
-    void testInvestigationCaseAnswer() throws JsonProcessingException {
+    void testProcessInvestigationCaseAnswers() {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswer.json"));
+        investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"));
 
         InvestigationCaseAnswer caseAnswer = new InvestigationCaseAnswer();
         caseAnswer.setActUid(investigationUid);
@@ -191,23 +171,17 @@ class InvestigationDataProcessingTests {
 
         when(investigationCaseAnswerRepository.findByActUid(investigationUid)).thenReturn(new ArrayList<>());
 
-        List<InvestigationCaseAnswer> caseAnswers = new ArrayList<>();
-        caseAnswers.add(caseAnswer);
-
-        when(objectMapper.treeToValue(any(JsonNode.class), eq(InvestigationCaseAnswer.class)))
-                .thenReturn(caseAnswer);
-
         verify(investigationCaseAnswerRepository).findByActUid(investigationUid);
         verify(investigationCaseAnswerRepository, never()).deleteByActUid(anyLong());
         verify(investigationCaseAnswerRepository).saveAll(anyList());
     }
 
     @Test
-    void testInvestigationCaseAnswerExistingRecords() throws JsonProcessingException {
+    void testInvestigationCaseAnswerExistingRecords() {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswer.json"));
+        investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"));
 
         InvestigationCaseAnswer caseAnswer = new InvestigationCaseAnswer();
         caseAnswer.setActUid(investigationUid);
@@ -218,12 +192,6 @@ class InvestigationDataProcessingTests {
 
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation);
         assertEquals("D_INV_CLINICAL,D_INV_ADMINISTRATIVE", investigationTransformed.getRdbTableNameList());
-
-        List<InvestigationCaseAnswer> caseAnswers = new ArrayList<>();
-        caseAnswers.add(caseAnswer);
-
-        when(objectMapper.treeToValue(any(JsonNode.class), eq(InvestigationCaseAnswer.class)))
-                .thenReturn(caseAnswer);
 
         verify(investigationCaseAnswerRepository).findByActUid(investigationUid);
         verify(investigationCaseAnswerRepository).deleteByActUid(investigationUid);
@@ -240,5 +208,76 @@ class InvestigationDataProcessingTests {
         transformer.transformInvestigationData(investigation);
 
         verify(investigationCaseAnswerRepository, never()).findByActUid(investigationUid);
+    }
+
+    @Test
+    void testInvestigationCaseAnswersDeserialization() throws JsonProcessingException {
+        InvestigationCaseAnswer[] answers = objectMapper.readValue(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"),
+                InvestigationCaseAnswer[].class);
+
+        InvestigationCaseAnswer expected = constructCaseAnswer();
+
+        assertEquals(3, answers.length);
+        assertEquals(expected, answers[1]);
+    }
+
+    private @NotNull InvestigationNotifications constructNotifications() {
+        InvestigationNotifications notifications = new InvestigationNotifications();
+        notifications.setSourceActUid(263748597L);
+        notifications.setPublicHealthCaseUid(investigationUid);
+        notifications.setSourceClassCd("NOTF");
+        notifications.setTargetClassCd("CASE");
+        notifications.setActTypeCd("Notification");
+        notifications.setStatusCd("A");
+        notifications.setNotificationUid(263748597L);
+        notifications.setProgAreaCd("XYZ");
+        notifications.setProgramJurisdictionOid(9630258741L);
+        notifications.setJurisdictionCd("900003");
+        notifications.setRecordStatusTime("2024-05-29T16:05:44.523");
+        notifications.setStatusTime("2024-05-15T20:25:39.797");
+        notifications.setRptSentTime("2024-05-16T20:00:26.380");
+        notifications.setNotifStatus("APPROVED");
+        notifications.setNotifLocalId("NOT10005003GA01");
+        notifications.setNotifComments("test is success");
+        notifications.setNotifAddTime("2024-05-15T20:25:39.813");
+        notifications.setNotifAddUserId(96325874L);
+        notifications.setNotifAddUserName("Zor-El, Kara");
+        notifications.setNotifLastChgUserId("96325874");
+        notifications.setNotifLastChgUserName("Zor-El, Kara");
+        notifications.setNotifLastChgTime("2024-05-29T16:05:44.523");
+        notifications.setLocalPatientId("ABC7539512AB01");
+        notifications.setLocalPatientUid(75395128L);
+        notifications.setConditionCd("11065");
+        notifications.setConditionDesc("Novel Coronavirus");
+
+        return notifications;
+    }
+
+    private @NotNull InvestigationCaseAnswer constructCaseAnswer() {
+        InvestigationCaseAnswer expected = new InvestigationCaseAnswer();
+        expected.setNbsCaseAnswerUid(1235L);
+        expected.setNbsUiMetadataUid(65497311L);
+        expected.setNbsRdbMetadataUid(41201011L);
+        expected.setRdbTableNm("D_INV_ADMINISTRATIVE");
+        expected.setRdbColumnNm("ADM_IMMEDIATE_NND_DESC");
+        expected.setCodeSetGroupId(null);
+        expected.setAnswerTxt("notify test is success");
+        expected.setActUid(investigationUid);
+        expected.setRecordStatusCd("OPEN");
+        expected.setNbsQuestionUid(12341438L);
+        expected.setInvestigationFormCd("PG_Generic_V2_Investigation");
+        expected.setUnitValue(null);
+        expected.setQuestionIdentifier("QUE126");
+        expected.setDataLocation("NBS_CASE_ANSWER.ANSWER_TXT");
+        expected.setAnswerGroupSeqNbr(null);
+        expected.setQuestionLabel("If yes, describe");
+        expected.setOtherValueIndCd(null);
+        expected.setUnitTypeCd(null);
+        expected.setMask("TXT");
+        expected.setBlockNm("BLOCK_8");
+        expected.setQuestionGroupSeqNbr(null);
+        expected.setDataType("TEXT");
+        expected.setLastChgTime("2024-05-29T16:05:44.537");
+        return expected;
     }
 }

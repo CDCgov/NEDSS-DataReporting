@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
+import lombok.Setter;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Setter
 public class ProcessInvestigationDataUtil {
     private static final Logger logger = LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
 

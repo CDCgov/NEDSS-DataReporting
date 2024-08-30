@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 
-
 @Data
 @Entity
 @Table(name = "nrt_page_case_answer")

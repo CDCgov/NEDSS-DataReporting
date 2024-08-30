@@ -1,13 +1,15 @@
 package gov.cdc.etldatapipeline.investigation.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
-import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -43,17 +45,27 @@ class InvestigationServiceTest {
     @Captor
     private ArgumentCaptor<String> messageCaptor;
 
+    private AutoCloseable closeable;
+
     private ProcessInvestigationDataUtil transformer;
-    private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository);
+        transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
+        transformer.setInvestigationObservationOutputTopicName("investigationObservation");
+        transformer.setInvestigationNotificationsOutputTopicName("investigationNotification");
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
-    void testProcessMessage() {
+    void testProcessMessage() throws JsonProcessingException {
         String investigationTopic = "Investigation";
         String investigationTopicOutput = "InvestigationOutput";
 
@@ -93,7 +105,7 @@ class InvestigationServiceTest {
     }
 
     private void validateData(String inputTopicName, String outputTopicName,
-                              String payload, Investigation investigation) {
+                              String payload, Investigation investigation) throws JsonProcessingException {
 
         final var investigationService = getInvestigationService(inputTopicName, outputTopicName);
         investigationService.processMessage(payload, inputTopicName);
@@ -102,14 +114,20 @@ class InvestigationServiceTest {
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
         final InvestigationReporting reportingModel = constructInvestigationReporting(investigation.getPublicHealthCaseUid());
 
-        String expectedKey = jsonGenerator.generateStringJson(investigationKey);
-        String expectedValue = jsonGenerator.generateStringJson(reportingModel);
+        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(outputTopicName, topicCaptor.getValue());
-        assertEquals(expectedKey, keyCaptor.getValue());
-        assertEquals(expectedValue, messageCaptor.getValue());
-        assertTrue(keyCaptor.getValue().contains(String.valueOf(investigationKey.getPublicHealthCaseUid())));
+        String actualTopic = topicCaptor.getAllValues().get(3);
+        String actualKey = keyCaptor.getAllValues().get(3);
+        String actualValue = messageCaptor.getAllValues().get(3);
+
+        var actualReporting = objectMapper.readValue(
+                objectMapper.readTree(actualValue).path("payload").toString(), InvestigationReporting.class);
+        var actualInvestigationKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path("payload").toString(), InvestigationKey.class);
+
+        assertEquals(outputTopicName, actualTopic); // investigation topic
+        assertEquals(investigationKey, actualInvestigationKey);
+        assertEquals(reportingModel, actualReporting);
     }
 
     private InvestigationService getInvestigationService(String inputTopicName, String outputTopicName) {
@@ -120,28 +138,57 @@ class InvestigationServiceTest {
     }
 
     private Investigation constructInvestigation(Long investigationUid) {
-        String filePathPrefix = "rawDataFiles/";
         Investigation investigation = new Investigation();
         investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setJurisdictionCode("130001");
+        investigation.setJurisdictionNm("Fulton County");
+        investigation.setInvestigationStatus("Open");
+        investigation.setClassCd("CASE");
+        investigation.setInvCaseStatus("Confirmed");
+        investigation.setCd("10110");
+        investigation.setCdDescTxt("Hepatitis A, acute");
+        investigation.setProgAreaCd("HEP");
+        investigation.setLocalId("CAS10107171GA01");
+        investigation.setPatAgeAtOnset("50");
+        investigation.setRecordStatusCd("ACTIVE");
+        investigation.setMmwrWeek("22");
+        investigation.setMmwrYear("2024");
+
+        String filePathPrefix = "rawDataFiles/";
         investigation.setActIds(readFileData(filePathPrefix + "ActIds.json"));
         investigation.setInvestigationConfirmationMethod(readFileData(filePathPrefix + "ConfirmationMethod.json"));
         investigation.setObservationNotificationIds(readFileData(filePathPrefix + "ObservationNotificationIds.json"));
         investigation.setOrganizationParticipations(readFileData(filePathPrefix + "OrganizationParticipations.json"));
         investigation.setPersonParticipations(readFileData(filePathPrefix + "PersonParticipations.json"));
-        investigation.setInvestigationCaseAnswer(readFileData(filePathPrefix + "InvestigationCaseAnswer.json"));
+        investigation.setInvestigationCaseAnswer(readFileData(filePathPrefix + "InvestigationCaseAnswers.json"));
+        investigation.setInvestigationNotifications(readFileData(filePathPrefix + "InvestigationNotifications.json"));
         return investigation;
     }
 
     private InvestigationReporting constructInvestigationReporting(Long investigationUid) {
         final InvestigationReporting reporting = new InvestigationReporting();
         reporting.setPublicHealthCaseUid(investigationUid);
+        reporting.setJurisdictionCode("130001");
+        reporting.setJurisdictionNm("Fulton County");
+        reporting.setInvestigationStatus("Open");
+        reporting.setClassCd("CASE");
+        reporting.setInvCaseStatus("Confirmed");
+        reporting.setCd("10110");
+        reporting.setCdDescTxt("Hepatitis A, acute");
+        reporting.setProgAreaCd("HEP");
+        reporting.setLocalId("CAS10107171GA01");
+        reporting.setPatAgeAtOnset("50");
+        reporting.setRecordStatusCd("ACTIVE");
+        reporting.setMmwrWeek("22");
+        reporting.setMmwrYear("2024");
+
         reporting.setInvestigatorId(32143250L);    // PersonParticipations.json, entity_id for type_cd=InvestgrOfPHC
         reporting.setPhysicianId(14253651L);       // PersonParticipations.json, entity_id for type_cd=PhysicianOfPHC
         reporting.setPatientId(321432537L);        // PersonParticipations.json, entity_id for type_cd=SubjOfPHC
         reporting.setOrganizationId(34865315L);    // OrganizationParticipations.json, entity_id for type_cd=OrgAsReporterOfPHC
         reporting.setInvStateCaseId("12-345-678"); // ActIds.json, root_extension_txt for type_cd=STATE
         reporting.setPhcInvFormId(263748598L);     // ObservationNotificationIds.json, source_act_uid for act_type_cd=PHCInvForm
-        reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswer.json, rdb_table_nm
+        reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
         return reporting;
     }
 }

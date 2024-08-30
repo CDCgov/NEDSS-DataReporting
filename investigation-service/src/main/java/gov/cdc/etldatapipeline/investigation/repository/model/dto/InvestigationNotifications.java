@@ -2,11 +2,15 @@ package gov.cdc.etldatapipeline.investigation.repository.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.Data;
 
+@Entity
 @Data
 public class InvestigationNotifications {
     @JsonProperty("source_act_uid")
+    @Id
     @Column(name = "source_act_uid")
     private Long sourceActUid;
 

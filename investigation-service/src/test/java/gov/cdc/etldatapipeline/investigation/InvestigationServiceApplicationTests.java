@@ -21,7 +21,7 @@ class InvestigationServiceApplicationTests {
     private ApplicationContext context;
 
     @Test
-    void main() {
+    void testMain() {
         try (MockedStatic<SpringApplication> mocked = Mockito.mockStatic(SpringApplication.class)) {
             mocked.when(() -> SpringApplication.run(InvestigationServiceApplication.class, new String[]{}))
                     .thenReturn(null);
@@ -30,7 +30,6 @@ class InvestigationServiceApplicationTests {
             mocked.verify(() -> SpringApplication.run(InvestigationServiceApplication.class, new String[]{}), Mockito.times(1));
         }
     }
-
 
     @Test
     void contextLoads() {

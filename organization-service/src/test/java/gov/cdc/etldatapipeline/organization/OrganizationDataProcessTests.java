@@ -1,6 +1,5 @@
 package gov.cdc.etldatapipeline.organization;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationElasticSearch;
@@ -25,8 +24,8 @@ class OrganizationDataProcessTests {
     OrganizationSp orgSp;
 
     @BeforeEach
-    public void setup() throws JsonProcessingException {
-        orgSp = objectMapper.readValue(readFileData("orgcdc/orgSp.json"), OrganizationSp.class);
+    public void setup() {
+        orgSp = utilHelper.deserializePayload(readFileData("orgcdc/orgSp.json"), OrganizationSp.class);
     }
 
     @Test
