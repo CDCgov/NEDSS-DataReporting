@@ -68,9 +68,8 @@ public class ProcessInvestigationDataUtil {
 
                     String jsonKey = jsonGenerator.generateStringJson(investigationNotificationsKey);
                     String jsonValue = jsonGenerator.generateStringJson(tempInvestigationNotificationsObject);
-                    // ToDo: Revert this
-//                    kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue)
-//                            .whenComplete((res, e) -> logger.info("Notification data (uid={}) sent to {}", notificationUid, investigationNotificationsOutputTopicName));
+                    kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue)
+                            .whenComplete((res, e) -> logger.info("Notification data (uid={}) sent to {}", notificationUid, investigationNotificationsOutputTopicName));
                 }
             }
             else {
@@ -187,8 +186,7 @@ public class ProcessInvestigationDataUtil {
                 for(Long id : observationIds) {
                     investigationObservation.setObservationId(id);
                     String jsonValue = jsonGenerator.generateStringJson(investigationObservation);
-                    //ToDo: Revert this after the loop debugging issue
-//                    kafkaTemplate.send(investigationObservationOutputTopicName, jsonValue, jsonValue);
+                    kafkaTemplate.send(investigationObservationOutputTopicName, jsonValue, jsonValue);
                 }
             }
             else {
@@ -244,8 +242,7 @@ public class ProcessInvestigationDataUtil {
                     investigationConfirmationMethodKey.setConfirmationMethodCd(key);
                     String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
                     String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
-                    //ToDo: Revert this after the loop debugging issue
-//                    kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
+                    kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
                 }
             }
             else {

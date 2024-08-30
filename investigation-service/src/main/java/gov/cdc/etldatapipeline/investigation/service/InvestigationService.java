@@ -105,9 +105,7 @@ public class InvestigationService {
                     InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation);
                     buildReportingModelForTransformedData(reportingModel, investigationTransformed);
                     pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting);
-
-                    //ToDo: Revert this after the loop debugging issue
-                    // only process and send notifications when investigation data has been sent
+                        // only process and send notifications when investigation data has been sent
                       /*  .whenComplete((res, ex) ->
                             logger.info("Investigation data (uid={}) sent to {}", investigation.getPublicHealthCaseUid(), investigationTopicReporting))
                         .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications(), objectMapper))

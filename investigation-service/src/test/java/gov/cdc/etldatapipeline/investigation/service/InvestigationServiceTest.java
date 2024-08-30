@@ -8,7 +8,6 @@ import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationK
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -24,7 +23,6 @@ import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@Ignore
 class InvestigationServiceTest {
 
     @Mock
@@ -54,7 +52,7 @@ class InvestigationServiceTest {
         transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository);
     }
 
-   // @Test
+    @Test
     void testProcessMessage() {
         String investigationTopic = "Investigation";
         String investigationTopicOutput = "InvestigationOutput";
