@@ -79,6 +79,7 @@ class InvestigationServiceTest {
         validateData(investigationTopic, investigationTopicOutput, payload, investigation);
 
         verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid));
+        verify(investigationRepository).populatePhcFact(String.valueOf(investigationUid));
     }
 
     @Test
@@ -134,6 +135,7 @@ class InvestigationServiceTest {
         InvestigationService investigationService = new InvestigationService(investigationRepository, kafkaTemplate, transformer);
         investigationService.setInvestigationTopic(inputTopicName);
         investigationService.setInvestigationTopicReporting(outputTopicName);
+        investigationService.setPhcDatamartEnable(true);
         return investigationService;
     }
 
@@ -182,12 +184,14 @@ class InvestigationServiceTest {
         reporting.setMmwrWeek("22");
         reporting.setMmwrYear("2024");
 
-        reporting.setInvestigatorId(32143250L);    // PersonParticipations.json, entity_id for type_cd=InvestgrOfPHC
-        reporting.setPhysicianId(14253651L);       // PersonParticipations.json, entity_id for type_cd=PhysicianOfPHC
-        reporting.setPatientId(321432537L);        // PersonParticipations.json, entity_id for type_cd=SubjOfPHC
-        reporting.setOrganizationId(34865315L);    // OrganizationParticipations.json, entity_id for type_cd=OrgAsReporterOfPHC
-        reporting.setInvStateCaseId("12-345-678"); // ActIds.json, root_extension_txt for type_cd=STATE
-        reporting.setPhcInvFormId(263748598L);     // ObservationNotificationIds.json, source_act_uid for act_type_cd=PHCInvForm
+        reporting.setInvestigatorId(32143250L);         // PersonParticipations.json, entity_id for type_cd=InvestgrOfPHC
+        reporting.setPhysicianId(14253651L);            // PersonParticipations.json, entity_id for type_cd=PhysicianOfPHC
+        reporting.setPatientId(321432537L);             // PersonParticipations.json, entity_id for type_cd=SubjOfPHC
+        reporting.setOrganizationId(34865315L);         // OrganizationParticipations.json, entity_id for type_cd=OrgAsReporterOfPHC
+        reporting.setInvStateCaseId("12-345-STA");      // ActIds.json, root_extension_txt for type_cd=STATE
+        reporting.setCityCountyCaseNbr("12-345-CTY");   // ActIds.json, root_extension_txt for type_cd=CITY
+        reporting.setLegacyCaseId("12-345-LGY");        // ActIds.json, root_extension_txt for type_cd=LEGACY
+        reporting.setPhcInvFormId(263748598L);          // ObservationNotificationIds.json, source_act_uid for act_type_cd=PHCInvForm
         reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
         return reporting;
     }

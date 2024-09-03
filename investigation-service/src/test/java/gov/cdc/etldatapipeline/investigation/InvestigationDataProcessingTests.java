@@ -1,5 +1,8 @@
 package gov.cdc.etldatapipeline.investigation;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
@@ -13,14 +16,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +45,7 @@ class InvestigationDataProcessingTests {
     private ArgumentCaptor<String> messageCaptor;
 
     private AutoCloseable closeable;
+    private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String FILE_PREFIX = "rawDataFiles/";
@@ -54,22 +56,24 @@ class InvestigationDataProcessingTests {
 
     ProcessInvestigationDataUtil transformer;
 
-    BiFunction<String, List<String>, Boolean> containsWords = (input, words) ->
-            words.stream().allMatch(input::contains);
-
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository);
+        Logger logger = (Logger) LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
+        listAppender.start();
+        logger.addAppender(listAppender);
     }
 
     @AfterEach
     void tearDown() throws Exception {
+        Logger logger = (Logger) LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
+        logger.detachAppender(listAppender);
         closeable.close();
     }
 
     @Test
-    void testConfirmationMethod() {
+    void testConfirmationMethod() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -90,22 +94,37 @@ class InvestigationDataProcessingTests {
         verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(CONFIRMATION_TOPIC, topicCaptor.getValue());
 
-        Function<InvestigationConfirmationMethod, List<String>> cmDetailsFn = m -> Arrays.asList(
-                String.valueOf(m.getPublicHealthCaseUid()),
-                m.getConfirmationMethodCd(),
-                m.getConfirmationMethodDescTxt(),
-                m.getConfirmationMethodTime());
+        var actualConfirmationMethod = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationConfirmationMethod.class);
+        var actualKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationConfirmationMethodKey.class);
 
-        Function<InvestigationConfirmationMethodKey, List<String>> cmKeyFn = k -> Arrays.asList(
-                String.valueOf(k.getPublicHealthCaseUid()),
-                k.getConfirmationMethodCd());
-
-        assertTrue(containsWords.apply(keyCaptor.getValue(), cmKeyFn.apply(confirmationMethodKey)));
-        assertTrue(containsWords.apply(messageCaptor.getValue(), cmDetailsFn.apply(confirmationMethod)));
+        assertEquals(confirmationMethodKey, actualKey);
+        assertEquals(confirmationMethod, actualConfirmationMethod);
     }
 
     @Test
-    void testObservationNotificationIds() {
+    void testTransformInvestigationError(){
+        Investigation investigation = new Investigation();
+        investigation.setPublicHealthCaseUid(investigationUid);
+        String invalidJSON = "invalidJSON";
+
+        investigation.setPersonParticipations(invalidJSON);
+        investigation.setOrganizationParticipations(invalidJSON);
+        investigation.setActIds(invalidJSON);
+        investigation.setObservationNotificationIds(invalidJSON);
+        investigation.setInvestigationConfirmationMethod(invalidJSON);
+        investigation.setInvestigationCaseAnswer(invalidJSON);
+
+        transformer.transformInvestigationData(investigation);
+        transformer.processNotifications(invalidJSON, objectMapper);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
+    }
+
+        @Test
+    void testObservationNotificationIds() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -120,13 +139,10 @@ class InvestigationDataProcessingTests {
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getValue());
 
-        Function<InvestigationObservation, List<String>> oDetailsFn = o -> Arrays.asList(
-                String.valueOf(o.getPublicHealthCaseUid()),
-                String.valueOf(o.getObservationId()));
+        var actualObservation = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationObservation.class);
 
-        String actualCombined = String.join(" ",messageCaptor.getAllValues());
-
-        assertTrue(containsWords.apply(actualCombined, oDetailsFn.apply(observation)));
+        assertEquals(observation, actualObservation);
     }
 
     @Test
@@ -156,6 +172,21 @@ class InvestigationDataProcessingTests {
         assertEquals(notificationKey, actualKey);
         assertEquals(notifications, actualNotifications);
     }
+
+    @Test
+    void testTransformNotificationError(){
+        Investigation investigation = new Investigation();
+        investigation.setPublicHealthCaseUid(investigationUid);
+        String invalidJSON = "invalidJSON";
+
+        investigation.setInvestigationNotifications(invalidJSON);
+
+        transformer.transformInvestigationData(investigation);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
+    }
+
 
     @Test
     void testProcessInvestigationCaseAnswers() {
