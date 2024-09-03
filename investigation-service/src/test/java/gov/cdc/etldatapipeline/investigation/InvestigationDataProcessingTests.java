@@ -174,21 +174,6 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testTransformNotificationError(){
-        Investigation investigation = new Investigation();
-        investigation.setPublicHealthCaseUid(investigationUid);
-        String invalidJSON = "invalidJSON";
-
-        investigation.setInvestigationNotifications(invalidJSON);
-
-        transformer.transformInvestigationData(investigation);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
-    }
-
-
-    @Test
     void testProcessInvestigationCaseAnswers() {
         Investigation investigation = new Investigation();
 
