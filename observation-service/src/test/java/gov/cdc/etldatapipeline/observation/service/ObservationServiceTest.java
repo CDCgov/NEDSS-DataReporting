@@ -1,11 +1,11 @@
 package gov.cdc.etldatapipeline.observation.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
-import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.Observation;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.ObservationKey;
-import gov.cdc.etldatapipeline.observation.repository.model.dto.ObservationTransformed;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationReporting;
 import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -15,7 +15,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.modelmapper.ModelMapper;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Optional;
@@ -54,12 +53,11 @@ class ObservationServiceTest {
         closeable.close();
     }
 
-    final ModelMapper modelMapper = new ModelMapper();
     ProcessObservationDataUtil transformer = new ProcessObservationDataUtil();
-    final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void testProcessMessage() {
+    void testProcessMessage() throws JsonProcessingException {
         String observationTopic = "Observation";
         String observationTopicOutput = "ObservationOutput";
 
@@ -99,10 +97,36 @@ class ObservationServiceTest {
         assertThrows(NoDataException.class, () -> observationService.processMessage(payload, observationTopic));
     }
 
+    private void validateData(String inputTopicName, String outputTopicName,
+                              String payload, Observation observation) throws JsonProcessingException {
+        final var observationService = getObservationService(inputTopicName, outputTopicName);
+        observationService.processMessage(payload, inputTopicName);
+
+        ObservationKey observationKey = new ObservationKey();
+        observationKey.setObservationUid(observation.getObservationUid());
+
+        ObservationReporting reportingModel = constructObservationReporting(observation.getObservationUid(), observation.getObsDomainCdSt1());
+
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        String actualTopic = topicCaptor.getValue();
+        String actualKey = keyCaptor.getValue();
+        String actualValue = messageCaptor.getValue();
+
+        var actualReporting = objectMapper.readValue(
+                objectMapper.readTree(actualValue).path("payload").toString(), ObservationReporting.class);
+
+        var actualObservationKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path("payload").toString(), ObservationKey.class);
+
+        assertEquals(outputTopicName, actualTopic);
+        assertEquals(observationKey, actualObservationKey);
+        assertEquals(reportingModel, actualReporting);
+    }
+
     private Observation constructObservation(Long observationUid, String obsDomainCdSt1) {
         String filePathPrefix = "rawDataFiles/";
         Observation observation = new Observation();
-        observation.setId(observationUid);
+        observation.setObservationUid(observationUid);
         observation.setObsDomainCdSt1(obsDomainCdSt1);
         observation.setPersonParticipations(readFileData(filePathPrefix + "PersonParticipations.json"));
         observation.setOrganizationParticipations(readFileData(filePathPrefix + "OrganizationParticipations.json"));
@@ -111,25 +135,18 @@ class ObservationServiceTest {
         return observation;
     }
 
-    private void validateData(String inputTopicName, String outputTopicName,
-                              String payload, Observation observation) {
-        final var observationService = getObservationService(inputTopicName, outputTopicName);
-        observationService.processMessage(payload, inputTopicName);
-
-        ObservationKey observationKey = new ObservationKey();
-        observationKey.setObservationUid(observation.getId());
-
-        ObservationReporting reportingModel = modelMapper.map(observation, ObservationReporting.class);
-        final ObservationTransformed transformed = transformer.transformObservationData(observation);
-        observationService.buildReportingModelForTransformedData(reportingModel, transformed);
-
-        String expectedKey = jsonGenerator.generateStringJson(observationKey);
-        String expectedValue = jsonGenerator.generateStringJson(reportingModel);
-
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(outputTopicName, topicCaptor.getValue());
-        assertEquals(expectedKey, keyCaptor.getValue());
-        assertEquals(expectedValue, messageCaptor.getValue());
+    private ObservationReporting constructObservationReporting(Long observationUid, String obsDomainCdSt1) {
+        ObservationReporting observation = new ObservationReporting();
+        observation.setObservationUid(observationUid);
+        observation.setObsDomainCdSt1(obsDomainCdSt1);
+        observation.setOrderingPersonId(10000055L);
+        observation.setPatientId(10000066L);
+        observation.setPerformingOrganizationId(null);      // not null when obsDomainCdSt1=Result
+        observation.setAuthorOrganizationId(34567890L);     // null when obsDomainCdSt1=Result
+        observation.setOrderingOrganizationId(23456789L);   // null when obsDomainCdSt1=Result
+        observation.setMaterialId(10000005L);
+        observation.setResultObservationUid(56789012L);
+        return observation;
     }
 
     private ObservationService getObservationService(String inputTopicName, String outputTopicName) {
@@ -138,5 +155,4 @@ class ObservationServiceTest {
         observationService.setObservationTopicOutputReporting(outputTopicName);
         return observationService;
     }
-
 }

@@ -22,7 +22,7 @@ public class Observation {
 
     @Id
     @Column(name = "observation_uid")
-    private Long id;
+    private Long observationUid;
 
     @Column(name = "obs_domain_cd_st_1")
     private String obsDomainCdSt1;

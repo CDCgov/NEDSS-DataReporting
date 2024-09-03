@@ -2,10 +2,7 @@ package gov.cdc.etldatapipeline.observation.repository.model.dto;
 
 import lombok.*;
 
-@NoArgsConstructor
-@Getter
-@Setter
-@ToString
+@Data
 public class ObservationTransformed {
     private Long orderingPersonId;
     private Long patientId;
