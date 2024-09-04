@@ -138,22 +138,21 @@ public class PostProcessingService {
             JsonNode payloadNode = objectMapper.readTree(payload);
 
             Datamart dmData = objectMapper.readValue(payloadNode.get(PAYLOAD).toString(), Datamart.class);
-            final String PAYLOAD_PFX = "For payload: " + payloadNode;
             if (Objects.isNull(dmData)) {
-                throw new NoDataException(PAYLOAD_PFX + " DataMart object is null. Skipping further processing");
+                logger.info("For payload: {} DataMart object is null. Skipping further processing", payloadNode);
+                return;
             }
             Map<Long, Long> dmMap = new HashMap<>();
             if (Objects.isNull(dmData.getPublicHealthCaseUid()) || Objects.isNull(dmData.getPatientUid())) {
-                throw new NoDataException(PAYLOAD_PFX + " DataMart Public Health Case/Patient Id is null. Skipping further processing");
+                logger.info("For payload: {} DataMart Public Health Case/Patient Id is null. Skipping further processing", payloadNode);
+                return;
             }
             dmMap.put(dmData.getPublicHealthCaseUid(), dmData.getPatientUid());
             if (Objects.isNull(dmData.getDatamart())) {
-                throw new NoDataException(PAYLOAD_PFX + " DataMart value is null. Skipping further processing");
+                logger.info("For payload: {} DataMart value is null. Skipping further processing", payloadNode);
+                return;
             }
             dmCache.computeIfAbsent(dmData.getDatamart(), k -> ConcurrentHashMap.newKeySet()).add(dmMap);
-        } catch (NoDataException nde) {
-            logger.warn(nde.getMessage());
-            throw nde;
         } catch (Exception e) {
             logger.error("Error processing datamart message: {}", e.getMessage());
             throw new RuntimeException(e);

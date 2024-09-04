@@ -20,7 +20,7 @@ class OrganizationServiceApplicationTest {
     private ApplicationContext context;
 
     @Test
-    void main() {
+    void testMain() {
         try (MockedStatic<SpringApplication> mocked = Mockito.mockStatic(SpringApplication.class)) {
             mocked.when(() -> SpringApplication.run(OrganizationServiceApplication.class, new String[]{}))
                     .thenReturn(null);

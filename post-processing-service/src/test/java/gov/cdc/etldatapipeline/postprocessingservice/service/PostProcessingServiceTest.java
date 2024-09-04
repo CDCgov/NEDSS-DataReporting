@@ -388,8 +388,8 @@ class PostProcessingServiceTest {
     void testPostProcessDatamartIncompleteData(String msg) {
         String topic = "dummy_datamart";
 
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
         List<ILoggingEvent> logs = listAppender.list;
-        assertThrows(NoDataException.class, () -> postProcessingServiceMock.postProcessDatamart(topic, msg));
         assertTrue(logs.get(logs.size()-1).getFormattedMessage().contains("Skipping further processing"));
     }
 

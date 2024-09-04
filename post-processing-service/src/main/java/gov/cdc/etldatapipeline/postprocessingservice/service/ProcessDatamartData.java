@@ -34,8 +34,9 @@ public class ProcessDatamartData {
                     if (invResult.getPatientKey().equals(1L)) continue; // skipping now for unprocessed patients
 
                     Datamart dmart = modelMapper.map(invResult, Datamart.class);
-                    String jsonKey = jsonGenerator.generateStringJson(
-                            DatamartKey.builder().publicHealthCaseUid(invResult.getPublicHealthCaseUid()).build());
+                    DatamartKey dmKey = new DatamartKey();
+                    dmKey.setPublicHealthCaseUid(invResult.getPublicHealthCaseUid());
+                    String jsonKey = jsonGenerator.generateStringJson(dmKey);
                     String jsonMessage = jsonGenerator.generateStringJson(dmart);
 
                     kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);

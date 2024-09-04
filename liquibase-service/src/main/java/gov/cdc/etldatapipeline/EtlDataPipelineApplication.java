@@ -9,5 +9,4 @@ public class EtlDataPipelineApplication {
     public static void main(String[] args) {
         SpringApplication.run(EtlDataPipelineApplication.class, args);
     }
-
 }

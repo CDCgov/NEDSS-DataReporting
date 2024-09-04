@@ -52,7 +52,7 @@ class OrganizationServiceControllerTest {
 
     @Test
     void testGetStatusHealth() {
-        final String responseBody = "Person Service Status OK";
+        final String responseBody = "Organization Service Status OK";
         when(dataPipelineStatusService.getHealthStatus()).thenReturn(ResponseEntity.ok(responseBody));
 
         ResponseEntity<String> response = controller.getDataPipelineStatusHealth();

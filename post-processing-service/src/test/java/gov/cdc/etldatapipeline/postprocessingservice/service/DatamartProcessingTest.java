@@ -16,11 +16,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,13 +37,11 @@ class DatamartProcessingTest {
     private ArgumentCaptor<String> messageCaptor;
 
     private static final String FILE_PREFIX = "rawDataFiles/";
+    private static final String PAYLOAD = "payload";
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private ProcessDatamartData datamartProcessor;
     private AutoCloseable closeable;
-
-    BiFunction<String, List<String>, Boolean> containsWords = (input, words) ->
-            words.stream().allMatch(input::contains);
 
     @BeforeEach
     void setUp() {
@@ -60,31 +55,32 @@ class DatamartProcessingTest {
     }
 
     @Test
-    void testDatamartProcess() {
+    void testDatamartProcess() throws Exception {
         String topic = "dummy_investigation";
         List<InvestigationResult> investigationResults = new ArrayList<>();
         InvestigationResult invResult = getInvestigationResult(123L);
         investigationResults.add(invResult);
 
-        Function<InvestigationResult, List<String>> dmDetails =  r -> Arrays.asList(
-                String.valueOf(r.getPublicHealthCaseUid()),
-                String.valueOf(r.getInvestigationKey()),
-                String.valueOf(r.getPatientUid()),
-                String.valueOf(r.getPatientKey()),
-                r.getConditionCd(),
-                r.getDatamart(),
-                r.getStoredProcedure());
-
         datamartProcessor.datamartTopic = topic;
         datamartProcessor.process(investigationResults);
 
+        Datamart datamart = getDatamart();
+        DatamartKey datamartKey = new DatamartKey();
+        datamartKey.setPublicHealthCaseUid(invResult.getPublicHealthCaseUid());
+
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
-        DatamartKey dmKey = DatamartKey.builder().publicHealthCaseUid(invResult.getPublicHealthCaseUid()).build();
+        String actualMessage = messageCaptor.getValue();
+        String actualKey = keyCaptor.getValue();
+
+        var actualReporting = objectMapper.readValue(
+                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
+        var actualDatamartKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
 
         assertEquals(topic, topicCaptor.getValue());
-        assertTrue(keyCaptor.getValue().contains(String.valueOf(dmKey.getPublicHealthCaseUid())));
-        assertTrue(containsWords.apply(messageCaptor.getValue(), dmDetails.apply(invResult)));
+        assertEquals(datamartKey, actualDatamartKey);
+        assertEquals(datamart, actualReporting);
     }
 
     @Test
@@ -98,22 +94,6 @@ class DatamartProcessingTest {
         assertThrows(RuntimeException.class, () -> datamartProcessor.process(nullPhcResults));
     }
 
-    @Test
-    void testDataMartDeserialization() throws Exception {
-        String dmJson = readFileData(FILE_PREFIX + "Datamart.json");
-        JsonNode dmNode = objectMapper.readTree(dmJson);
-
-        Datamart dm = objectMapper.readValue(dmNode.get(PostProcessingService.PAYLOAD).toString(), Datamart.class);
-        assertNotNull(dm);
-        assertEquals(123L, dm.getPublicHealthCaseUid());
-        assertEquals(456L, dm.getPatientUid());
-        assertEquals(100L, dm.getInvestigationKey());
-        assertEquals(200L, dm.getPatientKey());
-        assertEquals("10110", dm.getConditionCd());
-        assertEquals("Hepatitis_Datamart", dm.getDatamart());
-        assertEquals("sp_hepatitis_datamart_postprocessing", dm.getStoredProcedure());
-    }
-
     private InvestigationResult getInvestigationResult(Long phcUid) {
         InvestigationResult investigationResult = new InvestigationResult();
         investigationResult.setPublicHealthCaseUid(phcUid);
@@ -124,5 +104,12 @@ class DatamartProcessingTest {
         investigationResult.setDatamart("Hepatitis_Datamart");
         investigationResult.setStoredProcedure("sp_hepatitis_datamart_postprocessing");
         return investigationResult;
+    }
+
+    private Datamart getDatamart() throws Exception {
+        String dmJson = readFileData(FILE_PREFIX + "Datamart.json");
+        JsonNode dmNode = objectMapper.readTree(dmJson);
+
+        return objectMapper.readValue(dmNode.get(PAYLOAD).toString(), Datamart.class);
     }
 }

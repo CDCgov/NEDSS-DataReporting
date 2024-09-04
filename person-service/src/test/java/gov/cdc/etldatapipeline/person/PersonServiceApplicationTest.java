@@ -21,7 +21,7 @@ class PersonServiceApplicationTest {
     private ApplicationContext context;
 
     @Test
-    void main() {
+    void testMain() {
         try (MockedStatic<SpringApplication> mocked = Mockito.mockStatic(SpringApplication.class)) {
             mocked.when(() -> SpringApplication.run(PersonServiceApplication.class, new String[]{}))
                     .thenReturn(null);
