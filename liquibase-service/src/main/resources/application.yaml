@@ -7,11 +7,5 @@ spring:
     url: ${DB_URL:localhost}
     odse: ${DB_ODSE:NBS_ODSE}
     rdb: ${DB_RDB:RDB}
-logging:
-  #  Only one config can be active at a time
-  config: classpath:logback-config.xml
-  file:
-    name: DataReportingService.log
-    path: ${DA_LOG_PATH:logs}
 server:
   port: '8090'

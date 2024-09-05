@@ -34,11 +34,5 @@ service:
   fixed-delay:
     cached-ids: ${FIXED_DELAY_ID:20000}
     datamart: ${FIXED_DELAY_DM:60000}
-#logging:
-#  # Only one config can be active at a time
-#  config: classpath:logback-config.xml
-#  file:
-#    name: PostProcessingService.log
-#    path: ${DA_LOG_PATH:logs}
 server:
   port: '8095'

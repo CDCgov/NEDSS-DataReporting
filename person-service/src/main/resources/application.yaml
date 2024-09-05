@@ -37,11 +37,5 @@ spring:
     url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_ODSE:nbs_odse};encrypt=true;trustServerCertificate=true;
   liquibase:
     change-log: db/changelog/db.changelog-master.yaml
-logging:
-  #  Only one config can be active at a time
-  config: classpath:logback-config.xml
-  file:
-    name: PersonService.log
-    path: ${DA_LOG_PATH:logs}
 server:
   port: '8091'
