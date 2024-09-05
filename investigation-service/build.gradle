@@ -37,10 +37,8 @@ jacocoTestReport {
 
     afterEvaluate {
         classDirectories.from = files(classDirectories.files.collect {
-            fileTree(
-                    dir: it,
-                    exclude: ['gov/cdc/etldatapipeline/investigation/config/OdseDataSourceConfig.class',
-                              'gov/cdc/etldatapipeline/investigation/config/RdbDataSourceConfig.class'])
+            fileTree(dir: it,
+                    exclude: ['**/*_$$_javassist_*', '**/LogDynamic*.class', '**/*Application.class', '**/*DataSourceConfig.class'])
         })
     }
 }
