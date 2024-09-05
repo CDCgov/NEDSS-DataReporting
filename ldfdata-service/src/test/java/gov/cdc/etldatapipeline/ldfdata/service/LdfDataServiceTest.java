@@ -8,6 +8,8 @@ import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfDataKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -98,6 +100,22 @@ class LdfDataServiceTest {
                 .thenReturn(Optional.empty());
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
         assertThrows(NoDataException.class, () -> ldfDataService.processMessage(payload, ldfTopic));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "'{\"payload\": {\"before\": {}}}'",
+            "'{\"payload\": {\"after\": {\"business_object_nm\": \"PHC\", \"business_object_uid\": \"100000010\"}}}'",
+            "'{\"payload\": {\"after\": {\"business_object_nm\": \"PHC\", \"ldf_uid\": \"100000001\"}}}'",
+            "'{\"payload\": {\"after\": {\"ldf_uid\": \"100000001\", \"business_object_uid\": \"100000010\"}}}'"
+    })
+    void testProcessMessageIncompleteData(String payload) {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+
+        final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        ldfDataService.processMessage(payload, ldfTopic);
+        verify(kafkaTemplate, never()).send(eq(ldfTopicOutput), anyString(), anyString());
     }
 
     private void validateData(String inputTopicName, String outputTopicName,

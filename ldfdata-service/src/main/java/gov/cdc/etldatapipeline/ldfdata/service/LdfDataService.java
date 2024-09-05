@@ -72,7 +72,7 @@ public class LdfDataService {
         processLdfData(message);
     }
 
-    public String processLdfData(String value) {
+    public void processLdfData(String value) {
         String busObjNm = "";
         String ldfUid = "";
         String busObjUid = "";
@@ -80,7 +80,7 @@ public class LdfDataService {
             ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
             JsonNode jsonNode = objectMapper.readTree(value);
             JsonNode payloadNode = jsonNode.get("payload").path("after");
-            if (payloadNode != null
+            if (!payloadNode.isMissingNode()
                     && payloadNode.has("business_object_nm")
                     && payloadNode.has("ldf_uid")
                     && payloadNode.has("business_object_uid")) {
@@ -93,7 +93,6 @@ public class LdfDataService {
                 if (ldfData.isPresent()) {
                     ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
                     pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
-                    return objectMapper.writeValueAsString(ldfData.get());
                 }
                 else {
                     throw new NoDataException("No LDF data found for id: " + ldfUid);
@@ -114,7 +113,6 @@ public class LdfDataService {
             logger.error(msg, e.getMessage());
             throw new RuntimeException(e);
         }
-        return null;
     }
 
     private void pushKeyValuePairToKafka(LdfDataKey ldfDataKey, Object model, String topicName) {

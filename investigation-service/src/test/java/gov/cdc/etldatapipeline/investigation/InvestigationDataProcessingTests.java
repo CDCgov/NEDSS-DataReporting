@@ -174,6 +174,18 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
+    void testProcessMissingOrInvalidNotifications() {
+        Investigation investigation = new Investigation();
+
+        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setInvestigationNotifications(null);
+        transformer.investigationNotificationsOutputTopicName = NOTIFICATIONS_TOPIC;
+        transformer.processNotifications(null, new ObjectMapper());
+        transformer.processNotifications("{\"foo\":\"bar\"}", new ObjectMapper());
+        verify(kafkaTemplate, never()).send(eq(NOTIFICATIONS_TOPIC), anyString(), anyString());
+    }
+
+    @Test
     void testProcessInvestigationCaseAnswers() {
         Investigation investigation = new Investigation();
 

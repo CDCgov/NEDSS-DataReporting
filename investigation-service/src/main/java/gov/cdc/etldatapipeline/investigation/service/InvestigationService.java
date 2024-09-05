@@ -83,7 +83,7 @@ public class InvestigationService {
         processInvestigation(message);
     }
 
-    public String processInvestigation(String value) {
+    public void processInvestigation(String value) {
         String publicHealthCaseUid = "";
         try {
             ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -110,7 +110,6 @@ public class InvestigationService {
                             logger.info("Investigation data (uid={}) sent to {}", investigation.getPublicHealthCaseUid(), investigationTopicReporting))
                         .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications(), objectMapper))
                         .join();
-                    return objectMapper.writeValueAsString(investigation);
                 } else {
                     throw new NoDataException("No investigation data found for id: " + publicHealthCaseUid);
                 }
@@ -124,7 +123,6 @@ public class InvestigationService {
             logger.error(msg, e.getMessage());
             throw new RuntimeException(e);
         }
-        return null;
     }
 
     private void processPhcFactDatamart(String publicHealthCaseUid) {

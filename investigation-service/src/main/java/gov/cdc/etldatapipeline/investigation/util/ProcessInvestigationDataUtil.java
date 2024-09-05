@@ -58,9 +58,9 @@ public class ProcessInvestigationDataUtil {
     public void processNotifications(String investigationNotifications, ObjectMapper objectMapper) {
         try {
             JsonNode investigationNotificationsJsonArray = parseJsonArray(investigationNotifications, objectMapper);
-            InvestigationNotificationsKey investigationNotificationsKey = new InvestigationNotificationsKey();
 
             if (investigationNotificationsJsonArray != null) {
+                InvestigationNotificationsKey investigationNotificationsKey = new InvestigationNotificationsKey();
                 for (JsonNode node : investigationNotificationsJsonArray) {
                     Long notificationUid = node.get("notification_uid").asLong();
                     investigationNotificationsKey.setNotificationUid(notificationUid);
