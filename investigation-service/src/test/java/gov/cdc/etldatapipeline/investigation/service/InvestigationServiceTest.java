@@ -9,6 +9,7 @@ import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationK
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import org.apache.kafka.clients.consumer.MockConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class InvestigationServiceTest {
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
+
+    @Mock
+    MockConsumer<String, String> consumer;
 
     @Captor
     private ArgumentCaptor<String> topicCaptor;
@@ -89,7 +93,7 @@ class InvestigationServiceTest {
         String invalidPayload = "{\"payload\": {\"after\": }}";
 
         final var investigationService = getInvestigationService(investigationTopic, investigationTopicOutput);
-        assertThrows(RuntimeException.class, () -> investigationService.processMessage(invalidPayload, investigationTopic));
+        assertThrows(RuntimeException.class, () -> investigationService.processMessage(invalidPayload, investigationTopic, consumer));
     }
 
     @Test
@@ -102,14 +106,14 @@ class InvestigationServiceTest {
         when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.empty());
 
         final var investigationService = getInvestigationService(investigationTopic, investigationTopicOutput);
-        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, investigationTopic));
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, investigationTopic, consumer));
     }
 
     private void validateData(String inputTopicName, String outputTopicName,
                               String payload, Investigation investigation) throws JsonProcessingException {
 
         final var investigationService = getInvestigationService(inputTopicName, outputTopicName);
-        investigationService.processMessage(payload, inputTopicName);
+        investigationService.processMessage(payload, inputTopicName, consumer);
 
         InvestigationKey investigationKey = new InvestigationKey();
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());

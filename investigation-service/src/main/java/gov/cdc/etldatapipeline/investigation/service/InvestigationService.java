@@ -13,6 +13,7 @@ import gov.cdc.etldatapipeline.investigation.repository.model.reporting.Investig
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.errors.SerializationException;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -78,9 +79,11 @@ public class InvestigationService {
             topics = "${spring.kafka.input.topic-name}"
     )
     public void processMessage(String message,
-                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+                               Consumer<?,?> consumer) {
         logger.debug(topicDebugLog, message, topic);
         processInvestigation(message);
+        consumer.commitSync();
     }
 
     public void processInvestigation(String value) {
