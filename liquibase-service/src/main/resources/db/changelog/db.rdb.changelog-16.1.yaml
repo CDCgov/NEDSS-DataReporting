@@ -137,115 +137,122 @@ databaseChangeLog:
       author: liquibase
       changes:
         - sqlFile:
-            path: 001-fn_get_record_status-001.sql
+            path: 017-create_nrt_observation-002.sql
             splitStatements: false
   - changeSet:
       id: 20
       author: liquibase
       changes:
         - sqlFile:
-            path: 002-sp_nrt_organization_postprocessing-001.sql
+            path: 001-fn_get_record_status-001.sql
             splitStatements: false
   - changeSet:
       id: 21
       author: liquibase
       changes:
         - sqlFile:
-            path: 003-sp_nrt_provider_postprocessing-001.sql
+            path: 002-sp_nrt_organization_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 22
       author: liquibase
       changes:
         - sqlFile:
-            path: 004-sp_nrt_patient_postprocessing-001.sql
+            path: 003-sp_nrt_provider_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 23
       author: liquibase
       changes:
         - sqlFile:
-            path: 005-sp_nrt_investigation_postprocessing-001.sql
+            path: 004-sp_nrt_patient_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 24
       author: liquibase
       changes:
         - sqlFile:
-            path: 006-sp_nrt_notification_postprocessing-001.sql
+            path: 005-sp_nrt_investigation_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 25
       author: liquibase
       changes:
         - sqlFile:
-            path: 007-sp_s_pagebuilder_postprocessing-001.sql
+            path: 006-sp_nrt_notification_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 26
       author: liquibase
       changes:
         - sqlFile:
-            path: 008-sp_l_pagebuilder_postprocessing-001.sql
+            path: 007-sp_s_pagebuilder_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 27
       author: liquibase
       changes:
         - sqlFile:
-            path: 009-sp_d_pagebuilder_postprocessing-001.sql
+            path: 008-sp_l_pagebuilder_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 28
       author: liquibase
       changes:
         - sqlFile:
-            path: 010-sp_sld_investigation_repeat_postprocessing-001.sql
+            path: 009-sp_d_pagebuilder_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 29
       author: liquibase
       changes:
         - sqlFile:
-            path: 011-sp_page_builder_postprocessing-001.sql
+            path: 010-sp_sld_investigation_repeat_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 30
       author: liquibase
       changes:
         - sqlFile:
-            path: 012-sp_f_page_case_postprocessing-001.sql
+            path: 011-sp_page_builder_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 31
       author: liquibase
       changes:
         - sqlFile:
-            path: 013-sp_hepatitis_datamart_postprocessing-001.sql
+            path: 012-sp_f_page_case_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 32
       author: liquibase
       changes:
         - sqlFile:
-            path: 019-create_nrt_datamart_metadata-001.sql
+            path: 013-sp_hepatitis_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 33
       author: liquibase
       changes:
         - sqlFile:
-            path: 014-sp_get_date_dim-001.sql
+            path: 019-create_nrt_datamart_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 34
       author: liquibase
       changes:
         - sqlFile:
-            path: 018-create-nrt_ldf_data-001.sql
+            path: 014-sp_get_date_dim-001.sql
             splitStatements: false
   - changeSet:
       id: 35
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 018-create-nrt_ldf_data-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 36
       author: liquibase
       changes:
         - sqlFile:
