@@ -20,7 +20,7 @@ public class DataPostProcessor {
             Arrays.stream(utilHelper.deserializePayload(name, Name[].class))
                     .filter(oName -> !ObjectUtils.isEmpty(oName.getOnOrgUid()))
                     .max(Comparator.comparing(Name::getOnOrgUid))
-                    .map(n -> n.updateOrg(org));
+                    .ifPresent(n -> n.updateOrg(org));
         }
     }
 
@@ -33,7 +33,7 @@ public class DataPostProcessor {
                 Arrays.stream(utilHelper.deserializePayload(entity, Entity[].class))
                         .filter(oEntity -> !ObjectUtils.isEmpty(oEntity.getEntityIdSeq()))
                         .max(Comparator.comparing(Entity::getEntityIdSeq))
-                        .map(n -> n.updateOrg(org));
+                        .ifPresent(n -> n.updateOrg(org));
             } else {
                 Function<String, T> entityFn =
                         (String typeCd) ->
@@ -55,7 +55,7 @@ public class DataPostProcessor {
             Arrays.stream(utilHelper.deserializePayload(address, Address[].class))
                     .filter(oAddr -> !ObjectUtils.isEmpty(oAddr.getAddrPlUid()))
                     .max(Comparator.comparing(Address::getAddrPlUid))
-                    .map(n -> n.updateOrg(org));
+                    .ifPresent(n -> n.updateOrg(org));
         }
     }
 
@@ -64,7 +64,7 @@ public class DataPostProcessor {
             Arrays.stream(utilHelper.deserializePayload(phone, Phone[].class))
                     .filter(oPhone -> !ObjectUtils.isEmpty(oPhone.getPhTlUid()))
                     .max(Comparator.comparing(Phone::getPhTlUid))
-                    .map(n -> n.updateOrg(org));
+                    .ifPresent(n -> n.updateOrg(org));
         }
     }
 
@@ -73,7 +73,7 @@ public class DataPostProcessor {
             Arrays.stream(utilHelper.deserializePayload(fax, Fax[].class))
                     .filter(oPhone -> !ObjectUtils.isEmpty(oPhone.getFaxTlUid()))
                     .max(Comparator.comparing(Fax::getFaxTlUid))
-                    .map(n -> n.updateOrg(org));
+                    .ifPresent(n -> n.updateOrg(org));
         }
     }
 }

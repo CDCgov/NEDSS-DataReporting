@@ -57,7 +57,7 @@ public class DataPostProcessor {
                             .filter(pName -> !ObjectUtils.isEmpty(pName.getPersonNmSeq()))
                             // Get the entry with the max Person Name Sequence
                             .max(Comparator.comparing(Name::getPersonNmSeq))
-                            .map(n -> n.updatePerson(pf, cd.getVal()));
+                            .ifPresent(n -> n.updatePerson(pf, cd.getVal()));
                 }
             });
         }
@@ -70,18 +70,18 @@ public class DataPostProcessor {
                         .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
                                 && (pa.getUseCd().equalsIgnoreCase("H")))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
-                        .map(n -> n.updatePerson(pf));
+                        .ifPresent(n -> n.updatePerson(pf));
                 Arrays.stream(utilHelper.deserializePayload(address, Address[].class))
                         .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
                                 && pa.getUseCd().equalsIgnoreCase("BIR"))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
-                        .map(n -> n.updatePerson(pf));
+                        .ifPresent(n -> n.updatePerson(pf));
             } else if (pf.getClass() == ProviderReporting.class || pf.getClass() == ProviderElasticSearch.class) {
                 Arrays.stream(utilHelper.deserializePayload(address, Address[].class))
                         .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
                                 && pa.getUseCd().equalsIgnoreCase("WP"))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
-                        .map(n -> n.updatePerson(pf));
+                        .ifPresent(n -> n.updatePerson(pf));
             }
         }
     }
@@ -91,14 +91,14 @@ public class DataPostProcessor {
             Arrays.stream(utilHelper.deserializePayload(race, Race[].class))
                     .filter(pRace -> !ObjectUtils.isEmpty(pRace.getPersonUid()))
                     .max(Comparator.comparing(Race::getPersonUid))
-                    .map(n -> n.updatePerson(pf));
+                    .ifPresent(n -> n.updatePerson(pf));
         }
     }
 
     public <T extends PersonExtendedProps> void processPersonTelephone(String telephone, T pf) {
         if (!ObjectUtils.isEmpty(telephone)) {
             Function<String, T> personPhoneFn =
-                    (code) -> Arrays.stream(utilHelper.deserializePayload(telephone, Phone[].class))
+                    code -> Arrays.stream(utilHelper.deserializePayload(telephone, Phone[].class))
                             .filter(phone -> (StringUtils.hasText(phone.getUseCd())
                                     && phone.getUseCd().equalsIgnoreCase(code)) ||
                                     (StringUtils.hasText(phone.getCd())
@@ -138,7 +138,7 @@ public class DataPostProcessor {
             Arrays.stream(utilHelper.deserializePayload(email, Email[].class))
                     .filter(pEmail -> !ObjectUtils.isEmpty(pEmail.getTeleLocatorUid()))
                     .max(Comparator.comparing(Email::getTeleLocatorUid))
-                    .map(n -> n.updatePerson(pf));
+                    .ifPresent(n -> n.updatePerson(pf));
         }
     }
 }
