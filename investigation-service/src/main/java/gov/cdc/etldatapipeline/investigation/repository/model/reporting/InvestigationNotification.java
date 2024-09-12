@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.investigation.repository.model.dto;
+package gov.cdc.etldatapipeline.investigation.repository.model.reporting;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Entity
 @Data
-public class InvestigationNotifications {
+public class InvestigationNotification {
     @JsonProperty("source_act_uid")
     @Id
     @Column(name = "source_act_uid")

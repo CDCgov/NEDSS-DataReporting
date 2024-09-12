@@ -14,18 +14,25 @@ import org.springframework.web.bind.annotation.*;
 public class InvestigationController {
     private final KafkaProducerService producerService;
 
-    @Value("${spring.kafka.input.topic-name}")
-    private String topicName;
+    @Value("${spring.kafka.input.topic-name-phc}")
+    private String investigationTopic;
+
+    @Value("${spring.kafka.input.topic-name-ntf}")
+    private String notificationTopic;
 
     @GetMapping("/reporting/investigation-svc/status")
-    @ResponseBody
     public ResponseEntity<String> getDataPipelineStatusHealth() {
         log.info("Investigation Service Status OK");
         return ResponseEntity.status(HttpStatus.OK).body("Investigation Service Status OK");
     }
 
-    @PostMapping("/publish")
-    public void publishMessageToKafka(@RequestBody String jsonData) {
-        producerService.sendMessage(topicName, jsonData);
+    @PostMapping("/reporting/investigation-svc/investigation")
+    public void postInvestigation(@RequestBody String jsonData) {
+        producerService.sendMessage(investigationTopic, jsonData);
+    }
+
+    @PostMapping("/reporting/investigation-svc/notification")
+    public void postNotification(@RequestBody String jsonData) {
+        producerService.sendMessage(notificationTopic, jsonData);
     }
 }

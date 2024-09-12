@@ -6,6 +6,9 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotification;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotificationKey;
+import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +22,6 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,6 +36,9 @@ class InvestigationDataProcessingTests {
 
     @Mock
     InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
+
+    @Mock
+    InvestigationRepository investigationRepository;
 
     @Captor
     private ArgumentCaptor<String> topicCaptor;
@@ -59,7 +64,7 @@ class InvestigationDataProcessingTests {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository);
+        transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository, investigationRepository);
         Logger logger = (Logger) LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
         listAppender.start();
         logger.addAppender(listAppender);
@@ -123,7 +128,7 @@ class InvestigationDataProcessingTests {
         logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
     }
 
-        @Test
+    @Test
     void testObservationNotificationIds() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
@@ -150,12 +155,12 @@ class InvestigationDataProcessingTests {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setInvestigationNotifications(readFileData(FILE_PREFIX + "InvestigationNotifications.json"));
+        investigation.setInvestigationNotifications(readFileData(FILE_PREFIX + "InvestigationNotification.json"));
         transformer.investigationNotificationsOutputTopicName = NOTIFICATIONS_TOPIC;
 
         final var notifications = constructNotifications();
 
-        InvestigationNotificationsKey notificationKey = new InvestigationNotificationsKey();
+        InvestigationNotificationKey notificationKey = new InvestigationNotificationKey();
         notificationKey.setNotificationUid(notifications.getNotificationUid());
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
@@ -165,9 +170,9 @@ class InvestigationDataProcessingTests {
         assertEquals(NOTIFICATIONS_TOPIC, topicCaptor.getValue());
 
         var actualNotifications = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationNotifications.class);
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationNotification.class);
         var actualKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationNotificationsKey.class);
+                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationNotificationKey.class);
 
         assertEquals(notificationKey, actualKey);
         assertEquals(notifications, actualNotifications);
@@ -186,7 +191,7 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testProcessInvestigationCaseAnswers() {
+    void testInvestigationCaseAnswer() {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -194,34 +199,10 @@ class InvestigationDataProcessingTests {
 
         InvestigationCaseAnswer caseAnswer = new InvestigationCaseAnswer();
         caseAnswer.setActUid(investigationUid);
-
-        transformer.transformInvestigationData(investigation);
-
-        when(investigationCaseAnswerRepository.findByActUid(investigationUid)).thenReturn(new ArrayList<>());
-
-        verify(investigationCaseAnswerRepository).findByActUid(investigationUid);
-        verify(investigationCaseAnswerRepository, never()).deleteByActUid(anyLong());
-        verify(investigationCaseAnswerRepository).saveAll(anyList());
-    }
-
-    @Test
-    void testInvestigationCaseAnswerExistingRecords() {
-        Investigation investigation = new Investigation();
-
-        investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"));
-
-        InvestigationCaseAnswer caseAnswer = new InvestigationCaseAnswer();
-        caseAnswer.setActUid(investigationUid);
-
-        List<InvestigationCaseAnswer> investigationCaseAnswerDataIfPresent = new ArrayList<>();
-        investigationCaseAnswerDataIfPresent.add(new InvestigationCaseAnswer());
-        when(investigationCaseAnswerRepository.findByActUid(investigationUid)).thenReturn(investigationCaseAnswerDataIfPresent);
 
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation);
         assertEquals("D_INV_CLINICAL,D_INV_ADMINISTRATIVE", investigationTransformed.getRdbTableNameList());
 
-        verify(investigationCaseAnswerRepository).findByActUid(investigationUid);
         verify(investigationCaseAnswerRepository).deleteByActUid(investigationUid);
         verify(investigationCaseAnswerRepository).saveAll(anyList());
     }
@@ -235,7 +216,7 @@ class InvestigationDataProcessingTests {
 
         transformer.transformInvestigationData(investigation);
 
-        verify(investigationCaseAnswerRepository, never()).findByActUid(investigationUid);
+        verify(investigationCaseAnswerRepository, never()).deleteByActUid(investigationUid);
     }
 
     @Test
@@ -249,8 +230,8 @@ class InvestigationDataProcessingTests {
         assertEquals(expected, answers[1]);
     }
 
-    private @NotNull InvestigationNotifications constructNotifications() {
-        InvestigationNotifications notifications = new InvestigationNotifications();
+    private @NotNull InvestigationNotification constructNotifications() {
+        InvestigationNotification notifications = new InvestigationNotification();
         notifications.setSourceActUid(263748597L);
         notifications.setPublicHealthCaseUid(investigationUid);
         notifications.setSourceClassCd("NOTF");

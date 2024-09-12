@@ -5,8 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotification;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotificationKey;
+import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import lombok.Setter;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -38,6 +43,7 @@ public class ProcessInvestigationDataUtil {
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
     private final InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
+    private final InvestigationRepository investigationRepository;
 
     @Transactional(transactionManager = "rdbTransactionManager")
     public InvestigationTransformed transformInvestigationData(Investigation investigation) {
@@ -60,21 +66,21 @@ public class ProcessInvestigationDataUtil {
             JsonNode investigationNotificationsJsonArray = parseJsonArray(investigationNotifications, objectMapper);
 
             if (investigationNotificationsJsonArray != null) {
-                InvestigationNotificationsKey investigationNotificationsKey = new InvestigationNotificationsKey();
+                InvestigationNotificationKey investigationNotificationKey = new InvestigationNotificationKey();
                 for (JsonNode node : investigationNotificationsJsonArray) {
                     Long notificationUid = node.get("notification_uid").asLong();
-                    investigationNotificationsKey.setNotificationUid(notificationUid);
+                    investigationNotificationKey.setNotificationUid(notificationUid);
 
-                    InvestigationNotifications tempInvestigationNotificationsObject = objectMapper.treeToValue(node, InvestigationNotifications.class);
+                    InvestigationNotification tempInvestigationNotificationObject = objectMapper.treeToValue(node, InvestigationNotification.class);
 
-                    String jsonKey = jsonGenerator.generateStringJson(investigationNotificationsKey);
-                    String jsonValue = jsonGenerator.generateStringJson(tempInvestigationNotificationsObject);
+                    String jsonKey = jsonGenerator.generateStringJson(investigationNotificationKey);
+                    String jsonValue = jsonGenerator.generateStringJson(tempInvestigationNotificationObject);
                     kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue)
                             .whenComplete((res, e) -> logger.info("Notification data (uid={}) sent to {}", notificationUid, investigationNotificationsOutputTopicName));
                 }
             }
             else {
-                logger.info("InvestigationNotifications array is null.");
+                logger.info("InvestigationNotification array is null.");
             }
         } catch (Exception e) {
             logger.error("Error processing Notifications JSON array from investigation data: {}", e.getMessage());
@@ -249,7 +255,6 @@ public class ProcessInvestigationDataUtil {
 
             if(investigationCaseAnswerJsonArray != null) {
                 Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
-                List<InvestigationCaseAnswer> investigationCaseAnswerDataIfPresent = investigationCaseAnswerRepository.findByActUid(actUid);
                 List<InvestigationCaseAnswer> investigationCaseAnswerList = new ArrayList<>();
 
                 for(JsonNode node : investigationCaseAnswerJsonArray) {
@@ -257,13 +262,8 @@ public class ProcessInvestigationDataUtil {
                     investigationCaseAnswerList.add(tempCaseAnswerObject);
                 }
 
-                if(investigationCaseAnswerDataIfPresent.isEmpty()) {
-                    investigationCaseAnswerRepository.saveAll(investigationCaseAnswerList);
-                }
-                else {
-                    investigationCaseAnswerRepository.deleteByActUid(actUid);
-                    investigationCaseAnswerRepository.saveAll(investigationCaseAnswerList);
-                }
+                investigationCaseAnswerRepository.deleteByActUid(actUid);
+                investigationCaseAnswerRepository.saveAll(investigationCaseAnswerList);
 
                 String rdbTblNms = String.join(",", investigationCaseAnswerList.stream()
                                 .map(InvestigationCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
@@ -276,6 +276,18 @@ public class ProcessInvestigationDataUtil {
             }
         } catch (Exception e) {
             logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
+        }
+    }
+
+    @Transactional(transactionManager = "odseTransactionManager", isolation = Isolation.REPEATABLE_READ)
+    public void processPhcFactDatamart(String publicHealthCaseUid) {
+        try {
+            // Calling sp_public_health_case_fact_datamart_event
+            logger.info("Executing stored proc: sp_public_health_case_fact_datamart_event '{}' to populate PHС fact datamart", publicHealthCaseUid);
+            investigationRepository.populatePhcFact(publicHealthCaseUid);
+            logger.info("Stored proc execution completed: sp_public_health_case_fact_datamart_event '{}", publicHealthCaseUid);
+        } catch (Exception dbe) {
+            logger.warn("Error processing PHC fact datamart: {}", dbe.getMessage());
         }
     }
 

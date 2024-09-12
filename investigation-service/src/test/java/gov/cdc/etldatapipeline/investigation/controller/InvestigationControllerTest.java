@@ -2,6 +2,7 @@ package gov.cdc.etldatapipeline.investigation.controller;
 
 import gov.cdc.etldatapipeline.investigation.service.KafkaProducerService;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -28,17 +29,36 @@ class InvestigationControllerTest {
     @InjectMocks
     InvestigationController investigationController;
 
+    private AutoCloseable closeable;
+
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(investigationController).build();
     }
 
+    @AfterEach
+    public void tearDown() throws Exception {
+        closeable.close();
+    }
+
     @Test
-    void publishMessageToKafkaTest() throws Exception  {
+    void postInvestigationTest() throws Exception  {
         String jsonData = "{\"key\":\"value\"}";
 
-        mockMvc.perform(post("/publish")
+        mockMvc.perform(post("/reporting/investigation-svc/investigation")
+                        .contentType("application/json")
+                        .content(jsonData))
+                .andExpect(status().isOk());
+
+        verify(kafkaProducerService).sendMessage(isNull(), eq(jsonData));
+    }
+
+    @Test
+    void postNotificationTest() throws Exception  {
+        String jsonData = "{\"key\":\"value\"}";
+
+        mockMvc.perform(post("/reporting/investigation-svc/notification")
                         .contentType("application/json")
                         .content(jsonData))
                 .andExpect(status().isOk());

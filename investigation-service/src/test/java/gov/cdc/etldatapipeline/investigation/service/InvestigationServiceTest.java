@@ -3,22 +3,22 @@ package gov.cdc.etldatapipeline.investigation.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
 import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationKey;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
+import gov.cdc.etldatapipeline.investigation.repository.odse.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,8 +28,14 @@ import static org.mockito.Mockito.*;
 
 class InvestigationServiceTest {
 
+    @InjectMocks
+    private InvestigationService investigationService;
+
     @Mock
     private InvestigationRepository investigationRepository;
+
+    @Mock
+    private NotificationRepository notificationRepository;
 
     @Mock
     private InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
@@ -51,16 +57,26 @@ class InvestigationServiceTest {
 
     private AutoCloseable closeable;
 
-    private ProcessInvestigationDataUtil transformer;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final static String filePathPrefix = "rawDataFiles/";
+    private final String investigationTopic = "Investigation";
+    private final String notificationTopic = "Notification";
+    private final String investigationTopicOutput = "InvestigationOutput";
+    private final String notificationTopicOutput = "investigationNotification";
 
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository);
+        ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository, investigationRepository);
         transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
         transformer.setInvestigationObservationOutputTopicName("investigationObservation");
-        transformer.setInvestigationNotificationsOutputTopicName("investigationNotification");
+        transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
+        investigationService = new InvestigationService(investigationRepository, notificationRepository, kafkaTemplate, transformer);
+        investigationService.setPhcDatamartEnable(true);
+        investigationService.setInvestigationTopic(investigationTopic);
+        investigationService.setNotificationTopic(notificationTopic);
+        investigationService.setInvestigationTopicReporting(investigationTopicOutput);
     }
 
     @AfterEach
@@ -69,10 +85,7 @@ class InvestigationServiceTest {
     }
 
     @Test
-    void testProcessMessage() throws JsonProcessingException {
-        String investigationTopic = "Investigation";
-        String investigationTopicOutput = "InvestigationOutput";
-
+    void testProcessInvestigationMessage() throws JsonProcessingException {
         Long investigationUid = 234567890L;
         String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\"}}}";
 
@@ -80,7 +93,7 @@ class InvestigationServiceTest {
         when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
-        validateData(investigationTopic, investigationTopicOutput, payload, investigation);
+        validateInvestigationData(payload, investigation);
 
         verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid));
         verify(investigationRepository).populatePhcFact(String.valueOf(investigationUid));
@@ -88,32 +101,53 @@ class InvestigationServiceTest {
 
     @Test
     void testProcessInvestigationException() {
-        String investigationTopic = "Investigation";
-        String investigationTopicOutput = "InvestigationOutput";
         String invalidPayload = "{\"payload\": {\"after\": }}";
-
-        final var investigationService = getInvestigationService(investigationTopic, investigationTopicOutput);
         assertThrows(RuntimeException.class, () -> investigationService.processMessage(invalidPayload, investigationTopic, consumer));
     }
 
     @Test
     void testProcessInvestigationNoDataException() {
-        String investigationTopic = "Investigation";
-        String investigationTopicOutput = "InvestigationOutput";
         Long investigationUid = 234567890L;
         String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\"}}}";
 
         when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.empty());
-
-        final var investigationService = getInvestigationService(investigationTopic, investigationTopicOutput);
         assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, investigationTopic, consumer));
     }
 
-    private void validateData(String inputTopicName, String outputTopicName,
-                              String payload, Investigation investigation) throws JsonProcessingException {
+    @Test
+    void testProcessNotificationMessage() {
+        Long notificationUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"notification_uid\": \"" + notificationUid + "\"}}}";
 
-        final var investigationService = getInvestigationService(inputTopicName, outputTopicName);
-        investigationService.processMessage(payload, inputTopicName, consumer);
+        final NotificationUpdate notification = constructNotificationUpdate(notificationUid);
+        when(notificationRepository.computeNotifications(String.valueOf(notificationUid))).thenReturn(Optional.of(notification));
+        investigationService.processMessage(payload, notificationTopic, consumer);
+
+        verify(notificationRepository).computeNotifications(String.valueOf(notificationUid));
+        verify(kafkaTemplate).send(topicCaptor.capture(), anyString(), anyString());
+        assertEquals(notificationTopicOutput, topicCaptor.getValue());
+    }
+
+    @Test
+    void testProcessNotificationException() {
+        String invalidPayload = "{\"payload\": {\"after\": {}}}";
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> investigationService.processMessage(invalidPayload, notificationTopic, consumer));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+    }
+
+    @Test
+    void testProcessNotificationNoDataException() {
+        Long notificationUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"notification_uid\": \"" + notificationUid + "\"}}}";
+
+        when(investigationRepository.computeInvestigations(String.valueOf(notificationUid))).thenReturn(Optional.empty());
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, notificationTopic, consumer));
+    }
+
+    private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
+
+        investigationService.processMessage(payload, investigationTopic, consumer);
 
         InvestigationKey investigationKey = new InvestigationKey();
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
@@ -130,17 +164,9 @@ class InvestigationServiceTest {
         var actualInvestigationKey = objectMapper.readValue(
                 objectMapper.readTree(actualKey).path("payload").toString(), InvestigationKey.class);
 
-        assertEquals(outputTopicName, actualTopic); // investigation topic
+        assertEquals(investigationTopicOutput, actualTopic); // investigation topic
         assertEquals(investigationKey, actualInvestigationKey);
         assertEquals(reportingModel, actualReporting);
-    }
-
-    private InvestigationService getInvestigationService(String inputTopicName, String outputTopicName) {
-        InvestigationService investigationService = new InvestigationService(investigationRepository, kafkaTemplate, transformer);
-        investigationService.setInvestigationTopic(inputTopicName);
-        investigationService.setInvestigationTopicReporting(outputTopicName);
-        investigationService.setPhcDatamartEnable(true);
-        return investigationService;
     }
 
     private Investigation constructInvestigation(Long investigationUid) {
@@ -160,14 +186,13 @@ class InvestigationServiceTest {
         investigation.setMmwrWeek("22");
         investigation.setMmwrYear("2024");
 
-        String filePathPrefix = "rawDataFiles/";
         investigation.setActIds(readFileData(filePathPrefix + "ActIds.json"));
         investigation.setInvestigationConfirmationMethod(readFileData(filePathPrefix + "ConfirmationMethod.json"));
         investigation.setObservationNotificationIds(readFileData(filePathPrefix + "ObservationNotificationIds.json"));
         investigation.setOrganizationParticipations(readFileData(filePathPrefix + "OrganizationParticipations.json"));
         investigation.setPersonParticipations(readFileData(filePathPrefix + "PersonParticipations.json"));
         investigation.setInvestigationCaseAnswer(readFileData(filePathPrefix + "InvestigationCaseAnswers.json"));
-        investigation.setInvestigationNotifications(readFileData(filePathPrefix + "InvestigationNotifications.json"));
+        investigation.setInvestigationNotifications(readFileData(filePathPrefix + "InvestigationNotification.json"));
         return investigation;
     }
 
@@ -198,5 +223,12 @@ class InvestigationServiceTest {
         reporting.setPhcInvFormId(263748598L);          // ObservationNotificationIds.json, source_act_uid for act_type_cd=PHCInvForm
         reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
         return reporting;
+    }
+
+    private NotificationUpdate constructNotificationUpdate(Long notificationUid) {
+        final NotificationUpdate notification = new NotificationUpdate();
+        notification.setNotificationUid(notificationUid);
+        notification.setInvestigationNotifications(readFileData(filePathPrefix + "InvestigationNotification.json"));
+        return notification;
     }
 }

@@ -1,7 +1,8 @@
 spring:
   kafka:
     input:
-      topic-name: nbs_Public_health_case
+      topic-name-phc: nbs_Public_health_case
+      topic-name-ntf: nbs_Notification
     output:
       topic-name-reporting: nrt_investigation
       topic-name-confirmation: nrt_investigation_confirmation

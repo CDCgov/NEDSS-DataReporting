@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.investigation.repository.model.dto;
+package gov.cdc.etldatapipeline.investigation.repository.model.reporting;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
-public class InvestigationNotificationsKey {
+public class InvestigationNotificationKey {
 
     @NonNull
     @JsonProperty("notification_uid")

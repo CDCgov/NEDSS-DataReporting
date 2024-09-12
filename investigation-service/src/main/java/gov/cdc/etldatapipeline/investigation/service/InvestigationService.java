@@ -5,12 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
 import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationKey;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationTransformed;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
+import gov.cdc.etldatapipeline.investigation.repository.odse.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -29,19 +32,30 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @Setter
 @RequiredArgsConstructor
 public class InvestigationService {
-    private static final Logger logger = LoggerFactory.getLogger(InvestigationService.class);
+    private static int nProc = Runtime.getRuntime().availableProcessors();
 
-    @Value("${spring.kafka.input.topic-name}")
+    private static final Logger logger = LoggerFactory.getLogger(InvestigationService.class);
+    private final ExecutorService phcExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("phc-"));
+    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    @Value("${spring.kafka.input.topic-name-phc}")
     private String investigationTopic;
+
+    @Value("${spring.kafka.input.topic-name-ntf}")
+    private String notificationTopic;
 
     @Value("${spring.kafka.output.topic-name-reporting}")
     public String investigationTopicReporting;
@@ -50,6 +64,7 @@ public class InvestigationService {
     public boolean phcDatamartEnable;
 
     private final InvestigationRepository investigationRepository;
+    private final NotificationRepository notificationRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessInvestigationDataUtil processDataUtil;
     InvestigationKey investigationKey = new InvestigationKey();
@@ -76,66 +91,74 @@ public class InvestigationService {
             }
     )
     @KafkaListener(
-            topics = "${spring.kafka.input.topic-name}"
+            topics = {
+                    "${spring.kafka.input.topic-name-phc}",
+                    "${spring.kafka.input.topic-name-ntf}"
+            }
     )
     public void processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
                                Consumer<?,?> consumer) {
         logger.debug(topicDebugLog, message, topic);
-        processInvestigation(message);
+        if (topic.equals(investigationTopic)) {
+            processInvestigation(message);
+        } else if (topic.equals(notificationTopic)) {
+            processNotification(message);
+        }
         consumer.commitSync();
     }
 
     public void processInvestigation(String value) {
         String publicHealthCaseUid = "";
         try {
-            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-            JsonNode jsonNode = objectMapper.readTree(value);
-            JsonNode payloadNode = jsonNode.get("payload").path("after");
-            if (payloadNode != null && payloadNode.has("public_health_case_uid")) {
-                publicHealthCaseUid = payloadNode.get("public_health_case_uid").asText();
+            final String phcUid = publicHealthCaseUid = extractUid(value, "public_health_case_uid");
+
+            if (phcDatamartEnable) {
+                CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
+            }
+
+            logger.info(topicDebugLog, publicHealthCaseUid, investigationTopic);
+            Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
+            if (investigationData.isPresent()) {
+                Investigation investigation = investigationData.get();
                 investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
-
-                if (phcDatamartEnable) {
-                    processPhcFactDatamart(publicHealthCaseUid);
-                }
-
-                logger.debug(topicDebugLog, publicHealthCaseUid, investigationTopic);
-                Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
-                if (investigationData.isPresent()) {
-                    Investigation investigation = investigationData.get();
-                    InvestigationReporting reportingModel = modelMapper.map(investigation, InvestigationReporting.class);
-                    InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation);
-                    buildReportingModelForTransformedData(reportingModel, investigationTransformed);
-                    pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
+                InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation);
+                InvestigationReporting reportingModel = buildReportingModelForTransformedData(investigation, investigationTransformed);
+                pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
                         // only process and send notifications when investigation data has been sent
                         .whenComplete((res, ex) ->
-                            logger.info("Investigation data (uid={}) sent to {}", investigation.getPublicHealthCaseUid(), investigationTopicReporting))
+                                logger.info("Investigation data (uid={}) sent to {}", investigation.getPublicHealthCaseUid(), investigationTopicReporting))
                         .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications(), objectMapper))
                         .join();
-                } else {
-                    throw new NoDataException("No investigation data found for id: " + publicHealthCaseUid);
-                }
+            } else {
+                throw new EntityNotFoundException("Unable to find Investigation with id " + publicHealthCaseUid);
             }
-        } catch (NoDataException nde) {
-            logger.error(nde.getMessage());
-            throw nde;
+        } catch (EntityNotFoundException nde) {
+            throw new NoDataException(nde.getMessage());
         } catch (Exception e) {
-            String msg = "Error processing investigation" +
-                    (!publicHealthCaseUid.isEmpty() ? " for ids='" + publicHealthCaseUid + "': {}" : ": {}");
-            logger.error(msg, e.getMessage());
-            throw new RuntimeException(e);
+            String msg = "Error processing Investigation data" +
+                    (!publicHealthCaseUid.isEmpty() ? " with ids '" + publicHealthCaseUid + "': " : ": " + e.getMessage());
+            throw new RuntimeException(msg, e);
         }
     }
 
-    private void processPhcFactDatamart(String publicHealthCaseUid) {
+    public void processNotification(String value) {
+        String notificationUid = "";
         try {
-            // Calling sp_public_health_case_fact_datamart_event
-            logger.info("Executing stored proc with ids: {} to populate PHС fact datamart", publicHealthCaseUid);
-            investigationRepository.populatePhcFact(publicHealthCaseUid);
-            logger.info("Stored proc executed");
-        } catch (Exception dbe) {
-            logger.warn("Error processing PHC fact datamart: {}", dbe.getMessage());
+            notificationUid = extractUid(value, "notification_uid");
+            Optional<NotificationUpdate> notificationData = notificationRepository.computeNotifications(notificationUid);
+            if (notificationData.isPresent()) {
+                NotificationUpdate notification = notificationData.get();
+                processDataUtil.processNotifications(notification.getInvestigationNotifications(), objectMapper);
+            } else {
+                throw new EntityNotFoundException("Unable to find Notification with id " + notificationUid );
+            }
+        } catch (EntityNotFoundException nde) {
+            throw new NoDataException(nde.getMessage());
+        } catch (Exception e) {
+            String msg = "Error processing Notification data" +
+                (!notificationUid.isEmpty() ? " for ids='" + notificationUid + "': " : ": " + e.getMessage());
+            throw new RuntimeException(msg, e);
         }
     }
 
@@ -146,7 +169,8 @@ public class InvestigationService {
         return kafkaTemplate.send(topicName, jsonKey, jsonValue);
     }
 
-    private void buildReportingModelForTransformedData(InvestigationReporting reportingModel, InvestigationTransformed investigationTransformed) {
+    private InvestigationReporting buildReportingModelForTransformedData(Investigation investigation, InvestigationTransformed investigationTransformed) {
+        final InvestigationReporting reportingModel = modelMapper.map(investigation, InvestigationReporting.class);
         reportingModel.setInvestigatorId(investigationTransformed.getInvestigatorId());
         reportingModel.setPhysicianId(investigationTransformed.getPhysicianId());
         reportingModel.setPatientId(investigationTransformed.getPatientId());
@@ -156,5 +180,16 @@ public class InvestigationService {
         reportingModel.setLegacyCaseId(investigationTransformed.getLegacyCaseId());
         reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
         reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
+        return reportingModel;
+    }
+
+    private String extractUid(String value, String uidName) throws Exception {
+        JsonNode jsonNode = objectMapper.readTree(value);
+        JsonNode payloadNode = jsonNode.get("payload").path("after");
+        if (!payloadNode.isMissingNode() && payloadNode.has(uidName)) {
+            return payloadNode.get(uidName).asText();
+        } else {
+            throw new NoSuchElementException("The " + uidName + " field is missing in the message payload.");
+        }
     }
 }
