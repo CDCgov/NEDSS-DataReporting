@@ -71,7 +71,7 @@ public class InvestigationService {
     private final ModelMapper modelMapper = new ModelMapper();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
-    private String topicDebugLog = "Received Investigation ID: {} from topic: {}";
+    private String topicDebugLog = "Received {} with id: {} from topic: {}";
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -99,7 +99,7 @@ public class InvestigationService {
     public void processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
                                Consumer<?,?> consumer) {
-        logger.debug(topicDebugLog, message, topic);
+        logger.debug(topicDebugLog, "message", message, topic);
         if (topic.equals(investigationTopic)) {
             processInvestigation(message);
         } else if (topic.equals(notificationTopic)) {
@@ -117,7 +117,7 @@ public class InvestigationService {
                 CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
             }
 
-            logger.info(topicDebugLog, publicHealthCaseUid, investigationTopic);
+            logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
             Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
             if (investigationData.isPresent()) {
                 Investigation investigation = investigationData.get();
@@ -127,14 +127,14 @@ public class InvestigationService {
                 pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
                         // only process and send notifications when investigation data has been sent
                         .whenComplete((res, ex) ->
-                                logger.info("Investigation data (uid={}) sent to {}", investigation.getPublicHealthCaseUid(), investigationTopicReporting))
+                                logger.info("Investigation data (uid={}) sent to {}", phcUid, investigationTopicReporting))
                         .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications(), objectMapper))
                         .join();
             } else {
-                throw new EntityNotFoundException("Unable to find Investigation with id " + publicHealthCaseUid);
+                throw new EntityNotFoundException("Unable to find Investigation with id: " + publicHealthCaseUid);
             }
-        } catch (EntityNotFoundException nde) {
-            throw new NoDataException(nde.getMessage());
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             String msg = "Error processing Investigation data" +
                     (!publicHealthCaseUid.isEmpty() ? " with ids '" + publicHealthCaseUid + "': " : ": " + e.getMessage());
@@ -146,6 +146,8 @@ public class InvestigationService {
         String notificationUid = "";
         try {
             notificationUid = extractUid(value, "notification_uid");
+            logger.info(topicDebugLog, "Notification", notificationUid, notificationTopic);
+
             Optional<NotificationUpdate> notificationData = notificationRepository.computeNotifications(notificationUid);
             if (notificationData.isPresent()) {
                 NotificationUpdate notification = notificationData.get();
@@ -153,8 +155,8 @@ public class InvestigationService {
             } else {
                 throw new EntityNotFoundException("Unable to find Notification with id " + notificationUid );
             }
-        } catch (EntityNotFoundException nde) {
-            throw new NoDataException(nde.getMessage());
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             String msg = "Error processing Notification data" +
                 (!notificationUid.isEmpty() ? " for ids='" + notificationUid + "': " : ": " + e.getMessage());

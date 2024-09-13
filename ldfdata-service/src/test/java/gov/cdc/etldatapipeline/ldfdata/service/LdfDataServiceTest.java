@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -114,8 +115,9 @@ class LdfDataServiceTest {
         String ldfTopicOutput = "LdfDataOutput";
 
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        ldfDataService.processMessage(payload, ldfTopic);
-        verify(kafkaTemplate, never()).send(eq(ldfTopicOutput), anyString(), anyString());
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> ldfDataService.processMessage(payload, ldfTopic));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     private void validateData(String inputTopicName, String outputTopicName,

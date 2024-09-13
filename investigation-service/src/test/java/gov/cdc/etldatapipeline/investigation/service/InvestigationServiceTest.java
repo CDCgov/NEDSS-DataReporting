@@ -59,7 +59,7 @@ class InvestigationServiceTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final static String filePathPrefix = "rawDataFiles/";
+    private static final String FILE_PATH_PREFIX = "rawDataFiles/";
     private final String investigationTopic = "Investigation";
     private final String notificationTopic = "Notification";
     private final String investigationTopicOutput = "InvestigationOutput";
@@ -186,13 +186,13 @@ class InvestigationServiceTest {
         investigation.setMmwrWeek("22");
         investigation.setMmwrYear("2024");
 
-        investigation.setActIds(readFileData(filePathPrefix + "ActIds.json"));
-        investigation.setInvestigationConfirmationMethod(readFileData(filePathPrefix + "ConfirmationMethod.json"));
-        investigation.setObservationNotificationIds(readFileData(filePathPrefix + "ObservationNotificationIds.json"));
-        investigation.setOrganizationParticipations(readFileData(filePathPrefix + "OrganizationParticipations.json"));
-        investigation.setPersonParticipations(readFileData(filePathPrefix + "PersonParticipations.json"));
-        investigation.setInvestigationCaseAnswer(readFileData(filePathPrefix + "InvestigationCaseAnswers.json"));
-        investigation.setInvestigationNotifications(readFileData(filePathPrefix + "InvestigationNotification.json"));
+        investigation.setActIds(readFileData(FILE_PATH_PREFIX + "ActIds.json"));
+        investigation.setInvestigationConfirmationMethod(readFileData(FILE_PATH_PREFIX + "ConfirmationMethod.json"));
+        investigation.setObservationNotificationIds(readFileData(FILE_PATH_PREFIX + "ObservationNotificationIds.json"));
+        investigation.setOrganizationParticipations(readFileData(FILE_PATH_PREFIX + "OrganizationParticipations.json"));
+        investigation.setPersonParticipations(readFileData(FILE_PATH_PREFIX + "PersonParticipations.json"));
+        investigation.setInvestigationCaseAnswer(readFileData(FILE_PATH_PREFIX + "InvestigationCaseAnswers.json"));
+        investigation.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
         return investigation;
     }
 
@@ -228,7 +228,7 @@ class InvestigationServiceTest {
     private NotificationUpdate constructNotificationUpdate(Long notificationUid) {
         final NotificationUpdate notification = new NotificationUpdate();
         notification.setNotificationUid(notificationUid);
-        notification.setInvestigationNotifications(readFileData(filePathPrefix + "InvestigationNotification.json"));
+        notification.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
         return notification;
     }
 }
