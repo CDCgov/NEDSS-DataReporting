@@ -1,9 +1,5 @@
 package gov.cdc.etldatapipeline.organization.service;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,11 +15,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
@@ -45,7 +40,6 @@ class OrganizationServiceTest {
     private KafkaTemplate<String, String> kafkaTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
     private AutoCloseable closeable;
 
     private final String orgTopic = "OrgUpdate";
@@ -59,16 +53,10 @@ class OrganizationServiceTest {
         organizationService = new OrganizationService(orgRepository, transformer, kafkaTemplate);
         organizationService.setOrgReportingOutputTopic(orgReportingTopic);
         organizationService.setOrgElasticSearchTopic(orgElasticTopic);
-        Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
-        logger.setLevel(Level.ALL);
-        listAppender.start();
-        logger.addAppender(listAppender);
     }
 
     @AfterEach
     public void tearDown() throws Exception {
-        Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
-        logger.detachAppender(listAppender);
         closeable.close();
     }
 
@@ -85,16 +73,10 @@ class OrganizationServiceTest {
             "{\"payload\": {}}",
             "{\"payload\": {\"after\": {}}}"
     })
-    void testProcessMessageNoData(String payload) {
-        organizationService.processMessage(payload, orgTopic);
-        List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(0).getFormattedMessage().contains("Incoming data doesn't contain payload"));
-    }
-
-    @Test
-    void testProcessMessageException() {
-        String invalidPayload = "{\"payload\": {\"after\": }}";
-        assertThrows(RuntimeException.class, () -> organizationService.processMessage(invalidPayload, orgTopic));
+    void testProcessMessageException(String payload) {
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> organizationService.processMessage(payload, orgTopic));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     @Test

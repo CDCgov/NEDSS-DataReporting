@@ -1,9 +1,6 @@
 package gov.cdc.etldatapipeline.observation.service;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
@@ -12,6 +9,7 @@ import gov.cdc.etldatapipeline.observation.repository.model.dto.ObservationKey;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.ObservationTransformed;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationReporting;
 import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.kafka.common.errors.SerializationException;
@@ -32,6 +30,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
+
 @Service
 @Setter
 @RequiredArgsConstructor
@@ -48,13 +48,13 @@ public class ObservationService {
     public String observationTopicOutputElasticSearch;
 
     private final IObservationRepository iObservationRepository;
-    private String topicDebugLog = "Received Observation ID: {} from topic: {}";
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessObservationDataUtil processObservationDataUtil;
     ObservationKey observationKey = new ObservationKey();
     private final ModelMapper modelMapper = new ModelMapper();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
+    private static String topicDebugLog = "Received Observation with id: {} from topic: {}";
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -82,38 +82,30 @@ public class ObservationService {
         processObservation(message);
     }
 
-    private String processObservation(String value) {
+    private void processObservation(String value) {
+        String observationUid = "";
         try {
-            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-            JsonNode jsonNode = objectMapper.readTree(value);
-            JsonNode payloadNode = jsonNode.get("payload").path("after");
-            if (payloadNode != null && payloadNode.has("observation_uid")) {
-                String observationUid = payloadNode.get("observation_uid").asText();
-                observationKey.setObservationUid(Long.valueOf(observationUid));
-                logger.debug(topicDebugLog, observationUid, observationTopic);
-                Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
-                if(observationData.isPresent()) {
-                    ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
-                    ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get());
-                    buildReportingModelForTransformedData(reportingModel, observationTransformed);
-                    pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
-                    return objectMapper.writeValueAsString(observationData.get());
-                }
-                else {
-                    throw new NoDataException("No observation data found for id: " + observationUid);
-                }
+            observationUid = extractUid(value,"observation_uid");
+            observationKey.setObservationUid(Long.valueOf(observationUid));
+            logger.info(topicDebugLog, observationUid, observationTopic);
+            Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
+            if(observationData.isPresent()) {
+                ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
+                ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get());
+                buildReportingModelForTransformedData(reportingModel, observationTransformed);
+                pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
+                logger.info("Observation data (uid={}) sent to {}", observationUid, observationTopicOutputReporting);
             }
             else {
-                logger.info("No observation id to process.");
+                throw new EntityNotFoundException("Unable to find Observation with id: " + observationUid);
             }
-        } catch (NoDataException nde) {
-            logger.error(nde.getMessage());
-            throw nde;
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            logger.error("Error processing observation: {}", e.getMessage());
-            throw new RuntimeException(e);
+            String msg = "Error processing Observation data" +
+                    (!observationUid.isEmpty() ? " with ids '" + observationUid + "': " : ": " + e.getMessage());
+            throw new RuntimeException(msg, e);
         }
-        return null;
     }
 
     // This same method can be used for elastic search as well and that is why the generic model is present

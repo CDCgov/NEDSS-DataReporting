@@ -6,27 +6,23 @@ import gov.cdc.etldatapipeline.person.model.dto.patient.PatientReporting;
 import gov.cdc.etldatapipeline.person.model.dto.persondetail.*;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderElasticSearch;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderReporting;
-import gov.cdc.etldatapipeline.person.utils.UtilHelper;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @NoArgsConstructor
 public class DataPostProcessor {
-    UtilHelper utilHelper = UtilHelper.getInstance();
-
     /**
      * 1. For patient name_use_cd = {L, AL}
      * 2. For providers  name_use_cd = {L}
@@ -43,7 +39,7 @@ public class DataPostProcessor {
                 nameUseCds = List.of(NameUseCd.LEGAL).toArray(NameUseCd[]::new);
             }
             Arrays.stream(nameUseCds).forEach(cd -> {
-                TreeMap<Long, List<Name>> nameMap = Arrays.stream(utilHelper.deserializePayload(name, Name[].class))
+                TreeMap<Long, List<Name>> nameMap = Arrays.stream(requireNonNull(deserializePayload(name, Name[].class)))
                         .filter(pName -> !ObjectUtils.isEmpty(pName.getPersonUid()))
                         // Filter by Name types: L-Legal, AL-Alias
                         .filter(pName -> ObjectUtils.isEmpty(pName.getNmUseCd()) || pName.getNmUseCd().equals(cd.getVal()))
@@ -66,18 +62,18 @@ public class DataPostProcessor {
     public <T extends PersonExtendedProps> void processPersonAddress(String address, T pf) {
         if (!ObjectUtils.isEmpty(address)) {
             if(pf.getClass() == PatientReporting.class || pf.getClass() == PatientElasticSearch.class) {
-                Arrays.stream(utilHelper.deserializePayload(address, Address[].class))
+                Arrays.stream(requireNonNull(deserializePayload(address, Address[].class)))
                         .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
                                 && (pa.getUseCd().equalsIgnoreCase("H")))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
                         .ifPresent(n -> n.updatePerson(pf));
-                Arrays.stream(utilHelper.deserializePayload(address, Address[].class))
+                Arrays.stream(requireNonNull(deserializePayload(address, Address[].class)))
                         .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
                                 && pa.getUseCd().equalsIgnoreCase("BIR"))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
                         .ifPresent(n -> n.updatePerson(pf));
             } else if (pf.getClass() == ProviderReporting.class || pf.getClass() == ProviderElasticSearch.class) {
-                Arrays.stream(utilHelper.deserializePayload(address, Address[].class))
+                Arrays.stream(requireNonNull(deserializePayload(address, Address[].class)))
                         .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
                                 && pa.getUseCd().equalsIgnoreCase("WP"))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
@@ -88,7 +84,7 @@ public class DataPostProcessor {
 
     public <T extends PersonExtendedProps> void processPersonRace(String race, T pf) {
         if (!ObjectUtils.isEmpty(race)) {
-            Arrays.stream(utilHelper.deserializePayload(race, Race[].class))
+            Arrays.stream(requireNonNull(deserializePayload(race, Race[].class)))
                     .filter(pRace -> !ObjectUtils.isEmpty(pRace.getPersonUid()))
                     .max(Comparator.comparing(Race::getPersonUid))
                     .ifPresent(n -> n.updatePerson(pf));
@@ -98,7 +94,7 @@ public class DataPostProcessor {
     public <T extends PersonExtendedProps> void processPersonTelephone(String telephone, T pf) {
         if (!ObjectUtils.isEmpty(telephone)) {
             Function<String, T> personPhoneFn =
-                    code -> Arrays.stream(utilHelper.deserializePayload(telephone, Phone[].class))
+                    code -> Arrays.stream(requireNonNull(deserializePayload(telephone, Phone[].class)))
                             .filter(phone -> (StringUtils.hasText(phone.getUseCd())
                                     && phone.getUseCd().equalsIgnoreCase(code)) ||
                                     (StringUtils.hasText(phone.getCd())
@@ -116,7 +112,7 @@ public class DataPostProcessor {
         if (!ObjectUtils.isEmpty(entityData)) {
             Function<Predicate<? super EntityData>, T> entityDataTypeCdFn =
                     (Predicate<? super EntityData> p) -> Arrays.stream(
-                                    utilHelper.deserializePayload(entityData, EntityData[].class))
+                                    requireNonNull(deserializePayload(entityData, EntityData[].class)))
                             .filter(p)
                             .filter(e -> !ObjectUtils.isEmpty(e.getEntityIdSeq()))
                             .max(Comparator.comparing(EntityData::getEntityIdSeq))
@@ -135,7 +131,7 @@ public class DataPostProcessor {
 
     public <T extends PersonExtendedProps> void processPersonEmail(String email, T pf) {
         if (!ObjectUtils.isEmpty(email)) {
-            Arrays.stream(utilHelper.deserializePayload(email, Email[].class))
+            Arrays.stream(requireNonNull(deserializePayload(email, Email[].class)))
                     .filter(pEmail -> !ObjectUtils.isEmpty(pEmail.getTeleLocatorUid()))
                     .max(Comparator.comparing(Email::getTeleLocatorUid))
                     .ifPresent(n -> n.updatePerson(pf));

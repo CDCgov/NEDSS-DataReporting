@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
@@ -78,10 +79,11 @@ class ObservationServiceTest {
     void testProcessMessageException() {
         String observationTopic = "Observation";
         String observationTopicOutput = "ObservationOutput";
-        String invalidPayload = "{\"payload\": {\"after\": }}";
+        String invalidPayload = "{\"payload\": {\"after\": {}}}";
 
         final var observationService = getObservationService(observationTopic, observationTopicOutput);
-        assertThrows(RuntimeException.class, () -> observationService.processMessage(invalidPayload, observationTopic));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(invalidPayload, observationTopic));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     @Test

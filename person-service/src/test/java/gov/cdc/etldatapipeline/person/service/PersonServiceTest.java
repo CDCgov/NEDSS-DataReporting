@@ -1,9 +1,5 @@
 package gov.cdc.etldatapipeline.person.service;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,12 +18,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,7 +53,6 @@ class PersonServiceTest {
     private final String providerElasticTopic = "ProviderElastic";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
     @BeforeEach
     public void setUp() {
@@ -67,10 +62,6 @@ class PersonServiceTest {
         personService.setPatientElasticSearchOutputTopic(patientElasticTopic);
         personService.setProviderReportingOutputTopic(providerReportingTopic);
         personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
-        Logger logger = (Logger) LoggerFactory.getLogger(PersonService.class);
-        logger.setLevel(Level.ALL);
-        listAppender.start();
-        logger.addAppender(listAppender);
     }
 
     @Test
@@ -109,16 +100,9 @@ class PersonServiceTest {
             "{\"payload\": {}}",
             "{\"payload\": {\"after\": {}}}"
     })
-    void testProcessMessageNoData(String payload) {
-        personService.processMessage(payload, inputTopic);
-        List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(0).getFormattedMessage().contains("Incoming data doesn't contain payload"));
-    }
-
-    @Test
-    void testProcessMessageException() {
-        String invalidPayload = "{\"payload\": {\"after\": }}";
-        assertThrows(RuntimeException.class, () -> personService.processMessage(invalidPayload, inputTopic));
+    void testProcessMessageException(String payload) {
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> personService.processMessage(payload, inputTopic));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     @Test

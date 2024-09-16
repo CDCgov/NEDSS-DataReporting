@@ -6,31 +6,32 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.base.CaseFormat;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 
+@Slf4j
 public class CustomJsonGeneratorImpl {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     public String generateStringJson(Object model) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
             ObjectNode root = objectMapper.createObjectNode();
             ObjectNode schemaNode = root.putObject("schema");
             schemaNode.put("type", "struct");
             schemaNode.set("fields", generateFieldsArray(model));
             ObjectNode payloadNode = root.putObject("payload");
-            payloadNode = generatePayloadNode(payloadNode, model);
+            generatePayloadNode(payloadNode, model);
             return objectMapper.writeValueAsString(root);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to generate JSON string for model: {}", model.getClass().getName(), e);
             return null;
         }
     }
 
     private static ArrayNode generateFieldsArray(Object model) {
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         ArrayNode fieldsArray = objectMapper.createArrayNode();
-
         try {
             Class<?> modelClass = model.getClass();
             for (Field field : modelClass.getDeclaredFields()) {
@@ -46,25 +47,23 @@ public class CustomJsonGeneratorImpl {
                 fieldsArray.add(fieldNode);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to generate JSON array node for model: {}", model.getClass().getName(), e);
         }
 
         return fieldsArray;
     }
 
     private static ObjectNode generatePayloadNode(ObjectNode payloadNode, Object model) {
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-
         try {
             Class<?> modelClass = model.getClass();
             for (java.lang.reflect.Field field : modelClass.getDeclaredFields()) {
                 field.setAccessible(true);
                 String fieldName = getFieldName(field);
 
-                payloadNode.put(fieldName, objectMapper.valueToTree(field.get(model)));
+                payloadNode.set(fieldName, objectMapper.valueToTree(field.get(model)));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to generate JSON payload node for model: {}", model.getClass().getName(), e);
         }
 
         return payloadNode;

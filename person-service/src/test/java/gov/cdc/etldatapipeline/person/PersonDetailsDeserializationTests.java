@@ -2,15 +2,15 @@ package gov.cdc.etldatapipeline.person;
 
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.persondetail.*;
-import gov.cdc.etldatapipeline.person.utils.UtilHelper;
 import org.junit.jupiter.api.Test;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class PersonDetailsDeserializationTests {
     private static final String FILE_PREFIX = "rawDataFiles/person/";
-    UtilHelper utilHelper = UtilHelper.getInstance();
 
     @Test
     void testPersonAddressDeserialization() {
@@ -19,7 +19,7 @@ class PersonDetailsDeserializationTests {
                 .addressNested(readFileData(FILE_PREFIX + "PersonAddress.json"))
                 .build();
 
-        Address[] addr = utilHelper.deserializePayload(perOp.getAddressNested(), Address[].class);
+        Address[] addr = deserializePayload(perOp.getAddressNested(), Address[].class);
         Address expected = Address.builder()
                 .streetAddr1("123 Main St.")
                 .streetAddr2("")
@@ -39,6 +39,7 @@ class PersonDetailsDeserializationTests {
                 .censusTract("3389.45")
                 .build();
 
+        assertNotNull(addr);
         assertEquals(5, addr.length);
         assertEquals(expected.toString(), addr[1].toString());
     }
@@ -50,7 +51,7 @@ class PersonDetailsDeserializationTests {
                 .emailNested(readFileData(FILE_PREFIX + "PersonEmail.json"))
                 .build();
 
-        Email[] email = utilHelper.deserializePayload(perOp.getEmailNested(), Email[].class);
+        Email[] email = deserializePayload(perOp.getEmailNested(), Email[].class);
         Email expected = Email.builder()
                 .emailAddress("someone1@email.com")
                 .useCd("H")
@@ -58,6 +59,7 @@ class PersonDetailsDeserializationTests {
                 .teleLocatorUid(10000009L)
                 .build();
 
+        assertNotNull(email);
         assertEquals(3, email.length);
         assertEquals(expected.toString(), email[0].toString());
     }
@@ -69,7 +71,7 @@ class PersonDetailsDeserializationTests {
                 .entityDataNested(readFileData(FILE_PREFIX + "PersonEntityData.json"))
                 .build();
 
-        EntityData[] entityData = utilHelper.deserializePayload(perOp.getEntityDataNested(), EntityData[].class);
+        EntityData[] entityData = deserializePayload(perOp.getEntityDataNested(), EntityData[].class);
         EntityData expected = EntityData.builder()
                 .entityUid(242790990L)
                 .typeCd("MR")
@@ -79,6 +81,7 @@ class PersonDetailsDeserializationTests {
                 .assigningAuthorityCd("2.16.840.1.113883.3.1147.1.1001")
                 .build();
 
+        assertNotNull(entityData);
         assertEquals(11, entityData.length);
         assertEquals(expected.toString(), entityData[0].toString());
     }
@@ -90,7 +93,7 @@ class PersonDetailsDeserializationTests {
                 .nameNested(readFileData(FILE_PREFIX + "PersonName.json"))
                 .build();
 
-        Name[] name = utilHelper.deserializePayload(perOp.getNameNested(), Name[].class);
+        Name[] name = deserializePayload(perOp.getNameNested(), Name[].class);
         Name expected = Name.builder()
                 .lastNm("Singgh")
                 .lastNmSndx("S520")
@@ -104,6 +107,7 @@ class PersonDetailsDeserializationTests {
                 .personNmSeq("2")
                 .build();
 
+        assertNotNull(name);
         assertEquals(3, name.length);
         assertEquals(expected.toString(), name[1].toString());
     }
@@ -115,7 +119,7 @@ class PersonDetailsDeserializationTests {
                 .telephoneNested(readFileData(FILE_PREFIX + "PersonTelephone.json"))
                 .build();
 
-        Phone[] phones = utilHelper.deserializePayload(perOp.getTelephoneNested(), Phone[].class);
+        Phone[] phones = deserializePayload(perOp.getTelephoneNested(), Phone[].class);
         Phone expected = Phone.builder()
                 .telephoneNbr("4562323422")
                 .extensionTxt("201")
@@ -124,6 +128,7 @@ class PersonDetailsDeserializationTests {
                 .teleLocatorUid(10000009L)
                 .build();
 
+        assertNotNull(phones);
         assertEquals(8, phones.length);
         assertEquals(expected.toString(), phones[0].toString());
     }
@@ -135,7 +140,7 @@ class PersonDetailsDeserializationTests {
                 .raceNested(readFileData(FILE_PREFIX + "PersonRace.json"))
                 .build();
 
-        Race[] race = utilHelper.deserializePayload(perOp.getRaceNested(), Race[].class);
+        Race[] race = deserializePayload(perOp.getRaceNested(), Race[].class);
         Race expected = Race.builder()
                 .raceCd("2028-9")
                 .raceCategoryCd("2028-9")
@@ -146,6 +151,7 @@ class PersonDetailsDeserializationTests {
                 .raceCalcDetails("Asian")
                 .raceAll("Asian").build();
 
+        assertNotNull(race);
         assertEquals(5, race.length);
         assertEquals(expected.toString(), race[1].toString());
     }

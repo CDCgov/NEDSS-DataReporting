@@ -1,6 +1,5 @@
 package gov.cdc.etldatapipeline.investigation.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
@@ -35,11 +34,12 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
 @Service
 @Setter
@@ -71,7 +71,7 @@ public class InvestigationService {
     private final ModelMapper modelMapper = new ModelMapper();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
-    private String topicDebugLog = "Received {} with id: {} from topic: {}";
+    private static String topicDebugLog = "Received {} with id: {} from topic: {}";
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -153,7 +153,7 @@ public class InvestigationService {
                 NotificationUpdate notification = notificationData.get();
                 processDataUtil.processNotifications(notification.getInvestigationNotifications(), objectMapper);
             } else {
-                throw new EntityNotFoundException("Unable to find Notification with id " + notificationUid );
+                throw new EntityNotFoundException("Unable to find Notification with id; " + notificationUid );
             }
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
@@ -183,15 +183,5 @@ public class InvestigationService {
         reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
         reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
         return reportingModel;
-    }
-
-    private String extractUid(String value, String uidName) throws Exception {
-        JsonNode jsonNode = objectMapper.readTree(value);
-        JsonNode payloadNode = jsonNode.get("payload").path("after");
-        if (!payloadNode.isMissingNode() && payloadNode.has(uidName)) {
-            return payloadNode.get(uidName).asText();
-        } else {
-            throw new NoSuchElementException("The " + uidName + " field is missing in the message payload.");
-        }
     }
 }

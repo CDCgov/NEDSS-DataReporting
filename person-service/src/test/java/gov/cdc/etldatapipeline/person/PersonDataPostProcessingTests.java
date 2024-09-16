@@ -13,12 +13,12 @@ import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderReporting;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.etldatapipeline.person.transformer.PersonTransformers;
 import gov.cdc.etldatapipeline.person.transformer.PersonType;
-import gov.cdc.etldatapipeline.person.utils.UtilHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PersonDataPostProcessingTests {
@@ -27,8 +27,7 @@ class PersonDataPostProcessingTests {
     private static final String FILE_PREFIX_PRV = "rawDataFiles/provider/";
     PersonTransformers tx = new PersonTransformers();
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    UtilHelper utilHelper = UtilHelper.getInstance();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @ParameterizedTest
     @EnumSource(PersonTypeExt.class)
@@ -116,7 +115,7 @@ class PersonDataPostProcessingTests {
     }
 
     private <T> T getTransformed(PersonTypeExt type) throws JsonProcessingException {
-        return utilHelper.deserializePayload(objectMapper.readTree(
+        return deserializePayload(objectMapper.readTree(
                 readFileData(type.getFileName())).path("payload").toString(), type.getType().getClazz());
     }
 
