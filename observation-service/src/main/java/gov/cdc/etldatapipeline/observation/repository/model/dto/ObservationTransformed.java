@@ -11,5 +11,6 @@ public class ObservationTransformed {
     private Long authorOrganizationId;
     private Long orderingOrganizationId;
     private Long materialId;
-    private Long resultObservationUid;
+    private String resultObservationUid;
+    private String followUpObservationUid;
 }

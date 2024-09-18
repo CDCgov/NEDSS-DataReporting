@@ -123,5 +123,6 @@ public class ObservationService {
         reportingModel.setOrderingOrganizationId(observationTransformed.getOrderingOrganizationId());
         reportingModel.setMaterialId(observationTransformed.getMaterialId());
         reportingModel.setResultObservationUid(observationTransformed.getResultObservationUid());
+        reportingModel.setFollowupObservationUid(observationTransformed.getFollowUpObservationUid());
     }
 }

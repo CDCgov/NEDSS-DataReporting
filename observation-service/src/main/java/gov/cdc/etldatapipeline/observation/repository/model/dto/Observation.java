@@ -20,6 +20,12 @@ public class Observation {
     @Column(name = "mood_cd")
     private String moodCd;
 
+    @Column(name = "interpretation_cd")
+    private String interpretationCd;
+
+    @Column(name = "interpretation_desc_txt")
+    private String interpretationDescTxt;
+
     @Id
     @Column(name = "observation_uid")
     private Long observationUid;
@@ -60,6 +66,9 @@ public class Observation {
     @Column(name = "electronic_ind")
     private Character electronicInd;
 
+    @Column(name = "version_ctrl_nbr")
+    private Short versionCtrlNbr;
+
     @Column(name = "ctrl_cd_display_form")
     private String ctrlCdDisplayForm;
 
@@ -72,8 +81,44 @@ public class Observation {
     @Column(name = "shared_ind")
     private Character sharedInd;
 
-    @Column(name = "version_ctrl_nbr")
-    private Short versionCtrlNbr;
+    @Column(name = "status_cd")
+    private String statusCd;
+
+    @Column(name = "cd_system_cd")
+    private String cdSystemCd;
+
+    @Column(name = "cd_system_desc_txt")
+    private String cdSystemDescTxt;
+
+    @Column(name = "ctrl_cd_user_defined_1")
+    private String ctrlCdUserDefined1;
+
+    @Column(name = "alt_cd")
+    private String altCd;
+
+    @Column(name = "alt_cd_desc_txt")
+    private String altCdDescTxt;
+
+    @Column(name = "alt_cd_system_cd")
+    private String altCdSystemCd;
+
+    @Column(name = "alt_cd_system_desc_txt")
+    private String altCdSystemDescTxt;
+
+    @Column(name = "method_cd")
+    private String methodCd;
+
+    @Column(name = "method_desc_txt")
+    private String methodDescTxt;
+
+    @Column(name = "target_site_cd")
+    private String targetSiteCd;
+
+    @Column(name = "target_site_desc_txt")
+    private String targetSiteDescTxt;
+
+    @Column(name = "txt")
+    private String txt;
 
     @Column(name = "add_user_id")
     private Long addUserId;
@@ -105,7 +150,27 @@ public class Observation {
     @Column(name = "followup_observations")
     private String followupObservations;
 
+    @Column(name = "parent_observations")
+    private String parentObservations;
+
     @Column(name = "act_ids")
     private String actIds;
 
+    @Column(name = "edx_ids")
+    private String edxIds;
+
+    @Column(name = "obs_reason")
+    private String obsReason;
+
+    @Column(name = "obs_txt")
+    private String obsTxt;
+
+    @Column(name = "obs_code")
+    private String obsCode;
+
+    @Column(name = "obs_date")
+    private String obsDate;
+
+    @Column(name = "obs_num")
+    private String obsNum;
 }

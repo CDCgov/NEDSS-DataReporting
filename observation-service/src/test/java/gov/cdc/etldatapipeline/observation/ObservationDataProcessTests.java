@@ -54,7 +54,7 @@ class ObservationDataProcessTests {
         Long ordererOrgId = observationTransformed.getOrderingOrganizationId();
         Long performerOrgId = observationTransformed.getPerformingOrganizationId();
         Long materialId = observationTransformed.getMaterialId();
-        Long resultObsUid = observationTransformed.getResultObservationUid();
+        String resultObsUid = observationTransformed.getResultObservationUid();
 
 
         Assertions.assertEquals(10000055L, ordererId);
@@ -63,7 +63,7 @@ class ObservationDataProcessTests {
         Assertions.assertEquals(23456789L, ordererOrgId);
         Assertions.assertNull(performerOrgId);
         Assertions.assertEquals(10000005L, materialId);
-        Assertions.assertEquals(56789012L, resultObsUid);
+        Assertions.assertEquals("56789012", resultObsUid);
     }
 
     @Test

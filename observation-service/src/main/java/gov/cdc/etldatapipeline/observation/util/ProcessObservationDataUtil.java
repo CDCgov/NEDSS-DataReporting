@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.*;
+
 @Component
 @RequiredArgsConstructor
 public class ProcessObservationDataUtil {
@@ -152,20 +154,29 @@ public class ProcessObservationDataUtil {
             JsonNode followupObservationsJsonArray = parseJsonArray(followupObservations, objectMapper);
 
             if(followupObservationsJsonArray != null) {
+                List<String> results = new ArrayList<>();
+                List<String> followUps = new ArrayList<>();
                 for (JsonNode jsonNode : followupObservationsJsonArray) {
                     String domainCdSt1 = getNodeValue(jsonNode.get("domain_cd_st_1"));
 
                     if (obsDomainCdSt1.equals(DOM_ORDER)) {
-                        if (domainCdSt1 != null && domainCdSt1.equals("Result")) {
-                            observationTransformed.setResultObservationUid(jsonNode.get("result_observation_uid").asLong());
+                        if (DOM_RESULT.equals(domainCdSt1)) {
+                            Optional.ofNullable(jsonNode.get("result_observation_uid")).ifPresent(r -> results.add(r.asText()));
                         }
                         else {
-                            logger.error("domainCdSt1: {} is null or not valid for the followupObservations: {}", domainCdSt1, followupObservations);
+                            Optional.ofNullable(jsonNode.get("result_observation_uid")).ifPresent(r -> followUps.add(r.asText()));
                         }
                     }
                     else {
                         logger.error("obsDomainCdSt1: {} is not valid for the followupObservations", obsDomainCdSt1);
                     }
+                }
+
+                if(!results.isEmpty()) {
+                    observationTransformed.setResultObservationUid(String.join(",", results));
+                }
+                if(!followUps.isEmpty()) {
+                    observationTransformed.setFollowUpObservationUid(String.join(",", followUps));
                 }
             }
             else {
