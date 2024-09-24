@@ -134,6 +134,7 @@ class ObservationServiceTest {
         observation.setOrganizationParticipations(readFileData(filePathPrefix + "OrganizationParticipations.json"));
         observation.setMaterialParticipations(readFileData(filePathPrefix + "MaterialParticipations.json"));
         observation.setFollowupObservations(readFileData(filePathPrefix + "FollowupObservations.json"));
+        observation.setParentObservations(readFileData(filePathPrefix + "ParentObservations.json"));
         return observation;
     }
 
@@ -147,8 +148,11 @@ class ObservationServiceTest {
         observation.setAuthorOrganizationId(34567890L);     // null when obsDomainCdSt1=Result
         observation.setOrderingOrganizationId(23456789L);   // null when obsDomainCdSt1=Result
         observation.setMaterialId(10000005L);
-        observation.setResultObservationId("56789012");
-        observation.setReportObservationId(observationUid);
+        observation.setResultObservationUid("56789012,56789013");
+        observation.setFollowupObservationUid("56789014,56789015");
+        observation.setReportObservationUid(observationUid);
+        observation.setReportRefrUid(234567899L);
+        observation.setReportSprtUid(234567888L);
         return observation;
     }
 

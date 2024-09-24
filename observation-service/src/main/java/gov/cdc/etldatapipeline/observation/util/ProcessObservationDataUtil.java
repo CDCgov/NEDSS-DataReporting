@@ -57,7 +57,7 @@ public class ProcessObservationDataUtil {
                             }
                         }
                         else {
-                            logger.error("typeCd or subjectClassCd is null for the personParticipations: {}", personParticipations);
+                            logger.error("Type_cd or subject_class_cd is null for the personParticipations: {}", personParticipations);
                         }
                     }
                     else {
@@ -100,7 +100,7 @@ public class ProcessObservationDataUtil {
                             logger.error("obsDomainCdSt1: {} is not valid for the organizationParticipations", obsDomainCdSt1);
                         }
                     } else {
-                        logger.error("typeCd or subjectClassCd is null for the organizationParticipations: {}", organizationParticipations);
+                        logger.error("Type_cd or subject_class_cd is null for the organizationParticipations: {}", organizationParticipations);
                     }
                 }
             }
@@ -128,7 +128,7 @@ public class ProcessObservationDataUtil {
                             }
                         }
                         else {
-                            logger.error("typeCd or subjectClassCd is null for the materialParticipations: {}", materialParticipations);
+                            logger.error("Type_cd or subject_class_cd is null for the materialParticipations: {}", materialParticipations);
                         }
                     }
                     else {
@@ -167,10 +167,10 @@ public class ProcessObservationDataUtil {
                 }
 
                 if(!results.isEmpty()) {
-                    observationTransformed.setResultObservationId(String.join(",", results));
+                    observationTransformed.setResultObservationUid(String.join(",", results));
                 }
                 if(!followUps.isEmpty()) {
-                    observationTransformed.setFollowUpObservationId(String.join(",", followUps));
+                    observationTransformed.setFollowUpObservationUid(String.join(",", followUps));
                 }
             }
             else {
@@ -188,17 +188,19 @@ public class ProcessObservationDataUtil {
             if(parentObservationsJsonArray != null) {
                 for (JsonNode jsonNode : parentObservationsJsonArray) {
                     String typeCd = getNodeValue(jsonNode.get("parent_type_cd"));
-                    Optional.ofNullable(jsonNode.get("report_observation_uid")).ifPresent(id -> observationTransformed.setReportObservationId(id.asLong()));
+                    Optional.ofNullable(jsonNode.get("report_observation_uid")).ifPresent(id -> observationTransformed.setReportObservationUid(id.asLong()));
 
                     if (obsDomainCdSt1.equals(DOM_ORDER)) {
                         Optional<JsonNode> parentUid = Optional.ofNullable(jsonNode.get("parent_uid"));
 
                         if(typeCd != null) {
                             if (typeCd.equals("SPRT")) {
-                                parentUid.ifPresent(id -> observationTransformed.setReportSprtId(id.asLong()));
+                                parentUid.ifPresent(id -> observationTransformed.setReportSprtUid(id.asLong()));
                             } else if (typeCd.equals("REFR")) {
-                                parentUid.ifPresent(id -> observationTransformed.setReportRefrId(id.asLong()));
+                                parentUid.ifPresent(id -> observationTransformed.setReportRefrUid(id.asLong()));
                             }
+                        } else {
+                            logger.error("Parent_type_cd is null for the parentObservations: {}", parentObservations);
                         }
                     } else {
                         logger.error("obsDomainCdSt1: {} is not valid for the parentObservations", obsDomainCdSt1);
@@ -208,7 +210,7 @@ public class ProcessObservationDataUtil {
                 logger.info("ParentObservations array is null.");
             }
         } catch (Exception e) {
-            logger.error("Error processing Paren Observations JSON array from observation data: {}", e.getMessage());
+            logger.error("Error processing Parent Observations JSON array from observation data: {}", e.getMessage());
         }
     }
 

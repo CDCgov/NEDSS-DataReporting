@@ -120,34 +120,35 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
                     ADD interpretation_desc_txt varchar(100);
             END;
 
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'report_observation_id' AND object_id = Object_ID(N'nrt_observation'))
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'report_observation_uid' AND object_id = Object_ID(N'nrt_observation'))
             BEGIN
                 ALTER TABLE nrt_observation
-                    ADD report_observation_id bigint;
+                    ADD report_observation_uid bigint;
             END;
 
-        IF EXISTS(SELECT 1 FROM sys.columns WHERE name = N'result_observation_id' AND  DATA_TYPE = 'bigint' AND object_id = Object_ID(N'nrt_observation'))
+        IF EXISTS(SELECT 1 FROM sys.columns col JOIN sys.types t on col.user_type_id = t.user_type_id
+                           WHERE col.name = N'result_observation_uid' AND t.name = 'bigint' AND col.object_id = Object_ID(N'nrt_observation'))
             BEGIN
                 ALTER TABLE nrt_observation
-                ALTER COLUMN result_observation_id nvarchar(max);
+                    ALTER COLUMN result_observation_uid nvarchar(max);
             END;
 
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'followup_observation_id' AND object_id = Object_ID(N'nrt_observation'))
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'followup_observation_uid' AND object_id = Object_ID(N'nrt_observation'))
             BEGIN
                 ALTER TABLE nrt_observation
-                    ADD followup_observation_id nvarchar(max);
+                    ADD followup_observation_uid nvarchar(max);
             END;
 
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'report_refr_id' AND object_id = Object_ID(N'nrt_observation'))
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'report_refr_uid' AND object_id = Object_ID(N'nrt_observation'))
             BEGIN
                 ALTER TABLE nrt_observation
-                    ADD report_refr_id bigint;
+                    ADD report_refr_uid bigint;
             END;
 
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'report_sprt_id' AND object_id = Object_ID(N'nrt_observation'))
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'report_sprt_uid' AND object_id = Object_ID(N'nrt_observation'))
             BEGIN
                 ALTER TABLE nrt_observation
-                    ADD report_sprt_id bigint;
+                    ADD report_sprt_uid bigint;
             END;
 
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'morb_physician_id' AND object_id = Object_ID(N'nrt_observation'))

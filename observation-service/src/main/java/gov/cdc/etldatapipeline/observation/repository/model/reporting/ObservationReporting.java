@@ -49,11 +49,11 @@ public class ObservationReporting {
     private String txt;
     private String interpretationCd;
     private String interpretationDescTxt;
-    private Long reportObservationId;
-    private Long reportRefrId;
-    private Long reportSprtId;
-    private String resultObservationId;
-    private String followupObservationId;
+    private Long reportObservationUid;
+    private Long reportRefrUid;
+    private Long reportSprtUid;
+    private String resultObservationUid;
+    private String followupObservationUid;
 
     private Long patientId;
     private Long orderingPersonId;

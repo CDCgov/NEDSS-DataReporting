@@ -54,8 +54,7 @@ class ObservationDataProcessTests {
         Long ordererOrgId = observationTransformed.getOrderingOrganizationId();
         Long performerOrgId = observationTransformed.getPerformingOrganizationId();
         Long materialId = observationTransformed.getMaterialId();
-        String resultObsUid = observationTransformed.getResultObservationId();
-
+        String resultObsUid = observationTransformed.getResultObservationUid();
 
         Assertions.assertEquals(10000055L, ordererId);
         Assertions.assertEquals(10000066L, patId);
@@ -63,7 +62,7 @@ class ObservationDataProcessTests {
         Assertions.assertEquals(23456789L, ordererOrgId);
         Assertions.assertNull(performerOrgId);
         Assertions.assertEquals(10000005L, materialId);
-        Assertions.assertEquals("56789012", resultObsUid);
+        Assertions.assertEquals("56789012,56789013", resultObsUid);
     }
 
     @Test
@@ -82,6 +81,15 @@ class ObservationDataProcessTests {
         Assertions.assertNull(authorOrgId);
         Assertions.assertNull(ordererOrgId);
         Assertions.assertEquals(45678901L, performerOrgId);
+    }
+
+    @Test
+    void testTransformNoObservationData() {
+        Observation observation = new Observation();
+        transformer.transformObservationData(observation);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains("array is null")));
     }
 
     @Test
@@ -104,7 +112,7 @@ class ObservationDataProcessTests {
     @Test
     void testTransformObservationInvalidDomainError(){
         Observation observation = new Observation();
-        String dummyJSON = "[{\"subject_class_cd\": null}]";
+        String dummyJSON = "[{\"type_cd\":\"ORD\", \"subject_class_cd\": \"ORD\"}]";
         String invalidDomain = "invalidDomain";
         observation.setObsDomainCdSt1(invalidDomain);
 
@@ -141,17 +149,18 @@ class ObservationDataProcessTests {
     @Test
     void testTransformObservationNullError(){
         Observation observation = new Observation();
-        String dummyJSON = "[{\"subject_class_cd\": null}]";
+        String dummyJSON = "[{\"type_cd\":null, \"subject_class_cd\":null, \"parent_type_cd\":null}]";
 
         observation.setObsDomainCdSt1("Order");
         observation.setPersonParticipations(dummyJSON);
         observation.setOrganizationParticipations(dummyJSON);
         observation.setMaterialParticipations(dummyJSON);
         observation.setFollowupObservations(dummyJSON);
+        observation.setParentObservations(dummyJSON);
 
         transformer.transformObservationData(observation);
 
         List<ILoggingEvent> logs = listAppender.list;
-        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains("is null")));
+        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains("_cd is null")));
     }
 }
