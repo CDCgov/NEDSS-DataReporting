@@ -1,4 +1,4 @@
-FROM amazoncorretto:17 as builder
+FROM amazoncorretto:21 as builder
 
 #Copy project config
 COPY gradle /usr/src/gradle
@@ -14,7 +14,7 @@ WORKDIR /usr/src/
 
 #Build person service along with any required libraries
 RUN ./gradlew :observation-service:buildNeeded -x test --no-daemon
-FROM amazoncorretto:17
+FROM amazoncorretto:21
 COPY --from=builder /usr/src/observation-service/build/libs/observation-service*.jar observation-service.jar
 
 # Run jar
