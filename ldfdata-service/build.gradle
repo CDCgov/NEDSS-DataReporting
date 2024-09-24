@@ -10,7 +10,7 @@ group = 'gov.cdc.etldatapipeline'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '17'
+	sourceCompatibility = '21'
 }
 
 repositories {
@@ -23,7 +23,7 @@ test {
 }
 
 jacoco {
-	toolVersion = "0.8.8"
+	toolVersion = "0.8.11"
 	reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
 }
 

@@ -1,4 +1,4 @@
-FROM amazoncorretto:17 as builder
+FROM amazoncorretto:21 as builder
 
 #Copy project config
 COPY gradle /usr/src/gradle
@@ -13,7 +13,7 @@ WORKDIR /usr/src/
 
 #Build status service along with any required libraries
 RUN ./gradlew :status-service:buildNeeded -x test --no-daemon
-FROM amazoncorretto:17
+FROM amazoncorretto:21
 COPY --from=builder /usr/src/status-service/build/libs/status-service*.jar status-service.jar
 
 # Run jar

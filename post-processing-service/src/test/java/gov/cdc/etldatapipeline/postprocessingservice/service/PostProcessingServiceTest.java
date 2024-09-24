@@ -3,7 +3,6 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
 import org.junit.jupiter.api.AfterEach;
@@ -17,8 +16,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 
 class PostProcessingServiceTest {
 
-    @InjectMocks
+    @InjectMocks @Spy
     private PostProcessingService postProcessingServiceMock;
     @Mock
     private PostProcRepository postProcRepositoryMock;
@@ -48,8 +48,8 @@ class PostProcessingServiceTest {
     public void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         datamartProcessor = new ProcessDatamartData(kafkaTemplate);
-        postProcessingServiceMock = new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
-                datamartProcessor);
+        postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
+                datamartProcessor));
         Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         listAppender.start();
         logger.addAppender(listAppender);
@@ -68,12 +68,13 @@ class PostProcessingServiceTest {
             "dummy_provider, '{\"payload\":{\"provider_uid\":123}}', 123",
             "dummy_organization, '{\"payload\":{\"organization_uid\":123}}', 123",
             "dummy_investigation, '{\"payload\":{\"public_health_case_uid\":123}}', 123",
-            "dummy_notification, '{\"payload\":{\"notification_uid\":123}}', 123"
+            "dummy_notification, '{\"payload\":{\"notification_uid\":123}}', 123",
+            "dummy_ldf_data, '{\"payload\":{\"ldf_uid\":123}}', 123"
     })
-    void testExtractIdFromMessage(String topic, String messageKey, Long expectedId) {
-        Long extractedId = postProcessingServiceMock.extractIdFromMessage(topic, messageKey, messageKey);
-        assertNotNull(extractedId);
-        assertEquals(expectedId, extractedId);
+    void testPostProcessMessage(String topic, String messageKey, Long expectedId) {
+        postProcessingServiceMock.postProcessMessage(topic, messageKey, messageKey);
+        assertEquals(expectedId, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
     }
 
     @Test
@@ -82,13 +83,10 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"patient_uid\":123}}";
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
-        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).get(0));
-
         postProcessingServiceMock.processCachedIds();
 
         String expectedPatientIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForPatientIds(expectedPatientIdsString);
-        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
@@ -105,7 +103,6 @@ class PostProcessingServiceTest {
 
         String expectedProviderIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForProviderIds(expectedProviderIdsString);
-        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
@@ -122,7 +119,6 @@ class PostProcessingServiceTest {
 
         String expectedOrganizationIdsIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForOrganizationIds(expectedOrganizationIdsIdsString);
-        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
@@ -140,7 +136,6 @@ class PostProcessingServiceTest {
         String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
-        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(6, logs.size());
@@ -158,7 +153,6 @@ class PostProcessingServiceTest {
 
         String expectedNotificationIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForNotificationIds(expectedNotificationIdsString);
-        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
@@ -196,11 +190,13 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"ldf_uid\":123}}";
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+
         postProcessingServiceMock.processCachedIds();
 
         String expectedLdfIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForLdfIds(expectedLdfIdsString);
-        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
@@ -229,16 +225,15 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(invTopic, invKey1, invKey1);
         postProcessingServiceMock.postProcessMessage(invTopic, invKey2, invKey2);
 
+        assertTrue(postProcessingServiceMock.idCache.containsKey(orgTopic));
+        assertTrue(postProcessingServiceMock.idCache.containsKey(invTopic));
+        assertTrue(postProcessingServiceMock.idCache.containsKey(ntfTopic));
+
         postProcessingServiceMock.processCachedIds();
 
         verify(postProcRepositoryMock).executeStoredProcForOrganizationIds("123,124");
-        assertTrue(postProcessingServiceMock.idCache.containsKey(orgTopic));
-
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds("234,235");
-        assertTrue(postProcessingServiceMock.idCache.containsKey(invTopic));
-
         verify(postProcRepositoryMock).executeStoredProcForNotificationIds("567,568");
-        assertTrue(postProcessingServiceMock.idCache.containsKey(ntfTopic));
     }
 
     @Test
@@ -328,24 +323,28 @@ class PostProcessingServiceTest {
         verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
-    @Test
-    void testPostProcessPageBuilderWithNoTableCache() {
+    @ParameterizedTest
+    @CsvSource({
+            "'{\"payload\":{\"patient_uid\":123}}'",
+            "'{\"payload\":{invalid}'"
+    })
+    void testPostProcessNoIdValOrInvalidPayload(String payload) {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.postProcessMessage(topic, key, payload);
+        assertFalse(postProcessingServiceMock.idVals.containsKey(123L));
+
         postProcessingServiceMock.processCachedIds();
 
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
     }
 
     @Test
     void testProcessMessageEmptyCache() {
         String topic = "dummy_patient";
 
-        postProcessingServiceMock.idCache.put(topic, new CopyOnWriteArrayList<>());
+        postProcessingServiceMock.idCache.put(topic, new ConcurrentLinkedQueue<>());
         postProcessingServiceMock.processCachedIds();
 
         List<ILoggingEvent> logs = listAppender.list;
@@ -363,12 +362,13 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessNoDataException() {
+    void testPostProcessNoUidException() {
         String orgKey = "{\"payload\":{}}";
         String topic = "dummy_organization";
 
-        assertThrows(NoDataException.class, () -> postProcessingServiceMock.postProcessMessage(topic,
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> postProcessingServiceMock.postProcessMessage(topic,
                 orgKey, orgKey));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     @Test
@@ -412,6 +412,18 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processCachedIds();
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(logs.size()-1).getFormattedMessage().contains("Unknown topic: " + topic + " cannot be processed"));
+    }
+
+    @Test
+    void testShutdown() {
+        postProcessingServiceMock.shutdown();
+        verify(postProcessingServiceMock, times(1)).processCachedIds();
+        verify(postProcessingServiceMock).processDatamartIds();
+
+        InOrder inOrder = inOrder(postProcessingServiceMock);
+        inOrder.verify(postProcessingServiceMock).processCachedIds();
+        inOrder.verify(postProcessingServiceMock).processDatamartIds();
+
     }
 
     private List<InvestigationResult> getInvestigationResults(Long phcUid, Long patientKey) {
