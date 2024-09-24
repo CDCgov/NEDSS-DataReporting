@@ -160,3 +160,10 @@ databaseChangeLog:
         - sqlFile:
             path: 020-sp_notification_event-002.sql
             splitStatements: false
+  - changeSet:
+      id: 23
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 021_sp_observation_event-001.sql
+            splitStatements: false

@@ -147,7 +147,8 @@ class ObservationServiceTest {
         observation.setAuthorOrganizationId(34567890L);     // null when obsDomainCdSt1=Result
         observation.setOrderingOrganizationId(23456789L);   // null when obsDomainCdSt1=Result
         observation.setMaterialId(10000005L);
-        observation.setResultObservationUid("56789012");
+        observation.setResultObservationId("56789012");
+        observation.setReportObservationId(observationUid);
         return observation;
     }
 

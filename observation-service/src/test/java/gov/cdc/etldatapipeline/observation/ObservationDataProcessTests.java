@@ -54,7 +54,7 @@ class ObservationDataProcessTests {
         Long ordererOrgId = observationTransformed.getOrderingOrganizationId();
         Long performerOrgId = observationTransformed.getPerformingOrganizationId();
         Long materialId = observationTransformed.getMaterialId();
-        String resultObsUid = observationTransformed.getResultObservationUid();
+        String resultObsUid = observationTransformed.getResultObservationId();
 
 
         Assertions.assertEquals(10000055L, ordererId);
@@ -93,6 +93,7 @@ class ObservationDataProcessTests {
         observation.setOrganizationParticipations(invalidJSON);
         observation.setMaterialParticipations(invalidJSON);
         observation.setFollowupObservations(invalidJSON);
+        observation.setParentObservations(invalidJSON);
 
         transformer.transformObservationData(observation);
 
@@ -111,6 +112,7 @@ class ObservationDataProcessTests {
         observation.setOrganizationParticipations(dummyJSON);
         observation.setMaterialParticipations(dummyJSON);
         observation.setFollowupObservations(dummyJSON);
+        observation.setParentObservations(dummyJSON);
 
         transformer.transformObservationData(observation);
 
@@ -128,6 +130,7 @@ class ObservationDataProcessTests {
         observation.setOrganizationParticipations(dummyJSON);
         observation.setMaterialParticipations(dummyJSON);
         observation.setFollowupObservations(dummyJSON);
+        observation.setParentObservations(dummyJSON);
 
         transformer.transformObservationData(observation);
 

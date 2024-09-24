@@ -122,7 +122,11 @@ public class ObservationService {
         reportingModel.setAuthorOrganizationId(observationTransformed.getAuthorOrganizationId());
         reportingModel.setOrderingOrganizationId(observationTransformed.getOrderingOrganizationId());
         reportingModel.setMaterialId(observationTransformed.getMaterialId());
-        reportingModel.setResultObservationUid(observationTransformed.getResultObservationUid());
-        reportingModel.setFollowupObservationUid(observationTransformed.getFollowUpObservationUid());
+        reportingModel.setResultObservationId(observationTransformed.getResultObservationId());
+        reportingModel.setFollowupObservationId(observationTransformed.getFollowUpObservationId());
+        reportingModel.setReportObservationId(Optional.ofNullable(observationTransformed.getReportObservationId())
+                .orElse(reportingModel.getObservationUid()));
+        reportingModel.setReportRefrId(observationTransformed.getReportRefrId());
+        reportingModel.setReportSprtId(observationTransformed.getReportSprtId());
     }
 }

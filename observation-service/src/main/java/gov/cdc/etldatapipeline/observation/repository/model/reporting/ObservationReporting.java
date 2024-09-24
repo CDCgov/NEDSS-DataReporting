@@ -52,8 +52,8 @@ public class ObservationReporting {
     private Long reportObservationId;
     private Long reportRefrId;
     private Long reportSprtId;
-    private String resultObservationUid;
-    private String followupObservationUid;
+    private String resultObservationId;
+    private String followupObservationId;
 
     private Long patientId;
     private Long orderingPersonId;
@@ -61,10 +61,12 @@ public class ObservationReporting {
     private Long morbReporterId;
     private Long transcriptionistId;
     private String transcriptionistVal;
-    private String transcriptionistName;
+    private String transcriptionistFirstNm;
+    private String transcriptionistLastNm;
     private Long assistantInterpreterId;
     private String assistantInterpreterVal;
-    private String assistantInterpreterName;
+    private String assistantInterpreterFirstNm;
+    private String assistantInterpreterLastNm;
     private Long resultInterpreterId;
     private Long specimenCollectorId;
     private Long copyToProviderId;

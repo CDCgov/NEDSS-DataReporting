@@ -33,6 +33,7 @@ public class ProcessObservationDataUtil {
         transformOrganizationParticipations(observation.getOrganizationParticipations(), obsDomainCdSt1, observationTransformed, objectMapper);
         transformMaterialParticipations(observation.getMaterialParticipations(), obsDomainCdSt1, observationTransformed, objectMapper);
         transformFollowupObservations(observation.getFollowupObservations(), obsDomainCdSt1, observationTransformed, objectMapper);
+        transformParentObservations(observation.getParentObservations(), obsDomainCdSt1, observationTransformed, objectMapper);
 
         return observationTransformed;
     }
@@ -81,31 +82,25 @@ public class ProcessObservationDataUtil {
                     String typeCd = getNodeValue(jsonNode.get(TYPE_CD));
                     String subjectClassCd = getNodeValue(jsonNode.get(SUBJECT_CLASS_CD));
 
-                    if(obsDomainCdSt1.equals(DOM_RESULT)) {
-                        if(typeCd != null && subjectClassCd != null) {
+                    if(typeCd != null && subjectClassCd != null) {
+                        if(obsDomainCdSt1.equals(DOM_RESULT)) {
                             if(typeCd.equals("PRF") && subjectClassCd.equals("ORG")) {
                                 observationTransformed.setPerformingOrganizationId(jsonNode.get(ENTITY_ID).asLong());
                             }
                         }
-                        else {
-                            logger.error("typeCd or subjectClassCd is null for the organizationParticipations: {}", organizationParticipations);
-                        }
-                    }
-                    else if(obsDomainCdSt1.equals(DOM_ORDER)) {
-                        if(typeCd != null && subjectClassCd != null) {
-                            if(typeCd.equals("AUT") && subjectClassCd.equals("ORG")) {
-                                observationTransformed.setAuthorOrganizationId(jsonNode.get(ENTITY_ID).asLong());
-                            }
-                            if(typeCd.equals("ORD") && subjectClassCd.equals("ORG")) {
-                                observationTransformed.setOrderingOrganizationId(jsonNode.get(ENTITY_ID).asLong());
-                            }
+                        else if(obsDomainCdSt1.equals(DOM_ORDER)) {
+                                if(typeCd.equals("AUT") && subjectClassCd.equals("ORG")) {
+                                    observationTransformed.setAuthorOrganizationId(jsonNode.get(ENTITY_ID).asLong());
+                                }
+                                if(typeCd.equals("ORD") && subjectClassCd.equals("ORG")) {
+                                    observationTransformed.setOrderingOrganizationId(jsonNode.get(ENTITY_ID).asLong());
+                                }
                         }
                         else {
-                            logger.error("typeCd or subjectClassCd is null for the organizationParticipations: {}", organizationParticipations);
+                            logger.error("obsDomainCdSt1: {} is not valid for the organizationParticipations", obsDomainCdSt1);
                         }
-                    }
-                    else {
-                        logger.error("obsDomainCdSt1: {} is not valid for the organizationParticipations", obsDomainCdSt1);
+                    } else {
+                        logger.error("typeCd or subjectClassCd is null for the organizationParticipations: {}", organizationParticipations);
                     }
                 }
             }
@@ -166,17 +161,16 @@ public class ProcessObservationDataUtil {
                         else {
                             Optional.ofNullable(jsonNode.get("result_observation_uid")).ifPresent(r -> followUps.add(r.asText()));
                         }
-                    }
-                    else {
+                    } else {
                         logger.error("obsDomainCdSt1: {} is not valid for the followupObservations", obsDomainCdSt1);
                     }
                 }
 
                 if(!results.isEmpty()) {
-                    observationTransformed.setResultObservationUid(String.join(",", results));
+                    observationTransformed.setResultObservationId(String.join(",", results));
                 }
                 if(!followUps.isEmpty()) {
-                    observationTransformed.setFollowUpObservationUid(String.join(",", followUps));
+                    observationTransformed.setFollowUpObservationId(String.join(",", followUps));
                 }
             }
             else {
@@ -184,6 +178,37 @@ public class ProcessObservationDataUtil {
             }
         } catch (Exception e) {
             logger.error("Error processing Followup Observations JSON array from observation data: {}", e.getMessage());
+        }
+    }
+
+    private void transformParentObservations(String parentObservations, String obsDomainCdSt1, ObservationTransformed observationTransformed, ObjectMapper objectMapper) {
+        try {
+            JsonNode parentObservationsJsonArray = parseJsonArray(parentObservations, objectMapper);
+
+            if(parentObservationsJsonArray != null) {
+                for (JsonNode jsonNode : parentObservationsJsonArray) {
+                    String typeCd = getNodeValue(jsonNode.get("parent_type_cd"));
+                    Optional.ofNullable(jsonNode.get("report_observation_uid")).ifPresent(id -> observationTransformed.setReportObservationId(id.asLong()));
+
+                    if (obsDomainCdSt1.equals(DOM_ORDER)) {
+                        Optional<JsonNode> parentUid = Optional.ofNullable(jsonNode.get("parent_uid"));
+
+                        if(typeCd != null) {
+                            if (typeCd.equals("SPRT")) {
+                                parentUid.ifPresent(id -> observationTransformed.setReportSprtId(id.asLong()));
+                            } else if (typeCd.equals("REFR")) {
+                                parentUid.ifPresent(id -> observationTransformed.setReportRefrId(id.asLong()));
+                            }
+                        }
+                    } else {
+                        logger.error("obsDomainCdSt1: {} is not valid for the parentObservations", obsDomainCdSt1);
+                    }
+                }
+            } else {
+                logger.info("ParentObservations array is null.");
+            }
+        } catch (Exception e) {
+            logger.error("Error processing Paren Observations JSON array from observation data: {}", e.getMessage());
         }
     }
 
