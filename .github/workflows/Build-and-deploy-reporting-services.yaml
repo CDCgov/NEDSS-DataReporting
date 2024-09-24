@@ -26,7 +26,7 @@ jobs:
       microservice_name: data-reporting-service/person-reporting-service
       dockerfile_relative_path: -f ./person-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_REPO_BASE_NAME}}
@@ -54,7 +54,7 @@ jobs:
       microservice_name: data-reporting-service/organization-reporting-service
       dockerfile_relative_path: -f ./organization-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_REPO_BASE_NAME}}
@@ -82,7 +82,7 @@ jobs:
       microservice_name: data-reporting-service/investigation-reporting-service
       dockerfile_relative_path: -f ./investigation-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_REPO_BASE_NAME}}
@@ -110,7 +110,7 @@ jobs:
       microservice_name: data-reporting-service/post-processing-reporting-service
       dockerfile_relative_path: -f ./post-processing-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_REPO_BASE_NAME}}
@@ -138,7 +138,7 @@ jobs:
       microservice_name: data-reporting-service/observation-reporting-service
       dockerfile_relative_path: -f ./observation-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_REPO_BASE_NAME}}
@@ -166,7 +166,7 @@ jobs:
       microservice_name: data-reporting-service/ldfdata-reporting-service
       dockerfile_relative_path: -f ./ldfdata-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_REPO_BASE_NAME}}
@@ -194,7 +194,7 @@ jobs:
       microservice_name: liquibase-service
       dockerfile_relative_path: -f ./liquibase-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_NBS_REPO_BASE_NAME}}
