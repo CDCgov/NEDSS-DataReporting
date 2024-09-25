@@ -45,7 +45,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'cd_system_desc_txt' AND object_id = Object_ID(N'nrt_observation'))
             BEGIN
             ALTER TABLE nrt_observation
-                ADD cd_system_desc_txt varchar(1000);
+                ADD cd_system_desc_txt varchar(100);
             END;
 
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'ctrl_cd_user_defined_1' AND object_id = Object_ID(N'nrt_observation'))
@@ -69,7 +69,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'alt_cd_system_cd' AND object_id = Object_ID(N'nrt_observation'))
             BEGIN
             ALTER TABLE nrt_observation
-                ADD alt_cd_system_cd varchar(1000);
+                ADD alt_cd_system_cd varchar(300);
             END;
 
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'alt_cd_system_desc_txt' AND object_id = Object_ID(N'nrt_observation'))
