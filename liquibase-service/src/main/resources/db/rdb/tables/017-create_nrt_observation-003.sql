@@ -208,7 +208,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'assistant_interpreter_last_nm' AND object_id = Object_ID(N'nrt_observation'))
             BEGIN
                 ALTER TABLE nrt_observation
-                    ADD transcriptionist_last_nm varchar(50);
+                    ADD assistant_interpreter_last_nm varchar(50);
             END;
 
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'result_interpreter_id' AND object_id = Object_ID(N'nrt_observation'))
