@@ -30,6 +30,58 @@ WHERE status_type = 'start' AND
 ---******************************************************************
 ---** START PROCESSING TEXT BASED QUESTIONS AND ANSWERS *************
 
+BEGIN TRANSACTION;
+SET @Proc_Step_no = 2;
+SET @Proc_Step_Name = ' Creating nrt_page temporary table to hold latest answers for act_uid: '+cast(@phc_id as VARCHAR(50));
+
+IF OBJECT_ID('#NRT_PAGE', 'U') IS NOT NULL
+BEGIN
+DROP TABLE #NRT_PAGE;
+END;
+
+SELECT
+    act_uid,
+    nbs_case_answer_uid,
+    nbs_ui_metadata_uid,
+    nbs_rdb_metadata_uid,
+    nbs_question_uid,
+    rdb_table_nm,
+    rdb_column_nm,
+    answer_txt,
+    answer_group_seq_nbr,
+    investigation_form_cd,
+    unit_value,
+    question_identifier,
+    data_location,
+    question_label,
+    other_value_ind_cd,
+    unit_type_cd,
+    mask,
+    data_type,
+    question_group_seq_nbr,
+    code_set_group_id,
+    block_nm,
+    last_chg_time,
+    record_status_cd
+INTO
+    #NRT_PAGE
+FROM
+    dbo.nrt_page_case_answer AS nrt_pca WITH(NOLOCK)
+WHERE
+    nrt_pca.act_uid = @phc_id
+  and nrt_pca.last_chg_time = (
+    select
+    max(last_chg_time)
+    from
+    dbo.nrt_page_case_answer
+    where
+    act_uid = @phc_id
+    );
+COMMIT TRANSACTION;
+
+
+if @debug = 'true'
+    select 'nrt_page', * from #NRT_PAGE;
 
 BEGIN TRANSACTION;
 		SET @Proc_Step_no = 3;
@@ -44,13 +96,12 @@ END;
 SELECT DISTINCT
     NBS_CASE_ANSWER_UID, nrt_page.CODE_SET_GROUP_ID, nrt_page.RDB_COLUMN_NM, CAST(REPLACE(ANSWER_TXT, CHAR(13) + CHAR(10), ' ') AS varchar(2000)) AS ANSWER_TXT, COALESCE(ACT_UID, 1) AS PAGE_CASE_UID_TEXT, nrt_page.RECORD_STATUS_CD, nrt_page.NBS_QUESTION_UID
 INTO #text_data_INV
-FROM dbo.nrt_page_case_answer AS nrt_page WITH(NOLOCK) --2
+FROM #NRT_PAGE AS nrt_page WITH(NOLOCK) --2
 			INNER JOIN
 			NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
 ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
 WHERE
-    nrt_page.act_uid = @phc_id and nrt_page.last_chg_time = (select max(last_chg_time) from dbo.nrt_page_case_answer where act_uid = @phc_id)
-  AND nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
+    nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
   AND (nrt_page.RDB_TABLE_NM = @rdb_table_name AND nrt_page.QUESTION_GROUP_SEQ_NBR IS NULL AND UPPER(nrt_page.DATA_TYPE) = 'TEXT')
    OR (nrt_page.RDB_TABLE_NM = @rdb_table_name AND nrt_page.QUESTION_GROUP_SEQ_NBR IS NULL AND nrt_page.RDB_COLUMN_NM LIKE '%_CD')
   AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
@@ -62,7 +113,7 @@ INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [St
 VALUES( @Batch_id, @category, 'S_'+@category, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
 if @debug = 'true'
-select * from #text_data_INV;
+    select * from #text_data_INV;
 
 COMMIT TRANSACTION;
 
@@ -136,9 +187,9 @@ SELECT DISTINCT
     NBS_CASE_ANSWER_UID, nrt_page.RECORD_STATUS_CD, nrt_page.ACT_UID AS 'PAGE_CASE_UID', nrt_page.INVESTIGATION_FORM_CD, ANSWER_TXT, nrt_page.nbs_question_uid,
     nrt_page.RDB_COLUMN_NM, nrt_page.CODE_SET_GROUP_ID, nrt_page.unit_value, CODE_SET_GROUP_ID AS CODE_SET_GROUP_ID1, QUESTION_GROUP_SEQ_NBR, DATA_TYPE, OTHER_VALUE_IND_CD
 INTO #CASE_ANSWER_PHC_UIDS
-FROM dbo.nrt_page_case_answer as nrt_page WITH(NOLOCK) --2
-WHERE nrt_page.act_uid=@phc_id and nrt_page.last_chg_time = (select max(last_chg_time) from dbo.nrt_page_case_answer where act_uid = @phc_id)
-  AND nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
+FROM #NRT_PAGE as nrt_page WITH(NOLOCK) --2
+WHERE
+    nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
   AND UPPER(nrt_page.data_type) = 'CODED'
   AND ANSWER_GROUP_SEQ_NBR IS NULL
   AND nrt_page.rdb_table_nm = @rdb_table_name
@@ -376,12 +427,11 @@ SELECT NBS_CASE_ANSWER_UID,
        nrt_page.RDB_COLUMN_NM, CAST(ANSWER_TXT AS varchar(2000)) AS ANSWER_TXT, ACT_UID AS 'PAGE_CASE_UID', nrt_page.RECORD_STATUS_CD, nrt_page.NBS_QUESTION_UID, nrt_page.MASK, CAST(NULL AS [varchar](2000)) AS ANSWER_TXT_CODE, CAST(NULL AS [varchar](2000)) AS ANSWER_VALUE, nrt_page.INVESTIGATION_FORM_CD,
        nrt_page.UNIT_VALUE, CODE_SET_GROUP_ID AS CODE_SET_GROUP_ID1, QUESTION_GROUP_SEQ_NBR, DATA_TYPE, UNIT_VALUE AS UNIT_VALUE1, UNIT_TYPE_CD
 INTO #CODED_TABLE_SNTEMP_INV
-FROM dbo.nrt_page_case_answer AS nrt_page WITH(NOLOCK) --3
+FROM #NRT_PAGE AS nrt_page WITH(NOLOCK) --3
 			INNER JOIN
 			NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
 ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
-WHERE nrt_page.act_uid = @phc_id  and nrt_page.last_chg_time = (select max(last_chg_time) from dbo.nrt_page_case_answer where act_uid = @phc_id)
-  AND nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
+WHERE nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
   AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
   AND UPPER(nrt_page.data_type) = 'NUMERIC'
   AND nrt_page.RDB_TABLE_NM = @rdb_table_name AND
@@ -439,10 +489,9 @@ INSERT INTO dbo.ETL_DQ_LOG( EVENT_TYPE, EVENT_LOCAL_ID, EVENT_UID, DQ_ISSUE_CD, 
              NBS_SRTE.DBO.CONDITION_CODE
              ON CONDITION_CODE.CONDITION_CD = inv.CD
                  INNER JOIN
-             dbo.nrt_page_case_answer nrt_page
+             #NRT_PAGE nrt_page
              ON nrt_page.act_uid = inv.public_health_case_uid
-        WHERE nrt_page.act_uid = @phc_id
-          AND (isNumeric(ANSWER_VALUE) != 1)
+        WHERE (isNumeric(ANSWER_VALUE) != 1)
           AND ANSWER_VALUE IS NOT NULL);
 
 SELECT @RowCount_no = @@ROWCOUNT;
@@ -747,12 +796,11 @@ SELECT NBS_CASE_ANSWER_UID, nrt_page.CODE_SET_GROUP_ID, nrt_page.RDB_COLUMN_NM,
     END ) AS ANSWER_TXT,
        nrt_page.INVESTIGATION_FORM_CD, CODE_SET_GROUP_ID AS CODE_SET_GROUP_ID1, QUESTION_GROUP_SEQ_NBR, DATA_TYPE
 INTO #DATE_DATA_INV
-FROM dbo.nrt_page_case_answer AS nrt_page WITH(NOLOCK) --4
+FROM #NRT_PAGE AS nrt_page WITH(NOLOCK) --4
 				LEFT OUTER JOIN
 					NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
 ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
-WHERE nrt_page.act_uid = @phc_id
-  AND nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
+WHERE nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
   AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
   AND CODE IN( 'DATETIME', 'DATE' )
   AND nrt_page.RDB_TABLE_NM = @rdb_table_name AND
@@ -767,15 +815,15 @@ VALUES( @Batch_id, @category, 'S_'+@category, 'START', @Proc_Step_no, @Proc_Step
 INSERT INTO dbo.ETL_DQ_LOG( EVENT_TYPE, EVENT_LOCAL_ID, EVENT_UID, DQ_ISSUE_CD, DQ_ISSUE_DESC_TXT, DQ_ISSUE_QUESTION_IDENTIFIER, DQ_ISSUE_ANSWER_TXT, DQ_ISSUE_RDB_LOCATION, JOB_BATCH_LOG_UID, DQ_ETL_PROCESS_TABLE, DQ_ETL_PROCESS_COLUMN, DQ_STATUS_TIME, DQ_ISSUE_SOURCE_LOCATION, DQ_ISSUE_SOURCE_QUESTION_LABEL )
     (
         SELECT 'INVESTIGATION', inv.LOCAL_ID, inv.PUBLIC_HEALTH_CASE_UID, 'INVALID_DATE', 'BAD DATE: A poorly formatted date exists and requires update. Please correct the bad date so that it can be properly written to the reporting database during the next ETL run.', nrt_page.QUESTION_IDENTIFIER, ANSWER_TXT, nrt_page.DATA_LOCATION, @Batch_id, nrt_page.rdb_table_nm, nrt_page.RDB_COLUMN_NM, GETDATE(), nrt_page.DATA_LOCATION, nrt_page.QUESTION_LABEL
-        FROM dbo.nrt_page_case_answer nrt_page
+        FROM #NRT_PAGE nrt_page
                  INNER JOIN
              dbo.nrt_investigation inv
              ON nrt_page.ACT_UID = inv.PUBLIC_HEALTH_CASE_UID
                  INNER JOIN
              NBS_SRTE.DBO.CONDITION_CODE
              ON CONDITION_CODE.CONDITION_CD = inv.CD
-        WHERE nrt_page.act_uid = @phc_id
-          AND DATA_TYPE IN ( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
+        WHERE
+            DATA_TYPE IN ( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
             (ISDATE(ANSWER_TXT) != 1) AND
             UPPER(nrt_page.DATA_LOCATION) = 'NBS_CASE_ANSWER.ANSWER_TXT' AND
             ANSWER_TXT IS NOT NULL AND
@@ -908,12 +956,12 @@ SELECT NBS_CASE_ANSWER_UID, nrt_page.CODE_SET_GROUP_ID, nrt_page.RDB_COLUMN_NM, 
        CAST(NULL AS [varchar](2000)) AS ANSWER_CODED, CAST(NULL AS [varchar](2000)) AS UNIT_VALUE1, CAST(NULL AS [varchar](30)) AS RDB_COLUMN_NM2,
        CODE_SET_GROUP_ID AS CODE_SET_GROUP_ID1, QUESTION_GROUP_SEQ_NBR, DATA_TYPE
 INTO #NUMERIC_BASE_DATA_INV_CAT
-FROM dbo.nrt_page_case_answer AS nrt_page WITH(NOLOCK) --5
+FROM #NRT_PAGE AS nrt_page WITH(NOLOCK) --5
 			INNER JOIN
 			NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
 ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
-WHERE nrt_page.act_uid=@phc_id
-  AND nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
+WHERE
+    nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
   AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
   AND CODE IN( 'Numeric', 'NUMERIC' )
   AND nrt_page.RDB_TABLE_NM = @rdb_table_name AND
@@ -1255,10 +1303,9 @@ INSERT INTO dbo.ETL_DQ_LOG( EVENT_TYPE, EVENT_LOCAL_ID, EVENT_UID, DQ_ISSUE_CD, 
              NBS_SRTE.DBO.CONDITION_CODE
              ON CONDITION_CODE.CONDITION_CD = inv.CD
                  INNER JOIN
-             dbo.nrt_page_case_answer nrt_page
+             #NRT_PAGE nrt_page
              ON nrt_page.act_uid = inv.public_health_case_uid
-        WHERE nrt_page.act_uid = @phc_id
-          AND (isNumeric(numeric_inv.ANSWER_TXT) != 1) AND
+        WHERE (isNumeric(numeric_inv.ANSWER_TXT) != 1) AND
             numeric_inv.ANSWER_TXT IS NOT NULL AND
             CONDITION_CODE.INVESTIGATION_FORM_CD = nrt_page.INVESTIGATION_FORM_CD);
 
@@ -1336,10 +1383,9 @@ END;
 
 SELECT ACT_UID AS PAGE_CASE_UID, NBS_CASE_ANSWER_UID, nrt_page.LAST_CHG_TIME
 INTO #STAGING_KEY_INV_CAT
-FROM dbo.nrt_page_case_answer AS nrt_page WITH(NOLOCK) --6
+FROM #NRT_PAGE AS nrt_page WITH(NOLOCK) --6
 WHERE
-    nrt_page.act_uid=@phc_id
-  AND ANSWER_GROUP_SEQ_NBR IS NULL
+    ANSWER_GROUP_SEQ_NBR IS NULL
   AND nrt_page.RDB_TABLE_NM = @rdb_table_name AND
     QUESTION_GROUP_SEQ_NBR IS NULL
 GROUP BY ACT_UID, NBS_CASE_ANSWER_UID, nrt_page.LAST_CHG_TIME;
