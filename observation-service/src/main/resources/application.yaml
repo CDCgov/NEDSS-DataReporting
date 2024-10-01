@@ -4,6 +4,13 @@ spring:
       topic-name: nbs_Observation
     output:
       topic-name-reporting: nrt_observation
+      topic-name-coded: nrt_observation_coded
+      topic-name-date: nrt_observation_date
+      topic-name-edx: nrt_observation_edx
+      topic-name-material: nrt_observation_material
+      topic-name-numeric: nrt_observation_numeric
+      topic-name-reason: nrt_observation_reason
+      topic-name-txt: nrt_observation_txt
       topic-name-es: elastic_search_observation
     dlq:
       retry-suffix: _retry
