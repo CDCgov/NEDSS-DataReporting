@@ -1336,9 +1336,9 @@ BEGIN
         --cte added to assist in filtering latest answers from page case answer table
         WITH NRT_PCA_FILTERED_CTE AS (
             SELECT
-                C.condition_key, M.block_nm, M.investigation_form_cd, M.act_uid, M.last_chg_time, max(M.last_chg_time) OVER (PARTITION BY M.investigation_form_cd, act_uid ) max_last_chg_time
+                C.condition_key, M.block_nm, M.investigation_form_cd, M.act_uid, M.last_chg_time, max(M.last_chg_time) OVER (PARTITION BY act_uid ) max_last_chg_time
             FROM
-                RDB_MODERN.DBO.NRT_PAGE_CASE_ANSWER AS M WITH(NOLOCK)
+                DBO.NRT_PAGE_CASE_ANSWER AS M WITH(NOLOCK)
             INNER JOIN
                 #TMP_CONDITION AS C
             ON M.investigation_form_cd = C.disease_grp_desc ----(My table)
