@@ -279,3 +279,10 @@ databaseChangeLog:
         - sqlFile:
             path: 010-sp_sld_investigation_repeat_postprocessing-002.sql
             splitStatements: false
+  - changeSet:
+      id: 40
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 013-sp_hepatitis_datamart_postprocessing-002.sql
+            splitStatements: false
