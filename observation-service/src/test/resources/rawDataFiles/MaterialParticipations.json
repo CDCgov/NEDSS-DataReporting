@@ -6,8 +6,14 @@
     "subject_class_cd": "MAT",
     "record_status": "ACTIVE",
     "type_desc_txt": "Specimen",
-    "last_change_time": "2024-01-01T00:00:00.000",
+    "last_chg_time": "2024-01-01T00:00:00.000",
     "material_cd": "UNK",
-    "material_cd_desc_txt": "Unknown"
+    "material_nm": null,
+    "material_details": "Thought not call ground.",
+    "material_collection_vol": "36",
+    "material_collection_vol_unit": "ML",
+    "material_desc": "Lymphocytes",
+    "risk_cd": null,
+    "risk_desc_txt": null
   }
 ]

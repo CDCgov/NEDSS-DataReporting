@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.Observation;
-import gov.cdc.etldatapipeline.observation.repository.model.dto.ObservationKey;
+import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationKey;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationReporting;
 import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -54,7 +54,7 @@ class ObservationServiceTest {
         closeable.close();
     }
 
-    ProcessObservationDataUtil transformer = new ProcessObservationDataUtil();
+    ProcessObservationDataUtil transformer = new ProcessObservationDataUtil(kafkaTemplate);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test

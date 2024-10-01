@@ -1,0 +1,14 @@
+[
+  {
+    "observation_uid": 10001234,
+    "ovt_seq": 1,
+    "ovt_txt_type_cd": "N",
+    "ovt_value_txt": "RECOMMENDED IN SUCH INSTANCES."
+  },
+  {
+    "observation_uid": 10001234,
+    "ovt_seq": 2,
+    "ovt_txt_type_cd": "N",
+    "ovt_value_txt": " "
+  }
+]
