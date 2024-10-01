@@ -265,3 +265,52 @@ databaseChangeLog:
         - sqlFile:
             path: 017-create_nrt_observation-003.sql
             splitStatements: false
+  - changeSet:
+      id: 38
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-create_nrt_observation_coded-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 39
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-create_nrt_observation_date-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 40
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-create_nrt_observation_edx-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 41
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-create_nrt_observation_material-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 42
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-create_nrt_observation_numeric-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 43
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-create_nrt_observation_reason-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 44
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-create_nrt_observation_txt-001.sql
+            splitStatements: false
