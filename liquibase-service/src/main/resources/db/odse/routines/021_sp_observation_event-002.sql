@@ -331,7 +331,8 @@ BEGIN
                                       ob.code_system_desc_txt AS [ovc_code_system_desc_txt],
                                       ob.alt_cd AS [ovc_alt_cd],
                                       ob.alt_cd_desc_txt AS [ovc_alt_cd_desc_txt],
-                                      ob.alt_cd_system_cd AS [ovc_alt_cd_system_cd]
+                                      ob.alt_cd_system_cd AS [ovc_alt_cd_system_cd],
+                                      ob.alt_cd_system_desc_txt AS [ovc_alt_cd_system_desc_txt]
                                   FROM
                                       obs_value_coded ob WITH (NOLOCK)
                                   WHERE
