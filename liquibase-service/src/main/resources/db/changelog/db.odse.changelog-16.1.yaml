@@ -181,3 +181,10 @@ databaseChangeLog:
         - sqlFile:
             path: 021_sp_observation_event-002.sql
             splitStatements: false
+  - changeSet:
+      id: 26
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 008-sp_patient_event-002.sql
+            splitStatements: false
