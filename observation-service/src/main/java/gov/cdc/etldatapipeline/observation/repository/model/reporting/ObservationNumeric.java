@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -18,9 +16,9 @@ public class ObservationNumeric {
     @JsonProperty("ovn_comparator_cd_1")
     private String ovnComparatorCd1;
     @JsonProperty("ovn_numeric_value_1")
-    private BigDecimal ovnNumericValue1;
+    private String ovnNumericValue1;
     @JsonProperty("ovn_numeric_value_2")
-    private BigDecimal ovnNumericValue2;
+    private String ovnNumericValue2;
     private String ovnNumericUnitCd;
     private String ovnSeparatorCd;
 }

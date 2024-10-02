@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.shaded.org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -258,8 +257,8 @@ class ObservationDataProcessTests {
         numeric.setOvnComparatorCd1("100");
         numeric.setOvnLowRange("10-100");
         numeric.setOvnHighRange("100-1000");
-        numeric.setOvnNumericValue1(new BigDecimal("1"));
-        numeric.setOvnNumericValue2(new BigDecimal("1"));
+        numeric.setOvnNumericValue1("1.0");
+        numeric.setOvnNumericValue2("1.0");
         numeric.setOvnNumericUnitCd("mL");
         numeric.setOvnSeparatorCd(":");
 
