@@ -5,7 +5,7 @@ BEGIN
     BEGIN TRY
 
         DECLARE @batch_id BIGINT;
-        SET @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(),'yyMMddHHmmss')) AS bigint);
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
                                                         batch_id
@@ -70,11 +70,11 @@ BEGIN
                      o.add_user_id,
                      case
                          when o.add_user_id > 0 then (select * from dbo.fn_get_user_name(o.add_user_id))
-                         end as      add_user_name,
+                         end AS      add_user_name,
                      o.last_chg_user_id,
                      case
                          when o.last_chg_user_id > 0 then (select * from dbo.fn_get_user_name(o.last_chg_user_id))
-                         end as      last_chg_user_name,
+                         end AS      last_chg_user_name,
                      o.add_time      add_time,
                      o.last_chg_time last_chg_time
                       ,nesteddata.person_participations
@@ -100,35 +100,35 @@ BEGIN
                           SELECT
                               (
                                   SELECT
-                                      o2.observation_uid as [result_observation_uid],
+                                      o2.observation_uid AS [result_observation_uid],
                                       o2.cd AS [cd],
                                       o2.cd_desc_txt AS [cd_desc_txt],
                                       o2.obs_domain_cd_st_1 AS [domain_cd_st_1]
                                   FROM
-                                      observation o2 WITH (NOLOCK)
+                                      nbs_odse.dbo.observation o2 WITH (NOLOCK)
                                   WHERE
                                       o2.observation_uid
                                           IN (
                                           select sai.observation_uid
                                           from (
-                                                   select act1.source_act_uid as observation_uid
+                                                   select act1.source_act_uid AS observation_uid
                                                    from nbs_odse.dbo.act_relationship act1 with (nolock)
-                                                   where source_act_uid is not null and act1.target_act_uid = o.observation_uid
+                                                   where source_act_uid is not null and act1.target_act_uid = o.observation_uid and act1.record_status_cd = 'ACTIVE'
                                                    union
-                                                   select act2.source_act_uid as observation_uid from nbs_odse..act_relationship act1 with (nolock)
+                                                   select act2.source_act_uid AS observation_uid from nbs_odse..act_relationship act1 with (nolock)
                                                                                                           left outer join nbs_odse.dbo.act_relationship act2 with (nolock)  on act1.source_act_uid=act2.target_act_uid
-                                                   where act2.source_act_uid is not null and act1.target_act_uid  = o.observation_uid
+                                                   where act2.source_act_uid is not null and act1.target_act_uid  = o.observation_uid and act2.record_status_cd = 'ACTIVE'
                                                    union
-                                                   select act3.source_act_uid as observation_uid from nbs_odse..act_relationship act1 with (nolock)
+                                                   select act3.source_act_uid AS observation_uid from nbs_odse..act_relationship act1 with (nolock)
                                                                                                           left outer join nbs_odse.dbo.act_relationship act2 with (nolock) on act1.source_act_uid=act2.target_act_uid
                                                                                                           left outer join nbs_odse.dbo.act_relationship act3 with (nolock) on act2.source_act_uid=act3.target_act_uid
-                                                   where act3.source_act_uid is not null and act1.target_act_uid  = o.observation_uid
+                                                   where act3.source_act_uid is not null and act1.target_act_uid  = o.observation_uid and act3.record_status_cd = 'ACTIVE'
                                                    union
-                                                   select act4.source_act_uid as observation_uid from nbs_odse..act_relationship act1 with (nolock)
+                                                   select act4.source_act_uid AS observation_uid from nbs_odse..act_relationship act1 with (nolock)
                                                                                                           left outer join nbs_odse.dbo.act_relationship act2 with (nolock) on act1.source_act_uid=act2.target_act_uid
                                                                                                           left outer join nbs_odse.dbo.act_relationship act3 with (nolock) on act2.source_act_uid=act3.target_act_uid
                                                                                                           left outer join nbs_odse.dbo.act_relationship act4 with (nolock) on act3.source_act_uid=act4.target_act_uid
-                                                   where act4.source_act_uid is not null and act1.target_act_uid = o.observation_uid
+                                                   where act4.source_act_uid is not null and act1.target_act_uid = o.observation_uid and act4.record_status_cd = 'ACTIVE'
                                                ) sai
                                       )
                                   FOR json path, INCLUDE_NULL_VALUES
@@ -139,9 +139,9 @@ BEGIN
                           SELECT
                               (
                                   SELECT
-                                      ar.type_cd as [parent_type_cd],
-                                      ar.source_act_uid as [report_observation_uid],
-                                      o2.observation_uid as [parent_uid],
+                                      ar.type_cd AS [parent_type_cd],
+                                      ar.source_act_uid AS [report_observation_uid],
+                                      o2.observation_uid AS [parent_uid],
                                       o2.cd AS [parent_cd],
                                       o2.cd_desc_txt AS [parent_cd_desc_txt],
                                       o2.obs_domain_cd_st_1 AS [parent_domain_cd_st_1]
@@ -151,6 +151,7 @@ BEGIN
                                   WHERE
                                       ar.source_act_uid = o.observation_uid
                                     and ar.target_class_cd = 'OBS'
+                                    and ar.record_status_cd = 'ACTIVE'
                                   FOR json path,INCLUDE_NULL_VALUES
                               ) AS parent_observations
                       ) AS parent_observations,
@@ -171,12 +172,15 @@ BEGIN
                                       person.person_record_status,
                                       person.person_last_chg_time,
                                       person.person_id_val,
-                                      person.patient_id_type,
+                                      person.person_id_type,
                                       person.person_id_assign_auth_cd,
                                       person.entity_record_status_cd,
                                       person.person_id_type_desc,
                                       person.last_nm,
-                                      person.first_nm
+                                      person.first_nm,
+                                      person.role_cd,
+                                      person.subject_class_cd AS [role_subject_class_cd],
+                                      person.scoping_class_cd AS [role_scoping_class_cd]
                                   FROM
                                       participation p WITH (NOLOCK)
                                           JOIN (
@@ -185,23 +189,27 @@ BEGIN
                                               person.cd AS [person_cd],
                                               person.record_status_cd AS [person_record_status],
                                               person.last_chg_time AS [person_last_chg_time],
-                                              e.root_extension_txt as [person_id_val],
-                                              e.type_cd as [patient_id_type],
-                                              e.assigning_authority_cd as [person_id_assign_auth_cd],
-                                              e.record_status_cd as [entity_record_status_cd],
-                                              cvg.code_short_desc_txt as [person_id_type_desc],
+                                              e.root_extension_txt AS [person_id_val],
+                                              e.type_cd AS [person_id_type],
+                                              e.assigning_authority_cd AS [person_id_assign_auth_cd],
+                                              e.record_status_cd AS [entity_record_status_cd],
+                                              cvg.code_short_desc_txt AS [person_id_type_desc],
                                               STRING_ESCAPE(REPLACE(pn.last_nm, '-', ' '), 'json') AS [last_nm],
                                               STRING_ESCAPE(pn.first_nm, 'json')                   AS [first_nm],
-                                              person.person_uid
+                                              person.person_uid,
+                                              r.cd AS [role_cd],
+                                              r.subject_class_cd,
+                                              r.scoping_class_cd
                                           from
                                               dbo.person WITH (NOLOCK)
                                                   join nbs_odse.dbo.person_name pn WITH (NOLOCK) on pn.person_uid = person.person_uid
                                                   left join entity_id e WITH (NOLOCK) ON e.entity_uid = person.person_uid
-                                                  left join nbs_srte.dbo.code_value_general as cvg WITH (NOLOCK) on e.type_cd = cvg.code
+                                                  left join role r WITH (NOLOCK) on person.person_uid = r.subject_entity_uid
+                                                  left join nbs_srte.dbo.code_value_general AS cvg WITH (NOLOCK) on e.type_cd = cvg.code
                                                   and cvg.code_set_nm = 'EI_TYPE'
                                       ) person on person.person_uid = p.subject_entity_uid
                                   WHERE
-                                      p.act_uid = o.observation_uid FOR json path,INCLUDE_NULL_VALUES
+                                      p.act_uid = o.observation_uid and p.record_status_cd = 'ACTIVE' FOR json path,INCLUDE_NULL_VALUES
                               ) AS person_participations
                       ) AS person_participations,
                       -- organizations associated with observation
@@ -222,7 +230,7 @@ BEGIN
                                       dbo.participation p WITH (NOLOCK)
                                           JOIN dbo.organization org WITH (NOLOCK) ON org.organization_uid = p.subject_entity_uid
                                   WHERE
-                                      p.act_uid = o.observation_uid FOR json path,INCLUDE_NULL_VALUES
+                                      p.act_uid = o.observation_uid and p.record_status_cd = 'ACTIVE' FOR json path,INCLUDE_NULL_VALUES
                               ) AS organization_participations
                       ) AS organization_participations,
                       (
@@ -238,13 +246,13 @@ BEGIN
                                       p.type_desc_txt AS [type_desc_txt],
                                       p.last_chg_time AS [last_chg_time],
                                       STRING_ESCAPE(m.cd, 'json') AS [material_cd],
-                                      m.nm						 as [material_nm],
-                                      m.description				 as [material_details],
-                                      m.qty						 as [material_collection_vol],
-                                      m.qty_unit_cd				 as [material_collection_vol_unit],
-                                      m.cd_desc_txt				 as [material_desc],
-                                      m.risk_cd					 as [risk_cd],
-                                      m.risk_desc_txt			 as [risk_desc_txt]
+                                      m.nm						 AS [material_nm],
+                                      m.description				 AS [material_details],
+                                      m.qty						 AS [material_collection_vol],
+                                      m.qty_unit_cd				 AS [material_collection_vol_unit],
+                                      m.cd_desc_txt				 AS [material_desc],
+                                      m.risk_cd					 AS [risk_cd],
+                                      m.risk_desc_txt			 AS [risk_desc_txt]
                                   FROM
                                       participation p WITH (NOLOCK)
                                           JOIN material m WITH (NOLOCK) ON m.material_uid = p.subject_entity_uid
@@ -302,8 +310,8 @@ BEGIN
                               (
                                   SELECT
                                       ot.observation_uid,
-                                      ot.obs_value_txt_seq as [ovt_seq],
-                                      ot.txt_type_cd as [ovt_txt_type_cd],
+                                      ot.obs_value_txt_seq AS [ovt_seq],
+                                      ot.txt_type_cd AS [ovt_txt_type_cd],
                                       REPLACE(REPLACE(ot.value_txt, CHAR(13), ' '), CHAR(10), ' ')	as [ovt_value_txt]
                                   FROM
                                       obs_value_txt ot WITH (NOLOCK)
@@ -319,12 +327,11 @@ BEGIN
                                       ob.observation_uid,
                                       STRING_ESCAPE(ob.display_name, 'json') AS [ovc_display_name],
                                       ob.code AS [ovc_code],
-                                      ob.code_system_cd as [ovc_code_system_cd],
-                                      ob.code_system_desc_txt as [ovc_code_system_desc_txt],
+                                      ob.code_system_cd AS [ovc_code_system_cd],
+                                      ob.code_system_desc_txt AS [ovc_code_system_desc_txt],
                                       ob.alt_cd AS [ovc_alt_cd],
                                       ob.alt_cd_desc_txt AS [ovc_alt_cd_desc_txt],
-                                      ob.alt_cd_system_cd AS [ovc_alt_cd_system_cd],
-                                      ob.alt_cd_system_desc_txt AS [ovc_alt_cd_system_desc_txt]
+                                      ob.alt_cd_system_cd AS [ovc_alt_cd_system_cd]
                                   FROM
                                       obs_value_coded ob WITH (NOLOCK)
                                   WHERE
@@ -337,8 +344,8 @@ BEGIN
                               (
                                   SELECT
                                       od.observation_uid,
-                                      od.from_time as [ovd_from_date],
-                                      od.to_time as [ovd_to_date]
+                                      od.from_time AS [ovd_from_date],
+                                      od.to_time AS [ovd_to_date]
                                   FROM
                                       obs_value_date od WITH (NOLOCK)
                                   WHERE
@@ -351,13 +358,13 @@ BEGIN
                               (
                                   SELECT
                                       ovn.observation_uid,
-                                      ovn.comparator_cd_1 as [ovn_comparator_cd_1],
-                                      ovn.numeric_value_1 as [ovn_numeric_value_1],
-                                      ovn.separator_cd as [ovn_separator_cd],
-                                      ovn.numeric_value_2 as [ovn_numeric_value_2],
-                                      ovn.numeric_unit_cd as [ovn_numeric_unit_cd], -- asresult_units,
-                                      substring(ovn.low_range,1,20) as [ovn_low_range], -- as ref_range_frm,
-                                      substring(ovn.high_range,1,20) as [ovn_high_range] -- as ref_range_to,
+                                      ovn.comparator_cd_1 AS [ovn_comparator_cd_1],
+                                      ovn.numeric_value_1 AS [ovn_numeric_value_1],
+                                      ovn.separator_cd AS [ovn_separator_cd],
+                                      ovn.numeric_value_2 AS [ovn_numeric_value_2],
+                                      ovn.numeric_unit_cd AS [ovn_numeric_unit_cd], -- asresult_units,
+                                      substring(ovn.low_range,1,20) AS [ovn_low_range], -- AS ref_range_frm,
+                                      substring(ovn.high_range,1,20) AS [ovn_high_range] -- AS ref_range_to,
                                   FROM
                                       obs_value_numeric ovn WITH (NOLOCK)
                                   WHERE
@@ -387,7 +394,7 @@ BEGIN
                   phc.local_id AS [local_id],
                        ar.last_chg_time AS [act_relationship_last_change_time]
                          FROM
-                           Public_health_case phc WITH (NOLOCK)
+      Public_health_case phc WITH (NOLOCK)
                            JOIN Act_relationship ar WITH (NOLOCK) ON ar.target_act_uid = phc.public_health_case_uid
                          WHERE
                            phc.public_health_case_uid in (
@@ -400,12 +407,12 @@ BEGIN
                                    AND source_class_cd = 'OBS'
                 AND target_class_cd = 'CASE'
                         ) FOR JSON path,INCLUDE_NULL_VALUES
-                       ) AS associated_investigations
-                   ) as associated_investigations*/
+    ) AS associated_investigations
+                   ) AS associated_investigations*/
               ) AS nesteddata
               WHERE
                   o.observation_uid in (SELECT value FROM STRING_SPLIT(@obs_id_list
-                      , ','))) as results
+                      , ','))) AS results
                  join act WITH (NOLOCK) ON results.observation_uid = act.act_uid
                  left outer join nbs_odse.dbo.observation_interp oi WITH (NOLOCK) on results.observation_uid = oi.observation_uid --1:1
 
