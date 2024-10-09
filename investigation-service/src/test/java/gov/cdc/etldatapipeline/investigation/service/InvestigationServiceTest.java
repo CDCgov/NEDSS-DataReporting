@@ -153,11 +153,11 @@ class InvestigationServiceTest {
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
         final InvestigationReporting reportingModel = constructInvestigationReporting(investigation.getPublicHealthCaseUid());
 
-        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
-        String actualTopic = topicCaptor.getAllValues().get(3);
-        String actualKey = keyCaptor.getAllValues().get(3);
-        String actualValue = messageCaptor.getAllValues().get(3);
+        String actualTopic = topicCaptor.getAllValues().get(4);
+        String actualKey = keyCaptor.getAllValues().get(4);
+        String actualValue = messageCaptor.getAllValues().get(4);
 
         var actualReporting = objectMapper.readValue(
                 objectMapper.readTree(actualValue).path("payload").toString(), InvestigationReporting.class);

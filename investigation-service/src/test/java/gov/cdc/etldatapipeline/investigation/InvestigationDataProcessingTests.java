@@ -122,7 +122,7 @@ class InvestigationDataProcessingTests {
         investigation.setInvestigationCaseAnswer(invalidJSON);
 
         transformer.transformInvestigationData(investigation);
-        transformer.processNotifications(invalidJSON, objectMapper);
+        transformer.processNotifications(invalidJSON);
 
         List<ILoggingEvent> logs = listAppender.list;
         logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
@@ -138,10 +138,10 @@ class InvestigationDataProcessingTests {
 
         InvestigationObservation observation = new InvestigationObservation();
         observation.setPublicHealthCaseUid(investigationUid);
-        observation.setObservationId(263748596L);
+        observation.setObservationId(263748599L);
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getValue());
 
         var actualObservation = objectMapper.readValue(
@@ -165,7 +165,7 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
-        transformer.processNotifications(investigation.getInvestigationNotifications(), new ObjectMapper());
+        transformer.processNotifications(investigation.getInvestigationNotifications());
         verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(NOTIFICATIONS_TOPIC, topicCaptor.getValue());
 
@@ -185,8 +185,8 @@ class InvestigationDataProcessingTests {
         investigation.setPublicHealthCaseUid(investigationUid);
         investigation.setInvestigationNotifications(null);
         transformer.investigationNotificationsOutputTopicName = NOTIFICATIONS_TOPIC;
-        transformer.processNotifications(null, new ObjectMapper());
-        transformer.processNotifications("{\"foo\":\"bar\"}", new ObjectMapper());
+        transformer.processNotifications(null);
+        transformer.processNotifications("{\"foo\":\"bar\"}");
         verify(kafkaTemplate, never()).send(eq(NOTIFICATIONS_TOPIC), anyString(), anyString());
     }
 

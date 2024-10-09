@@ -1,7 +1,5 @@
 package gov.cdc.etldatapipeline.investigation.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
@@ -49,7 +47,6 @@ public class InvestigationService {
 
     private static final Logger logger = LoggerFactory.getLogger(InvestigationService.class);
     private final ExecutorService phcExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("phc-"));
-    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @Value("${spring.kafka.input.topic-name-phc}")
     private String investigationTopic;
@@ -128,7 +125,7 @@ public class InvestigationService {
                         // only process and send notifications when investigation data has been sent
                         .whenComplete((res, ex) ->
                                 logger.info("Investigation data (uid={}) sent to {}", phcUid, investigationTopicReporting))
-                        .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications(), objectMapper))
+                        .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications()))
                         .join();
             } else {
                 throw new EntityNotFoundException("Unable to find Investigation with id: " + publicHealthCaseUid);
@@ -151,7 +148,7 @@ public class InvestigationService {
             Optional<NotificationUpdate> notificationData = notificationRepository.computeNotifications(notificationUid);
             if (notificationData.isPresent()) {
                 NotificationUpdate notification = notificationData.get();
-                processDataUtil.processNotifications(notification.getInvestigationNotifications(), objectMapper);
+                processDataUtil.processNotifications(notification.getInvestigationNotifications());
             } else {
                 throw new EntityNotFoundException("Unable to find Notification with id; " + notificationUid );
             }

@@ -40,6 +40,20 @@
     "act_last_chg_user_id": null,
     "last_chg_user_name": null,
     "act_last_chg_time": "2023-03-01T07:41:48.640"
+  },
+  {
+    "source_act_uid": 263748599,
+    "public_health_case_uid": 234567890,
+    "source_class_cd": "OBS",
+    "target_class_cd": "CASE",
+    "act_type_cd": "MorbReport",
+    "status_cd": "A",
+    "act_add_time": "2023-03-01T07:41:48.640",
+    "act_add_user_id": null,
+    "add_user_name": null,
+    "act_last_chg_user_id": null,
+    "last_chg_user_name": null,
+    "act_last_chg_time": "2023-03-01T07:41:48.640"
   }
 
 ]

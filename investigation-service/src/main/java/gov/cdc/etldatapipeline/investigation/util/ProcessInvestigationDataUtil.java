@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.investigation.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @Setter
 public class ProcessInvestigationDataUtil {
     private static final Logger logger = LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @Value("${spring.kafka.output.topic-name-confirmation}")
     public String investigationConfirmationOutputTopicName;
@@ -45,235 +47,221 @@ public class ProcessInvestigationDataUtil {
     private final InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
     private final InvestigationRepository investigationRepository;
 
+    public static final String TYPE_CD = "type_cd";
+
     @Transactional(transactionManager = "rdbTransactionManager")
     public InvestigationTransformed transformInvestigationData(Investigation investigation) {
 
         InvestigationTransformed investigationTransformed = new InvestigationTransformed();
-        ObjectMapper objectMapper = new ObjectMapper();
 
-        transformPersonParticipations(investigation.getPersonParticipations(), investigationTransformed, objectMapper);
-        transformOrganizationParticipations(investigation.getOrganizationParticipations(), investigationTransformed, objectMapper);
-        transformActIds(investigation.getActIds(), investigationTransformed, objectMapper);
-        transformObservationIds(investigation.getObservationNotificationIds(), investigationTransformed, objectMapper);
-        transformInvestigationConfirmationMethod(investigation.getInvestigationConfirmationMethod(), objectMapper);
-        processInvestigationPageCaseAnswer(investigation.getInvestigationCaseAnswer(), investigationTransformed, objectMapper);
+        transformPersonParticipations(investigation.getPersonParticipations(), investigationTransformed);
+        transformOrganizationParticipations(investigation.getOrganizationParticipations(), investigationTransformed);
+        transformActIds(investigation.getActIds(), investigationTransformed);
+        transformObservationIds(investigation.getObservationNotificationIds(), investigationTransformed);
+        transformInvestigationConfirmationMethod(investigation.getInvestigationConfirmationMethod());
+        processInvestigationPageCaseAnswer(investigation.getInvestigationCaseAnswer(), investigationTransformed);
 
         return investigationTransformed;
     }
 
-    public void processNotifications(String investigationNotifications, ObjectMapper objectMapper) {
+    public void processNotifications(String investigationNotifications) {
         try {
-            JsonNode investigationNotificationsJsonArray = parseJsonArray(investigationNotifications, objectMapper);
+            JsonNode investigationNotificationsJsonArray = parseJsonArray(investigationNotifications);
 
-            if (investigationNotificationsJsonArray != null) {
-                InvestigationNotificationKey investigationNotificationKey = new InvestigationNotificationKey();
-                for (JsonNode node : investigationNotificationsJsonArray) {
-                    Long notificationUid = node.get("notification_uid").asLong();
-                    investigationNotificationKey.setNotificationUid(notificationUid);
+            InvestigationNotificationKey investigationNotificationKey = new InvestigationNotificationKey();
+            for (JsonNode node : investigationNotificationsJsonArray) {
+                Long notificationUid = node.get("notification_uid").asLong();
+                investigationNotificationKey.setNotificationUid(notificationUid);
 
-                    InvestigationNotification tempInvestigationNotificationObject = objectMapper.treeToValue(node, InvestigationNotification.class);
+                InvestigationNotification tempInvestigationNotificationObject = objectMapper.treeToValue(node, InvestigationNotification.class);
 
-                    String jsonKey = jsonGenerator.generateStringJson(investigationNotificationKey);
-                    String jsonValue = jsonGenerator.generateStringJson(tempInvestigationNotificationObject);
-                    kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue)
-                            .whenComplete((res, e) -> logger.info("Notification data (uid={}) sent to {}", notificationUid, investigationNotificationsOutputTopicName));
-                }
+                String jsonKey = jsonGenerator.generateStringJson(investigationNotificationKey);
+                String jsonValue = jsonGenerator.generateStringJson(tempInvestigationNotificationObject);
+                kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Notification data (uid={}) sent to {}", notificationUid, investigationNotificationsOutputTopicName));
             }
-            else {
-                logger.info("InvestigationNotification array is null.");
-            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationNotification");
         } catch (Exception e) {
             logger.error("Error processing Notifications JSON array from investigation data: {}", e.getMessage());
         }
     }
 
-    private void transformPersonParticipations(String personParticipations, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
+    private void transformPersonParticipations(String personParticipations, InvestigationTransformed investigationTransformed) {
         try {
-            JsonNode personParticipationsJsonArray = parseJsonArray(personParticipations, objectMapper);
+            JsonNode personParticipationsJsonArray = parseJsonArray(personParticipations);
 
-            if (personParticipationsJsonArray != null) {
-                for (JsonNode node : personParticipationsJsonArray) {
-                    String typeCode = node.get("type_cd").asText();
-                    String subjectClassCode = node.get("subject_class_cd").asText();
-                    String personCode = node.get("person_cd").asText();
-                    Long entityId = node.get("entity_id").asLong();
+            for (JsonNode node : personParticipationsJsonArray) {
+                String typeCode = node.get(TYPE_CD).asText();
+                String subjectClassCode = node.get("subject_class_cd").asText();
+                String personCode = node.get("person_cd").asText();
+                Long entityId = node.get("entity_id").asLong();
 
-                    if (typeCode.equals("InvestgrOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
-                        investigationTransformed.setInvestigatorId(entityId);
-                    }
-                    if (typeCode.equals("PhysicianOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
-                        investigationTransformed.setPhysicianId(entityId);
-                    }
-                    if (typeCode.equals("SubjOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PAT")) {
-                        investigationTransformed.setPatientId(entityId);
-                    }
+                if (typeCode.equals("InvestgrOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
+                    investigationTransformed.setInvestigatorId(entityId);
+                }
+                if (typeCode.equals("PhysicianOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
+                    investigationTransformed.setPhysicianId(entityId);
+                }
+                if (typeCode.equals("SubjOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PAT")) {
+                    investigationTransformed.setPatientId(entityId);
                 }
             }
-            else {
-                logger.info("PersonParticipations array is null.");
-            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "PersonParticipations");
         } catch (Exception e) {
             logger.error("Error processing Person Participation JSON array from investigation data: {}", e.getMessage());
         }
     }
 
-    private void transformOrganizationParticipations(String organizationParticipations, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
+    private void transformOrganizationParticipations(String organizationParticipations, InvestigationTransformed investigationTransformed) {
         try {
-            JsonNode organizationParticipationsJsonArray = parseJsonArray(organizationParticipations, objectMapper);
+            JsonNode organizationParticipationsJsonArray = parseJsonArray(organizationParticipations);
 
-            if(organizationParticipationsJsonArray != null) {
-                for(JsonNode node : organizationParticipationsJsonArray) {
-                    String typeCode = node.get("type_cd").asText();
-                    String subjectClassCode = node.get("subject_class_cd").asText();
+            for (JsonNode node : organizationParticipationsJsonArray) {
+                String typeCode = node.get(TYPE_CD).asText();
+                String subjectClassCode = node.get("subject_class_cd").asText();
 
-                    if(typeCode.equals("OrgAsReporterOfPHC") && subjectClassCode.equals("ORG")) {
-                        investigationTransformed.setOrganizationId(node.get("entity_id").asLong());
-                    }
+                if (typeCode.equals("OrgAsReporterOfPHC") && subjectClassCode.equals("ORG")) {
+                    investigationTransformed.setOrganizationId(node.get("entity_id").asLong());
                 }
             }
-            else {
-                logger.info("OrganizationParticipations array is null.");
-            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "OrganizationParticipations");
         } catch (Exception e) {
             logger.error("Error processing Organization Participation JSON array from investigation data: {}", e.getMessage());
         }
     }
 
-    private void transformActIds(String actIds, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
+    private void transformActIds(String actIds, InvestigationTransformed investigationTransformed) {
         try {
-            JsonNode actIdsJsonArray = parseJsonArray(actIds, objectMapper);
+            JsonNode actIdsJsonArray = parseJsonArray(actIds);
 
-            if(actIdsJsonArray != null) {
-                for(JsonNode node : actIdsJsonArray) {
-                    int actIdSeq = node.get("act_id_seq").asInt();
-                    String typeCode = node.get("type_cd").asText();
-                    String rootExtension = node.get("root_extension_txt").asText();
+            for(JsonNode node : actIdsJsonArray) {
+                int actIdSeq = node.get("act_id_seq").asInt();
+                String typeCode = node.get(TYPE_CD).asText();
+                String rootExtension = node.get("root_extension_txt").asText();
 
-                    if(typeCode.equals("STATE") && actIdSeq == 1) {
-                        investigationTransformed.setInvStateCaseId(rootExtension);
-                    }
-                    if(typeCode.equals("CITY") && actIdSeq == 2) {
-                        investigationTransformed.setCityCountyCaseNbr(rootExtension);
-                    }
-                    if(typeCode.equals("LEGACY") && actIdSeq == 3) {
-                        investigationTransformed.setLegacyCaseId(rootExtension);
-                    }
+                if(typeCode.equals("STATE") && actIdSeq == 1) {
+                    investigationTransformed.setInvStateCaseId(rootExtension);
+                }
+                if(typeCode.equals("CITY") && actIdSeq == 2) {
+                    investigationTransformed.setCityCountyCaseNbr(rootExtension);
+                }
+                if(typeCode.equals("LEGACY") && actIdSeq == 3) {
+                    investigationTransformed.setLegacyCaseId(rootExtension);
                 }
             }
-            else {
-                logger.info("ActIds array is null.");
-            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "ActIds");
         } catch (Exception e) {
             logger.error("Error processing Act Ids JSON array from investigation data: {}", e.getMessage());
         }
     }
 
-    private void transformObservationIds(String observationNotificationIds, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
+    private void transformObservationIds(String observationNotificationIds, InvestigationTransformed investigationTransformed) {
         try {
-            JsonNode investigationObservationIdsJsonArray = parseJsonArray(observationNotificationIds, objectMapper);
+            JsonNode investigationObservationIdsJsonArray = parseJsonArray(observationNotificationIds);
             InvestigationObservation investigationObservation = new InvestigationObservation();
             List<Long> observationIds = new ArrayList<>();
 
-            if(investigationObservationIdsJsonArray != null) {
-                for(JsonNode node : investigationObservationIdsJsonArray) {
-                    String sourceClassCode = node.get("source_class_cd").asText();
-                    String actTypeCode = node.get("act_type_cd").asText();
-                    Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
-                    investigationKey.setPublicHealthCaseUid(publicHealthCaseUid);
+            for(JsonNode node : investigationObservationIdsJsonArray) {
+                String sourceClassCode = node.path("source_class_cd").asText();
+                String actTypeCode = node.path("act_type_cd").asText();
+                Long sourceActId = node.get("source_act_uid").asLong();
+                Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
+                investigationKey.setPublicHealthCaseUid(publicHealthCaseUid);
 
-                    if(sourceClassCode.equals("OBS") && actTypeCode.equals("PHCInvForm")) {
-                        investigationTransformed.setPhcInvFormId(node.get("source_act_uid").asLong());
-                    }
-
-                    if(sourceClassCode.equals("OBS") && actTypeCode.equals("LabReport")) {
-                        investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
-                        observationIds.add(node.get("source_act_uid").asLong());
-                    }
+                if(sourceClassCode.equals("OBS") && actTypeCode.equals("PHCInvForm")) {
+                    investigationTransformed.setPhcInvFormId(sourceActId);
                 }
 
-                for(Long id : observationIds) {
-                    investigationObservation.setObservationId(id);
-                    String jsonValue = jsonGenerator.generateStringJson(investigationObservation);
-                    kafkaTemplate.send(investigationObservationOutputTopicName, jsonValue, jsonValue);
+                if(sourceClassCode.equals("OBS") && actTypeCode.equals("LabReport")) {
+                    investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
+                    observationIds.add(sourceActId);
+                }
+
+                if(sourceClassCode.equals("OBS") && actTypeCode.equals("MorbReport")) {
+                    investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
+                    observationIds.add(sourceActId);
                 }
             }
-            else {
-                logger.info("InvestigationObservationIds array is null.");
+
+            for(Long id : observationIds) {
+                investigationObservation.setObservationId(id);
+                String jsonValue = jsonGenerator.generateStringJson(investigationObservation);
+                kafkaTemplate.send(investigationObservationOutputTopicName, jsonValue, jsonValue);
             }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationObservationIds");
         } catch (Exception e) {
             logger.error("Error processing Observation Ids JSON array from investigation data: {}", e.getMessage());
         }
     }
 
-    private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod, ObjectMapper objectMapper) {
+    private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod) {
         try {
-            JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod, objectMapper);
+            JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod);
 
-            if(investigationConfirmationMethodJsonArray != null) {
-                InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
-                InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
-                Map<String, String> confirmationMethodMap = new HashMap<>();
-                String confirmationMethodTime = null;
+            InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
+            InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
+            Map<String, String> confirmationMethodMap = new HashMap<>();
+            String confirmationMethodTime = null;
 
-                // Redundant time variable in case if confirmation_method_time is null in all rows of the array
-                String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
-                Long publicHealthCaseUid = investigationConfirmationMethodJsonArray.get(0).get("public_health_case_uid").asLong();
+            // Redundant time variable in case if confirmation_method_time is null in all rows of the array
+            String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
+            Long publicHealthCaseUid = investigationConfirmationMethodJsonArray.get(0).get("public_health_case_uid").asLong();
 
-                for(JsonNode node : investigationConfirmationMethodJsonArray) {
-                    JsonNode timeNode = node.get("confirmation_method_time");
-                    if (timeNode != null && !timeNode.isNull()) {
-                        confirmationMethodTime = timeNode.asText();
-                    }
-                    confirmationMethodMap.put(node.get("confirmation_method_cd").asText(), node.get("confirmation_method_desc_txt").asText());
+            for(JsonNode node : investigationConfirmationMethodJsonArray) {
+                JsonNode timeNode = node.get("confirmation_method_time");
+                if (timeNode != null && !timeNode.isNull()) {
+                    confirmationMethodTime = timeNode.asText();
                 }
-                investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
-                investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
-
-                investigationConfirmation.setConfirmationMethodTime(
-                        confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
-
-                for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
-                    investigationConfirmation.setConfirmationMethodCd(entry.getKey());
-                    investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
-                    investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
-                    String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
-                    String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
-                    kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
-                }
+                confirmationMethodMap.put(node.get("confirmation_method_cd").asText(), node.get("confirmation_method_desc_txt").asText());
             }
-            else {
-                logger.info("InvestigationConfirmationMethod array is null.");
+            investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
+            investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
+
+            investigationConfirmation.setConfirmationMethodTime(
+                    confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
+
+            for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
+                investigationConfirmation.setConfirmationMethodCd(entry.getKey());
+                investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
+                investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
+                String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
+                String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
+                kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
             }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationObservationIds");
         } catch (Exception e) {
             logger.error("Error processing investigation confirmation method JSON array from investigation data: {}", e.getMessage());
         }
     }
 
-    private void processInvestigationPageCaseAnswer(String investigationCaseAnswer, InvestigationTransformed investigationTransformed, ObjectMapper objectMapper) {
+    private void processInvestigationPageCaseAnswer(String investigationCaseAnswer, InvestigationTransformed investigationTransformed) {
         try {
-            JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer, objectMapper);
+            JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
 
-            if(investigationCaseAnswerJsonArray != null) {
-                Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
-                List<InvestigationCaseAnswer> investigationCaseAnswerList = new ArrayList<>();
+            Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
+            List<InvestigationCaseAnswer> investigationCaseAnswerList = new ArrayList<>();
 
-                for(JsonNode node : investigationCaseAnswerJsonArray) {
-                    InvestigationCaseAnswer tempCaseAnswerObject = objectMapper.treeToValue(node, InvestigationCaseAnswer.class);
-                    investigationCaseAnswerList.add(tempCaseAnswerObject);
-                }
-
-                investigationCaseAnswerRepository.deleteByActUid(actUid);
-                investigationCaseAnswerRepository.saveAll(investigationCaseAnswerList);
-
-                String rdbTblNms = String.join(",", investigationCaseAnswerList.stream()
-                                .map(InvestigationCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
-                if (!rdbTblNms.isEmpty()) {
-                    investigationTransformed.setRdbTableNameList(rdbTblNms);
-                }
+            for(JsonNode node : investigationCaseAnswerJsonArray) {
+                InvestigationCaseAnswer tempCaseAnswerObject = objectMapper.treeToValue(node, InvestigationCaseAnswer.class);
+                investigationCaseAnswerList.add(tempCaseAnswerObject);
             }
-            else {
-                logger.info("InvestigationCaseAnswerJsonArray array is null.");
+
+            investigationCaseAnswerRepository.deleteByActUid(actUid);
+            investigationCaseAnswerRepository.saveAll(investigationCaseAnswerList);
+
+            String rdbTblNms = String.join(",", investigationCaseAnswerList.stream()
+                            .map(InvestigationCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
+            if (!rdbTblNms.isEmpty()) {
+                investigationTransformed.setRdbTableNameList(rdbTblNms);
             }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationCaseAnswer");
         } catch (Exception e) {
             logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
         }
@@ -291,12 +279,12 @@ public class ProcessInvestigationDataUtil {
         }
     }
 
-    private JsonNode parseJsonArray(String jsonString, ObjectMapper objectMapper) throws JsonProcessingException {
+    private JsonNode parseJsonArray(String jsonString) throws JsonProcessingException, IllegalArgumentException {
         JsonNode jsonArray = jsonString != null ? objectMapper.readTree(jsonString) : null;
-        if (jsonArray != null) {
-            return jsonArray.isArray() ? jsonArray : null;
+        if (jsonArray != null && jsonArray.isArray()) {
+            return jsonArray;
         } else {
-            return null;
+            throw new IllegalArgumentException("{} array is null.");
         }
     }
 }
