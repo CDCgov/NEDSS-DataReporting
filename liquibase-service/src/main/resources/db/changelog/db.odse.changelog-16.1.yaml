@@ -172,14 +172,14 @@ databaseChangeLog:
       author: liquibase
       changes:
         - sqlFile:
-            path: 021_sp_observation_event-001.sql
+            path: 009-sp_observation_event-002.sql
             splitStatements: false
   - changeSet:
       id: 25
       author: liquibase
       changes:
         - sqlFile:
-            path: 021_sp_observation_event-002.sql
+            path: 009-sp_observation_event-003.sql
             splitStatements: false
   - changeSet:
       id: 26
