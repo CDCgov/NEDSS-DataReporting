@@ -97,7 +97,7 @@ public class ProcessObservationDataUtil {
                     transformPersonParticipationRoles(jsonNode, observationTransformed, entityId);
                 }
 
-                if (obsDomainCdSt1.equals(ORDER)) {
+                if (ORDER.equals(obsDomainCdSt1)) {
                     String subjectClassCd = getNodeValue(jsonNode, SUBJECT_CLASS_CD, JsonNode::asText);
                     if ("PSN".equals(subjectClassCd)) {
                         switch (typeCd) {
@@ -184,11 +184,11 @@ public class ProcessObservationDataUtil {
                 Long entityId = getNodeValue(jsonNode, ENTITY_ID, JsonNode::asLong);
 
                 if (subjectClassCd.equals("ORG")) {
-                    if (obsDomainCdSt1.equals(RESULT)) {
+                    if (RESULT.equals(obsDomainCdSt1)) {
                         if ("PRF".equals(typeCd)) {
                             observationTransformed.setPerformingOrganizationId(entityId);
                         }
-                    } else if (obsDomainCdSt1.equals(ORDER)) {
+                    } else if (ORDER.equals(obsDomainCdSt1)) {
                         switch (typeCd) {
                             case "AUT":
                                 observationTransformed.setAuthorOrganizationId(entityId);
@@ -283,7 +283,7 @@ public class ProcessObservationDataUtil {
                 String parentTypeCd = getNodeValue(jsonNode, "parent_type_cd", JsonNode::asText);
                 Optional<JsonNode> parentUid = Optional.ofNullable(jsonNode.get("parent_uid"));
 
-                if (obsDomainCdSt1.equals(ORDER)) {
+                if (ORDER.equals(obsDomainCdSt1)) {
                     Optional<JsonNode> observationUid = Optional.ofNullable(jsonNode.get("observation_uid"));
 
                     switch (parentTypeCd) {
