@@ -349,3 +349,10 @@ databaseChangeLog:
         - sqlFile:
             path: 016-sp_nrt_morbidity_report_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 50
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-sp_d_labtest_result_postprocessing-001.sql
+            splitStatements: false
