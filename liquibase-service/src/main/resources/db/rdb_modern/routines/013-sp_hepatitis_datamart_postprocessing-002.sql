@@ -1336,7 +1336,7 @@ BEGIN
         --cte added to assist in filtering latest answers from page case answer table
         WITH NRT_PCA_FILTERED_CTE AS (
             SELECT
-                C.condition_key, M.block_nm, M.investigation_form_cd, M.act_uid, M.last_chg_time, max(M.last_chg_time) OVER (PARTITION BY act_uid ) max_last_chg_time
+                C.condition_key, M.block_nm, M.investigation_form_cd, M.act_uid, M.last_chg_time, M.question_identifier, max(M.last_chg_time) OVER (PARTITION BY act_uid ) max_last_chg_time
             FROM
                 DBO.NRT_PAGE_CASE_ANSWER AS M WITH(NOLOCK)
             INNER JOIN
@@ -1346,7 +1346,7 @@ BEGIN
             M.block_nm IS NOT NULL
         )
         select
-            CONDITION_KEY, block_nm, investigation_form_cd
+            CONDITION_KEY, block_nm, investigation_form_cd, question_identifier
         INTO #TMP_METADATA_TEST
         FROM NRT_PCA_FILTERED_CTE
         WHERE max_last_chg_time = last_chg_time;
