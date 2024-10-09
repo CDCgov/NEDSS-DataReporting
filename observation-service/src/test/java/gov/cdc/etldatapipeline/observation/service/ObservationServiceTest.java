@@ -11,14 +11,12 @@ import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class ObservationServiceTest {
+
+    @InjectMocks
+    private ObservationService observationService;
 
     @Mock
     private IObservationRepository observationRepository;
@@ -42,11 +43,20 @@ class ObservationServiceTest {
     @Captor
     private ArgumentCaptor<String> messageCaptor;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private AutoCloseable closeable;
+
+    private final String inputTopicName = "Observation";
+    private final String outputTopicName = "ObservationOutput";
 
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
+        ProcessObservationDataUtil transformer = new ProcessObservationDataUtil(kafkaTemplate);
+        transformer.setMaterialTopicName("materialTopic");
+        observationService = new ObservationService(observationRepository, kafkaTemplate, transformer);
+        observationService.setObservationTopic(inputTopicName);
+        observationService.setObservationTopicOutputReporting(outputTopicName);
     }
 
     @AfterEach
@@ -54,14 +64,8 @@ class ObservationServiceTest {
         closeable.close();
     }
 
-    ProcessObservationDataUtil transformer = new ProcessObservationDataUtil(kafkaTemplate);
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Test
     void testProcessMessage() throws JsonProcessingException {
-        String observationTopic = "Observation";
-        String observationTopicOutput = "ObservationOutput";
-
         // Mocked input data
         Long observationUid = 123456789L;
         String obsDomainCdSt = "Order";
@@ -69,47 +73,39 @@ class ObservationServiceTest {
 
         Observation observation = constructObservation(observationUid, obsDomainCdSt);
         when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.of(observation));
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
-        validateData(observationTopic, observationTopicOutput, payload, observation);
+        validateData(payload, observation);
 
         verify(observationRepository).computeObservations(String.valueOf(observationUid));
     }
 
     @Test
     void testProcessMessageException() {
-        String observationTopic = "Observation";
-        String observationTopicOutput = "ObservationOutput";
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
 
-        final var observationService = getObservationService(observationTopic, observationTopicOutput);
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(invalidPayload, observationTopic));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(invalidPayload, inputTopicName));
         assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     @Test
     void testProcessMessageNoDataException() {
-        String observationTopic = "Observation";
-        String observationTopicOutput = "ObservationOutput";
         Long observationUid = 123456789L;
         String payload = "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
 
         when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.empty());
-
-        final var observationService = getObservationService(observationTopic, observationTopicOutput);
-        assertThrows(NoDataException.class, () -> observationService.processMessage(payload, observationTopic));
+        assertThrows(NoDataException.class, () -> observationService.processMessage(payload, inputTopicName));
     }
 
-    private void validateData(String inputTopicName, String outputTopicName,
-                              String payload, Observation observation) throws JsonProcessingException {
-        final var observationService = getObservationService(inputTopicName, outputTopicName);
+    private void validateData(String payload, Observation observation) throws JsonProcessingException {
         observationService.processMessage(payload, inputTopicName);
 
         ObservationKey observationKey = new ObservationKey();
         observationKey.setObservationUid(observation.getObservationUid());
 
-        ObservationReporting reportingModel = constructObservationReporting(observation.getObservationUid(), observation.getObsDomainCdSt1());
+        var reportingModel = constructObservationReporting(observation.getObservationUid(), observation.getObsDomainCdSt1());
 
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         String actualTopic = topicCaptor.getValue();
         String actualKey = keyCaptor.getValue();
         String actualValue = messageCaptor.getValue();
@@ -129,12 +125,17 @@ class ObservationServiceTest {
         String filePathPrefix = "rawDataFiles/";
         Observation observation = new Observation();
         observation.setObservationUid(observationUid);
+        observation.setActUid(observationUid);
+        observation.setClassCd("OBS");
+        observation.setMoodCd("ENV");
+        observation.setLocalId("OBS10003388MA01");
         observation.setObsDomainCdSt1(obsDomainCdSt1);
         observation.setPersonParticipations(readFileData(filePathPrefix + "PersonParticipations.json"));
         observation.setOrganizationParticipations(readFileData(filePathPrefix + "OrganizationParticipations.json"));
         observation.setMaterialParticipations(readFileData(filePathPrefix + "MaterialParticipations.json"));
         observation.setFollowupObservations(readFileData(filePathPrefix + "FollowupObservations.json"));
         observation.setParentObservations(readFileData(filePathPrefix + "ParentObservations.json"));
+        observation.setActIds(readFileData(filePathPrefix + "ActIds.json"));
         return observation;
     }
 
@@ -142,24 +143,46 @@ class ObservationServiceTest {
         ObservationReporting observation = new ObservationReporting();
         observation.setObservationUid(observationUid);
         observation.setObsDomainCdSt1(obsDomainCdSt1);
+        observation.setActUid(observationUid);
+        observation.setClassCd("OBS");
+        observation.setMoodCd("ENV");
+        observation.setLocalId("OBS10003388MA01");
         observation.setOrderingPersonId(10000055L);
         observation.setPatientId(10000066L);
         observation.setPerformingOrganizationId(null);      // not null when obsDomainCdSt1=Result
         observation.setAuthorOrganizationId(34567890L);     // null when obsDomainCdSt1=Result
         observation.setOrderingOrganizationId(23456789L);   // null when obsDomainCdSt1=Result
+        observation.setHealthCareId(56789012L);             // null when obsDomainCdSt1=Result
+        observation.setMorbHospReporterId(67890123L);           // null when obsDomainCdSt1=Result
+        observation.setMorbHospId(78901234L);               // null when obsDomainCdSt1=Result
         observation.setMaterialId(10000005L);
         observation.setResultObservationUid("56789012,56789013");
         observation.setFollowupObservationUid("56789014,56789015");
         observation.setReportObservationUid(observationUid);
         observation.setReportRefrUid(234567899L);
         observation.setReportSprtUid(234567888L);
-        return observation;
-    }
 
-    private ObservationService getObservationService(String inputTopicName, String outputTopicName) {
-        ObservationService observationService = new ObservationService(observationRepository, kafkaTemplate, transformer);
-        observationService.setObservationTopic(inputTopicName);
-        observationService.setObservationTopicOutputReporting(outputTopicName);
-        return observationService;
+        observation.setAssistantInterpreterId(10000077L);
+        observation.setAssistantInterpreterVal("22582");
+        observation.setAssistantInterpreterFirstNm("Cara");
+        observation.setAssistantInterpreterLastNm("Dune");
+        observation.setAssistantInterpreterIdAssignAuth("22D7377772");
+        observation.setAssistantInterpreterAuthType("Employee number");
+
+        observation.setTranscriptionistId(10000088L);
+        observation.setTranscriptionistVal("34344355455144");
+        observation.setTranscriptionistFirstNm("Moff");
+        observation.setTranscriptionistLastNm("Gideon");
+        observation.setTranscriptionistIdAssignAuth("18D8181818");
+        observation.setTranscriptionistAuthType("Employee number");
+
+        observation.setResultInterpreterId(10000022L);
+        observation.setLabTestTechnicianId(10000011L);
+
+        observation.setSpecimenCollectorId(10000033L);
+        observation.setCopyToProviderId(10000044L);
+        observation.setAccessionNumber("20120601114");
+
+        return observation;
     }
 }

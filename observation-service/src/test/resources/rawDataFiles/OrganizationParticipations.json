@@ -31,5 +31,38 @@
     "last_change_time": "2024-01-01T00:00:00.000",
     "name": "Mount-Auburn Health",
     "org_last_change_time": "2011-09-13T00:00:00.000"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "HCFAC",
+    "entity_id": 56789012,
+    "subject_class_cd": "ORG",
+    "record_status": "ACTIVE",
+    "type_desc_txt": "Health Care Fraud and Abuse Control",
+    "last_change_time": null,
+    "name": "ACL",
+    "org_last_change_time": "2011-09-13T00:00:00.000"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "ReporterOfMorbReport",
+    "entity_id": 67890123,
+    "subject_class_cd": "ORG",
+    "record_status": "ACTIVE",
+    "type_desc_txt": "Reporter Of Morbidity Report",
+    "last_change_time": "2011-09-13T00:00:00.000",
+    "name": "Emory University Hospital",
+    "org_last_change_time": "2011-09-13T00:00:00.000"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "HospOfMorbObs",
+    "entity_id": 78901234,
+    "subject_class_cd": "ORG",
+    "record_status": "ACTIVE",
+    "type_desc_txt": "Hospice Of Morbidity Observation",
+    "last_change_time": "2011-09-13T00:00:00.000",
+    "name": "HSL",
+    "org_last_change_time": "2011-09-13T00:00:00.000"
   }
 ]

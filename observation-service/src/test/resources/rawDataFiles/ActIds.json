@@ -1,0 +1,20 @@
+[
+  {
+    "id": 10361979,
+    "act_id_seq": 1,
+    "record_status": "ACTIVE",
+    "root_extension_txt": "20240829163135",
+    "type_cd": "MCID",
+    "type_desc_txt": "Message Control ID",
+    "act_last_change_time": null
+  },
+  {
+    "id": 10361979,
+    "act_id_seq": 2,
+    "record_status": "ACTIVE",
+    "root_extension_txt": "20120601114",
+    "type_cd": "FN",
+    "type_desc_txt": "Filler Number",
+    "act_last_change_time": null
+  }
+]
