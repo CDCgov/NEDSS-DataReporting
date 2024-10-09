@@ -120,6 +120,9 @@ public class Observation {
     @Column(name = "txt")
     private String txt;
 
+    @Column(name = "priority_cd")
+    private String priorityCd;
+
     @Column(name = "add_user_id")
     private Long addUserId;
 

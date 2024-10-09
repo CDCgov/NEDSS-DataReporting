@@ -284,7 +284,7 @@ public class ProcessObservationDataUtil {
                 Optional<JsonNode> parentUid = Optional.ofNullable(jsonNode.get("parent_uid"));
 
                 if (obsDomainCdSt1.equals(ORDER)) {
-                    Optional<JsonNode> observationUid = Optional.ofNullable(jsonNode.get("report_observation_uid"));
+                    Optional<JsonNode> observationUid = Optional.ofNullable(jsonNode.get("observation_uid"));
 
                     switch (parentTypeCd) {
                         case "SPRT":
