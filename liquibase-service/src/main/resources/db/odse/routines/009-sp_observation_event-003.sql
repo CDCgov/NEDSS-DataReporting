@@ -67,6 +67,7 @@ BEGIN
                      o.target_site_cd,
                      o.target_site_desc_txt,
                      o.txt,
+                     o.priority_cd,
                      o.add_user_id,
                      case
                          when o.add_user_id > 0 then (select * from dbo.fn_get_user_name(o.add_user_id))
@@ -140,7 +141,7 @@ BEGIN
                               (
                                   SELECT
                                       ar.type_cd AS [parent_type_cd],
-                                      ar.source_act_uid AS [report_observation_uid],
+                                      ar.source_act_uid AS [observation_uid],
                                       o2.observation_uid AS [parent_uid],
                                       o2.cd AS [parent_cd],
                                       o2.cd_desc_txt AS [parent_cd_desc_txt],
@@ -373,7 +374,6 @@ BEGIN
                                   FOR json path,INCLUDE_NULL_VALUES
                               ) AS obs_num
                       ) AS obs_num -- can be more than 1
-
                   /* -- ldf_observation associated with observation
                    (
                      SELECT
@@ -382,7 +382,7 @@ BEGIN
                   WHERE   ldf.observation_uid = o.observation_uid
                           Order By ldf.observation_uid, ldf.display_order_nbr
                                   FOR json path,INCLUDE_NULL_VALUES
-                       ) AS ldf_observation
+           ) AS ldf_observation
                    ) AS ldf_observation*/
                   /* , -- public health cases associated with lab report
                    (
@@ -391,7 +391,7 @@ BEGIN
                          SELECT
                            phc.public_health_case_uid AS [public_health_case_uid],
                            phc.last_chg_time AS [last_change_time],
-                           phc.cd_desc_txt AS [cd_desc_txt],
+   phc.cd_desc_txt AS [cd_desc_txt],
                   phc.local_id AS [local_id],
                        ar.last_chg_time AS [act_relationship_last_change_time]
                          FROM
