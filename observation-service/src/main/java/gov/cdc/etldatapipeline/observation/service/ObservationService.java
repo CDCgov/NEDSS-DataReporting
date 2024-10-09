@@ -92,7 +92,7 @@ public class ObservationService {
             if(observationData.isPresent()) {
                 ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
                 ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get());
-                buildReportingModelForTransformedData(reportingModel, observationTransformed);
+                modelMapper.map(observationTransformed, reportingModel);
                 pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
                 logger.info("Observation data (uid={}) sent to {}", observationUid, observationTopicOutputReporting);
             }
@@ -113,20 +113,5 @@ public class ObservationService {
         String jsonKey = jsonGenerator.generateStringJson(observationKey);
         String jsonValue = jsonGenerator.generateStringJson(model);
         kafkaTemplate.send(topicName, jsonKey, jsonValue);
-    }
-
-    protected void buildReportingModelForTransformedData(ObservationReporting reportingModel, ObservationTransformed observationTransformed) {
-        reportingModel.setOrderingPersonId(observationTransformed.getOrderingPersonId());
-        reportingModel.setPatientId(observationTransformed.getPatientId());
-        reportingModel.setPerformingOrganizationId(observationTransformed.getPerformingOrganizationId());
-        reportingModel.setAuthorOrganizationId(observationTransformed.getAuthorOrganizationId());
-        reportingModel.setOrderingOrganizationId(observationTransformed.getOrderingOrganizationId());
-        reportingModel.setMaterialId(observationTransformed.getMaterialId());
-        reportingModel.setResultObservationUid(observationTransformed.getResultObservationUid());
-        reportingModel.setFollowupObservationUid(observationTransformed.getFollowUpObservationUid());
-        reportingModel.setReportObservationUid(Optional.ofNullable(observationTransformed.getReportObservationUid())
-                .orElse(reportingModel.getObservationUid()));
-        reportingModel.setReportRefrUid(observationTransformed.getReportRefrUid());
-        reportingModel.setReportSprtUid(observationTransformed.getReportSprtUid());
     }
 }

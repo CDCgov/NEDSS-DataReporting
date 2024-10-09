@@ -59,25 +59,34 @@ public class ObservationReporting {
     private Long orderingPersonId;
     private Long morbPhysicianId;
     private Long morbReporterId;
+    private Long morbHospReporterId;
+    private Long morbHospId;
+
     private Long transcriptionistId;
     private String transcriptionistVal;
     private String transcriptionistFirstNm;
     private String transcriptionistLastNm;
+    private String transcriptionistIdAssignAuth;
+    private String transcriptionistAuthType;
+
     private Long assistantInterpreterId;
     private String assistantInterpreterVal;
     private String assistantInterpreterFirstNm;
     private String assistantInterpreterLastNm;
+    private String assistantInterpreterIdAssignAuth;
+    private String assistantInterpreterAuthType;
+
     private Long resultInterpreterId;
     private Long specimenCollectorId;
     private Long copyToProviderId;
     private Long labTestTechnicianId;
-
     private Long authorOrganizationId;
     private Long orderingOrganizationId;
     private Long performingOrganizationId;
     private Long healthCareId;
-    private Long morbHospReporterId;
 
+    private String accessionNumber;
+    private String priorityCd;
     private Long materialId;
     private Long addUserId;
     private String addUserName;
