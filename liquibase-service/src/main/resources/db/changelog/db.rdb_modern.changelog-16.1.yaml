@@ -95,7 +95,7 @@ databaseChangeLog:
       author: liquibase
       changes:
         - sqlFile:
-            path: 012-create-nrt-investigation-notification-002.sql
+            path: 012-create_nrt_investigation_notification-002.sql
             splitStatements: false
   - changeSet:
       id: 14

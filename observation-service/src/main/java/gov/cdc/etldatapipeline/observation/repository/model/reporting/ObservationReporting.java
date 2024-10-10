@@ -16,7 +16,6 @@ public class ObservationReporting {
     private String classCd;
     private String moodCd;
     private Long actUid;
-    private String cdDescText;
     private String recordStatusCd;
     private String jurisdictionCd;
     private Long programJurisdictionOid;
