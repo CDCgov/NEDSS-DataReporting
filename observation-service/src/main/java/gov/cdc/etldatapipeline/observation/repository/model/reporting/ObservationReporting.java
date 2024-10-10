@@ -31,6 +31,7 @@ public class ObservationReporting {
     private String ctrlCdDisplayForm;
     private String processingDecisionCd;
     private String cd;
+    private String cdDescTxt;
     private String sharedInd;
 
     private String statusCd;

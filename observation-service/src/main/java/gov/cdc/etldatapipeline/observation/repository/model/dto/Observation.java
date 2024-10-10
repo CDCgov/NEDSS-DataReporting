@@ -34,7 +34,7 @@ public class Observation {
     private String obsDomainCdSt1;
 
     @Column(name = "cd_desc_txt")
-    private String cdDescText;
+    private String cdDescTxt;
 
     @Column(name = "record_status_cd")
     private String recordStatusCd;
