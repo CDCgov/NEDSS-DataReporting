@@ -391,3 +391,10 @@ databaseChangeLog:
         - sqlFile:
             path: 018-sp_d_lab_test_postprocessing-001.sql
             splitStatements: false
+  - changeSet:  
+      id: 56
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 019-sp_lab100_datamart_postprocessing-001.sql
+            splitStatements: false
