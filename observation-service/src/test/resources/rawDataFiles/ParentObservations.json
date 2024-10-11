@@ -2,7 +2,7 @@
   {
     "parent_type_cd": "SPRT",
     "observation_uid": 123456789,
-    "parent_uid": 234567888,
+    "parent_uid": 123456788,
     "parent_cd": "634-6",
     "parent_cd_desc_txt": "Bacteria identified in Unspecified specimen by Aerobe culture",
     "parent_domain_cd_st_1": "Order"
@@ -10,7 +10,7 @@
   {
     "parent_type_cd": "REFR",
     "observation_uid": 123456789,
-    "parent_uid": 234567899,
+    "parent_uid": 123456790,
     "parent_cd": "634-6",
     "parent_cd_desc_txt": "Bacteria identified in Unspecified specimen by Aerobe culture",
     "parent_domain_cd_st_1": "Result"

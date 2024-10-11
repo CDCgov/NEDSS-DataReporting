@@ -71,7 +71,7 @@ public class ProcessObservationDataUtil {
         transformOrganizationParticipations(observation.getOrganizationParticipations(), obsDomainCdSt1, observationTransformed);
         transformMaterialParticipations(observation.getMaterialParticipations(), obsDomainCdSt1, observationTransformed);
         transformFollowupObservations(observation.getFollowupObservations(), obsDomainCdSt1, observationTransformed);
-        transformParentObservations(observation.getParentObservations(), obsDomainCdSt1, observationTransformed);
+        transformParentObservations(observation.getParentObservations(), observationTransformed);
         transformActIds(observation.getActIds(), observationTransformed);
         transformObservationCoded(observation.getObsCode());
         transformObservationDate(observation.getObsDate());
@@ -275,36 +275,23 @@ public class ProcessObservationDataUtil {
         }
     }
 
-    private void transformParentObservations(String parentObservations, String obsDomainCdSt1, ObservationTransformed observationTransformed) {
+    private void transformParentObservations(String parentObservations, ObservationTransformed observationTransformed) {
         try {
             JsonNode parentObservationsJsonArray = parseJsonArray(parentObservations);
 
             for (JsonNode jsonNode : parentObservationsJsonArray) {
-                String parentTypeCd = getNodeValue(jsonNode, "parent_type_cd", JsonNode::asText);
-                Optional<JsonNode> parentUid = Optional.ofNullable(jsonNode.get("parent_uid"));
+                Long parentUid = getNodeValue(jsonNode, "parent_uid", JsonNode::asLong);
+                String parentTypeCd = jsonNode.path("parent_type_cd").asText();
+                String parentDomainCd = jsonNode.path("parent_domain_cd_st_1").asText();
 
-                if (ORDER.equals(obsDomainCdSt1)) {
-                    Optional<JsonNode> observationUid = Optional.ofNullable(jsonNode.get("observation_uid"));
+                if (parentTypeCd.equals("SPRT")) {
+                    observationTransformed.setReportSprtUid(parentUid);
+                } else if (parentTypeCd.equals("REFR")) {
+                    observationTransformed.setReportRefrUid(parentUid);
+                }
 
-                    switch (parentTypeCd) {
-                        case "SPRT":
-                            parentUid.ifPresent(id -> observationTransformed.setReportSprtUid(id.asLong()));
-                            observationUid.ifPresent(id -> observationTransformed.setReportObservationUid(id.asLong()));
-                            break;
-                        case "REFR":
-                            parentUid.ifPresent(id -> observationTransformed.setReportRefrUid(id.asLong()));
-                            observationUid.ifPresent(id -> observationTransformed.setReportObservationUid(id.asLong()));
-                            break;
-                        default:
-                            parentUid.ifPresent(id ->  observationTransformed.setReportObservationUid(id.asLong()));
-                            break;
-                    }
-                } else {
-                    Optional.ofNullable(jsonNode.get("parent_domain_cd_st_1")).ifPresent( node -> {
-                        if (node.asText().contains(ORDER)) {
-                            parentUid.ifPresent(id -> observationTransformed.setReportObservationUid(id.asLong()));
-                        }
-                    });
+                if (parentDomainCd.contains(ORDER)) {
+                    observationTransformed.setReportObservationUid(parentUid);
                 }
             }
         } catch (IllegalArgumentException ex) {

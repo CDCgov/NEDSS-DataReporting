@@ -153,14 +153,14 @@ class ObservationServiceTest {
         observation.setAuthorOrganizationId(34567890L);     // null when obsDomainCdSt1=Result
         observation.setOrderingOrganizationId(23456789L);   // null when obsDomainCdSt1=Result
         observation.setHealthCareId(56789012L);             // null when obsDomainCdSt1=Result
-        observation.setMorbHospReporterId(67890123L);           // null when obsDomainCdSt1=Result
+        observation.setMorbHospReporterId(67890123L);       // null when obsDomainCdSt1=Result
         observation.setMorbHospId(78901234L);               // null when obsDomainCdSt1=Result
         observation.setMaterialId(10000005L);
         observation.setResultObservationUid("56789012,56789013");
         observation.setFollowupObservationUid("56789014,56789015");
-        observation.setReportObservationUid(observationUid);
-        observation.setReportRefrUid(234567899L);
-        observation.setReportSprtUid(234567888L);
+        observation.setReportObservationUid(123456788L);
+        observation.setReportRefrUid(123456790L);
+        observation.setReportSprtUid(123456788L);
 
         observation.setAssistantInterpreterId(10000077L);
         observation.setAssistantInterpreterVal("22582");

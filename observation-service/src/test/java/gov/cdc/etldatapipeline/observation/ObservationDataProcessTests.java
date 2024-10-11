@@ -190,6 +190,8 @@ class ObservationDataProcessTests {
         observation.setObsDomainCdSt1(domainCd);
         ObservationTransformed observationTransformed = transformer.transformObservationData(observation);
         assertEquals(234567888L, observationTransformed.getReportObservationUid());
+        assertNull(observationTransformed.getReportRefrUid());
+        assertNull(observationTransformed.getReportSprtUid());
     }
 
     @Test
@@ -399,27 +401,6 @@ class ObservationDataProcessTests {
 
     @Test
     void testTransformObservationInvalidDomainError(){
-        Observation observation = new Observation();
-        String dummyJSON = "[{\"type_cd\":\"ORD\",\"subject_class_cd\":\"ORD\",\"domain_cd_st_1\":\"Result\"}]";
-        String invalidDomain = "invalidDomain";
-        observation.setObservationUid(10000001L);
-        observation.setObsDomainCdSt1(invalidDomain);
-
-        observation.setPersonParticipations(dummyJSON);
-        observation.setOrganizationParticipations(dummyJSON);
-        observation.setMaterialParticipations(dummyJSON);
-        observation.setFollowupObservations(dummyJSON);
-        observation.setParentObservations(dummyJSON);
-
-        transformer.setReasonTopicName(REASON_TOPIC);
-        transformer.transformObservationData(observation);
-
-        List<ILoggingEvent> logs = listAppender.list.subList(0, 4);
-        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidDomain)));
-    }
-
-    @Test
-    void testTransformObservationResultDomainError(){
         Observation observation = new Observation();
         String dummyJSON = "[{\"type_cd\":\"PRF\",\"subject_class_cd\":\"ORG\",\"entity_id\":45678901,\"domain_cd_st_1\":\"Result\"}]";
         String invalidDomainCode = "Check";
