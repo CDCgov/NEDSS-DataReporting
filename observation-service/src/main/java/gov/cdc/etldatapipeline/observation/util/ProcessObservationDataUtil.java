@@ -323,10 +323,12 @@ public class ProcessObservationDataUtil {
         try {
             JsonNode observationCodedJsonArray = parseJsonArray(observationCoded);
 
+            ObservationCodedKey codedKey = new ObservationCodedKey();
             for (JsonNode jsonNode : observationCodedJsonArray) {
                 ObservationCoded coded = objectMapper.treeToValue(jsonNode, ObservationCoded.class);
-                observationKey.setObservationUid(coded.getObservationUid());
-                sendToKafka(observationKey, coded, codedTopicName, coded.getObservationUid(), "Observation Coded data (uid={}) sent to {}");
+                codedKey.setObservationUid(coded.getObservationUid());
+                codedKey.setOvcCode(coded.getOvcCode());
+                sendToKafka(codedKey, coded, codedTopicName, coded.getObservationUid(), "Observation Coded data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "ObservationCoded");
@@ -388,10 +390,12 @@ public class ProcessObservationDataUtil {
         try {
             JsonNode observationReasonsJsonArray = parseJsonArray(observationReasons);
 
+            ObservationReasonKey reasonKey = new ObservationReasonKey();
             for (JsonNode jsonNode : observationReasonsJsonArray) {
                 ObservationReason reason = objectMapper.treeToValue(jsonNode, ObservationReason.class);
-                observationKey.setObservationUid(reason.getObservationUid());
-                sendToKafka(observationKey, reason, reasonTopicName, reason.getObservationUid(), "Observation Reason data (uid={}) sent to {}");
+                reasonKey.setObservationUid(reason.getObservationUid());
+                reasonKey.setReasonCd(reason.getReasonCd());
+                sendToKafka(reasonKey, reason, reasonTopicName, reason.getObservationUid(), "Observation Reason data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "ObservationReasons");
@@ -404,10 +408,12 @@ public class ProcessObservationDataUtil {
         try {
             JsonNode observationTxtJsonArray = parseJsonArray(observationTxt);
 
+            ObservationTxtKey txtKey = new ObservationTxtKey();
             for (JsonNode jsonNode : observationTxtJsonArray) {
                 ObservationTxt txt = objectMapper.treeToValue(jsonNode, ObservationTxt.class);
-                observationKey.setObservationUid(txt.getObservationUid());
-                sendToKafka(observationKey, txt, txtTopicName, txt.getObservationUid(), "Observation Txt data (uid={}) sent to {}");
+                txtKey.setObservationUid(txt.getObservationUid());
+                txtKey.setOvtSeq(txt.getOvtSeq());
+                sendToKafka(txtKey, txt, txtTopicName, txt.getObservationUid(), "Observation Txt data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "ObservationTxt");
