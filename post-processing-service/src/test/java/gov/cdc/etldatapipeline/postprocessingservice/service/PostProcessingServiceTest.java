@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -136,6 +135,7 @@ class PostProcessingServiceTest {
         String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(6, logs.size());
@@ -202,6 +202,87 @@ class PostProcessingServiceTest {
         assertEquals(4, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.LDF_DATA.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
+    void testPostProcessObservationMorb() {
+        String topic = "dummy_observation";
+        String key = "{\"payload\":{\"observation_uid\":123}}";
+        String msg = "{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"MorbReport\"}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, msg);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+        assertTrue(postProcessingServiceMock.idVals.containsKey(123L));
+        assertTrue(postProcessingServiceMock.idVals.containsValue(PostProcessingService.MORB_REPORT));
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedObsIdsString = "123";
+        verify(postProcRepositoryMock).executeStoredProcForMorbReport(expectedObsIdsString);
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_morbidity_report_postprocessing"));assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"LabReport\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"LabReportMorb\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Result\",\"ctrl_cd_display_form\": \"LabReport\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"R_Order\",\"ctrl_cd_display_form\": \"LabReportMorb\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"R_Result\",\"ctrl_cd_display_form\": \"LabReport\"}}'",
+    })
+    void testPostProcessObservationLab(String payload) {
+        String topic = "dummy_observation";
+        String key = "{\"payload\":{\"observation_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, payload);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+        assertTrue(postProcessingServiceMock.idVals.containsKey(123L));
+        assertTrue(postProcessingServiceMock.idVals.containsValue(PostProcessingService.LAB_REPORT));
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedObsIdsString = "123";
+        verify(postProcRepositoryMock).executeStoredProcForLabTest(expectedObsIdsString);
+        verify(postProcRepositoryMock).executeStoredProcForLabTestResult(expectedObsIdsString);
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(6, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_lab_test_postprocessing"));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertTrue(logs.get(4).getFormattedMessage().contains("sp_d_labtest_result_postprocessing"));
+        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Result\",\"ctrl_cd_display_form\": \"MorbReport\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"NoReport\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"NoOrderOrResult\",\"ctrl_cd_display_form\": \"LabReport\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": null,\"ctrl_cd_display_form\": \"LabReport\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"C_Result\",\"ctrl_cd_display_form\": \"LabComment\"}}'",
+            "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Result\",\"ctrl_cd_display_form\": null}}'"
+    })
+    void testPostProcessObservationNoReport(String payload) {
+        String topic = "dummy_observation";
+        String key = "{\"payload\":{\"observation_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, payload);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+        assertTrue(postProcessingServiceMock.idVals.isEmpty());
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedObsIdsString = "123";
+        verify(postProcRepositoryMock, never()).executeStoredProcForMorbReport(expectedObsIdsString);
+        verify(postProcRepositoryMock, never()).executeStoredProcForLabTest(expectedObsIdsString);
+        verify(postProcRepositoryMock, never()).executeStoredProcForLabTestResult(expectedObsIdsString);
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(2, logs.size());
     }
 
     @Test
@@ -342,14 +423,11 @@ class PostProcessingServiceTest {
 
     @Test
     void testProcessMessageEmptyCache() {
-        String topic = "dummy_patient";
-
-        postProcessingServiceMock.idCache.put(topic, new ConcurrentLinkedQueue<>());
         postProcessingServiceMock.processCachedIds();
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(1, logs.size());
-        assertTrue(logs.get(0).getMessage().contains("No ids to process from the topics."));
+        assertTrue(logs.getFirst().getMessage().contains("No ids to process from the topics."));
     }
 
     @Test
@@ -390,7 +468,7 @@ class PostProcessingServiceTest {
 
         postProcessingServiceMock.postProcessDatamart(topic, msg);
         List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(logs.size()-1).getFormattedMessage().contains("Skipping further processing"));
+        assertTrue(logs.getLast().getFormattedMessage().contains("Skipping further processing"));
     }
 
     @Test
@@ -400,7 +478,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(1, logs.size());
-        assertTrue(logs.get(0).getMessage().contains("No data to process from the datamart topics."));
+        assertTrue(logs.getFirst().getMessage().contains("No data to process from the datamart topics."));
     }
 
     @Test
@@ -411,7 +489,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
         List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(logs.size()-1).getFormattedMessage().contains("Unknown topic: " + topic + " cannot be processed"));
+        assertTrue(logs.getLast().getFormattedMessage().contains("Unknown topic: " + topic + " cannot be processed"));
     }
 
     @Test

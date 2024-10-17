@@ -52,6 +52,11 @@ public class PostProcessingService {
     static final String PAYLOAD = "payload";
     static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
     static final String PHC_UID = "public_health_case_uid";
+
+    static final String MORB_REPORT = "MorbReport";
+    static final String LAB_REPORT = "LabReport";
+    static final String LAB_REPORT_MORB = "LabReportMorb";
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
 
@@ -63,6 +68,7 @@ public class PostProcessingService {
         INVESTIGATION(4, "investigation", PHC_UID, "sp_nrt_investigation_postprocessing"),
         NOTIFICATION(5, "notification", "notification_uid", "sp_nrt_notification_postprocessing"),
         LDF_DATA(6, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
+        OBSERVATION(7, "observation", "observation_uid", null),
         F_PAGE_CASE(0, "fact page case", PHC_UID, "sp_f_page_case_postprocessing"),
         CASE_ANSWERS(0, "case answers", PHC_UID, "sp_page_builder_postprocessing"),
         UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
@@ -78,6 +84,7 @@ public class PostProcessingService {
             this.storedProcedure = storedProcedure;
             this.uidName = uidName;
         }
+
     }
 
     @RetryableTopic(
@@ -102,7 +109,8 @@ public class PostProcessingService {
             "${spring.kafka.topic.patient}",
             "${spring.kafka.topic.provider}",
             "${spring.kafka.topic.notification}",
-            "${spring.kafka.topic.ldf_data}"
+            "${spring.kafka.topic.ldf_data}",
+            "${spring.kafka.topic.observation}"
     })
     public void postProcessMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -111,8 +119,24 @@ public class PostProcessingService {
 
         Long id = extractIdFromMessage(topic, key);
         idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-        Optional<String> val = Optional.ofNullable(extractValFromMessage(topic, payload, "rdb_table_name_list"));
+        Optional<String> val = Optional.ofNullable(extractValFromMessage(topic, payload));
         val.ifPresent(v -> idVals.put(id, v));
+    }
+
+    private Long extractIdFromMessage(String topic, String messageKey) {
+        try {
+            logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
+            JsonNode keyNode = objectMapper.readTree(messageKey);
+
+            Entity entity = getEntityByTopic(topic);
+            if (Objects.isNull(keyNode.get(PAYLOAD).get(entity.getUidName()))) {
+                throw new NoSuchElementException("The '" + entity.getUidName() + "' value is missing in the '" + topic + "' message payload.");
+            }
+            return keyNode.get(PAYLOAD).get(entity.getUidName()).asLong();
+        } catch (Exception e) {
+            String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
+            throw new RuntimeException(msg, e);
+        }
     }
 
     @RetryableTopic(
@@ -164,17 +188,21 @@ public class PostProcessingService {
 
         // Making cache snapshot preventing out-of-sequence ids processing
         Map<String, List<Long>> idCacheSnapshot;
+        Map<Long, String> idValsSnapshot;
         synchronized (cacheLock) {
             idCacheSnapshot = idCache.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
             idCache.clear();
+
+            idValsSnapshot = idVals.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            idVals.clear();
         }
 
-        List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
-                .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
+        if (!idCacheSnapshot.isEmpty()) {
+            List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
+                    .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
 
-        for (Entry<String, List<Long>> entry : sortedEntries) {
-            if (!entry.getValue().isEmpty()) {
+            for (Entry<String, List<Long>> entry : sortedEntries) {
                 String keyTopic = entry.getKey();
                 List<Long> ids = entry.getValue();
 
@@ -197,10 +225,9 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
                         ids.forEach(id -> {
-                            if (idVals.containsKey(id)) {
-                                processTopic(keyTopic, Entity.CASE_ANSWERS, id, idVals.get(id),
+                            if (idValsSnapshot.containsKey(id)) {
+                                processTopic(keyTopic, Entity.CASE_ANSWERS, id, idValsSnapshot.get(id),
                                         investigationRepository::executeStoredProcForPageBuilder);
-                                idVals.remove(id);
                             }
                         });
 
@@ -216,13 +243,33 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids,
                                 postProcRepository::executeStoredProcForLdfIds);
                         break;
+                    case OBSERVATION:
+                        List<Long> morbIds;
+                        List<Long> labIds;
+                        synchronized (cacheLock) {
+                            morbIds = idValsSnapshot.entrySet().stream().filter(e -> e.getValue().equals(MORB_REPORT)).map(Entry::getKey).toList();
+                            labIds = idValsSnapshot.entrySet().stream().filter(e -> e.getValue().equals(LAB_REPORT)).map(Entry::getKey).toList();
+                        }
+
+                        if (!morbIds.isEmpty()) {
+                            processTopic(keyTopic, entity.getName(), morbIds,
+                                    postProcRepository::executeStoredProcForMorbReport, "sp_d_morbidity_report_postprocessing");
+                        }
+
+                        if (!labIds.isEmpty()) {
+                            processTopic(keyTopic, entity.getName(), labIds,
+                                    postProcRepository::executeStoredProcForLabTest, "sp_d_lab_test_postprocessing");
+                            processTopic(keyTopic, entity.getName(), labIds,
+                                    postProcRepository::executeStoredProcForLabTestResult, "sp_d_labtest_result_postprocessing");
+                        }
+                        break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
                         break;
                 }
-            } else {
-                logger.info("No ids to process from the topics.");
             }
+        } else {
+            logger.info("No ids to process from the topics.");
         }
     }
 
@@ -257,35 +304,34 @@ public class PostProcessingService {
         processDatamartIds();
     }
 
-    private Long extractIdFromMessage(String topic, String messageKey) {
+    private String extractValFromMessage(String topic, String payload) {
         try {
-            logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
-            JsonNode keyNode = objectMapper.readTree(messageKey);
-
-            Entity entity = getEntityByTopic(topic);
-            if (Objects.isNull(keyNode.get(PAYLOAD).get(entity.getUidName()))) {
-                throw new NoSuchElementException("The '" + entity.getUidName() + "' value is missing in the '" + topic + "' message payload.");
-            }
-            return keyNode.get(PAYLOAD).get(entity.getUidName()).asLong();
-        } catch (Exception e) {
-            String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
-            throw new RuntimeException(msg, e);
-        }
-    }
-
-    private String extractValFromMessage(String topic, String payload, String valName) {
-        try {
-            Entity entity = getEntityByTopic(topic);
-            if (entity.equals(Entity.INVESTIGATION)) {
-                JsonNode tblNode = objectMapper.readTree(payload).get(PAYLOAD).path(valName);
+            if (topic.endsWith(Entity.INVESTIGATION.getName())) {
+                JsonNode tblNode = objectMapper.readTree(payload).get(PAYLOAD).path("rdb_table_name_list");
                 if (!tblNode.isMissingNode() && !tblNode.isNull()) {
                     return tblNode.asText();
                 }
+            } else if (topic.endsWith(Entity.OBSERVATION.getName())) {
+                String domainCd = objectMapper.readTree(payload).get(PAYLOAD).path("obs_domain_cd_st_1").asText();
+                String ctrlCd = objectMapper.readTree(payload).get(PAYLOAD).path("ctrl_cd_display_form").asText();
+
+                if (MORB_REPORT.equals(ctrlCd)) {
+                    if ("Order".equals(domainCd)) {
+                        return ctrlCd;
+                    }
+                } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB) &&
+                        assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result", "Order_rslt")) {
+                    return LAB_REPORT;
+                }
             }
         } catch (Exception ex) {
-            logger.warn("Error processing '{}' for the '{}' message: {}", valName, topic, ex.getMessage());
+            logger.warn("Error processing ID values for the {} message: {}", topic, ex.getMessage());
         }
         return null;
+    }
+
+    private boolean assertMatches(String value, String... vals ) {
+        return Arrays.asList(vals).contains(value);
     }
 
     private Entity getEntityByTopic(String topic) {
@@ -297,14 +343,18 @@ public class PostProcessingService {
     }
 
     private void processTopic(String keyTopic, Entity entity, List<Long> ids, Consumer<String> repositoryMethod) {
-        String idsString = prepareAndLog(keyTopic, entity, ids);
+        processTopic(keyTopic, entity.getName(), ids, repositoryMethod, entity.getStoredProcedure());
+    }
+
+    private void processTopic(String keyTopic, String name, List<Long> ids, Consumer<String> repositoryMethod, String spName) {
+        String idsString = prepareAndLog(keyTopic, ids, name, spName);
         repositoryMethod.accept(idsString);
-        completeLog(entity.getStoredProcedure());
+        completeLog(spName);
     }
 
     private <T> List<T> processTopic(String keyTopic, Entity entity, List<Long> ids,
                                      Function<String, List<T>> repositoryMethod) {
-        String idsString = prepareAndLog(keyTopic, entity, ids);
+        String idsString = prepareAndLog(keyTopic, ids, entity.getName(), entity.getStoredProcedure());
         List<T> result = repositoryMethod.apply(idsString);
         completeLog(entity.getStoredProcedure());
         return result;
@@ -317,10 +367,10 @@ public class PostProcessingService {
         completeLog(entity.getStoredProcedure());
     }
 
-    private String prepareAndLog(String keyTopic, Entity entity, List<Long> ids) {
+    private String prepareAndLog(String keyTopic, List<Long> ids, String name, String spName) {
         String idsString = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}'", StringUtils.capitalize(entity.getName()), keyTopic,
-                entity.getStoredProcedure(), idsString);
+        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}'", StringUtils.capitalize(name), keyTopic,
+                spName, idsString);
         return idsString;
     }
 
