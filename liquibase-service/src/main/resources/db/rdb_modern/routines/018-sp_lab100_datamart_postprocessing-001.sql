@@ -7,11 +7,8 @@ BEGIN
 DECLARE @batch_id bigint;
 SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmss')) AS bigint);
 DECLARE @RowCount_no INT ;
-DECLARE @Table_RowCount_no INT ;
 DECLARE @Proc_Step_no FLOAT = 0 ;
 DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
-DECLARE @batch_start_time datetime2(7) = null ;
-DECLARE @batch_end_time datetime2(7) = null ;
 
 BEGIN TRY
 
@@ -29,15 +26,6 @@ BEGIN TRY
 	(@BATCH_ID,'LAB100_DATAMART','LAB100_DATAMART','START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 	COMMIT TRANSACTION;
-
-
-	SELECT
-		@batch_start_time = batch_start_dttm,
-		@batch_end_time = batch_end_dttm
-	FROM dbo.[job_batch_log]
-	WHERE status_type = 'start';
-
-
 
 
 	BEGIN TRANSACTION;
@@ -359,64 +347,6 @@ if @debug = 'true' select 'TMP_LABTEST_RESULTS_VAL_COMMENT', * from #TMP_LABTEST
 	BEGIN TRANSACTION;
 
 	SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
-	SET @PROC_STEP_NAME = ' GENERATING TMP_LABTEST_RESULTS_VAL_COMMENT1';
-
-	IF OBJECT_ID('#TMP_LABTEST_RESULTS_VAL_COMMENT1', 'U') IS NOT NULL
-		drop table  #TMP_LABTEST_RESULTS_VAL_COMMENT1
-	;
-
-	with cte1 as (
-	    -- picking latest usernames from observation but only for the lab tests currently being loaded
-		select  nullif(LAST_CHG_USER_ID, ADD_USER_ID) as USER_ENTRY_ID,
-		nullif(LAST_CHG_USER_NAME, ADD_USER_NAME) as USER_FULL_NAME,
-		row_number() over (partition by nullif(LAST_CHG_USER_ID, ADD_USER_ID)  order by refresh_datetime desc) rnum
-		from dbo.NRT_OBSERVATION nrtobs with(NOLOCK)
-		inner join #TMP_LABTEST_LABTESTRESULT tmp on tmp.LAB_TEST_UID = nrtobs.OBSERVATION_UID
-		where nullif(LAST_CHG_USER_ID, ADD_USER_ID) is not null
-	)
-	,cte2 as (
-		select * from cte1 where rnum=1
-	)
-	select lrvc.* ,
-		'' as FIRST_NM, --up.FIRST_NM, --todo: refactor as these are not used
-		'' as LAST_NM, --up.LAST_NM,
-		cast (USER_FULL_NAME  as varchar(150)) as LAB_REPORT_CREATED_BY,
-		cast(USER_FULL_NAME as varchar(150)) as LAB_REPORT_CREATED_BY_UID
-	INTO #TMP_LABTEST_RESULTS_VAL_COMMENT1
-	from #TMP_LABTEST_RESULTS_VAL_COMMENT lrvc
-	left outer join (
-		select
-			USER_ENTRY_ID,
-			USER_FULL_NAME
-			from cte2
-	) up
-	on up.user_entry_id = lrvc.LAB_RPT_CREATED_BY
-	;
---  	select lrvc.* ,
---  	cast (RTRIM(UP.FIRST_NM)+','+RTRIM(UP.LAST_NM)  as varchar(150)) as LAB_REPORT_CREATED_BY,
---  	case
--- 	 	when CAST(RTRIM(coalesce(UP.FIRST_NM,'')+' ')+RTRIM(up.LAST_NM) AS varchar(150)) = 'N ELR' then 'NEDSS_ELR'
--- 	 	else CAST(RTRIM(coalesce(UP.FIRST_NM,'')+' ')+RTRIM(up.LAST_NM) AS varchar(150))
--- 	 end as LAB_REPORT_CREATED_BY_UID
---  	INTO #TMP_LABTEST_RESULTS_VAL_COMMENT1
---  	from #tmp_LABTEST_RESULTS_VAL_COMMENT lrvc
---  	left outer join nbs_odse..user_profile up on up.[NEDSS_ENTRY_ID] = lrvc.LAB_RPT_CREATED_BY
---  	;
-
-
-	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-	INSERT INTO dbo.[JOB_FLOW_LOG]
-	(BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-	VALUES
-	(@BATCH_ID,'LAB100_DATAMART','LAB100_DATAMART','START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
-
-	COMMIT TRANSACTION;
-
-if @debug = 'true' select 'TMP_LABTEST_RESULTS_VAL_COMMENT1', * from #TMP_LABTEST_RESULTS_VAL_COMMENT1;
-
-	BEGIN TRANSACTION;
-
-	SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
 	SET @PROC_STEP_NAME = ' GENERATING TMP_LABTEST_UPDATED';
 
 
@@ -424,30 +354,13 @@ if @debug = 'true' select 'TMP_LABTEST_RESULTS_VAL_COMMENT1', * from #TMP_LABTES
 		drop table  #TMP_LABTEST_UPDATED
 	;
 
-	with cte1 as (
-		select  nullif(LAST_CHG_USER_ID, ADD_USER_ID) as USER_ENTRY_ID,
-		nullif(LAST_CHG_USER_NAME, ADD_USER_NAME) as USER_FULL_NAME,
-		row_number() over (partition by nullif(LAST_CHG_USER_ID, ADD_USER_ID)  order by refresh_datetime desc) rnum
-		from dbo.NRT_OBSERVATION nrtobs with(NOLOCK)
-		inner join #TMP_LABTEST_LABTESTRESULT tmp on tmp.LAB_TEST_UID = nrtobs.OBSERVATION_UID
-		where nullif(LAST_CHG_USER_ID, ADD_USER_ID) is not null
-	)
-	,cte2 as (
-		select * from cte1 where rnum=1
-	)
+
 	select
-		lrvc1.*, PARENT_TEST_PNTR as ORDERED_TEST_UID,
-		cast (USER_FULL_NAME  as varchar(150)) as LAB_REPORT_LAST_UPDATED_BY,
-		cast (USER_FULL_NAME  as varchar(150))  as LAB_REPORT_LAST_UPDATED_BY_UID
+		lrvc1.*,
+		PARENT_TEST_PNTR as ORDERED_TEST_UID
 	into #TMP_LABTEST_UPDATED
-	from #TMP_LABTEST_RESULTS_VAL_COMMENT1 lrvc1
-	left outer join (
-		select
-			USER_ENTRY_ID,
-			USER_FULL_NAME
-			from cte2
-	) up on up.USER_ENTRY_ID = lrvc1.LAB_RPT_LAST_UPDATE_BY
-	;
+	from #TMP_LABTEST_RESULTS_VAL_COMMENT lrvc1
+
 
 --  	select
 --  		lrvc1.*,
@@ -461,10 +374,6 @@ if @debug = 'true' select 'TMP_LABTEST_RESULTS_VAL_COMMENT1', * from #TMP_LABTES
 --  	from #TMP_LABTEST_RESULTS_VAL_COMMENT1 lrvc1
 --  	left outer join nbs_odse..user_profile up on up.[NEDSS_ENTRY_ID] = lrvc1.LAB_RPT_LAST_UPDATE_BY
 --  	;
-
-	alter table  #TMP_LABTEST_UPDATED
-	DROP column LAB_RPT_LAST_UPDATE_BY, LAB_REPORT_CREATED_BY_UID --FIRST_NM, LAST_NM
-	;
 
 
   	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -613,7 +522,7 @@ if @debug = 'true' select 'TMP_LAB_RESULTS_ORDER_CONTACT2', * from #TMP_LAB_RESU
 			+coalesce(','+RTRIM( PROVIDER_ZIP),'')
 			+coalesce(','+RTRIM( PROVIDER_STATE ),'')
 		)	as varchar(725) ) as PROVIDER_ADDRESS,
-		cast ( '' as varchar(30)) as PRV_ADDR_USE_CD_DESC,
+        cast ( '' as varchar(30)) as PRV_ADDR_USE_CD_DESC,
 		cast ( '' as varchar(30)) as PRV_ADDR_CD_DESC
 	into #TMP_PERSON_ORDER_PROVIDER
 	from dbo.D_PROVIDER P with(NOLOCK),
@@ -626,13 +535,16 @@ if @debug = 'true' select 'TMP_LAB_RESULTS_ORDER_CONTACT2', * from #TMP_LAB_RESU
 			PRV_ADDR_CD_DESC='OFFICE'
 	where PROVIDER_ADDRESS is not null and rtrim(PROVIDER_ADDRESS) != ''
 	;
+
+
 	update  #TMP_PERSON_ORDER_PROVIDER
 	set  PRV_ADDR_USE_CD_DESC=null
 	where rtrim(PRV_ADDR_USE_CD_DESC) = ''
 	;
-	update  #TMP_PERSON_ORDER_PROVIDER
-	set  PRV_ADDR_CD_DESC=null
-	where rtrim(PRV_ADDR_CD_DESC) = ''
+
+	 update  #TMP_PERSON_ORDER_PROVIDER
+	 set  PRV_ADDR_CD_DESC=null
+	 where rtrim(PRV_ADDR_CD_DESC) = ''
 	;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -1015,7 +927,7 @@ if @debug = 'true' select 'TMP_LABTESTSINIT', * from #TMP_LABTESTSINIT;
 	;
 
 	SELECT
-		li.*
+        li.*
 		, lroc2.code_seq
 		, lroc2.code_set_nm
 		, lroc2.nbs_uid
@@ -1024,8 +936,11 @@ if @debug = 'true' select 'TMP_LABTESTSINIT', * from #TMP_LABTESTSINIT;
 		, lroc2.PROGRAM_AREA_ID
 		, lroc2.status_cd
 		, lroc2.status_time
-		,CONDITION_SHORT_NM
-		, cast ( null as varchar(50)) as LOINC
+		, CONDITION_SHORT_NM
+		,  case
+               when UPPER(li.LAB_TEST_CD_SYS_NM)='LOINC' then ORDERED_LAB_TEST_CD
+               else cast ( null as varchar(50))
+            end as LOINC
 		, cast ( null as varchar(50)) as  CONDITION
 	into #TMP_LABTESTS
 	from #TMP_LABTESTSINIT li
@@ -1033,10 +948,6 @@ if @debug = 'true' select 'TMP_LABTESTSINIT', * from #TMP_LABTESTSINIT;
 	left outer join #TMP_LAB_RESULTS_ORDER_CONTACT2  lroc2 on lroc2.RESULTED_TEST_UID = li.RESULTED_TEST_UID
 	;
 
-	update #TMP_LABTESTS
-	set LOINC=ORDERED_LAB_TEST_CD
-	where UPPER(LAB_TEST_CD_SYS_NM)='LOINC'
-	;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO dbo.[JOB_FLOW_LOG]
@@ -1059,22 +970,153 @@ if @debug = 'true' select 'TMP_LABTESTS', * from #TMP_LABTESTS;
 	;
 
 	select
-		tl.*,  LOINC_CD
+        tl.ORDERING_ORG_KEY_MAIN,
+		tl.ORDERING_ORG_KEY_ORDER,
+		tl.ORDERING_FACILITY_ID,
+		tl.ORDERING_FACILITY,
+		tl.ORDERING_FACILITY_PHONE_NBR,
+		tl.REPORTING_LAB_KEY_REPORTING,
+		tl.REPORTING_FACILITY,
+		tl.REPORTING_FACILITY_CLIA_NBR,
+		tl.REPORTING_FACILITY_ID,
+		tl.REPORTING_FACILITY_UID,
+		tl.REPORTING_FACILITY_PHONE_NBR,
+		tl.LAB_TEST_STATUS,
+		tl.LAB_TEST_KEY_OE,
+		tl.LAB_RPT_LOCAL_ID_OE,
+		tl.REASON_FOR_TEST_DESC,
+		tl.RECORD_STATUS_CD,
+		tl.ORDERED_RPT_UID,
+		tl.ORDERED_LAB_TEST_CD,
+		tl.ORDERED_LAB_TEST_CD_DESC,
+		tl.ORDERED_TEST_CODE,
+		tl.ORDERED_LABTEST_CD_SYS_NM,
+		tl.SPECIMEN_DETAILS,
+		tl.ORDERED_TEST_UID_OE,
+		tl.SPECIMEN_ADD_TIME,
+		tl.SPECIMEN_LAST_CHANGE_TIME,
+		tl.ORDERING_ORG_KEY,
+		tl.REPORTING_LAB_KEY_ORDER,
+		tl.CONDITION_KEY,
+		tl.ORDERING_PROVIDER_KEY,
+		tl.LAB_RPT_STATUS,
+		tl.oid_order,
+		tl.CONDITION_CD,
+		tl.REASON_FOR_TEST_DESC1,
+		tl.SPECIMEN_SRC_CD,
+		tl.SPECIMEN_SRC_DESC,
+		tl.LDF_GROUP_KEY,
+		tl.MORB_RPT_KEY,
+		tl.PATIENT_KEY,
+		tl.DOCUMENT_LINK,
+		tl.ALT_LAB_TEST_CD_SYS_CD_OE,
+		tl.lab_test_type_oe,
+		tl.PATIENT_UID,
+		tl.PERSON_FIRST_NM,
+		tl.PERSON_MIDDLE_NM,
+		tl.PERSON_LAST_NM,
+		tl.PERSON_LOCAL_ID,
+		tl.PERSON_DOB,
+		tl.PERSON_CURR_GENDER,
+		tl.PATIENT_ADDRESS,
+		tl.PATIENT_STREET_ADDRESS_2,
+		tl.PATIENT_CITY,
+		tl.PATIENT_STATE,
+		tl.PATIENT_ZIP_CODE,
+		tl.PATIENT_COUNTY,
+		tl.PATIENT_COUNTRY,
+		tl.AGE_REPORTED,
+		tl.PATIENT_REPORTED_AGE_UNITS,
+		tl.ADDR_USE_CD_DESC,
+		tl.ADDR_CD_DESC,
+		tl.PROVIDER_PHONE,
+		tl.PROVIDER_FIRST_NAME,
+		tl.PROVIDER_MIDDLE_NAME,
+		tl.PROVIDER_LAST_NAME,
+		tl.ORDERING_PROVIDER_NM,
+		tl.PROVIDER_STREET_ADDRESS_1,
+		tl.PROVIDER_STREET_ADDRESS_2,
+		tl.PROVIDER_CITY,
+		tl.PROVIDER_STATE,
+		tl.PROVIDER_ZIP,
+		tl.PROVIDER_COUNTY,
+		tl.PROVIDER_COUNTRY,
+		tl.PROVIDER_ADDRESS,
+		tl.PRV_ADDR_USE_CD_DESC,
+		tl.PRV_ADDR_CD_DESC,
+		tl.INVESTIGATION_KEYS,
+		tl.INV_KEY,
+		tl.LAB_TEST_KEY,
+		tl.LAB_RPT_LOCAL_ID,
+		tl.TEST_METHOD_CD,
+		tl.TEST_METHOD_CD_DESC,
+		tl.RESULTED_LAB_TEST_CD,
+		tl.ELR_IND,
+		tl.RESULTED_RPT_UID,
+		tl.RESULTED_TEST,
+		tl.INTERPRETATION_FLG,
+		tl.LAB_RPT_RECEIVED_BY_PH_DT,
+		tl.LAB_RPT_CREATED_DT,
+		tl.LAB_RPT_CREATED_BY,
+		tl.LAB_TEST_DT,
+		tl.LAB_RPT_LAST_UPDATE_DT,
+		tl.JURISDICTION_CD,
+		tl.LAB_TEST_CD_SYS_NM,
+		tl.JURISDICTION_NM,
+		tl.OID,
+		tl.ACCESSION_NBR,
+		tl.SPECIMEN_SRC,
+		tl.SPECIMEN_DESC,
+		tl.SPECIMEN_SITE,
+		tl.SPECIMEN_SITE_DESC,
+		tl.SPECIMEN_COLLECTION_DT,
+		tl.RESULTED_TEST_UID,
+		tl.ROOT_ORDERED_TEST_PNTR,
+		tl.PARENT_TEST_PNTR,
+		tl.TEST_RESULT_GRP_KEY,
+		tl.PERFORMING_LAB_KEY,
+		tl.ALT_LAB_TEST_CD,
+		tl.ALT_LAB_TEST_CD_DESC,
+		tl.ALT_LAB_TEST_CD_SYS_CD,
+		tl.ALT_LAB_TEST_CD_SYS_NM,
+		tl.RESULTED_LAB_TEST_CD_DESC,
+		tl.RESULTEDTEST_CD_SYS_NM,
+		tl.RESULT_TEST_METHOD_CD,
+		tl.RESULTED_LAB_TEST_KEY,
+		tl.lab_test_type,
+		tl.RESULT,
+		tl.TEST_RESULT_VAL_CD,
+		tl.TEST_RESULT_VAL_CD_SYS_NM,
+		tl.LOCAL_RESULT_CODE,
+		tl.LOCAL_RESULT_NAME,
+		tl.RESULT_REF_RANGE_FRM,
+		tl.RESULT_REF_RANGE_TO,
+		tl.RESULTEDTEST_VAL_CD,
+		tl.RESULTEDTEST_VAL_CD_DESC,
+		tl.LAB_RESULT_TXT_VAL,
+		tl.NUMERIC_RESULT_WITHUNITS,
+		tl.LAB_RESULT_COMMENTS,
+		tl.ORDERED_TEST_UID,
+		tl.code_seq,
+		tl.code_set_nm,
+		tl.nbs_uid,
+		tl.prog_area_cd,
+		tl.prog_area_desc_txt,
+		tl.PROGRAM_AREA_ID,
+		tl.status_cd,
+		tl.status_time,
+		tl.CONDITION_SHORT_NM,
+        case
+            when ltrim(rtrim(tl.LOINC)) is null and charindex('-',ORDERED_LAB_TEST_CD) > 3 then ORDERED_LAB_TEST_CD
+            when ltrim(rtrim(tl.LOINC)) is null then loinc_cd
+            else tl.LOINC
+        end as LOINC,
+        tl.CONDITION
 	into #TMP_LABTESTS2
 	from #TMP_LABTESTS tl
 	left outer join NBS_SRTE..LABTEST_LOINC ll  on ll.LAB_TEST_CD = tl.ORDERED_LAB_TEST_CD
 	;
 
-	update #TMP_LABTESTS2
-	set loinc = ORDERED_LAB_TEST_CD
-	where ltrim(rtrim(loinc)) is null
-	and charindex('-',ORDERED_LAB_TEST_CD) > 3
-	;
-
-	update #TMP_LABTESTS2
-	set  loinc = loinc_cd
-	where ltrim(rtrim(loinc)) is null
-	;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO dbo.[JOB_FLOW_LOG]
@@ -1096,20 +1138,158 @@ if @debug = 'true' select 'TMP_LABTESTS2', * from #TMP_LABTESTS2;
 		drop table  #TMP_LABTESTS3 ;
 
 	select
-		lt2.*,lc.condition_cd as CONDITION_CD_SRT,lc.disease_nm
+
+        lt2.ORDERING_ORG_KEY_MAIN,
+        lt2.ORDERING_ORG_KEY_ORDER,
+        lt2.ORDERING_FACILITY_ID,
+        lt2.ORDERING_FACILITY,
+        lt2.ORDERING_FACILITY_PHONE_NBR,
+        lt2.REPORTING_LAB_KEY_REPORTING,
+        lt2.REPORTING_FACILITY,
+        lt2.REPORTING_FACILITY_CLIA_NBR,
+        lt2.REPORTING_FACILITY_ID,
+        lt2.REPORTING_FACILITY_UID,
+        lt2.REPORTING_FACILITY_PHONE_NBR,
+        lt2.LAB_TEST_STATUS,
+        lt2.LAB_TEST_KEY_OE,
+        lt2.LAB_RPT_LOCAL_ID_OE,
+        lt2.REASON_FOR_TEST_DESC,
+        lt2.RECORD_STATUS_CD,
+        lt2.ORDERED_RPT_UID,
+        lt2.ORDERED_LAB_TEST_CD,
+        lt2.ORDERED_LAB_TEST_CD_DESC,
+        lt2.ORDERED_TEST_CODE,
+        lt2.ORDERED_LABTEST_CD_SYS_NM,
+        lt2.SPECIMEN_DETAILS,
+        lt2.ORDERED_TEST_UID_OE,
+        lt2.SPECIMEN_ADD_TIME,
+        lt2.SPECIMEN_LAST_CHANGE_TIME,
+        lt2.ORDERING_ORG_KEY,
+        lt2.REPORTING_LAB_KEY_ORDER,
+        lt2.CONDITION_KEY,
+        lt2.ORDERING_PROVIDER_KEY,
+        lt2.LAB_RPT_STATUS,
+        lt2.oid_order,
+        case
+            when RTRIM(LTRIM(lt2.CONDITION_SHORT_NM))='' or RTRIM(LTRIM(lt2.CONDITION_SHORT_NM)) is null then lc.condition_cd
+            else lt2.CONDITION_CD
+            end as CONDITION_CD,
+        lt2.REASON_FOR_TEST_DESC1,
+        lt2.SPECIMEN_SRC_CD,
+        lt2.SPECIMEN_SRC_DESC,
+        lt2.LDF_GROUP_KEY,
+        lt2.MORB_RPT_KEY,
+        lt2.PATIENT_KEY,
+        lt2.DOCUMENT_LINK,
+        lt2.ALT_LAB_TEST_CD_SYS_CD_OE,
+        lt2.lab_test_type_oe,
+        lt2.PATIENT_UID,
+        lt2.PERSON_FIRST_NM,
+        lt2.PERSON_MIDDLE_NM,
+        lt2.PERSON_LAST_NM,
+        lt2.PERSON_LOCAL_ID,
+        lt2.PERSON_DOB,
+        lt2.PERSON_CURR_GENDER,
+        lt2.PATIENT_ADDRESS,
+        lt2.PATIENT_STREET_ADDRESS_2,
+        lt2.PATIENT_CITY,
+        lt2.PATIENT_STATE,
+        lt2.PATIENT_ZIP_CODE,
+        lt2.PATIENT_COUNTY,
+        lt2.PATIENT_COUNTRY,
+        lt2.AGE_REPORTED,
+        lt2.PATIENT_REPORTED_AGE_UNITS,
+        lt2.ADDR_USE_CD_DESC,
+        lt2.ADDR_CD_DESC,
+        lt2.PROVIDER_PHONE,
+        lt2.PROVIDER_FIRST_NAME,
+        lt2.PROVIDER_MIDDLE_NAME,
+        lt2.PROVIDER_LAST_NAME,
+        lt2.ORDERING_PROVIDER_NM,
+        lt2.PROVIDER_STREET_ADDRESS_1,
+        lt2.PROVIDER_STREET_ADDRESS_2,
+        lt2.PROVIDER_CITY,
+        lt2.PROVIDER_STATE,
+        lt2.PROVIDER_ZIP,
+        lt2.PROVIDER_COUNTY,
+        lt2.PROVIDER_COUNTRY,
+        lt2.PROVIDER_ADDRESS,
+        lt2.PRV_ADDR_USE_CD_DESC,
+        lt2.PRV_ADDR_CD_DESC,
+        lt2.INVESTIGATION_KEYS,
+        lt2.INV_KEY,
+        lt2.LAB_TEST_KEY,
+        lt2.LAB_RPT_LOCAL_ID,
+        lt2.TEST_METHOD_CD,
+        lt2.TEST_METHOD_CD_DESC,
+        lt2.RESULTED_LAB_TEST_CD,
+        lt2.ELR_IND,
+        lt2.RESULTED_RPT_UID,
+        lt2.RESULTED_TEST,
+        lt2.INTERPRETATION_FLG,
+        lt2.LAB_RPT_RECEIVED_BY_PH_DT,
+        lt2.LAB_RPT_CREATED_DT,
+        lt2.LAB_RPT_CREATED_BY,
+        lt2.LAB_TEST_DT,
+        lt2.LAB_RPT_LAST_UPDATE_DT,
+        lt2.JURISDICTION_CD,
+        lt2.LAB_TEST_CD_SYS_NM,
+        lt2.JURISDICTION_NM,
+        lt2.OID,
+        lt2.ACCESSION_NBR,
+        lt2.SPECIMEN_SRC,
+        lt2.SPECIMEN_DESC,
+        lt2.SPECIMEN_SITE,
+        lt2.SPECIMEN_SITE_DESC,
+        lt2.SPECIMEN_COLLECTION_DT,
+        lt2.RESULTED_TEST_UID,
+        lt2.ROOT_ORDERED_TEST_PNTR,
+        lt2.PARENT_TEST_PNTR,
+        lt2.TEST_RESULT_GRP_KEY,
+        lt2.PERFORMING_LAB_KEY,
+        lt2.ALT_LAB_TEST_CD,
+        lt2.ALT_LAB_TEST_CD_DESC,
+        lt2.ALT_LAB_TEST_CD_SYS_CD,
+        lt2.ALT_LAB_TEST_CD_SYS_NM,
+        lt2.RESULTED_LAB_TEST_CD_DESC,
+        lt2.RESULTEDTEST_CD_SYS_NM,
+        lt2.RESULT_TEST_METHOD_CD,
+        lt2.RESULTED_LAB_TEST_KEY,
+        lt2.lab_test_type,
+        lt2.RESULT,
+        lt2.TEST_RESULT_VAL_CD,
+        lt2.TEST_RESULT_VAL_CD_SYS_NM,
+        lt2.LOCAL_RESULT_CODE,
+        lt2.LOCAL_RESULT_NAME,
+        lt2.RESULT_REF_RANGE_FRM,
+        lt2.RESULT_REF_RANGE_TO,
+        lt2.RESULTEDTEST_VAL_CD,
+        lt2.RESULTEDTEST_VAL_CD_DESC,
+        lt2.LAB_RESULT_TXT_VAL,
+        lt2.NUMERIC_RESULT_WITHUNITS,
+        lt2.LAB_RESULT_COMMENTS,
+        lt2.ORDERED_TEST_UID,
+        lt2.code_seq,
+        lt2.code_set_nm,
+        lt2.nbs_uid,
+        lt2.prog_area_cd,
+        lt2.prog_area_desc_txt,
+        lt2.PROGRAM_AREA_ID,
+        lt2.status_cd,
+        lt2.status_time,
+        case
+            when RTRIM(LTRIM(lt2.CONDITION_SHORT_NM))='' or RTRIM(LTRIM(lt2.CONDITION_SHORT_NM)) is null then lc.DISEASE_NM
+            else lt2.CONDITION_SHORT_NM
+        end as CONDITION_SHORT_NM,
+        lt2.LOINC,
+        lt2.CONDITION
 	into #TMP_LABTESTS3
 	from #TMP_LABTESTS2 lt2
 	left outer join nbs_srte.dbo.LOINC_CONDITION lc with(NOLOCK) on lc.loinc_cd = lt2.LOINC
 	;
 
-	update
-		#TMP_LABTESTS3
-	set CONDITION_SHORT_NM=DISEASE_NM,
-		CONDITION_CD=CONDITION_CD_SRT
-	where RTRIM(LTRIM(CONDITION_SHORT_NM))='' or RTRIM(LTRIM(CONDITION_SHORT_NM)) is null
-	;
 
-	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+    SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO dbo.[JOB_FLOW_LOG]
 	(BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
 	VALUES
@@ -1129,62 +1309,177 @@ if @debug = 'true' select 'TMP_LABTESTS3', * from #TMP_LABTESTS3;
 	;
 
 	select
-		lt3.*,
-		sc.DISEASE_NM as SNOMED_CONDITION_NM,
-		sc.CONDITION_CD as SNOMED_CONDITION_CD,
-		Cast (null as [varchar](1000) ) as SNOMED
+        lt3.ORDERING_ORG_KEY_MAIN,
+        lt3.ORDERING_ORG_KEY_ORDER,
+        lt3.ORDERING_FACILITY_ID,
+        lt3.ORDERING_FACILITY,
+        lt3.ORDERING_FACILITY_PHONE_NBR,
+        lt3.REPORTING_LAB_KEY_REPORTING,
+        lt3.REPORTING_FACILITY,
+        lt3.REPORTING_FACILITY_CLIA_NBR,
+        lt3.REPORTING_FACILITY_ID,
+        lt3.REPORTING_FACILITY_UID,
+        lt3.REPORTING_FACILITY_PHONE_NBR,
+        lt3.LAB_TEST_STATUS,
+        lt3.LAB_TEST_KEY_OE,
+        lt3.LAB_RPT_LOCAL_ID_OE,
+        lt3.REASON_FOR_TEST_DESC,
+        lt3.RECORD_STATUS_CD,
+        lt3.ORDERED_RPT_UID,
+        lt3.ORDERED_LAB_TEST_CD,
+        lt3.ORDERED_LAB_TEST_CD_DESC,
+        lt3.ORDERED_TEST_CODE,
+        lt3.ORDERED_LABTEST_CD_SYS_NM,
+        lt3.SPECIMEN_DETAILS,
+        lt3.ORDERED_TEST_UID_OE,
+        lt3.SPECIMEN_ADD_TIME,
+        lt3.SPECIMEN_LAST_CHANGE_TIME,
+        lt3.ORDERING_ORG_KEY,
+        lt3.REPORTING_LAB_KEY_ORDER,
+        lt3.CONDITION_KEY,
+        lt3.ORDERING_PROVIDER_KEY,
+        lt3.LAB_RPT_STATUS,
+        lt3.oid_order,
+        case
+            when TEST_RESULT_VAL_CD   like '%[^0-9]%' and SUBSTRING(TEST_RESULT_VAL_CD,2,1) = '-'
+                and (lt3.CONDITION_CD='' or lt3.CONDITION_CD is null) then sc.DISEASE_NM
+            else lt3.CONDITION_CD
+        end as CONDITION_CD,
+        lt3.REASON_FOR_TEST_DESC1,
+        lt3.SPECIMEN_SRC_CD,
+        lt3.SPECIMEN_SRC_DESC,
+        lt3.LDF_GROUP_KEY,
+        lt3.MORB_RPT_KEY,
+        lt3.PATIENT_KEY,
+        lt3.DOCUMENT_LINK,
+        lt3.ALT_LAB_TEST_CD_SYS_CD_OE,
+        lt3.lab_test_type_oe,
+        lt3.PATIENT_UID,
+        lt3.PERSON_FIRST_NM,
+        lt3.PERSON_MIDDLE_NM,
+        lt3.PERSON_LAST_NM,
+        lt3.PERSON_LOCAL_ID,
+        lt3.PERSON_DOB,
+        lt3.PERSON_CURR_GENDER,
+        case
+            when rtrim(Patient_Address) = '' then null
+            else  lt3.PATIENT_ADDRESS
+        end as PATIENT_ADDRESS,
+        lt3.PATIENT_STREET_ADDRESS_2,
+        lt3.PATIENT_CITY,
+        lt3.PATIENT_STATE,
+        lt3.PATIENT_ZIP_CODE,
+        lt3.PATIENT_COUNTY,
+        lt3.PATIENT_COUNTRY,
+        lt3.AGE_REPORTED,
+        lt3.PATIENT_REPORTED_AGE_UNITS,
+        case
+            when rtrim(lt3.ADDR_USE_CD_DESC) = '' then null
+            else lt3.ADDR_USE_CD_DESC
+        end as ADDR_USE_CD_DESC,
+        case
+            when rtrim(lt3.ADDR_CD_DESC) = '' then null
+            else lt3.ADDR_CD_DESC
+        end as ADDR_CD_DESC,
+        lt3.PROVIDER_PHONE,
+        lt3.PROVIDER_FIRST_NAME,
+        lt3.PROVIDER_MIDDLE_NAME,
+        lt3.PROVIDER_LAST_NAME,
+        lt3.ORDERING_PROVIDER_NM,
+        lt3.PROVIDER_STREET_ADDRESS_1,
+        lt3.PROVIDER_STREET_ADDRESS_2,
+        lt3.PROVIDER_CITY,
+        lt3.PROVIDER_STATE,
+        lt3.PROVIDER_ZIP,
+        lt3.PROVIDER_COUNTY,
+        lt3.PROVIDER_COUNTRY,
+        case
+            when rtrim(PROVIDER_ADDRESS) = '' then null
+            else lt3.PROVIDER_ADDRESS
+        end as PROVIDER_ADDRESS,
+        lt3.PRV_ADDR_USE_CD_DESC,
+        lt3.PRV_ADDR_CD_DESC,
+        lt3.INVESTIGATION_KEYS,
+        lt3.INV_KEY,
+        lt3.LAB_TEST_KEY,
+        lt3.LAB_RPT_LOCAL_ID,
+        lt3.TEST_METHOD_CD,
+        lt3.TEST_METHOD_CD_DESC,
+        lt3.RESULTED_LAB_TEST_CD,
+        lt3.ELR_IND,
+        lt3.RESULTED_RPT_UID,
+        lt3.RESULTED_TEST,
+        lt3.INTERPRETATION_FLG,
+        lt3.LAB_RPT_RECEIVED_BY_PH_DT,
+        lt3.LAB_RPT_CREATED_DT,
+        lt3.LAB_RPT_CREATED_BY,
+        lt3.LAB_TEST_DT,
+        lt3.LAB_RPT_LAST_UPDATE_DT,
+        lt3.JURISDICTION_CD,
+        lt3.LAB_TEST_CD_SYS_NM,
+        lt3.JURISDICTION_NM,
+        lt3.OID,
+        lt3.ACCESSION_NBR,
+        lt3.SPECIMEN_SRC,
+        lt3.SPECIMEN_DESC,
+        lt3.SPECIMEN_SITE,
+        lt3.SPECIMEN_SITE_DESC,
+        lt3.SPECIMEN_COLLECTION_DT,
+        lt3.RESULTED_TEST_UID,
+        lt3.ROOT_ORDERED_TEST_PNTR,
+        lt3.PARENT_TEST_PNTR,
+        lt3.TEST_RESULT_GRP_KEY,
+        lt3.PERFORMING_LAB_KEY,
+        lt3.ALT_LAB_TEST_CD,
+        lt3.ALT_LAB_TEST_CD_DESC,
+        lt3.ALT_LAB_TEST_CD_SYS_CD,
+        lt3.ALT_LAB_TEST_CD_SYS_NM,
+        lt3.RESULTED_LAB_TEST_CD_DESC,
+        lt3.RESULTEDTEST_CD_SYS_NM,
+        lt3.RESULT_TEST_METHOD_CD,
+        lt3.RESULTED_LAB_TEST_KEY,
+        lt3.lab_test_type,
+        lt3.RESULT,
+        lt3.TEST_RESULT_VAL_CD,
+        lt3.TEST_RESULT_VAL_CD_SYS_NM,
+        lt3.LOCAL_RESULT_CODE,
+        lt3.LOCAL_RESULT_NAME,
+        lt3.RESULT_REF_RANGE_FRM,
+        lt3.RESULT_REF_RANGE_TO,
+        lt3.RESULTEDTEST_VAL_CD,
+        lt3.RESULTEDTEST_VAL_CD_DESC,
+        lt3.LAB_RESULT_TXT_VAL,
+        lt3.NUMERIC_RESULT_WITHUNITS,
+        lt3.LAB_RESULT_COMMENTS,
+        lt3.ORDERED_TEST_UID,
+        lt3.code_seq,
+        lt3.code_set_nm,
+        lt3.nbs_uid,
+        lt3.prog_area_cd,
+        lt3.prog_area_desc_txt,
+        lt3.PROGRAM_AREA_ID,
+        lt3.status_cd,
+        lt3.status_time,
+        case
+            when lt3.TEST_RESULT_VAL_CD   like '%[^0-9]%' and SUBSTRING(lt3.TEST_RESULT_VAL_CD,2,1) = '-'
+                     and (lt3.CONDITION='' or lt3.CONDITION is null) and lt3.CONDITION_SHORT_NM is null then substring(sc.DISEASE_NM,1,50)
+            else lt3.CONDITION_SHORT_NM
+        end as CONDITION_SHORT_NM,
+        lt3.LOINC,
+        case
+            when TEST_RESULT_VAL_CD   like '%[^0-9]%' and SUBSTRING(TEST_RESULT_VAL_CD,2,1) = '-'
+                     and (CONDITION='' or CONDITION is null) then substring(sc.DISEASE_NM,1,50)
+            else lt3.CONDITION
+        end as CONDITION,
+		case
+		    when lt3.TEST_RESULT_VAL_CD like '%[^0-9]%' and SUBSTRING(lt3.TEST_RESULT_VAL_CD,2,1) = '-' then lt3.TEST_RESULT_VAL_CD
+            else cast(null as [varchar](1000) )
+        end as SNOMED
 	into #TMP_LABTESTS4
 	from #TMP_LABTESTS3 lt3
 	left outer join nbs_srte.dbo.SNOMED_CONDITION sc with(NOLOCK) on sc.SNOMED_CD = lt3.TEST_RESULT_VAL_CD
 	;
 
-	update  #TMP_LABTESTS4
-	set SNOMED = TEST_RESULT_VAL_CD
-	where TEST_RESULT_VAL_CD   like '%[^0-9]%'
-	and SUBSTRING(TEST_RESULT_VAL_CD,2,1) = '-'
-	;
-
-	update  #TMP_LABTESTS4
-	set CONDITION_SHORT_NM = substring(SNOMED_CONDITION_NM,1,50)
-	where TEST_RESULT_VAL_CD   like '%[^0-9]%'
-	and SUBSTRING(TEST_RESULT_VAL_CD,2,1) = '-'
-	and CONDITION='' or CONDITION is null
-	and CONDITION_SHORT_NM is null
-	;
-
-	update  #TMP_LABTESTS4
-	set  CONDITION = substring(SNOMED_CONDITION_NM,1,50)
-	where TEST_RESULT_VAL_CD   like '%[^0-9]%'
-	and SUBSTRING(TEST_RESULT_VAL_CD,2,1) = '-'
-	and CONDITION='' or CONDITION is null
-	;
-
-	update  #TMP_LABTESTS4
-	set CONDITION_CD = SNOMED_CONDITION_CD
-	where TEST_RESULT_VAL_CD   like '%[^0-9]%'
-	and SUBSTRING(TEST_RESULT_VAL_CD,2,1) = '-'
-	and CONDITION_CD='' or CONDITION_CD is null
-	;
-
-	update  #TMP_LABTESTS4
-	set Patient_Address = null
-	where rtrim(Patient_Address) = ''
-	;
-
-	update  #TMP_LABTESTS4
-	set PROVIDER_ADDRESS = null
-	where rtrim(PROVIDER_ADDRESS) = ''
-	;
-
-	update  #TMP_LABTESTS4
-	set ADDR_USE_CD_DESC = null
-	where rtrim(ADDR_USE_CD_DESC) = ''
-	;
-
-	update  #TMP_LABTESTS4
-	set ADDR_CD_DESC = null
-	where rtrim(ADDR_CD_DESC) = ''
-	;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO dbo.[JOB_FLOW_LOG]
@@ -1202,7 +1497,7 @@ if @debug = 'true' select 'TMP_LABTESTS4', * from #TMP_LABTESTS4;
 	SET @PROC_STEP_NAME = ' GENERATING LAB100 Table - Update';
 
 
-	update dbo.LAB100_1
+	update dbo.LAB100
 		set
 			[LAB_RPT_LOCAL_ID] = src.[LAB_RPT_LOCAL_ID]
 			,[RESULTED_LAB_TEST_CD] = substring(src.RESULTED_LAB_TEST_CD ,1,50)
@@ -1273,7 +1568,7 @@ if @debug = 'true' select 'TMP_LABTESTS4', * from #TMP_LABTESTS4;
 			,[REPORTING_FACILITY_UID] = src.REPORTING_FACILITY_UID
 			,[RDB_LAST_REFRESH_TIME] = current_timestamp
 		from
-			dbo.LAB100_1 tgt inner join (select * from #TMP_LABTESTS4 where LAB_RPT_LOCAL_ID is not null) src
+			dbo.LAB100 tgt inner join (select * from #TMP_LABTESTS4 where LAB_RPT_LOCAL_ID is not null) src
 		on src.RESULTED_LAB_TEST_KEY = tgt.RESULTED_LAB_TEST_KEY;
 
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -1284,7 +1579,7 @@ if @debug = 'true' select 'TMP_LABTESTS4', * from #TMP_LABTESTS4;
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
 	    SET @PROC_STEP_NAME = ' GENERATING LAB100 Table - Insert';
 
-		insert into dbo.[LAB100_1](
+		insert into dbo.[LAB100](
 			[LAB_RPT_LOCAL_ID]
 			,[RESULTED_LAB_TEST_CD]
 			,[PROGRAM_JURISDICTION_OID]
@@ -1429,7 +1724,7 @@ if @debug = 'true' select 'TMP_LABTESTS4', * from #TMP_LABTESTS4;
 		from
 			#TMP_LABTESTS4 src
 		left join
-			dbo.LAB100_1 tgt
+			dbo.LAB100 tgt
 		on src.RESULTED_LAB_TEST_KEY = tgt.RESULTED_LAB_TEST_KEY
 		where src.LAB_RPT_LOCAL_ID is not null and tgt.RESULTED_LAB_TEST_KEY is null
 		;
