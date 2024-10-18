@@ -363,3 +363,11 @@ databaseChangeLog:
         - sqlFile:
             path: 017-create_nrt_observation-004.sql
             splitStatements: false
+  - changeSet:
+      id: 52
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 017-sp_d_labtest_result_postprocessing-002.sql
+            splitStatements: false
+
