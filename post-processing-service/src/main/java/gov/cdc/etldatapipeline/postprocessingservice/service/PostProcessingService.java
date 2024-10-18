@@ -224,12 +224,9 @@ public class PostProcessingService {
                         List<InvestigationResult> invData = processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
-                        ids.forEach(id -> {
-                            if (idValsSnapshot.containsKey(id)) {
-                                processTopic(keyTopic, Entity.CASE_ANSWERS, id, idValsSnapshot.get(id),
-                                        investigationRepository::executeStoredProcForPageBuilder);
-                            }
-                        });
+                        ids.stream().filter(idValsSnapshot::containsKey).forEach(id ->
+                            processTopic(keyTopic, Entity.CASE_ANSWERS, id, idValsSnapshot.get(id),
+                                    investigationRepository::executeStoredProcForPageBuilder));
 
                         processTopic(keyTopic, Entity.F_PAGE_CASE, ids,
                                 investigationRepository::executeStoredProcForFPageCase);
@@ -247,8 +244,10 @@ public class PostProcessingService {
                         List<Long> morbIds;
                         List<Long> labIds;
                         synchronized (cacheLock) {
-                            morbIds = idValsSnapshot.entrySet().stream().filter(e -> e.getValue().equals(MORB_REPORT)).map(Entry::getKey).toList();
-                            labIds = idValsSnapshot.entrySet().stream().filter(e -> e.getValue().equals(LAB_REPORT)).map(Entry::getKey).toList();
+                            morbIds = idValsSnapshot.entrySet().stream()
+                                    .filter(e -> e.getValue().equals(MORB_REPORT)).map(Entry::getKey).toList();
+                            labIds = idValsSnapshot.entrySet().stream()
+                                    .filter(e -> e.getValue().equals(LAB_REPORT)).map(Entry::getKey).toList();
                         }
 
                         if (!morbIds.isEmpty()) {
@@ -369,7 +368,8 @@ public class PostProcessingService {
 
     private String prepareAndLog(String keyTopic, List<Long> ids, String name, String spName) {
         String idsString = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}'", StringUtils.capitalize(name), keyTopic,
+        name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
+        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}'", name, keyTopic,
                 spName, idsString);
         return idsString;
     }
