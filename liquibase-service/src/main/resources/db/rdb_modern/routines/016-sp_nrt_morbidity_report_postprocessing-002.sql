@@ -273,7 +273,7 @@ BEGIN
             DROP TABLE #tmp_MorbFrmQCoded ;
 
         SELECT 	oq.*,
-                  ob.ovc_code AS [code]
+                ob.ovc_code AS [code]
         INTO #tmp_MorbFrmQCoded
         FROM #tmp_MorbFrmQ					AS oq
                  INNER JOIN nrt_observation_coded AS ob
