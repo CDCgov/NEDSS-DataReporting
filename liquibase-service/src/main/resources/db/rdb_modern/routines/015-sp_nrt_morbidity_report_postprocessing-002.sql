@@ -10,7 +10,7 @@ BEGIN
      * This stored procedure is handles event based updates to Morbidity Report based dimensions.
      * 1. Receives input list of Morbidity Report based Observations with Order.
      * 2. Pulls changed records from nrt_observation using the input list into temporary tables for processing.
-     * 4. Inserts and updates new records into target dimensions.
+     * 3. Inserts and updates new records into target dimensions.
      *
      * [Target Dimensions]
      * 1. MORBIDITY_REPORT

@@ -377,4 +377,11 @@ databaseChangeLog:
         - sqlFile:
             path: 016-sp_nrt_morbidity_report_postprocessing-002.sql
             splitStatements: false
+  - changeSet:
+      id: 54
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 013-sp_hepatitis_datamart_postprocessing-003.sql
+            splitStatements: false
 
