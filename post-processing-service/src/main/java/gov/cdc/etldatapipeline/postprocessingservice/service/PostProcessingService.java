@@ -260,6 +260,8 @@ public class PostProcessingService {
                                     postProcRepository::executeStoredProcForLabTest, "sp_d_lab_test_postprocessing");
                             processTopic(keyTopic, entity.getName(), labIds,
                                     postProcRepository::executeStoredProcForLabTestResult, "sp_d_labtest_result_postprocessing");
+                            processTopic(keyTopic, entity.getName(), labIds,
+                                    postProcRepository::executeStoredProcForLab100Datamart, "sp_lab100_datamart_postprocessing");
                         }
                         break;
                     default:
