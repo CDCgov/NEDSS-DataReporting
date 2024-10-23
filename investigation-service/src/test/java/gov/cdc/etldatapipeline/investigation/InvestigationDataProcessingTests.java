@@ -6,10 +6,8 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotification;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotificationKey;
-import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
-import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
+import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -33,9 +31,6 @@ import static org.mockito.Mockito.*;
 class InvestigationDataProcessingTests {
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
-
-    @Mock
-    InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
 
     @Mock
     InvestigationRepository investigationRepository;
@@ -64,7 +59,7 @@ class InvestigationDataProcessingTests {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository, investigationRepository);
+        transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
         Logger logger = (Logger) LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
         listAppender.start();
         logger.addAppender(listAppender);
@@ -197,34 +192,19 @@ class InvestigationDataProcessingTests {
         investigation.setPublicHealthCaseUid(investigationUid);
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"));
 
-        InvestigationCaseAnswer caseAnswer = new InvestigationCaseAnswer();
+        PageCaseAnswer caseAnswer = new PageCaseAnswer();
         caseAnswer.setActUid(investigationUid);
 
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation);
         assertEquals("D_INV_CLINICAL,D_INV_ADMINISTRATIVE", investigationTransformed.getRdbTableNameList());
-
-        verify(investigationCaseAnswerRepository).deleteByActUid(investigationUid);
-        verify(investigationCaseAnswerRepository).saveAll(anyList());
-    }
-
-    @Test
-    void testInvestigationCaseAnswerInvalidJson() {
-        Investigation investigation = new Investigation();
-
-        investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setInvestigationCaseAnswer("{ invalid json }");
-
-        transformer.transformInvestigationData(investigation);
-
-        verify(investigationCaseAnswerRepository, never()).deleteByActUid(investigationUid);
     }
 
     @Test
     void testInvestigationCaseAnswersDeserialization() throws JsonProcessingException {
-        InvestigationCaseAnswer[] answers = objectMapper.readValue(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"),
-                InvestigationCaseAnswer[].class);
+        PageCaseAnswer[] answers = objectMapper.readValue(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"),
+                PageCaseAnswer[].class);
 
-        InvestigationCaseAnswer expected = constructCaseAnswer();
+        PageCaseAnswer expected = constructCaseAnswer();
 
         assertEquals(3, answers.length);
         assertEquals(expected, answers[1]);
@@ -262,8 +242,8 @@ class InvestigationDataProcessingTests {
         return notifications;
     }
 
-    private @NotNull InvestigationCaseAnswer constructCaseAnswer() {
-        InvestigationCaseAnswer expected = new InvestigationCaseAnswer();
+    private @NotNull PageCaseAnswer constructCaseAnswer() {
+        PageCaseAnswer expected = new PageCaseAnswer();
         expected.setNbsCaseAnswerUid(1235L);
         expected.setNbsUiMetadataUid(65497311L);
         expected.setNbsRdbMetadataUid(41201011L);
