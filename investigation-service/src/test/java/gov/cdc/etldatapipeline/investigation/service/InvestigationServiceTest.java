@@ -4,12 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
-import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
+import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
-import gov.cdc.etldatapipeline.investigation.repository.odse.NotificationRepository;
-import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
+import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.junit.jupiter.api.AfterEach;
@@ -36,9 +35,6 @@ class InvestigationServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
-
-    @Mock
-    private InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
@@ -68,7 +64,7 @@ class InvestigationServiceTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository, investigationRepository);
+        ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
         transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
         transformer.setInvestigationObservationOutputTopicName("investigationObservation");
         transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
@@ -153,11 +149,11 @@ class InvestigationServiceTest {
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
         final InvestigationReporting reportingModel = constructInvestigationReporting(investigation.getPublicHealthCaseUid());
 
-        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(11)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
-        String actualTopic = topicCaptor.getAllValues().get(4);
-        String actualKey = keyCaptor.getAllValues().get(4);
-        String actualValue = messageCaptor.getAllValues().get(4);
+        String actualTopic = topicCaptor.getAllValues().get(9);
+        String actualKey = keyCaptor.getAllValues().get(9);
+        String actualValue = messageCaptor.getAllValues().get(9);
 
         var actualReporting = objectMapper.readValue(
                 objectMapper.readTree(actualValue).path("payload").toString(), InvestigationReporting.class);

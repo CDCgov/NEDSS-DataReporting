@@ -6,11 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotification;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotificationKey;
-import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
-import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
+import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import lombok.Setter;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,16 +37,18 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-notifications}")
     public String investigationNotificationsOutputTopicName;
 
+    @Value("${spring.kafka.output.topic-name-page-case-answer}")
+    public String pageCaseAnswerOutputTopicName;
+
     private final KafkaTemplate<String, String> kafkaTemplate;
     InvestigationKey investigationKey = new InvestigationKey();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
-    private final InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
     private final InvestigationRepository investigationRepository;
 
     public static final String TYPE_CD = "type_cd";
 
-    @Transactional(transactionManager = "rdbTransactionManager")
+    @Transactional
     public InvestigationTransformed transformInvestigationData(Investigation investigation) {
 
         InvestigationTransformed investigationTransformed = new InvestigationTransformed();
@@ -225,11 +224,15 @@ public class ProcessInvestigationDataUtil {
             investigationConfirmation.setConfirmationMethodTime(
                     confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
 
+            // Tombstone message to delete all confirmation methods for specified phc uid
+            String jsonKey = jsonGenerator.generateStringJson(new InvestigationConfirmationMethodUidKey(publicHealthCaseUid));
+            kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, null);
+
             for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
                 investigationConfirmation.setConfirmationMethodCd(entry.getKey());
                 investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
                 investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
-                String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
+                jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
                 String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
                 kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
             }
@@ -245,29 +248,40 @@ public class ProcessInvestigationDataUtil {
             JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
 
             Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
-            List<InvestigationCaseAnswer> investigationCaseAnswerList = new ArrayList<>();
+            List<PageCaseAnswer> pageCaseAnswerList = new ArrayList<>();
+
+            // Tombstone message to delete all page case answers for specified actUid
+            PageCaseAnswerUidKey pageCaseAnswerUidKey = new PageCaseAnswerUidKey(actUid);
+            String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerUidKey);
+            kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, null);
+
+            PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
+            pageCaseAnswerKey.setActUid(actUid);
 
             for(JsonNode node : investigationCaseAnswerJsonArray) {
-                InvestigationCaseAnswer tempCaseAnswerObject = objectMapper.treeToValue(node, InvestigationCaseAnswer.class);
-                investigationCaseAnswerList.add(tempCaseAnswerObject);
+                PageCaseAnswer pageCaseAnswer = objectMapper.treeToValue(node, PageCaseAnswer.class);
+                pageCaseAnswerList.add(pageCaseAnswer);
+
+                pageCaseAnswerKey.setNbsCaseAnswerUid(pageCaseAnswer.getNbsCaseAnswerUid());
+                jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerKey);
+                String jsonValue = jsonGenerator.generateStringJson(pageCaseAnswer);
+
+                kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, jsonValue);
             }
 
-            investigationCaseAnswerRepository.deleteByActUid(actUid);
-            investigationCaseAnswerRepository.saveAll(investigationCaseAnswerList);
-
-            String rdbTblNms = String.join(",", investigationCaseAnswerList.stream()
-                            .map(InvestigationCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
+            String rdbTblNms = String.join(",", pageCaseAnswerList.stream()
+                            .map(PageCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
             if (!rdbTblNms.isEmpty()) {
                 investigationTransformed.setRdbTableNameList(rdbTblNms);
             }
         } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "InvestigationCaseAnswer");
+            logger.info(ex.getMessage(), "PageCaseAnswer");
         } catch (Exception e) {
             logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
         }
     }
 
-    @Transactional(transactionManager = "odseTransactionManager", isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void processPhcFactDatamart(String publicHealthCaseUid) {
         try {
             // Calling sp_public_health_case_fact_datamart_event

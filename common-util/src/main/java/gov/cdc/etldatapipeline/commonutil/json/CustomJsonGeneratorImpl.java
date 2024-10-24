@@ -41,9 +41,9 @@ public class CustomJsonGeneratorImpl {
 
                 fieldNode.put("type", getType(field.getType().getSimpleName().toLowerCase()));
                 fieldNode.put("optional", (!fieldName.equals("public_health_case_uid")
-                        && !fieldName.equals("observation_uid") && !fieldName.equals("organization_uid")
-                        && !fieldName.equals("patient_uid") && !fieldName.equals("provider_uid")
-                        && !fieldName.equals("notification_uid")));
+                        && !fieldName.equals("act_uid") && !fieldName.equals("observation_uid")
+                        && !fieldName.equals("organization_uid") && !fieldName.equals("provider_uid")
+                        && !fieldName.equals("patient_uid") && !fieldName.equals("notification_uid")));
                 fieldNode.put("field", fieldName);
                 fieldsArray.add(fieldNode);
             }
