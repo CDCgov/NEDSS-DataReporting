@@ -224,11 +224,15 @@ public class ProcessInvestigationDataUtil {
             investigationConfirmation.setConfirmationMethodTime(
                     confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
 
+            // Tombstone message to delete all confirmation methods for specified phc uid
+            String jsonKey = jsonGenerator.generateStringJson(new InvestigationConfirmationMethodUidKey(publicHealthCaseUid));
+            kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, null);
+
             for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
                 investigationConfirmation.setConfirmationMethodCd(entry.getKey());
                 investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
                 investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
-                String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
+                jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
                 String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
                 kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
             }
