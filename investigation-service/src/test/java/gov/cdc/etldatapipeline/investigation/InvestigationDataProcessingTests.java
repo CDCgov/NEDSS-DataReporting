@@ -92,13 +92,13 @@ class InvestigationDataProcessingTests {
         confirmationMethod.setConfirmationMethodTime("2024-01-15T10:20:57.001");
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(CONFIRMATION_TOPIC, topicCaptor.getValue());
+        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(CONFIRMATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
         var actualConfirmationMethod = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationConfirmationMethod.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InvestigationConfirmationMethod.class);
         var actualKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationConfirmationMethodKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), InvestigationConfirmationMethodKey.class);
 
         assertEquals(confirmationMethodKey, actualKey);
         assertEquals(confirmationMethod, actualConfirmationMethod);
@@ -134,14 +134,14 @@ class InvestigationDataProcessingTests {
 
         InvestigationObservation observation = new InvestigationObservation();
         observation.setPublicHealthCaseUid(investigationUid);
-        observation.setObservationId(263748599L);
+        observation.setObservationId(263748596L);
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(OBSERVATION_TOPIC, topicCaptor.getValue());
+        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(OBSERVATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
         var actualObservation = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationObservation.class);
+                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), InvestigationObservation.class);
 
         assertEquals(observation, actualObservation);
     }
@@ -207,13 +207,13 @@ class InvestigationDataProcessingTests {
         PageCaseAnswer pageCaseAnswer = constructCaseAnswer();
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(PAGE_CASE_ANSWER_TOPIC, topicCaptor.getValue());
 
         var actualPageCaseAnswer = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), PageCaseAnswer.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(3)).path("payload").toString(), PageCaseAnswer.class);
         var actualKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), PageCaseAnswerKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(3)).path("payload").toString(), PageCaseAnswerKey.class);
 
         assertEquals(pageCaseAnswerKey, actualKey);
         assertEquals(pageCaseAnswer, actualPageCaseAnswer);

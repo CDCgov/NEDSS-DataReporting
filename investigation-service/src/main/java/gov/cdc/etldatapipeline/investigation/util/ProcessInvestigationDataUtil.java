@@ -51,13 +51,13 @@ public class ProcessInvestigationDataUtil {
     @Transactional
     public InvestigationTransformed transformInvestigationData(Investigation investigation) {
 
-        InvestigationTransformed investigationTransformed = new InvestigationTransformed();
+        InvestigationTransformed investigationTransformed = new InvestigationTransformed(investigation.getPublicHealthCaseUid());
 
         transformPersonParticipations(investigation.getPersonParticipations(), investigationTransformed);
         transformOrganizationParticipations(investigation.getOrganizationParticipations(), investigationTransformed);
         transformActIds(investigation.getActIds(), investigationTransformed);
         transformObservationIds(investigation.getObservationNotificationIds(), investigationTransformed);
-        transformInvestigationConfirmationMethod(investigation.getInvestigationConfirmationMethod());
+        transformInvestigationConfirmationMethod(investigation.getInvestigationConfirmationMethod(), investigationTransformed);
         processInvestigationPageCaseAnswer(investigation.getInvestigationCaseAnswer(), investigationTransformed);
 
         return investigationTransformed;
@@ -198,8 +198,13 @@ public class ProcessInvestigationDataUtil {
         }
     }
 
-    private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod) {
+    private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod, InvestigationTransformed investigationTransformed) {
         try {
+            Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
+            // Tombstone message to delete all confirmation methods for specified phc uid
+            String jsonKey = jsonGenerator.generateStringJson(new InvestigationConfirmationMethodUidKey(publicHealthCaseUid));
+            kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, null);
+
             JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod);
 
             InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
@@ -209,7 +214,6 @@ public class ProcessInvestigationDataUtil {
 
             // Redundant time variable in case if confirmation_method_time is null in all rows of the array
             String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
-            Long publicHealthCaseUid = investigationConfirmationMethodJsonArray.get(0).get("public_health_case_uid").asLong();
 
             for(JsonNode node : investigationConfirmationMethodJsonArray) {
                 JsonNode timeNode = node.get("confirmation_method_time");
@@ -224,10 +228,6 @@ public class ProcessInvestigationDataUtil {
             investigationConfirmation.setConfirmationMethodTime(
                     confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
 
-            // Tombstone message to delete all confirmation methods for specified phc uid
-            String jsonKey = jsonGenerator.generateStringJson(new InvestigationConfirmationMethodUidKey(publicHealthCaseUid));
-            kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, null);
-
             for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
                 investigationConfirmation.setConfirmationMethodCd(entry.getKey());
                 investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
@@ -237,7 +237,7 @@ public class ProcessInvestigationDataUtil {
                 kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
             }
         } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "InvestigationObservationIds");
+            logger.info(ex.getMessage(), "InvestigationConfirmationMethod");
         } catch (Exception e) {
             logger.error("Error processing investigation confirmation method JSON array from investigation data: {}", e.getMessage());
         }
@@ -245,15 +245,17 @@ public class ProcessInvestigationDataUtil {
 
     private void processInvestigationPageCaseAnswer(String investigationCaseAnswer, InvestigationTransformed investigationTransformed) {
         try {
+            Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
+
+            // Tombstone message to delete all page case answers for specified actUid
+            PageCaseAnswerUidKey pageCaseAnswerUidKey = new PageCaseAnswerUidKey(publicHealthCaseUid);
+            String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerUidKey);
+            kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, null);
+
             JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
 
             Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
             List<PageCaseAnswer> pageCaseAnswerList = new ArrayList<>();
-
-            // Tombstone message to delete all page case answers for specified actUid
-            PageCaseAnswerUidKey pageCaseAnswerUidKey = new PageCaseAnswerUidKey(actUid);
-            String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerUidKey);
-            kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, null);
 
             PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
             pageCaseAnswerKey.setActUid(actUid);

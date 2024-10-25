@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class InvestigationTransformed {
+    private Long publicHealthCaseUid;
     private Long investigatorId;
     private Long physicianId;
     private Long patientId;
@@ -13,4 +14,8 @@ public class InvestigationTransformed {
     private String legacyCaseId;
     private Long phcInvFormId;
     private String rdbTableNameList;
+
+    public InvestigationTransformed(Long publicHealthCaseUid) {
+        this.publicHealthCaseUid = publicHealthCaseUid;
+    }
 }
