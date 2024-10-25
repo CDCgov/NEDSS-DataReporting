@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
@@ -24,8 +25,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class InvestigationDataProcessingTests {
@@ -172,6 +172,9 @@ class InvestigationDataProcessingTests {
 
         assertEquals(notificationKey, actualKey);
         assertEquals(notifications, actualNotifications);
+
+        JsonNode keyNode = objectMapper.readTree(keyCaptor.getValue()).path("schema").path("fields");
+        assertFalse(keyNode.get(0).path("optional").asBoolean());
     }
 
     @Test
@@ -187,7 +190,7 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testInvestigationCaseAnswer() throws JsonProcessingException {
+    void testPageCaseAnswer() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
@@ -215,13 +218,16 @@ class InvestigationDataProcessingTests {
         assertEquals(pageCaseAnswerKey, actualKey);
         assertEquals(pageCaseAnswer, actualPageCaseAnswer);
 
+        JsonNode keyNode = objectMapper.readTree(keyCaptor.getValue()).path("schema").path("fields");
+        assertFalse(keyNode.get(0).path("optional").asBoolean());
+        assertTrue(keyNode.get(1).path("optional").asBoolean());
 
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation);
         assertEquals("D_INV_CLINICAL,D_INV_ADMINISTRATIVE", investigationTransformed.getRdbTableNameList());
     }
 
     @Test
-    void testInvestigationCaseAnswersDeserialization() throws JsonProcessingException {
+    void testPageCaseAnswersDeserialization() throws JsonProcessingException {
         PageCaseAnswer[] answers = objectMapper.readValue(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"),
                 PageCaseAnswer[].class);
 
