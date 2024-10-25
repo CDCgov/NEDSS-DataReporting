@@ -57,9 +57,19 @@ BEGIN TRY
 	into #TMP_LABTEST_LABTESTRESULT
 	from
 		dbo.LAB_TEST lt with(NOLOCK)
-	left outer join dbo.LAB_TEST_RESULT  ltr with(NOLOCK) on lt.LAB_TEST_KEY = ltr.LAB_TEST_KEY
-	where lt.LAB_TEST_KEY <> 1 and lt.LAB_TEST_UID in (select value from string_split(@labtestuids, ','))
-	;
+	left outer join 
+		dbo.LAB_TEST_RESULT  ltr with(NOLOCK) on lt.LAB_TEST_KEY = ltr.LAB_TEST_KEY
+	where 
+		lt.LAB_TEST_KEY <> 1 and lt.lab_test_uid in (
+		-- the procedure requires the parent order to be present in the batch and hence the union
+		-- also LAB100 is only concerned with Results so adding LAB_TEST_TYPE filter
+		select lab_test_uid as uid from dbo.LAB_TEST with(nolock) 
+			where lab_test_uid in (select value from string_split(@labtestuids, ',')) and LAB_TEST_TYPE = 'Result'
+		UNION all
+		select ROOT_ORDERED_TEST_PNTR as uid from dbo.LAB_TEST with(nolock) 
+			where lab_test_uid in(select value from string_split(@labtestuids, ',')) and LAB_TEST_TYPE = 'Result'
+	)
+	; 
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO dbo.[JOB_FLOW_LOG]
@@ -1171,7 +1181,8 @@ if @debug = 'true' select 'TMP_LABTESTS2', * from #TMP_LABTESTS2;
         lt2.LAB_RPT_STATUS,
         lt2.oid_order,
         case
-            when RTRIM(LTRIM(lt2.CONDITION_SHORT_NM))='' or RTRIM(LTRIM(lt2.CONDITION_SHORT_NM)) is null then lc.condition_cd
+            when RTRIM(LTRIM(lt2.CONDITION_SHORT_NM))='' 
+				or RTRIM(LTRIM(lt2.CONDITION_SHORT_NM)) is null then lc.condition_cd
             else lt2.CONDITION_CD
             end as CONDITION_CD,
         lt2.REASON_FOR_TEST_DESC1,
