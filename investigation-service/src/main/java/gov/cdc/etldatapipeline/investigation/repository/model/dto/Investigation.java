@@ -274,18 +274,6 @@ public class Investigation {
     @Column(name = "program_area_description")
     private String programAreaDescription;
 
-    @Column(name = "notification_local_id")
-    private String notificationLocalId;
-
-    @Column(name = "notification_add_time")
-    private String notificationAddTime;
-
-    @Column(name = "notification_record_status_cd")
-    private String notificationRecordStatusCd;
-
-    @Column(name = "notification_last_chg_time")
-    private String notificationLastChgTime;
-
     @Column(name = "case_management_uid")
     private Long caseManagementUid;
 

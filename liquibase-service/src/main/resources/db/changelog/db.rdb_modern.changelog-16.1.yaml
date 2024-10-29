@@ -440,3 +440,10 @@ databaseChangeLog:
         - sqlFile:
             path: 020-sp_lab101_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 59
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 007-create_nrt_investigation-001.sql
+            splitStatements: false
