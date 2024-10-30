@@ -250,11 +250,12 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForLabTest(expectedObsIdsString);
         verify(postProcRepositoryMock).executeStoredProcForLabTestResult(expectedObsIdsString);
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
+        assertEquals(10, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_lab_test_postprocessing"));
-        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
         assertTrue(logs.get(4).getFormattedMessage().contains("sp_d_labtest_result_postprocessing"));
-        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertTrue(logs.get(6).getFormattedMessage().contains("sp_lab100_datamart_postprocessing"));
+        assertTrue(logs.get(8).getFormattedMessage().contains("sp_lab101_datamart_postprocessing"));
+        assertTrue(logs.get(9).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @ParameterizedTest
