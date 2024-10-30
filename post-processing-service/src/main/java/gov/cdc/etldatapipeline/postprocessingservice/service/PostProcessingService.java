@@ -317,13 +317,14 @@ public class PostProcessingService {
                 }
             } else if (topic.endsWith(Entity.OBSERVATION.getName())) {
                 String domainCd = objectMapper.readTree(payload).get(PAYLOAD).path("obs_domain_cd_st_1").asText();
-                String ctrlCd = objectMapper.readTree(payload).get(PAYLOAD).path("ctrl_cd_display_form").asText();
+                String ctrlCd = Optional.ofNullable(objectMapper.readTree(payload).get("ctrl_cd_display_form"))
+                        .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
 
                 if (MORB_REPORT.equals(ctrlCd)) {
                     if ("Order".equals(domainCd)) {
                         return ctrlCd;
                     }
-                } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB) &&
+                } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null) &&
                         assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result", "Order_rslt")) {
                     return LAB_REPORT;
                 }
@@ -335,6 +336,9 @@ public class PostProcessingService {
     }
 
     private boolean assertMatches(String value, String... vals ) {
+        if ("null".equals(value)) {
+            value = null;
+        }
         return Arrays.asList(vals).contains(value);
     }
 
