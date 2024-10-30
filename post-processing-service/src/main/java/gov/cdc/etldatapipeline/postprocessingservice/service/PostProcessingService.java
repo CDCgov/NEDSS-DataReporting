@@ -317,7 +317,7 @@ public class PostProcessingService {
                 }
             } else if (topic.endsWith(Entity.OBSERVATION.getName())) {
                 String domainCd = objectMapper.readTree(payload).get(PAYLOAD).path("obs_domain_cd_st_1").asText();
-                String ctrlCd = Optional.ofNullable(objectMapper.readTree(payload).get("ctrl_cd_display_form"))
+                String ctrlCd = Optional.ofNullable(objectMapper.readTree(payload).get(PAYLOAD).get("ctrl_cd_display_form"))
                         .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
 
                 if (MORB_REPORT.equals(ctrlCd)) {
@@ -336,9 +336,6 @@ public class PostProcessingService {
     }
 
     private boolean assertMatches(String value, String... vals ) {
-        if ("null".equals(value)) {
-            value = null;
-        }
         return Arrays.asList(vals).contains(value);
     }
 
