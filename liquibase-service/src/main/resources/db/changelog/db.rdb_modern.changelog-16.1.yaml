@@ -142,6 +142,7 @@ databaseChangeLog:
   - changeSet:
       id: 20
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 001-fn_get_record_status-001.sql
@@ -149,6 +150,7 @@ databaseChangeLog:
   - changeSet:
       id: 21
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 002-sp_nrt_organization_postprocessing-001.sql
@@ -156,6 +158,7 @@ databaseChangeLog:
   - changeSet:
       id: 22
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 003-sp_nrt_provider_postprocessing-001.sql
@@ -163,6 +166,7 @@ databaseChangeLog:
   - changeSet:
       id: 23
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 004-sp_nrt_patient_postprocessing-001.sql
@@ -170,6 +174,7 @@ databaseChangeLog:
   - changeSet:
       id: 24
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 005-sp_nrt_investigation_postprocessing-001.sql
@@ -177,6 +182,7 @@ databaseChangeLog:
   - changeSet:
       id: 25
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 006-sp_nrt_notification_postprocessing-001.sql
@@ -184,6 +190,7 @@ databaseChangeLog:
   - changeSet:
       id: 26
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 007-sp_s_pagebuilder_postprocessing-001.sql
@@ -191,6 +198,7 @@ databaseChangeLog:
   - changeSet:
       id: 27
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 008-sp_l_pagebuilder_postprocessing-001.sql
@@ -198,6 +206,7 @@ databaseChangeLog:
   - changeSet:
       id: 28
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 009-sp_d_pagebuilder_postprocessing-001.sql
@@ -205,6 +214,7 @@ databaseChangeLog:
   - changeSet:
       id: 29
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 010-sp_sld_investigation_repeat_postprocessing-001.sql
@@ -212,6 +222,7 @@ databaseChangeLog:
   - changeSet:
       id: 30
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 011-sp_page_builder_postprocessing-001.sql
@@ -219,6 +230,7 @@ databaseChangeLog:
   - changeSet:
       id: 31
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 012-sp_f_page_case_postprocessing-001.sql
@@ -226,6 +238,7 @@ databaseChangeLog:
   - changeSet:
       id: 32
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 013-sp_hepatitis_datamart_postprocessing-001.sql
@@ -240,6 +253,7 @@ databaseChangeLog:
   - changeSet:
       id: 34
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 014-sp_get_date_dim-001.sql
@@ -254,6 +268,7 @@ databaseChangeLog:
   - changeSet:
       id: 36
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 015-sp_nrt_ldf_postprocessing-001.sql
@@ -268,6 +283,7 @@ databaseChangeLog:
   - changeSet:
       id: 38
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 007-sp_s_pagebuilder_postprocessing-002.sql
@@ -275,6 +291,7 @@ databaseChangeLog:
   - changeSet:
       id: 39
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 010-sp_sld_investigation_repeat_postprocessing-002.sql
@@ -282,6 +299,7 @@ databaseChangeLog:
   - changeSet:
       id: 40
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 013-sp_hepatitis_datamart_postprocessing-002.sql
@@ -338,6 +356,7 @@ databaseChangeLog:
   - changeSet:
       id: 48
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 005-sp_nrt_investigation_postprocessing-002.sql
@@ -345,6 +364,7 @@ databaseChangeLog:
   - changeSet:
       id: 49
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 016-sp_nrt_morbidity_report_postprocessing-001.sql
@@ -352,6 +372,7 @@ databaseChangeLog:
   - changeSet:
       id: 50
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-sp_d_labtest_result_postprocessing-001.sql
@@ -366,6 +387,7 @@ databaseChangeLog:
   - changeSet:
       id: 52
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-sp_d_labtest_result_postprocessing-002.sql
@@ -373,6 +395,7 @@ databaseChangeLog:
   - changeSet:
       id: 53
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 016-sp_nrt_morbidity_report_postprocessing-002.sql
@@ -380,6 +403,7 @@ databaseChangeLog:
   - changeSet:
       id: 54
       author: liquibase
+
       changes:
         - sqlFile:
             path: 013-sp_hepatitis_datamart_postprocessing-003.sql
@@ -387,6 +411,7 @@ databaseChangeLog:
   - changeSet:
       id: 55
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 018-sp_d_lab_test_postprocessing-001.sql
@@ -394,7 +419,31 @@ databaseChangeLog:
   - changeSet:  
       id: 56
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 019-sp_lab100_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 57
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 005-sp_nrt_investigation_postprocessing-003.sql
+            splitStatements: false
+  - changeSet:  
+      id: 58
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 020-sp_lab101_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 59
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 007-create_nrt_investigation-002.sql
             splitStatements: false

@@ -4,12 +4,11 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotification;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationNotificationKey;
-import gov.cdc.etldatapipeline.investigation.repository.odse.InvestigationRepository;
-import gov.cdc.etldatapipeline.investigation.repository.rdb.InvestigationCaseAnswerRepository;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
+import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -26,16 +25,12 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class InvestigationDataProcessingTests {
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
-
-    @Mock
-    InvestigationCaseAnswerRepository investigationCaseAnswerRepository;
 
     @Mock
     InvestigationRepository investigationRepository;
@@ -57,6 +52,7 @@ class InvestigationDataProcessingTests {
     private static final String CONFIRMATION_TOPIC = "confirmationTopic";
     private static final String OBSERVATION_TOPIC = "observationTopic";
     private static final String NOTIFICATIONS_TOPIC = "notificationsTopic";
+    private static final String PAGE_CASE_ANSWER_TOPIC = "pageCaseAnswerTopic";
     private static final Long investigationUid = 234567890L;
 
     ProcessInvestigationDataUtil transformer;
@@ -64,7 +60,7 @@ class InvestigationDataProcessingTests {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationCaseAnswerRepository, investigationRepository);
+        transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
         Logger logger = (Logger) LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
         listAppender.start();
         logger.addAppender(listAppender);
@@ -96,13 +92,13 @@ class InvestigationDataProcessingTests {
         confirmationMethod.setConfirmationMethodTime("2024-01-15T10:20:57.001");
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(CONFIRMATION_TOPIC, topicCaptor.getValue());
+        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(CONFIRMATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
         var actualConfirmationMethod = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationConfirmationMethod.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InvestigationConfirmationMethod.class);
         var actualKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationConfirmationMethodKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), InvestigationConfirmationMethodKey.class);
 
         assertEquals(confirmationMethodKey, actualKey);
         assertEquals(confirmationMethod, actualConfirmationMethod);
@@ -138,14 +134,14 @@ class InvestigationDataProcessingTests {
 
         InvestigationObservation observation = new InvestigationObservation();
         observation.setPublicHealthCaseUid(investigationUid);
-        observation.setObservationId(263748599L);
+        observation.setObservationId(263748596L);
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(OBSERVATION_TOPIC, topicCaptor.getValue());
+        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(OBSERVATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
         var actualObservation = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationObservation.class);
+                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), InvestigationObservation.class);
 
         assertEquals(observation, actualObservation);
     }
@@ -176,6 +172,9 @@ class InvestigationDataProcessingTests {
 
         assertEquals(notificationKey, actualKey);
         assertEquals(notifications, actualNotifications);
+
+        JsonNode keyNode = objectMapper.readTree(keyCaptor.getValue()).path("schema").path("fields");
+        assertFalse(keyNode.get(0).path("optional").asBoolean());
     }
 
     @Test
@@ -191,40 +190,48 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testInvestigationCaseAnswer() {
+    void testPageCaseAnswer() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"));
+        transformer.setPageCaseAnswerOutputTopicName(PAGE_CASE_ANSWER_TOPIC);
 
-        InvestigationCaseAnswer caseAnswer = new InvestigationCaseAnswer();
+        PageCaseAnswer caseAnswer = new PageCaseAnswer();
         caseAnswer.setActUid(investigationUid);
+
+        PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
+        pageCaseAnswerKey.setActUid(investigationUid);
+        pageCaseAnswerKey.setNbsCaseAnswerUid(1235L);
+
+        PageCaseAnswer pageCaseAnswer = constructCaseAnswer();
+
+        transformer.transformInvestigationData(investigation);
+        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(PAGE_CASE_ANSWER_TOPIC, topicCaptor.getValue());
+
+        var actualPageCaseAnswer = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(3)).path("payload").toString(), PageCaseAnswer.class);
+        var actualKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(3)).path("payload").toString(), PageCaseAnswerKey.class);
+
+        assertEquals(pageCaseAnswerKey, actualKey);
+        assertEquals(pageCaseAnswer, actualPageCaseAnswer);
+
+        JsonNode keyNode = objectMapper.readTree(keyCaptor.getValue()).path("schema").path("fields");
+        assertFalse(keyNode.get(0).path("optional").asBoolean());
+        assertTrue(keyNode.get(1).path("optional").asBoolean());
 
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation);
         assertEquals("D_INV_CLINICAL,D_INV_ADMINISTRATIVE", investigationTransformed.getRdbTableNameList());
-
-        verify(investigationCaseAnswerRepository).deleteByActUid(investigationUid);
-        verify(investigationCaseAnswerRepository).saveAll(anyList());
     }
 
     @Test
-    void testInvestigationCaseAnswerInvalidJson() {
-        Investigation investigation = new Investigation();
+    void testPageCaseAnswersDeserialization() throws JsonProcessingException {
+        PageCaseAnswer[] answers = objectMapper.readValue(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"),
+                PageCaseAnswer[].class);
 
-        investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setInvestigationCaseAnswer("{ invalid json }");
-
-        transformer.transformInvestigationData(investigation);
-
-        verify(investigationCaseAnswerRepository, never()).deleteByActUid(investigationUid);
-    }
-
-    @Test
-    void testInvestigationCaseAnswersDeserialization() throws JsonProcessingException {
-        InvestigationCaseAnswer[] answers = objectMapper.readValue(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"),
-                InvestigationCaseAnswer[].class);
-
-        InvestigationCaseAnswer expected = constructCaseAnswer();
+        PageCaseAnswer expected = constructCaseAnswer();
 
         assertEquals(3, answers.length);
         assertEquals(expected, answers[1]);
@@ -262,8 +269,8 @@ class InvestigationDataProcessingTests {
         return notifications;
     }
 
-    private @NotNull InvestigationCaseAnswer constructCaseAnswer() {
-        InvestigationCaseAnswer expected = new InvestigationCaseAnswer();
+    private @NotNull PageCaseAnswer constructCaseAnswer() {
+        PageCaseAnswer expected = new PageCaseAnswer();
         expected.setNbsCaseAnswerUid(1235L);
         expected.setNbsUiMetadataUid(65497311L);
         expected.setNbsRdbMetadataUid(41201011L);

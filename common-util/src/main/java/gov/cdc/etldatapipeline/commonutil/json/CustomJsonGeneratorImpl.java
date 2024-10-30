@@ -9,6 +9,8 @@ import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 public class CustomJsonGeneratorImpl {
@@ -39,11 +41,11 @@ public class CustomJsonGeneratorImpl {
 
                 String fieldName = getFieldName(field);
 
+                List<String> pKeys = Arrays.asList("public_health_case_uid", "act_uid", "observation_uid",
+                        "organization_uid", "provider_uid", "patient_uid", "notification_uid");
+
                 fieldNode.put("type", getType(field.getType().getSimpleName().toLowerCase()));
-                fieldNode.put("optional", (!fieldName.equals("public_health_case_uid")
-                        && !fieldName.equals("observation_uid") && !fieldName.equals("organization_uid")
-                        && !fieldName.equals("patient_uid") && !fieldName.equals("provider_uid")
-                        && !fieldName.equals("notification_uid")));
+                fieldNode.put("optional", (!pKeys.contains(fieldName)));
                 fieldNode.put("field", fieldName);
                 fieldsArray.add(fieldNode);
             }

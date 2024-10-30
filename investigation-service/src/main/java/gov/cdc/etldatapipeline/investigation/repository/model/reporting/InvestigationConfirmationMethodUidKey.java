@@ -1,14 +1,13 @@
-package gov.cdc.etldatapipeline.investigation.repository.model.dto;
+package gov.cdc.etldatapipeline.investigation.repository.model.reporting;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class InvestigationConfirmationMethod {
+public class InvestigationConfirmationMethodUidKey {
     private Long publicHealthCaseUid;
-    private String confirmationMethodCd;
-    private String confirmationMethodDescTxt;
-    private String confirmationMethodTime;
 }

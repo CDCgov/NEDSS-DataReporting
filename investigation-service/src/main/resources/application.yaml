@@ -8,6 +8,7 @@ spring:
       topic-name-confirmation: nrt_investigation_confirmation
       topic-name-observation: nrt_investigation_observation
       topic-name-notifications: nrt_investigation_notification
+      topic-name-page-case-answer: nrt_page_case_answer
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt

@@ -9,6 +9,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 001-fn_get_value_by_cd_ques-001.sql
@@ -16,6 +17,7 @@ databaseChangeLog:
   - changeSet:
       id: 2
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 002-fn_get_value_by_cvg-001.sql
@@ -23,6 +25,7 @@ databaseChangeLog:
   - changeSet:
       id: 3
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 003-fn-get_user_name-001.sql
@@ -30,6 +33,7 @@ databaseChangeLog:
   - changeSet:
       id: 4
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 004-fn_get_value_by_cd_codeset-001.sql
@@ -37,6 +41,7 @@ databaseChangeLog:
   - changeSet:
       id: 5
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 005-sp_organization_event-001.sql
@@ -44,6 +49,7 @@ databaseChangeLog:
   - changeSet:
       id: 6
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 006-sp_provider_event-001.sql
@@ -51,6 +57,7 @@ databaseChangeLog:
   - changeSet:
       id: 7
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 007-sp_patient_race_event-001.sql
@@ -58,6 +65,7 @@ databaseChangeLog:
   - changeSet:
       id: 8
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 008-sp_patient_event-001.sql
@@ -65,6 +73,7 @@ databaseChangeLog:
   - changeSet:
       id: 9
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 009-sp_observation_event-001.sql
@@ -72,6 +81,7 @@ databaseChangeLog:
   - changeSet:
       id: 10
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 010-sp_investigation_event-001.sql
@@ -79,6 +89,7 @@ databaseChangeLog:
   - changeSet:
       id: 11
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 011-sp_ldf_provider_event-001.sql
@@ -86,6 +97,7 @@ databaseChangeLog:
   - changeSet:
       id: 12
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 012-sp_ldf_organization_event-001.sql
@@ -93,6 +105,7 @@ databaseChangeLog:
   - changeSet:
       id: 13
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 013-sp_ldf_patient_event-001.sql
@@ -100,6 +113,7 @@ databaseChangeLog:
   - changeSet:
       id: 14
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 014-sp_ldf_observation_event-001.sql
@@ -107,6 +121,7 @@ databaseChangeLog:
   - changeSet:
       id: 15
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 015-sp_ldf_phc_event-001.sql
@@ -114,6 +129,7 @@ databaseChangeLog:
   - changeSet:
       id: 16
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 016-sp_ldf_intervention_event-001.sql
@@ -121,6 +137,7 @@ databaseChangeLog:
   - changeSet:
       id: 17
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-sp_ldf_data_event-001.sql
@@ -128,6 +145,7 @@ databaseChangeLog:
   - changeSet:
       id: 18
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 018-sp_public_health_case_fact_datamart_event-001.sql
@@ -135,6 +153,7 @@ databaseChangeLog:
   - changeSet:
       id: 19
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 001-v_inv_form_code_data-001.sql
@@ -142,6 +161,7 @@ databaseChangeLog:
   - changeSet:
       id: 20
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 001-fn_get_record_status-001.sql
@@ -149,6 +169,7 @@ databaseChangeLog:
   - changeSet:
       id: 21
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 020-sp_notification_event-001.sql
@@ -156,6 +177,7 @@ databaseChangeLog:
   - changeSet:
       id: 22
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 020-sp_notification_event-002.sql
@@ -163,6 +185,7 @@ databaseChangeLog:
   - changeSet:
       id: 23
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 010-sp_investigation_event-002.sql
@@ -170,6 +193,7 @@ databaseChangeLog:
   - changeSet:
       id: 24
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 009-sp_observation_event-002.sql
@@ -177,6 +201,7 @@ databaseChangeLog:
   - changeSet:
       id: 25
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 009-sp_observation_event-003.sql
@@ -184,6 +209,7 @@ databaseChangeLog:
   - changeSet:
       id: 26
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 008-sp_patient_event-002.sql

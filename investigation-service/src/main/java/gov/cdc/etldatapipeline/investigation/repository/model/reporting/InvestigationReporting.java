@@ -88,10 +88,6 @@ public class InvestigationReporting {
     private String coinfectionId;
     private String contactInvTxt;
     private String programAreaDescription;
-    private String notificationLocalId;
-    private String notificationAddTime;
-    private String notificationRecordStatusCd;
-    private String notificationLastChgTime;
     private Long caseManagementUid;
     private Long nacPageCaseUid;
     private String nacLastChgTime;
