@@ -57,6 +57,9 @@ class ObservationServiceTest {
         observationService = new ObservationService(observationRepository, kafkaTemplate, transformer);
         observationService.setObservationTopic(inputTopicName);
         observationService.setObservationTopicOutputReporting(outputTopicName);
+        transformer.setCodedTopicName("ObservationCoded");
+        transformer.setReasonTopicName("ObservationReason");
+        transformer.setTxtTopicName("ObservationTxt");
     }
 
     @AfterEach
@@ -74,6 +77,7 @@ class ObservationServiceTest {
         Observation observation = constructObservation(observationUid, obsDomainCdSt);
         when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.of(observation));
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
 
         validateData(payload, observation);
 
@@ -105,7 +109,7 @@ class ObservationServiceTest {
 
         var reportingModel = constructObservationReporting(observation.getObservationUid(), observation.getObsDomainCdSt1());
 
-        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         String actualTopic = topicCaptor.getValue();
         String actualKey = keyCaptor.getValue();
         String actualValue = messageCaptor.getValue();

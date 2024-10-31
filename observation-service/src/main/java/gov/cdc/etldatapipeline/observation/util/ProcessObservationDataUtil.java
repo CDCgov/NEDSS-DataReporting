@@ -65,6 +65,7 @@ public class ProcessObservationDataUtil {
         observationTransformed.setObservationUid(observation.getObservationUid());
         observationTransformed.setReportObservationUid(observation.getObservationUid());
 
+        observationKey.setObservationUid(observation.getObservationUid());
         String obsDomainCdSt1 = observation.getObsDomainCdSt1();
 
         transformPersonParticipations(observation.getPersonParticipations(), obsDomainCdSt1, observationTransformed);
@@ -320,6 +321,9 @@ public class ProcessObservationDataUtil {
     }
 
     private void transformObservationCoded(String observationCoded) {
+        // Tombstone message to delete previous observation coded data for specified uid
+        sendToKafka(observationKey, null, codedTopicName, observationKey.getObservationUid(), null);
+
         try {
             JsonNode observationCodedJsonArray = parseJsonArray(observationCoded);
 
@@ -342,9 +346,8 @@ public class ProcessObservationDataUtil {
             JsonNode observationDateJsonArray = parseJsonArray(observationDate);
 
             for (JsonNode jsonNode : observationDateJsonArray) {
-                ObservationDate coded = objectMapper.treeToValue(jsonNode, ObservationDate.class);
-                observationKey.setObservationUid(coded.getObservationUid());
-                sendToKafka(observationKey, coded, dateTopicName, coded.getObservationUid(), "Observation Date data (uid={}) sent to {}");
+                ObservationDate obsDate = objectMapper.treeToValue(jsonNode, ObservationDate.class);
+                sendToKafka(observationKey, obsDate, dateTopicName, obsDate.getObservationUid(), "Observation Date data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "ObservationDate");
@@ -376,7 +379,6 @@ public class ProcessObservationDataUtil {
 
             for (JsonNode jsonNode : observationNumericJsonArray) {
                 ObservationNumeric numeric = objectMapper.treeToValue(jsonNode, ObservationNumeric.class);
-                observationKey.setObservationUid(numeric.getObservationUid());
                 sendToKafka(observationKey, numeric, numericTopicName, numeric.getObservationUid(), "Observation Numeric data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {
@@ -388,6 +390,9 @@ public class ProcessObservationDataUtil {
 
     private void transformObservationReasons(String observationReasons) {
         try {
+            // Tombstone message to delete previous observation coded data for specified uid
+            sendToKafka(observationKey, null, reasonTopicName, observationKey.getObservationUid(), null);
+
             JsonNode observationReasonsJsonArray = parseJsonArray(observationReasons);
 
             ObservationReasonKey reasonKey = new ObservationReasonKey();
@@ -405,6 +410,9 @@ public class ProcessObservationDataUtil {
     }
 
     private void transformObservationTxt(String observationTxt) {
+        // Tombstone message to delete previous observation coded data for specified uid
+        sendToKafka(observationKey, null, txtTopicName, observationKey.getObservationUid(), null);
+
         try {
             JsonNode observationTxtJsonArray = parseJsonArray(observationTxt);
 
@@ -424,9 +432,13 @@ public class ProcessObservationDataUtil {
 
     private void sendToKafka(Object key, Object value, String topicName, Long uid, String message) {
         String jsonKey = jsonGenerator.generateStringJson(key);
-        String jsonValue = jsonGenerator.generateStringJson(value);
+        String jsonValue = Optional.ofNullable(value).map(jsonGenerator::generateStringJson).orElse(null);
         kafkaTemplate.send(topicName, jsonKey, jsonValue)
-                .whenComplete((res, e) -> logger.info(message, uid, topicName));
+                .whenComplete((res, e) -> {
+                    if (message != null) {
+                        logger.info(message, uid, topicName);
+                    }
+                });
     }
 
     private JsonNode parseJsonArray(String jsonString) throws JsonProcessingException, IllegalArgumentException {
