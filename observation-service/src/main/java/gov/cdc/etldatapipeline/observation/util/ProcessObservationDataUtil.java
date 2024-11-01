@@ -390,7 +390,7 @@ public class ProcessObservationDataUtil {
 
     private void transformObservationReasons(String observationReasons) {
         try {
-            // Tombstone message to delete previous observation coded data for specified uid
+            // Tombstone message to delete previous observation reason data for specified uid
             sendToKafka(observationKey, null, reasonTopicName, observationKey.getObservationUid(), null);
 
             JsonNode observationReasonsJsonArray = parseJsonArray(observationReasons);
@@ -410,7 +410,7 @@ public class ProcessObservationDataUtil {
     }
 
     private void transformObservationTxt(String observationTxt) {
-        // Tombstone message to delete previous observation coded data for specified uid
+        // Tombstone message to delete previous observation txt data for specified uid
         sendToKafka(observationKey, null, txtTopicName, observationKey.getObservationUid(), null);
 
         try {
