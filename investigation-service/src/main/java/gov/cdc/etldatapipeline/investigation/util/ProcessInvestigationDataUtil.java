@@ -54,6 +54,7 @@ public class ProcessInvestigationDataUtil {
         InvestigationTransformed investigationTransformed = new InvestigationTransformed(investigation.getPublicHealthCaseUid());
 
         transformPersonParticipations(investigation.getPersonParticipations(), investigationTransformed);
+        transformCaseCountInfo(investigation.getCaseCountInfo(), investigationTransformed);
         transformOrganizationParticipations(investigation.getOrganizationParticipations(), investigationTransformed);
         transformActIds(investigation.getActIds(), investigationTransformed);
         transformObservationIds(investigation.getObservationNotificationIds(), investigationTransformed);
@@ -110,6 +111,22 @@ public class ProcessInvestigationDataUtil {
             logger.info(ex.getMessage(), "PersonParticipations");
         } catch (Exception e) {
             logger.error("Error processing Person Participation JSON array from investigation data: {}", e.getMessage());
+        }
+    }
+
+    private void transformCaseCountInfo(String caseCountInfo, InvestigationTransformed investigationTransformed) {
+        try {
+            JsonNode caseCountArray = parseJsonArray(caseCountInfo);
+            //case count array will always have only one element
+            for (JsonNode node : caseCountArray) {
+                investigationTransformed.setInvestigationCount(node.get("investigation_count").asLong());
+                investigationTransformed.setCaseCount(node.get("case_count").asLong());
+                investigationTransformed.setInvestigatorAssignedDatetime(node.get("investigator_assigned_datetime").asText());
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "CaseCountInfo");
+        } catch (Exception e) {
+            logger.error("Error processing Case Count JSON array from investigation data: {}", e.getMessage());
         }
     }
 

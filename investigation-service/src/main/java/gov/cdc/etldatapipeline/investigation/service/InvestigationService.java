@@ -179,6 +179,9 @@ public class InvestigationService {
         reportingModel.setLegacyCaseId(investigationTransformed.getLegacyCaseId());
         reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
         reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
+        reportingModel.setCaseCount(investigationTransformed.getCaseCount());
+        reportingModel.setInvestigationCount(investigationTransformed.getInvestigationCount());
+        reportingModel.setInvestigatorAssignedDatetime(investigationTransformed.getInvestigatorAssignedDatetime());
         return reportingModel;
     }
 }

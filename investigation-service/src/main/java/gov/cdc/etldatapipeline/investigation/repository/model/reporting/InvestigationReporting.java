@@ -110,4 +110,7 @@ public class InvestigationReporting {
     private Long lastChgUserId;
     private String lastChgUserName;
     private String lastChgTime;
+    private Long investigationCount;
+    private Long caseCount;
+    private String investigatorAssignedDatetime;
 }
