@@ -73,7 +73,7 @@ select
              cc.case_count,
              1 as geocoding_location_key
 into #CASE_COUNT
-from dbo.nrt_investigation_test cc
+from dbo.nrt_investigation cc
          inner join dbo.INVESTIGATION i on cc.public_health_case_uid = i.case_uid
          inner join dbo.CONDITION con on	con.condition_cd = cc.CD
          left outer join dbo.D_PATIENT dpat on cc.patient_id = dpat.patient_uid
@@ -163,8 +163,7 @@ SELECT
     src.geocoding_location_key
 from
     #CASE_COUNT src
-        left outer join
-    dbo.CASE_COUNT tgt
+left outer join dbo.CASE_COUNT tgt
     on src.investigation_key = tgt.investigation_key
 where tgt.investigation_key is null
 ;
