@@ -137,7 +137,8 @@ BEGIN
                results.investigation_confirmation_method,
                results.investigation_case_answer,
                results.investigation_notifications,
-               results.notification_history
+               results.notification_history,
+               results.case_count_info
         --,con.investigation_form_cd
         -- ,results.investigation_act_entity
         -- ,results.ldf_public_health_case
@@ -279,7 +280,8 @@ BEGIN
                      nesteddata.investigation_confirmation_method,
                      nesteddata.investigation_case_answer,
                      nesteddata.investigation_notifications,
-                     nesteddata.notification_history
+                     nesteddata.notification_history,
+                     nesteddata.case_count_info
               --,nesteddata.ldf_public_health_case
               FROM
                   --public health case
@@ -610,7 +612,46 @@ BEGIN
                                                )
                                            FOR json path,INCLUDE_NULL_VALUES
                                        ) AS notification_history
-                                  ) AS notification_history
+                                  ) AS notification_history,
+                                  (select
+                                        (
+	                                        select
+		                                        phcase.group_case_cnt                                           as investigation_count,
+		                                        round(COALESCE (gcs.group_case_cnt, phcase.group_case_cnt),0)   as case_count,
+		                                        par2.from_time                                                  as investigator_assigned_datetime
+		                                    from nbs_odse.dbo.Public_health_case phcase
+	                                        left outer join (
+	                                            select
+	                                                public_health_case_uid, ovn.numeric_value_1 as group_case_cnt
+	                                                from
+	                                                nbs_odse.dbo.Public_health_case phci,
+	                                                nbs_odse.dbo.act_relationship as ar2, 	/*OBS Summary_Report_Form to phc */
+	                                                nbs_odse.dbo.act_relationship as ar1, 	/*-- OBS sum107 to OBS Summary_Report_Form */
+	                                                nbs_odse.dbo.observation as ob1, 		/*--SUM107 */
+	                                                nbs_odse.dbo.observation as ob2, 		/* --Summary_Report_Form*/
+	                                                nbs_odse.dbo.obs_value_numeric as ovn 	/*--group_case_cnt*/
+	                                            where
+	                                                phci.case_type_cd ='S'
+	                                                and phci.public_health_case_uid = ar2.target_act_uid
+	                                                and ar1.source_act_uid = ob1.observation_uid
+	                                                and ar1.target_act_uid = ob2.observation_uid
+	                                                and ar1.type_cd='SummaryFrmQ'
+	                                                and ob1.cd = 'SUM107'
+	                                                and ob2.cd = 'Summary_Report_Form'
+	                                                and ob1.observation_uid = ovn.observation_uid
+	                                                and ob2.observation_uid = ar2.source_act_uid
+	                                                and ar2.type_cd =  'SummaryForm'
+	                                        ) gcs
+	                                        on gcs.public_health_case_uid = phcase.public_health_case_uid
+	                                        left outer join nbs_odse.dbo.participation par2
+	                                                on phcase.public_health_case_uid = par2.act_uid
+	                                                and par2.type_cd ='InvestgrOfPHC'
+	                                                and par2.act_class_cd = 'CASE'
+	                                                and par2.subject_class_cd = 'PSN'
+	                                        where phcase.public_health_case_uid = phc.public_health_case_uid
+	                                     FOR json path,INCLUDE_NULL_VALUES
+                                      ) as case_count_info
+                                  ) as case_count_info
                               /*
                                -- ldf_phc associated with phc
                      ,(
