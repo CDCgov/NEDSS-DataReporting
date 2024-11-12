@@ -317,5 +317,5 @@ public class Investigation {
     private String investigationNotifications;
 
     @Column(name = "case_count_info")
-    private String caseCountInfo;
+    private String caseCntInfo;
 }

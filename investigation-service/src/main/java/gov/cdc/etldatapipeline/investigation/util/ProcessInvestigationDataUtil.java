@@ -54,7 +54,7 @@ public class ProcessInvestigationDataUtil {
         InvestigationTransformed investigationTransformed = new InvestigationTransformed(investigation.getPublicHealthCaseUid());
 
         transformPersonParticipations(investigation.getPersonParticipations(), investigationTransformed);
-        transformCaseCountInfo(investigation.getCaseCountInfo(), investigationTransformed);
+        transformCaseCountInfo(investigation.getCaseCntInfo(), investigationTransformed);
         transformOrganizationParticipations(investigation.getOrganizationParticipations(), investigationTransformed);
         transformActIds(investigation.getActIds(), investigationTransformed);
         transformObservationIds(investigation.getObservationNotificationIds(), investigationTransformed);

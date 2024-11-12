@@ -189,7 +189,7 @@ class InvestigationServiceTest {
         investigation.setPersonParticipations(readFileData(FILE_PATH_PREFIX + "PersonParticipations.json"));
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PATH_PREFIX + "InvestigationCaseAnswers.json"));
         investigation.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
-        investigation.setCaseCountInfo(readFileData(FILE_PATH_PREFIX + "CaseCountInfo.json"));
+        investigation.setCaseCntInfo(readFileData(FILE_PATH_PREFIX + "CaseCountInfo.json"));
         return investigation;
     }
 
@@ -221,6 +221,7 @@ class InvestigationServiceTest {
         reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
         reporting.setInvestigationCount(1L);
         reporting.setCaseCount(1L);
+        reporting.setInvestigatorAssignedDatetime("2024-01-15T10:20:57.787");
         return reporting;
     }
 
