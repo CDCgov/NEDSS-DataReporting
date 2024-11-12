@@ -189,6 +189,7 @@ class InvestigationServiceTest {
         investigation.setPersonParticipations(readFileData(FILE_PATH_PREFIX + "PersonParticipations.json"));
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PATH_PREFIX + "InvestigationCaseAnswers.json"));
         investigation.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
+        investigation.setCaseCountInfo(readFileData(FILE_PATH_PREFIX + "CaseCountInfo.json"));
         return investigation;
     }
 
@@ -218,6 +219,8 @@ class InvestigationServiceTest {
         reporting.setLegacyCaseId("12-345-LGY");        // ActIds.json, root_extension_txt for type_cd=LEGACY
         reporting.setPhcInvFormId(263748598L);          // ObservationNotificationIds.json, source_act_uid for act_type_cd=PHCInvForm
         reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
+        reporting.setInvestigationCount(1L);
+        reporting.setCaseCount(1L);
         return reporting;
     }
 
