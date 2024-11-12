@@ -452,7 +452,7 @@ databaseChangeLog:
       author: liquibase
       changes:
         - sqlFile:
-            path: 020-create_nrt_investigation-003.sql
+            path: 007-create_nrt_investigation-003.sql
             splitStatements: false
   - changeSet:
       id: 61
