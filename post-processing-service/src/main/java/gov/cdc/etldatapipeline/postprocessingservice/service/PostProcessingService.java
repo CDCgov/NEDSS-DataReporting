@@ -71,6 +71,7 @@ public class PostProcessingService {
         OBSERVATION(7, "observation", "observation_uid", null),
         F_PAGE_CASE(0, "fact page case", PHC_UID, "sp_f_page_case_postprocessing"),
         CASE_ANSWERS(0, "case answers", PHC_UID, "sp_page_builder_postprocessing"),
+        CASE_COUNT(0, "case count", PHC_UID, "sp_nrt_case_count_postprocessing"),
         UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
         private final int priority;
@@ -230,6 +231,10 @@ public class PostProcessingService {
 
                         processTopic(keyTopic, Entity.F_PAGE_CASE, ids,
                                 investigationRepository::executeStoredProcForFPageCase);
+
+                        processTopic(keyTopic, Entity.CASE_COUNT, ids,
+                                investigationRepository::executeStoredProcForCaseCount);
+
                         datamartProcessor.process(invData);
                         break;
                     case NOTIFICATION:
