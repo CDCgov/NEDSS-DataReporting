@@ -121,7 +121,8 @@ public class ProcessInvestigationDataUtil {
             for (JsonNode node : caseCountArray) {
                 investigationTransformed.setInvestigationCount(node.get("investigation_count").asLong());
                 investigationTransformed.setCaseCount(node.get("case_count").asLong());
-                investigationTransformed.setInvestigatorAssignedDatetime(node.get("investigator_assigned_datetime").asText());
+                Optional.ofNullable(node.get("investigator_assigned_datetime")).filter(n -> !n.isNull())
+                        .ifPresent(n -> investigationTransformed.setInvestigatorAssignedDatetime(n.asText()));
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "CaseCountInfo");
