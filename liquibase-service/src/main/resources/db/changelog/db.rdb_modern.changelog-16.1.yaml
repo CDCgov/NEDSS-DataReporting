@@ -476,3 +476,17 @@ databaseChangeLog:
         - sqlFile:
             path: 021-create_nrt_case_management_key-001.sql
             splitStatements: false
+  - changeSet:
+      id: 64
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 007-create_nrt_investigation-004.sql
+            splitStatements: false
+  - changeSet:
+      id: 65
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 011-create_nrt_investigation_observation-002.sql
+            splitStatements: false
