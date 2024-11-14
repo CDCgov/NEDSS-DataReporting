@@ -189,7 +189,7 @@ class InvestigationServiceTest {
         investigation.setPersonParticipations(readFileData(FILE_PATH_PREFIX + "PersonParticipations.json"));
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PATH_PREFIX + "InvestigationCaseAnswers.json"));
         investigation.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
-        investigation.setCaseCntInfo(readFileData(FILE_PATH_PREFIX + "CaseCountInfo.json"));
+        investigation.setInvestigationCaseCnt(readFileData(FILE_PATH_PREFIX + "CaseCountInfo.json"));
         return investigation;
     }
 
