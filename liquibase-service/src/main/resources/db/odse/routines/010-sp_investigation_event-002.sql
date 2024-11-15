@@ -9,23 +9,23 @@ BEGIN
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         (      batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
         VALUES (
-                 @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'NBS_ODSE.sp_investigation_event'
-               , 'START'
-               , 0
-               , LEFT ('Pre ID-' + @phc_id_list, 199)
-               , 0
-               , LEFT (@phc_id_list, 199)
-               );
+            @batch_id
+                , 'Investigation PRE-Processing Event'
+                , 'NBS_ODSE.sp_investigation_event'
+                , 'START'
+                , 0
+                , LEFT ('Pre ID-' + @phc_id_list, 199)
+                , 0
+                , LEFT (@phc_id_list, 199)
+            );
 
         /*Complete Investigation section*/
         SELECT results.public_health_case_uid,
@@ -139,7 +139,7 @@ BEGIN
                results.investigation_case_management,
                results.investigation_notifications,
                results.notification_history,
-               results.case_count_info
+               results.investigation_case_count
                 ,con.investigation_form_cd
         -- ,results.investigation_act_entity
         -- ,results.ldf_public_health_case
@@ -283,7 +283,7 @@ BEGIN
                      nesteddata.investigation_case_management,
                      nesteddata.investigation_notifications,
                      nesteddata.notification_history,
-                     nesteddata.case_count_info
+                     nesteddata.investigation_case_count
               --,nesteddata.ldf_public_health_case
               FROM
                   --public health case
@@ -704,17 +704,17 @@ BEGIN
                                        phcase.group_case_cnt                                           as investigation_count,
                                        round(COALESCE (gcs.group_case_cnt, phcase.group_case_cnt),0)   as case_count,
                                        par2.from_time                                                  as investigator_assigned_datetime
-                                   from nbs_odse.dbo.Public_health_case phcase
+                                   from nbs_odse.dbo.Public_health_case phcase with (nolock)
                                             left outer join (
                                        select
                                            public_health_case_uid, ovn.numeric_value_1 as group_case_cnt
                                        from
-                                           nbs_odse.dbo.Public_health_case phci,
-                                           nbs_odse.dbo.act_relationship as ar2, 	/*OBS Summary_Report_Form to phc */
-                                           nbs_odse.dbo.act_relationship as ar1, 	/*-- OBS sum107 to OBS Summary_Report_Form */
-                                           nbs_odse.dbo.observation as ob1, 		/*--SUM107 */
-                                           nbs_odse.dbo.observation as ob2, 		/* --Summary_Report_Form*/
-                                           nbs_odse.dbo.obs_value_numeric as ovn 	/*--group_case_cnt*/
+                                           nbs_odse.dbo.Public_health_case phci with (nolock),
+                                           nbs_odse.dbo.act_relationship as ar2 with (nolock), 	/*OBS Summary_Report_Form to phc */
+                                           nbs_odse.dbo.act_relationship as ar1 with (nolock), 	/*-- OBS sum107 to OBS Summary_Report_Form */
+                                           nbs_odse.dbo.observation as ob1 with (nolock), 		/*--SUM107 */
+                                           nbs_odse.dbo.observation as ob2 with (nolock), 		/* --Summary_Report_Form*/
+                                           nbs_odse.dbo.obs_value_numeric as ovn with (nolock)	/*--group_case_cnt*/
                                        where
                                            phci.case_type_cd ='S'
                                          and phci.public_health_case_uid = ar2.target_act_uid
@@ -728,15 +728,15 @@ BEGIN
                                          and ar2.type_cd =  'SummaryForm'
                                    ) gcs
                                                             on gcs.public_health_case_uid = phcase.public_health_case_uid
-                                            left outer join nbs_odse.dbo.participation par2
+                                            left outer join nbs_odse.dbo.participation par2 with (nolock)
                                                             on phcase.public_health_case_uid = par2.act_uid
                                                                 and par2.type_cd ='InvestgrOfPHC'
                                                                 and par2.act_class_cd = 'CASE'
                                                                 and par2.subject_class_cd = 'PSN'
                                    where phcase.public_health_case_uid = phc.public_health_case_uid
                                    FOR json path,INCLUDE_NULL_VALUES
-                               ) as case_count_info
-                          ) as case_count_info
+                               ) as investigation_case_count
+                          ) as investigation_case_count
                       /*
                        -- ldf_phc associated with phc
              ,(
@@ -750,7 +750,7 @@ BEGIN
                       ) AS ldf_public_health_case
                       */
 
-                  ) as nestedData
+                          ) as nestedData
               WHERE
                   phc.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list
                       , ','))) AS results
@@ -783,34 +783,34 @@ BEGIN
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         (   batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
         VALUES (
-                 @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'NBS_ODSE.sp_investigation_event'
-               , 'COMPLETE'
-               , 0
-               , LEFT ('Pre ID-' + @phc_id_list, 199)
-               , 0
-               , LEFT (@phc_id_list, 199)
-               );
+            @batch_id
+                , 'Investigation PRE-Processing Event'
+                , 'NBS_ODSE.sp_investigation_event'
+                , 'COMPLETE'
+                , 0
+                , LEFT ('Pre ID-' + @phc_id_list, 199)
+                , 0
+                , LEFT (@phc_id_list, 199)
+            );
 
     END TRY
 
     BEGIN CATCH
 
 
-        IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+    IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
-        (      batch_id
+    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    (      batch_id
         , [Dataflow_Name]
         , [package_Name]
         , [Status_Type]
@@ -818,17 +818,17 @@ BEGIN
         , [step_name]
         , [row_count]
         , [Msg_Description1])
-        VALUES (
-                 @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'NBS_ODSE.sp_investigation_event'
-               , 'ERROR: ' + @ErrorMessage
-               , 0
-               , LEFT ('Pre ID-' + @phc_id_list, 199)
-               , 0
-               , LEFT (@phc_id_list, 199)
-               );
-        return @ErrorMessage;
+    VALUES (
+        @batch_id
+            , 'Investigation PRE-Processing Event'
+            , 'NBS_ODSE.sp_investigation_event'
+            , 'ERROR: ' + @ErrorMessage
+            , 0
+            , LEFT ('Pre ID-' + @phc_id_list, 199)
+            , 0
+            , LEFT (@phc_id_list, 199)
+        );
+    return @ErrorMessage;
 
     END CATCH
 
