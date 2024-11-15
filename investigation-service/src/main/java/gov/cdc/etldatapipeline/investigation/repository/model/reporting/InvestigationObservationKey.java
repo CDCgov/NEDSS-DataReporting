@@ -6,10 +6,8 @@ import lombok.Data;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class InvestigationObservation {
+public class InvestigationObservationKey {
     private Long publicHealthCaseUid;
     private Long observationId;
-    private String rootTypeCd;
     private Long branchId;
-    private String branchTypeCd;
 }

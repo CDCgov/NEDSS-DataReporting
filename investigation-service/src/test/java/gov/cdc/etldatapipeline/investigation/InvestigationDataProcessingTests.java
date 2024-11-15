@@ -113,7 +113,7 @@ class InvestigationDataProcessingTests {
         investigation.setPersonParticipations(invalidJSON);
         investigation.setOrganizationParticipations(invalidJSON);
         investigation.setActIds(invalidJSON);
-        investigation.setObservationNotificationIds(invalidJSON);
+        investigation.setInvestigationObservationIds(invalidJSON);
         investigation.setInvestigationConfirmationMethod(invalidJSON);
         investigation.setInvestigationCaseAnswer(invalidJSON);
         investigation.setCaseCntInfo(invalidJSON);
@@ -125,23 +125,26 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testObservationNotificationIds() throws JsonProcessingException {
+    void testInvestigationObservationIds() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setObservationNotificationIds(readFileData(FILE_PREFIX + "ObservationNotificationIds.json"));
+        investigation.setInvestigationObservationIds(readFileData(FILE_PREFIX + "InvestigationObservationIds.json"));
         transformer.investigationObservationOutputTopicName = OBSERVATION_TOPIC;
 
         InvestigationObservation observation = new InvestigationObservation();
         observation.setPublicHealthCaseUid(investigationUid);
-        observation.setObservationId(263748596L);
+        observation.setObservationId(10344738L);
+        observation.setRootTypeCd("LabReport");
+        observation.setBranchId(10344740L);
+        observation.setBranchTypeCd("COMP");
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(8)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
         var actualObservation = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), InvestigationObservation.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InvestigationObservation.class);
 
         assertEquals(observation, actualObservation);
     }

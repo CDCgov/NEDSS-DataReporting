@@ -113,4 +113,5 @@ public class InvestigationReporting {
     private Long investigationCount;
     private Long caseCount;
     private String investigatorAssignedDatetime;
+    private String investigationFormCd;
 }

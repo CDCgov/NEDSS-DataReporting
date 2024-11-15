@@ -298,8 +298,8 @@ public class Investigation {
     @Column(name = "act_ids")
     private String actIds;
 
-    @Column(name = "observation_notification_ids")
-    private String observationNotificationIds;
+    @Column(name = "investigation_observation_ids")
+    private String investigationObservationIds;
 
     @Column(name = "person_participations")
     private String personParticipations;
@@ -318,4 +318,7 @@ public class Investigation {
 
     @Column(name = "case_count_info")
     private String caseCntInfo;
+
+    @Column(name = "investigation_form_cd")
+    private String investigationFormCd;
 }

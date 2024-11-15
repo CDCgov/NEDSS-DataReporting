@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface InvestigationRepository extends JpaRepository<Investigation, String> {
 
-    @Query(nativeQuery = true, value = "execute sp_investigation_event :investigation_uids")
+    @Query(nativeQuery = true, value = "execute sp_investigation_event_cnde1863 :investigation_uids")
     Optional<Investigation> computeInvestigations(@Param("investigation_uids") String investigationUids);
 
     @Query(nativeQuery = true, value = "exec sp_public_health_case_fact_datamart_event :investigation_uids")
