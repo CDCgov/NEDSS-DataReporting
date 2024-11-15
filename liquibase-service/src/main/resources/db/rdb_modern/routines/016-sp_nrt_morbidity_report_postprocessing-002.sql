@@ -50,7 +50,7 @@ BEGIN
             *
         INTO #nrt_morbidity_observation
         FROM
-            nrt_observation WITH (NOLOCK)
+            dbo.nrt_observation WITH (NOLOCK)
         WHERE
             observation_uid IN (SELECT value FROM STRING_SPLIT(@pMorbidityIdList, ','));
 
@@ -174,7 +174,7 @@ BEGIN
                   obs.PROCESSING_DECISION_CD ,
                   substring(cvg.Code_short_desc_txt,1,25)
         FROM #nrt_morbidity_observation AS updated_lab
-                 INNER JOIN nrt_observation obs ON updated_lab.observation_uid = obs.observation_uid
+                 INNER JOIN dbo.nrt_observation obs ON updated_lab.observation_uid = obs.observation_uid
                  LEFT OUTER JOIN NBS_SRTE.dbo.Code_value_general cvg ON cvg.code_set_nm = 'STD_NBS_PROCESSING_DECISION_ALL'
             AND cvg.code = obs.PROCESSING_DECISION_CD
         WHERE obs.obs_domain_cd_st_1 = 'Order'
@@ -273,10 +273,10 @@ BEGIN
             DROP TABLE #tmp_MorbFrmQCoded ;
 
         SELECT 	oq.*,
-                ob.ovc_code AS [code]
+                  ob.ovc_code AS [code]
         INTO #tmp_MorbFrmQCoded
         FROM #tmp_MorbFrmQ					AS oq
-                 INNER JOIN nrt_observation_coded AS ob
+                 INNER JOIN dbo.nrt_observation_coded AS ob
                             ON oq.observation_uid = ob.observation_uid;
 
         if @pDebug = 'true' SELECT 'DEBUG: tmp_MorbFrmQCoded', * FROM #tmp_MorbFrmQCoded;
@@ -301,7 +301,7 @@ BEGIN
                   ob.ovd_FROM_date AS [FROM_time]
         INTO #tmp_MorbFrmQDate
         FROM	#tmp_MorbFrmQ					AS oq
-                    INNER JOIN  nrt_observation_date AS ob ON
+                    INNER JOIN  dbo.nrt_observation_date AS ob ON
             oq.observation_uid = ob.observation_uid;
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -324,7 +324,7 @@ BEGIN
                   REPLACE(REPLACE(ob.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')	as VALUE_TXT
         INTO #tmp_MorbFrmQTxt
         FROM #tmp_MorbFrmQ					AS oq
-                 INNER JOIN  nrt_observation_txt AS ob ON oq.observation_uid = ob.observation_uid;
+                 INNER JOIN  dbo.nrt_observation_txt AS ob ON oq.observation_uid = ob.observation_uid;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -871,31 +871,34 @@ BEGIN
         INTO '+@tmp_MORBIDITY_REPORT_Event_Final+'
         FROM '+@tmp_Morbidity_Report+' rpt
                  inner join #morb_obs_reference n ON rpt.morb_rpt_uid = n.observation_uid
-                 left join d_patient AS pat ON n.patient_id = pat.patient_uid
-                 left join condition AS con ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
-     left join d_Organization AS org1 ON org1.Organization_uid = n.health_care_id
+                 left join dbo.d_patient AS pat ON n.patient_id = pat.patient_uid
+                 left join dbo.condition AS con ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
+     			 left join dbo.d_Organization AS org1 ON org1.Organization_uid = n.health_care_id
             /*HSPTL_DISCHARGE_DT_KEY*/
-                 left join rdb_date	as dt3	on rpt.temp_hsptl_discharge_dt_key = dt3.date_mm_dd_yyyy
+                 left join dbo.rdb_date	as dt3	on rpt.temp_hsptl_discharge_dt_key = dt3.date_mm_dd_yyyy
             /*	HSPTL_KEY*/
-                 left join d_Organization AS org2 ON n.morb_hosp_id = org2.Organization_uid
+                 left join dbo.d_Organization AS org2 ON n.morb_hosp_id = org2.Organization_uid
             /*ILLNESS_ONSET_DT_KEY*/
-                 left join rdb_date	as dt4 ON rpt.temp_illness_onset_dt_key = dt4.date_mm_dd_yyyy
+                 left join dbo.rdb_date	as dt4 ON rpt.temp_illness_onset_dt_key = dt4.date_mm_dd_yyyy
             /* INVESTIGATION_KEY  */
-                 left join dbo.nrt_investigation_observation AS ninv ON rpt.morb_rpt_uid = ninv.observation_id
-                 left join Investigation inv ON ninv.public_health_case_uid = inv.case_uid
+                 left join (select distinct public_health_case_uid, observation_id
+                 			from
+                 			dbo.nrt_investigation_observation with (nolock)
+                 			) ninv ON rpt.morb_rpt_uid = ninv.observation_id
+                 left join dbo.Investigation inv ON ninv.public_health_case_uid = inv.case_uid
             /*MORB_RPT_CREATE_DT_KEY*/
-                 left join rdb_date AS dt5 ON CAST(CONVERT(VARCHAR,rpt.morb_RPT_Created_DT,102) AS DATETIME)  = dt5.DATE_MM_DD_YYYY
+                 left join dbo.rdb_date AS dt5 ON CAST(CONVERT(VARCHAR,rpt.morb_RPT_Created_DT,102) AS DATETIME)  = dt5.DATE_MM_DD_YYYY
             /*MORB_RPT_DT_KEY*/
-                 left join rdb_date	as dt6 ON rpt.morb_report_date = dt6.DATE_MM_DD_YYYY
+                 left join dbo.rdb_date	as dt6 ON rpt.morb_report_date = dt6.DATE_MM_DD_YYYY
             /*MORB_RPT_SRC_ORG_KEY */
-                 left join d_Organization AS org3 ON n.morb_hosp_reporter_id = org3.Organization_uid
+                 left join dbo.d_Organization AS org3 ON n.morb_hosp_reporter_id = org3.Organization_uid
             /*PHYSICIAN_KEY*/
-                 left join d_provider AS phy ON n.morb_physician_id = phy.provider_uid
+                 left join dbo.d_provider AS phy ON n.morb_physician_id = phy.provider_uid
             /*	REPORTER_KEY           */
             --morb_reporter_id
-                 left join d_provider AS per1 ON n.morb_reporter_id = per1.provider_uid
+                 left join dbo.d_provider AS per1 ON n.morb_reporter_id = per1.provider_uid
             /*Ldf group key*/
-                 left join ldf_group AS ldf_g ON rpt.morb_rpt_uid = ldf_g.business_object_uid;'
+                 left join dbo.ldf_group AS ldf_g ON rpt.morb_rpt_uid = ldf_g.business_object_uid;'
 
         IF @pDebug = 'true' print @sql;
         EXEC sp_executesql @sql;
@@ -916,7 +919,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'Update Morbidity_Report';
 
         SET @sql= N'
-        UPDATE MORBIDITY_REPORT
+        UPDATE dbo.MORBIDITY_REPORT
         SET
             [MORB_RPT_KEY]	 = 	tmp.[MORB_RPT_KEY], --Not Null
 			[MORB_RPT_LOCAL_ID]	 = 	substring(tmp.MORB_RPT_LOCAL_ID ,1,50),
@@ -948,7 +951,7 @@ BEGIN
 			[PROCESSING_DECISION_CD]	 = 	substring(tmp.PROCESSING_DECISION_CD ,1,50),
 			[PROCESSING_DECISION_DESC]	 = 	substring(tmp.PROCESSING_DECISION_DESC ,1,50)
         FROM '+@tmp_Morbidity_Report+' tmp
-      	 INNER JOIN MORBIDITY_REPORT m ON m.morb_rpt_uid = tmp.morb_rpt_uid;'
+      	 INNER JOIN dbo.MORBIDITY_REPORT m ON m.morb_rpt_uid = tmp.morb_rpt_uid;'
 
         IF @pDebug = 'true' print @sql;
         EXEC sp_executesql @sql;
@@ -968,7 +971,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'Inserting into dbo.Morbidity_Report';
 
         SET @sql= N'
-        INSERT INTO MORBIDITY_REPORT
+        INSERT INTO dbo.MORBIDITY_REPORT
         ([MORB_RPT_KEY]
         ,[MORB_RPT_UID]
         ,[MORB_RPT_LOCAL_ID]
@@ -1030,7 +1033,7 @@ BEGIN
              , substring(tmp.PROCESSING_DECISION_CD ,1,50)
              , substring(tmp.PROCESSING_DECISION_DESC ,1,50)
         FROM '+@tmp_Morbidity_Report+' tmp
-      	 LEFT JOIN MORBIDITY_REPORT m ON m.morb_rpt_uid = tmp.morb_rpt_uid
+      	 LEFT JOIN dbo.MORBIDITY_REPORT m ON m.morb_rpt_uid = tmp.morb_rpt_uid
         WHERE m.morb_rpt_uid is null;'
 
         IF @pDebug = 'true' print @sql;
@@ -1073,7 +1076,7 @@ BEGIN
 			[record_status_cd] = SUBSTRING(tmp.RECORD_STATUS_CD ,1,8)
 		FROM
 			'+@tmp_MORBIDITY_REPORT_Event_Final+' tmp
-       	INNER JOIN MORBIDITY_REPORT_EVENT mre ON mre.morb_rpt_key = tmp.morb_rpt_key;'
+       	INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre ON mre.morb_rpt_key = tmp.morb_rpt_key;'
 
         IF @pDebug = 'true' print @sql;
         EXEC sp_executesql @sql;
@@ -1131,7 +1134,7 @@ BEGIN
              ,tmp.[Nursing_Home_Key] --Not Null
              ,substring(tmp.RECORD_STATUS_CD ,1,8) --Not Null
         FROM '+@tmp_MORBIDITY_REPORT_Event_Final+' tmp
-       	LEFT JOIN MORBIDITY_REPORT_EVENT mre ON mre.morb_rpt_key = tmp.morb_rpt_key
+       	LEFT JOIN dbo.MORBIDITY_REPORT_EVENT mre ON mre.morb_rpt_key = tmp.morb_rpt_key
         WHERE mre.morb_rpt_key IS NULL;'
 
         IF @pDebug = 'true' print @sql;
@@ -1154,7 +1157,7 @@ BEGIN
 
 
         SET @sql= N'
-        UPDATE morb_Rpt_User_Comment
+        UPDATE dbo.morb_Rpt_User_Comment
         SET
         [MORB_RPT_UID]	 =	tmp.MORB_RPT_UID,
 		[USER_COMMENT_KEY]	 =	tmp.USER_COMMENT_KEY,
@@ -1165,7 +1168,7 @@ BEGIN
 		[RECORD_STATUS_CD]	 =	substring(tmp.RECORD_STATUS_CD, 1, 8),
 		[RDB_LAST_REFRESH_TIME]	 =	getdate()
         FROM '+@tmp_morb_Rpt_User_Comment+' tmp
-      	 INNER JOIN morb_Rpt_User_Comment c ON c.MORB_RPT_UID = tmp.MORB_RPT_UID
+      	 INNER JOIN dbo.morb_Rpt_User_Comment c ON c.MORB_RPT_UID = tmp.MORB_RPT_UID
 			AND c.USER_COMMENT_KEY = tmp.USER_COMMENT_KEY ;'
 
         IF @pDebug = 'true' print @sql;
@@ -1187,7 +1190,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'Insert into morb_Rpt_User_Comment';
 
         SET @sql = N'
-        INSERT INTO morb_Rpt_User_Comment
+        INSERT INTO dbo.morb_Rpt_User_Comment
         (
           [MORB_RPT_UID]
         ,[USER_COMMENT_KEY]
@@ -1207,7 +1210,7 @@ BEGIN
              ,substring(tmp.RECORD_STATUS_CD ,1,8)
              ,getdate() AS [RDB_LAST_REFRESH_TIME]
         FROM '+@tmp_morb_Rpt_User_Comment+' tmp
-      	 LEFT JOIN morb_Rpt_User_Comment c ON c.MORB_RPT_UID = tmp.MORB_RPT_UID
+      	 LEFT JOIN dbo.morb_Rpt_User_Comment c ON c.MORB_RPT_UID = tmp.MORB_RPT_UID
         WHERE c.MORB_RPT_UID is null;'
 
         IF @pDebug = 'true' print @sql;

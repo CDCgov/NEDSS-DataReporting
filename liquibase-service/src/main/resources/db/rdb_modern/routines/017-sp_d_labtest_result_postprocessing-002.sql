@@ -31,7 +31,6 @@ BEGIN
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
-
         BEGIN TRANSACTION;
 
 
@@ -63,7 +62,7 @@ BEGIN
                lab_test_type, -- for TMP_Result_And_R_Result
                elr_ind -- for TMP_Result_And_R_Result
         INTO #TMP_D_LAB_TEST_N
-        FROM LAB_TEST with (nolock)
+        FROM dbo.LAB_TEST with (nolock)
         WHERE lab_test_uid IN (SELECT value FROM string_split(@pLabResultList, ','))
 
 
@@ -86,10 +85,10 @@ BEGIN
         INTO #TMP_lab_test_resultInit
         FROM  #TMP_D_LAB_TEST_N AS tst
                   /* Morb report */
-                  LEFT JOIN nrt_observation no2 with (nolock) ON tst.lab_test_uid = no2.observation_uid
-                  LEFT JOIN Morbidity_Report as morb with (nolock)
+                  LEFT JOIN dbo.nrt_observation no2 with (nolock) ON tst.lab_test_uid = no2.observation_uid
+                  LEFT JOIN dbo.Morbidity_Report as morb with (nolock)
                             ON no2.report_observation_uid = morb.morb_rpt_uid
-                  LEFT JOIN Morbidity_report_event morb_event with (nolock) on
+                  LEFT JOIN dbo.Morbidity_report_event morb_event with (nolock) on
             morb_event.morb_rpt_key= morb.morb_rpt_key;
 
         IF @pDebug = 'true' SELECT 'DEBUG: TMP_lab_test_resultInit',* FROM #TMP_lab_test_resultInit;
@@ -146,22 +145,22 @@ BEGIN
                  LEFT JOIN dbo.nrt_observation AS no2 with (nolock) ON tst.lab_test_uid = no2.observation_uid
                  LEFT JOIN dbo.nrt_observation AS no3 with (nolock) ON tst.Root_Ordered_Test_Pntr = no3.observation_uid
             /*get specimen collector: Associated to Root Order*/
-                 LEFT JOIN d_provider AS per4 with (nolock)
+                 LEFT JOIN dbo.d_provider AS per4 with (nolock)
                            ON no3.specimen_collector_id = per4.provider_uid
             /*get copy_to_provider key: Associated to Root Order*/
-                 LEFT JOIN d_provider AS per5 with (nolock)
+                 LEFT JOIN dbo.d_provider AS per5 with (nolock)
                            ON no3.specimen_collector_id = per5.provider_uid
             /*get lab_test_technician: Associated to Root Order*/
-                 LEFT JOIN d_provider AS per6 with (nolock)
+                 LEFT JOIN dbo.d_provider AS per6 with (nolock)
                            ON no3.lab_test_technician_id = per6.provider_uid
             /* Ordering Provider */
-                 LEFT JOIN	d_provider 	AS prv with (nolock)
+                 LEFT JOIN	dbo.d_provider 	AS prv with (nolock)
                               ON no2.ordering_person_id = prv.provider_uid
             /* Reporting_Lab*/
-                 LEFT JOIN d_Organization	AS org with (nolock)
+                 LEFT JOIN dbo.d_Organization	AS org with (nolock)
                            ON no2.author_organization_id = org.Organization_uid
             /* Ordering Facility */
-                 LEFT JOIN d_Organization	AS org2 with (nolock)
+                 LEFT JOIN dbo.d_Organization	AS org2 with (nolock)
                            ON no2.ordering_organization_id = org2.Organization_uid
 
             /* Condition it's just program area */
@@ -171,18 +170,22 @@ BEGIN
             principle for adding a prog_area_cd row to the condition, it sure will cause
             some confusion among users.  There's no "disease" ON the input.
             */
-                 LEFT JOIN	Condition	AS con with (nolock)
-                              ON	no2.prog_area_cd  = con.program_area_cd
-                                  AND con.condition_cd IS NULL
+                 LEFT JOIN dbo.Condition	AS con with (nolock)
+                           ON	no2.prog_area_cd  = con.program_area_cd
+                               AND con.condition_cd IS NULL
             /*LDF_GRP_KEY*/
             --LEFT JOIN ldf_group AS ldf_g 	ON tst.Lab_test_UID = ldf_g.business_object_uid --VS
-                 LEFT JOIN ldf_group AS ldf_g  with (nolock)	ON tst.Lab_test_UID = ldf_g.ldf_group_key
+                 LEFT JOIN dbo.ldf_group AS ldf_g  with (nolock)	ON tst.Lab_test_UID = ldf_g.ldf_group_key
 
             /* Lab_Rpt_Dt */ --VS	LEFT JOIN rdb_datetable 		as dat
-                 LEFT JOIN rdb_date AS dat  with (nolock)	ON  DATEADD(d,0,DATEDIFF(d,0,[lab_rpt_created_dt])) = dat.DATE_MM_DD_YYYY
+                 LEFT JOIN dbo.rdb_date AS dat  with (nolock)	ON  DATEADD(d,0,DATEDIFF(d,0,[lab_rpt_created_dt])) = dat.DATE_MM_DD_YYYY
             /* PHC: Using NRT nrt_investigation_observation which captures observation-investigation mapping  */
-                 LEFT JOIN nrt_investigation_observation ninv with (nolock) ON ninv.observation_id = tst.lab_test_uid
-                 LEFT JOIN investigation AS inv with (nolock) ON ninv.public_health_case_uid = inv.case_uid;
+                 LEFT JOIN
+             ( select distinct public_health_case_uid, observation_id
+               from
+                   dbo.nrt_investigation_observation with (nolock)
+             ) ninv ON ninv.observation_id = tst.lab_test_uid
+                 LEFT JOIN dbo.investigation AS inv with (nolock) ON ninv.public_health_case_uid = inv.case_uid;
 
 
         IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Test_Result1',* FROM #TMP_Lab_Test_Result1;
@@ -241,7 +244,7 @@ BEGIN
         INTO #TMP_Lab_Result_Comment
         FROM
             #TMP_Result_And_R_Result		AS lab104
-                INNER JOIN nrt_observation_txt AS ovt with (nolock) ON ovt.observation_uid =  lab104.lab_test_uid
+                INNER JOIN dbo.nrt_observation_txt AS ovt with (nolock) ON ovt.observation_uid =  lab104.lab_test_uid
         WHERE 	ovt.ovt_value_txt IS NOT NULL
           AND ovt.ovt_txt_type_cd = 'N'
           AND ovt.ovt_seq <>  0;
@@ -549,16 +552,16 @@ BEGIN
             NULL, --Test_Result_Val_Key
             NULL --lab_result_txt_val1
         FROM #TMP_Result_And_R_Result		as rslt
-                 LEFT JOIN nrt_observation_txt	as otxt  with (nolock)	ON rslt.lab_test_uid = otxt.observation_uid
+                 LEFT JOIN dbo.nrt_observation_txt	as otxt  with (nolock)	ON rslt.lab_test_uid = otxt.observation_uid
             AND ((otxt.ovt_txt_type_cd IS NULL) OR (rslt.ELR_IND = 'Y' AND otxt.ovt_txt_type_cd <>  'N'))
             --AND otxt.OBS_VALUE_TXT_SEQ =1
             /*
             Commented out because an ELR Test Result can have zero to many text result values
             AND otxt.OBS_VALUE_TXT_SEQ =1
             */
-                 LEFT JOIN nrt_observation_numeric	as onum  with (nolock)	ON rslt.lab_test_uid = onum.observation_uid
-                 LEFT JOIN nrt_observation_coded		as code	 with (nolock)	ON rslt.lab_test_uid = code.observation_uid
-                 LEFT JOIN nrt_observation_date		as ndate  with (nolock)	ON rslt.lab_test_uid = ndate.observation_uid
+                 LEFT JOIN dbo.nrt_observation_numeric	as onum  with (nolock)	ON rslt.lab_test_uid = onum.observation_uid
+                 LEFT JOIN dbo.nrt_observation_coded		as code	 with (nolock)	ON rslt.lab_test_uid = code.observation_uid
+                 LEFT JOIN dbo.nrt_observation_date		as ndate  with (nolock)	ON rslt.lab_test_uid = ndate.observation_uid
 
         --LEFT JOIN (SELECT *, ROW_NUMBER() OVER (PARTITION BY observation_uid ORDER BY refresh_datetime DESC) AS cr
         --	FROM nrt_observation_coded with (nolock)) code on rslt.lab_test_uid = code.observation_uid and code.cr=1;
@@ -715,7 +718,7 @@ BEGIN
 
         UPDATE #TMP_Lab_Result_Val
         SET Result_Units  = NULL
-        WHERE rtrim(Result_Units  ) = '';
+    WHERE rtrim(Result_Units  ) = '';
 
 
         UPDATE #TMP_Lab_Result_Val
@@ -846,8 +849,8 @@ BEGIN
         INTO #TMP_Lab_Test_Result3
         FROM 	#TMP_Lab_Test_Result2 AS tst
                     /*Get patient id for root observation ids*/
-                    LEFT JOIN nrt_observation no2 with (nolock) ON no2.observation_uid = tst.root_ordered_test_pntr
-                    LEFT JOIN d_patient AS psn with (nolock)
+                    LEFT JOIN dbo.nrt_observation no2 with (nolock) ON no2.observation_uid = tst.root_ordered_test_pntr
+                    LEFT JOIN dbo.d_patient AS psn with (nolock)
                               ON no2.patient_id = psn.patient_uid
                                   AND psn.patient_key <> 1;
 
@@ -881,8 +884,8 @@ BEGIN
                         COALESCE(org.Organization_key,1) AS Performing_lab_key
         INTO    #TMP_Lab_Test_Result
         FROM 	#TMP_Lab_Test_Result3 AS tst
-                    LEFT JOIN nrt_observation AS no2 with (nolock) ON no2.observation_uid= tst.lab_test_uid
-                    LEFT JOIN d_Organization  AS org with (nolock)
+                    LEFT JOIN dbo.nrt_observation AS no2 with (nolock) ON no2.observation_uid= tst.lab_test_uid
+                    LEFT JOIN dbo.d_Organization  AS org with (nolock)
                               ON no2.performing_organization_id = org.Organization_uid
                                   AND org.Organization_key <> 1;
 
@@ -926,7 +929,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'UPDATE LAB_RESULT_VAL ';
 
 
-        UPDATE LAB_RESULT_VAL
+        UPDATE dbo.LAB_RESULT_VAL
         SET
             [NUMERIC_RESULT]	 = 	SUBSTRING(tmp.NUMERIC_RESULT ,1,50),
             [RESULT_UNITS]	 = 	 SUBSTRING(tmp.RESULT_UNITS ,1,50)	,
@@ -948,7 +951,7 @@ BEGIN
             [LAB_TEST_UID]	 = 	tmp.LAB_TEST_UID,
             [RDB_LAST_REFRESH_TIME]	 = 	GETDATE()
         FROM #TMP_LAB_RESULT_VAL_FINAL tmp
-                 INNER JOIN LAB_RESULT_VAL val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 INNER JOIN dbo.LAB_RESULT_VAL val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
             AND val.TEST_RESULT_GRP_KEY = tmp.TEST_RESULT_GRP_KEY
             AND val.TEST_RESULT_VAL_KEY = val.TEST_RESULT_VAL_KEY;
 
@@ -969,13 +972,13 @@ BEGIN
         SET @PROC_STEP_NAME = 'UPDATE TEST_RESULT_GROUPING';
 
         --No downstream update of RDB_LAST_REFRESH_TIME.
-        UPDATE TEST_RESULT_GROUPING
+        UPDATE dbo.TEST_RESULT_GROUPING
         SET
             [TEST_RESULT_GRP_KEY] = tmp.TEST_RESULT_GRP_KEY,
             [LAB_TEST_UID] = tmp.LAB_TEST_UID,
             [RDB_LAST_REFRESH_TIME] = CAST( NULL AS datetime)
         FROM #TMP_TEST_RESULT_GROUPING tmp
-                 INNER JOIN TEST_RESULT_GROUPING g with (nolock) ON g.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 INNER JOIN dbo.TEST_RESULT_GROUPING g with (nolock) ON g.LAB_TEST_UID = tmp.LAB_TEST_UID
             AND g.TEST_RESULT_GRP_KEY = tmp.TEST_RESULT_GRP_KEY;
 
 
@@ -999,7 +1002,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'GENERATING TEST_RESULT_GROUPING ';
 
         --No downstream update of RDB_LAST_REFRESH_TIME.
-        INSERT INTO TEST_RESULT_GROUPING
+        INSERT INTO dbo.TEST_RESULT_GROUPING
         ([TEST_RESULT_GRP_KEY]
         ,[LAB_TEST_UID]
         ,[RDB_LAST_REFRESH_TIME])
@@ -1007,7 +1010,7 @@ BEGIN
                 ,tmp.[LAB_TEST_UID],
                CAST( NULL AS datetime) AS [RDB_LAST_REFRESH_TIME]
         FROM #TMP_TEST_RESULT_GROUPING tmp
-                 LEFT JOIN TEST_RESULT_GROUPING g with (nolock) ON g.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 LEFT JOIN dbo.TEST_RESULT_GROUPING g with (nolock) ON g.LAB_TEST_UID = tmp.LAB_TEST_UID
         WHERE g.LAB_TEST_UID IS NULL AND g.TEST_RESULT_GRP_KEY IS NULL;
 
 
@@ -1028,7 +1031,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'INSERTING INTO LAB_RESULT_VAL ';
 
 
-        INSERT INTO LAB_RESULT_VAL
+        INSERT INTO dbo.LAB_RESULT_VAL
         ([TEST_RESULT_GRP_KEY]
         ,[NUMERIC_RESULT]
         ,[RESULT_UNITS]
@@ -1071,7 +1074,7 @@ BEGIN
              ,tmp.LAB_TEST_UID
              , GETDATE()
         FROM #TMP_LAB_RESULT_VAL_FINAL tmp
-                 LEFT JOIN LAB_RESULT_VAL val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 LEFT JOIN dbo.LAB_RESULT_VAL val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
         WHERE val.LAB_TEST_UID IS NULL and val.TEST_RESULT_VAL_KEY IS NULL;
 
 
@@ -1091,13 +1094,13 @@ BEGIN
         SET @PROC_STEP_NAME = 'UPDATE RESULT_COMMENT_GROUP ';
 
 
-        UPDATE [RESULT_COMMENT_GROUP]
+        UPDATE dbo.RESULT_COMMENT_GROUP
         SET
             [RESULT_COMMENT_GRP_KEY] = tmp.RESULT_COMMENT_GRP_KEY,
             [LAB_TEST_UID] = tmp.LAB_TEST_UID,
             [RDB_LAST_REFRESH_TIME] = GETDATE()
         FROM #TMP_RESULT_COMMENT_GROUP tmp
-                 INNER JOIN RESULT_COMMENT_GROUP val ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 INNER JOIN dbo.RESULT_COMMENT_GROUP val ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
             AND val.RESULT_COMMENT_GRP_KEY = tmp.RESULT_COMMENT_GRP_KEY;
 
 
@@ -1122,7 +1125,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'INSERTING INTO RESULT_COMMENT_GROUP ';
 
 
-        INSERT INTO  [RESULT_COMMENT_GROUP]
+        INSERT INTO  dbo.RESULT_COMMENT_GROUP
         ([RESULT_COMMENT_GRP_KEY]
         ,[LAB_TEST_UID]
         ,[RDB_LAST_REFRESH_TIME]
@@ -1131,7 +1134,7 @@ BEGIN
              , tmp.[LAB_TEST_UID]
              , GETDATE()
         FROM #TMP_RESULT_COMMENT_GROUP tmp
-                 LEFT JOIN RESULT_COMMENT_GROUP val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 LEFT JOIN dbo.RESULT_COMMENT_GROUP val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
         WHERE val.LAB_TEST_UID IS NULL and val.RESULT_COMMENT_GRP_KEY IS NULL;
 
 
@@ -1188,14 +1191,14 @@ BEGIN
         SET @PROC_STEP_NAME = 'UPDATE Lab_Result_Comment ';
 
 
-        UPDATE Lab_Result_Comment
+        UPDATE dbo.Lab_Result_Comment
         SET
             [LAB_RESULT_COMMENTS] = SUBSTRING(tmp.LAB_RESULT_COMMENTS ,1,2000),
             [RESULT_COMMENT_GRP_KEY] = tmp.RESULT_COMMENT_GRP_KEY,
             [RECORD_STATUS_CD] = SUBSTRING(tmp.RECORD_STATUS_CD ,1,8),
             [RDB_LAST_REFRESH_TIME] = tmp.[RDB_LAST_REFRESH_TIME]
         FROM #TMP_New_Lab_Result_Comment_FINAL tmp
-                 INNER JOIN Lab_Result_Comment val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 INNER JOIN dbo.Lab_Result_Comment val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
             AND val.LAB_RESULT_COMMENT_KEY = tmp.LAB_RESULT_COMMENT_KEY;
 
 
@@ -1216,7 +1219,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'INSERTING INTO Lab_Result_Comment ';
 
 
-        INSERT INTO Lab_Result_Comment
+        INSERT INTO dbo.Lab_Result_Comment
         ([LAB_TEST_UID]
         ,[LAB_RESULT_COMMENT_KEY]
         ,[LAB_RESULT_COMMENTS]
@@ -1231,7 +1234,7 @@ BEGIN
              , SUBSTRING(tmp.RECORD_STATUS_CD ,1,8)
              , tmp.[RDB_LAST_REFRESH_TIME]
         FROM #TMP_New_Lab_Result_Comment_FINAL tmp
-                 LEFT JOIN Lab_Result_Comment val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 LEFT JOIN dbo.Lab_Result_Comment val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
         WHERE val.LAB_TEST_UID IS NULL AND val.LAB_RESULT_COMMENT_KEY IS NULL;
 
 
@@ -1263,7 +1266,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'UPDATE LAB_TEST_RESULT';
 
-        UPDATE LAB_TEST_RESULT
+        UPDATE dbo.LAB_TEST_RESULT
         SET
             [LAB_TEST_KEY]	 =	tmp.[LAB_TEST_KEY],
             [LAB_TEST_UID]	 =	tmp.[LAB_TEST_UID],
@@ -1285,7 +1288,7 @@ BEGIN
             [RECORD_STATUS_CD]	 =	SUBSTRING(tmp.RECORD_STATUS_CD ,1,8),
             [RDB_LAST_REFRESH_TIME]	 =	GETDATE()
         FROM #TMP_LAB_TEST_RESULT tmp
-                 INNER JOIN LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
             AND val.RESULT_COMMENT_GRP_KEY = tmp.RESULT_COMMENT_GRP_KEY
             AND val.TEST_RESULT_GRP_KEY = tmp.TEST_RESULT_GRP_KEY;
 
@@ -1309,7 +1312,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'INSERTING INTO LAB_TEST_RESULT';
 
-        INSERT INTO LAB_TEST_RESULT
+        INSERT INTO dbo.LAB_TEST_RESULT
         ([LAB_TEST_KEY]
         ,[LAB_TEST_UID]
         ,[RESULT_COMMENT_GRP_KEY]
@@ -1350,7 +1353,7 @@ BEGIN
              , SUBSTRING(tmp.RECORD_STATUS_CD ,1,8)
              , GETDATE() AS [RDB_LAST_REFRESH_TIME]
         FROM #TMP_LAB_TEST_RESULT tmp
-                 LEFT JOIN LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                 LEFT JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
             AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY
         WHERE val.LAB_TEST_UID IS NULL AND val.LAB_TEST_KEY IS NULL;
 

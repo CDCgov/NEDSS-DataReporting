@@ -1105,9 +1105,9 @@ BEGIN
              ,MIN(notif.rpt_sent_time) AS FIRSTNOTIFICATIONSENDDATE
         INTO #TMP_Notif
         FROM #TMP_Investigation AS I WITH(NOLOCK)
-                 LEFT JOIN NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
-                 LEFT JOIN nrt_notification_key NK WITH(NOLOCK)	ON NE.NOTIFICATION_KEY = NK.d_notification_key
-                 LEFT JOIN nrt_investigation_notification notif WITH(NOLOCK) ON notif.notification_uid= NK.notification_uid
+                 LEFT JOIN dbo.NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
+                 LEFT JOIN dbo.nrt_notification_key NK WITH(NOLOCK)	ON NE.NOTIFICATION_KEY = NK.d_notification_key
+                 LEFT JOIN dbo.nrt_investigation_notification notif WITH(NOLOCK) ON notif.notification_uid= NK.notification_uid
         WHERE notif.NOTIF_STATUS = 'COMPLETED' and notif.RPT_SENT_TIME IS NOT NULL
         GROUP BY I.INVESTIGATION_KEY
         ORDER BY I.INVESTIGATION_KEY;
@@ -1135,13 +1135,16 @@ BEGIN
              ,cast( null as varchar(200)) as EVENT_DATE_TYPE
         INTO #TMP_Event
         FROM #TMP_Investigation AS I WITH(NOLOCK)
-                 LEFT JOIN CONFIRMATION_METHOD_GROUP CMG WITH(NOLOCK) ON CMG.INVESTIGATION_KEY = I.INVESTIGATION_KEY
-                 LEFT JOIN NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
-                 LEFT JOIN nrt_investigation_observation NIO WITH(NOLOCK) ON nio.public_health_case_uid = i.case_uid
-                 LEFT JOIN nrt_observation no2 WITH(NOLOCK) ON nio.observation_id = no2.observation_uid
-                 LEFT JOIN nrt_notification_key nk WITH(NOLOCK)ON NE.notification_key = nk.d_notification_key
-                 LEFT JOIN nrt_investigation_notification notif WITH(NOLOCK) ON notif.notification_uid= NK.notification_uid
-                 LEFT JOIN nrt_investigation n_inv WITH(NOLOCK) ON n_inv.public_health_case_uid= I.CASE_UID
+                 LEFT JOIN dbo.CONFIRMATION_METHOD_GROUP CMG WITH(NOLOCK) ON CMG.INVESTIGATION_KEY = I.INVESTIGATION_KEY
+                 LEFT JOIN dbo.NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
+                 LEFT JOIN
+             (SELECT DISTINCT public_health_case_uid, observation_id
+              FROM dbo.nrt_investigation_observation with (nolock)
+             ) NIO ON nio.public_health_case_uid = i.case_uid
+                 LEFT JOIN dbo.nrt_observation no2 WITH(NOLOCK) ON nio.observation_id = no2.observation_uid
+                 LEFT JOIN dbo.nrt_notification_key nk WITH(NOLOCK)ON NE.notification_key = nk.d_notification_key
+                 LEFT JOIN dbo.nrt_investigation_notification notif WITH(NOLOCK) ON notif.notification_uid= NK.notification_uid
+                 LEFT JOIN dbo.nrt_investigation n_inv WITH(NOLOCK) ON n_inv.public_health_case_uid= I.CASE_UID
         GROUP BY I.INVESTIGATION_KEY;
 
 
