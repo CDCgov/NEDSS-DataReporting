@@ -125,6 +125,7 @@ public class InvestigationService {
                         // only process and send notifications when investigation data has been sent
                         .whenComplete((res, ex) ->
                                 logger.info("Investigation data (uid={}) sent to {}", phcUid, investigationTopicReporting))
+                        .thenRunAsync(() -> processDataUtil.processInvestigationCaseManagement(investigation.getInvestigationCaseManagement()))
                         .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications()))
                         .join();
             } else {

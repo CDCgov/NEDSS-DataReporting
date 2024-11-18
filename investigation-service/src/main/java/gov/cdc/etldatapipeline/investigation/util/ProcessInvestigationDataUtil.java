@@ -40,6 +40,9 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-page-case-answer}")
     public String pageCaseAnswerOutputTopicName;
 
+    @Value("${spring.kafka.output.topic-name-case-management}")
+    public String investigationCaseManagementTopicName;
+
     private final KafkaTemplate<String, String> kafkaTemplate;
     InvestigationKey investigationKey = new InvestigationKey();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
@@ -62,6 +65,31 @@ public class ProcessInvestigationDataUtil {
         processInvestigationPageCaseAnswer(investigation.getInvestigationCaseAnswer(), investigationTransformed);
 
         return investigationTransformed;
+    }
+
+    public void processInvestigationCaseManagement(String investigationCaseManagement) {
+        try {
+            JsonNode investigationCaseManagementArray = parseJsonArray(investigationCaseManagement);
+
+            for (JsonNode jsonNode : investigationCaseManagementArray) {
+                Long publicHealthCaseUid = jsonNode.get("public_health_case_uid").asLong();
+                Long caseManagementUid = jsonNode.get("case_management_uid").asLong();
+
+                InvestigationCaseManagementKey caseManagementKey = new InvestigationCaseManagementKey(publicHealthCaseUid, caseManagementUid);
+                InvestigationCaseManagement caseManagement = objectMapper.treeToValue(jsonNode, InvestigationCaseManagement.class);
+
+                String jsonKey = jsonGenerator.generateStringJson(caseManagementKey);
+                String jsonValue = jsonGenerator.generateStringJson(caseManagement);
+                kafkaTemplate.send(investigationCaseManagementTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Case Management data (uid={}) sent to {}", publicHealthCaseUid, investigationCaseManagementTopicName));
+            }
+
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationCaseManagement");
+        } catch (Exception e) {
+            logger.error("Error processing Case Management JSON array from investigation data: {}", e.getMessage());
+        }
+
     }
 
     public void processNotifications(String investigationNotifications) {

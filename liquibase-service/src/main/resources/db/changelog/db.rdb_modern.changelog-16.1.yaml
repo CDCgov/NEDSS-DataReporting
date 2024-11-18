@@ -479,12 +479,20 @@ databaseChangeLog:
   - changeSet:
       id: 64
       author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 022-sp_nrt_case_management_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 65
+      author: liquibase
       changes:
         - sqlFile:
             path: 007-create_nrt_investigation-004.sql
             splitStatements: false
   - changeSet:
-      id: 65
+      id: 66
       author: liquibase
       changes:
         - sqlFile:

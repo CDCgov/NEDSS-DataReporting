@@ -149,11 +149,11 @@ class InvestigationServiceTest {
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
         final InvestigationReporting reportingModel = constructInvestigationReporting(investigation.getPublicHealthCaseUid());
 
-        verify(kafkaTemplate, times(16)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(17)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
-        String actualTopic = topicCaptor.getAllValues().get(13);
-        String actualKey = keyCaptor.getAllValues().get(13);
-        String actualValue = messageCaptor.getAllValues().get(13);
+        String actualTopic = topicCaptor.getAllValues().get(14);
+        String actualKey = keyCaptor.getAllValues().get(14);
+        String actualValue = messageCaptor.getAllValues().get(14);
 
         var actualReporting = objectMapper.readValue(
                 objectMapper.readTree(actualValue).path("payload").toString(), InvestigationReporting.class);
@@ -191,6 +191,7 @@ class InvestigationServiceTest {
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PATH_PREFIX + "InvestigationCaseAnswers.json"));
         investigation.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
         investigation.setInvestigationCaseCnt(readFileData(FILE_PATH_PREFIX + "CaseCountInfo.json"));
+        investigation.setInvestigationCaseManagement(readFileData(FILE_PATH_PREFIX + "CaseManagement.json"));
         return investigation;
     }
 
@@ -219,7 +220,7 @@ class InvestigationServiceTest {
         reporting.setInvStateCaseId("12-345-STA");      // ActIds.json, root_extension_txt for type_cd=STATE
         reporting.setCityCountyCaseNbr("12-345-CTY");   // ActIds.json, root_extension_txt for type_cd=CITY
         reporting.setLegacyCaseId("12-345-LGY");        // ActIds.json, root_extension_txt for type_cd=LEGACY
-        reporting.setPhcInvFormId(10344747L);          // InvestigationObservationIds.json, source_act_uid for act_type_cd=PHCInvForm
+        reporting.setPhcInvFormId(10638298L);          // InvestigationObservationIds.json, source_act_uid for act_type_cd=PHCInvForm
         reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
         reporting.setInvestigationCount(1L);
         reporting.setCaseCount(1L);

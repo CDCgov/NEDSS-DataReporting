@@ -753,7 +753,7 @@ BEGIN
                           ) as nestedData
               WHERE
                   phc.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list
-                      , ','))) AS results
+                  , ','))) AS results
                  LEFT JOIN nbs_srte.dbo.jurisdiction_code jc WITH (NOLOCK) ON results.jurisdiction_cd = jc.code
                  LEFT JOIN act WITH (NOLOCK) ON act.act_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.program_area_code pac WITH (NOLOCK) on results.prog_area_cd = pac.prog_area_cd

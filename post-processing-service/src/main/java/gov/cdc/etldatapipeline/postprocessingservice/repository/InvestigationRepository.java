@@ -27,4 +27,7 @@ public interface InvestigationRepository extends JpaRepository<InvestigationResu
 
     @Procedure("sp_nrt_case_count_postprocessing")
     void executeStoredProcForCaseCount(@Param("healthcaseUids") String healthcaseUids);
+
+    @Procedure("sp_nrt_case_management_postprocessing")
+    void executeStoredProcForCaseManagement(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 }

@@ -313,6 +313,9 @@ public class Investigation {
     @Column(name = "investigation_case_answer")
     private String investigationCaseAnswer;
 
+    @Column(name = "investigation_case_management")
+    private String investigationCaseManagement;
+
     @Column(name = "investigation_notifications")
     private String investigationNotifications;
 

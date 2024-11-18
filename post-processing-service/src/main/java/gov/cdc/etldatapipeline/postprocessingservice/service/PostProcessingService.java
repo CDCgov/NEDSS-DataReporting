@@ -67,8 +67,9 @@ public class PostProcessingService {
         PATIENT(3, "patient", "patient_uid", "sp_nrt_patient_postprocessing"),
         INVESTIGATION(4, "investigation", PHC_UID, "sp_nrt_investigation_postprocessing"),
         NOTIFICATION(5, "notification", "notification_uid", "sp_nrt_notification_postprocessing"),
-        LDF_DATA(6, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
-        OBSERVATION(7, "observation", "observation_uid", null),
+        CASE_MANAGEMENT(6, "case_management", PHC_UID, "sp_nrt_case_management_postprocessing"),
+        LDF_DATA(7, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
+        OBSERVATION(8, "observation", "observation_uid", null),
         F_PAGE_CASE(0, "fact page case", PHC_UID, "sp_f_page_case_postprocessing"),
         CASE_ANSWERS(0, "case answers", PHC_UID, "sp_page_builder_postprocessing"),
         CASE_COUNT(0, "case count", PHC_UID, "sp_nrt_case_count_postprocessing"),
@@ -110,6 +111,7 @@ public class PostProcessingService {
             "${spring.kafka.topic.patient}",
             "${spring.kafka.topic.provider}",
             "${spring.kafka.topic.notification}",
+            "${spring.kafka.topic.case_management}",
             "${spring.kafka.topic.ldf_data}",
             "${spring.kafka.topic.observation}"
     })
@@ -240,6 +242,10 @@ public class PostProcessingService {
                     case NOTIFICATION:
                         processTopic(keyTopic, entity, ids,
                                 postProcRepository::executeStoredProcForNotificationIds);
+                        break;
+                    case CASE_MANAGEMENT:
+                        processTopic(keyTopic, entity, ids,
+                                investigationRepository::executeStoredProcForCaseManagement);
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids,
