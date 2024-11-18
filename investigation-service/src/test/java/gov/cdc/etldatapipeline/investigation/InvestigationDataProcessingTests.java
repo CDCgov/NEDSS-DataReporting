@@ -140,7 +140,7 @@ class InvestigationDataProcessingTests {
         observation.setBranchTypeCd("COMP");
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(8)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(9)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
         var actualObservation = objectMapper.readValue(

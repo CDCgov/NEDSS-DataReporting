@@ -93,6 +93,24 @@
     "root_source_class_cd": "OBS",
     "branch_source_class_cd": "OBS",
     "branch_type_cd": "LabReport"
+  },
+  {
+    "source_act_uid": 10638298,
+    "public_health_case_uid": 234567890,
+    "source_class_cd": "OBS",
+    "target_class_cd": "CASE",
+    "act_type_cd": "PHCInvForm",
+    "status_cd": "A",
+    "act_add_time": "2024-11-18T19:49:34.137",
+    "act_add_user_id": null,
+    "add_user_name": null,
+    "act_last_chg_user_id": null,
+    "last_chg_user_name": null,
+    "act_last_chg_time": "2024-11-18T19:49:34.137",
+    "root_uid": null,
+    "branch_uid": null,
+    "root_source_class_cd": null,
+    "branch_source_class_cd": null,
+    "branch_type_cd": null
   }
-
 ]

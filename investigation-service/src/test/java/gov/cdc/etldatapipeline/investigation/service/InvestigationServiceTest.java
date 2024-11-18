@@ -149,7 +149,7 @@ class InvestigationServiceTest {
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
         final InvestigationReporting reportingModel = constructInvestigationReporting(investigation.getPublicHealthCaseUid());
 
-        verify(kafkaTemplate, times(15)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(16)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
         String actualTopic = topicCaptor.getAllValues().get(13);
         String actualKey = keyCaptor.getAllValues().get(13);

@@ -192,8 +192,6 @@ public class ProcessInvestigationDataUtil {
                 Long sourceActId = node.get("source_act_uid").asLong();
                 Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
                 String rootTypeCd = node.path("act_type_cd").asText();
-                Long branchId = node.get("branch_uid").asLong();
-                String branchTypeCd = node.path("branch_type_cd").asText();
 
                 if(sourceClassCode.equals("OBS") && actTypeCode.equals("PHCInvForm")) {
                     investigationTransformed.setPhcInvFormId(sourceActId);
@@ -201,13 +199,22 @@ public class ProcessInvestigationDataUtil {
 
                 investigationObservationKey.setPublicHealthCaseUid(publicHealthCaseUid);
                 investigationObservationKey.setObservationId(sourceActId);
-                investigationObservationKey.setBranchId(branchId);
+                investigationObservationKey.setBranchId(null);
 
                 investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
                 investigationObservation.setObservationId(sourceActId);
                 investigationObservation.setRootTypeCd(rootTypeCd);
-                investigationObservation.setBranchId(branchId);
-                investigationObservation.setBranchTypeCd(branchTypeCd);
+                investigationObservation.setBranchId(null);
+                investigationObservation.setBranchTypeCd(null);
+
+                Optional.ofNullable(node.get("branch_uid")).filter(n -> !n.isNull())
+                        .ifPresent(n -> {
+                            investigationObservationKey.setBranchId(n.asLong());
+                            investigationObservation.setBranchId(n.asLong());
+
+                        });
+                Optional.ofNullable(node.get("branch_type_cd")).filter(n -> !n.isNull())
+                        .ifPresent(n -> investigationObservation.setBranchTypeCd(n.asText()));
 
                 jsonKey = jsonGenerator.generateStringJson(investigationObservationKey);
                 String jsonValue = jsonGenerator.generateStringJson(investigationObservation);
