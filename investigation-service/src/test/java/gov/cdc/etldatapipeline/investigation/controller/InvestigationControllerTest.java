@@ -67,6 +67,18 @@ class InvestigationControllerTest {
     }
 
     @Test
+    void postInterviewTest() throws Exception  {
+        String jsonData = "{\"key\":\"value\"}";
+
+        mockMvc.perform(post("/reporting/investigation-svc/interview")
+                        .contentType("application/json")
+                        .content(jsonData))
+                .andExpect(status().isOk());
+
+        verify(kafkaProducerService).sendMessage(isNull(), eq(jsonData));
+    }
+
+    @Test
     void getDataPipelineStatusHealthTest() {
         final String responseBody = "Investigation Service Status OK";
 

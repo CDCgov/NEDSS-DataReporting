@@ -43,6 +43,18 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-case-management}")
     public String investigationCaseManagementTopicName;
 
+    @Value("${spring.kafka.output.topic-name-interview}")
+    private String interviewOutputTopicName;
+
+    @Value("${spring.kafka.output.topic-name-interview-answer}")
+    private String interviewAnswerOutputTopicName;
+
+    @Value("${spring.kafka.output.topic-name-interview-note}")
+    private String interviewNoteOutputTopicName;
+
+    @Value("${spring.kafka.output.topic-name-rdb-metadata-columns}")
+    private String rdbMetadataColumnsOutputTopicName;
+
     private final KafkaTemplate<String, String> kafkaTemplate;
     InvestigationKey investigationKey = new InvestigationKey();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
@@ -359,5 +371,139 @@ public class ProcessInvestigationDataUtil {
         } else {
             throw new IllegalArgumentException("{} array is null.");
         }
+    }
+
+    /**
+     * Utility method to transform and send kafka message for nrt_interview_*** stage tables
+     * @param interview
+     */
+    public void processInterview(Interview interview) {
+        // creating key for kafka
+        InvestigationInterviewKey investigationInterviewKey = new InvestigationInterviewKey();
+        investigationInterviewKey.setInterviewUid(interview.getInterviewUid());
+
+        // constructing reporting(nrt) beans
+        InvestigationInterview investigationInterview = transformInterview(interview);
+
+        /**
+         *  sending reporting(nrt) beans as json to kafka
+         *  starting with the nrt_interview and then
+         *      create and send nrt_interview_answer then
+         *      create and send nrt_interview_note
+         */
+        String jsonKey = jsonGenerator.generateStringJson(investigationInterviewKey);
+        String jsonValue = jsonGenerator.generateStringJson(investigationInterview);
+        kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
+                .whenComplete((res, e) -> logger.info("Interview data (uid={}) sent to {}", interview.getInterviewUid(), interviewOutputTopicName))
+                .thenRunAsync(() -> transformAndSendInterviewAnswer(interview, investigationInterviewKey))
+                .thenRunAsync(() -> transformAndSendInterviewNote(interview, investigationInterviewKey));
+
+    }
+
+    public InvestigationInterview transformInterview(Interview interview) {
+        InvestigationInterview investigationInterview = new InvestigationInterview();
+        investigationInterview.setInterviewUid(interview.getInterviewUid());
+        investigationInterview.setInterviewDate(interview.getInterviewDate());
+        investigationInterview.setInterviewLocCd(interview.getInterviewLocCd());
+        investigationInterview.setInterviewTypeCd(interview.getInterviewTypeCd());
+        investigationInterview.setInterviewStatusCd(interview.getInterviewStatusCd());
+        investigationInterview.setIntervieweeRoleCd(interview.getIntervieweeRoleCd());
+        investigationInterview.setIxIntervieweeRole(interview.getIxIntervieweeRole());
+        investigationInterview.setAddTime(interview.getAddTime());
+        investigationInterview.setAddUserId(interview.getAddUserId());
+        investigationInterview.setIxLocation(interview.getIxLocation());
+        investigationInterview.setIxStatus(interview.getIxStatus());
+        investigationInterview.setIxType(interview.getIxType());
+        investigationInterview.setLastChgTime(interview.getLastChgTime());
+        investigationInterview.setLastChgUserId(interview.getLastChgUserId());
+        investigationInterview.setRecordStatusTime(interview.getRecordStatusTime());
+        investigationInterview.setRecordStatusCd(interview.getRecordStatusCd());
+        investigationInterview.setLocalId(interview.getLocalId());
+        investigationInterview.setVersionCtrlNbr(interview.getVersionCtrlNbr());
+        return investigationInterview;
+    }
+
+    public void transformAndSendInterviewAnswer(Interview interview,  InvestigationInterviewKey investigationInterviewKey) {
+        try {
+            JsonNode answerArray = parseJsonArray(interview.getAnswers());
+            for (JsonNode node : answerArray) {
+                InvestigationInterviewAnswer investigationInterviewAnswer = new InvestigationInterviewAnswer();
+                investigationInterviewAnswer.setInterviewUid(interview.getInterviewUid());
+                investigationInterviewAnswer.setRdbColumnNm(node.get("RDB_COLUMN_NM").asText());
+                investigationInterviewAnswer.setAnswerVal(node.get("ANSWER_VAL").asText());
+
+                String jsonKey = jsonGenerator.generateStringJson(investigationInterviewKey);
+                String jsonValue = jsonGenerator.generateStringJson(investigationInterviewAnswer);
+                kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Interview Answer data (uid={}) sent to {}", interview.getInterviewUid(), interviewAnswerOutputTopicName));
+
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Investigation Interview Answer");
+        } catch (Exception e) {
+            logger.error("Error processing Investigation Interview Answer JSON array from investigation data: {}", e.getMessage());
+        }
+    }
+
+    public void transformAndSendInterviewNote(Interview interview, InvestigationInterviewKey investigationInterviewKey) {
+        try {
+            InvestigationInterviewNote investigationInterviewNote = new InvestigationInterviewNote();
+            investigationInterviewNote.setInterviewUid(interview.getInterviewUid());
+            JsonNode answerArray = parseJsonArray(interview.getNotes());
+            for (JsonNode node : answerArray) {
+                investigationInterviewNote.setNbsAnswerUid(node.get("NBS_ANSWER_UID").asLong());
+                investigationInterviewNote.setAnswerVal(node.get("USER_FIRST_NAME").asText());
+                investigationInterviewNote.setUserLastName(node.get("USER_LAST_NAME").asText());
+                investigationInterviewNote.setUserComment(node.get("USER_COMMENT").asText());
+                investigationInterviewNote.setCommentDate(node.get("COMMENT_DATE").asText());
+
+                String jsonKey = jsonGenerator.generateStringJson(investigationInterviewKey);
+                String jsonValue = jsonGenerator.generateStringJson(investigationInterviewNote);
+                kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Interview Note data (uid={}) sent to {}", interview.getInterviewUid(), interviewNoteOutputTopicName));
+
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Investigation Interview Note");
+        } catch (Exception e) {
+            logger.error("Error processing Investigation Interview Note JSON array from investigation data: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Parse and send RDB metadata column information sourced from the odse nbs_rdb_metadata
+     * To a generic kafka topic to handle all types of rdb column metadata
+     * This is now being used from interview service but can be reused from other service functions
+     * @param interview
+     */
+    public void processColumnMetadata(Interview interview) {
+        try {
+            JsonNode columnArray = parseJsonArray(interview.getRdbCols());
+            for (JsonNode node : columnArray) {
+
+                // creating key for kafka
+                RdbMetadataColumnKey metadataColumnKey = new RdbMetadataColumnKey();
+                metadataColumnKey.setTableName(node.get("TABLE_NAME").asText());
+                metadataColumnKey.setRdbColumnName(node.get("RDB_COLUMN_NM").asText());
+
+                RdbMetadataColumn rdbMetadataColumn = new RdbMetadataColumn();
+                rdbMetadataColumn.setTableName(node.get("TABLE_NAME").asText());
+                rdbMetadataColumn.setRdbColumnName(node.get("RDB_COLUMN_NM").asText());
+                rdbMetadataColumn.setNewFlag(node.get("NEW_FLAG").asInt());
+                rdbMetadataColumn.setLastChgTime(node.get("LAST_CHG_TIME").asText());
+                rdbMetadataColumn.setLastChgUserId(node.get("LAST_CHG_USER_ID").asLong());
+
+                String jsonKey = jsonGenerator.generateStringJson(metadataColumnKey);
+                String jsonValue = jsonGenerator.generateStringJson(rdbMetadataColumn);
+
+                kafkaTemplate.send(rdbMetadataColumnsOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("RDB column metadata (uid={}) sent to {}", interview.getInterviewUid(), rdbMetadataColumnsOutputTopicName));
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "RDB Column Metadata");
+        } catch (Exception e) {
+            logger.error("Error processing RDB Column Metadata JSON array from data: {}", e.getMessage());
+        }
+
     }
 }

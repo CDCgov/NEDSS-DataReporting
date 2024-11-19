@@ -3,9 +3,13 @@ package gov.cdc.etldatapipeline.investigation.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.investigation.repository.InterviewRepository;
+import gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationInterview;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationInterviewKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
@@ -37,6 +41,9 @@ class InvestigationServiceTest {
     private NotificationRepository notificationRepository;
 
     @Mock
+    private InterviewRepository interviewRepository;
+
+    @Mock
     KafkaTemplate<String, String> kafkaTemplate;
 
     @Mock
@@ -58,8 +65,11 @@ class InvestigationServiceTest {
     private static final String FILE_PATH_PREFIX = "rawDataFiles/";
     private final String investigationTopic = "Investigation";
     private final String notificationTopic = "Notification";
+    private final String interviewTopic = "Interview";
     private final String investigationTopicOutput = "InvestigationOutput";
     private final String notificationTopicOutput = "investigationNotification";
+    private final String interviewTopicOutput = "InterviewOutput";
+
 
     @BeforeEach
     void setUp() {
@@ -68,11 +78,14 @@ class InvestigationServiceTest {
         transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
         transformer.setInvestigationObservationOutputTopicName("investigationObservation");
         transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
-        investigationService = new InvestigationService(investigationRepository, notificationRepository, kafkaTemplate, transformer);
+        transformer.setInterviewOutputTopicName(interviewTopicOutput);
+        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, kafkaTemplate, transformer);
         investigationService.setPhcDatamartEnable(true);
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
+        investigationService.setInterviewTopic(interviewTopic);
+        investigationService.setInterviewOutputTopicReporting(interviewTopicOutput);
     }
 
     @AfterEach
@@ -139,6 +152,41 @@ class InvestigationServiceTest {
 
         when(investigationRepository.computeInvestigations(String.valueOf(notificationUid))).thenReturn(Optional.empty());
         assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, notificationTopic, consumer));
+    }
+
+    @Test
+    void testProcessInterviewMessage() throws JsonProcessingException {
+        Long interviewUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"interview_uid\": \"" + interviewUid + "\"}}}";
+
+        final Interview interview = constructInterview(interviewUid);
+        when(interviewRepository.computeInterviews(String.valueOf(interviewUid))).thenReturn(Optional.of(interview));
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+        investigationService.processMessage(payload, interviewTopic, consumer);
+
+        final InvestigationInterviewKey interviewKey =  new InvestigationInterviewKey();
+        interviewKey.setInterviewUid(interviewUid);
+
+        final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
+
+        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+
+        String actualTopic = topicCaptor.getAllValues().get(0);
+        String actualKey = keyCaptor.getAllValues().get(0);
+        String actualValue = messageCaptor.getAllValues().get(0);
+
+
+        var actualInterviewKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path("payload").toString(), InvestigationInterviewKey.class);
+        var actualInterviewValue = objectMapper.readValue(
+                objectMapper.readTree(actualValue).path("payload").toString(), InvestigationInterview.class);
+
+        assertEquals(interviewTopicOutput, actualTopic); // investigation topic
+        assertEquals(interviewKey, actualInterviewKey);
+        assertEquals(interviewValue, actualInterviewValue);
+
+        verify(interviewRepository).computeInterviews(String.valueOf(interviewUid));
     }
 
     private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
@@ -233,5 +281,56 @@ class InvestigationServiceTest {
         notification.setNotificationUid(notificationUid);
         notification.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
         return notification;
+    }
+
+
+    private Interview constructInterview(Long interviewUid) {
+        Interview interview = new Interview();
+        interview.setInterviewUid(interviewUid);
+        interview.setInterviewDate("2024-11-11 00:00:00.000");
+        interview.setInterviewStatusCd("COMPLETE");
+        interview.setInterviewLocCd("C");
+        interview.setInterviewTypeCd("REINTVW");
+        interview.setIntervieweeRoleCd("SUBJECT");
+        interview.setIxIntervieweeRole("Subject of Investigation");
+        interview.setIxLocation("Clinic");
+        interview.setIxStatus("Closed/Completed");
+        interview.setIxType("Re-Interview");
+        interview.setLastChgTime("2024-11-13 20:27:39.587");
+        interview.setAddTime("2024-11-13 20:27:39.587");
+        interview.setAddUserId(10055282L);
+        interview.setLastChgUserId(10055282L);
+        interview.setLocalId("INT10099004GA01");
+        interview.setRecordStatusCd("ACTIVE");
+        interview.setRecordStatusTime("2024-11-13 20:27:39.587");
+        interview.setVersionCtrlNbr(1L);
+        interview.setRdbCols(readFileData(FILE_PATH_PREFIX + "RdbColumns.json"));
+        interview.setAnswers(readFileData(FILE_PATH_PREFIX + "InterviewAnswers.json"));
+        interview.setNotes(readFileData(FILE_PATH_PREFIX + "InterviewNotes.json"));
+        return interview;
+
+    }
+
+    private InvestigationInterview constructInvestigationInterview(Long interviewUid) {
+        InvestigationInterview investigationInterview = new InvestigationInterview();
+        investigationInterview.setInterviewUid(interviewUid);
+        investigationInterview.setInterviewDate("2024-11-11 00:00:00.000");
+        investigationInterview.setInterviewStatusCd("COMPLETE");
+        investigationInterview.setInterviewLocCd("C");
+        investigationInterview.setInterviewTypeCd("REINTVW");
+        investigationInterview.setIntervieweeRoleCd("SUBJECT");
+        investigationInterview.setIxIntervieweeRole("Subject of Investigation");
+        investigationInterview.setIxLocation("Clinic");
+        investigationInterview.setIxStatus("Closed/Completed");
+        investigationInterview.setIxType("Re-Interview");
+        investigationInterview.setLastChgTime("2024-11-13 20:27:39.587");
+        investigationInterview.setAddTime("2024-11-13 20:27:39.587");
+        investigationInterview.setAddUserId(10055282L);
+        investigationInterview.setLastChgUserId(10055282L);
+        investigationInterview.setLocalId("INT10099004GA01");
+        investigationInterview.setRecordStatusCd("ACTIVE");
+        investigationInterview.setRecordStatusTime("2024-11-13 20:27:39.587");
+        investigationInterview.setVersionCtrlNbr(1L);
+        return investigationInterview;
     }
 }
