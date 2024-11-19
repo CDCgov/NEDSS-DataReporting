@@ -24,4 +24,10 @@ public interface InvestigationRepository extends JpaRepository<InvestigationResu
     void executeStoredProcForHepDatamart(
             @Param("publicHealthCaseUids") String publicHealthCaseUids,
             @Param("patientUids") String patientUids);
+
+    @Procedure("sp_nrt_case_count_postprocessing")
+    void executeStoredProcForCaseCount(@Param("healthcaseUids") String healthcaseUids);
+
+    @Procedure("sp_nrt_case_management_postprocessing")
+    void executeStoredProcForCaseManagement(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 }

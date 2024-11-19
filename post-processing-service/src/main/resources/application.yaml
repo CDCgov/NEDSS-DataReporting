@@ -7,6 +7,7 @@ spring:
       patient: nrt_patient
       provider: nrt_provider
       notification: nrt_investigation_notification
+      case_management: nrt_investigation_case_management
       ldf_data: nrt_ldf_data
       datamart: nbs_Datamart
     dlq:

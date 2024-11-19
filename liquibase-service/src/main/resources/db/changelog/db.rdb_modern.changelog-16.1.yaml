@@ -447,3 +447,82 @@ databaseChangeLog:
         - sqlFile:
             path: 007-create_nrt_investigation-002.sql
             splitStatements: false
+  - changeSet:
+      id: 60
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 007-create_nrt_investigation-003.sql
+            splitStatements: false
+  - changeSet:
+      id: 61
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 021-sp_nrt_case_count_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 62
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 020-create_nrt_investigation_case_management-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 63
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 021-create_nrt_case_management_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 64
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 022-sp_nrt_case_management_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 65
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 007-create_nrt_investigation-004.sql
+            splitStatements: false
+  - changeSet:
+      id: 66
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 011-create_nrt_investigation_observation-002.sql
+            splitStatements: false
+  - changeSet:
+      id: 67
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 68
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_columns-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 69
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_note-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_answer-001.sql
+            splitStatements: false

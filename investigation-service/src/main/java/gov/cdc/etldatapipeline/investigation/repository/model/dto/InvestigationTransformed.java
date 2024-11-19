@@ -14,6 +14,9 @@ public class InvestigationTransformed {
     private String legacyCaseId;
     private Long phcInvFormId;
     private String rdbTableNameList;
+    private Long investigationCount;
+    private Long caseCount;
+    private String investigatorAssignedDatetime;
 
     public InvestigationTransformed(Long publicHealthCaseUid) {
         this.publicHealthCaseUid = publicHealthCaseUid;

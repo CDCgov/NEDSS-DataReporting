@@ -135,10 +135,11 @@ class PostProcessingServiceTest {
         String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
+        assertEquals(8, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -157,6 +158,23 @@ class PostProcessingServiceTest {
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.NOTIFICATION.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
+    void testPostProcessCaseManagementMessage() {
+        String topic = "dummy_case_management";
+        String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_management_uid\":1001}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedPublicHealthCaseIdsString = "123";
+        verify(investigationRepositoryMock).executeStoredProcForCaseManagement(expectedPublicHealthCaseIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.CASE_MANAGEMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -180,7 +198,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(8, logs.size());
+        assertEquals(10, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -326,6 +344,7 @@ class PostProcessingServiceTest {
         String patientKey = "{\"payload\":{\"patient_uid\":125}}";
         String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
         String notificationKey = "{\"payload\":{\"notification_uid\":127}}";
+        String caseManagementKey = "{\"payload\":{\"public_health_case_uid\":128,\"case_management_uid\":1001}}";
         String ldfKey = "{\"payload\":{\"ldf_uid\":127}}";
 
         String orgTopic = "dummy_organization";
@@ -334,6 +353,7 @@ class PostProcessingServiceTest {
         String invTopic = "dummy_investigation";
         String ntfTopic = "dummy_notification";
         String ldfTopic = "dummy_ldf_data";
+        String cmTopic = "dummy_case_management";
 
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
@@ -341,6 +361,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(ntfTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
         postProcessingServiceMock.postProcessMessage(ldfTopic, ldfKey, ldfKey);
+        postProcessingServiceMock.postProcessMessage(cmTopic, caseManagementKey, caseManagementKey);
         postProcessingServiceMock.processCachedIds();
 
         List<ILoggingEvent> logs = listAppender.list;
@@ -352,8 +373,10 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(2).contains(patientTopic));
         assertTrue(topicLogList.get(3).contains(invTopic));
         assertTrue(topicLogList.get(4).contains(invTopic));
-        assertTrue(topicLogList.get(5).contains(ntfTopic));
-        assertTrue(topicLogList.get(6).contains(ldfTopic));
+        assertTrue(topicLogList.get(5).contains(invTopic));
+        assertTrue(topicLogList.get(6).contains(ntfTopic));
+        assertTrue(topicLogList.get(7).contains(cmTopic));
+        assertTrue(topicLogList.get(8).contains(ldfTopic));
     }
 
     @Test
@@ -504,7 +527,6 @@ class PostProcessingServiceTest {
         InOrder inOrder = inOrder(postProcessingServiceMock);
         inOrder.verify(postProcessingServiceMock).processCachedIds();
         inOrder.verify(postProcessingServiceMock).processDatamartIds();
-
     }
 
     private List<InvestigationResult> getInvestigationResults(Long phcUid, Long patientKey) {

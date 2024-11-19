@@ -214,3 +214,19 @@ databaseChangeLog:
         - sqlFile:
             path: 008-sp_patient_event-002.sql
             splitStatements: false
+  - changeSet:
+      id: 27
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 021-sp_interview_event-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 28
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 002-v_rdb_ui_metadata_answers-001.sql
+            splitStatements: false

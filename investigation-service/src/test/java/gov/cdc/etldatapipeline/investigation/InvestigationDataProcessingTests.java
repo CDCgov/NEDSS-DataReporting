@@ -53,6 +53,7 @@ class InvestigationDataProcessingTests {
     private static final String OBSERVATION_TOPIC = "observationTopic";
     private static final String NOTIFICATIONS_TOPIC = "notificationsTopic";
     private static final String PAGE_CASE_ANSWER_TOPIC = "pageCaseAnswerTopic";
+    private static final String CASE_MANAGEMENT_TOPIC = "caseManagementTopic";
     private static final Long investigationUid = 234567890L;
 
     ProcessInvestigationDataUtil transformer;
@@ -113,10 +114,10 @@ class InvestigationDataProcessingTests {
         investigation.setPersonParticipations(invalidJSON);
         investigation.setOrganizationParticipations(invalidJSON);
         investigation.setActIds(invalidJSON);
-        investigation.setObservationNotificationIds(invalidJSON);
+        investigation.setInvestigationObservationIds(invalidJSON);
         investigation.setInvestigationConfirmationMethod(invalidJSON);
         investigation.setInvestigationCaseAnswer(invalidJSON);
-
+        investigation.setInvestigationCaseCnt(invalidJSON);
         transformer.transformInvestigationData(investigation);
         transformer.processNotifications(invalidJSON);
 
@@ -125,23 +126,26 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testObservationNotificationIds() throws JsonProcessingException {
+    void testInvestigationObservationIds() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
         investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setObservationNotificationIds(readFileData(FILE_PREFIX + "ObservationNotificationIds.json"));
+        investigation.setInvestigationObservationIds(readFileData(FILE_PREFIX + "InvestigationObservationIds.json"));
         transformer.investigationObservationOutputTopicName = OBSERVATION_TOPIC;
 
         InvestigationObservation observation = new InvestigationObservation();
         observation.setPublicHealthCaseUid(investigationUid);
-        observation.setObservationId(263748596L);
+        observation.setObservationId(10344738L);
+        observation.setRootTypeCd("LabReport");
+        observation.setBranchId(10344740L);
+        observation.setBranchTypeCd("COMP");
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(9)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
         var actualObservation = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), InvestigationObservation.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InvestigationObservation.class);
 
         assertEquals(observation, actualObservation);
     }
@@ -237,6 +241,31 @@ class InvestigationDataProcessingTests {
         assertEquals(expected, answers[1]);
     }
 
+    @Test
+    void testProcessCaseManagement() throws JsonProcessingException {
+
+        Investigation investigation = new Investigation();
+
+        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setInvestigationCaseManagement(readFileData(FILE_PREFIX + "CaseManagement.json"));
+        transformer.setInvestigationCaseManagementTopicName(CASE_MANAGEMENT_TOPIC);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+        var caseManagementKey = new InvestigationCaseManagementKey(investigationUid, 1001L);
+        var caseManagement = constructCaseManagement();
+
+        transformer.processInvestigationCaseManagement(investigation.getInvestigationCaseManagement());
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(CASE_MANAGEMENT_TOPIC, topicCaptor.getValue());
+        var actualCaseManagement = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), InvestigationCaseManagement.class);
+        var actualKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationCaseManagementKey.class);
+
+        assertEquals(caseManagementKey, actualKey);
+        assertEquals(caseManagement, actualCaseManagement);
+    }
+
     private @NotNull InvestigationNotification constructNotifications() {
         InvestigationNotification notifications = new InvestigationNotification();
         notifications.setSourceActUid(263748597L);
@@ -294,6 +323,60 @@ class InvestigationDataProcessingTests {
         expected.setQuestionGroupSeqNbr(null);
         expected.setDataType("TEXT");
         expected.setLastChgTime("2024-05-29T16:05:44.537");
+        return expected;
+    }
+
+    private InvestigationCaseManagement constructCaseManagement() {
+        InvestigationCaseManagement expected = new InvestigationCaseManagement();
+        expected.setCaseManagementUid(1001L);
+        expected.setPublicHealthCaseUid(investigationUid);
+        expected.setAddUserId(10055001L);
+        expected.setCaseOid(1300110031L);
+        expected.setInitFupInitialFollUpCd("SF");
+        expected.setInitFupInitialFollUp("Surveillance Follow-up");
+        expected.setInitFupInternetFollUpCd("N");
+        expected.setInternetFollUp("No");
+        expected.setInitFupNotifiableCd("06");
+        expected.setInitFollUpNotifiable("6-Yes, Notifiable");
+        expected.setInitFupClinicCode("80000");
+        expected.setSurvInvestigatorAssgnDt("2024-07-15T00:00:00");
+        expected.setSurvClosedDt("2024-07-22T00:00:00");
+        expected.setSurvProviderContactCd("S");
+        expected.setSurvProviderContact("S - Successful");
+        expected.setSurvProvExmReason("M");
+        expected.setSurvProviderExamReason("Community Screening");
+        expected.setSurvProviderDiagnosis("900");
+        expected.setSurvPatientFollUp("FF");
+        expected.setSurvPatientFollUpCd("Field Follow-up");
+        expected.setAdi900StatusCd("02");
+        expected.setStatus900("2 - Newly Diagnosed");
+        expected.setFlFupFieldRecordNum("1310005124");
+        expected.setFlFupInvestigatorAssgnDt("2024-07-23T00:00:00");
+        expected.setFlFupInitAssgnDt("2024-07-23T00:00:00");
+        expected.setFldFollUpProvExmReason("M");
+        expected.setFlFupProvExmReason("Community Screening");
+        expected.setFldFollUpProvDiagnosis("900");
+        expected.setFlFupProvDiagnosis("900");
+        expected.setFldFollUpNotificationPlan("3");
+        expected.setFlFupNotificationPlanCd("3 - Dual");
+        expected.setFldFollUpExpectedIn("Y");
+        expected.setFlFupExpectedInInd("Yes");
+        expected.setFlFupExpectedDt("2024-07-21T00:00:00");
+        expected.setFlFupExamDt("2024-07-19T00:00:00");
+        expected.setFlFupDispositionCd("1");
+        expected.setFlFupDispositionDesc("1 - Prev. Pos");
+        expected.setFlFupDispoDt("2024-07-23T00:00:00");
+        expected.setActRefTypeCd("2");
+        expected.setFlFupActualRefType("2 - Provider");
+        expected.setFlFupInternetOutcomeCd("I1");
+        expected.setFlFupInternetOutcome("I1 - Informed, Urgent Health Matter");
+        expected.setCaInterviewerAssignDt("2024-07-22T00:00:00");
+        expected.setCaInitIntvwrAssgnDt("2024-07-22T00:00:00");
+        expected.setEpiLinkId("1310005124");
+        expected.setPatIntvStatusCd("A");
+        expected.setCaPatientIntvStatus("A - Awaiting");
+        expected.setInitiatingAgncy("Arizona");
+        expected.setOojInitgAgncyRecdDate("2024-07-15T00:00:00");
         return expected;
     }
 }

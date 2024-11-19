@@ -149,11 +149,11 @@ class InvestigationServiceTest {
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
         final InvestigationReporting reportingModel = constructInvestigationReporting(investigation.getPublicHealthCaseUid());
 
-        verify(kafkaTemplate, times(11)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(17)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
-        String actualTopic = topicCaptor.getAllValues().get(9);
-        String actualKey = keyCaptor.getAllValues().get(9);
-        String actualValue = messageCaptor.getAllValues().get(9);
+        String actualTopic = topicCaptor.getAllValues().get(14);
+        String actualKey = keyCaptor.getAllValues().get(14);
+        String actualValue = messageCaptor.getAllValues().get(14);
 
         var actualReporting = objectMapper.readValue(
                 objectMapper.readTree(actualValue).path("payload").toString(), InvestigationReporting.class);
@@ -181,14 +181,17 @@ class InvestigationServiceTest {
         investigation.setRecordStatusCd("ACTIVE");
         investigation.setMmwrWeek("22");
         investigation.setMmwrYear("2024");
+        investigation.setInvestigationFormCd("INV_FORM_MEA");
 
         investigation.setActIds(readFileData(FILE_PATH_PREFIX + "ActIds.json"));
         investigation.setInvestigationConfirmationMethod(readFileData(FILE_PATH_PREFIX + "ConfirmationMethod.json"));
-        investigation.setObservationNotificationIds(readFileData(FILE_PATH_PREFIX + "ObservationNotificationIds.json"));
+        investigation.setInvestigationObservationIds(readFileData(FILE_PATH_PREFIX + "InvestigationObservationIds.json"));
         investigation.setOrganizationParticipations(readFileData(FILE_PATH_PREFIX + "OrganizationParticipations.json"));
         investigation.setPersonParticipations(readFileData(FILE_PATH_PREFIX + "PersonParticipations.json"));
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PATH_PREFIX + "InvestigationCaseAnswers.json"));
         investigation.setInvestigationNotifications(readFileData(FILE_PATH_PREFIX + "InvestigationNotification.json"));
+        investigation.setInvestigationCaseCnt(readFileData(FILE_PATH_PREFIX + "CaseCountInfo.json"));
+        investigation.setInvestigationCaseManagement(readFileData(FILE_PATH_PREFIX + "CaseManagement.json"));
         return investigation;
     }
 
@@ -208,6 +211,7 @@ class InvestigationServiceTest {
         reporting.setRecordStatusCd("ACTIVE");
         reporting.setMmwrWeek("22");
         reporting.setMmwrYear("2024");
+        reporting.setInvestigationFormCd("INV_FORM_MEA");
 
         reporting.setInvestigatorId(32143250L);         // PersonParticipations.json, entity_id for type_cd=InvestgrOfPHC
         reporting.setPhysicianId(14253651L);            // PersonParticipations.json, entity_id for type_cd=PhysicianOfPHC
@@ -216,8 +220,11 @@ class InvestigationServiceTest {
         reporting.setInvStateCaseId("12-345-STA");      // ActIds.json, root_extension_txt for type_cd=STATE
         reporting.setCityCountyCaseNbr("12-345-CTY");   // ActIds.json, root_extension_txt for type_cd=CITY
         reporting.setLegacyCaseId("12-345-LGY");        // ActIds.json, root_extension_txt for type_cd=LEGACY
-        reporting.setPhcInvFormId(263748598L);          // ObservationNotificationIds.json, source_act_uid for act_type_cd=PHCInvForm
+        reporting.setPhcInvFormId(10638298L);          // InvestigationObservationIds.json, source_act_uid for act_type_cd=PHCInvForm
         reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
+        reporting.setInvestigationCount(1L);
+        reporting.setCaseCount(1L);
+        reporting.setInvestigatorAssignedDatetime("2024-01-15T10:20:57.787");
         return reporting;
     }
 
