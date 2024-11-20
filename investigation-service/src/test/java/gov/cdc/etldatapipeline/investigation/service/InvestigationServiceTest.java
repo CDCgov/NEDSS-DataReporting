@@ -15,6 +15,7 @@ import gov.cdc.etldatapipeline.investigation.repository.model.reporting.Investig
 import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.apache.kafka.clients.consumer.MockConsumer;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
@@ -169,8 +171,11 @@ class InvestigationServiceTest {
         interviewKey.setInterviewUid(interviewUid);
 
         final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
-
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
 
         String actualTopic = topicCaptor.getAllValues().get(0);
         String actualKey = keyCaptor.getAllValues().get(0);
@@ -182,7 +187,7 @@ class InvestigationServiceTest {
         var actualInterviewValue = objectMapper.readValue(
                 objectMapper.readTree(actualValue).path("payload").toString(), InvestigationInterview.class);
 
-        assertEquals(interviewTopicOutput, actualTopic); // investigation topic
+        assertEquals(interviewTopicOutput, actualTopic);
         assertEquals(interviewKey, actualInterviewKey);
         assertEquals(interviewValue, actualInterviewValue);
 

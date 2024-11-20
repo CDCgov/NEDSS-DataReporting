@@ -374,7 +374,7 @@ public class ProcessInvestigationDataUtil {
     }
 
     /**
-     * Utility method to transform and send kafka message for nrt_interview_*** stage tables
+     * Utility method to transform and send kafka message for various nrt_interview_*** stage tables
      * @param interview
      */
     public void processInterview(Interview interview) {
@@ -452,7 +452,7 @@ public class ProcessInvestigationDataUtil {
             JsonNode answerArray = parseJsonArray(interview.getNotes());
             for (JsonNode node : answerArray) {
                 investigationInterviewNote.setNbsAnswerUid(node.get("NBS_ANSWER_UID").asLong());
-                investigationInterviewNote.setAnswerVal(node.get("USER_FIRST_NAME").asText());
+                investigationInterviewNote.setUserFirstName(node.get("USER_FIRST_NAME").asText());
                 investigationInterviewNote.setUserLastName(node.get("USER_LAST_NAME").asText());
                 investigationInterviewNote.setUserComment(node.get("USER_COMMENT").asText());
                 investigationInterviewNote.setCommentDate(node.get("COMMENT_DATE").asText());

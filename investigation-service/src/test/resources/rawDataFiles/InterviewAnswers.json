@@ -2,17 +2,5 @@
   {
     "RDB_COLUMN_NM": "IX_CONTACTS_NAMED_IND",
     "ANSWER_VAL": "Yes"
-  },
-  {
-    "RDB_COLUMN_NM": "CLN_CARE_STATUS_IXS",
-    "ANSWER_VAL": "99-Don't Know"
-  },
-  {
-    "RDB_COLUMN_NM": "IX_900_SITE_TYPE",
-    "ANSWER_VAL": "F15 Non-clinical - Community Setting - Syringe exchange program"
-  },
-  {
-    "RDB_COLUMN_NM": "IX_INTERVENTION",
-    "ANSWER_VAL": "HIV Intervention Value b"
   }
 ]

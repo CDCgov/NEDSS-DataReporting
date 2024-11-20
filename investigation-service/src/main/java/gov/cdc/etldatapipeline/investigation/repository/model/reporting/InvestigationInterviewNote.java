@@ -11,7 +11,6 @@ import lombok.Data;
 public class InvestigationInterviewNote {
     private Long interviewUid;
     private Long nbsAnswerUid;
-    private String answerVal;
     private String userFirstName;
     private String userLastName;
     private String userComment;
