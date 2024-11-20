@@ -63,7 +63,7 @@ public class InvestigationService {
     public String investigationTopicReporting;
 
     @Value("${spring.kafka.output.topic-name-interview}")
-    private String interviewOutputTopicReporting; //TODO: needed to be added
+    private String interviewOutputTopicReporting;
 
     @Value("${service.phc-datamart-enable}")
     public boolean phcDatamartEnable;

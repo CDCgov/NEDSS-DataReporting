@@ -426,6 +426,7 @@ public class ProcessInvestigationDataUtil {
     public void transformAndSendInterviewAnswer(Interview interview,  InvestigationInterviewKey investigationInterviewKey) {
         try {
             JsonNode answerArray = parseJsonArray(interview.getAnswers());
+
             for (JsonNode node : answerArray) {
                 InvestigationInterviewAnswer investigationInterviewAnswer = new InvestigationInterviewAnswer();
                 investigationInterviewAnswer.setInterviewUid(interview.getInterviewUid());
@@ -480,15 +481,17 @@ public class ProcessInvestigationDataUtil {
         try {
             JsonNode columnArray = parseJsonArray(interview.getRdbCols());
             for (JsonNode node : columnArray) {
+                String tableName = node.get("TABLE_NAME").asText();
+                String columnName = node.get("RDB_COLUMN_NM").asText();
 
                 // creating key for kafka
                 RdbMetadataColumnKey metadataColumnKey = new RdbMetadataColumnKey();
-                metadataColumnKey.setTableName(node.get("TABLE_NAME").asText());
-                metadataColumnKey.setRdbColumnName(node.get("RDB_COLUMN_NM").asText());
+                metadataColumnKey.setTableName(tableName);
+                metadataColumnKey.setRdbColumnName(columnName);
 
                 RdbMetadataColumn rdbMetadataColumn = new RdbMetadataColumn();
-                rdbMetadataColumn.setTableName(node.get("TABLE_NAME").asText());
-                rdbMetadataColumn.setRdbColumnName(node.get("RDB_COLUMN_NM").asText());
+                rdbMetadataColumn.setTableName(tableName);
+                rdbMetadataColumn.setRdbColumnName(columnName);
                 rdbMetadataColumn.setNewFlag(node.get("NEW_FLAG").asInt());
                 rdbMetadataColumn.setLastChgTime(node.get("LAST_CHG_TIME").asText());
                 rdbMetadataColumn.setLastChgUserId(node.get("LAST_CHG_USER_ID").asLong());

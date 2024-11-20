@@ -191,6 +191,8 @@ class InvestigationDataProcessingTests {
 
         final var interviewUid =  234567890L;
         Interview interview = constructInterview(interviewUid);
+        interview.setAnswers(readFileData(FILE_PREFIX + "InterviewAnswers.json"));
+        interview.setNotes(readFileData(FILE_PREFIX + "InterviewNotes.json"));
         transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
         transformer.setInterviewAnswerOutputTopicName(INTERVIEW_ANSWERS_TOPIC);
         transformer.setInterviewNoteOutputTopicName(INTERVIEW_NOTE_TOPIC);
@@ -227,20 +229,100 @@ class InvestigationDataProcessingTests {
 
     }
 
+    @Test
+    void testProcessInterviewAnswers() throws JsonProcessingException {
+
+        final var interviewUid =  234567890L;
+        Interview interview = constructInterview(interviewUid);
+        interview.setAnswers(readFileData(FILE_PREFIX + "InterviewAnswers.json"));
+
+        transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
+        transformer.setInterviewAnswerOutputTopicName(INTERVIEW_ANSWERS_TOPIC);
+
+
+        final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
+        interviewKey.setInterviewUid(interviewUid);
+
+        final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
+        final InvestigationInterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(interviewUid);
+
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processInterview(interview);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        var actualInterviewKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationInterviewKey.class);
+        var actualInterviewValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InvestigationInterview.class);
+        var actualInterviewAnswerValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InvestigationInterviewAnswer.class);
+
+        assertEquals(interviewKey, actualInterviewKey);
+        assertEquals(interviewValue, actualInterviewValue);
+        assertEquals(interviewAnswerValue, actualInterviewAnswerValue);
+    }
+
+
+    @Test
+    void testProcessInterviewNotes() throws JsonProcessingException {
+
+        final var interviewUid =  234567890L;
+        Interview interview = constructInterview(interviewUid);
+        interview.setNotes(readFileData(FILE_PREFIX + "InterviewNotes.json"));
+
+        transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
+        transformer.setInterviewNoteOutputTopicName(INTERVIEW_NOTE_TOPIC);
+
+
+        final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
+        interviewKey.setInterviewUid(interviewUid);
+        final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
+        final InvestigationInterviewNote interviewNoteValue = constructInvestigationInterviewNote(interviewUid);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processInterview(interview);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        var actualInterviewKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationInterviewKey.class);
+        var actualInterviewValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InvestigationInterview.class);
+        var actualInterviewNoteValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InvestigationInterviewNote.class);
+
+
+        assertEquals(interviewKey, actualInterviewKey);
+        assertEquals(interviewValue, actualInterviewValue);
+        assertEquals(interviewNoteValue, actualInterviewNoteValue);
+
+    }
 
     @Test
     void testProcessColumnMetadata() throws JsonProcessingException {
         final var interviewUid =  234567890L;
+        final var rdb_col_name = "CLN_CARE_STATUS_IXS";
+        final var tbl_name = "D_INTERVIEW";
         Interview interview = constructInterview(interviewUid);
+        interview.setRdbCols(readFileData(FILE_PREFIX + "RdbColumns.json"));
+
         transformer.setRdbMetadataColumnsOutputTopicName(RDB_METADATA_COLS_TOPIC);
 
         RdbMetadataColumnKey rdbMetadataColumnKey = new RdbMetadataColumnKey();
-        rdbMetadataColumnKey.setRdbColumnName("CLN_CARE_STATUS_IXS");
-        rdbMetadataColumnKey.setTableName("D_INTERVIEW");
+        rdbMetadataColumnKey.setRdbColumnName(rdb_col_name);
+        rdbMetadataColumnKey.setTableName(tbl_name);
 
         RdbMetadataColumn rdbMetadataColumnValue = new RdbMetadataColumn();
-        rdbMetadataColumnValue.setRdbColumnName("CLN_CARE_STATUS_IXS");
-        rdbMetadataColumnValue.setTableName("D_INTERVIEW");
+        rdbMetadataColumnValue.setRdbColumnName(rdb_col_name);
+        rdbMetadataColumnValue.setTableName(tbl_name);
         rdbMetadataColumnValue.setLastChgTime("2024-05-23T15:42:41.317");
         rdbMetadataColumnValue.setLastChgUserId(10000000L);
         rdbMetadataColumnValue.setNewFlag(1);
@@ -258,6 +340,22 @@ class InvestigationDataProcessingTests {
         assertEquals(rdbMetadataColumnKey, actualRdbMetadataColumnKey);
         assertEquals(rdbMetadataColumnValue, actualRdbMetadataColumnsValue);
 
+    }
+
+    @Test
+    void testTransformInterview() {
+        final var interviewUid =  234567890L;
+        Interview interview = constructInterview(interviewUid);
+        InvestigationInterview investigationInterview = transformer.transformInterview(interview);
+
+        assertEquals(interviewUid, investigationInterview.getInterviewUid());
+        assertEquals(interview.getInterviewLocCd(), investigationInterview.getInterviewLocCd());
+        assertEquals(interview.getInterviewStatusCd(), investigationInterview.getInterviewStatusCd());
+        assertEquals(interview.getInterviewTypeCd(), investigationInterview.getInterviewTypeCd());
+        assertEquals(interview.getIxLocation(), investigationInterview.getIxLocation());
+        assertEquals(interview.getIxStatus(), investigationInterview.getIxStatus());
+        assertEquals(interview.getIxType(), investigationInterview.getIxType());
+        assertEquals(interview.getInterviewDate(), investigationInterview.getInterviewDate());
     }
 
     @Test
@@ -481,9 +579,6 @@ class InvestigationDataProcessingTests {
         interview.setRecordStatusCd("ACTIVE");
         interview.setRecordStatusTime("2024-11-13 20:27:39.587");
         interview.setVersionCtrlNbr(1L);
-        interview.setRdbCols(readFileData(FILE_PREFIX + "RdbColumns.json"));
-        interview.setAnswers(readFileData(FILE_PREFIX + "InterviewAnswers.json"));
-        interview.setNotes(readFileData(FILE_PREFIX + "InterviewNotes.json"));
         return interview;
     }
 
