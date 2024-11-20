@@ -74,7 +74,7 @@ BEGIN
         INTO #phc_uids_REPT
         FROM dbo.nrt_investigation as inv WITH(NOLOCK)
         WHERE inv.public_health_case_uid = @phc_id
-          AND INVESTIGATION_FORM_CD NOT IN( 'INV_FORM_BMDGAS', 'INV_FORM_BMDGBS', 'INV_FORM_BMDGEN', 'INV_FORM_BMDNM', 'INV_FORM_BMDSP', 'INV_FORM_GEN', 'INV_FORM_HEPA', 'INV_FORM_HEPBV', 'INV_FORM_HEPCV', 'INV_FORM_HEPGEN', 'INV_FORM_MEA', 'INV_FORM_PER', 'INV_FORM_RUB', 'INV_FORM_RVCT', 'INV_FORM_VAR' )
+          AND INVESTIGATION_FORM_CD NOT IN ( 'INV_FORM_BMDGAS', 'INV_FORM_BMDGBS', 'INV_FORM_BMDGEN', 'INV_FORM_BMDNM', 'INV_FORM_BMDSP', 'INV_FORM_GEN', 'INV_FORM_HEPA', 'INV_FORM_HEPBV', 'INV_FORM_HEPCV', 'INV_FORM_HEPGEN', 'INV_FORM_MEA', 'INV_FORM_PER', 'INV_FORM_RUB', 'INV_FORM_RVCT', 'INV_FORM_VAR' );
 
         if @debug = 'true'
             select * from #phc_uids_REPT;
@@ -83,7 +83,6 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
         VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
-
 
 
         COMMIT TRANSACTION;
@@ -133,6 +132,7 @@ BEGIN
             from dbo.nrt_page_case_answer
             where act_uid = @phc_id
         );
+        
         COMMIT TRANSACTION;
 
 
