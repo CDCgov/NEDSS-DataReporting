@@ -326,7 +326,7 @@ class InvestigationDataProcessingTests {
         rdbMetadataColumnValue.setNewFlag(1);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        transformer.processColumnMetadata(interview);
+        transformer.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
         verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
         var actualRdbMetadataColumnKey = objectMapper.readValue(

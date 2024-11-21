@@ -186,7 +186,7 @@ public class InvestigationService {
             if (interviewData.isPresent()) {
                 Interview interview = interviewData.get();
                 processDataUtil.processInterview(interview);
-                processDataUtil.processColumnMetadata(interview);
+                processDataUtil.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
 
             } else {
                 throw new EntityNotFoundException("Unable to find Interview with id: " + interviewUid);

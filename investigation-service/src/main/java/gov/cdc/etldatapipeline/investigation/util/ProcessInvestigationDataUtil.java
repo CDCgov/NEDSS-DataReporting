@@ -375,7 +375,7 @@ public class ProcessInvestigationDataUtil {
 
     /**
      * Utility method to transform and send kafka message for various nrt_interview_*** stage tables
-     * @param interview
+     * @param interview Entity bean returned from stroed procedures
      */
     public void processInterview(Interview interview) {
         // creating key for kafka
@@ -385,11 +385,11 @@ public class ProcessInvestigationDataUtil {
         // constructing reporting(nrt) beans
         InvestigationInterview investigationInterview = transformInterview(interview);
 
-        /**
-         *  sending reporting(nrt) beans as json to kafka
-         *  starting with the nrt_interview and then
-         *      create and send nrt_interview_answer then
-         *      create and send nrt_interview_note
+        /*
+           sending reporting(nrt) beans as json to kafka
+           starting with the nrt_interview and then
+               create and send nrt_interview_answer then
+               create and send nrt_interview_note
          */
         String jsonKey = jsonGenerator.generateStringJson(investigationInterviewKey);
         String jsonValue = jsonGenerator.generateStringJson(investigationInterview);
@@ -479,11 +479,12 @@ public class ProcessInvestigationDataUtil {
      * Parse and send RDB metadata column information sourced from the odse nbs_rdb_metadata
      * To a generic kafka topic to handle all types of rdb column metadata
      * This is now being used from interview service but can be reused from other service functions
-     * @param interview
+     * @param rdbCols - rdb metadata column information
+     * @param uid - the uid of the domain (e.g. interviewUid) invoking this method
      */
-    public void processColumnMetadata(Interview interview) {
+    public void processColumnMetadata(String rdbCols, Long uid) {
         try {
-            JsonNode columnArray = parseJsonArray(interview.getRdbCols());
+            JsonNode columnArray = parseJsonArray(rdbCols);
             for (JsonNode node : columnArray) {
                 String tableName = node.get("TABLE_NAME").asText();
                 String columnName = node.get("RDB_COLUMN_NM").asText();
@@ -504,7 +505,7 @@ public class ProcessInvestigationDataUtil {
                 String jsonValue = jsonGenerator.generateStringJson(rdbMetadataColumn);
 
                 kafkaTemplate.send(rdbMetadataColumnsOutputTopicName, jsonKey, jsonValue)
-                        .whenComplete((res, e) -> logger.info("RDB column metadata (uid={}) sent to {}", interview.getInterviewUid(), rdbMetadataColumnsOutputTopicName));
+                        .whenComplete((res, e) -> logger.info("RDB column metadata (uid={}) sent to {}", uid, rdbMetadataColumnsOutputTopicName));
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "RDB Column Metadata");
