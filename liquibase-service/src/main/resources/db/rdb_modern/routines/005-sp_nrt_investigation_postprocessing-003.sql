@@ -160,7 +160,6 @@ BEGIN
                ,LEFT(@id_list, 500));
 
 
-
         SET @proc_step_name = 'Update Legacy Investigation Values -' + LEFT(@id_list, 160);
         SET @proc_step_no = 1;
 
@@ -198,19 +197,19 @@ BEGIN
                      ,c.cd
                      ,c.response
                 INTO #tmp_coded
-                FROM #temp_inv_obs tnio
-                         INNER JOIN dbo.v_getobscode c on tnio.branch_id = c.branch_id
-                WHERE c.cd IN 	('INV153',	/* Import country*/
+                FROM #temp_inv_obs tnio with (nolock)
+                         INNER JOIN dbo.v_getobscode c with (nolock) on tnio.branch_id = c.branch_id
+                WHERE c.cd IN 	('INV153',	    /* Import country*/
                                   'INV154', 	/* state*/
                                   'INV156', 	/* county*/
-                                  'INV128',	/* HSPTLIZD_IND*/
-                                  'RUB162',  /* DIE_FRM_THIS_ILLNESS_IND */
-                                  'MEA078',  /* DIE_FRM_THIS_ILLNESS_IND */
+                                  'INV128',	    /* HSPTLIZD_IND*/
+                                  'RUB162',     /* DIE_FRM_THIS_ILLNESS_IND */
+                                  'MEA078',     /* DIE_FRM_THIS_ILLNESS_IND */
                                   'PRT103', 	/* DIE_FRM_THIS_ILLNESS_IND */
-                                  'INV145',	/* DIE_FRM_THIS_ILLNESS_IND in Generic */
-                                  'INV149',  /* FOOD_HANDLR_IND */
-                                  'INV178',  /* PATIENT_PREGNANT_IND */
-                                  'INV148');  /* DAYCARE_ASSOCIATION_IND */
+                                  'INV145',	    /* DIE_FRM_THIS_ILLNESS_IND in Generic */
+                                  'INV149',     /* FOOD_HANDLR_IND */
+                                  'INV178',     /* PATIENT_PREGNANT_IND */
+                                  'INV148');    /* DAYCARE_ASSOCIATION_IND */
 
                 IF @debug = 'true' SELECT '#tmp_coded', * FROM #tmp_coded;
 
@@ -223,8 +222,8 @@ BEGIN
                      ,t.cd
                      ,t.response
                 INTO #tmp_txt
-                FROM #temp_inv_obs tnio
-                         INNER JOIN dbo.v_getobstxt t ON tnio.branch_id = t.branch_id
+                FROM #temp_inv_obs tnio with (nolock)
+                         INNER JOIN dbo.v_getobstxt t with (nolock) ON tnio.branch_id = t.branch_id
                 WHERE t.cd = 'INV155'; /* city */
 
                 IF @debug = 'true' SELECT '#tmp_txt', * FROM #tmp_txt;
@@ -238,8 +237,8 @@ BEGIN
                      ,n.cd
                      ,n.response
                 INTO #tmp_num
-                FROM #temp_inv_obs tnio
-                         INNER JOIN dbo.v_getobsnum n ON tnio.branch_id = n.branch_id
+                FROM #temp_inv_obs tnio with (nolock)
+                         INNER JOIN dbo.v_getobsnum n with (nolock) ON tnio.branch_id = n.branch_id
                 WHERE n.cd = 'INV134'; /* HSPTL_DURATION_DAYS */
 
                 IF @debug = 'true' SELECT '#tmp_num', * FROM #tmp_num;
@@ -256,7 +255,7 @@ BEGIN
                 FROM #temp_inv_obs tnio
                          INNER JOIN dbo.v_getobsdate d on tnio.branch_id = d.branch_id
                 WHERE d.cd IN ('INV132',	/* HSPTL_ADMISSION_DT */
-                               'INV133'	/* HSPTL_DISCHARGE_DT */
+                               'INV133'	    /* HSPTL_DISCHARGE_DT */
                     );
 
                 IF @debug = 'true' SELECT '#tmp_date', * FROM #tmp_date;
@@ -295,11 +294,11 @@ BEGIN
                     max(CASE WHEN n.cd = 'INV134' THEN n.response
                              ELSE NULL END) AS HSPTL_DURATION_DAYS
                 INTO #final_inv_obs
-                FROM #temp_inv_obs tnio
-                         LEFT JOIN #tmp_coded c on tnio.public_health_case_uid = c.public_health_case_uid
-                         LEFT JOIN #tmp_txt t on tnio.public_health_case_uid = t.public_health_case_uid
-                         LEFT JOIN #tmp_num n on tnio.public_health_case_uid = n.public_health_case_uid
-                         LEFT JOIN #tmp_date d on tnio.observation_id = d.observation_id
+                FROM #temp_inv_obs tnio with (nolock)
+                         LEFT JOIN #tmp_coded c with (nolock) on tnio.public_health_case_uid = c.public_health_case_uid
+                         LEFT JOIN #tmp_txt t with (nolock) on tnio.public_health_case_uid = t.public_health_case_uid
+                         LEFT JOIN #tmp_num n with (nolock) on tnio.public_health_case_uid = n.public_health_case_uid
+                         LEFT JOIN #tmp_date d with (nolock) on tnio.observation_id = d.observation_id
                 GROUP BY tnio.public_health_case_uid;
 
                 IF @debug = 'true' SELECT '#final_inv_obs', * FROM #final_inv_obs;
@@ -321,8 +320,8 @@ BEGIN
                     HSPTL_ADMISSION_DT = COALESCE(tmp.HSPTL_ADMISSION_DT, obs.HSPTL_ADMISSION_DT),
                     HSPTL_DISCHARGE_DT = COALESCE(tmp.HSPTL_DISCHARGE_DT, obs.HSPTL_DISCHARGE_DT),
                     HSPTL_DURATION_DAYS = COALESCE(tmp.HSPTL_DURATION_DAYS, obs.HSPTL_DURATION_DAYS)
-                FROM #temp_inv_table tmp
-                         LEFT JOIN #final_inv_obs obs on tmp.case_uid = obs.public_health_case_uid;
+                FROM #temp_inv_table tmp with (nolock)
+                         LEFT JOIN #final_inv_obs obs with (nolock) on tmp.case_uid = obs.public_health_case_uid;
 
                 IF @debug = 'true' SELECT '#temp_inv_table', * FROM #temp_inv_table;
 
@@ -359,7 +358,7 @@ BEGIN
             [CASE_OID]                      = inv.CASE_OID,
             [CASE_UID]                      = inv.CASE_UID,
             [INV_LOCAL_ID]    = inv.INV_LOCAL_ID,
-            [INV_SHARE_IND]                 = inv.INV_SHARE_IND,
+            [INV_SHARE_IND] = inv.INV_SHARE_IND,
             [OUTBREAK_NAME]                 = inv.OUTBREAK_NAME,
             [INVESTIGATION_STATUS]          = inv.INVESTIGATION_STATUS,
             [INV_CASE_STATUS]               = inv.INV_CASE_STATUS,

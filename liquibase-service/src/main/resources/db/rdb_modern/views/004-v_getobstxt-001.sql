@@ -8,7 +8,7 @@ SELECT
      ,o.cd
      ,ovt.ovt_value_txt as response
 FROM
-    dbo.nrt_investigation_observation tnio
-        LEFT JOIN dbo.nrt_observation o ON o.observation_uid = tnio.branch_id
-        LEFT JOIN dbo.nrt_observation_txt ovt ON ovt.observation_uid = o.observation_uid
+    dbo.nrt_investigation_observation tnio with (nolock)
+        LEFT JOIN dbo.nrt_observation o with (nolock) ON o.observation_uid = tnio.branch_id
+        LEFT JOIN dbo.nrt_observation_txt ovt with (nolock) ON ovt.observation_uid = o.observation_uid
 WHERE tnio.branch_type_cd = 'InvFrmQ' AND ovt.ovt_seq = 1;
