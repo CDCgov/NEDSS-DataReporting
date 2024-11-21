@@ -167,7 +167,7 @@ class InvestigationServiceTest {
 
         investigationService.processMessage(payload, interviewTopic, consumer);
 
-        final InvestigationInterviewKey interviewKey =  new InvestigationInterviewKey();
+        final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
         interviewKey.setInterviewUid(interviewUid);
 
         final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
@@ -193,6 +193,24 @@ class InvestigationServiceTest {
 
         verify(interviewRepository).computeInterviews(String.valueOf(interviewUid));
     }
+
+    @Test
+    void testProcessInterviewException() {
+        String invalidPayload = "{\"payload\": {\"after\": {}}}";
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> investigationService.processMessage(invalidPayload, interviewTopic, consumer));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+    }
+
+    @Test
+    void testProcessInterviewNoDataException() {
+        Long interviewUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"interview_uid\": \"" + interviewUid + "\"}}}";
+
+        when(interviewRepository.computeInterviews(String.valueOf(interviewUid))).thenReturn(Optional.empty());
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, interviewTopic, consumer));
+    }
+
 
     private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
 
