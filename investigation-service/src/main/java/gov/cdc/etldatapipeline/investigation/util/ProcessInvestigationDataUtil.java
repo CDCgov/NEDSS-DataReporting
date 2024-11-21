@@ -400,7 +400,7 @@ public class ProcessInvestigationDataUtil {
 
     }
 
-    public InvestigationInterview transformInterview(Interview interview) {
+    private InvestigationInterview transformInterview(Interview interview) {
         InvestigationInterview investigationInterview = new InvestigationInterview();
         investigationInterview.setInterviewUid(interview.getInterviewUid());
         investigationInterview.setInterviewDate(interview.getInterviewDate());
@@ -420,6 +420,10 @@ public class ProcessInvestigationDataUtil {
         investigationInterview.setRecordStatusCd(interview.getRecordStatusCd());
         investigationInterview.setLocalId(interview.getLocalId());
         investigationInterview.setVersionCtrlNbr(interview.getVersionCtrlNbr());
+        investigationInterview.setInvestigationUid(interview.getInvestigationUid());
+        investigationInterview.setOrganizationUid(interview.getOrganizationUid());
+        investigationInterview.setProviderUid(interview.getProviderUid());
+        investigationInterview.setPatientUid(interview.getPatientUid());
         return investigationInterview;
     }
 

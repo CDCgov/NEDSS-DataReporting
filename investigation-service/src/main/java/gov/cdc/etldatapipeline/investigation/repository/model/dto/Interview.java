@@ -63,6 +63,18 @@ public class Interview {
     @Column(name="ix_location")
     private String ixLocation;
 
+    @Column(name="investigation_uid")
+    private String investigationUid;
+
+    @Column(name="provider_uid")
+    private String providerUid;
+
+    @Column(name="organization_uid")
+    private String organizationUid;
+
+    @Column(name="patient_uid")
+    private String patientUid;
+
     @Column(name="answers")
     private String answers;
 

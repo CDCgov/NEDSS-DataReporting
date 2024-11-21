@@ -27,4 +27,8 @@ public class InvestigationInterview {
     private String ixIntervieweeRole;
     private String ixType;
     private String ixLocation;
+    private String investigationUid;
+    private String providerUid;
+    private String organizationUid;
+    private String patientUid;
 }

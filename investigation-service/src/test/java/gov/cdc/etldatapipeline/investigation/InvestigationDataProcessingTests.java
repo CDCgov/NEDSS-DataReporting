@@ -62,7 +62,7 @@ class InvestigationDataProcessingTests {
     private static final String RDB_METADATA_COLS_TOPIC = "rdbMetadataColsTopic";
     private static final Long INVESTIGATION_UID = 234567890L;
     private static final Long INTERVIEW_UID = 234567890L;
-
+    private static final String INVALID_JSON = "invalidJSON";
     ProcessInvestigationDataUtil transformer;
 
     @BeforeEach
@@ -116,20 +116,19 @@ class InvestigationDataProcessingTests {
     void testTransformInvestigationError(){
         Investigation investigation = new Investigation();
         investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
-        String invalidJSON = "invalidJSON";
 
-        investigation.setPersonParticipations(invalidJSON);
-        investigation.setOrganizationParticipations(invalidJSON);
-        investigation.setActIds(invalidJSON);
-        investigation.setInvestigationObservationIds(invalidJSON);
-        investigation.setInvestigationConfirmationMethod(invalidJSON);
-        investigation.setInvestigationCaseAnswer(invalidJSON);
-        investigation.setInvestigationCaseCnt(invalidJSON);
+        investigation.setPersonParticipations(INVALID_JSON);
+        investigation.setOrganizationParticipations(INVALID_JSON);
+        investigation.setActIds(INVALID_JSON);
+        investigation.setInvestigationObservationIds(INVALID_JSON);
+        investigation.setInvestigationConfirmationMethod(INVALID_JSON);
+        investigation.setInvestigationCaseAnswer(INVALID_JSON);
+        investigation.setInvestigationCaseCnt(INVALID_JSON);
         transformer.transformInvestigationData(investigation);
-        transformer.processNotifications(invalidJSON);
+        transformer.processNotifications(INVALID_JSON);
 
         List<ILoggingEvent> logs = listAppender.list;
-        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
+        logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(INVALID_JSON)));
     }
 
     @Test
@@ -342,18 +341,27 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testTransformInterview() {
-        Interview interview = constructInterview(INTERVIEW_UID);
-        InvestigationInterview investigationInterview = transformer.transformInterview(interview);
+    void testProcessInterviewsError(){
 
-        assertEquals(INTERVIEW_UID, investigationInterview.getInterviewUid());
-        assertEquals(interview.getInterviewLocCd(), investigationInterview.getInterviewLocCd());
-        assertEquals(interview.getInterviewStatusCd(), investigationInterview.getInterviewStatusCd());
-        assertEquals(interview.getInterviewTypeCd(), investigationInterview.getInterviewTypeCd());
-        assertEquals(interview.getIxLocation(), investigationInterview.getIxLocation());
-        assertEquals(interview.getIxStatus(), investigationInterview.getIxStatus());
-        assertEquals(interview.getIxType(), investigationInterview.getIxType());
-        assertEquals(interview.getInterviewDate(), investigationInterview.getInterviewDate());
+        Interview interview = new Interview();
+        interview.setInterviewUid(INTERVIEW_UID);
+
+        interview.setAnswers(INVALID_JSON);
+        interview.setNotes(INVALID_JSON);
+        transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
+        transformer.setInterviewAnswerOutputTopicName(INTERVIEW_ANSWERS_TOPIC);
+        transformer.setInterviewNoteOutputTopicName(INTERVIEW_NOTE_TOPIC);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processInterview(interview);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
     }
 
     @Test
