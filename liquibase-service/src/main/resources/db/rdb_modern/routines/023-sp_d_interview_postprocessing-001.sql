@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.sp_d_interview_postprocessing_COPY(
+CREATE OR ALTER PROCEDURE dbo.sp_d_interview_postprocessing(
     @interview_uids NVARCHAR(MAX),
     @debug bit = 'false')
 as
@@ -13,7 +13,7 @@ BEGIN
     DECLARE @Pivot_sql NVARCHAR(MAX) = '';
     DECLARE @Insert_sql NVARCHAR(MAX) = '';
     DECLARE @Update_sql NVARCHAR(MAX) = '';
-    DECLARE @Col_number BIGINT = (SELECT COUNT(*) FROM dbo.nrt_interview_columns_copy);
+    DECLARE @Col_number BIGINT = (SELECT COUNT(*) FROM dbo.nrt_metadata_columns);
 
     BEGIN TRY
 
@@ -41,7 +41,7 @@ BEGIN
         SELECT
             RDB_COLUMN_NM
         INTO #NEW_COLUMNS
-        FROM dbo.nrt_interview_columns_copy
+        FROM dbo.nrt_metadata_columns
         WHERE NEW_FLAG = 1 AND RDB_COLUMN_NM NOT IN (SELECT COLUMN_NAME
     FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_NAME = 'D_INTERVIEW' AND TABLE_SCHEMA = 'dbo');
@@ -68,7 +68,7 @@ BEGIN
             EXEC sp_executesql @ColumnAdd_sql;
         END
 
-        UPDATE dbo.nrt_interview_columns_copy
+        UPDATE dbo.nrt_metadata_columns
         SET NEW_FLAG = 0
         WHERE NEW_FLAG = 1 AND TABLE_NAME = 'D_INTERVIEW';
 
@@ -106,7 +106,7 @@ BEGIN
             IX_LOCATION,
             IX_INTERVIEWEE_ROLE
         INTO #INTERVIEW_INIT
-        FROM dbo.nrt_interview_copy
+        FROM dbo.nrt_interview
         WHERE interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
         if
@@ -133,7 +133,7 @@ BEGIN
             rdb_column_nm,
             answer_val
         INTO #INTERVIEW_ANSWERS
-        FROM dbo.nrt_interview_answer_copy
+        FROM dbo.nrt_interview_answer
         WHERE interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
         if
@@ -230,7 +230,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'INSERT INTO D_INTERVIEW';
 
         SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',') 
-        FROM dbo.nrt_interview_columns_copy);
+        FROM dbo.nrt_metadata_columns);
 
         SET @Insert_sql = '
         INSERT INTO dbo.D_INTERVIEW (
@@ -252,7 +252,7 @@ BEGIN
         IX_INTERVIEWEE_ROLE,
         IX_TYPE,
         IX_LOCATION
-        ' + CASE WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',') FROM dbo.nrt_interview_columns_copy) + ') '
+        ' + CASE WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',') FROM dbo.nrt_metadata_columns) + ') '
         ELSE ')' end + 
         ' SELECT 
         li.D_INTERVIEW_KEY,
@@ -273,7 +273,7 @@ BEGIN
         ix.IX_INTERVIEWEE_ROLE,
         ix.IX_TYPE,
         ix.IX_LOCATION
-        ' + CASE WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('pv.' + QUOTENAME(RDB_COLUMN_NM), ',') FROM dbo.nrt_interview_columns_copy)
+        ' + CASE WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('pv.' + QUOTENAME(RDB_COLUMN_NM), ',') FROM dbo.nrt_metadata_columns)
             ELSE '' END +
         'FROM #L_INTERVIEW_N li
         LEFT JOIN #INTERVIEW_INIT ix
@@ -313,7 +313,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'UPDATE D_INTERVIEW';
 
         SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',') 
-        FROM dbo.nrt_interview_columns_copy);
+        FROM dbo.nrt_metadata_columns);
 
         SET @Update_sql = '
         UPDATE dl 
@@ -335,7 +335,7 @@ BEGIN
         dl.IX_INTERVIEWEE_ROLE = ix.IX_INTERVIEWEE_ROLE,
         dl.IX_TYPE = ix.IX_TYPE,
         dl.IX_LOCATION = ix.IX_LOCATION 
-        ' + CASE WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('dl.' + QUOTENAME(RDB_COLUMN_NM) + ' = pv.' + QUOTENAME(RDB_COLUMN_NM), ',') FROM dbo.nrt_interview_columns_copy)
+        ' + CASE WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('dl.' + QUOTENAME(RDB_COLUMN_NM) + ' = pv.' + QUOTENAME(RDB_COLUMN_NM), ',') FROM dbo.nrt_metadata_columns)
             ELSE '' END +
         ' FROM 
         #INTERVIEW_INIT ix
@@ -391,7 +391,7 @@ BEGIN
             ixn.user_comment,
             ixn.comment_date
         INTO #INTERVIEW_NOTE_INIT
-        FROM dbo.nrt_interview_note_copy ixn
+        FROM dbo.nrt_interview_note ixn
         LEFT JOIN dbo.L_INTERVIEW lint
             ON ixn.interview_uid = lint.interview_uid
         WHERE ixn.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
