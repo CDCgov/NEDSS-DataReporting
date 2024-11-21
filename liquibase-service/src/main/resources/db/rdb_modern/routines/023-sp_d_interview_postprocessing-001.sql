@@ -70,7 +70,7 @@ BEGIN
 
         UPDATE dbo.nrt_interview_columns_copy
         SET NEW_FLAG = 0
-        WHERE NEW_FLAG = 1;
+        WHERE NEW_FLAG = 1 AND TABLE_NAME = 'D_INTERVIEW';
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
