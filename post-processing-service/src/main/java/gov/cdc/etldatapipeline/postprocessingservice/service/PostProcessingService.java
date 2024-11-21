@@ -68,8 +68,9 @@ public class PostProcessingService {
         INVESTIGATION(4, "investigation", PHC_UID, "sp_nrt_investigation_postprocessing"),
         NOTIFICATION(5, "notification", "notification_uid", "sp_nrt_notification_postprocessing"),
         CASE_MANAGEMENT(6, "case_management", PHC_UID, "sp_nrt_case_management_postprocessing"),
-        LDF_DATA(7, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
-        OBSERVATION(8, "observation", "observation_uid", null),
+        INTERVIEW(7, "interview", "interview_uid", "sp_d_interview_postprocessing"),
+        LDF_DATA(8, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
+        OBSERVATION(9, "observation", "observation_uid", null),
         F_PAGE_CASE(0, "fact page case", PHC_UID, "sp_f_page_case_postprocessing"),
         CASE_ANSWERS(0, "case answers", PHC_UID, "sp_page_builder_postprocessing"),
         CASE_COUNT(0, "case count", PHC_UID, "sp_nrt_case_count_postprocessing"),
@@ -86,7 +87,6 @@ public class PostProcessingService {
             this.storedProcedure = storedProcedure;
             this.uidName = uidName;
         }
-
     }
 
     @RetryableTopic(
@@ -112,6 +112,7 @@ public class PostProcessingService {
             "${spring.kafka.topic.provider}",
             "${spring.kafka.topic.notification}",
             "${spring.kafka.topic.case_management}",
+            "${spring.kafka.topic.interview}",
             "${spring.kafka.topic.ldf_data}",
             "${spring.kafka.topic.observation}"
     })
@@ -246,6 +247,12 @@ public class PostProcessingService {
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForCaseManagement);
+                        break;
+                    case INTERVIEW:
+                        processTopic(keyTopic, entity, ids,
+                                postProcRepository::executeStoredProcForDInterview);
+                        processTopic(keyTopic, entity.getName(), ids,
+                                postProcRepository::executeStoredProcForFInterviewCase, "sp_f_interview_case_postprocessing");
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids,

@@ -37,4 +37,10 @@ public interface PostProcRepository extends JpaRepository<PostProcSp, Long> {
 
     @Procedure("sp_lab101_datamart_postprocessing")
     void executeStoredProcForLab101Datamart(@Param("observationUids") String observationUids);
+
+    @Procedure("sp_d_interview_postprocessing")
+    void executeStoredProcForDInterview(@Param("interviewUids") String interviewUids);
+
+    @Procedure("sp_f_interview_case_postprocessing")
+    void executeStoredProcForFInterviewCase(@Param("interviewUids") String interviewUids);
 }
