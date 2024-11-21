@@ -1,18 +1,16 @@
 CREATE OR ALTER PROCEDURE dbo.sp_f_page_case_postprocessing
     @phc_ids nvarchar(max),
     @debug bit = 'false'
-as
+AS
 
-    BEGIN
-        DECLARE @RowCount_no INT ;
-        DECLARE @Proc_Step_no FLOAT = 0 ;
-        DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
-        DECLARE @batch_start_time datetime2(7) = null ;
-        DECLARE @batch_end_time datetime2(7) = null ;
-        DECLARE @batch_id BIGINT;
-        SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmss')) as bigint);
+BEGIN
+    DECLARE @RowCount_no INT ;
+    DECLARE @Proc_Step_no FLOAT = 0 ;
+    DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
+    DECLARE @batch_id BIGINT;
+    SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmss')) as bigint);
 
-        BEGIN TRY
+    BEGIN TRY
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
@@ -22,42 +20,36 @@ as
 
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
-            ,[Dataflow_Name]
-            ,[package_Name]
-            ,[Status_Type]
-            ,[step_number]
-            ,[step_name]
-            ,[row_count]
-            ,[Msg_Description1]
+                                         ,[Dataflow_Name]
+                                         ,[package_Name]
+                                         ,[Status_Type]
+                                         ,[step_number]
+                                         ,[step_name]
+                                         ,[row_count]
+                                         ,[Msg_Description1]
         )
         VALUES
             (
-            @batch_id
-                ,'F_PAGE_CASE'
-                ,'F_PAGE_CASE'
-                ,'START'
-                ,@Proc_Step_no
-                ,@Proc_Step_Name
-                ,0
-                ,LEFT('ID List-' + @phc_ids,500)
+              @batch_id
+            ,'F_PAGE_CASE'
+            ,'F_PAGE_CASE'
+            ,'START'
+            ,@Proc_Step_no
+            ,@Proc_Step_Name
+            ,0
+            ,LEFT('ID List-' + @phc_ids,500)
             );
 
         COMMIT TRANSACTION;
 
 
-        select @batch_start_time = batch_start_dttm,@batch_end_time = batch_end_dttm
-        from [dbo].[job_batch_log]
-        where status_type = 'start' and type_code='MasterETL'
-        ;
-
-
         BEGIN TRANSACTION;
 
 
-                SET @Proc_Step_no = 2;
-                SET @Proc_Step_Name = ' Generating PHC_UIDS_ALL';
+        SET @Proc_Step_no = 2;
+        SET @Proc_Step_Name = ' Generating PHC_UIDS_ALL';
 
-                    ---> PHC_UIDS
+        ---> PHC_UIDS
         SELECT inv.public_health_case_uid page_case_uid,
                CASE_MANAGEMENT_UID,
                INVESTIGATION_FORM_CD,
@@ -65,32 +57,29 @@ as
                LAST_CHG_TIME
         INTO #PHC_UIDS
         FROM dbo.nrt_investigation inv
-                 --LEFT OUTER JOIN NBS_ODSE..CASE_MANAGEMENT cm ON inv.PUBLIC_HEALTH_CASE_UID= cm.PUBLIC_HEALTH_CASE_UID
-                 LEFT OUTER JOIN NBS_SRTE..CONDITION_CODE cc  ON cc.CONDITION_CD= inv.CD
-            AND INVESTIGATION_FORM_CD   NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
-                                                 'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
-                                                 'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
-        WHERE inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','));
+        WHERE inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','))
+          AND INVESTIGATION_FORM_CD  NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
+                                              'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
+                                              'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR');
 
         if @debug  = 'true' select * from #PHC_UIDS;
 
         IF OBJECT_ID('#PHC_UIDS_ALL', 'U') IS NOT NULL
-        drop table #PHC_UIDS_ALL
-        ;
+            drop table #PHC_UIDS_ALL
+            ;
 
         SELECT
             inv.PUBLIC_HEALTH_CASE_UID  'PAGE_CASE_UID', /* VS LENGTH =8 AS PAGE_CASE_UID 'PAGE_CASE_UID',*/
-                CASE_MANAGEMENT_UID,
+            CASE_MANAGEMENT_UID,
             INVESTIGATION_FORM_CD,
             CD,
             LAST_CHG_TIME
         INTO  #PHC_UIDS_ALL
         FROM
             dbo.nrt_investigation inv
-                --LEFT OUTER JOIN NBS_ODSE.dbo.CASE_MANAGEMENT ON	inv.PUBLIC_HEALTH_CASE_UID= CASE_MANAGEMENT.PUBLIC_HEALTH_CASE_UID
-                LEFT OUTER JOIN NBS_SRTE.dbo.CONDITION_CODE ON 	CONDITION_CODE.CONDITION_CD= inv.CD AND	INVESTIGATION_FORM_CD
-                NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
-        WHERE inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','));
+        WHERE inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','))
+          AND INVESTIGATION_FORM_CD
+            NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR');
 
         if @debug  = 'true' select * from #PHC_UIDS_ALL;
 
@@ -104,27 +93,27 @@ as
 
         BEGIN TRANSACTION;
 
-                    SET @Proc_Step_no = 3;
-                    SET @Proc_Step_Name = ' Generating PHC_CASE_UIDS_ALL';
+        SET @Proc_Step_no = 3;
+        SET @Proc_Step_Name = ' Generating PHC_CASE_UIDS_ALL';
 
-                    IF OBJECT_ID('#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
-        drop table #PHC_CASE_UIDS_ALL
-        ;
+        IF OBJECT_ID('#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
+            drop table #PHC_CASE_UIDS_ALL
+            ;
 
 
         SELECT
             inv.PUBLIC_HEALTH_CASE_UID  'PAGE_CASE_UID', /* VS LENGTH =8 AS PAGE_CASE_UID 'PAGE_CASE_UID',*/
-                CASE_MANAGEMENT_UID,
+            CASE_MANAGEMENT_UID,
             INVESTIGATION_FORM_CD,
             CD,
             LAST_CHG_TIME
         INTO  #PHC_CASE_UIDS_ALL
         FROM
             dbo.nrt_investigation inv
-                --LEFT OUTER JOIN NBS_ODSE.dbo.CASE_MANAGEMENT ON	inv.PUBLIC_HEALTH_CASE_UID= CASE_MANAGEMENT.PUBLIC_HEALTH_CASE_UID
-                LEFT OUTER JOIN NBS_SRTE.dbo.CONDITION_CODE ON 	CONDITION_CODE.CONDITION_CD= inv.CD AND	INVESTIGATION_FORM_CD
-                NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
+        --LEFT OUTER JOIN NBS_ODSE.dbo.CASE_MANAGEMENT ON	inv.PUBLIC_HEALTH_CASE_UID= CASE_MANAGEMENT.PUBLIC_HEALTH_CASE_UID
+        --LEFT OUTER JOIN NBS_SRTE.dbo.CONDITION_CODE ON 	CONDITION_CODE.CONDITION_CD= inv.CD AND
         where inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','))
+          and INVESTIGATION_FORM_CD  NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
           AND CASE_MANAGEMENT_UID is null;
 
         if @debug  = 'true' select * from #PHC_CASE_UIDS_ALL;
@@ -139,17 +128,17 @@ as
 
         BEGIN TRANSACTION;
 
-                    SET @Proc_Step_no = 4;
-                    SET @Proc_Step_Name = ' Generating ENTITY_KEYSTORE_INC';
+        SET @Proc_Step_no = 4;
+        SET @Proc_Step_Name = ' Generating ENTITY_KEYSTORE_INC';
 
-                    IF OBJECT_ID('#ENTITY_KEYSTORE_INC', 'U') IS NOT NULL
-        drop table #ENTITY_KEYSTORE_INC
-        ;
+        IF OBJECT_ID('#ENTITY_KEYSTORE_INC', 'U') IS NOT NULL
+            drop table #ENTITY_KEYSTORE_INC
+            ;
 
         -- drop table dbo.F_S_INV_CASE
 
         IF OBJECT_ID('#F_S_INV_CASE', 'U') IS NOT NULL
-        drop table #F_S_INV_CASE;
+            drop table #F_S_INV_CASE;
 
         -- Populate dbo.F_S_INV_CASE
 
@@ -220,8 +209,8 @@ as
         SET @Proc_Step_Name = ' Generating DIMENSION_KEYS_PAGECASEID';
 
         IF OBJECT_ID('#DIMENSION_KEYS_PAGECASEID', 'U') IS NOT NULL
-        drop table #DIMENSION_KEYS_PAGECASEID
-        ;
+            drop table #DIMENSION_KEYS_PAGECASEID
+            ;
 
         select L_INV_ADMINISTRATIVE_INC.PAGE_CASE_UID as PAGE_CASE_UID
         into #DIMENSION_KEYS_PAGECASEID
@@ -264,12 +253,12 @@ as
 
         BEGIN TRANSACTION;
 
-                    SET @Proc_Step_no = 6;
-                    SET @Proc_Step_Name = ' Generating DIMENSIONAL_KEYS';
+        SET @Proc_Step_no = 6;
+        SET @Proc_Step_Name = ' Generating DIMENSIONAL_KEYS';
 
-                    IF OBJECT_ID('#DIMENSIONAL_KEYS', 'U') IS NOT NULL
-        drop table #DIMENSIONAL_KEYS
-        ;
+        IF OBJECT_ID('#DIMENSIONAL_KEYS', 'U') IS NOT NULL
+            drop table #DIMENSIONAL_KEYS
+            ;
 
         /**Updated to handle cases when there are no page builder investigation updates.*/
         select  phc.page_case_uid,
@@ -338,12 +327,12 @@ as
 
         BEGIN TRANSACTION;
 
-                    SET @Proc_Step_no = 7;
-                    SET @Proc_Step_Name = ' Generating F_PAGE_CASE_TEMP_INC';
+        SET @Proc_Step_no = 7;
+        SET @Proc_Step_Name = ' Generating F_PAGE_CASE_TEMP_INC';
 
-                    IF OBJECT_ID('#F_PAGE_CASE_TEMP_INC', 'U') IS NOT NULL
-        drop table #F_PAGE_CASE_TEMP_INC
-        ;
+        IF OBJECT_ID('#F_PAGE_CASE_TEMP_INC', 'U') IS NOT NULL
+            drop table #F_PAGE_CASE_TEMP_INC
+            ;
 
 
         --DROP TABLE dbo.F_PAGE_CASE;
@@ -387,46 +376,46 @@ as
 
         BEGIN TRANSACTION;
 
-                    SET @Proc_Step_no = 8;
-                    SET @Proc_Step_Name = ' Generating DROP COLUMNS';
+        SET @Proc_Step_no = 8;
+        SET @Proc_Step_Name = ' Generating DROP COLUMNS';
 
-                -- DROP COLUMN PAGE_CASE_UID;
+        -- DROP COLUMN PAGE_CASE_UID;
         ALTER TABLE  #F_PAGE_CASE_TEMP_INC DROP COLUMN PAGE_CASE_UID ;
         if @debug  = 'true' select * from #F_PAGE_CASE_TEMP_INC;
 
         --??PROC SORT DATA=F_PAGE_CASE NODUPKEY; BY PATIENT_KEY; RUN;
 
         IF OBJECT_ID('dbo.F_PAGE_CASE', 'U') IS NOT NULL
-        BEGIN
-                             --drop table dbo.F_PAGE_CASE;
-                             DELETE fpagecase FROM dbo.F_PAGE_CASE fpagecase
-                             JOIN #F_PAGE_CASE_TEMP_INC fpagecaseinc ON fpagecase.investigation_key=fpagecaseinc.investigation_key;
+            BEGIN
+                --drop table dbo.F_PAGE_CASE;
+                DELETE fpagecase FROM dbo.F_PAGE_CASE fpagecase
+                                          JOIN #F_PAGE_CASE_TEMP_INC fpagecaseinc ON fpagecase.investigation_key=fpagecaseinc.investigation_key;
 
-        INSERT INTO dbo.F_PAGE_CASE SELECT * FROM #F_PAGE_CASE_TEMP_INC;
-        END;
-
-
-                    IF OBJECT_ID('dbo.F_PAGE_CASE', 'U') IS NULL
-        BEGIN
-        SELECT *
-        into [dbo].F_PAGE_CASE
-        FROM
-            (
-            SELECT *,
-            ROW_NUMBER () OVER (PARTITION BY PATIENT_KEY order by PATIENT_KEY) rowid
-            FROM #F_PAGE_CASE_TEMP_INC
-            ) AS Der WHERE rowid=1;
+                INSERT INTO dbo.F_PAGE_CASE SELECT * FROM #F_PAGE_CASE_TEMP_INC;
+            END;
 
 
-        ALTER TABLE  dbo.F_PAGE_CASE DROP COLUMN rowid ;
-        END;
-                    /**
-                    This should cover any issue with defect https://nbscentral.sramanaged.com/redmine/issues/12555
-                    ETL Error in Dynamic Datamarts Process - Problem Record(s) Causing Million+ Rows in Dynamic Datamart (Total Should Be a Few Thousand)
-                    */
+        IF OBJECT_ID('dbo.F_PAGE_CASE', 'U') IS NULL
+            BEGIN
+                SELECT *
+                into [dbo].F_PAGE_CASE
+                FROM
+                    (
+                        SELECT *,
+                               ROW_NUMBER () OVER (PARTITION BY PATIENT_KEY order by PATIENT_KEY) rowid
+                        FROM #F_PAGE_CASE_TEMP_INC
+                    ) AS Der WHERE rowid=1;
+
+
+                ALTER TABLE  dbo.F_PAGE_CASE DROP COLUMN rowid ;
+            END;
+        /**
+        This should cover any issue with defect https://nbscentral.sramanaged.com/redmine/issues/12555
+        ETL Error in Dynamic Datamarts Process - Problem Record(s) Causing Million+ Rows in Dynamic Datamart (Total Should Be a Few Thousand)
+        */
 
         DELETE FROM [DBO].F_PAGE_CASE WHERE INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY FROM dbo.F_PAGE_CASE
-            GROUP BY INVESTIGATION_KEY HAVING COUNT(INVESTIGATION_KEY)>1) AND PATIENT_KEY =1
+                                                                  GROUP BY INVESTIGATION_KEY HAVING COUNT(INVESTIGATION_KEY)>1) AND PATIENT_KEY =1
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
@@ -437,75 +426,75 @@ as
 
         BEGIN TRANSACTION ;
 
-            SET @Proc_Step_no = 9;
-            SET @Proc_Step_Name = 'SP_COMPLETE';
+        SET @Proc_Step_no = 9;
+        SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
-            ,[Dataflow_Name]
-            ,[package_Name]
-            ,[Status_Type]
-            ,[step_number]
-            ,[step_name]
-            ,[row_count]
-            ,[msg_description1]
+                                         ,[Dataflow_Name]
+                                         ,[package_Name]
+                                         ,[Status_Type]
+                                         ,[step_number]
+                                         ,[step_name]
+                                         ,[row_count]
+                                         ,[msg_description1]
         )
         VALUES
             (
-            @batch_id,
-            'F_PAGE_CASE'
-                ,'S_F_PAGE_CASE'
-                ,'COMPLETE'
-                ,@Proc_Step_no
-                ,@Proc_Step_name
-                ,@RowCount_no
-                ,LEFT('ID List-' + @phc_ids,500)
+              @batch_id,
+              'F_PAGE_CASE'
+            ,'S_F_PAGE_CASE'
+            ,'COMPLETE'
+            ,@Proc_Step_no
+            ,@Proc_Step_name
+            ,@RowCount_no
+            ,LEFT('ID List-' + @phc_ids,500)
             );
 
 
         COMMIT TRANSACTION;
-END TRY
+    END TRY
 
-BEGIN CATCH
+    BEGIN CATCH
 
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
 
 
-            DECLARE @ErrorNumber INT = ERROR_NUMBER();
-            DECLARE @ErrorLine INT = ERROR_LINE();
-            DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-            DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-            DECLARE @ErrorState INT = ERROR_STATE();
+        DECLARE @ErrorNumber INT = ERROR_NUMBER();
+        DECLARE @ErrorLine INT = ERROR_LINE();
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
 
 
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
-            ,[Dataflow_Name]
-            ,[package_Name]
-            ,[Status_Type]
-            ,[step_number]
-            ,[step_name]
-            ,[Error_Description]
-            ,[row_count]
+                                         ,[Dataflow_Name]
+                                         ,[package_Name]
+                                         ,[Status_Type]
+                                         ,[step_number]
+                                         ,[step_name]
+                                         ,[Error_Description]
+                                         ,[row_count]
         )
         VALUES
             (
-            @batch_id
-                ,'F_PAGE_CASE'
-                ,'S_F_PAGE_CASE'
-                ,'ERROR'
-                ,@Proc_Step_no
-                ,'ERROR - '+ @Proc_Step_name
-                , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
-                ,0
+              @batch_id
+            ,'F_PAGE_CASE'
+            ,'S_F_PAGE_CASE'
+            ,'ERROR'
+            ,@Proc_Step_no
+            ,'ERROR - '+ @Proc_Step_name
+            , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
+            ,0
             );
 
 
         return -1 ;
 
-END CATCH
+    END CATCH
 
 END;
