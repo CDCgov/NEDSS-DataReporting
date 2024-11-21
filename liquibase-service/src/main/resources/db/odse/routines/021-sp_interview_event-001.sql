@@ -41,24 +41,28 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #INTERVIEW_INIT';
 
-        SELECT INTERVIEW_UID,
-               INTERVIEW_STATUS_CD,
-               INTERVIEW_DATE,
-               INTERVIEWEE_ROLE_CD,
-               INTERVIEW_TYPE_CD,
-               INTERVIEW_LOC_CD,
-               LOCAL_ID,
-               RECORD_STATUS_CD,
-               RECORD_STATUS_TIME,
+        SELECT ix.INTERVIEW_UID,
+               ix.INTERVIEW_STATUS_CD,
+               ix.INTERVIEW_DATE,
+               ix.INTERVIEWEE_ROLE_CD,
+               ix.INTERVIEW_TYPE_CD,
+               ix.INTERVIEW_LOC_CD,
+               ix.LOCAL_ID,
+               ix.RECORD_STATUS_CD,
+               ix.RECORD_STATUS_TIME,
                ix.ADD_TIME,
                ix.ADD_USER_ID,
                ix.last_chg_time,
-               LAST_CHG_USER_ID,
-               VERSION_CTRL_NBR,
+               ix.LAST_CHG_USER_ID,
+               ix.VERSION_CTRL_NBR,
                cvg1.code_short_desc_txt                              AS IX_STATUS,
                cvg2.code_short_desc_txt                              AS IX_INTERVIEWEE_ROLE,
                COALESCE(cvg3.code_short_desc_txt, INTERVIEW_TYPE_CD) AS IX_TYPE,
-               cvg4.code_short_desc_txt                              AS IX_LOCATION
+               cvg4.code_short_desc_txt                              AS IX_LOCATION,
+               ar1.target_act_uid AS INVESTIGATION_UID,
+               nae.entity_uid AS PROVIDER_UID,
+               nae2.entity_uid AS ORGANIZATION_UID,
+               nae3.entity_uid AS PATIENT_UID
         INTO #INTERVIEW_INIT
         FROM NBS_ODSE.dbo.INTERVIEW ix WITH (NOLOCK)
                  LEFT JOIN nbs_srte.dbo.Code_value_general cvg1 WITH (NOLOCK)
@@ -70,6 +74,17 @@ BEGIN
                  LEFT JOIN nbs_srte.dbo.Code_value_general cvg4 WITH (NOLOCK)
                            ON ix.interview_loc_cd = cvg4.code and
                               cvg4.code_set_nm in ('NBS_INTVW_LOC', 'NBS_INTVW_LOC_STDHIV')
+                LEFT JOIN NBS_ODSE.dbo.Act_relationship ar1 WITH (NOLOCK)
+                    ON ar1.source_act_uid = ix.interview_uid AND ar1.type_cd = 'IXS'
+                LEFT JOIN NBS_ODSE.dbo.NBS_act_entity nae  WITH (NOLOCK)
+                    on ix.interview_uid = nae.act_uid
+                    AND nae.type_cd = 'IntrvwerOfInterview'
+                LEFT JOIN NBS_ODSE.dbo.NBS_act_entity nae2  WITH (NOLOCK)
+                    on ix.interview_uid = nae2.act_uid
+                    AND nae2.type_cd = 'OrgAsSiteOfIntv'
+                LEFT JOIN NBS_ODSE.dbo.NBS_act_entity nae3  WITH (NOLOCK)
+                    on ix.interview_uid = nae3.act_uid
+                    AND nae3.type_cd = 'IntrvweeOfInterview'
         where interview_uid in (SELECT value FROM STRING_SPLIT(@ix_uids, ','));
 
         if
@@ -1204,6 +1219,10 @@ BEGIN
                ix.IX_INTERVIEWEE_ROLE,
                ix.IX_TYPE,
                ix.IX_LOCATION,
+               ix.INVESTIGATION_UID,
+               ix.PROVIDER_UID,
+               ix.ORGANIZATION_UID,
+               ix.PATIENT_UID,
                nesteddata.answers,
                nesteddata.notes,
                nesteddata.rdb_cols
