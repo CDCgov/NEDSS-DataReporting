@@ -510,7 +510,7 @@ databaseChangeLog:
       author: liquibase
       changes:
         - sqlFile:
-            path: 022-create_nrt_interview_columns-001.sql
+            path: 022-create_nrt_metadata_columns-001.sql
             splitStatements: false
   - changeSet:
       id: 69

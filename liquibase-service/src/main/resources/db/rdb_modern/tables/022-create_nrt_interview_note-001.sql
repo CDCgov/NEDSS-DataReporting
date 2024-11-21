@@ -6,7 +6,6 @@ CREATE TABLE dbo.nrt_interview_note
 (
     interview_uid    bigint                                          NOT NULL,
     nbs_answer_uid   bigint                                          NULL,
-    answer_val       VARCHAR(4000)                                   NULL,
     user_first_name  varchar(200)                                    NULL,
     user_last_name   varchar(200)                                    NULL,
     user_comment     varchar(2000)                                   NULL,
