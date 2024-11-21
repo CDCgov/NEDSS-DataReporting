@@ -60,7 +60,8 @@ class InvestigationDataProcessingTests {
     private static final String INTERVIEW_ANSWERS_TOPIC = "interviewAnswersTopic";
     private static final String INTERVIEW_NOTE_TOPIC = "interviewAnswersTopic";
     private static final String RDB_METADATA_COLS_TOPIC = "rdbMetadataColsTopic";
-    private static final Long investigationUid = 234567890L;
+    private static final Long INVESTIGATION_UID = 234567890L;
+    private static final Long INTERVIEW_UID = 234567890L;
 
     ProcessInvestigationDataUtil transformer;
 
@@ -84,16 +85,16 @@ class InvestigationDataProcessingTests {
     void testConfirmationMethod() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
-        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         investigation.setInvestigationConfirmationMethod(readFileData(FILE_PREFIX + "ConfirmationMethod.json"));
         transformer.investigationConfirmationOutputTopicName = CONFIRMATION_TOPIC;
 
         InvestigationConfirmationMethodKey confirmationMethodKey = new InvestigationConfirmationMethodKey();
-        confirmationMethodKey.setPublicHealthCaseUid(investigationUid);
+        confirmationMethodKey.setPublicHealthCaseUid(INVESTIGATION_UID);
         confirmationMethodKey.setConfirmationMethodCd("LD");
 
         InvestigationConfirmationMethod confirmationMethod = new InvestigationConfirmationMethod();
-        confirmationMethod.setPublicHealthCaseUid(investigationUid);
+        confirmationMethod.setPublicHealthCaseUid(INVESTIGATION_UID);
         confirmationMethod.setConfirmationMethodCd("LD");
         confirmationMethod.setConfirmationMethodDescTxt("Laboratory confirmed");
         confirmationMethod.setConfirmationMethodTime("2024-01-15T10:20:57.001");
@@ -114,7 +115,7 @@ class InvestigationDataProcessingTests {
     @Test
     void testTransformInvestigationError(){
         Investigation investigation = new Investigation();
-        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         String invalidJSON = "invalidJSON";
 
         investigation.setPersonParticipations(invalidJSON);
@@ -135,12 +136,12 @@ class InvestigationDataProcessingTests {
     void testInvestigationObservationIds() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
-        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         investigation.setInvestigationObservationIds(readFileData(FILE_PREFIX + "InvestigationObservationIds.json"));
         transformer.investigationObservationOutputTopicName = OBSERVATION_TOPIC;
 
         InvestigationObservation observation = new InvestigationObservation();
-        observation.setPublicHealthCaseUid(investigationUid);
+        observation.setPublicHealthCaseUid(INVESTIGATION_UID);
         observation.setObservationId(10344738L);
         observation.setRootTypeCd("LabReport");
         observation.setBranchId(10344740L);
@@ -159,7 +160,7 @@ class InvestigationDataProcessingTests {
     @Test
     void testProcessNotifications() throws JsonProcessingException {
         Investigation investigation = new Investigation();
-        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         investigation.setInvestigationNotifications(readFileData(FILE_PREFIX + "InvestigationNotification.json"));
         transformer.investigationNotificationsOutputTopicName = NOTIFICATIONS_TOPIC;
 
@@ -189,8 +190,7 @@ class InvestigationDataProcessingTests {
     @Test
     void testProcessInterviews() throws JsonProcessingException {
 
-        final var interviewUid =  234567890L;
-        Interview interview = constructInterview(interviewUid);
+        Interview interview = constructInterview(INTERVIEW_UID);
         interview.setAnswers(readFileData(FILE_PREFIX + "InterviewAnswers.json"));
         interview.setNotes(readFileData(FILE_PREFIX + "InterviewNotes.json"));
         transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
@@ -198,11 +198,11 @@ class InvestigationDataProcessingTests {
         transformer.setInterviewNoteOutputTopicName(INTERVIEW_NOTE_TOPIC);
 
         final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
-        interviewKey.setInterviewUid(interviewUid);
+        interviewKey.setInterviewUid(INTERVIEW_UID);
 
-        final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
-        final InvestigationInterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(interviewUid);
-        final InvestigationInterviewNote interviewNoteValue = constructInvestigationInterviewNote(interviewUid);
+        final InvestigationInterview interviewValue = constructInvestigationInterview(INTERVIEW_UID);
+        final InvestigationInterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(INTERVIEW_UID);
+        final InvestigationInterviewNote interviewNoteValue = constructInvestigationInterviewNote(INTERVIEW_UID);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processInterview(interview);
@@ -308,10 +308,9 @@ class InvestigationDataProcessingTests {
 
     @Test
     void testProcessColumnMetadata() throws JsonProcessingException {
-        final var interviewUid =  234567890L;
         final var rdb_col_name = "CLN_CARE_STATUS_IXS";
         final var tbl_name = "D_INTERVIEW";
-        Interview interview = constructInterview(interviewUid);
+        Interview interview = constructInterview(INTERVIEW_UID);
         interview.setRdbCols(readFileData(FILE_PREFIX + "RdbColumns.json"));
 
         transformer.setRdbMetadataColumnsOutputTopicName(RDB_METADATA_COLS_TOPIC);
@@ -344,11 +343,10 @@ class InvestigationDataProcessingTests {
 
     @Test
     void testTransformInterview() {
-        final var interviewUid =  234567890L;
-        Interview interview = constructInterview(interviewUid);
+        Interview interview = constructInterview(INTERVIEW_UID);
         InvestigationInterview investigationInterview = transformer.transformInterview(interview);
 
-        assertEquals(interviewUid, investigationInterview.getInterviewUid());
+        assertEquals(INTERVIEW_UID, investigationInterview.getInterviewUid());
         assertEquals(interview.getInterviewLocCd(), investigationInterview.getInterviewLocCd());
         assertEquals(interview.getInterviewStatusCd(), investigationInterview.getInterviewStatusCd());
         assertEquals(interview.getInterviewTypeCd(), investigationInterview.getInterviewTypeCd());
@@ -362,7 +360,7 @@ class InvestigationDataProcessingTests {
     void testProcessMissingOrInvalidNotifications() {
         Investigation investigation = new Investigation();
 
-        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         investigation.setInvestigationNotifications(null);
         transformer.investigationNotificationsOutputTopicName = NOTIFICATIONS_TOPIC;
         transformer.processNotifications(null);
@@ -374,15 +372,15 @@ class InvestigationDataProcessingTests {
     void testPageCaseAnswer() throws JsonProcessingException {
         Investigation investigation = new Investigation();
 
-        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"));
         transformer.setPageCaseAnswerOutputTopicName(PAGE_CASE_ANSWER_TOPIC);
 
         PageCaseAnswer caseAnswer = new PageCaseAnswer();
-        caseAnswer.setActUid(investigationUid);
+        caseAnswer.setActUid(INVESTIGATION_UID);
 
         PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
-        pageCaseAnswerKey.setActUid(investigationUid);
+        pageCaseAnswerKey.setActUid(INVESTIGATION_UID);
         pageCaseAnswerKey.setNbsCaseAnswerUid(1235L);
 
         PageCaseAnswer pageCaseAnswer = constructCaseAnswer();
@@ -423,12 +421,12 @@ class InvestigationDataProcessingTests {
 
         Investigation investigation = new Investigation();
 
-        investigation.setPublicHealthCaseUid(investigationUid);
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         investigation.setInvestigationCaseManagement(readFileData(FILE_PREFIX + "CaseManagement.json"));
         transformer.setInvestigationCaseManagementTopicName(CASE_MANAGEMENT_TOPIC);
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
-        var caseManagementKey = new InvestigationCaseManagementKey(investigationUid, 1001L);
+        var caseManagementKey = new InvestigationCaseManagementKey(INVESTIGATION_UID, 1001L);
         var caseManagement = constructCaseManagement();
 
         transformer.processInvestigationCaseManagement(investigation.getInvestigationCaseManagement());
@@ -448,7 +446,7 @@ class InvestigationDataProcessingTests {
     private @NotNull InvestigationNotification constructNotifications() {
         InvestigationNotification notifications = new InvestigationNotification();
         notifications.setSourceActUid(263748597L);
-        notifications.setPublicHealthCaseUid(investigationUid);
+        notifications.setPublicHealthCaseUid(INVESTIGATION_UID);
         notifications.setSourceClassCd("NOTF");
         notifications.setTargetClassCd("CASE");
         notifications.setActTypeCd("Notification");
@@ -486,7 +484,7 @@ class InvestigationDataProcessingTests {
         expected.setRdbColumnNm("ADM_IMMEDIATE_NND_DESC");
         expected.setCodeSetGroupId(null);
         expected.setAnswerTxt("notify test is success");
-        expected.setActUid(investigationUid);
+        expected.setActUid(INVESTIGATION_UID);
         expected.setRecordStatusCd("OPEN");
         expected.setNbsQuestionUid(12341438L);
         expected.setInvestigationFormCd("PG_Generic_V2_Investigation");
@@ -508,7 +506,7 @@ class InvestigationDataProcessingTests {
     private InvestigationCaseManagement constructCaseManagement() {
         InvestigationCaseManagement expected = new InvestigationCaseManagement();
         expected.setCaseManagementUid(1001L);
-        expected.setPublicHealthCaseUid(investigationUid);
+        expected.setPublicHealthCaseUid(INVESTIGATION_UID);
         expected.setAddUserId(10055001L);
         expected.setCaseOid(1300110031L);
         expected.setInitFupInitialFollUpCd("SF");
