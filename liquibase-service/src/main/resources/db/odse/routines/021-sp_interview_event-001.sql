@@ -41,35 +41,50 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #INTERVIEW_INIT';
 
-        SELECT INTERVIEW_UID,
-               INTERVIEW_STATUS_CD,
-               INTERVIEW_DATE,
-               INTERVIEWEE_ROLE_CD,
-               INTERVIEW_TYPE_CD,
-               INTERVIEW_LOC_CD,
-               LOCAL_ID,
-               RECORD_STATUS_CD,
-               RECORD_STATUS_TIME,
+        SELECT ix.INTERVIEW_UID,
+               ix.INTERVIEW_STATUS_CD,
+               ix.INTERVIEW_DATE,
+               ix.INTERVIEWEE_ROLE_CD,
+               ix.INTERVIEW_TYPE_CD,
+               ix.INTERVIEW_LOC_CD,
+               ix.LOCAL_ID,
+               ix.RECORD_STATUS_CD,
+               ix.RECORD_STATUS_TIME,
                ix.ADD_TIME,
                ix.ADD_USER_ID,
                ix.last_chg_time,
-               LAST_CHG_USER_ID,
-               VERSION_CTRL_NBR,
+               ix.LAST_CHG_USER_ID,
+               ix.VERSION_CTRL_NBR,
                cvg1.code_short_desc_txt                              AS IX_STATUS,
                cvg2.code_short_desc_txt                              AS IX_INTERVIEWEE_ROLE,
                COALESCE(cvg3.code_short_desc_txt, INTERVIEW_TYPE_CD) AS IX_TYPE,
-               cvg4.code_short_desc_txt                              AS IX_LOCATION
+               cvg4.code_short_desc_txt                              AS IX_LOCATION,
+               ar1.target_act_uid                                    AS INVESTIGATION_UID,
+               nae.entity_uid                                        AS PROVIDER_UID,
+               nae2.entity_uid                                       AS ORGANIZATION_UID,
+               nae3.entity_uid                                       AS PATIENT_UID
         INTO #INTERVIEW_INIT
-        FROM NBS_ODSE.dbo.INTERVIEW ix
-                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg1
+        FROM NBS_ODSE.dbo.INTERVIEW ix WITH (NOLOCK)
+                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg1 WITH (NOLOCK)
                            ON ix.interview_status_cd = cvg1.code and cvg1.code_set_nm = 'NBS_INTVW_STATUS'
-                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg2
+                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg2 WITH (NOLOCK)
                            ON ix.interviewee_role_cd = cvg2.code and cvg2.code_set_nm = 'NBS_INTVWEE_ROLE'
-                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg3
+                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg3 WITH (NOLOCK)
                            ON ix.interview_type_cd = cvg3.code and cvg3.code_set_nm = 'NBS_INTERVIEW_TYPE_STDHIV'
-                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg4
+                 LEFT JOIN nbs_srte.dbo.Code_value_general cvg4 WITH (NOLOCK)
                            ON ix.interview_loc_cd = cvg4.code and
                               cvg4.code_set_nm in ('NBS_INTVW_LOC', 'NBS_INTVW_LOC_STDHIV')
+                LEFT JOIN NBS_ODSE.dbo.Act_relationship ar1 WITH (NOLOCK)
+                    ON ar1.source_act_uid = ix.interview_uid AND ar1.type_cd = 'IXS'
+                LEFT JOIN NBS_ODSE.dbo.NBS_act_entity nae  WITH (NOLOCK)
+                    on ix.interview_uid = nae.act_uid
+                    AND nae.type_cd = 'IntrvwerOfInterview'
+                LEFT JOIN NBS_ODSE.dbo.NBS_act_entity nae2  WITH (NOLOCK)
+                    on ix.interview_uid = nae2.act_uid
+                    AND nae2.type_cd = 'OrgAsSiteOfIntv'
+                LEFT JOIN NBS_ODSE.dbo.NBS_act_entity nae3  WITH (NOLOCK)
+                    on ix.interview_uid = nae3.act_uid
+                    AND nae3.type_cd = 'IntrvweeOfInterview'
         where interview_uid in (SELECT value FROM STRING_SPLIT(@ix_uids, ','));
 
         if
@@ -141,9 +156,9 @@ BEGIN
                                   END AS DATA_TYPE,
                               rdb_table_nm,
                               answer_group_seq_nbr
-              FROM dbo.v_rdb_ui_metadata_answers
+              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) AS metadata
-                 INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG
+                 INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
                             ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
         WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
           AND UPPER(data_type) = 'CODED'
@@ -186,9 +201,9 @@ BEGIN
                rdb_column_nm2
         INTO #coded_table_snm
         FROM #coded_table AS CODED
-                 LEFT JOIN NBS_SRTE.DBO.CODESET_GROUP_METADATA AS METADATA
+                 LEFT JOIN NBS_SRTE.DBO.CODESET_GROUP_METADATA AS METADATA WITH (NOLOCK)
                            ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
-                 LEFT JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG
+                 LEFT JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
                            ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                                AND CVG.CODE = CODED.ANSWER_OTH
         WHERE ANSWER_OTH IS NOT NULL
@@ -230,9 +245,9 @@ BEGIN
                CODE_SHORT_DESC_TXT AS ANSWER_TXT1
         INTO #coded_table_nonsnm
         FROM #coded_table AS CODED
-                 LEFT JOIN NBS_SRTE.DBO.CODESET_GROUP_METADATA AS METADATA
+                 LEFT JOIN NBS_SRTE.DBO.CODESET_GROUP_METADATA AS METADATA WITH (NOLOCK)
                            ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
-                 LEFT JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG
+                 LEFT JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
                            ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                                AND CVG.CODE = CODED.ANSWER_TXT
         WHERE nbs_answer_uid NOT IN (SELECT nbs_answer_uid FROM #coded_table_snm);
@@ -288,7 +303,7 @@ BEGIN
                               DATA_TYPE,
                               ACT_UID AS INTERVIEW_UID,
                               RECORD_STATUS_CD
-              FROM dbo.v_rdb_ui_metadata_answers
+              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND (
@@ -297,7 +312,7 @@ BEGIN
                   )
                 AND RDB_COLUMN_NM NOT LIKE '%_CD'
                 AND ANSWER_GROUP_SEQ_NBR IS NULL) metadata
-                 INNER JOIN NBS_SRTE.dbo.CODE_VALUE_GENERAL CVG
+                 INNER JOIN NBS_SRTE.dbo.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
                             ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
                                 AND upper(data_type) = 'CODED';
 
@@ -336,9 +351,9 @@ BEGIN
                REPLACE(CODED.ANSWER_VALUE, ' ', '') + ' ' + REPLACE(CVG.CODE_SHORT_DESC_TXT, ' ', '') AS ANSWER_TXT
         INTO #CODED_TABLE_SNTEMP_TRANS
         FROM #CODED_TABLE_SNTEMP CODED
-                 LEFT JOIN NBS_SRTE.dbo.CODESET_GROUP_METADATA METADATA
+                 LEFT JOIN NBS_SRTE.dbo.CODESET_GROUP_METADATA METADATA WITH (NOLOCK)
                            ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
-                 LEFT JOIN NBS_SRTE.dbo.CODE_VALUE_GENERAL CVG
+                 LEFT JOIN NBS_SRTE.dbo.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
                            ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                                AND CVG.CODE = CODED.ANSWER_TXT_CODE;
 
@@ -476,10 +491,10 @@ BEGIN
         INTO #CODED_COUNTY_TABLE
         FROM #CODED_TABLE_SN_MERGED AS CODED
                  LEFT JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA
+             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA WITH (NOLOCK)
              ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
                  LEFT JOIN
-             NBS_SRTE.dbo.V_STATE_COUNTY_CODE_VALUE AS CVG
+             NBS_SRTE.dbo.V_STATE_COUNTY_CODE_VALUE AS CVG WITH (NOLOCK)
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                  AND CVG.CODE = CODED.ANSWER_TXT
         WHERE METADATA.CODE_SET_NM = 'COUNTY_CCD';
@@ -651,9 +666,9 @@ BEGIN
                               data_type,
                               rdb_table_nm,
                               answer_group_seq_nbr
-              from dbo.v_rdb_ui_metadata_answers
+              from dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) as metadata
-                 INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL CVG
+                 INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
                             ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
         WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
           AND CODE = 'TEXT'
@@ -698,17 +713,17 @@ BEGIN
                               INVESTIGATION_FORM_CD,
                               QUESTION_GROUP_SEQ_NBR,
                               DATA_TYPE
-              FROM dbo.v_rdb_ui_metadata_answers
+              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND UPPER(DATA_TYPE) = 'TEXT'
                 AND data_location = 'NBS_ANSWER.ANSWER_TXT'
                 AND ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) metadata
                  LEFT JOIN
-             NBS_ODSE.dbo.NBS_ANSWER AS PA
+             NBS_ODSE.dbo.NBS_ANSWER AS PA WITH (NOLOCK)
              ON metadata.nbs_question_uid = PA.nbs_question_uid
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG
+             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(metadata.DATA_TYPE)
         WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
           AND CVG.CODE IN ('Numeric', 'NUMERIC')
@@ -895,10 +910,10 @@ BEGIN
         INTO #NUMERIC_DATA_TRANS
         FROM #NUMERIC_DATA_MERGED AS CODED
                  LEFT JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA
+             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA WITH (NOLOCK)
              ON METADATA.CODE_SET_GROUP_ID = CODED.UNIT_VALUE1
                  LEFT JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG
+             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
         WHERE CVG.CODE = CODED.ANSWER_CODED;
 
@@ -968,17 +983,17 @@ BEGIN
                               INVESTIGATION_FORM_CD,
                               QUESTION_GROUP_SEQ_NBR,
                               DATA_TYPE
-              FROM dbo.v_rdb_ui_metadata_answers
+              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND DATA_TYPE in ('Date/Time', 'Date', 'DATETIME', 'DATE')
                 AND data_location = 'NBS_ANSWER.ANSWER_TXT'
                 AND ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) metadata
                  LEFT JOIN
-             NBS_ODSE.dbo.NBS_ANSWER AS PA
+             NBS_ODSE.dbo.NBS_ANSWER AS PA WITH (NOLOCK)
              ON metadata.nbs_question_uid = PA.nbs_question_uid
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG
+             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(metadata.DATA_TYPE)
         WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
           AND CVG.CODE IN ('DATETIME', 'DATE')
@@ -1062,7 +1077,7 @@ BEGIN
                         ACT_UID                                                AS INTERVIEW_UID,
                         LEFT(ANSWER_TXT, CHARINDEX('~', ANSWER_TXT + '~') - 1) AS [USER]
         INTO #INTERVIEW_NOTE_INIT
-        FROM dbo.v_rdb_ui_metadata_answers
+        FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
         WHERE act_uid in (SELECT value FROM STRING_SPLIT(@ix_uids, ','))
           AND QUESTION_IDENTIFIER = 'IXS111';
 
@@ -1144,7 +1159,7 @@ BEGIN
                                      LAST_CHG_USER_ID,
                                      ROW_NUMBER() OVER (PARTITION BY RDB_COLUMN_NM ORDER BY LAST_CHG_TIME DESC) AS rn
 
-                              FROM NBS_ODSE.dbo.NBS_rdb_metadata
+                              FROM NBS_ODSE.dbo.NBS_rdb_metadata WITH (NOLOCK)
                               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                                 AND RDB_COLUMN_NM NOT IN (
                                                           'IX_STATUS',
@@ -1204,6 +1219,10 @@ BEGIN
                ix.IX_INTERVIEWEE_ROLE,
                ix.IX_TYPE,
                ix.IX_LOCATION,
+               ix.INVESTIGATION_UID,
+               ix.PROVIDER_UID,
+               ix.ORGANIZATION_UID,
+               ix.PATIENT_UID,
                nesteddata.answers,
                nesteddata.notes,
                nesteddata.rdb_cols
