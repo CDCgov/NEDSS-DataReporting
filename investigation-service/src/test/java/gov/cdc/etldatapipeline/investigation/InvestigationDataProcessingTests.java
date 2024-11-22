@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -196,12 +197,12 @@ class InvestigationDataProcessingTests {
         transformer.setInterviewAnswerOutputTopicName(INTERVIEW_ANSWERS_TOPIC);
         transformer.setInterviewNoteOutputTopicName(INTERVIEW_NOTE_TOPIC);
 
-        final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
-        interviewKey.setInterviewUid(INTERVIEW_UID);
+        final InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
+        interviewReportingKey.setInterviewUid(INTERVIEW_UID);
 
-        final InvestigationInterview interviewValue = constructInvestigationInterview(INTERVIEW_UID);
-        final InvestigationInterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(INTERVIEW_UID);
-        final InvestigationInterviewNote interviewNoteValue = constructInvestigationInterviewNote(INTERVIEW_UID);
+        final InterviewReporting interviewReportingValue = constructInvestigationInterview(INTERVIEW_UID);
+        final InterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(INTERVIEW_UID);
+        final InterviewNote interviewNoteValue = constructInvestigationInterviewNote(INTERVIEW_UID);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processInterview(interview);
@@ -212,17 +213,17 @@ class InvestigationDataProcessingTests {
                 );
 
         var actualInterviewKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationInterviewKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReportingKey.class);
         var actualInterviewValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InvestigationInterview.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReporting.class);
         var actualInterviewAnswerValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InvestigationInterviewAnswer.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InterviewAnswer.class);
         var actualInterviewNoteValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InvestigationInterviewNote.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InterviewNote.class);
 
 
-        assertEquals(interviewKey, actualInterviewKey);
-        assertEquals(interviewValue, actualInterviewValue);
+        assertEquals(interviewReportingKey, actualInterviewKey);
+        assertEquals(interviewReportingValue, actualInterviewValue);
         assertEquals(interviewAnswerValue, actualInterviewAnswerValue);
         assertEquals(interviewNoteValue, actualInterviewNoteValue);
 
@@ -232,18 +233,22 @@ class InvestigationDataProcessingTests {
     void testProcessInterviewAnswers() throws JsonProcessingException {
 
         final var interviewUid =  234567890L;
+        final var interviewAnsColNm = "IX_CONTACTS_NAMED_IND";
         Interview interview = constructInterview(interviewUid);
         interview.setAnswers(readFileData(FILE_PREFIX + "InterviewAnswers.json"));
 
         transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
         transformer.setInterviewAnswerOutputTopicName(INTERVIEW_ANSWERS_TOPIC);
 
+        final InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
+        interviewReportingKey.setInterviewUid(interviewUid);
 
-        final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
-        interviewKey.setInterviewUid(interviewUid);
+        final InterviewAnswerKey interviewAnswerKey = new InterviewAnswerKey();
+        interviewAnswerKey.setInterviewUid(interviewUid);
+        interviewAnswerKey.setRdbColumnNm(interviewAnsColNm);
 
-        final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
-        final InvestigationInterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(interviewUid);
+        final InterviewReporting interviewReportingValue = constructInvestigationInterview(interviewUid);
+        final InterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(interviewUid);
 
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
@@ -255,14 +260,17 @@ class InvestigationDataProcessingTests {
                 );
 
         var actualInterviewKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationInterviewKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReportingKey.class);
         var actualInterviewValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InvestigationInterview.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReporting.class);
+        var actualInterviewAnswerKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), InterviewAnswerKey.class);
         var actualInterviewAnswerValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InvestigationInterviewAnswer.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InterviewAnswer.class);
 
-        assertEquals(interviewKey, actualInterviewKey);
-        assertEquals(interviewValue, actualInterviewValue);
+        assertEquals(interviewReportingKey, actualInterviewKey);
+        assertEquals(interviewReportingValue, actualInterviewValue);
+        assertEquals(interviewAnswerKey, actualInterviewAnswerKey);
         assertEquals(interviewAnswerValue, actualInterviewAnswerValue);
     }
 
@@ -271,6 +279,7 @@ class InvestigationDataProcessingTests {
     void testProcessInterviewNotes() throws JsonProcessingException {
 
         final var interviewUid =  234567890L;
+        final var interviewAnsUid = 21L;
         Interview interview = constructInterview(interviewUid);
         interview.setNotes(readFileData(FILE_PREFIX + "InterviewNotes.json"));
 
@@ -278,10 +287,14 @@ class InvestigationDataProcessingTests {
         transformer.setInterviewNoteOutputTopicName(INTERVIEW_NOTE_TOPIC);
 
 
-        final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
-        interviewKey.setInterviewUid(interviewUid);
-        final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
-        final InvestigationInterviewNote interviewNoteValue = constructInvestigationInterviewNote(interviewUid);
+        final InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
+        interviewReportingKey.setInterviewUid(interviewUid);
+        final InterviewNoteKey interviewNoteKey = new InterviewNoteKey();
+        interviewNoteKey.setInterviewUid(interviewUid);
+        interviewNoteKey.setNbsAnswerUid(interviewAnsUid);
+
+        final InterviewReporting interviewReportingValue = constructInvestigationInterview(interviewUid);
+        final InterviewNote interviewNoteValue = constructInvestigationInterviewNote(interviewUid);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processInterview(interview);
@@ -292,15 +305,18 @@ class InvestigationDataProcessingTests {
                 );
 
         var actualInterviewKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), InvestigationInterviewKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReportingKey.class);
         var actualInterviewValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InvestigationInterview.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReporting.class);
+        var actualInterviewNoteKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), InterviewNoteKey.class);
         var actualInterviewNoteValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InvestigationInterviewNote.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InterviewNote.class);
 
 
-        assertEquals(interviewKey, actualInterviewKey);
-        assertEquals(interviewValue, actualInterviewValue);
+        assertEquals(interviewReportingKey, actualInterviewKey);
+        assertEquals(interviewReportingValue, actualInterviewValue);
+        assertEquals(interviewNoteKey, actualInterviewNoteKey);
         assertEquals(interviewNoteValue, actualInterviewNoteValue);
 
     }
@@ -314,29 +330,29 @@ class InvestigationDataProcessingTests {
 
         transformer.setRdbMetadataColumnsOutputTopicName(RDB_METADATA_COLS_TOPIC);
 
-        RdbMetadataColumnKey rdbMetadataColumnKey = new RdbMetadataColumnKey();
-        rdbMetadataColumnKey.setRdbColumnName(rdb_col_name);
-        rdbMetadataColumnKey.setTableName(tbl_name);
+        MetadataColumnKey metadataColumnKey = new MetadataColumnKey();
+        metadataColumnKey.setRdbColumnName(rdb_col_name);
+        metadataColumnKey.setTableName(tbl_name);
 
-        RdbMetadataColumn rdbMetadataColumnValue = new RdbMetadataColumn();
-        rdbMetadataColumnValue.setRdbColumnName(rdb_col_name);
-        rdbMetadataColumnValue.setTableName(tbl_name);
-        rdbMetadataColumnValue.setLastChgTime("2024-05-23T15:42:41.317");
-        rdbMetadataColumnValue.setLastChgUserId(10000000L);
-        rdbMetadataColumnValue.setNewFlag(1);
+        MetadataColumn metadataColumnValue = new MetadataColumn();
+        metadataColumnValue.setRdbColumnNm(rdb_col_name);
+        metadataColumnValue.setTableName(tbl_name);
+        metadataColumnValue.setLastChgTime("2024-05-23T15:42:41.317");
+        metadataColumnValue.setLastChgUserId(10000000L);
+        metadataColumnValue.setNewFlag(1);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
         verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
         var actualRdbMetadataColumnKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), RdbMetadataColumnKey.class);
+                objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), MetadataColumnKey.class);
         var actualRdbMetadataColumnsValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), RdbMetadataColumn.class);
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), MetadataColumn.class);
 
 
-        assertEquals(rdbMetadataColumnKey, actualRdbMetadataColumnKey);
-        assertEquals(rdbMetadataColumnValue, actualRdbMetadataColumnsValue);
+        assertEquals(metadataColumnKey, actualRdbMetadataColumnKey);
+        assertEquals(metadataColumnValue, actualRdbMetadataColumnsValue);
 
     }
 
@@ -588,46 +604,46 @@ class InvestigationDataProcessingTests {
         return interview;
     }
 
-    private InvestigationInterview constructInvestigationInterview(Long interviewUid) {
-        InvestigationInterview investigationInterview = new InvestigationInterview();
-        investigationInterview.setInterviewUid(interviewUid);
-        investigationInterview.setInterviewDate("2024-11-11 00:00:00.000");
-        investigationInterview.setInterviewStatusCd("COMPLETE");
-        investigationInterview.setInterviewLocCd("C");
-        investigationInterview.setInterviewTypeCd("REINTVW");
-        investigationInterview.setIntervieweeRoleCd("SUBJECT");
-        investigationInterview.setIxIntervieweeRole("Subject of Investigation");
-        investigationInterview.setIxLocation("Clinic");
-        investigationInterview.setIxStatus("Closed/Completed");
-        investigationInterview.setIxType("Re-Interview");
-        investigationInterview.setLastChgTime("2024-11-13 20:27:39.587");
-        investigationInterview.setAddTime("2024-11-13 20:27:39.587");
-        investigationInterview.setAddUserId(10055282L);
-        investigationInterview.setLastChgUserId(10055282L);
-        investigationInterview.setLocalId("INT10099004GA01");
-        investigationInterview.setRecordStatusCd("ACTIVE");
-        investigationInterview.setRecordStatusTime("2024-11-13 20:27:39.587");
-        investigationInterview.setVersionCtrlNbr(1L);
-        return investigationInterview;
+    private InterviewReporting constructInvestigationInterview(Long interviewUid) {
+        InterviewReporting interviewReporting = new InterviewReporting();
+        interviewReporting.setInterviewUid(interviewUid);
+        interviewReporting.setInterviewDate("2024-11-11 00:00:00.000");
+        interviewReporting.setInterviewStatusCd("COMPLETE");
+        interviewReporting.setInterviewLocCd("C");
+        interviewReporting.setInterviewTypeCd("REINTVW");
+        interviewReporting.setIntervieweeRoleCd("SUBJECT");
+        interviewReporting.setIxIntervieweeRole("Subject of Investigation");
+        interviewReporting.setIxLocation("Clinic");
+        interviewReporting.setIxStatus("Closed/Completed");
+        interviewReporting.setIxType("Re-Interview");
+        interviewReporting.setLastChgTime("2024-11-13 20:27:39.587");
+        interviewReporting.setAddTime("2024-11-13 20:27:39.587");
+        interviewReporting.setAddUserId(10055282L);
+        interviewReporting.setLastChgUserId(10055282L);
+        interviewReporting.setLocalId("INT10099004GA01");
+        interviewReporting.setRecordStatusCd("ACTIVE");
+        interviewReporting.setRecordStatusTime("2024-11-13 20:27:39.587");
+        interviewReporting.setVersionCtrlNbr(1L);
+        return interviewReporting;
     }
 
-    private InvestigationInterviewAnswer constructInvestigationInterviewAnswer(Long interviewUid) {
-        InvestigationInterviewAnswer investigationInterviewAnswer = new InvestigationInterviewAnswer();
-        investigationInterviewAnswer.setInterviewUid(interviewUid);
-        investigationInterviewAnswer.setAnswerVal("Yes");
-        investigationInterviewAnswer.setRdbColumnNm("IX_CONTACTS_NAMED_IND");
-        return investigationInterviewAnswer;
+    private InterviewAnswer constructInvestigationInterviewAnswer(Long interviewUid) {
+        InterviewAnswer interviewAnswer = new InterviewAnswer();
+        interviewAnswer.setInterviewUid(interviewUid);
+        interviewAnswer.setAnswerVal("Yes");
+        interviewAnswer.setRdbColumnNm("IX_CONTACTS_NAMED_IND");
+        return interviewAnswer;
     }
 
-    private InvestigationInterviewNote constructInvestigationInterviewNote(Long interviewUid) {
-        InvestigationInterviewNote investigationInterviewNote = new InvestigationInterviewNote();
-        investigationInterviewNote.setInterviewUid(interviewUid);
-        investigationInterviewNote.setNbsAnswerUid(21L);
-        investigationInterviewNote.setCommentDate("2024-11-13T15:27:00");
-        investigationInterviewNote.setUserFirstName("super");
-        investigationInterviewNote.setUserLastName("user");
-        investigationInterviewNote.setUserComment("Test123");
-        return investigationInterviewNote;
+    private InterviewNote constructInvestigationInterviewNote(Long interviewUid) {
+        InterviewNote interviewNote = new InterviewNote();
+        interviewNote.setInterviewUid(interviewUid);
+        interviewNote.setNbsAnswerUid(21L);
+        interviewNote.setCommentDate("2024-11-13T15:27:00");
+        interviewNote.setUserFirstName("super");
+        interviewNote.setUserLastName("user");
+        interviewNote.setUserComment("Test123");
+        return interviewNote;
     }
 
 }

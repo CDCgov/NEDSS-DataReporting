@@ -9,9 +9,9 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class RdbMetadataColumn {
+public class MetadataColumn {
     private String tableName;
-    private String rdbColumnName;
+    private String rdbColumnNm;
     private Integer newFlag;
     private String lastChgTime;
     private Long lastChgUserId;

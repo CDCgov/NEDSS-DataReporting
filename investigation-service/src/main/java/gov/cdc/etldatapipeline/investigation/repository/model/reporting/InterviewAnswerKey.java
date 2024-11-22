@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.investigation.repository.model.reporting;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,12 +8,12 @@ import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
-public class RdbMetadataColumnKey {
+public class InterviewAnswerKey {
     @NonNull
-    @JsonProperty("table_name")
-    private String tableName;
+    @JsonProperty("interview_uid")
+    private Long interviewUid;
 
     @NonNull
     @JsonProperty("rdb_column_nm")
-    private String rdbColumnName;
+    private String rdbColumnNm;
 }

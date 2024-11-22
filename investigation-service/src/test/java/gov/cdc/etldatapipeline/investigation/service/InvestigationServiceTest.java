@@ -8,8 +8,8 @@ import gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationInterview;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationInterviewKey;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReportingKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
@@ -161,16 +161,16 @@ class InvestigationServiceTest {
         Long interviewUid = 234567890L;
         String payload = "{\"payload\": {\"after\": {\"interview_uid\": \"" + interviewUid + "\"}}}";
 
-        final Interview interview = constructInterview(interviewUid);
+        final gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview interview = constructInterview(interviewUid);
         when(interviewRepository.computeInterviews(String.valueOf(interviewUid))).thenReturn(Optional.of(interview));
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
         investigationService.processMessage(payload, interviewTopic, consumer);
 
-        final InvestigationInterviewKey interviewKey = new InvestigationInterviewKey();
-        interviewKey.setInterviewUid(interviewUid);
+        final InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
+        interviewReportingKey.setInterviewUid(interviewUid);
 
-        final InvestigationInterview interviewValue = constructInvestigationInterview(interviewUid);
+        final InterviewReporting interviewReportingValue = constructInvestigationInterview(interviewUid);
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
@@ -183,13 +183,13 @@ class InvestigationServiceTest {
 
 
         var actualInterviewKey = objectMapper.readValue(
-                objectMapper.readTree(actualKey).path("payload").toString(), InvestigationInterviewKey.class);
+                objectMapper.readTree(actualKey).path("payload").toString(), InterviewReportingKey.class);
         var actualInterviewValue = objectMapper.readValue(
-                objectMapper.readTree(actualValue).path("payload").toString(), InvestigationInterview.class);
+                objectMapper.readTree(actualValue).path("payload").toString(), InterviewReporting.class);
 
         assertEquals(interviewTopicOutput, actualTopic);
-        assertEquals(interviewKey, actualInterviewKey);
-        assertEquals(interviewValue, actualInterviewValue);
+        assertEquals(interviewReportingKey, actualInterviewKey);
+        assertEquals(interviewReportingValue, actualInterviewValue);
 
         verify(interviewRepository).computeInterviews(String.valueOf(interviewUid));
     }
@@ -334,26 +334,26 @@ class InvestigationServiceTest {
 
     }
 
-    private InvestigationInterview constructInvestigationInterview(Long interviewUid) {
-        InvestigationInterview investigationInterview = new InvestigationInterview();
-        investigationInterview.setInterviewUid(interviewUid);
-        investigationInterview.setInterviewDate("2024-11-11 00:00:00.000");
-        investigationInterview.setInterviewStatusCd("COMPLETE");
-        investigationInterview.setInterviewLocCd("C");
-        investigationInterview.setInterviewTypeCd("REINTVW");
-        investigationInterview.setIntervieweeRoleCd("SUBJECT");
-        investigationInterview.setIxIntervieweeRole("Subject of Investigation");
-        investigationInterview.setIxLocation("Clinic");
-        investigationInterview.setIxStatus("Closed/Completed");
-        investigationInterview.setIxType("Re-Interview");
-        investigationInterview.setLastChgTime("2024-11-13 20:27:39.587");
-        investigationInterview.setAddTime("2024-11-13 20:27:39.587");
-        investigationInterview.setAddUserId(10055282L);
-        investigationInterview.setLastChgUserId(10055282L);
-        investigationInterview.setLocalId("INT10099004GA01");
-        investigationInterview.setRecordStatusCd("ACTIVE");
-        investigationInterview.setRecordStatusTime("2024-11-13 20:27:39.587");
-        investigationInterview.setVersionCtrlNbr(1L);
-        return investigationInterview;
+    private InterviewReporting constructInvestigationInterview(Long interviewUid) {
+        InterviewReporting interviewReporting = new InterviewReporting();
+        interviewReporting.setInterviewUid(interviewUid);
+        interviewReporting.setInterviewDate("2024-11-11 00:00:00.000");
+        interviewReporting.setInterviewStatusCd("COMPLETE");
+        interviewReporting.setInterviewLocCd("C");
+        interviewReporting.setInterviewTypeCd("REINTVW");
+        interviewReporting.setIntervieweeRoleCd("SUBJECT");
+        interviewReporting.setIxIntervieweeRole("Subject of Investigation");
+        interviewReporting.setIxLocation("Clinic");
+        interviewReporting.setIxStatus("Closed/Completed");
+        interviewReporting.setIxType("Re-Interview");
+        interviewReporting.setLastChgTime("2024-11-13 20:27:39.587");
+        interviewReporting.setAddTime("2024-11-13 20:27:39.587");
+        interviewReporting.setAddUserId(10055282L);
+        interviewReporting.setLastChgUserId(10055282L);
+        interviewReporting.setLocalId("INT10099004GA01");
+        interviewReporting.setRecordStatusCd("ACTIVE");
+        interviewReporting.setRecordStatusTime("2024-11-13 20:27:39.587");
+        interviewReporting.setVersionCtrlNbr(1L);
+        return interviewReporting;
     }
 }
