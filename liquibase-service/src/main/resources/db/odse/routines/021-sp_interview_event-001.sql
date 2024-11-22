@@ -59,10 +59,10 @@ BEGIN
                cvg2.code_short_desc_txt                              AS IX_INTERVIEWEE_ROLE,
                COALESCE(cvg3.code_short_desc_txt, INTERVIEW_TYPE_CD) AS IX_TYPE,
                cvg4.code_short_desc_txt                              AS IX_LOCATION,
-               ar1.target_act_uid AS INVESTIGATION_UID,
-               nae.entity_uid AS PROVIDER_UID,
-               nae2.entity_uid AS ORGANIZATION_UID,
-               nae3.entity_uid AS PATIENT_UID
+               ar1.target_act_uid                                    AS INVESTIGATION_UID,
+               nae.entity_uid                                        AS PROVIDER_UID,
+               nae2.entity_uid                                       AS ORGANIZATION_UID,
+               nae3.entity_uid                                       AS PATIENT_UID
         INTO #INTERVIEW_INIT
         FROM NBS_ODSE.dbo.INTERVIEW ix WITH (NOLOCK)
                  LEFT JOIN nbs_srte.dbo.Code_value_general cvg1 WITH (NOLOCK)
