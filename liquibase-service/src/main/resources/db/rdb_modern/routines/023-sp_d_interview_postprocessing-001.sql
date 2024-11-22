@@ -67,6 +67,8 @@ BEGIN
                           CHAR(13) + CHAR(10))
         FROM #NEW_COLUMNS;
 
+
+        -- if there aren't any new columns to add, sp_executesql won't fire
         IF @ColumnAdd_sql IS NOT NULL
             BEGIN
                 EXEC sp_executesql @ColumnAdd_sql;
@@ -226,6 +228,83 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'UPDATE D_INTERVIEW';
+
+        SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
+                             FROM dbo.nrt_metadata_columns);
+
+
+        /*
+        Query is built one part after another, adding in extra parts
+        for the dynamic columns if @Col_number > 0
+        */
+        SET @Update_sql = '
+        UPDATE dl 
+        SET 
+        dl.IX_STATUS_CD = ix.IX_STATUS_CD,
+        dl.IX_DATE = ix.IX_DATE,
+        dl.IX_INTERVIEWEE_ROLE_CD = ix.IX_INTERVIEWEE_ROLE_CD,
+        dl.IX_TYPE_CD = ix.IX_TYPE_CD,
+        dl.IX_LOCATION_CD = ix.IX_LOCATION_CD,
+        dl.LOCAL_ID = ix.LOCAL_ID,
+        dl.RECORD_STATUS_CD = ix.RECORD_STATUS_CD,
+        dl.RECORD_STATUS_TIME = ix.RECORD_STATUS_TIME,
+        dl.ADD_TIME = ix.ADD_TIME,
+        dl.ADD_USER_ID = ix.ADD_USER_ID,
+        dl.LAST_CHG_TIME = ix.LAST_CHG_TIME,
+        dl.LAST_CHG_USER_ID = ix.LAST_CHG_USER_ID,
+        dl.VERSION_CTRL_NBR = ix.VERSION_CTRL_NBR,
+        dl.IX_STATUS = ix.IX_STATUS,
+        dl.IX_INTERVIEWEE_ROLE = ix.IX_INTERVIEWEE_ROLE,
+        dl.IX_TYPE = ix.IX_TYPE,
+        dl.IX_LOCATION = ix.IX_LOCATION 
+        ' + CASE
+                WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('dl.' + QUOTENAME(RDB_COLUMN_NM) + ' = pv.' + QUOTENAME(RDB_COLUMN_NM),',')
+                                                 FROM dbo.nrt_metadata_columns)
+            ELSE '' END +
+        ' FROM 
+        #INTERVIEW_INIT ix
+        LEFT JOIN dbo.L_INTERVIEW lint
+            ON ix.interview_uid = lint.interview_uid
+        LEFT JOIN dbo.D_INTERVIEW dl
+            ON lint.d_interview_key = dl.d_interview_key '
+        + CASE
+              WHEN @Col_number > 0 THEN 
+        ' LEFT JOIN (
+        SELECT interview_uid, ' + @PivotColumns + '
+        FROM (
+            SELECT 
+                interview_uid, 
+                rdb_column_nm, 
+                answer_val
+            FROM 
+                #INTERVIEW_ANSWERS
+        ) AS SourceData
+        PIVOT (
+            MAX(answer_val) 
+            FOR rdb_column_nm IN (' + @PivotColumns + ')
+        ) AS PivotTable) pv 
+        ON pv.interview_uid = ix.interview_uid'
+        ELSE ' ' END + 
+        ' WHERE
+        ix.interview_uid NOT IN (SELECT interview_uid FROM #L_INTERVIEW_N);';
+
+        SELECT @Update_sql;
+
+        exec sp_executesql @Update_sql;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
+        VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
 
         BEGIN TRANSACTION;
 
@@ -312,83 +391,6 @@ BEGIN
 
 
         exec sp_executesql @Insert_sql;
-
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'UPDATE D_INTERVIEW';
-
-        SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
-                             FROM dbo.nrt_metadata_columns);
-
-
-        /*
-        Query is built one part after another, adding in extra parts
-        for the dynamic columns if @Col_number > 0
-        */
-        SET @Update_sql = '
-        UPDATE dl 
-        SET 
-        dl.IX_STATUS_CD = ix.IX_STATUS_CD,
-        dl.IX_DATE = ix.IX_DATE,
-        dl.IX_INTERVIEWEE_ROLE_CD = ix.IX_INTERVIEWEE_ROLE_CD,
-        dl.IX_TYPE_CD = ix.IX_TYPE_CD,
-        dl.IX_LOCATION_CD = ix.IX_LOCATION_CD,
-        dl.LOCAL_ID = ix.LOCAL_ID,
-        dl.RECORD_STATUS_CD = ix.RECORD_STATUS_CD,
-        dl.RECORD_STATUS_TIME = ix.RECORD_STATUS_TIME,
-        dl.ADD_TIME = ix.ADD_TIME,
-        dl.ADD_USER_ID = ix.ADD_USER_ID,
-        dl.LAST_CHG_TIME = ix.LAST_CHG_TIME,
-        dl.LAST_CHG_USER_ID = ix.LAST_CHG_USER_ID,
-        dl.VERSION_CTRL_NBR = ix.VERSION_CTRL_NBR,
-        dl.IX_STATUS = ix.IX_STATUS,
-        dl.IX_INTERVIEWEE_ROLE = ix.IX_INTERVIEWEE_ROLE,
-        dl.IX_TYPE = ix.IX_TYPE,
-        dl.IX_LOCATION = ix.IX_LOCATION 
-        ' + CASE
-                WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('dl.' + QUOTENAME(RDB_COLUMN_NM) + ' = pv.' + QUOTENAME(RDB_COLUMN_NM),',')
-                                                 FROM dbo.nrt_metadata_columns)
-            ELSE '' END +
-        ' FROM 
-        #INTERVIEW_INIT ix
-        LEFT JOIN dbo.L_INTERVIEW lint
-            ON ix.interview_uid = lint.interview_uid
-        LEFT JOIN dbo.D_INTERVIEW dl
-            ON lint.d_interview_key = dl.d_interview_key '
-        + CASE
-              WHEN @Col_number > 0 THEN 
-        ' LEFT JOIN (
-        SELECT interview_uid, ' + @PivotColumns + '
-        FROM (
-            SELECT 
-                interview_uid, 
-                rdb_column_nm, 
-                answer_val
-            FROM 
-                #INTERVIEW_ANSWERS
-        ) AS SourceData
-        PIVOT (
-            MAX(answer_val) 
-            FOR rdb_column_nm IN (' + @PivotColumns + ')
-        ) AS PivotTable) pv 
-        ON pv.interview_uid = ix.interview_uid'
-        ELSE ' ' END + 
-        ' WHERE
-        ix.interview_uid NOT IN (SELECT interview_uid FROM #L_INTERVIEW_N);';
-
-        SELECT @Update_sql;
-
-        exec sp_executesql @Update_sql;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -515,6 +517,33 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
+            @PROC_STEP_NAME = 'UPDATE D_INTERVIEW_NOTE';
+
+        UPDATE din
+        SET din.USER_FIRST_NAME = ixn.USER_FIRST_NAME,
+            din.USER_LAST_NAME  = ixn.USER_LAST_NAME,
+            din.USER_COMMENT    = ixn.USER_COMMENT,
+            din.COMMENT_DATE    = ixn.COMMENT_DATE
+        FROM #INTERVIEW_NOTE_INIT ixn
+                 LEFT JOIN dbo.D_INTERVIEW_NOTE din
+                           ON ixn.NBS_ANSWER_UID = din.NBS_ANSWER_UID
+        WHERE ixn.NBS_ANSWER_UID NOT IN (SELECT NBS_ANSWER_UID FROM #L_INTERVIEW_NOTE_N);
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN
+            TRANSACTION;
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
             @PROC_STEP_NAME = 'INSERTING INTO D_INTERVIEW_NOTE';
 
 
@@ -545,32 +574,6 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'UPDATE D_INTERVIEW_NOTE';
-
-        UPDATE din
-        SET din.USER_FIRST_NAME = ixn.USER_FIRST_NAME,
-            din.USER_LAST_NAME  = ixn.USER_LAST_NAME,
-            din.USER_COMMENT    = ixn.USER_COMMENT,
-            din.COMMENT_DATE    = ixn.COMMENT_DATE
-        FROM #INTERVIEW_NOTE_INIT ixn
-                 LEFT JOIN dbo.D_INTERVIEW_NOTE din
-                           ON ixn.NBS_ANSWER_UID = din.NBS_ANSWER_UID
-        WHERE ixn.NBS_ANSWER_UID NOT IN (SELECT NBS_ANSWER_UID FROM #L_INTERVIEW_NOTE_N);
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
 
 
     END TRY
