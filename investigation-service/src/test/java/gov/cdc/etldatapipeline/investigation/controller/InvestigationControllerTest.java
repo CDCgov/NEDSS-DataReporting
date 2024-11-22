@@ -5,6 +5,8 @@ import gov.cdc.etldatapipeline.investigation.service.KafkaProducerService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -42,11 +44,16 @@ class InvestigationControllerTest {
         closeable.close();
     }
 
-    @Test
-    void postInvestigationTest() throws Exception  {
+    @ParameterizedTest
+    @CsvSource({
+            "/reporting/investigation-svc/investigation",
+            "/reporting/investigation-svc/notification",
+            "/reporting/investigation-svc/interview"
+    })
+    void testControllerMethods(String endpoint) throws Exception  {
         String jsonData = "{\"key\":\"value\"}";
 
-        mockMvc.perform(post("/reporting/investigation-svc/investigation")
+        mockMvc.perform(post(endpoint)
                         .contentType("application/json")
                         .content(jsonData))
                 .andExpect(status().isOk());
@@ -54,17 +61,6 @@ class InvestigationControllerTest {
         verify(kafkaProducerService).sendMessage(isNull(), eq(jsonData));
     }
 
-    @Test
-    void postNotificationTest() throws Exception  {
-        String jsonData = "{\"key\":\"value\"}";
-
-        mockMvc.perform(post("/reporting/investigation-svc/notification")
-                        .contentType("application/json")
-                        .content(jsonData))
-                .andExpect(status().isOk());
-
-        verify(kafkaProducerService).sendMessage(isNull(), eq(jsonData));
-    }
 
     @Test
     void getDataPipelineStatusHealthTest() {
