@@ -160,6 +160,7 @@ BEGIN
                ,LEFT(@id_list, 500));
 
 
+
         SET @proc_step_name = 'Update Legacy Investigation Values -' + LEFT(@id_list, 160);
         SET @proc_step_no = 1;
 
@@ -196,20 +197,21 @@ BEGIN
                      ,tnio.branch_type_cd
                      ,c.cd
                      ,c.response
+                     ,c.response_cd
                 INTO #tmp_coded
                 FROM #temp_inv_obs tnio with (nolock)
                          INNER JOIN dbo.v_getobscode c with (nolock) on tnio.branch_id = c.branch_id
-                WHERE c.cd IN 	('INV153',	    /* Import country*/
+                WHERE c.cd IN 	('INV153',	/* Import country*/
                                   'INV154', 	/* state*/
                                   'INV156', 	/* county*/
-                                  'INV128',	    /* HSPTLIZD_IND*/
-                                  'RUB162',     /* DIE_FRM_THIS_ILLNESS_IND */
-                                  'MEA078',     /* DIE_FRM_THIS_ILLNESS_IND */
+                                  'INV128',	/* HSPTLIZD_IND*/
+                                  'RUB162',  /* DIE_FRM_THIS_ILLNESS_IND */
+                                  'MEA078',  /* DIE_FRM_THIS_ILLNESS_IND */
                                   'PRT103', 	/* DIE_FRM_THIS_ILLNESS_IND */
-                                  'INV145',	    /* DIE_FRM_THIS_ILLNESS_IND in Generic */
-                                  'INV149',     /* FOOD_HANDLR_IND */
-                                  'INV178',     /* PATIENT_PREGNANT_IND */
-                                  'INV148');    /* DAYCARE_ASSOCIATION_IND */
+                                  'INV145',	/* DIE_FRM_THIS_ILLNESS_IND in Generic */
+                                  'INV149',  /* FOOD_HANDLR_IND */
+                                  'INV178',  /* PATIENT_PREGNANT_IND */
+                                  'INV148');  /* DAYCARE_ASSOCIATION_IND */
 
                 IF @debug = 'true' SELECT '#tmp_coded', * FROM #tmp_coded;
 
@@ -255,7 +257,7 @@ BEGIN
                 FROM #temp_inv_obs tnio
                          INNER JOIN dbo.v_getobsdate d on tnio.branch_id = d.branch_id
                 WHERE d.cd IN ('INV132',	/* HSPTL_ADMISSION_DT */
-                               'INV133'	    /* HSPTL_DISCHARGE_DT */
+                               'INV133'		/* HSPTL_DISCHARGE_DT */
                     );
 
                 IF @debug = 'true' SELECT '#tmp_date', * FROM #tmp_date;
@@ -265,12 +267,18 @@ BEGIN
                     tnio.public_health_case_uid,
                     max(CASE WHEN c.cd = 'INV128' THEN c.response
                              ELSE NULL END) AS HSPTLIZD_IND,
+                    max(CASE WHEN c.cd = 'INV153' THEN c.response_cd
+                             ELSE NULL END) AS IMPORT_FRM_CNTRY_CD,
                     max(CASE WHEN c.cd = 'INV153' THEN c.response
                              ELSE NULL END) AS IMPORT_FRM_CNTRY,
-                    max(CASE WHEN c.cd = 'INV154' THEN c.response
+                    max(CASE WHEN c.cd = 'INV154' THEN c.response_cd
                              ELSE NULL END) AS IMPORT_FRM_STATE_CD,
-                    max(CASE WHEN c.cd = 'INV156' THEN c.response
+                    max(CASE WHEN c.cd = 'INV154' THEN c.response
+                             ELSE NULL END) AS IMPORT_FRM_STATE,
+                    max(CASE WHEN c.cd = 'INV156' THEN c.response_cd
                              ELSE NULL END) AS IMPORT_FRM_CNTY_CD,
+                    max(CASE WHEN c.cd = 'INV156' THEN c.response
+                             ELSE NULL END) AS IMPORT_FRM_CNTY,
                     max(CASE WHEN c.cd = 'INV149' THEN c.response
                              ELSE NULL END) AS FOOD_HANDLR_IND,
                     max(CASE WHEN c.cd = 'INV178' THEN c.response
@@ -307,9 +315,12 @@ BEGIN
                 UPDATE tmp
                 SET
                     HSPTLIZD_IND = COALESCE(tmp.HSPTLIZD_IND, obs.HSPTLIZD_IND),
+                    IMPORT_FRM_CNTRY_CD = COALESCE(tmp.IMPORT_FRM_CNTRY_CD,obs.IMPORT_FRM_CNTRY_CD),
                     IMPORT_FRM_CNTRY = COALESCE(tmp.IMPORT_FRM_CNTRY,obs.IMPORT_FRM_CNTRY),
                     IMPORT_FRM_STATE_CD = COALESCE(tmp.IMPORT_FRM_STATE_CD, obs.IMPORT_FRM_STATE_CD),
+                    IMPORT_FRM_STATE = COALESCE(tmp.IMPORT_FRM_STATE, obs.IMPORT_FRM_STATE),
                     IMPORT_FRM_CNTY_CD = COALESCE(tmp.IMPORT_FRM_CNTY_CD, obs.IMPORT_FRM_CNTY_CD),
+                    IMPORT_FRM_CNTY = COALESCE(tmp.IMPORT_FRM_CNTY, obs.IMPORT_FRM_CNTY),
                     FOOD_HANDLR_IND = COALESCE(tmp.FOOD_HANDLR_IND, obs.FOOD_HANDLR_IND),
                     PATIENT_PREGNANT_IND = COALESCE(tmp.PATIENT_PREGNANT_IND, obs.PATIENT_PREGNANT_IND),
                     DAYCARE_ASSOCIATION_IND = COALESCE(tmp.DAYCARE_ASSOCIATION_IND, obs.DAYCARE_ASSOCIATION_IND),
@@ -355,7 +366,7 @@ BEGIN
 
         update dbo.INVESTIGATION
         set [INVESTIGATION_KEY]             = inv.INVESTIGATION_KEY,
-            [CASE_OID]                      = inv.CASE_OID,
+            [CASE_OID]         = inv.CASE_OID,
             [CASE_UID]                      = inv.CASE_UID,
             [INV_LOCAL_ID]    = inv.INV_LOCAL_ID,
             [INV_SHARE_IND] = inv.INV_SHARE_IND,
