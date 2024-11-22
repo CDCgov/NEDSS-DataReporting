@@ -108,13 +108,13 @@ BEGIN
                     ON lix.D_INTERVIEW_KEY = dintv.D_INTERVIEW_KEY
                 LEFT JOIN dbo.nrt_investigation inv
                     ON inv.public_health_case_uid = ix.investigation_uid
-                LEFT JOIN dbo.L_INVESTIGATION linv
+                LEFT JOIN dbo.INVESTIGATION linv
                     ON inv.public_health_case_uid = linv.CASE_UID
-                LEFT JOIN DBO.L_PROVIDER lprov
+                LEFT JOIN DBO.D_PROVIDER lprov
                     ON lprov.PROVIDER_UID = ix.provider_uid
-                LEFT JOIN DBO.L_ORGANIZATION lorg
+                LEFT JOIN DBO.D_ORGANIZATION lorg
                     ON lorg.ORGANIZATION_UID = ix.organization_uid
-                LEFT JOIN DBO.L_PATIENT lpat
+                LEFT JOIN DBO.D_PATIENT lpat
                     ON lpat.PATIENT_UID = ix.patient_uid;
 
         if
