@@ -22,7 +22,12 @@ CREATE TABLE dbo.nrt_interview
     ix_interviewee_role varchar(4000)                                   NULL,
     ix_type             varchar(4000)                                   NULL,
     ix_location         varchar(4000)                                   NULL,
+    investigation_uid   bigint                                          NULL,
+    provider_uid        bigint                                          NULL,
+    organization_uid    bigint                                          NULL,
+    patient_uid         bigint                                          NULL,
     refresh_datetime    datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime        datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
+
