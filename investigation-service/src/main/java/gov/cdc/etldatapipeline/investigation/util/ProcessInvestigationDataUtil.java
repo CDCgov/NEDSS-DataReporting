@@ -384,7 +384,7 @@ public class ProcessInvestigationDataUtil {
         interviewReportingKey.setInterviewUid(interview.getInterviewUid());
 
         // constructing reporting(nrt) beans
-        InterviewReporting investigationInterviewReporting = transformInterview(interview);
+        InterviewReporting interviewReporting = transformInterview(interview);
 
         /*
            sending reporting(nrt) beans as json to kafka
@@ -393,7 +393,8 @@ public class ProcessInvestigationDataUtil {
                create and send nrt_interview_note
          */
         String jsonKey = jsonGenerator.generateStringJson(interviewReportingKey);
-        String jsonValue = jsonGenerator.generateStringJson(investigationInterviewReporting);
+        String jsonValue = jsonGenerator.generateStringJson(interviewReporting, "interview_uid",
+                "investigation_uid", "provider_uid", "patient_uid", "notification_uid");
         kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
                 .whenComplete((res, e) -> logger.info("Interview data (uid={}) sent to {}", interview.getInterviewUid(), interviewOutputTopicName))
                 .thenRunAsync(() -> transformAndSendInterviewAnswer(interview))
@@ -402,35 +403,40 @@ public class ProcessInvestigationDataUtil {
     }
 
     private InterviewReporting transformInterview(Interview interview) {
-        InterviewReporting investigationInterviewReporting = new InterviewReporting();
-        investigationInterviewReporting.setInterviewUid(interview.getInterviewUid());
-        investigationInterviewReporting.setInterviewDate(interview.getInterviewDate());
-        investigationInterviewReporting.setInterviewLocCd(interview.getInterviewLocCd());
-        investigationInterviewReporting.setInterviewTypeCd(interview.getInterviewTypeCd());
-        investigationInterviewReporting.setInterviewStatusCd(interview.getInterviewStatusCd());
-        investigationInterviewReporting.setIntervieweeRoleCd(interview.getIntervieweeRoleCd());
-        investigationInterviewReporting.setIxIntervieweeRole(interview.getIxIntervieweeRole());
-        investigationInterviewReporting.setAddTime(interview.getAddTime());
-        investigationInterviewReporting.setAddUserId(interview.getAddUserId());
-        investigationInterviewReporting.setIxLocation(interview.getIxLocation());
-        investigationInterviewReporting.setIxStatus(interview.getIxStatus());
-        investigationInterviewReporting.setIxType(interview.getIxType());
-        investigationInterviewReporting.setLastChgTime(interview.getLastChgTime());
-        investigationInterviewReporting.setLastChgUserId(interview.getLastChgUserId());
-        investigationInterviewReporting.setRecordStatusTime(interview.getRecordStatusTime());
-        investigationInterviewReporting.setRecordStatusCd(interview.getRecordStatusCd());
-        investigationInterviewReporting.setLocalId(interview.getLocalId());
-        investigationInterviewReporting.setVersionCtrlNbr(interview.getVersionCtrlNbr());
-        investigationInterviewReporting.setInvestigationUid(interview.getInvestigationUid());
-        investigationInterviewReporting.setOrganizationUid(interview.getOrganizationUid());
-        investigationInterviewReporting.setProviderUid(interview.getProviderUid());
-        investigationInterviewReporting.setPatientUid(interview.getPatientUid());
-        return investigationInterviewReporting;
+        InterviewReporting investigationReporting = new InterviewReporting();
+        investigationReporting.setInterviewUid(interview.getInterviewUid());
+        investigationReporting.setInterviewDate(interview.getInterviewDate());
+        investigationReporting.setInterviewLocCd(interview.getInterviewLocCd());
+        investigationReporting.setInterviewTypeCd(interview.getInterviewTypeCd());
+        investigationReporting.setInterviewStatusCd(interview.getInterviewStatusCd());
+        investigationReporting.setIntervieweeRoleCd(interview.getIntervieweeRoleCd());
+        investigationReporting.setIxIntervieweeRole(interview.getIxIntervieweeRole());
+        investigationReporting.setAddTime(interview.getAddTime());
+        investigationReporting.setAddUserId(interview.getAddUserId());
+        investigationReporting.setIxLocation(interview.getIxLocation());
+        investigationReporting.setIxStatus(interview.getIxStatus());
+        investigationReporting.setIxType(interview.getIxType());
+        investigationReporting.setLastChgTime(interview.getLastChgTime());
+        investigationReporting.setLastChgUserId(interview.getLastChgUserId());
+        investigationReporting.setRecordStatusTime(interview.getRecordStatusTime());
+        investigationReporting.setRecordStatusCd(interview.getRecordStatusCd());
+        investigationReporting.setLocalId(interview.getLocalId());
+        investigationReporting.setVersionCtrlNbr(interview.getVersionCtrlNbr());
+        investigationReporting.setInvestigationUid(interview.getInvestigationUid());
+        investigationReporting.setOrganizationUid(interview.getOrganizationUid());
+        investigationReporting.setProviderUid(interview.getProviderUid());
+        investigationReporting.setPatientUid(interview.getPatientUid());
+        return investigationReporting;
     }
 
     public void transformAndSendInterviewAnswer(Interview interview) {
         try {
             JsonNode answerArray = parseJsonArray(interview.getAnswers());
+
+            // Tombstone message to delete all interview answers for specified interview uid
+            String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
+            kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKey1, null);
+
 
             for (JsonNode node : answerArray) {
                 final Long interviewUid = interview.getInterviewUid();
@@ -459,6 +465,11 @@ public class ProcessInvestigationDataUtil {
     }
 
     public void transformAndSendInterviewNote(Interview interview) {
+
+        // Tombstone message to delete all interview note for specified interview uid
+        String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
+        kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey1, null);
+
         try {
             InterviewNote interviewNote = new InterviewNote();
             interviewNote.setInterviewUid(interview.getInterviewUid());
@@ -476,7 +487,7 @@ public class ProcessInvestigationDataUtil {
                 interviewNote.setUserLastName(node.get("USER_LAST_NAME").asText());
                 interviewNote.setUserComment(node.get("USER_COMMENT").asText());
                 interviewNote.setCommentDate(node.get("COMMENT_DATE").asText());
-
+                interviewNote.setRecordStatusCd(node.get("RECORD_STATUS_CD").asText());
                 String jsonKey = jsonGenerator.generateStringJson(interviewNoteKey);
                 String jsonValue = jsonGenerator.generateStringJson(interviewNote);
                 kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey, jsonValue)
