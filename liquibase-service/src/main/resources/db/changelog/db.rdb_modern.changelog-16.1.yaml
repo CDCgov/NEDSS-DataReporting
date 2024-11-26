@@ -51,6 +51,7 @@ databaseChangeLog:
   - changeSet:
       id: 7
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 007-create_nrt_investigation-001.sql
