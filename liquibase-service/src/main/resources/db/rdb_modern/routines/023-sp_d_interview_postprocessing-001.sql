@@ -93,27 +93,30 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #INTERVIEW_INIT';
 
-        SELECT INTERVIEW_UID,
-               interview_status_cd AS IX_STATUS_CD,
-               interview_date      AS IX_DATE,
-               interviewee_role_cd AS IX_INTERVIEWEE_ROLE_CD,
-               interview_type_cd   AS IX_TYPE_CD,
-               interview_loc_cd    AS IX_LOCATION_CD,
-               local_id,
-               record_status_cd,
-               record_status_time,
-               ADD_TIME,
-               add_user_id,
-               last_chg_time,
-               last_chg_user_id,
-               version_ctrl_nbr,
-               IX_STATUS,
-               IX_TYPE,
-               IX_LOCATION,
-               IX_INTERVIEWEE_ROLE
+        SELECT ix.INTERVIEW_UID,
+               ixk.D_INTERVIEW_KEY, 
+               ix.interview_status_cd AS IX_STATUS_CD,
+               ix.interview_date      AS IX_DATE,
+               ix.interviewee_role_cd AS IX_INTERVIEWEE_ROLE_CD,
+               ix.interview_type_cd   AS IX_TYPE_CD,
+               ix.interview_loc_cd    AS IX_LOCATION_CD,
+               ix.local_id,
+               ix.record_status_cd,
+               ix.record_status_time,
+               ix.ADD_TIME,
+               ix.add_user_id,
+               ix.last_chg_time,
+               ix.last_chg_user_id,
+               ix.version_ctrl_nbr,
+               ix.IX_STATUS,
+               ix.IX_TYPE,
+               ix.IX_LOCATION,
+               ix.IX_INTERVIEWEE_ROLE
         INTO #INTERVIEW_INIT
-        FROM dbo.nrt_interview
-        WHERE interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
+        FROM dbo.nrt_interview ix
+            LEFT JOIN dbo.nrt_interview_key ixk
+                ON ix.interview_uid = ixk.interview_uid
+        WHERE ix.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
         if
             @debug = 'true'
@@ -154,69 +157,19 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+
         BEGIN
             TRANSACTION;
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = ' GENERATING #L_INTERVIEW_N ';
+            @PROC_STEP_NAME = 'INSERT INTO nrt_interview_key';
 
-
-        IF
-            OBJECT_ID('#L_INTERVIEW_N', 'U') IS NOT NULL
-            drop table #L_INTERVIEW_N;
-
-
-        CREATE TABLE #L_INTERVIEW_N
-        (
-            [id]              [int] IDENTITY
-                (
-                1,
-                1
-                )                              NOT NULL,
-            [INTERVIEW_UID]   [numeric](20, 0) NULL,
-            [D_INTERVIEW_KEY] [numeric](18, 0) NULL
-        ) ON [PRIMARY];
-
-
-        insert into #L_INTERVIEW_N ([INTERVIEW_UID])
-        SELECT DISTINCT INTERVIEW_UID
+        INSERT INTO dbo.nrt_interview_key(interview_uid)
+        SELECT
+            INTERVIEW_UID
         FROM #INTERVIEW_INIT
-        EXCEPT
-        SELECT INTERVIEW_UID
-        FROM dbo.L_INTERVIEW lt;
-
-        UPDATE #L_INTERVIEW_N
-        SET D_INTERVIEW_KEY = id + coalesce((SELECT MAX(D_INTERVIEW_KEY) FROM dbo.L_INTERVIEW), 0)
-
-
-        DELETE
-        FROM #L_INTERVIEW_N
-        WHERE INTERVIEW_UID IS NULL;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'INSERTING INTO L_INTERVIEW';
-
-
-        INSERT INTO dbo.L_INTERVIEW
-        ( [D_INTERVIEW_KEY]
-        , [INTERVIEW_UID])
-        SELECT [D_INTERVIEW_KEY], [INTERVIEW_UID]
-        FROM #L_INTERVIEW_N;
+        WHERE D_INTERVIEW_KEY IS NULL;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -267,10 +220,8 @@ BEGIN
             ELSE '' END +
         ' FROM 
         #INTERVIEW_INIT ix
-        LEFT JOIN dbo.L_INTERVIEW lint
-            ON ix.interview_uid = lint.interview_uid
         LEFT JOIN dbo.D_INTERVIEW dl
-            ON lint.d_interview_key = dl.d_interview_key '
+            ON ix.d_interview_key = dl.d_interview_key '
         + CASE
               WHEN @Col_number > 0 THEN 
         ' LEFT JOIN (
@@ -290,7 +241,7 @@ BEGIN
         ON pv.interview_uid = ix.interview_uid'
         ELSE ' ' END + 
         ' WHERE
-        ix.interview_uid NOT IN (SELECT interview_uid FROM #L_INTERVIEW_N);';
+        ix.D_INTERVIEW_KEY IS NOT NULL;';
 
         SELECT @Update_sql;
 
@@ -344,7 +295,7 @@ BEGIN
         FROM dbo.nrt_metadata_columns) + ') '
         ELSE ')' end +
                           ' SELECT 
-                          li.D_INTERVIEW_KEY,
+                          ixk.D_INTERVIEW_KEY,
                           ix.IX_STATUS_CD,
                           ix.IX_DATE,
                           ix.IX_INTERVIEWEE_ROLE_CD,
@@ -361,15 +312,18 @@ BEGIN
                           ix.IX_STATUS,
                           ix.IX_INTERVIEWEE_ROLE,
                           ix.IX_TYPE,
-                          ix.IX_LOCATION
+                          ix.IX_LOCATION 
                           ' + CASE
                           WHEN @Col_number > 0 THEN ',' +
                           (SELECT STRING_AGG('pv.' + QUOTENAME(RDB_COLUMN_NM), ',')
                           FROM dbo.nrt_metadata_columns)
-                          ELSE '' END +
-                          'FROM #L_INTERVIEW_N li
-                          LEFT JOIN #INTERVIEW_INIT ix
-                              ON li.interview_uid = ix.interview_uid'
+                          ELSE ' ' END +
+                          'FROM #INTERVIEW_INIT ix 
+                          LEFT JOIN dbo.nrt_interview_key ixk 
+                              ON ixk.interview_uid = ix.interview_uid 
+                          LEFT JOIN dbo.D_INTERVIEW dint
+                              ON ixk.D_INTERVIEW_KEY = dint.D_INTERVIEW_KEY
+                             '
             + CASE
             WHEN @Col_number > 0 THEN
          ' LEFT JOIN (
@@ -386,8 +340,11 @@ BEGIN
         MAX(answer_val) 
         FOR rdb_column_nm IN (' + @PivotColumns + ')
     ) AS PivotTable) pv 
-    ON pv.interview_uid = ix.interview_uid'
-        ELSE '' END;
+    ON pv.interview_uid = ix.interview_uid '
+        ELSE ' ' END
+        + ' WHERE (ix.D_INTERVIEW_KEY IS NULL
+             OR dint.D_INTERVIEW_KEY IS NULL) 
+             AND ixk.D_INTERVIEW_KEY IS NOT NULL';
 
 
         exec sp_executesql @Insert_sql;
@@ -408,7 +365,8 @@ BEGIN
         SET @PROC_STEP_NAME = 'GENERATING #INTERVIEW_NOTE_INIT';
 
         SELECT ixn.interview_uid,
-               lint.d_interview_key,
+               ixk.d_interview_key,
+               ixnk.d_interview_note_key,
                ixn.nbs_answer_uid,
                ixn.user_first_name,
                ixn.user_last_name,
@@ -416,8 +374,11 @@ BEGIN
                ixn.comment_date
         INTO #INTERVIEW_NOTE_INIT
         FROM dbo.nrt_interview_note ixn
-                 LEFT JOIN dbo.L_INTERVIEW lint
-                           ON ixn.interview_uid = lint.interview_uid
+            LEFT JOIN dbo.nrt_interview_key ixk
+                ON ixn.interview_uid = ixk.interview_uid
+            LEFT JOIN dbo.nrt_interview_note_key ixnk
+                ON ixn.nbs_answer_uid = ixnk.nbs_answer_uid
+                AND ixk.d_interview_key = ixnk.d_interview_key
         WHERE ixn.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
 
@@ -434,47 +395,47 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        BEGIN
+            TRANSACTION;
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'Remove existing comments from D_INTERVIEW_NOTE';
+
+        /* 
+        There is no update step for D_INTERVIEW_NOTE.
+        This is because each time a new interview note is created or an existing interview note is updated/deleted,
+        all associated interview notes are deleted from NBS_ODSE.dbo.NBS_ANSWER.
+
+        So, it is necessary to delete and reinsert every time. 
+        */
+        DELETE FROM dbo.D_INTERVIEW_NOTE
+        WHERE D_INTERVIEW_KEY IN (SELECT D_INTERVIEW_KEY FROM #INTERVIEW_NOTE_INIT WHERE D_INTERVIEW_KEY IS NOT NULL);
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        COMMIT TRANSACTION;
+
 
         BEGIN
             TRANSACTION;
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = ' GENERATING #L_INTERVIEW_NOTE_N ';
+            @PROC_STEP_NAME = 'INSERT INTO nrt_interview_note_key';
 
-
-        IF
-            OBJECT_ID('#L_INTERVIEW__NOTE_N', 'U') IS NOT NULL
-            drop table #L_INTERVIEW_NOTE_N;
-
-
-        CREATE TABLE #L_INTERVIEW_NOTE_N
-        (
-            [id]                   [int] IDENTITY
-                (
-                1,
-                1
-                )                                   NOT NULL,
-            [D_INTERVIEW_KEY]      [numeric](20, 0) NULL,
-            [D_INTERVIEW_NOTE_KEY] [numeric](18, 0) NULL,
-            [NBS_ANSWER_UID]       [numeric](18, 0) NULL
-        ) ON [PRIMARY];
-
-
-        insert into #L_INTERVIEW_NOTE_N (D_INTERVIEW_KEY, NBS_ANSWER_UID)
-        SELECT DISTINCT D_INTERVIEW_KEY, NBS_ANSWER_UID
+        INSERT INTO dbo.nrt_interview_note_key(d_interview_key,nbs_answer_uid)
+        SELECT
+            D_INTERVIEW_KEY,
+            NBS_ANSWER_UID
         FROM #INTERVIEW_NOTE_INIT
-        EXCEPT
-        SELECT D_INTERVIEW_KEY, NBS_ANSWER_UID
-        FROM dbo.L_INTERVIEW_NOTE;
-
-        UPDATE #L_INTERVIEW_NOTE_N
-        SET D_INTERVIEW_NOTE_KEY = id + coalesce((SELECT MAX(D_INTERVIEW_NOTE_KEY) FROM dbo.L_INTERVIEW_NOTE), 0)
-
-
-        DELETE
-        FROM #L_INTERVIEW_NOTE_N
-        WHERE NBS_ANSWER_UID IS NULL;
+        WHERE D_INTERVIEW_NOTE_KEY IS NULL;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -483,58 +444,6 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'INSERTING INTO L_INTERVIEW_NOTE';
-
-
-        INSERT INTO dbo.L_INTERVIEW_NOTE
-        ( D_INTERVIEW_KEY
-        , D_INTERVIEW_NOTE_KEY
-        , NBS_ANSWER_UID)
-        SELECT D_INTERVIEW_KEY, D_INTERVIEW_NOTE_KEY, NBS_ANSWER_UID
-        FROM #L_INTERVIEW_NOTE_N;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'UPDATE D_INTERVIEW_NOTE';
-
-        UPDATE din
-        SET din.USER_FIRST_NAME = ixn.USER_FIRST_NAME,
-            din.USER_LAST_NAME  = ixn.USER_LAST_NAME,
-            din.USER_COMMENT    = ixn.USER_COMMENT,
-            din.COMMENT_DATE    = ixn.COMMENT_DATE
-        FROM #INTERVIEW_NOTE_INIT ixn
-                 LEFT JOIN dbo.D_INTERVIEW_NOTE din
-                           ON ixn.NBS_ANSWER_UID = din.NBS_ANSWER_UID
-        WHERE ixn.NBS_ANSWER_UID NOT IN (SELECT NBS_ANSWER_UID FROM #L_INTERVIEW_NOTE_N);
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         COMMIT TRANSACTION;
 
@@ -554,16 +463,17 @@ BEGIN
                                           USER_LAST_NAME,
                                           USER_COMMENT,
                                           COMMENT_DATE)
-        SELECT lintn.D_INTERVIEW_KEY,
-               lintn.D_INTERVIEW_NOTE_KEY,
+        SELECT ixnk.D_INTERVIEW_KEY,
+               ixnk.D_INTERVIEW_NOTE_KEY,
                ixn.NBS_ANSWER_UID,
                ixn.USER_FIRST_NAME,
                ixn.USER_LAST_NAME,
                ixn.USER_COMMENT,
                ixn.COMMENT_DATE
-        FROM #L_INTERVIEW_NOTE_N lintn
-                 LEFT JOIN #INTERVIEW_NOTE_INIT ixn
-                           ON lintn.NBS_ANSWER_UID = ixn.nbs_answer_uid;
+        FROM #INTERVIEW_NOTE_INIT ixn
+            LEFT JOIN dbo.nrt_interview_note_key ixnk
+                ON ixn.D_INTERVIEW_KEY = ixnk.D_INTERVIEW_KEY
+                AND ixn.NBS_ANSWER_UID = ixnk.NBS_ANSWER_UID;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -573,8 +483,6 @@ BEGIN
         VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         COMMIT TRANSACTION;
-
-
 
     END TRY
     BEGIN CATCH
