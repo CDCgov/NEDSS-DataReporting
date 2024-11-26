@@ -54,7 +54,7 @@ BEGIN
             INTERVIEW_UID,
             D_INTERVIEW_KEY
         INTO #L_INTERVIEW_INIT
-        FROM dbo.L_INTERVIEW
+        FROM dbo.nrt_interview_key
         WHERE INTERVIEW_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','));
 
         if
