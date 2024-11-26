@@ -20,6 +20,10 @@ public class InvestigationController {
     @Value("${spring.kafka.input.topic-name-ntf}")
     private String notificationTopic;
 
+    @Value("${spring.kafka.input.topic-name-int}")
+    private String interviewTopic;
+
+
     @GetMapping("/reporting/investigation-svc/status")
     public ResponseEntity<String> getDataPipelineStatusHealth() {
         log.info("Investigation Service Status OK");
@@ -34,5 +38,10 @@ public class InvestigationController {
     @PostMapping("/reporting/investigation-svc/notification")
     public void postNotification(@RequestBody String jsonData) {
         producerService.sendMessage(notificationTopic, jsonData);
+    }
+
+    @PostMapping("/reporting/investigation-svc/interview")
+    public void postInterview(@RequestBody String jsonData) {
+        producerService.sendMessage(interviewTopic, jsonData);
     }
 }
