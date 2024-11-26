@@ -878,7 +878,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'D_LABTEST', 'D_LABTEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -924,7 +924,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'D_LABTEST', 'D_LABTEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -3073,7 +3073,7 @@ BEGIN
                   AND l.record_status_cd = 'INACTIVE')
           AND record_status_cd <> 'INACTIVE';
 
-
+        SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
@@ -3086,10 +3086,23 @@ BEGIN
         SET @PROC_STEP_NAME = 'Remove LAB_TEST Results';
 
         /* Removed records associated to Deleted Orders. */
-        DELETE FROM dbo.LAB_TEST
-        WHERE ROOT_ORDERED_TEST_PNTR = 1
+        WITH removed_obs as (
+            select LAB_TEST_UID,
+                   PARENT_TEST_PNTR,
+                   ROOT_ORDERED_TEST_PNTR from dbo.LAB_TEST
+            where ROOT_ORDERED_TEST_PNTR = 1
 
+            UNION ALL
 
+            select lt.LAB_TEST_UID,
+                   lt.PARENT_TEST_PNTR,
+                   lt.ROOT_ORDERED_TEST_PNTR
+            from dbo.LAB_TEST lt
+                     inner join removed_obs o on lt.PARENT_TEST_PNTR = o.LAB_TEST_UID
+        )
+        DELETE FROM dbo.LAB_TEST WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM removed_obs);
+
+        SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
