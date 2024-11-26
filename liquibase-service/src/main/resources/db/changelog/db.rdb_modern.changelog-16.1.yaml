@@ -526,3 +526,35 @@ databaseChangeLog:
         - sqlFile:
             path: 022-create_nrt_interview_answer-001.sql
             splitStatements: false
+  - changeSet:
+      id: 71
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 001-v_getobscode-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 72
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 002-v_getobsdate-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 73
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 003-v_getobsnum-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 74
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 004-v_getobstxt-001.sql
+            splitStatements: false

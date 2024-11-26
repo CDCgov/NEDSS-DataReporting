@@ -2,9 +2,11 @@ package gov.cdc.etldatapipeline.investigation.service;
 
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.investigation.repository.InterviewRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
+import gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationTransformed;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
@@ -54,14 +56,22 @@ public class InvestigationService {
     @Value("${spring.kafka.input.topic-name-ntf}")
     private String notificationTopic;
 
+    @Value("${spring.kafka.input.topic-name-int}")
+    private String interviewTopic;
+
     @Value("${spring.kafka.output.topic-name-reporting}")
     public String investigationTopicReporting;
+
+    @Value("${spring.kafka.output.topic-name-interview}")
+    private String interviewOutputTopicReporting;
 
     @Value("${service.phc-datamart-enable}")
     public boolean phcDatamartEnable;
 
     private final InvestigationRepository investigationRepository;
     private final NotificationRepository notificationRepository;
+    private final InterviewRepository interviewRepository;
+
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessInvestigationDataUtil processDataUtil;
     InvestigationKey investigationKey = new InvestigationKey();
@@ -90,7 +100,8 @@ public class InvestigationService {
     @KafkaListener(
             topics = {
                     "${spring.kafka.input.topic-name-phc}",
-                    "${spring.kafka.input.topic-name-ntf}"
+                    "${spring.kafka.input.topic-name-ntf}",
+                    "${spring.kafka.input.topic-name-int}"
             }
     )
     public void processMessage(String message,
@@ -101,6 +112,8 @@ public class InvestigationService {
             processInvestigation(message);
         } else if (topic.equals(notificationTopic)) {
             processNotification(message);
+        } else if (topic.equals(interviewTopic)) {
+            processInterview(message);
         }
         consumer.commitSync();
     }
@@ -158,6 +171,31 @@ public class InvestigationService {
         } catch (Exception e) {
             String msg = "Error processing Notification data" +
                 (!notificationUid.isEmpty() ? " for ids='" + notificationUid + "': " : ": " + e.getMessage());
+            throw new RuntimeException(msg, e);
+        }
+    }
+
+
+    private void processInterview(String value) {
+        String interviewUid = "";
+        try {
+            interviewUid = extractUid(value, "interview_uid");
+
+            logger.info(topicDebugLog, "Interview", interviewUid, interviewTopic);
+            Optional<Interview> interviewData = interviewRepository.computeInterviews(interviewUid);
+            if (interviewData.isPresent()) {
+                Interview interview = interviewData.get();
+                processDataUtil.processInterview(interview);
+                processDataUtil.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
+
+            } else {
+                throw new EntityNotFoundException("Unable to find Interview with id: " + interviewUid);
+            }
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
+        } catch (Exception e) {
+            String msg = "Error processing Interview data" +
+                    (!interviewUid.isEmpty() ? " with ids '" + interviewUid + "': " : ": " + e.getMessage());
             throw new RuntimeException(msg, e);
         }
     }
