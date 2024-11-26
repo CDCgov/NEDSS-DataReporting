@@ -320,7 +320,7 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         //interview key
@@ -331,13 +331,13 @@ class InvestigationDataProcessingTests {
                 objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReporting.class);
         //interview key for tombstone message
         var actualInterviewKey2 = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), InterviewReportingKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), InterviewReportingKey.class);
         //interview note key
         var actualInterviewNoteKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), InterviewNoteKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(3)).path("payload").toString(), InterviewNoteKey.class);
         //interview note value
         var actualInterviewNoteValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InterviewNote.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(3)).path("payload").toString(), InterviewNote.class);
 
 
         assertEquals(interviewReportingKey, actualInterviewKey1);
@@ -400,7 +400,7 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         ILoggingEvent log = listAppender.list.getLast();

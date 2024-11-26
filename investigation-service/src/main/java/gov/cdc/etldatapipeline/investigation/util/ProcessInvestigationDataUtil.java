@@ -379,27 +379,34 @@ public class ProcessInvestigationDataUtil {
      * @param interview Entity bean returned from stroed procedures
      */
     public void processInterview(Interview interview) {
-        // creating key for kafka
-        InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
-        interviewReportingKey.setInterviewUid(interview.getInterviewUid());
+        try {
 
-        // constructing reporting(nrt) beans
-        InterviewReporting interviewReporting = transformInterview(interview);
+            // creating key for kafka
+            InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
+            interviewReportingKey.setInterviewUid(interview.getInterviewUid());
 
-        /*
-           sending reporting(nrt) beans as json to kafka
-           starting with the nrt_interview and then
-               create and send nrt_interview_answer then
-               create and send nrt_interview_note
-         */
-        String jsonKey = jsonGenerator.generateStringJson(interviewReportingKey);
-        String jsonValue = jsonGenerator.generateStringJson(interviewReporting, "interview_uid",
-                "investigation_uid", "provider_uid", "patient_uid", "notification_uid");
-        kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
-                .whenComplete((res, e) -> logger.info("Interview data (uid={}) sent to {}", interview.getInterviewUid(), interviewOutputTopicName))
-                .thenRunAsync(() -> transformAndSendInterviewAnswer(interview))
-                .thenRunAsync(() -> transformAndSendInterviewNote(interview));
+            // constructing reporting(nrt) beans
+            InterviewReporting interviewReporting = transformInterview(interview);
 
+            /*
+               sending reporting(nrt) beans as json to kafka
+               starting with the nrt_interview and then
+                   create and send nrt_interview_answer then
+                   create and send nrt_interview_note
+             */
+            String jsonKey = jsonGenerator.generateStringJson(interviewReportingKey);
+            String jsonValue = jsonGenerator.generateStringJson(interviewReporting, "interview_uid",
+                    "investigation_uid", "provider_uid", "patient_uid", "notification_uid");
+            kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
+                    .whenComplete((res, e) -> logger.info("Interview data (uid={}) sent to {}", interview.getInterviewUid(), interviewOutputTopicName))
+                    .thenRunAsync(() -> transformAndSendInterviewAnswer(interview))
+                    .thenRunAsync(() -> transformAndSendInterviewNote(interview));
+
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Investigation Interview");
+        } catch (Exception e) {
+            logger.error("Error processing Investigation Interview or any of the associated data from interview data: {}", e.getMessage());
+        }
     }
 
     private InterviewReporting transformInterview(Interview interview) {
@@ -431,12 +438,11 @@ public class ProcessInvestigationDataUtil {
 
     public void transformAndSendInterviewAnswer(Interview interview) {
         try {
-            JsonNode answerArray = parseJsonArray(interview.getAnswers());
-
             // Tombstone message to delete all interview answers for specified interview uid
             String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
             kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKey1, null);
 
+            JsonNode answerArray = parseJsonArray(interview.getAnswers());
 
             for (JsonNode node : answerArray) {
                 final Long interviewUid = interview.getInterviewUid();
@@ -460,20 +466,18 @@ public class ProcessInvestigationDataUtil {
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "Investigation Interview Answer");
         } catch (Exception e) {
-            logger.error("Error processing Investigation Interview Answer JSON array from investigation data: {}", e.getMessage());
+            logger.error("Error processing Investigation Interview Answer JSON array from interview data: {}", e.getMessage());
         }
     }
 
     public void transformAndSendInterviewNote(Interview interview) {
-
-        // Tombstone message to delete all interview note for specified interview uid
-        String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
-        kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey1, null);
-
         try {
-            InterviewNote interviewNote = new InterviewNote();
-            interviewNote.setInterviewUid(interview.getInterviewUid());
+            // Tombstone message to delete all interview note for specified interview uid
+            String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
+            kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey1, null);
+
             JsonNode answerArray = parseJsonArray(interview.getNotes());
+
             for (JsonNode node : answerArray) {
                 final Long interviewUid = interview.getInterviewUid();
                 final Long nbsAnswerUid = node.get("NBS_ANSWER_UID").asLong();
@@ -482,12 +486,15 @@ public class ProcessInvestigationDataUtil {
                 interviewNoteKey.setInterviewUid(interviewUid);
                 interviewNoteKey.setNbsAnswerUid(nbsAnswerUid);
 
+                InterviewNote interviewNote = new InterviewNote();
+                interviewNote.setInterviewUid(interview.getInterviewUid());
                 interviewNote.setNbsAnswerUid(nbsAnswerUid);
                 interviewNote.setUserFirstName(node.get("USER_FIRST_NAME").asText());
                 interviewNote.setUserLastName(node.get("USER_LAST_NAME").asText());
                 interviewNote.setUserComment(node.get("USER_COMMENT").asText());
                 interviewNote.setCommentDate(node.get("COMMENT_DATE").asText());
                 interviewNote.setRecordStatusCd(node.get("RECORD_STATUS_CD").asText());
+
                 String jsonKey = jsonGenerator.generateStringJson(interviewNoteKey);
                 String jsonValue = jsonGenerator.generateStringJson(interviewNote);
                 kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey, jsonValue)
@@ -497,7 +504,7 @@ public class ProcessInvestigationDataUtil {
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "Investigation Interview Note");
         } catch (Exception e) {
-            logger.error("Error processing Investigation Interview Note JSON array from investigation data: {}", e.getMessage());
+            logger.error("Error processing Investigation Interview Note JSON array from interview data: {}", e.getMessage());
         }
     }
 
