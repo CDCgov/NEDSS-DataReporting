@@ -711,7 +711,7 @@ BEGIN
         WHERE rtrim(Test_Result_Val_Cd ) = '';
 
 
-        UPDATE #TMP_Lab_Result_Val
+       UPDATE #TMP_Lab_Result_Val
         SET Test_Result_Val_Cd_Desc  = NULL
         WHERE rtrim(Test_Result_Val_Cd_Desc  ) = '';
 
@@ -1371,6 +1371,78 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST_RESULT Records';
+
+
+        /*Update records associated to Inactive Orders*/
+        SELECT ltr.LAB_TEST_UID
+        INTO #Inactive_Obs
+        FROM  dbo.LAB_TEST lt
+                  INNER JOIN dbo.LAB_TEST_RESULT ltr on ltr.LAB_TEST_UID = lt.LAB_TEST_UID
+        WHERE ROOT_ORDERED_TEST_PNTR IN
+              (SELECT ROOT_ORDERED_TEST_PNTR
+               FROM dbo.LAB_TEST ltr
+               WHERE LAB_TEST_TYPE = 'Order'
+                 AND RECORD_STATUS_CD = 'INACTIVE'
+              )
+          AND ltr.RECORD_STATUS_CD <> 'INACTIVE';
+
+        UPDATE lrc
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_RESULT_COMMENT lrc
+                 INNER JOIN dbo.RESULT_COMMENT_GROUP g ON lrc.RESULT_COMMENT_GRP_KEY = g.RESULT_COMMENT_GRP_KEY
+                 INNER JOIN dbo.LAB_TEST_RESULT R ON R.RESULT_COMMENT_GRP_KEY = g.RESULT_COMMENT_GRP_KEY
+                 INNER JOIN #INACTIVE_OBS io ON io.LAB_TEST_UID = lrc.LAB_TEST_UID
+            AND lrc.RECORD_STATUS_CD <> 'INACTIVE';
+
+        UPDATE lrv
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_RESULT_VAL lrv
+                 INNER JOIN dbo.TEST_RESULT_GROUPING R ON R.TEST_RESULT_GRP_KEY = lrv.TEST_RESULT_GRP_KEY
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr ON R.TEST_RESULT_GRP_KEY = ltr.TEST_RESULT_GRP_KEY
+                 INNER JOIN #INACTIVE_OBS io ON io.LAB_TEST_UID = lrv.LAB_TEST_UID
+            AND lrv.RECORD_STATUS_CD <> 'INACTIVE';
+
+        UPDATE lt
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_TEST_RESULT lt
+                 INNER JOIN #Inactive_Obs io ON io.LAB_TEST_UID = lt.LAB_TEST_UID
+            AND lt.RECORD_STATUS_CD <> 'INACTIVE';
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE FROM LAB_TEST_RESULT';
+
+        /*ID in LAB_TEST_RESULT that no longer exist in LAB_TEST*/
+        SELECT DISTINCT ltr.LAB_TEST_UID
+        INTO #Removed_Obs
+        FROM dbo.LAB_TEST_RESULT ltr
+        EXCEPT
+        SELECT lt.LAB_TEST_UID
+        FROM dbo.LAB_TEST lt;
+
+        DELETE FROM dbo.LAB_RESULT_COMMENT WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.RESULT_COMMENT_GROUP WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.LAB_RESULT_VAL WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.LAB_TEST_RESULT WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
 
         IF OBJECT_ID('#TMP_lab_test_resultInit', 'U') IS NOT NULL
             DROP TABLE   #TMP_lab_test_resultInit ;
@@ -1412,7 +1484,13 @@ BEGIN
             DROP TABLE   #TMP_Lab_Test_Result3;
 
         IF OBJECT_ID('#TMP_Lab_Test_Result', 'U') IS NOT NULL
-            DROP TABLE     #TMP_Lab_Test_Result;
+            DROP TABLE #TMP_Lab_Test_Result;
+
+        IF OBJECT_ID('#Inactive_Obs', 'U') IS NOT NULL
+            DROP TABLE #Inactive_Obs;
+
+        IF OBJECT_ID('#Removed_Obs', 'U') IS NOT NULL
+            DROP TABLE #Removed_Obs;
 
 
         BEGIN TRANSACTION;

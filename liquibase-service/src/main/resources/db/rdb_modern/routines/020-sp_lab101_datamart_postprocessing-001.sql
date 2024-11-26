@@ -807,7 +807,7 @@ BEGIN
                LAB.LAB20                                          AS 'NARMS_STATEID_NUM',
                LAB.LAB21                                          AS 'NARMS_EXPECTED_SHIP_DT',
                LAB.LAB22                                          AS 'NARMS_ACTUAL_SHIP_DT',
-               LAB.LAB23                                          AS 'EIP_ISO_IND',
+               LAB.LAB23                                AS 'EIP_ISO_IND',
                LAB.LAB24                                          AS 'EIP_SPEC_AVAIL_IND',
                LAB.LAB25                                          AS 'EIP_SPEC_NO_REASON',
                LAB.LAB26                                          AS 'EIP_SPEC_NO_REASON_OTH',
@@ -816,7 +816,7 @@ BEGIN
                LAB.LAB29                                          AS 'EIP_ACTUAL_SHIP_DT',
                LAB.LAB30                                          AS 'EIP_SPEC_RESHIP_IND',
                LAB.LAB31                                          AS 'EIP_SPEC_RESHIP_REASON',
-               LAB.LAB32                                          AS 'EIP_SPEC_RESHIP_REASON_OTH',
+               LAB.LAB32                AS 'EIP_SPEC_RESHIP_REASON_OTH',
                LAB.LAB33                                          AS 'EIP_SPEC_EXPECTED_RESHIP_DT',
                LAB.LAB34                                          AS 'EIP_SPEC_ACTUAL_RESHIP_DT',
                LAB.LAB35                                          AS 'ISO_SENT_CDC_IND',
@@ -1103,6 +1103,61 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, 'LAB101_DATAMART', 'LAB101_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Update Inactive LAB101 Records';
+
+
+        /* Update records associated to Inactive Orders using LAB_TEST */
+        UPDATE l
+        SET record_status_cd = 'INACTIVE'
+        FROM dbo.LAB101 l
+        WHERE
+            RESULTED_LAB_TEST_KEY IN (
+                SELECT
+                    l.RESULTED_LAB_TEST_KEY
+                FROM dbo.LAB_TEST lt
+                         INNER JOIN dbo.LAB101 l on
+                    l.RESULTED_LAB_TEST_KEY = lt.LAB_TEST_KEY
+                WHERE
+                    ROOT_ORDERED_TEST_PNTR IN
+                    (
+                        SELECT ROOT_ORDERED_TEST_PNTR
+                        FROM dbo.LAB_TEST ltr
+                        WHERE
+                            LAB_TEST_TYPE = 'Order'
+                          AND record_status_cd = 'INACTIVE'
+                    )
+                  AND l.record_status_cd <> 'INACTIVE'
+            );
+
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'LAB101_DATAMART','LAB101_DATAMART','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE REMOVED OBSERVATIONS FROM LAB100';
+
+        /* Remove keys in LAB101 that no longer exist in LAB_TEST. */
+        DELETE FROM dbo.LAB101
+        WHERE RESULTED_LAB_TEST_KEY IN (
+            SELECT DISTINCT l.RESULTED_LAB_TEST_KEY
+            FROM dbo.LAB101 l
+            EXCEPT
+            SELECT lt.LAB_TEST_KEY
+            FROM dbo.LAB_TEST lt);
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'LAB101_DATAMART','LAB101_DATAMART','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
