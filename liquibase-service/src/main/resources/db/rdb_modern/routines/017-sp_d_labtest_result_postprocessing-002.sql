@@ -1376,7 +1376,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST_RESULT Records';
 
 
-        /*Update records associated to Inactive Orders*/
+        /* Update record status for Inactive Orders and associated observations. */
         SELECT ltr.LAB_TEST_UID
         INTO #Inactive_Obs
         FROM  dbo.LAB_TEST lt
@@ -1411,6 +1411,7 @@ BEGIN
                  INNER JOIN #Inactive_Obs io ON io.LAB_TEST_UID = lt.LAB_TEST_UID
             AND lt.RECORD_STATUS_CD <> 'INACTIVE';
 
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
@@ -1423,7 +1424,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'DELETE FROM LAB_TEST_RESULT';
 
-        /*ID in LAB_TEST_RESULT that no longer exist in LAB_TEST*/
+        /* Remove lab_test_uids from LAB_TEST_RESULT that no longer exist in LAB_TEST. */
         SELECT DISTINCT ltr.LAB_TEST_UID
         INTO #Removed_Obs
         FROM dbo.LAB_TEST_RESULT ltr
@@ -1437,6 +1438,7 @@ BEGIN
         DELETE FROM dbo.TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
         DELETE FROM dbo.LAB_TEST_RESULT WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
 
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);

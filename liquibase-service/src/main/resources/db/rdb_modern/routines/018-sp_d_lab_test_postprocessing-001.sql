@@ -2980,7 +2980,7 @@ BEGIN
                 1
                 )                                     NOT NULL,
             [LAB_TEST_uid]            [bigint]        NULL,
-            [COMMENTS_FOR_ELR_DT]     [datetime]      NULL,
+            [COMMENTS_FOR_ELR_DT] [datetime]      NULL,
             [USER_COMMENT_CREATED_BY] [bigint]        NULL,
             [USER_RPT_COMMENTS]       [varchar](8000) NULL,
             [RECORD_STATUS_CD]        [varchar](8)    NOT NULL,
@@ -3073,6 +3073,7 @@ BEGIN
                   AND l.record_status_cd = 'INACTIVE')
           AND record_status_cd <> 'INACTIVE';
 
+
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -3085,22 +3086,26 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'Remove LAB_TEST Results';
 
-        /* Removed records associated to Deleted Orders. */
-        WITH removed_obs as (
-            select LAB_TEST_UID,
-                   PARENT_TEST_PNTR,
-                   ROOT_ORDERED_TEST_PNTR from dbo.LAB_TEST
-            where ROOT_ORDERED_TEST_PNTR = 1
+        /* Remove records associated to Deleted Results. */
+        IF EXISTS (SELECT 1 FROM dbo.LAB_TEST WHERE ROOT_ORDERED_TEST_PNTR = 1)
+            BEGIN
+                WITH removed_obs as (
+                    select LAB_TEST_UID,
+                           PARENT_TEST_PNTR,
+                           ROOT_ORDERED_TEST_PNTR from dbo.LAB_TEST
+                    where ROOT_ORDERED_TEST_PNTR = 1
 
-            UNION ALL
+                    UNION ALL
 
-            select lt.LAB_TEST_UID,
-                   lt.PARENT_TEST_PNTR,
-                   lt.ROOT_ORDERED_TEST_PNTR
-            from dbo.LAB_TEST lt
-                     inner join removed_obs o on lt.PARENT_TEST_PNTR = o.LAB_TEST_UID
-        )
-        DELETE FROM dbo.LAB_TEST WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM removed_obs);
+                    select lt.LAB_TEST_UID,
+                           lt.PARENT_TEST_PNTR,
+                           lt.ROOT_ORDERED_TEST_PNTR
+                    from dbo.LAB_TEST lt
+                             inner join removed_obs o on lt.PARENT_TEST_PNTR = o.LAB_TEST_UID
+                )
+                DELETE FROM dbo.LAB_TEST WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM removed_obs);
+            END
+
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]
