@@ -559,3 +559,40 @@ databaseChangeLog:
         - sqlFile:
             path: 004-v_getobstxt-001.sql
             splitStatements: false
+  - changeSet:
+      id: 75
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 023-sp_d_interview_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 76
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 77
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_note_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 78
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_note-002.sql
+            splitStatements: false
+  - changeSet:
+      id: 79
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 024-sp_f_interview_case_postprocessing-001.sql
+            splitStatements: false
