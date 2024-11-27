@@ -258,6 +258,10 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, 'F_INTERVIEW_CASE', 'F_INTERVIEW_CASE', 'COMPLETE', 999, 'COMPLETE', 0);
         
 
     END TRY

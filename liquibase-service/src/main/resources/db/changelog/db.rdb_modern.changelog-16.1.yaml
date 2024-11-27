@@ -589,7 +589,7 @@ databaseChangeLog:
             path: 022-create_nrt_interview_note-002.sql
             splitStatements: false
   - changeSet:
-      id: 78
+      id: 79
       author: liquibase
       runOnChange: true
       changes:
