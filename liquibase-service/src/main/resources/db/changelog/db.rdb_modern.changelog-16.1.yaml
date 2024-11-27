@@ -580,3 +580,10 @@ databaseChangeLog:
         - sqlFile:
             path: 022-create_nrt_interview_note_key-001.sql
             splitStatements: false
+  - changeSet:
+      id: 78
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_note-002.sql
+            splitStatements: false
