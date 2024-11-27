@@ -588,3 +588,11 @@ databaseChangeLog:
         - sqlFile:
             path: 022-create_nrt_interview_note-002.sql
             splitStatements: false
+  - changeSet:
+      id: 79
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 024-sp_f_interview_case_postprocessing-001.sql
+            splitStatements: false
