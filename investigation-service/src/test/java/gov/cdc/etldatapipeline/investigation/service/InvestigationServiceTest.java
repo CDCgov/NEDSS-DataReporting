@@ -174,7 +174,7 @@ class InvestigationServiceTest {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         String actualTopic = topicCaptor.getAllValues().get(0);
