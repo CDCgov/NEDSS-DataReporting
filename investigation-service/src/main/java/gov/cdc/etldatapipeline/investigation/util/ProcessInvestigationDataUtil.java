@@ -379,57 +379,69 @@ public class ProcessInvestigationDataUtil {
      * @param interview Entity bean returned from stroed procedures
      */
     public void processInterview(Interview interview) {
-        // creating key for kafka
-        InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
-        interviewReportingKey.setInterviewUid(interview.getInterviewUid());
+        try {
 
-        // constructing reporting(nrt) beans
-        InterviewReporting investigationInterviewReporting = transformInterview(interview);
+            // creating key for kafka
+            InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
+            interviewReportingKey.setInterviewUid(interview.getInterviewUid());
 
-        /*
-           sending reporting(nrt) beans as json to kafka
-           starting with the nrt_interview and then
-               create and send nrt_interview_answer then
-               create and send nrt_interview_note
-         */
-        String jsonKey = jsonGenerator.generateStringJson(interviewReportingKey);
-        String jsonValue = jsonGenerator.generateStringJson(investigationInterviewReporting);
-        kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
-                .whenComplete((res, e) -> logger.info("Interview data (uid={}) sent to {}", interview.getInterviewUid(), interviewOutputTopicName))
-                .thenRunAsync(() -> transformAndSendInterviewAnswer(interview))
-                .thenRunAsync(() -> transformAndSendInterviewNote(interview));
+            // constructing reporting(nrt) beans
+            InterviewReporting interviewReporting = transformInterview(interview);
 
+            /*
+               sending reporting(nrt) beans as json to kafka
+               starting with the nrt_interview and then
+                   create and send nrt_interview_answer then
+                   create and send nrt_interview_note
+             */
+            String jsonKey = jsonGenerator.generateStringJson(interviewReportingKey);
+            String jsonValue = jsonGenerator.generateStringJson(interviewReporting, "interview_uid",
+                    "investigation_uid", "provider_uid", "patient_uid", "notification_uid");
+            kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
+                    .whenComplete((res, e) -> logger.info("Interview data (uid={}) sent to {}", interview.getInterviewUid(), interviewOutputTopicName))
+                    .thenRunAsync(() -> transformAndSendInterviewAnswer(interview))
+                    .thenRunAsync(() -> transformAndSendInterviewNote(interview));
+
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Investigation Interview");
+        } catch (Exception e) {
+            logger.error("Error processing Investigation Interview or any of the associated data from interview data: {}", e.getMessage());
+        }
     }
 
     private InterviewReporting transformInterview(Interview interview) {
-        InterviewReporting investigationInterviewReporting = new InterviewReporting();
-        investigationInterviewReporting.setInterviewUid(interview.getInterviewUid());
-        investigationInterviewReporting.setInterviewDate(interview.getInterviewDate());
-        investigationInterviewReporting.setInterviewLocCd(interview.getInterviewLocCd());
-        investigationInterviewReporting.setInterviewTypeCd(interview.getInterviewTypeCd());
-        investigationInterviewReporting.setInterviewStatusCd(interview.getInterviewStatusCd());
-        investigationInterviewReporting.setIntervieweeRoleCd(interview.getIntervieweeRoleCd());
-        investigationInterviewReporting.setIxIntervieweeRole(interview.getIxIntervieweeRole());
-        investigationInterviewReporting.setAddTime(interview.getAddTime());
-        investigationInterviewReporting.setAddUserId(interview.getAddUserId());
-        investigationInterviewReporting.setIxLocation(interview.getIxLocation());
-        investigationInterviewReporting.setIxStatus(interview.getIxStatus());
-        investigationInterviewReporting.setIxType(interview.getIxType());
-        investigationInterviewReporting.setLastChgTime(interview.getLastChgTime());
-        investigationInterviewReporting.setLastChgUserId(interview.getLastChgUserId());
-        investigationInterviewReporting.setRecordStatusTime(interview.getRecordStatusTime());
-        investigationInterviewReporting.setRecordStatusCd(interview.getRecordStatusCd());
-        investigationInterviewReporting.setLocalId(interview.getLocalId());
-        investigationInterviewReporting.setVersionCtrlNbr(interview.getVersionCtrlNbr());
-        investigationInterviewReporting.setInvestigationUid(interview.getInvestigationUid());
-        investigationInterviewReporting.setOrganizationUid(interview.getOrganizationUid());
-        investigationInterviewReporting.setProviderUid(interview.getProviderUid());
-        investigationInterviewReporting.setPatientUid(interview.getPatientUid());
-        return investigationInterviewReporting;
+        InterviewReporting investigationReporting = new InterviewReporting();
+        investigationReporting.setInterviewUid(interview.getInterviewUid());
+        investigationReporting.setInterviewDate(interview.getInterviewDate());
+        investigationReporting.setInterviewLocCd(interview.getInterviewLocCd());
+        investigationReporting.setInterviewTypeCd(interview.getInterviewTypeCd());
+        investigationReporting.setInterviewStatusCd(interview.getInterviewStatusCd());
+        investigationReporting.setIntervieweeRoleCd(interview.getIntervieweeRoleCd());
+        investigationReporting.setIxIntervieweeRole(interview.getIxIntervieweeRole());
+        investigationReporting.setAddTime(interview.getAddTime());
+        investigationReporting.setAddUserId(interview.getAddUserId());
+        investigationReporting.setIxLocation(interview.getIxLocation());
+        investigationReporting.setIxStatus(interview.getIxStatus());
+        investigationReporting.setIxType(interview.getIxType());
+        investigationReporting.setLastChgTime(interview.getLastChgTime());
+        investigationReporting.setLastChgUserId(interview.getLastChgUserId());
+        investigationReporting.setRecordStatusTime(interview.getRecordStatusTime());
+        investigationReporting.setRecordStatusCd(interview.getRecordStatusCd());
+        investigationReporting.setLocalId(interview.getLocalId());
+        investigationReporting.setVersionCtrlNbr(interview.getVersionCtrlNbr());
+        investigationReporting.setInvestigationUid(interview.getInvestigationUid());
+        investigationReporting.setOrganizationUid(interview.getOrganizationUid());
+        investigationReporting.setProviderUid(interview.getProviderUid());
+        investigationReporting.setPatientUid(interview.getPatientUid());
+        return investigationReporting;
     }
 
     public void transformAndSendInterviewAnswer(Interview interview) {
         try {
+            // Tombstone message to delete all interview answers for specified interview uid
+            String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
+            kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKey1, null);
+
             JsonNode answerArray = parseJsonArray(interview.getAnswers());
 
             for (JsonNode node : answerArray) {
@@ -454,15 +466,18 @@ public class ProcessInvestigationDataUtil {
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "Investigation Interview Answer");
         } catch (Exception e) {
-            logger.error("Error processing Investigation Interview Answer JSON array from investigation data: {}", e.getMessage());
+            logger.error("Error processing Investigation Interview Answer JSON array from interview data: {}", e.getMessage());
         }
     }
 
     public void transformAndSendInterviewNote(Interview interview) {
         try {
-            InterviewNote interviewNote = new InterviewNote();
-            interviewNote.setInterviewUid(interview.getInterviewUid());
+            // Tombstone message to delete all interview note for specified interview uid
+            String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
+            kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey1, null);
+
             JsonNode answerArray = parseJsonArray(interview.getNotes());
+
             for (JsonNode node : answerArray) {
                 final Long interviewUid = interview.getInterviewUid();
                 final Long nbsAnswerUid = node.get("NBS_ANSWER_UID").asLong();
@@ -471,11 +486,14 @@ public class ProcessInvestigationDataUtil {
                 interviewNoteKey.setInterviewUid(interviewUid);
                 interviewNoteKey.setNbsAnswerUid(nbsAnswerUid);
 
+                InterviewNote interviewNote = new InterviewNote();
+                interviewNote.setInterviewUid(interview.getInterviewUid());
                 interviewNote.setNbsAnswerUid(nbsAnswerUid);
                 interviewNote.setUserFirstName(node.get("USER_FIRST_NAME").asText());
                 interviewNote.setUserLastName(node.get("USER_LAST_NAME").asText());
                 interviewNote.setUserComment(node.get("USER_COMMENT").asText());
                 interviewNote.setCommentDate(node.get("COMMENT_DATE").asText());
+                interviewNote.setRecordStatusCd(node.get("RECORD_STATUS_CD").asText());
 
                 String jsonKey = jsonGenerator.generateStringJson(interviewNoteKey);
                 String jsonValue = jsonGenerator.generateStringJson(interviewNote);
@@ -486,7 +504,7 @@ public class ProcessInvestigationDataUtil {
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "Investigation Interview Note");
         } catch (Exception e) {
-            logger.error("Error processing Investigation Interview Note JSON array from investigation data: {}", e.getMessage());
+            logger.error("Error processing Investigation Interview Note JSON array from interview data: {}", e.getMessage());
         }
     }
 

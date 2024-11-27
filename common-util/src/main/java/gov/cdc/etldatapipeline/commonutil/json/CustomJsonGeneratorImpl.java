@@ -11,18 +11,25 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class CustomJsonGeneratorImpl {
 
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private static final List<String> DEFAULT_KEYS = Arrays.asList("public_health_case_uid", "act_uid", "observation_uid",
+            "organization_uid", "provider_uid", "patient_uid", "notification_uid");
 
-    public String generateStringJson(Object model) {
+    public String generateStringJson(Object model, String... overrideKeys) {
         try {
             ObjectNode root = objectMapper.createObjectNode();
             ObjectNode schemaNode = root.putObject("schema");
             schemaNode.put("type", "struct");
-            schemaNode.set("fields", generateFieldsArray(model));
+            List<String> pkeys = Optional.ofNullable(overrideKeys)
+                    .filter(keys -> keys.length > 0)
+                    .map(Arrays::asList)
+                    .orElse(DEFAULT_KEYS);
+            schemaNode.set("fields", generateFieldsArray(model, pkeys));
             ObjectNode payloadNode = root.putObject("payload");
             generatePayloadNode(payloadNode, model);
             return objectMapper.writeValueAsString(root);
@@ -32,7 +39,7 @@ public class CustomJsonGeneratorImpl {
         }
     }
 
-    private static ArrayNode generateFieldsArray(Object model) {
+    private static ArrayNode generateFieldsArray(Object model, List<String> pKeys) {
         ArrayNode fieldsArray = objectMapper.createArrayNode();
         try {
             Class<?> modelClass = model.getClass();
@@ -40,9 +47,6 @@ public class CustomJsonGeneratorImpl {
                 ObjectNode fieldNode = objectMapper.createObjectNode();
 
                 String fieldName = getFieldName(field);
-
-                List<String> pKeys = Arrays.asList("public_health_case_uid", "act_uid", "observation_uid",
-                        "organization_uid", "provider_uid", "patient_uid", "notification_uid");
 
                 fieldNode.put("type", getType(field.getType().getSimpleName().toLowerCase()));
                 fieldNode.put("optional", (!pKeys.contains(fieldName)));

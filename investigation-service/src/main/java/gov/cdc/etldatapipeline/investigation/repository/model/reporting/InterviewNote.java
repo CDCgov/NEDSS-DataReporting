@@ -15,4 +15,5 @@ public class InterviewNote {
     private String userLastName;
     private String userComment;
     private String commentDate;
+    private String recordStatusCd;
 }
