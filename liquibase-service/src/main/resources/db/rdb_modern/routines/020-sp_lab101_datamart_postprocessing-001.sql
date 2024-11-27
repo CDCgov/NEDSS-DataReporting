@@ -22,13 +22,11 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'LAB101_DATAMART', 'LAB101_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, 'LAB101_DATAMART', 'LAB101_DATAMART', LEFT('START - UIDs: ' + @lab_test_uids, 200), @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
-
-
-        -- get just LAB_TEST's with I_RESULT that are coming in through @lab_test_uids
+        -- get all associated LAB_TEST's with I_RESULT that are coming in through @lab_test_uids
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -38,6 +36,10 @@ BEGIN
         IF OBJECT_ID('#tmp_I_Result_vals', 'U') IS NOT NULL
             drop table #tmp_I_Result_vals ;
 
+        /*
+        The subquery, aliased as tmp, works by getting the top level lab test uid and its followup uids for whatever ID(s) is(are) coming in,
+        then joins back onto dbo.LAB_TEST to get all I_Results for a given test.
+        */
         SELECT LAB_TEST_UID,
                LAB_TEST_KEY,
                LAB_TEST_CD,
@@ -47,9 +49,16 @@ BEGIN
                LAB_RPT_LOCAL_ID,
                LAB_RPT_UID
         INTO #tmp_I_Result_vals
-        FROM dbo.LAB_TEST
-        WHERE LAB_TEST_UID IN (SELECT value FROM STRING_SPLIT(@lab_test_uids, ','))
-          AND lab_test_type = 'I_Result'
+        FROM dbo.LAB_TEST lt
+        INNER JOIN
+        (
+        SELECT observation_uid,
+        followup_observation_uid
+        FROM dbo.nrt_observation
+        WHERE observation_uid IN (SELECT ROOT_ORDERED_TEST_PNTR FROM dbo.LAB_TEST WHERE LAB_TEST_UID IN (SELECT value FROM STRING_SPLIT(@lab_test_uids, ',')))
+        ) tmp
+        on lt.lab_test_uid in (SELECT value FROM STRING_SPLIT(tmp.followup_observation_uid, ','))
+            AND lt.LAB_TEST_TYPE = 'I_Result'
         order by LAB_RPT_UID;
 
 
@@ -91,21 +100,20 @@ BEGIN
                      FROM_TIME,
                      LAB_RESULT_TXT_VAL
               FROM dbo.LAB_RESULT_VAL
-              WHERE LAB_TEST_UID IN (SELECT value FROM STRING_SPLIT(@lab_test_uids, ','))) lrv
+              WHERE LAB_TEST_UID IN (SELECT lab_test_uid from #tmp_I_Result_vals)) lrv
                  LEFT JOIN (SELECT TEST_RESULT_GRP_KEY
                             FROM dbo.TEST_RESULT_GROUPING
-                            WHERE LAB_TEST_UID IN (SELECT value FROM STRING_SPLIT(@lab_test_uids, ','))) trg
+                            WHERE LAB_TEST_UID IN (SELECT lab_test_uid from #tmp_I_Result_vals)) trg
                            on lrv.TEST_RESULT_GRP_KEY = trg.TEST_RESULT_GRP_KEY
                  left join (SELECT TEST_RESULT_GRP_KEY,
                                    LAB_TEST_KEY
                             FROM dbo.LAB_TEST_RESULT
-                            WHERE LAB_TEST_UID IN (SELECT value FROM STRING_SPLIT(@lab_test_uids, ','))) ltr
+                            WHERE LAB_TEST_UID IN (SELECT lab_test_uid from #tmp_I_Result_vals)) ltr
                            on trg.TEST_RESULT_GRP_KEY = ltr.TEST_RESULT_GRP_KEY
                  left join #tmp_I_Result_vals lt
                            on lt.LAB_TEST_KEY = ltr.LAB_TEST_KEY
         order by LAB_RPT_UID;
 
-        if @debug = 'true' SELECT @Proc_Step_Name, * FROM (SELECT value FROM STRING_SPLIT(@lab_test_uids, ',')) a;
         if @debug = 'true' SELECT @Proc_Step_Name, * FROM #tmp_ISOLATE_TRACKING_INIT;
 
 
@@ -295,7 +303,7 @@ BEGIN
                     from dbo.nrt_observation
                     where observation_uid in (select root_ordered_test_pntr
                                               from dbo.LAB_TEST
-                                              where lab_test_uid IN (SELECT value FROM STRING_SPLIT(@lab_test_uids, ',')))) AS foi
+                                              where lab_test_uid IN (SELECT lab_test_uid from #tmp_I_Result_vals))) AS foi
                    on obs.observation_uid in (SELECT value FROM STRING_SPLIT(foi.followup_observation_uid, ','))
                        AND obs.cd = 'LAB330') as lt
              on lrv.lab_test_uid = lt.observation_uid;
@@ -458,7 +466,7 @@ BEGIN
              , substring(trtd18.TEST_RESULT_VAL_CD_DESC, 1, 50)
              , substring(trtd19.TEST_RESULT_VAL_CD_DESC, 1, 50)
              , substring(trtd20.LAB_RESULT_TXT_VAL, 1, 100)
-             , substring(trtd21.TEST_RESULT_VAL_CD_DESC, 1, 50)
+             , trtd21.FROM_TIME
              , trtd22.FROM_TIME
              , substring(trtd23.TEST_RESULT_VAL_CD_DESC, 1, 50)
              , substring(trtd24.TEST_RESULT_VAL_CD_DESC, 1, 50)
@@ -923,6 +931,7 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, 'LAB101_DATAMART', 'LAB101_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
+        if @debug = 'true' SELECT @Proc_Step_Name, * FROM #TMP_LAB101_INIT2;
 
         COMMIT TRANSACTION;
 
@@ -1156,8 +1165,8 @@ BEGIN
                                        , [step_name]
                                        , [row_count])
         VALUES ( @batch_id,
-                 'D_LAB101'
-               , 'D_LAB101'
+                 'LAB101_DATAMART'
+               , 'LAB101_DATAMART'
                , 'COMPLETE'
                , @Proc_Step_no
                , @Proc_Step_name
@@ -1188,8 +1197,8 @@ BEGIN
                                          , [Error_Description]
                                          , [row_count])
         VALUES ( @batch_id
-               , 'D_LAB101'
-               , 'D_LAB101'
+               , 'LAB101_DATAMART'
+               , 'LAB101_DATAMART'
                , 'ERROR'
                , @Proc_Step_no
                , 'ERROR - ' + @Proc_Step_name
