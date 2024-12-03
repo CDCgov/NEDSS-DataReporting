@@ -128,28 +128,8 @@ BEGIN
                investigation_act_entity.nac_page_case_uid,
                investigation_act_entity.nac_last_chg_time,
                investigation_act_entity.nac_add_time,
-               investigation_act_entity.investigator_uid,
                investigation_act_entity.person_as_reporter_uid,
-               investigation_act_entity.patient_uid,
-               investigation_act_entity.physician_uid,
-               investigation_act_entity.ca_supervisorofphc,
-               investigation_act_entity.closure_investgr_of_phc,
-               investigation_act_entity.dispo_fld_fupinvestgr_of_phc,
-               investigation_act_entity.fld_fup_investgr_of_phc,
-               investigation_act_entity.fld_fup_prov_of_phc,
-               investigation_act_entity.fld_fup_supervisor_of_phc,
-               investigation_act_entity.init_fld_fup_investgr_of_phc,
-               investigation_act_entity.init_fup_investgr_of_phc,
-               investigation_act_entity.init_interviewer_of_phc,
-               investigation_act_entity.interviewer_of_phc,
-               investigation_act_entity.surv_investgr_of_phc,
-               investigation_act_entity.fld_fup_facility_of_phc,
                investigation_act_entity.hospital_uid,
-               investigation_act_entity.org_as_hospital_of_delivery,
-               investigation_act_entity.per_as_provider_of_delivery,
-               investigation_act_entity.per_as_provider_of_obgyn,
-               investigation_act_entity.per_as_provider_of_pediatrics,
-               investigation_act_entity.org_as_reporter_uid,
                investigation_act_entity.ordering_facility_uid,
                results.act_ids,
                results.investigation_observation_ids,
@@ -633,8 +613,8 @@ BEGIN
                                           phc.cd as 'condition_cd',
                                           phc.cd_desc_txt as 'condition_desc'
                                       FROM
-                                          dbo.act_relationship act WITH (NOLOCK)
-                                              join dbo.notification notif WITH (NOLOCK) on  act.source_act_uid = notif.notification_uid
+                                          act_relationship act WITH (NOLOCK)
+                                              join notification notif WITH (NOLOCK) on  act.source_act_uid = notif.notification_uid
                                               join nbs_odse.dbo.participation part with (nolock) ON part.type_cd='SubjOfPHC' AND part.act_uid=act.target_act_uid
                                               join nbs_odse.dbo.person per with (nolock) ON per.cd='PAT' AND per.person_uid = part.subject_entity_uid
                                       WHERE
@@ -792,33 +772,12 @@ BEGIN
                            on results.contact_inv_status_cd = cvg2.code and cvg2.code_set_nm = 'PHC_IN_STS'
                  LEFT OUTER JOIN nbs_odse.dbo.case_management cm WITH (NOLOCK) on results.public_health_case_uid = cm.public_health_case_uid
                  LEFT JOIN
-             (SELECT DISTINCT
-                  act_uid  AS  nac_page_case_uid,
-                  MAX(last_chg_time) AS                                                  nac_last_chg_time,
-                  MIN(add_time)      AS                                                 nac_add_time,
-                  MAX(CASE WHEN type_cd = 'InvestgrOfPHC' THEN entity_uid END) INVESTIGATOR_uid,
-                  MAX(CASE WHEN type_cd = 'PerAsReporterOfPHC' THEN entity_uid END) PERSON_AS_REPORTER_UID,
-                  MAX(CASE WHEN type_cd = 'SubjOfPHC' THEN entity_uid END) patient_uid,
-                  MAX(CASE WHEN type_cd = 'PhysicianOfPHC' THEN entity_uid END) PHYSICIAN_UID,
-                  MAX(CASE WHEN type_cd = 'CASupervisorOfPHC' THEN entity_uid END) CA_SupervisorOfPHC,
-                  MAX(CASE WHEN type_cd = 'ClosureInvestgrOfPHC' THEN entity_uid END) Closure_Investgr_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'DispoFldFupInvestgrOfPHC' THEN entity_uid END) Dispo_Fld_FupInvestgr_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'FldFupInvestgrOfPHC' THEN entity_uid END) Fld_Fup_Investgr_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'FldFupProvOfPHC' THEN entity_uid END) Fld_Fup_Prov_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'FldFupSupervisorOfPHC' THEN entity_uid END) Fld_Fup_Supervisor_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'InitFldFupInvestgrOfPHC' THEN entity_uid END) Init_Fld_Fup_Investgr_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'InitFupInvestgrOfPHC' THEN entity_uid END) Init_Fup_Investgr_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'InitInterviewerOfPHC' THEN entity_uid END) Init_Interviewer_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'InterviewerOfPHC' THEN entity_uid END) Interviewer_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'SurvInvestgrOfPHC' THEN entity_uid END) Surv_Investgr_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'FldFupFacilityOfPHC' THEN entity_uid END) Fld_Fup_Facility_Of_PHC,
-                  MAX(CASE WHEN type_cd = 'HospOfADT' THEN entity_uid END) HOSPITAL_UID,
-                  MAX(CASE WHEN type_cd = 'OrgAsHospitalOfDelivery' THEN entity_uid END) Org_As_Hospital_Of_Delivery,
-                  MAX(CASE WHEN type_cd = 'PerAsProviderOfDelivery' THEN entity_uid END) Per_As_Provider_Of_Delivery,
-                  MAX(CASE WHEN type_cd = 'PerAsProviderOfOBGYN' THEN entity_uid END) Per_As_Provider_Of_OBGYN,
-                  MAX(CASE WHEN type_cd = 'PerAsProvideroOfPediatrics' THEN entity_uid END) Per_As_Provider_Of_Pediatrics,
-                  MAX(CASE WHEN type_cd = 'OrgAsReporterOfPHC' THEN entity_uid END) ORG_AS_REPORTER_UID,
-                  MAX(CASE WHEN type_cd = 'OrgAsClinicOfPHC' THEN entity_uid END) ordering_facility_uid
+             (SELECT DISTINCT act_uid       AS                                                 nac_page_case_uid,
+                              MAX(last_chg_time) AS                                                  nac_last_chg_time,
+                              MIN(add_time)      AS                                                 nac_add_time,
+                              MAX(CASE WHEN type_cd = 'PerAsReporterOfPHC' THEN entity_uid END) person_as_reporter_uid,
+                              MAX(CASE WHEN type_cd = 'HospOfADT' THEN entity_uid END)          hospital_uid,
+                              MAX(CASE WHEN type_cd = 'OrgAsClinicOfPHC' THEN entity_uid END)   ordering_facility_uid
               FROM nbs_act_entity nac WITH (NOLOCK)
               GROUP BY act_uid) AS investigation_act_entity
              ON investigation_act_entity.nac_page_case_uid = results.public_health_case_uid
