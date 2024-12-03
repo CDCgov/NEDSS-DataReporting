@@ -1191,7 +1191,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'DELETE LAB_RESULT_COMMENT ';
 
         DELETE lrc
-        FROM LAB_RESULT_COMMENT lrc
+        FROM dbo.LAB_RESULT_COMMENT lrc
             INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = lrc.lab_test_uid
             LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = lrc.lab_test_uid
         WHERE tcg.lab_test_uid IS NULL
@@ -1211,7 +1211,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'DELETE RESULT_COMMENT_GROUP ';
 
         DELETE rcg
-        FROM RESULT_COMMENT_GROUP rcg
+        FROM dbo.RESULT_COMMENT_GROUP rcg
             INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = rcg.lab_test_uid
             LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = rcg.lab_test_uid
         WHERE tcg.lab_test_uid IS NULL
