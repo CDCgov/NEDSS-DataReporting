@@ -203,6 +203,27 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessInterviewData() {
+        String topic = "dummy_interview";
+        String key = "{\"payload\":{\"interview_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedIntIdsString = "123";
+        verify(postProcRepositoryMock).executeStoredProcForDInterview(expectedIntIdsString);
+        verify(postProcRepositoryMock).executeStoredProcForFInterviewCase(expectedIntIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(6, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.INTERVIEW.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
     void testPostProcessLdfData() {
         String topic = "dummy_ldf_data";
         String key = "{\"payload\":{\"ldf_uid\":123}}";
@@ -345,21 +366,30 @@ class PostProcessingServiceTest {
         String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
         String notificationKey = "{\"payload\":{\"notification_uid\":127}}";
         String caseManagementKey = "{\"payload\":{\"public_health_case_uid\":128,\"case_management_uid\":1001}}";
-        String ldfKey = "{\"payload\":{\"ldf_uid\":127}}";
+        String ldfKey = "{\"payload\":{\"ldf_uid\":129}}";
+        String interviewKey = "{\"payload\":{\"interview_uid\":130}}";
+
+        String observationKey = "{\"payload\":{\"observation_uid\":130}}";
+        String observationMsg = "{\"payload\":{\"observation_uid\":130, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"MorbReport\"}}";
 
         String orgTopic = "dummy_organization";
         String providerTopic = "dummy_provider";
         String patientTopic = "dummy_patient";
         String invTopic = "dummy_investigation";
         String ntfTopic = "dummy_notification";
+        String intTopic = "dummy_interview";
         String ldfTopic = "dummy_ldf_data";
         String cmTopic = "dummy_case_management";
+        String obsTopic = "dummy_observation";
+
 
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
         postProcessingServiceMock.postProcessMessage(patientTopic, patientKey, patientKey);
+        postProcessingServiceMock.postProcessMessage(intTopic, interviewKey, interviewKey);
         postProcessingServiceMock.postProcessMessage(ntfTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
+        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationMsg);
         postProcessingServiceMock.postProcessMessage(ldfTopic, ldfKey, ldfKey);
         postProcessingServiceMock.postProcessMessage(cmTopic, caseManagementKey, caseManagementKey);
         postProcessingServiceMock.processCachedIds();
@@ -376,7 +406,10 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(5).contains(invTopic));
         assertTrue(topicLogList.get(6).contains(ntfTopic));
         assertTrue(topicLogList.get(7).contains(cmTopic));
-        assertTrue(topicLogList.get(8).contains(ldfTopic));
+        assertTrue(topicLogList.get(8).contains(intTopic));
+        assertTrue(topicLogList.get(9).contains(intTopic));
+        assertTrue(topicLogList.get(10).contains(ldfTopic));
+        assertTrue(topicLogList.get(11).contains(obsTopic));
     }
 
     @Test
