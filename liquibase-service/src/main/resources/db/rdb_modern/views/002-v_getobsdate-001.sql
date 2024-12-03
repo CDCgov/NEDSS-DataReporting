@@ -11,5 +11,5 @@ FROM
     dbo.nrt_investigation_observation tnio with (nolock)
         LEFT JOIN dbo.nrt_observation o with (nolock) ON o.observation_uid = tnio.branch_id
         LEFT JOIN dbo.nrt_observation_date ovd with (nolock) ON ovd.observation_uid = o.observation_uid
-WHERE tnio.branch_type_cd = 'InvFrmQ' --AND ovd.obs_value_date_seq = 1;
+WHERE tnio.branch_type_cd = 'InvFrmQ' AND ovd.ovd_seq = 1;
 ;

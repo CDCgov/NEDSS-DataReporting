@@ -147,8 +147,8 @@ BEGIN
                                       o2.cd_desc_txt AS [parent_cd_desc_txt],
                                       o2.obs_domain_cd_st_1 AS [parent_domain_cd_st_1]
                                   FROM
-                                      act_relationship ar WITH (NOLOCK)
-                                          join observation o2  WITH (NOLOCK) on ar.target_act_uid = o2.observation_uid
+                                      dbo.act_relationship ar WITH (NOLOCK)
+                                          join dbo.observation o2  WITH (NOLOCK) on ar.target_act_uid = o2.observation_uid
                                   WHERE
                                       ar.source_act_uid = o.observation_uid
                                     and ar.target_class_cd = 'OBS'
@@ -183,7 +183,7 @@ BEGIN
                                       person.subject_class_cd AS [role_subject_class_cd],
                                       person.scoping_class_cd AS [role_scoping_class_cd]
                                   FROM
-                                      participation p WITH (NOLOCK)
+                                      dbo.participation p WITH (NOLOCK)
                                           JOIN (
                                           select
                                               person.[person_parent_uid],
@@ -203,9 +203,9 @@ BEGIN
                                               r.scoping_class_cd
                                           from
                                               dbo.person WITH (NOLOCK)
-                                                  join nbs_odse.dbo.person_name pn WITH (NOLOCK) on pn.person_uid = person.person_uid
-                                                  left join entity_id e WITH (NOLOCK) ON e.entity_uid = person.person_uid
-                                                  left join role r WITH (NOLOCK) on person.person_uid = r.subject_entity_uid
+                                                  join dbo.person_name pn WITH (NOLOCK) on pn.person_uid = person.person_uid
+                                                  left join dbo.entity_id e WITH (NOLOCK) ON e.entity_uid = person.person_uid
+                                                  left join dbo.role r WITH (NOLOCK) on person.person_uid = r.subject_entity_uid
                                                   left join nbs_srte.dbo.code_value_general AS cvg WITH (NOLOCK) on e.type_cd = cvg.code
                                                   and cvg.code_set_nm = 'EI_TYPE'
                                       ) person on person.person_uid = p.subject_entity_uid
@@ -255,8 +255,8 @@ BEGIN
                                       m.risk_cd					 AS [risk_cd],
                                       m.risk_desc_txt			 AS [risk_desc_txt]
                                   FROM
-                                      participation p WITH (NOLOCK)
-                                          JOIN material m WITH (NOLOCK) ON m.material_uid = p.subject_entity_uid
+                                      dbo.participation p WITH (NOLOCK)
+                                          JOIN dbo.material m WITH (NOLOCK) ON m.material_uid = p.subject_entity_uid
                                   WHERE
                                       p.act_uid = o.observation_uid FOR json path,INCLUDE_NULL_VALUES
                               ) AS material_participations
@@ -274,7 +274,7 @@ BEGIN
                                       type_desc_txt AS [type_desc_txt],
                                       last_chg_time AS [act_last_change_time]
                                   FROM
-                                      act_id WITH (NOLOCK)
+                                      dbo.act_id WITH (NOLOCK)
                                   WHERE
                                       act_uid = o.observation_uid FOR json path,INCLUDE_NULL_VALUES
                               ) AS act_ids
@@ -287,7 +287,7 @@ BEGIN
                                       act_uid AS [edx_act_uid],
                                       add_time AS [edx_add_time]
                                   FROM
-                                      EDX_Document WITH (NOLOCK)
+                                      dbo.EDX_Document WITH (NOLOCK)
                                   WHERE
                                       act_uid = o.observation_uid FOR json path,INCLUDE_NULL_VALUES
                               ) AS edx_ids
@@ -300,7 +300,7 @@ BEGIN
                                       obr.reason_cd,
                                       obr.reason_desc_txt
                                   FROM
-                                      Observation_reason obr WITH (NOLOCK)
+                                      dbo.observation_reason obr WITH (NOLOCK)
                                   WHERE
                                       obr.observation_uid = o.observation_uid
                                   FOR json path,INCLUDE_NULL_VALUES
@@ -315,7 +315,7 @@ BEGIN
                                       ot.txt_type_cd AS [ovt_txt_type_cd],
                                       REPLACE(REPLACE(ot.value_txt, CHAR(13), ' '), CHAR(10), ' ')	as [ovt_value_txt]
                                   FROM
-                                      obs_value_txt ot WITH (NOLOCK)
+                                      dbo.obs_value_txt ot WITH (NOLOCK)
                                   WHERE
                                       ot.observation_uid = o.observation_uid and ot.value_txt is not null
                                   FOR json path,INCLUDE_NULL_VALUES
@@ -335,7 +335,7 @@ BEGIN
                                       ob.alt_cd_system_cd AS [ovc_alt_cd_system_cd],
                                       ob.alt_cd_system_desc_txt AS [ovc_alt_cd_system_desc_txt]
                                   FROM
-                                      obs_value_coded ob WITH (NOLOCK)
+                                      dbo.obs_value_coded ob WITH (NOLOCK)
                                   WHERE
                                       ob.observation_uid = o.observation_uid
                                   FOR json path,INCLUDE_NULL_VALUES
@@ -347,9 +347,10 @@ BEGIN
                                   SELECT
                                       od.observation_uid,
                                       od.from_time AS [ovd_from_date],
-                                      od.to_time AS [ovd_to_date]
+                                      od.to_time AS [ovd_to_date],
+                                      od.obs_value_date_seq AS [ovd_seq]
                                   FROM
-                                      obs_value_date od WITH (NOLOCK)
+                                      dbo.obs_value_date od WITH (NOLOCK)
                                   WHERE
                                       od.observation_uid = o.observation_uid
                                   FOR json path,INCLUDE_NULL_VALUES
@@ -366,9 +367,10 @@ BEGIN
                                       ovn.numeric_value_2 AS [ovn_numeric_value_2],
                                       ovn.numeric_unit_cd AS [ovn_numeric_unit_cd], -- asresult_units,
                                       substring(ovn.low_range,1,20) AS [ovn_low_range], -- AS ref_range_frm,
-                                      substring(ovn.high_range,1,20) AS [ovn_high_range] -- AS ref_range_to,
+                                      substring(ovn.high_range,1,20) AS [ovn_high_range], -- AS ref_range_to,
+                                      ovn.obs_value_numeric_seq AS [ovn_seq]
                                   FROM
-                                      obs_value_numeric ovn WITH (NOLOCK)
+                                      dbo.obs_value_numeric ovn WITH (NOLOCK)
                                   WHERE
                                       ovn.observation_uid = o.observation_uid
                                   FOR json path,INCLUDE_NULL_VALUES

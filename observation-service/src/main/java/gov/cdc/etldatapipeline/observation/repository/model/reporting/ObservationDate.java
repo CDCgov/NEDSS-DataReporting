@@ -12,4 +12,5 @@ public class ObservationDate {
     private Long observationUid;
     private String ovdFromDate;
     private String ovdToDate;
+    private Integer ovdSeq;
 }

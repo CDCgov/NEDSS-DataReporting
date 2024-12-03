@@ -178,6 +178,9 @@ public class Investigation {
     @Column(name = "outbreak_ind_val")
     private String outbreakIndVal;
 
+    @Column(name = "outbreak_name_desc")
+    private String outbreakNameDesc;
+
     @Column(name = "hospitalized_ind_cd")
     private String hospitalizedIndCd;
 

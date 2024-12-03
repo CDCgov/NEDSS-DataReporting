@@ -59,6 +59,7 @@ public class InvestigationReporting {
     private Long hospitalizedDurationAmt;
     private String outbreakInd;
     private String outbreakIndVal;
+    private String outbreakNameDesc;
     private String hospitalizedIndCd;
     private String hospitalizedInd;
     private String transmissionModeCd;

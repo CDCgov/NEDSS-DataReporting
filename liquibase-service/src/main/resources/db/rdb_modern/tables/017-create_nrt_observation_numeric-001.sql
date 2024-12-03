@@ -12,3 +12,11 @@ CREATE TABLE rdb_modern.dbo.nrt_observation_numeric (
     max_datetime datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_numeric' and xtype = 'U')
+BEGIN
+     IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'ovn_seq' AND Object_ID = Object_ID(N'nrt_observation_numeric'))
+        BEGIN
+            ALTER TABLE dbo.nrt_observation_numeric ADD ovn_seq smallint(2);
+        END;
+END;

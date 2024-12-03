@@ -315,6 +315,7 @@ databaseChangeLog:
   - changeSet:
       id: 42
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_date-001.sql
@@ -336,6 +337,7 @@ databaseChangeLog:
   - changeSet:
       id: 45
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_numeric-001.sql

@@ -253,6 +253,9 @@ class InvestigationServiceTest {
         investigation.setMmwrWeek("22");
         investigation.setMmwrYear("2024");
         investigation.setInvestigationFormCd("INV_FORM_MEA");
+        investigation.setOutbreakInd("Yes");
+        investigation.setOutbreakName("MDK");
+        investigation.setOutbreakNameDesc("Ketchup - McDonalds");
 
         investigation.setActIds(readFileData(FILE_PATH_PREFIX + "ActIds.json"));
         investigation.setInvestigationConfirmationMethod(readFileData(FILE_PATH_PREFIX + "ConfirmationMethod.json"));
@@ -283,6 +286,9 @@ class InvestigationServiceTest {
         reporting.setMmwrWeek("22");
         reporting.setMmwrYear("2024");
         reporting.setInvestigationFormCd("INV_FORM_MEA");
+        reporting.setOutbreakInd("Yes");
+        reporting.setOutbreakName("MDK");
+        reporting.setOutbreakNameDesc("Ketchup - McDonalds");
 
         reporting.setInvestigatorId(32143250L);         // PersonParticipations.json, entity_id for type_cd=InvestgrOfPHC
         reporting.setPhysicianId(14253651L);            // PersonParticipations.json, entity_id for type_cd=PhysicianOfPHC

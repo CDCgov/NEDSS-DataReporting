@@ -2,6 +2,7 @@
   {
     "observation_uid": 10001234,
     "ovd_from_date": "2024-08-16T00:00:00",
-    "ovd_to_date": null
+    "ovd_to_date": null,
+    "ovd_seq": 1
   }
 ]

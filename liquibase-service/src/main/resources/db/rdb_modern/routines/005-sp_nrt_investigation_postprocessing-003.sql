@@ -57,7 +57,7 @@ BEGIN
                program_jurisdiction_oid        as CASE_OID,
                nrt.local_id                    as INV_LOCAL_ID,
                nrt.shared_ind                  as INV_SHARE_IND,
-               nrt.outbreak_name               as OUTBREAK_NAME,
+               NULLIF(nrt.outbreak_name,'')               as OUTBREAK_NAME,
                nrt.investigation_status        as INVESTIGATION_STATUS,
                nrt.inv_case_status             as INV_CASE_STATUS,
                nrt.case_type_cd                as CASE_TYPE,
@@ -75,16 +75,16 @@ BEGIN
                nrt.mmwr_week                   as CASE_RPT_MMWR_WK,
                nrt.mmwr_year                   as CASE_RPT_MMWR_YR,
                nrt.disease_imported_ind        as DISEASE_IMPORTED_IND,
-               nrt.imported_from_country       as IMPORT_FRM_CNTRY,
-               nrt.imported_from_state         as IMPORT_FRM_STATE,
-               nrt.imported_from_county        as IMPORT_FRM_CNTY,
-               nrt.imported_city_desc_txt      as IMPORT_FRM_CITY,
+               NULLIF(nrt.imported_from_country,'')        as IMPORT_FRM_CNTRY,
+               NULLIF(nrt.imported_from_state,'')          as IMPORT_FRM_STATE,
+               NULLIF(nrt.imported_from_county,'')         as IMPORT_FRM_CNTY,
+               NULLIF(nrt.imported_city_desc_txt,'')       as IMPORT_FRM_CITY,
                nrt.earliest_rpt_to_cdc_dt      as EARLIEST_RPT_TO_CDC_DT,
                NULLIF(nrt.rpt_source_cd,'')               as RPT_SRC_CD,
-               nrt.imported_country_cd         as IMPORT_FRM_CNTRY_CD,
-               nrt.imported_state_cd           as IMPORT_FRM_STATE_CD,
-               nrt.imported_county_cd          as IMPORT_FRM_CNTY_CD,
-               nrt.import_frm_city_cd          as IMPORT_FRM_CITY_CD,
+               NULLIF(nrt.imported_country_cd,'')          as IMPORT_FRM_CNTRY_CD,
+               NULLIF(nrt.imported_state_cd,'')            as IMPORT_FRM_STATE_CD,
+               NULLIF(nrt.imported_county_cd,'')           as IMPORT_FRM_CNTY_CD,
+               NULLIF(nrt.import_frm_city_cd,'')           as IMPORT_FRM_CITY_CD,
                nrt.diagnosis_time              as DIAGNOSIS_DT,
                nrt.hospitalized_admin_time     as HSPTL_ADMISSION_DT,
                nrt.hospitalized_discharge_time as HSPTL_DISCHARGE_DT,
@@ -93,7 +93,7 @@ BEGIN
                nrt.hospitalized_ind            as HSPTLIZD_IND,
                CASE WHEN nrt.inv_state_case_id = '' OR nrt.inv_state_case_id = 'null' THEN NULL
                     ELSE  nrt.inv_state_case_id END          as INV_STATE_CASE_ID,
-               nrt.city_county_case_nbr        as CITY_COUNTY_CASE_NBR,
+               NULLIF(nrt.city_county_case_nbr,'')        as CITY_COUNTY_CASE_NBR,
                nrt.transmission_mode           as TRANSMISSION_MODE,
                nrt.record_status_cd            as RECORD_STATUS_CD,
                nrt.pregnant_ind                as PATIENT_PREGNANT_IND,
@@ -128,10 +128,11 @@ BEGIN
                nrt.curr_process_state          as CURR_PROCESS_STATE,
                nrt.inv_priority_cd             as INV_PRIORITY_CD,
                nrt.coinfection_id              as COINFECTION_ID,
-               nrt.legacy_case_id              as LEGACY_CASE_ID,
-               NULLIF(nrt.outbreak_name, '')               as OUTBREAK_NAME_DESC,
+               NULLIF(nrt.legacy_case_id,'')              as LEGACY_CASE_ID,
+               NULLIF(nrt.outbreak_name_desc, '')               as OUTBREAK_NAME_DESC,
                nrt.cd,
-               nrt.investigation_form_cd
+               nrt.investigation_form_cd,
+               nrt.investigator_assigned_datetime as INV_ASSIGNED_DT_LEGACY
         into #temp_inv_table
         from dbo.nrt_investigation nrt
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
@@ -330,7 +331,8 @@ BEGIN
                     IMPORT_FRM_CITY = COALESCE(tmp.IMPORT_FRM_CITY, obs.IMPORT_FRM_CITY),
                     HSPTL_ADMISSION_DT = COALESCE(tmp.HSPTL_ADMISSION_DT, obs.HSPTL_ADMISSION_DT),
                     HSPTL_DISCHARGE_DT = COALESCE(tmp.HSPTL_DISCHARGE_DT, obs.HSPTL_DISCHARGE_DT),
-                    HSPTL_DURATION_DAYS = COALESCE(tmp.HSPTL_DURATION_DAYS, obs.HSPTL_DURATION_DAYS)
+                    HSPTL_DURATION_DAYS = COALESCE(tmp.HSPTL_DURATION_DAYS, obs.HSPTL_DURATION_DAYS),
+                    INV_ASSIGNED_DT = COALESCE(tmp.INV_ASSIGNED_DT, tmp.INV_ASSIGNED_DT_LEGACY)
                 FROM #temp_inv_table tmp with (nolock)
                          LEFT JOIN #final_inv_obs obs with (nolock) on tmp.case_uid = obs.public_health_case_uid;
 
