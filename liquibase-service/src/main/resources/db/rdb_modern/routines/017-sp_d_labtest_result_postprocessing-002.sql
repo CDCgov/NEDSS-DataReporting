@@ -711,14 +711,14 @@ BEGIN
         WHERE rtrim(Test_Result_Val_Cd ) = '';
 
 
-       UPDATE #TMP_Lab_Result_Val
+        UPDATE #TMP_Lab_Result_Val
         SET Test_Result_Val_Cd_Desc  = NULL
         WHERE rtrim(Test_Result_Val_Cd_Desc  ) = '';
 
 
         UPDATE #TMP_Lab_Result_Val
         SET Result_Units  = NULL
-    WHERE rtrim(Result_Units  ) = '';
+        WHERE rtrim(Result_Units  ) = '';
 
 
         UPDATE #TMP_Lab_Result_Val
@@ -1184,11 +1184,51 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+
         BEGIN TRANSACTION;
 
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE LAB_RESULT_COMMENT ';
+
+        DELETE lrc
+        FROM dbo.LAB_RESULT_COMMENT lrc
+            INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = lrc.lab_test_uid
+            LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = lrc.lab_test_uid
+        WHERE tcg.lab_test_uid IS NULL;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
-        SET @PROC_STEP_NAME = 'UPDATE Lab_Result_Comment ';
+        SET @PROC_STEP_NAME = 'DELETE RESULT_COMMENT_GROUP ';
+
+        DELETE rcg
+        FROM dbo.RESULT_COMMENT_GROUP rcg
+            INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = rcg.lab_test_uid
+            LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = rcg.lab_test_uid
+        WHERE tcg.lab_test_uid IS NULL;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'UPDATE LAB_RESULT_COMMENT ';
 
 
         UPDATE dbo.Lab_Result_Comment
@@ -1216,7 +1256,7 @@ BEGIN
 
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
-        SET @PROC_STEP_NAME = 'INSERTING INTO Lab_Result_Comment ';
+        SET @PROC_STEP_NAME = 'INSERTING INTO LAB_RESULT_COMMENT ';
 
 
         INSERT INTO dbo.Lab_Result_Comment
@@ -1268,8 +1308,6 @@ BEGIN
 
         UPDATE dbo.LAB_TEST_RESULT
         SET
-            [LAB_TEST_KEY]	 =	tmp.[LAB_TEST_KEY],
-            [LAB_TEST_UID]	 =	tmp.[LAB_TEST_UID],
             [RESULT_COMMENT_GRP_KEY]	 =	tmp.[RESULT_COMMENT_GRP_KEY],
             [TEST_RESULT_GRP_KEY]	 =	tmp.[TEST_RESULT_GRP_KEY],
             [PERFORMING_LAB_KEY]	 =	tmp.[PERFORMING_LAB_KEY],
@@ -1288,9 +1326,8 @@ BEGIN
             [RECORD_STATUS_CD]	 =	SUBSTRING(tmp.RECORD_STATUS_CD ,1,8),
             [RDB_LAST_REFRESH_TIME]	 =	GETDATE()
         FROM #TMP_LAB_TEST_RESULT tmp
-                 INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
-            AND val.RESULT_COMMENT_GRP_KEY = tmp.RESULT_COMMENT_GRP_KEY
-            AND val.TEST_RESULT_GRP_KEY = tmp.TEST_RESULT_GRP_KEY;
+            INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY;
 
 
         IF @pDebug = 'true' SELECT 'TMP_LAB_TEST_RESULT', * FROM #TMP_LAB_TEST_RESULT;
