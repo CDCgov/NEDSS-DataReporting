@@ -558,3 +558,10 @@ databaseChangeLog:
         - sqlFile:
             path: 004-v_getobstxt-001.sql
             splitStatements: false
+  - changeSet:
+      id: 75
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 007-create_nrt_investigation-005.sql
+            splitStatements: false
