@@ -114,4 +114,21 @@ public class InvestigationReporting {
     private Long caseCount;
     private String investigatorAssignedDatetime;
     private String investigationFormCd;
+    private Long caSupervisorOfPhcUid;
+    private Long closureInvestgrOfPhcUid;
+    private Long dispoFldFupinvestgrOfPhcUid;
+    private Long fldFupInvestgrOfPhcUid;
+    private Long fldFupProvOfPhcUid;
+    private Long fldFupSupervisorOfPhcUid;
+    private Long initFldFupInvestgrOfPhcUid;
+    private Long initFupInvestgrOfPhcUid;
+    private Long initInterviewerOfPhcUid;
+    private Long interviewerOfPhcUid;
+    private Long survInvestgrOfPhcUid;
+    private Long fldFupFacilityOfPhcUid;
+    private Long orgAsHospitalOfDeliveryUid;
+    private Long perAsProviderOfDeliveryUid;
+    private Long perAsProviderOfObgynUid;
+    private Long perAsProviderOfPediatricsUid;
+    private Long orgAsReporterUid;
 }

@@ -324,4 +324,56 @@ public class Investigation {
 
     @Column(name = "investigation_form_cd")
     private String investigationFormCd;
+
+    @Column(name = "ca_supervisor_of_phc_uid")
+    private Long caSupervisorOfPhcUid;
+
+    @Column(name = "closure_investgr_of_phc_uid")
+    private Long closureInvestgrOfPhcUid;
+
+    @Column(name = "dispo_fld_fupinvestgr_of_phc_uid")
+    private Long dispoFldFupinvestgrOfPhcUid;
+
+    @Column(name = "fld_fup_investgr_of_phc_uid")
+    private Long fldFupInvestgrOfPhcUid;
+
+    @Column(name = "fld_fup_prov_of_phc_uid")
+    private Long fldFupProvOfPhcUid;
+
+    @Column(name = "fld_fup_supervisor_of_phc_uid")
+    private Long fldFupSupervisorOfPhcUid;
+
+    @Column(name = "init_fld_fup_investgr_of_phc_uid")
+    private Long initFldFupInvestgrOfPhcUid;
+
+    @Column(name = "init_fup_investgr_of_phc_uid")
+    private Long initFupInvestgrOfPhcUid;
+
+    @Column(name ="init_interviewer_of_phc_uid")
+    private Long initInterviewerOfPhcUid;
+
+    @Column(name = "interviewer_of_phc_uid")
+    private Long interviewerOfPhcUid;
+
+    @Column(name = "surv_investgr_of_phc_uid")
+    private Long survInvestgrOfPhcUid;
+
+    @Column(name = "fld_fup_facility_of_phc_uid")
+    private Long fldFupFacilityOfPhcUid;
+
+    @Column(name = "org_as_hospital_of_delivery_uid")
+    private Long orgAsHospitalOfDeliveryUid;
+
+    @Column(name = "per_as_provider_of_delivery_uid")
+    private Long perAsProviderOfDeliveryUid;
+
+    @Column(name = "per_as_provider_of_obgyn_uid")
+    private Long perAsProviderOfObgynUid;
+
+    @Column(name = "per_as_provider_of_pediatrics_uid")
+    private Long perAsProviderOfPediatricsUid;
+
+    @Column(name = "org_as_reporter_uid")
+    private Long orgAsReporterUid;
+
 }
