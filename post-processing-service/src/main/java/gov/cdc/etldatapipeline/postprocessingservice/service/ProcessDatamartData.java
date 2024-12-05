@@ -40,6 +40,7 @@ public class ProcessDatamartData {
                     String jsonMessage = jsonGenerator.generateStringJson(dmart);
 
                     kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
+                    logger.info("Datamart data: PHC uid={}, condition_cd={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getConditionCd(), datamartTopic);
                 }
             } catch (Exception e) {
                 logger.error("Error processing Datamart JSON array from investigation result data: {}", e.getMessage());

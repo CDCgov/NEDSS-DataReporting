@@ -206,6 +206,8 @@ public class PostProcessingService {
             List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
                     .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
 
+            List<InvestigationResult> dmData = new ArrayList<>();
+
             for (Entry<String, List<Long>> entry : sortedEntries) {
                 String keyTopic = entry.getKey();
                 List<Long> ids = entry.getValue();
@@ -225,7 +227,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
                         break;
                     case INVESTIGATION:
-                        List<InvestigationResult> invData = processTopic(keyTopic, entity, ids,
+                        dmData = processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
                         ids.stream().filter(idValsSnapshot::containsKey).forEach(id ->
@@ -237,8 +239,6 @@ public class PostProcessingService {
 
                         processTopic(keyTopic, Entity.CASE_COUNT, ids,
                                 investigationRepository::executeStoredProcForCaseCount);
-
-                        datamartProcessor.process(invData);
                         break;
                     case NOTIFICATION:
                         processTopic(keyTopic, entity, ids,
@@ -290,9 +290,12 @@ public class PostProcessingService {
                         break;
                 }
             }
+            datamartProcessor.process(dmData);
         } else {
             logger.info("No ids to process from the topics.");
         }
+
+
     }
 
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
