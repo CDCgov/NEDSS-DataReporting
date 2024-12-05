@@ -598,10 +598,3 @@ databaseChangeLog:
         - sqlFile:
             path: 024-sp_f_interview_case_postprocessing-001.sql
             splitStatements: false
-  - changeSet:
-      id: 80
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 007-create_nrt_investigation-005.sql
-            splitStatements: false
