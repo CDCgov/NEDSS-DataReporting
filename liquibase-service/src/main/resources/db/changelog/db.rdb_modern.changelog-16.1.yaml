@@ -444,20 +444,6 @@ databaseChangeLog:
             path: 020-sp_lab101_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 59
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 007-create_nrt_investigation-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 60
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 007-create_nrt_investigation-003.sql
-            splitStatements: false
-  - changeSet:
       id: 61
       author: liquibase
       runOnChange: true
@@ -486,13 +472,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 022-sp_nrt_case_management_postprocessing-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 65
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 007-create_nrt_investigation-004.sql
             splitStatements: false
   - changeSet:
       id: 66

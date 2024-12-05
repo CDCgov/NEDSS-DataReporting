@@ -114,6 +114,7 @@ CREATE TABLE dbo.nrt_investigation (
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
 
+--CNDE-1916
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype = 'U')
     BEGIN
 
@@ -129,6 +130,63 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
 
     END;
 
+--CNDE-1802
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype = 'U')
+    BEGIN
+
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE name = N'notification_local_id' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation DROP COLUMN notification_local_id;
+            END;
+
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE name = N'notification_add_time' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation DROP COLUMN notification_add_time;
+            END;
+
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE name = N'notification_record_status_cd' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation DROP COLUMN notification_record_status_cd;
+            END;
+
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'notification_last_chg_time' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation DROP COLUMN notification_last_chg_time;
+            END;
+
+    END;
+
+--CNDE-1602
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype = 'U')
+    BEGIN
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'investigation_count' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation ADD investigation_count bigint;
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'case_count' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation ADD case_count bigint;
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'investigator_assigned_datetime' AND Object_ID = Object_ID(N'nrt_investigation'))
+        BEGIN
+        ALTER TABLE dbo.nrt_investigation ADD investigator_assigned_datetime datetime;
+        END;
+    END;
+
+--CNDE-1902
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype = 'U')
+    BEGIN
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'investigation_form_cd' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation ADD investigation_form_cd VARCHAR(50);
+            END;
+    END;
+
+--CNDE-1913
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype = 'U')
     BEGIN
 
