@@ -247,6 +247,8 @@ public class PostProcessingService {
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForCaseManagement);
+                        processTopic(keyTopic, entity, ids,
+                                investigationRepository::executeStoredProcForFStdPageCase);
                         break;
                     case INTERVIEW:
                         processTopic(keyTopic, entity, ids,
