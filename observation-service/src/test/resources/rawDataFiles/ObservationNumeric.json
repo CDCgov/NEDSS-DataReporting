@@ -7,6 +7,7 @@
     "ovn_numeric_value_2": 1.00000,
     "ovn_numeric_unit_cd": "mL",
     "ovn_low_range": "10-100",
-    "ovn_high_range": "100-1000"
+    "ovn_high_range": "100-1000",
+    "ovn_seq": "1"
   }
 ]

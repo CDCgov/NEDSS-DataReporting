@@ -1,28 +1,34 @@
 CREATE OR ALTER PROCEDURE dbo.sp_d_lab_test_postprocessing @obs_ids nvarchar(max),
-                                                                @debug bit = 'false'
-as
+                                                             @debug bit = 'false'
+AS
 
 BEGIN
+    /*
+     * [Description]
+     * This stored procedure processes event based updates to LAB_TEST and associated tables.
+     * 1. Receives input list of Lab Report based observations from Observation Service.
+     * 2. Performs necessary transformations for domains: 'Order', 'Result', 'R_Order', 'R_Result',
+     * 	'I_Order', 'I_Result', 'Order_rslt'
+     * 3. Updates and inserts records into target dimensions.
+     *
+     * [Target Dimensions]
+     * 1. LAB_TEST
+     * 2. LAB_RPT_USER_COMMENT
+     */
 
-    DECLARE
-        @RowCount_no INT;
-    DECLARE
-        @Proc_Step_no FLOAT = 0;
-    DECLARE
-        @Proc_Step_Name VARCHAR(200) = '';
-    DECLARE
-        @batch_id BIGINT;
-    SET
-        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
+
+    DECLARE @RowCount_no INT;
+    DECLARE @Proc_Step_no FLOAT = 0;
+    DECLARE @Proc_Step_Name VARCHAR(200) = '';
+    DECLARE @batch_id BIGINT;
+    SET @batch_id = CAST((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
 
     BEGIN TRY
 
         SET @Proc_Step_no = 1;
-        SET
-            @Proc_Step_Name = 'SP_Start';
+        SET @Proc_Step_Name = 'SP_Start';
 
-        BEGIN
-            TRANSACTION;
+        BEGIN TRANSACTION;
 
         INSERT INTO dbo.job_flow_log ( batch_id
                                      , [Dataflow_Name]
@@ -44,16 +50,12 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'GENERATING #s_edx_document1 ';
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #s_edx_document1 ';
 
 
-        IF
-            OBJECT_ID('#s_edx_document1', 'U') IS NOT NULL
+        IF OBJECT_ID('#s_edx_document1', 'U') IS NOT NULL
             drop table #s_edx_document1;
 
         select EDX_Document_uid, edx_act_uid, edx_add_time
@@ -76,16 +78,12 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TESTinit_a ';
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = ' GENERATING #LAB_TESTinit_a ';
 
 
-        IF
-            OBJECT_ID('#LAB_TESTinit_a', 'U') IS NOT NULL
+        IF OBJECT_ID('#LAB_TESTinit_a', 'U') IS NOT NULL
             drop table #LAB_TESTinit_a;
 
 
@@ -880,7 +878,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'D_LABTEST', 'D_LABTEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -920,14 +918,13 @@ BEGIN
                  left join dbo.nrt_observation as tst4
                            on parent_test.report_observation_uid = tst4.observation_uid;
 
-        if
-            @debug = 'true'
+        if @debug = 'true'
             select 'r_result_to_r_order_to_order' as nm, *
             from #R_Result_to_R_Order_to_Order;
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'D_LABTEST', 'D_LABTEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -2025,7 +2022,7 @@ BEGIN
                CASE
                    WHEN obs.jurisdiction_cd IS NOT NULL THEN jc.code_short_desc_txt
                    else CAST(NULL AS varchar(50)) end                                                           as JURISDICTION_NM,
-               obs.activity_to_time                                                                             as LAB_TEST_dt,
+               obs.activity_to_time                                                             as LAB_TEST_dt,
                obs.effective_from_time                                                                          as specimen_collection_dt,
                obs.rpt_to_state_time                                                                            as LAB_RPT_RECEIVED_BY_PH_DT,
                obs.LAST_CHG_TIME                                                                                as LAB_RPT_LAST_UPDATE_DT,
@@ -2307,7 +2304,7 @@ BEGIN
                 (
                 1,
                 1
-                )                           NOT NULL,
+                )               NOT NULL,
             [LAB_TEST_UID] [numeric](20, 0) NULL,
             [LAB_TEST_KEY] [numeric](18, 0) NULL
         ) ON [PRIMARY];
@@ -2766,8 +2763,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        BEGIN
-            TRANSACTION;
+        BEGIN TRANSACTION;
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -2862,16 +2858,12 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #Lab_Rpt_User_Comment_N ';
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = ' GENERATING #Lab_Rpt_User_Comment_N ';
 
 
-        IF
-            OBJECT_ID('#Lab_Rpt_User_Comment_N', 'U') IS NOT NULL
+        IF OBJECT_ID('#Lab_Rpt_User_Comment_N', 'U') IS NOT NULL
             drop table #Lab_Rpt_User_Comment_N;
 
         CREATE TABLE #Lab_Rpt_User_Comment_N
@@ -2971,16 +2963,12 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #Lab_Rpt_User_Comment_U ';
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = ' GENERATING #Lab_Rpt_User_Comment_U ';
 
 
-        IF
-            OBJECT_ID('#Lab_Rpt_User_Comment_U', 'U') IS NOT NULL
+        IF OBJECT_ID('#Lab_Rpt_User_Comment_U', 'U') IS NOT NULL
             drop table #Lab_Rpt_User_Comment_U;
 
         CREATE TABLE #Lab_Rpt_User_Comment_U
@@ -2992,7 +2980,7 @@ BEGIN
                 1
                 )                                     NOT NULL,
             [LAB_TEST_uid]            [bigint]        NULL,
-            [COMMENTS_FOR_ELR_DT]     [datetime]      NULL,
+            [COMMENTS_FOR_ELR_DT] [datetime]      NULL,
             [USER_COMMENT_CREATED_BY] [bigint]        NULL,
             [USER_RPT_COMMENTS]       [varchar](8000) NULL,
             [RECORD_STATUS_CD]        [varchar](8)    NOT NULL,
@@ -3062,6 +3050,67 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST Records';
+
+
+        /* Update records associated to Inactive Orders using Root Order UID. */
+
+        UPDATE lt
+        SET record_status_cd = 'INACTIVE'
+        FROM
+            dbo.LAB_TEST lt
+        WHERE
+            root_ordered_test_pntr IN
+            (
+                SELECT l.root_ordered_test_pntr
+                FROM dbo.LAB_TEST l
+                WHERE l.lab_test_type = 'Order'
+                  AND l.record_status_cd = 'INACTIVE')
+          AND record_status_cd <> 'INACTIVE';
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Remove LAB_TEST Results';
+
+        /* Remove records associated to Deleted Results. */
+        IF EXISTS (SELECT 1 FROM dbo.LAB_TEST WHERE ROOT_ORDERED_TEST_PNTR = 1)
+            BEGIN
+                WITH removed_obs as (
+                    select LAB_TEST_UID,
+                           PARENT_TEST_PNTR,
+                           ROOT_ORDERED_TEST_PNTR from dbo.LAB_TEST
+                    where ROOT_ORDERED_TEST_PNTR = 1
+
+                    UNION ALL
+
+                    select lt.LAB_TEST_UID,
+                           lt.PARENT_TEST_PNTR,
+                           lt.ROOT_ORDERED_TEST_PNTR
+                    from dbo.LAB_TEST lt
+                             inner join removed_obs o on lt.PARENT_TEST_PNTR = o.LAB_TEST_UID
+                )
+                DELETE FROM dbo.LAB_TEST WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM removed_obs);
+            END
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, 'D_LAB_TEST', 'D_LAB_TEST', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         COMMIT TRANSACTION;
 
@@ -3200,6 +3249,7 @@ BEGIN
         IF
             OBJECT_ID('#Lab_Rpt_User_Comment', 'U') IS NOT NULL
             drop table #Lab_Rpt_User_Comment;
+
 
 
         BEGIN

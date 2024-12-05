@@ -209,20 +209,31 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
-
-        var actualInterviewKey = objectMapper.readValue(
+        //test interview key
+        var actualInterviewKey1 = objectMapper.readValue(
                 objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReportingKey.class);
+        //test interview key used for interview answer tombstone message
+        var actualInterviewKey2 = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), InterviewReportingKey.class);
+        //test interview key used for interview note tombstone message
+        var actualInterviewKey3 = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(3)).path("payload").toString(), InterviewReportingKey.class);
+
+
+
         var actualInterviewValue = objectMapper.readValue(
                 objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReporting.class);
         var actualInterviewAnswerValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InterviewAnswer.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InterviewAnswer.class);
         var actualInterviewNoteValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InterviewNote.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(4)).path("payload").toString(), InterviewNote.class);
 
 
-        assertEquals(interviewReportingKey, actualInterviewKey);
+        assertEquals(interviewReportingKey, actualInterviewKey1);
+        assertEquals(interviewReportingKey, actualInterviewKey2);
+        assertEquals(interviewReportingKey, actualInterviewKey3);
         assertEquals(interviewReportingValue, actualInterviewValue);
         assertEquals(interviewAnswerValue, actualInterviewAnswerValue);
         assertEquals(interviewNoteValue, actualInterviewNoteValue);
@@ -256,19 +267,27 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
-        var actualInterviewKey = objectMapper.readValue(
+        //interview key
+        var actualInterviewKey1 = objectMapper.readValue(
                 objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReportingKey.class);
+        //interview value
         var actualInterviewValue = objectMapper.readValue(
                 objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReporting.class);
+        //interview key used for tombstone
+        var actualInterviewKey2 = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), InterviewReportingKey.class);
+        //interview answer key
         var actualInterviewAnswerKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), InterviewAnswerKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), InterviewAnswerKey.class);
+        //interview answer value
         var actualInterviewAnswerValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InterviewAnswer.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), InterviewAnswer.class);
 
-        assertEquals(interviewReportingKey, actualInterviewKey);
+        assertEquals(interviewReportingKey, actualInterviewKey1);
+        assertEquals(interviewReportingKey, actualInterviewKey2);
         assertEquals(interviewReportingValue, actualInterviewValue);
         assertEquals(interviewAnswerKey, actualInterviewAnswerKey);
         assertEquals(interviewAnswerValue, actualInterviewAnswerValue);
@@ -301,20 +320,28 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
-        var actualInterviewKey = objectMapper.readValue(
+        //interview key
+        var actualInterviewKey1 = objectMapper.readValue(
                 objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReportingKey.class);
+        //interview value
         var actualInterviewValue = objectMapper.readValue(
                 objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), InterviewReporting.class);
+        //interview key for tombstone message
+        var actualInterviewKey2 = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), InterviewReportingKey.class);
+        //interview note key
         var actualInterviewNoteKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), InterviewNoteKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(3)).path("payload").toString(), InterviewNoteKey.class);
+        //interview note value
         var actualInterviewNoteValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), InterviewNote.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(3)).path("payload").toString(), InterviewNote.class);
 
 
-        assertEquals(interviewReportingKey, actualInterviewKey);
+        assertEquals(interviewReportingKey, actualInterviewKey1);
+        assertEquals(interviewReportingKey, actualInterviewKey2);
         assertEquals(interviewReportingValue, actualInterviewValue);
         assertEquals(interviewNoteKey, actualInterviewNoteKey);
         assertEquals(interviewNoteValue, actualInterviewNoteValue);
@@ -373,7 +400,7 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         ILoggingEvent log = listAppender.list.getLast();
@@ -643,6 +670,7 @@ class InvestigationDataProcessingTests {
         interviewNote.setUserFirstName("super");
         interviewNote.setUserLastName("user");
         interviewNote.setUserComment("Test123");
+        interviewNote.setRecordStatusCd("");
         return interviewNote;
     }
 

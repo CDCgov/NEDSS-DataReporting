@@ -718,7 +718,7 @@ BEGIN
 
         UPDATE #TMP_Lab_Result_Val
         SET Result_Units  = NULL
-    WHERE rtrim(Result_Units  ) = '';
+        WHERE rtrim(Result_Units  ) = '';
 
 
         UPDATE #TMP_Lab_Result_Val
@@ -1184,11 +1184,51 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+
         BEGIN TRANSACTION;
 
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE LAB_RESULT_COMMENT ';
+
+        DELETE lrc
+        FROM dbo.LAB_RESULT_COMMENT lrc
+            INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = lrc.lab_test_uid
+            LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = lrc.lab_test_uid
+        WHERE tcg.lab_test_uid IS NULL;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
-        SET @PROC_STEP_NAME = 'UPDATE Lab_Result_Comment ';
+        SET @PROC_STEP_NAME = 'DELETE RESULT_COMMENT_GROUP ';
+
+        DELETE rcg
+        FROM dbo.RESULT_COMMENT_GROUP rcg
+            INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = rcg.lab_test_uid
+            LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = rcg.lab_test_uid
+        WHERE tcg.lab_test_uid IS NULL;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'UPDATE LAB_RESULT_COMMENT ';
 
 
         UPDATE dbo.Lab_Result_Comment
@@ -1216,7 +1256,7 @@ BEGIN
 
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
-        SET @PROC_STEP_NAME = 'INSERTING INTO Lab_Result_Comment ';
+        SET @PROC_STEP_NAME = 'INSERTING INTO LAB_RESULT_COMMENT ';
 
 
         INSERT INTO dbo.Lab_Result_Comment
@@ -1268,8 +1308,6 @@ BEGIN
 
         UPDATE dbo.LAB_TEST_RESULT
         SET
-            [LAB_TEST_KEY]	 =	tmp.[LAB_TEST_KEY],
-            [LAB_TEST_UID]	 =	tmp.[LAB_TEST_UID],
             [RESULT_COMMENT_GRP_KEY]	 =	tmp.[RESULT_COMMENT_GRP_KEY],
             [TEST_RESULT_GRP_KEY]	 =	tmp.[TEST_RESULT_GRP_KEY],
             [PERFORMING_LAB_KEY]	 =	tmp.[PERFORMING_LAB_KEY],
@@ -1288,9 +1326,8 @@ BEGIN
             [RECORD_STATUS_CD]	 =	SUBSTRING(tmp.RECORD_STATUS_CD ,1,8),
             [RDB_LAST_REFRESH_TIME]	 =	GETDATE()
         FROM #TMP_LAB_TEST_RESULT tmp
-                 INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
-            AND val.RESULT_COMMENT_GRP_KEY = tmp.RESULT_COMMENT_GRP_KEY
-            AND val.TEST_RESULT_GRP_KEY = tmp.TEST_RESULT_GRP_KEY;
+            INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY;
 
 
         IF @pDebug = 'true' SELECT 'TMP_LAB_TEST_RESULT', * FROM #TMP_LAB_TEST_RESULT;
@@ -1371,6 +1408,80 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST_RESULT Records';
+
+
+        /* Update record status for Inactive Orders and associated observations. */
+        SELECT ltr.LAB_TEST_UID
+        INTO #Inactive_Obs
+        FROM  dbo.LAB_TEST lt
+                  INNER JOIN dbo.LAB_TEST_RESULT ltr on ltr.LAB_TEST_UID = lt.LAB_TEST_UID
+        WHERE ROOT_ORDERED_TEST_PNTR IN
+              (SELECT ROOT_ORDERED_TEST_PNTR
+               FROM dbo.LAB_TEST ltr
+               WHERE LAB_TEST_TYPE = 'Order'
+                 AND RECORD_STATUS_CD = 'INACTIVE'
+              )
+          AND ltr.RECORD_STATUS_CD <> 'INACTIVE';
+
+        UPDATE lrc
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_RESULT_COMMENT lrc
+                 INNER JOIN dbo.RESULT_COMMENT_GROUP g ON lrc.RESULT_COMMENT_GRP_KEY = g.RESULT_COMMENT_GRP_KEY
+                 INNER JOIN dbo.LAB_TEST_RESULT R ON R.RESULT_COMMENT_GRP_KEY = g.RESULT_COMMENT_GRP_KEY
+                 INNER JOIN #INACTIVE_OBS io ON io.LAB_TEST_UID = lrc.LAB_TEST_UID
+            AND lrc.RECORD_STATUS_CD <> 'INACTIVE';
+
+        UPDATE lrv
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_RESULT_VAL lrv
+                 INNER JOIN dbo.TEST_RESULT_GROUPING R ON R.TEST_RESULT_GRP_KEY = lrv.TEST_RESULT_GRP_KEY
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr ON R.TEST_RESULT_GRP_KEY = ltr.TEST_RESULT_GRP_KEY
+                 INNER JOIN #INACTIVE_OBS io ON io.LAB_TEST_UID = lrv.LAB_TEST_UID
+            AND lrv.RECORD_STATUS_CD <> 'INACTIVE';
+
+        UPDATE lt
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_TEST_RESULT lt
+                 INNER JOIN #Inactive_Obs io ON io.LAB_TEST_UID = lt.LAB_TEST_UID
+            AND lt.RECORD_STATUS_CD <> 'INACTIVE';
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE FROM LAB_TEST_RESULT';
+
+        /* Remove lab_test_uids from LAB_TEST_RESULT that no longer exist in LAB_TEST. */
+        SELECT DISTINCT ltr.LAB_TEST_UID
+        INTO #Removed_Obs
+        FROM dbo.LAB_TEST_RESULT ltr
+        EXCEPT
+        SELECT lt.LAB_TEST_UID
+        FROM dbo.LAB_TEST lt;
+
+        DELETE FROM dbo.LAB_RESULT_COMMENT WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.RESULT_COMMENT_GROUP WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.LAB_RESULT_VAL WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.LAB_TEST_RESULT WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
 
         IF OBJECT_ID('#TMP_lab_test_resultInit', 'U') IS NOT NULL
             DROP TABLE   #TMP_lab_test_resultInit ;
@@ -1412,7 +1523,13 @@ BEGIN
             DROP TABLE   #TMP_Lab_Test_Result3;
 
         IF OBJECT_ID('#TMP_Lab_Test_Result', 'U') IS NOT NULL
-            DROP TABLE     #TMP_Lab_Test_Result;
+            DROP TABLE #TMP_Lab_Test_Result;
+
+        IF OBJECT_ID('#Inactive_Obs', 'U') IS NOT NULL
+            DROP TABLE #Inactive_Obs;
+
+        IF OBJECT_ID('#Removed_Obs', 'U') IS NOT NULL
+            DROP TABLE #Removed_Obs;
 
 
         BEGIN TRANSACTION;

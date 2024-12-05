@@ -1075,11 +1075,13 @@ BEGIN
         SELECT DISTINCT ANSWER_TXT,
                         NBS_ANSWER_UID,
                         ACT_UID                                                AS INTERVIEW_UID,
-                        LEFT(ANSWER_TXT, CHARINDEX('~', ANSWER_TXT + '~') - 1) AS [USER]
+                        LEFT(ANSWER_TXT, CHARINDEX('~', ANSWER_TXT + '~') - 1) AS [USER],
+                        RECORD_STATUS_CD
         INTO #INTERVIEW_NOTE_INIT
         FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
         WHERE act_uid in (SELECT value FROM STRING_SPLIT(@ix_uids, ','))
-          AND QUESTION_IDENTIFIER = 'IXS111';
+          AND QUESTION_IDENTIFIER = 'IXS111'
+          AND RDB_TABLE_NM = 'D_INTERVIEW_NOTE';
 
         if
             @debug = 'true'
@@ -1237,7 +1239,8 @@ BEGIN
                                                    USER_FIRST_NAME,
                                                    USER_LAST_NAME,
                                                    USER_COMMENT,
-                                                   COMMENT_DATE
+                                                   COMMENT_DATE,
+                                                   RECORD_STATUS_CD
                                             FROM #INTERVIEW_NOTE ixnote
                                             WHERE ixnote.interview_uid = ix.interview_uid
                                             FOR json path,INCLUDE_NULL_VALUES) AS notes) AS notes,

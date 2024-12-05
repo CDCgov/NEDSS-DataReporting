@@ -64,16 +64,16 @@ public class Interview {
     private String ixLocation;
 
     @Column(name="investigation_uid")
-    private String investigationUid;
+    private Long investigationUid;
 
     @Column(name="provider_uid")
-    private String providerUid;
+    private Long providerUid;
 
     @Column(name="organization_uid")
-    private String organizationUid;
+    private Long organizationUid;
 
     @Column(name="patient_uid")
-    private String patientUid;
+    private Long patientUid;
 
     @Column(name="answers")
     private String answers;

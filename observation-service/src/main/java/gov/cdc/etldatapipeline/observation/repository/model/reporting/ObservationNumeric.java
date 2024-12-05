@@ -21,4 +21,5 @@ public class ObservationNumeric {
     private String ovnNumericValue2;
     private String ovnNumericUnitCd;
     private String ovnSeparatorCd;
+    private Integer ovnSeq;
 }

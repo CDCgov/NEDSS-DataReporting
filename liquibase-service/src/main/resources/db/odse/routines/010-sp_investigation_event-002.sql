@@ -9,23 +9,23 @@ BEGIN
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         (      batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [row_count]
-            , [Msg_Description1])
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count]
+        , [Msg_Description1])
         VALUES (
-            @batch_id
-                , 'Investigation PRE-Processing Event'
-                , 'NBS_ODSE.sp_investigation_event'
-                , 'START'
-                , 0
-                , LEFT ('Pre ID-' + @phc_id_list, 199)
-                , 0
-                , LEFT (@phc_id_list, 199)
-            );
+                 @batch_id
+               , 'Investigation PRE-Processing Event'
+               , 'NBS_ODSE.sp_investigation_event'
+               , 'START'
+               , 0
+               , LEFT ('Pre ID-' + @phc_id_list, 199)
+               , 0
+               , LEFT (@phc_id_list, 199)
+               );
 
         /*Complete Investigation section*/
         SELECT results.public_health_case_uid,
@@ -91,6 +91,7 @@ BEGIN
                results.hospitalized_duration_amt,
                results.outbreak_ind,
                results.outbreak_ind_val,
+               results.outbreak_name_desc,
                results.hospitalized_ind_cd,
                results.hospitalized_ind,
                results.transmission_mode_cd,
@@ -237,6 +238,10 @@ BEGIN
                          when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then (select *
                                                                                              from dbo.fn_get_value_by_cd_codeset(phc.outbreak_ind, 'INV150'))
                          end as                   outbreak_ind_val,
+                     case
+                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then (select *
+                                                                                             from dbo.fn_get_value_by_cd_codeset(phc.outbreak_name, 'INV151'))
+                         end as                   outbreak_name_desc,
                      phc.hospitalized_ind_cd,
                      case
                          when (phc.hospitalized_ind_cd is not null or phc.hospitalized_ind_cd != '') then (select *
@@ -304,7 +309,7 @@ BEGIN
               --,nesteddata.ldf_public_health_case
               FROM
                   --public health case
-                  public_health_case phc WITH (NOLOCK)
+                  dbo.public_health_case phc WITH (NOLOCK)
                       OUTER apply (
                       SELECT
                           *
@@ -330,13 +335,13 @@ BEGIN
                                           person.record_status_cd AS [person_record_status],
                                           person.last_chg_time AS [person_last_chg_time]
                                       FROM
-                                          participation p
+                                          dbo.participation p
                                               WITH (NOLOCK)
-                                              JOIN person WITH (NOLOCK) ON person.person_uid = (
+                                              JOIN dbo.person WITH (NOLOCK) ON person.person_uid = (
                                               select
                                                   person.person_parent_uid
                                               from
-                                                  person
+                                                  dbo.person
                                               where
                                                   person.person_uid = p.subject_entity_uid
                                           )
@@ -357,9 +362,9 @@ BEGIN
                                           STRING_ESCAPE(org.display_nm, 'json') AS [name],
                                           org.last_chg_time AS [org_last_change_time]
                                       FROM
-                                          participation p
+                                          dbo.participation p
                                               WITH (NOLOCK)
-                                              JOIN organization org WITH (NOLOCK) ON org.organization_uid = p.subject_entity_uid
+                                              JOIN dbo.organization org WITH (NOLOCK) ON org.organization_uid = p.subject_entity_uid
                                       WHERE
                                           p.act_uid = phc.public_health_case_uid FOR json path,INCLUDE_NULL_VALUES
                                   ) AS organization_participations
@@ -389,9 +394,9 @@ BEGIN
                                           act1.source_class_cd as branch_source_class_cd,
                                           act1.type_cd as branch_type_cd
                                       FROM
-                                          act_id WITH (NOLOCK)
-                                              join act_relationship act WITH (NOLOCK) on act_id.act_uid = act.target_act_uid
-                                              left join act_relationship act1 WITH (NOLOCK) on act.source_act_uid = act1.target_act_uid
+                                          dbo.act_id WITH (NOLOCK)
+                                              join dbo.act_relationship act WITH (NOLOCK) on act_id.act_uid = act.target_act_uid
+                                              left join dbo.act_relationship act1 WITH (NOLOCK) on act.source_act_uid = act1.target_act_uid
 
                                       WHERE
                                           act.target_act_uid = phc.public_health_case_uid FOR json path,INCLUDE_NULL_VALUES
@@ -413,7 +418,7 @@ BEGIN
                                           act_id.last_chg_user_id act_id_last_chg_user_id,
                                           act_id.last_chg_time AS [act_id_last_change_time]
                                       FROM
-                                          act_id WITH (NOLOCK)
+                                          dbo.act_id WITH (NOLOCK)
                                       WHERE
                                           act_uid = phc.public_health_case_uid FOR json path,INCLUDE_NULL_VALUES
                                   ) AS act_ids
@@ -767,10 +772,10 @@ BEGIN
                       ) AS ldf_public_health_case
                       */
 
-                          ) as nestedData
+                  ) as nestedData
               WHERE
                   phc.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list
-                  , ','))) AS results
+                      , ','))) AS results
                  LEFT JOIN nbs_srte.dbo.jurisdiction_code jc WITH (NOLOCK) ON results.jurisdiction_cd = jc.code
                  LEFT JOIN act WITH (NOLOCK) ON act.act_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.program_area_code pac WITH (NOLOCK) on results.prog_area_cd = pac.prog_area_cd
@@ -818,34 +823,6 @@ BEGIN
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         (   batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [row_count]
-            , [Msg_Description1])
-        VALUES (
-            @batch_id
-                , 'Investigation PRE-Processing Event'
-                , 'NBS_ODSE.sp_investigation_event'
-                , 'COMPLETE'
-                , 0
-                , LEFT ('Pre ID-' + @phc_id_list, 199)
-                , 0
-                , LEFT (@phc_id_list, 199)
-            );
-
-    END TRY
-
-    BEGIN CATCH
-
-
-    IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
-
-    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
-    (      batch_id
         , [Dataflow_Name]
         , [package_Name]
         , [Status_Type]
@@ -853,17 +830,45 @@ BEGIN
         , [step_name]
         , [row_count]
         , [Msg_Description1])
-    VALUES (
-        @batch_id
-            , 'Investigation PRE-Processing Event'
-            , 'NBS_ODSE.sp_investigation_event'
-            , 'ERROR: ' + @ErrorMessage
-            , 0
-            , LEFT ('Pre ID-' + @phc_id_list, 199)
-            , 0
-            , LEFT (@phc_id_list, 199)
-        );
-    return @ErrorMessage;
+        VALUES (
+                 @batch_id
+               , 'Investigation PRE-Processing Event'
+               , 'NBS_ODSE.sp_investigation_event'
+               , 'COMPLETE'
+               , 0
+               , LEFT ('Pre ID-' + @phc_id_list, 199)
+               , 0
+               , LEFT (@phc_id_list, 199)
+               );
+
+    END TRY
+
+    BEGIN CATCH
+
+
+        IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        (      batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count]
+        , [Msg_Description1])
+        VALUES (
+                 @batch_id
+               , 'Investigation PRE-Processing Event'
+               , 'NBS_ODSE.sp_investigation_event'
+               , 'ERROR: ' + @ErrorMessage
+               , 0
+               , LEFT ('Pre ID-' + @phc_id_list, 199)
+               , 0
+               , LEFT (@phc_id_list, 199)
+               );
+        return @ErrorMessage;
 
     END CATCH
 

@@ -51,6 +51,7 @@ databaseChangeLog:
   - changeSet:
       id: 7
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 007-create_nrt_investigation-001.sql
@@ -314,6 +315,7 @@ databaseChangeLog:
   - changeSet:
       id: 42
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_date-001.sql
@@ -335,6 +337,7 @@ databaseChangeLog:
   - changeSet:
       id: 45
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_numeric-001.sql
@@ -560,6 +563,43 @@ databaseChangeLog:
             splitStatements: false
   - changeSet:
       id: 75
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 023-sp_d_interview_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 76
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 77
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_note_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 78
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 022-create_nrt_interview_note-002.sql
+            splitStatements: false
+  - changeSet:
+      id: 79
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 024-sp_f_interview_case_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 80
       author: liquibase
       changes:
         - sqlFile:
