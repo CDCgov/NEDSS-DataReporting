@@ -409,10 +409,11 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(5).contains(invTopic));
         assertTrue(topicLogList.get(6).contains(ntfTopic));
         assertTrue(topicLogList.get(7).contains(cmTopic));
-        assertTrue(topicLogList.get(8).contains(intTopic));
+        assertTrue(topicLogList.get(8).contains(cmTopic));
         assertTrue(topicLogList.get(9).contains(intTopic));
-        assertTrue(topicLogList.get(10).contains(ldfTopic));
-        assertTrue(topicLogList.get(11).contains(obsTopic));
+        assertTrue(topicLogList.get(10).contains(intTopic));
+        assertTrue(topicLogList.get(11).contains(ldfTopic));
+        assertTrue(topicLogList.get(12).contains(obsTopic));
     }
 
     @Test
