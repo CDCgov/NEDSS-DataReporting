@@ -577,3 +577,11 @@ databaseChangeLog:
         - sqlFile:
             path: 024-sp_f_interview_case_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 80
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 025-sp_f_std_page_case_postprocessing-001.sql
+            splitStatements: false
