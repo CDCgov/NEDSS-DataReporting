@@ -177,6 +177,8 @@ class PostProcessingServiceTest {
         assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.CASE_MANAGEMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertTrue(logs.get(4).getFormattedMessage().contains(PostProcessingService.Entity.F_STD_PAGE_CASE.getStoredProcedure()));
+        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test

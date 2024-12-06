@@ -74,6 +74,7 @@ public class PostProcessingService {
         F_PAGE_CASE(0, "fact page case", PHC_UID, "sp_f_page_case_postprocessing"),
         CASE_ANSWERS(0, "case answers", PHC_UID, "sp_page_builder_postprocessing"),
         CASE_COUNT(0, "case count", PHC_UID, "sp_nrt_case_count_postprocessing"),
+        F_STD_PAGE_CASE(0, "fact std page case", PHC_UID, "sp_f_std_page_case_postprocessing"),
         UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
         private final int priority;
@@ -247,14 +248,14 @@ public class PostProcessingService {
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForCaseManagement);
-                        processTopic(keyTopic, entity, ids,
-                                investigationRepository::executeStoredProcForFStdPageCase);
+                        processTopic(keyTopic, entity.getName(), ids,
+                                investigationRepository::executeStoredProcForFStdPageCase, "sp_f_std_page_case_postprocessing");
                         break;
                     case INTERVIEW:
                         processTopic(keyTopic, entity, ids,
                                 postProcRepository::executeStoredProcForDInterview);
-                        processTopic(keyTopic, entity.getName(), ids,
-                                postProcRepository::executeStoredProcForFInterviewCase, "sp_f_interview_case_postprocessing");
+                        processTopic(keyTopic, Entity.F_STD_PAGE_CASE, ids,
+                                postProcRepository::executeStoredProcForFInterviewCase);
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids,
