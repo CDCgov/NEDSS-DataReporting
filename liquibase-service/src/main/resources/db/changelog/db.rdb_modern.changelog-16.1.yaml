@@ -585,3 +585,18 @@ databaseChangeLog:
         - sqlFile:
             path: 025-sp_f_std_page_case_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 81
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: 019-create_nrt_datamart_metadata-002.sql
+            splitStatements: false
+  - changeSet:
+      id: 82
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 026-sp_std_hiv_datamart_postprocessing-001.sql
+            splitStatements: false
