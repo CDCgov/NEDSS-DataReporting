@@ -101,7 +101,7 @@ class DatamartProcessingTest {
         investigationResult.setPatientUid(456L);
         investigationResult.setPatientKey(200L);
         investigationResult.setConditionCd("10110");
-        investigationResult.setDatamart("Hepatitis_Datamart");
+        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getName());
         investigationResult.setStoredProcedure("sp_hepatitis_datamart_postprocessing");
         return investigationResult;
     }

@@ -75,6 +75,8 @@ public class PostProcessingService {
         CASE_ANSWERS(0, "case answers", PHC_UID, "sp_page_builder_postprocessing"),
         CASE_COUNT(0, "case count", PHC_UID, "sp_nrt_case_count_postprocessing"),
         F_STD_PAGE_CASE(0, "fact std page case", PHC_UID, "sp_f_std_page_case_postprocessing"),
+        HEPATITIS_DATAMART(0, "Hepatitis_Datamart", PHC_UID, "sp_hepatitis_datamart_postprocessing"),
+        STD_HIV_DATAMART(0, "Hepatitis_Datamart", PHC_UID, "sp_std_hiv_datamart_postprocessing"),
         UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
         private final int priority;
@@ -309,16 +311,24 @@ public class PostProcessingService {
                 Set<Map<Long, Long>> dmSet = entry.getValue();
                 dmCache.put(dmType, ConcurrentHashMap.newKeySet());
 
-                if (dmType.equals("Hepatitis_Datamart")) {
+                if (dmType.equals(Entity.HEPATITIS_DATAMART.name())) {
                     String cases =
                             dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
                     String patients =
                             dmSet.stream().flatMap(m -> m.values().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
                     logger.info("Processing {} message topic. Calling stored proc: {} '{}','{}'", dmType,
-                            "sp_hepatitis_datamart_postprocessing", cases, patients);
+                            Entity.HEPATITIS_DATAMART.getStoredProcedure(), cases, patients);
                     investigationRepository.executeStoredProcForHepDatamart(cases, patients);
-                    completeLog("sp_hepatitis_datamart_postprocessing");
+                    completeLog(Entity.HEPATITIS_DATAMART.getStoredProcedure());
+                } else if (dmType.equals(Entity.STD_HIV_DATAMART.name())) {
+                    String cases =
+                            dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
+
+                    logger.info("Processing {} message topic. Calling stored proc: {} '{}'", dmType,
+                            Entity.STD_HIV_DATAMART.getStoredProcedure(), cases);
+                    investigationRepository.executeStoredProcForStdHIVDatamart(cases);
+                    completeLog(Entity.STD_HIV_DATAMART.getStoredProcedure());
                 }
             } else {
                 logger.info("No data to process from the datamart topics.");

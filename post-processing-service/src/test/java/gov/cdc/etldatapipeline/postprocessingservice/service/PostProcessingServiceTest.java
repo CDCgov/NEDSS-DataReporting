@@ -417,7 +417,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessDatamart() {
+    void testPostProcessHepatitsDatamart() {
         String topic = "dummy_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
                 "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10110\"," +
@@ -427,7 +427,23 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processDatamartIds();
 
         verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123", "456");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey("Hepatitis_Datamart"));
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.HEPATITIS_DATAMART.getName()));
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(3, logs.size());
+    }
+
+    @Test
+    void testPostProcessStdHIVDatamart() {
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
+                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10110\"," +
+                "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        verify(investigationRepositoryMock).executeStoredProcForStdHIVDatamart("123");
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.STD_HIV_DATAMART.getName()));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(3, logs.size());
     }
@@ -574,8 +590,8 @@ class PostProcessingServiceTest {
         investigationResult.setPatientUid(456L);
         investigationResult.setPatientKey(patientKey);
         investigationResult.setConditionCd("10110");
-        investigationResult.setDatamart("Hepatitis_Datamart");
-        investigationResult.setStoredProcedure("sp_hepatitis_datamart_postprocessing");
+        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getName());
+        investigationResult.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
         investigationResults.add(investigationResult);
         return investigationResults;
     }
