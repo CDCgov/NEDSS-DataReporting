@@ -58,7 +58,7 @@ BEGIN TRY
             ni.person_as_reporter_uid,
             ni.hospital_uid,
             ni.ordering_facility_uid,
-            ni.ca_supervisorofphc_uid,
+            ni.ca_supervisor_of_phc_uid,
             ni.closure_investgr_of_phc_uid,
             ni.dispo_fld_fupinvestgr_of_phc_uid,
             ni.fld_fup_investgr_of_phc_uid,
@@ -120,7 +120,7 @@ BEGIN TRY
            ni.person_as_reporter_uid,
            ni.hospital_uid,
            ni.ordering_facility_uid,
-           ni.ca_supervisorofphc_uid,
+           ni.ca_supervisor_of_phc_uid,
            ni.closure_investgr_of_phc_uid,
            ni.dispo_fld_fupinvestgr_of_phc_uid,
            ni.fld_fup_investgr_of_phc_uid,
@@ -227,7 +227,7 @@ BEGIN TRY
             LEFT OUTER JOIN dbo.D_PROVIDER INIT_INTERVIEWER with(nolock) ON fsshc.INIT_INTERVIEWER_OF_PHC_UID= INIT_INTERVIEWER.PROVIDER_UID
             LEFT OUTER JOIN dbo.D_PROVIDER INTERVIEWER with(nolock) ON fsshc.INTERVIEWER_OF_PHC_UID= INTERVIEWER.PROVIDER_UID
             LEFT OUTER JOIN dbo.D_PROVIDER SURV with(nolock) ON fsshc.SURV_INVESTGR_OF_PHC_UID= SURV.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER CA with(nolock) ON fsshc.CA_SUPERVISOROFPHC_UID= CA.PROVIDER_UID
+            LEFT OUTER JOIN dbo.D_PROVIDER CA with(nolock) ON fsshc.CA_SUPERVISOR_OF_PHC_UID= CA.PROVIDER_UID
             LEFT JOIN dbo.GEOCODING_LOCATION AS LOC with(nolock) ON LOC.ENTITY_UID = PATIENT.PATIENT_UID
         where  PAGE_CASE_UID IN (
             SELECT PAGE_CASE_UID FROM #PHC_UIDS
