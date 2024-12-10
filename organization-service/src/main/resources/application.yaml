@@ -32,7 +32,7 @@ spring:
   datasource:
     password: ${DB_PASSWORD:-fake.fake.fake.1234}
     username: ${DB_USERNAME:-sa}
-    url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_ODSE:nbs_odse};encrypt=true;trustServerCertificate=true;
+    url: ${DB_ODSE_URL:jdbc:sqlserver://localhost:1433;databaseName=:NBS_ODSE;encrypt=true;trustServerCertificate=true;}
   liquibase:
     change-log: db/changelog/db.changelog-master.yaml
 server:

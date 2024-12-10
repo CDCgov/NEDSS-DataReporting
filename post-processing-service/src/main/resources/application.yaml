@@ -28,7 +28,7 @@ spring:
   datasource:
     password: ${DB_PASSWORD:-fake.fake.fake.1234}
     username: ${DB_USERNAME:-sa}
-    url: jdbc:sqlserver://${DB_URL:localhost}:1433;databaseName=${DB_RDB:RDB};encrypt=true;trustServerCertificate=true;
+    url: ${DB_RDB_URL:jdbc:sqlserver://localhost:1433;databaseName=:RDB;encrypt=true;trustServerCertificate=true;}
   jpa:
     properties:
       javax.persistence.query.timeout: -1
