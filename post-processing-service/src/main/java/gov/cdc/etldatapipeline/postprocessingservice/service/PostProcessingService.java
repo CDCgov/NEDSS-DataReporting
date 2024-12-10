@@ -76,17 +76,17 @@ public class PostProcessingService {
         CASE_COUNT(0, "case count", PHC_UID, "sp_nrt_case_count_postprocessing"),
         F_STD_PAGE_CASE(0, "fact std page case", PHC_UID, "sp_f_std_page_case_postprocessing"),
         HEPATITIS_DATAMART(0, "Hepatitis_Datamart", PHC_UID, "sp_hepatitis_datamart_postprocessing"),
-        STD_HIV_DATAMART(0, "Hepatitis_Datamart", PHC_UID, "sp_std_hiv_datamart_postprocessing"),
+        STD_HIV_DATAMART(0, "Std_Hiv_Datamart", PHC_UID, "sp_std_hiv_datamart_postprocessing"),
         UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
         private final int priority;
-        private final String name;
+        private final String entityName;
         private final String storedProcedure;
         private final String uidName;
 
-        Entity(int priority, String name, String uidName, String storedProcedure) {
+        Entity(int priority, String entityName, String uidName, String storedProcedure) {
             this.priority = priority;
-            this.name = name;
+            this.entityName = entityName;
             this.storedProcedure = storedProcedure;
             this.uidName = uidName;
         }
@@ -250,7 +250,7 @@ public class PostProcessingService {
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForCaseManagement);
-                        processTopic(keyTopic, entity.getName(), ids,
+                        processTopic(keyTopic, entity.getEntityName(), ids,
                                 investigationRepository::executeStoredProcForFStdPageCase, "sp_f_std_page_case_postprocessing");
                         break;
                     case INTERVIEW:
@@ -274,19 +274,19 @@ public class PostProcessingService {
                         }
 
                         if (!morbIds.isEmpty()) {
-                            processTopic(keyTopic, entity.getName(), morbIds,
+                            processTopic(keyTopic, entity.getEntityName(), morbIds,
                                     postProcRepository::executeStoredProcForMorbReport, "sp_d_morbidity_report_postprocessing");
                         }
 
                         if (!labIds.isEmpty()) {
-                            processTopic(keyTopic, entity.getName(), labIds,
+                            processTopic(keyTopic, entity.getEntityName(), labIds,
                                     postProcRepository::executeStoredProcForLabTest, "sp_d_lab_test_postprocessing");
-                            processTopic(keyTopic, entity.getName(), labIds,
+                            processTopic(keyTopic, entity.getEntityName(), labIds,
                                     postProcRepository::executeStoredProcForLabTestResult, "sp_d_labtest_result_postprocessing");
 
-                            processTopic(keyTopic, entity.getName(), labIds,
+                            processTopic(keyTopic, entity.getEntityName(), labIds,
                                     postProcRepository::executeStoredProcForLab100Datamart, "sp_lab100_datamart_postprocessing");
-                            processTopic(keyTopic, entity.getName(), labIds,
+                            processTopic(keyTopic, entity.getEntityName(), labIds,
                                     postProcRepository::executeStoredProcForLab101Datamart, "sp_lab101_datamart_postprocessing");
                         }
                         break;
@@ -311,7 +311,7 @@ public class PostProcessingService {
                 Set<Map<Long, Long>> dmSet = entry.getValue();
                 dmCache.put(dmType, ConcurrentHashMap.newKeySet());
 
-                if (dmType.equals(Entity.HEPATITIS_DATAMART.name())) {
+                if (dmType.equals(Entity.HEPATITIS_DATAMART.getEntityName())) {
                     String cases =
                             dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
                     String patients =
@@ -321,7 +321,7 @@ public class PostProcessingService {
                             Entity.HEPATITIS_DATAMART.getStoredProcedure(), cases, patients);
                     investigationRepository.executeStoredProcForHepDatamart(cases, patients);
                     completeLog(Entity.HEPATITIS_DATAMART.getStoredProcedure());
-                } else if (dmType.equals(Entity.STD_HIV_DATAMART.name())) {
+                } else if (dmType.equals(Entity.STD_HIV_DATAMART.getEntityName())) {
                     String cases =
                             dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
@@ -344,12 +344,12 @@ public class PostProcessingService {
 
     private String extractValFromMessage(String topic, String payload) {
         try {
-            if (topic.endsWith(Entity.INVESTIGATION.getName())) {
+            if (topic.endsWith(Entity.INVESTIGATION.getEntityName())) {
                 JsonNode tblNode = objectMapper.readTree(payload).get(PAYLOAD).path("rdb_table_name_list");
                 if (!tblNode.isMissingNode() && !tblNode.isNull()) {
                     return tblNode.asText();
                 }
-            } else if (topic.endsWith(Entity.OBSERVATION.getName())) {
+            } else if (topic.endsWith(Entity.OBSERVATION.getEntityName())) {
                 String domainCd = objectMapper.readTree(payload).get(PAYLOAD).path("obs_domain_cd_st_1").asText();
                 String ctrlCd = Optional.ofNullable(objectMapper.readTree(payload).get(PAYLOAD).get("ctrl_cd_display_form"))
                         .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
@@ -376,13 +376,13 @@ public class PostProcessingService {
     private Entity getEntityByTopic(String topic) {
         return Arrays.stream(Entity.values())
                 .filter(entity -> entity.getPriority() > 0)
-                .filter(entity -> topic.endsWith(entity.getName()))
+                .filter(entity -> topic.endsWith(entity.getEntityName()))
                 .findFirst()
                 .orElse(Entity.UNKNOWN);
     }
 
     private void processTopic(String keyTopic, Entity entity, List<Long> ids, Consumer<String> repositoryMethod) {
-        processTopic(keyTopic, entity.getName(), ids, repositoryMethod, entity.getStoredProcedure());
+        processTopic(keyTopic, entity.getEntityName(), ids, repositoryMethod, entity.getStoredProcedure());
     }
 
     private void processTopic(String keyTopic, String name, List<Long> ids, Consumer<String> repositoryMethod, String spName) {
@@ -393,14 +393,14 @@ public class PostProcessingService {
 
     private <T> List<T> processTopic(String keyTopic, Entity entity, List<Long> ids,
                                      Function<String, List<T>> repositoryMethod) {
-        String idsString = prepareAndLog(keyTopic, ids, entity.getName(), entity.getStoredProcedure());
+        String idsString = prepareAndLog(keyTopic, ids, entity.getEntityName(), entity.getStoredProcedure());
         List<T> result = repositoryMethod.apply(idsString);
         completeLog(entity.getStoredProcedure());
         return result;
     }
 
     private void processTopic(String keyTopic, Entity entity, Long id, String vals, BiConsumer<Long, String> repositoryMethod) {
-        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", StringUtils.capitalize(entity.getName()), keyTopic,
+        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", StringUtils.capitalize(entity.getEntityName()), keyTopic,
                 entity.getStoredProcedure(), id, vals);
         repositoryMethod.accept(id, vals);
         completeLog(entity.getStoredProcedure());

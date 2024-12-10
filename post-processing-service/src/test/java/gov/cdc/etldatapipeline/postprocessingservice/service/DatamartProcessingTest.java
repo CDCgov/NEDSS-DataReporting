@@ -64,7 +64,7 @@ class DatamartProcessingTest {
         datamartProcessor.datamartTopic = topic;
         datamartProcessor.process(investigationResults);
 
-        Datamart datamart = getDatamart();
+        Datamart datamart = getHepDatamart();
         DatamartKey datamartKey = new DatamartKey();
         datamartKey.setPublicHealthCaseUid(invResult.getPublicHealthCaseUid());
 
@@ -101,13 +101,13 @@ class DatamartProcessingTest {
         investigationResult.setPatientUid(456L);
         investigationResult.setPatientKey(200L);
         investigationResult.setConditionCd("10110");
-        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getName());
-        investigationResult.setStoredProcedure("sp_hepatitis_datamart_postprocessing");
+        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
+        investigationResult.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
         return investigationResult;
     }
 
-    private Datamart getDatamart() throws Exception {
-        String dmJson = readFileData(FILE_PREFIX + "Datamart.json");
+    private Datamart getHepDatamart() throws Exception {
+        String dmJson = readFileData(FILE_PREFIX + "HepDatamart.json");
         JsonNode dmNode = objectMapper.readTree(dmJson);
 
         return objectMapper.readValue(dmNode.get(PAYLOAD).toString(), Datamart.class);

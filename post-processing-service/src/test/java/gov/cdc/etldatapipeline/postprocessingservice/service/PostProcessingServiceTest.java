@@ -427,7 +427,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processDatamartIds();
 
         verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123", "456");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.HEPATITIS_DATAMART.getName()));
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName()));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(3, logs.size());
     }
@@ -443,7 +443,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processDatamartIds();
 
         verify(investigationRepositoryMock).executeStoredProcForStdHIVDatamart("123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.STD_HIV_DATAMART.getName()));
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.STD_HIV_DATAMART.getEntityName()));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(3, logs.size());
     }
@@ -590,7 +590,7 @@ class PostProcessingServiceTest {
         investigationResult.setPatientUid(456L);
         investigationResult.setPatientKey(patientKey);
         investigationResult.setConditionCd("10110");
-        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getName());
+        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
         investigationResult.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
         investigationResults.add(investigationResult);
         return investigationResults;
