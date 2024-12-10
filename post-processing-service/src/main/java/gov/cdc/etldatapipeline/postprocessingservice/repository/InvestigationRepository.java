@@ -33,4 +33,8 @@ public interface InvestigationRepository extends JpaRepository<InvestigationResu
 
     @Procedure("sp_f_std_page_case_postprocessing")
     void executeStoredProcForFStdPageCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_std_hiv_datamart_postprocessing")
+    void executeStoredProcForStdHIVDatamart(
+            @Param("publicHealthCaseUids") String publicHealthCaseUids);
 }
