@@ -426,7 +426,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessDatamart(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
-        verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123", "456");
+        verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123");
         assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName()));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(3, logs.size());

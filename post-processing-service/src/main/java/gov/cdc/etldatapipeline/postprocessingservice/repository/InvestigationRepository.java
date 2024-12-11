@@ -21,9 +21,7 @@ public interface InvestigationRepository extends JpaRepository<InvestigationResu
     void executeStoredProcForFPageCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_hepatitis_datamart_postprocessing")
-    void executeStoredProcForHepDatamart(
-            @Param("publicHealthCaseUids") String publicHealthCaseUids,
-            @Param("patientUids") String patientUids);
+    void executeStoredProcForHepDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_case_count_postprocessing")
     void executeStoredProcForCaseCount(@Param("healthcaseUids") String healthcaseUids);
@@ -35,6 +33,5 @@ public interface InvestigationRepository extends JpaRepository<InvestigationResu
     void executeStoredProcForFStdPageCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_std_hiv_datamart_postprocessing")
-    void executeStoredProcForStdHIVDatamart(
-            @Param("publicHealthCaseUids") String publicHealthCaseUids);
+    void executeStoredProcForStdHIVDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 }
