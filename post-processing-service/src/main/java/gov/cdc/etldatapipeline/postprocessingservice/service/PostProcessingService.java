@@ -256,8 +256,8 @@ public class PostProcessingService {
                     case INTERVIEW:
                         processTopic(keyTopic, entity, ids,
                                 postProcRepository::executeStoredProcForDInterview);
-                        processTopic(keyTopic, Entity.F_STD_PAGE_CASE, ids,
-                                postProcRepository::executeStoredProcForFInterviewCase);
+                        processTopic(keyTopic, entity.getEntityName(), ids,
+                                postProcRepository::executeStoredProcForFInterviewCase, "sp_f_interview_case_postprocessing");
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids,
@@ -299,8 +299,6 @@ public class PostProcessingService {
         } else {
             logger.info("No ids to process from the topics.");
         }
-
-
     }
 
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
@@ -316,7 +314,7 @@ public class PostProcessingService {
 
                 if (dmType.equals(Entity.HEPATITIS_DATAMART.getEntityName())) {
 
-                    logger.info("Processing {} message topic. Calling stored proc: {} '{}','{}'", dmType,
+                    logger.info("Processing {} message topic. Calling stored proc: {} '{}'", dmType,
                             Entity.HEPATITIS_DATAMART.getStoredProcedure(), cases);
                     investigationRepository.executeStoredProcForHepDatamart(cases);
                     completeLog(Entity.HEPATITIS_DATAMART.getStoredProcedure());
