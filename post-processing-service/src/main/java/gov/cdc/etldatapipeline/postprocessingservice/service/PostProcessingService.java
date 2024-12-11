@@ -311,9 +311,11 @@ public class PostProcessingService {
                 Set<Map<Long, Long>> dmSet = entry.getValue();
                 dmCache.put(dmType, ConcurrentHashMap.newKeySet());
 
+                String cases =
+                        dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
+
                 if (dmType.equals(Entity.HEPATITIS_DATAMART.getEntityName())) {
-                    String cases =
-                            dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
+
                     String patients =
                             dmSet.stream().flatMap(m -> m.values().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
@@ -322,8 +324,6 @@ public class PostProcessingService {
                     investigationRepository.executeStoredProcForHepDatamart(cases, patients);
                     completeLog(Entity.HEPATITIS_DATAMART.getStoredProcedure());
                 } else if (dmType.equals(Entity.STD_HIV_DATAMART.getEntityName())) {
-                    String cases =
-                            dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
                     logger.info("Processing {} message topic. Calling stored proc: {} '{}'", dmType,
                             Entity.STD_HIV_DATAMART.getStoredProcedure(), cases);

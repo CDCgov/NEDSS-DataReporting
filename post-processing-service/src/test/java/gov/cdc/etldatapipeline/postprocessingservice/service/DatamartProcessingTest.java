@@ -55,10 +55,10 @@ class DatamartProcessingTest {
     }
 
     @Test
-    void testDatamartProcess() throws Exception {
+    void testHepDatamartProcess() throws Exception {
         String topic = "dummy_investigation";
         List<InvestigationResult> investigationResults = new ArrayList<>();
-        InvestigationResult invResult = getInvestigationResult(123L);
+        InvestigationResult invResult = getInvestigationResultForHep(123L);
         investigationResults.add(invResult);
 
         datamartProcessor.datamartTopic = topic;
@@ -84,17 +84,58 @@ class DatamartProcessingTest {
     }
 
     @Test
+    void testStdDatamartProcess() throws Exception {
+        String topic = "dummy_investigation";
+        List<InvestigationResult> investigationResults = new ArrayList<>();
+        InvestigationResult invResult = getInvestigationResultForStd(123L);
+        investigationResults.add(invResult);
+
+        datamartProcessor.datamartTopic = topic;
+        datamartProcessor.process(investigationResults);
+
+        Datamart datamart = getStdDatamart();
+        DatamartKey datamartKey = new DatamartKey();
+        datamartKey.setPublicHealthCaseUid(invResult.getPublicHealthCaseUid());
+
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+
+        String actualMessage = messageCaptor.getValue();
+        String actualKey = keyCaptor.getValue();
+
+        var actualReporting = objectMapper.readValue(
+                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
+        var actualDatamartKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
+
+        assertEquals(topic, topicCaptor.getValue());
+        assertEquals(datamartKey, actualDatamartKey);
+        assertEquals(datamart, actualReporting);
+    }
+
+    @Test
     void testDatamartProcessNoExceptionWhenDataIsNull() {
         assertDoesNotThrow(() -> datamartProcessor.process(null));
     }
 
     @Test
     void testDatamartProcessException() {
-        List<InvestigationResult> nullPhcResults = Collections.singletonList(getInvestigationResult(null));
+        List<InvestigationResult> nullPhcResults = Collections.singletonList(getInvestigationResultForHep(null));
         assertThrows(RuntimeException.class, () -> datamartProcessor.process(nullPhcResults));
     }
 
-    private InvestigationResult getInvestigationResult(Long phcUid) {
+    private InvestigationResult getInvestigationResultForHep(Long phcUid) {
+        InvestigationResult investigationResult = new InvestigationResult();
+        investigationResult.setPublicHealthCaseUid(phcUid);
+        investigationResult.setInvestigationKey(100L);
+        investigationResult.setPatientUid(456L);
+        investigationResult.setPatientKey(200L);
+        investigationResult.setConditionCd("10110");
+        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
+        investigationResult.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
+        return investigationResult;
+    }
+
+    private InvestigationResult getInvestigationResultForStd(Long phcUid) {
         InvestigationResult investigationResult = new InvestigationResult();
         investigationResult.setPublicHealthCaseUid(phcUid);
         investigationResult.setInvestigationKey(100L);
@@ -107,6 +148,13 @@ class DatamartProcessingTest {
     }
 
     private Datamart getHepDatamart() throws Exception {
+        String dmJson = readFileData(FILE_PREFIX + "HepDatamart.json");
+        JsonNode dmNode = objectMapper.readTree(dmJson);
+
+        return objectMapper.readValue(dmNode.get(PAYLOAD).toString(), Datamart.class);
+    }
+
+    private Datamart getStdDatamart() throws Exception {
         String dmJson = readFileData(FILE_PREFIX + "HepDatamart.json");
         JsonNode dmNode = objectMapper.readTree(dmJson);
 
