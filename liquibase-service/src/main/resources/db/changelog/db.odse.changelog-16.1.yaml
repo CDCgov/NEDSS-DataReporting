@@ -175,46 +175,6 @@ databaseChangeLog:
             path: 020-sp_notification_event-001.sql
             splitStatements: false
   - changeSet:
-      id: 22
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 020-sp_notification_event-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 23
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 010-sp_investigation_event-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 24
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 009-sp_observation_event-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 25
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 009-sp_observation_event-003.sql
-            splitStatements: false
-  - changeSet:
-      id: 26
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 008-sp_patient_event-002.sql
-            splitStatements: false
-  - changeSet:
       id: 27
       author: liquibase
       runOnChange: true

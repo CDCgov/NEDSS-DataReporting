@@ -1,6 +1,16 @@
 CREATE OR ALTER PROCEDURE dbo.sp_nrt_investigation_postprocessing @id_list nvarchar(max),@debug bit = 'false'
 AS
 BEGIN
+    /*
+     * [Description]
+     * This stored procedure is handles event based updates to Investigation, Confirmation
+     * Method and Confirmation Method Group Dimensions.
+     *
+     * 1. Receives input list of Public_health_case_uids.
+     * 2. Pulls records from nrt_investigation, nrt_investigation_observation and
+     * nrt_investigation_confirmation to insert/update dimensions.
+     * 3. Returns datamart signal if condition code exists in nrt_datamart_metadata.
+     * */
 
     BEGIN TRY
 
@@ -47,11 +57,11 @@ BEGIN
                program_jurisdiction_oid        as CASE_OID,
                nrt.local_id                    as INV_LOCAL_ID,
                nrt.shared_ind                  as INV_SHARE_IND,
-               nrt.outbreak_name               as OUTBREAK_NAME,
+               NULLIF(nrt.outbreak_name,'')               as OUTBREAK_NAME,
                nrt.investigation_status        as INVESTIGATION_STATUS,
                nrt.inv_case_status             as INV_CASE_STATUS,
                nrt.case_type_cd                as CASE_TYPE,
-               nrt.txt                         as INV_COMMENTS,
+               NULLIF(nrt.txt,'')			   as INV_COMMENTS,
                nrt.jurisdiction_cd             as JURISDICTION_CD,
                nrt.jurisdiction_nm             as JURISDICTION_NM,
                nrt.earliest_rpt_to_phd_dt      as EARLIEST_RPT_TO_PHD_DT,
@@ -65,24 +75,25 @@ BEGIN
                nrt.mmwr_week                   as CASE_RPT_MMWR_WK,
                nrt.mmwr_year                   as CASE_RPT_MMWR_YR,
                nrt.disease_imported_ind        as DISEASE_IMPORTED_IND,
-               nrt.imported_from_country       as IMPORT_FRM_CNTRY,
-               nrt.imported_from_state         as IMPORT_FRM_STATE,
-               nrt.imported_from_county        as IMPORT_FRM_CNTY,
-               nrt.imported_city_desc_txt      as IMPORT_FRM_CITY,
+               NULLIF(nrt.imported_from_country,'')        as IMPORT_FRM_CNTRY,
+               NULLIF(nrt.imported_from_state,'')          as IMPORT_FRM_STATE,
+               NULLIF(nrt.imported_from_county,'')         as IMPORT_FRM_CNTY,
+               NULLIF(nrt.imported_city_desc_txt,'')       as IMPORT_FRM_CITY,
                nrt.earliest_rpt_to_cdc_dt      as EARLIEST_RPT_TO_CDC_DT,
-               nrt.rpt_source_cd               as RPT_SRC_CD,
-               nrt.imported_country_cd         as IMPORT_FRM_CNTRY_CD,
-               nrt.imported_state_cd           as IMPORT_FRM_STATE_CD,
-               nrt.imported_county_cd          as IMPORT_FRM_CNTY_CD,
-               nrt.import_frm_city_cd          as IMPORT_FRM_CITY_CD,
+               NULLIF(nrt.rpt_source_cd,'')               as RPT_SRC_CD,
+               NULLIF(nrt.imported_country_cd,'')          as IMPORT_FRM_CNTRY_CD,
+               NULLIF(nrt.imported_state_cd,'')            as IMPORT_FRM_STATE_CD,
+               NULLIF(nrt.imported_county_cd,'')           as IMPORT_FRM_CNTY_CD,
+               NULLIF(nrt.import_frm_city_cd,'')           as IMPORT_FRM_CITY_CD,
                nrt.diagnosis_time              as DIAGNOSIS_DT,
                nrt.hospitalized_admin_time     as HSPTL_ADMISSION_DT,
                nrt.hospitalized_discharge_time as HSPTL_DISCHARGE_DT,
                nrt.hospitalized_duration_amt   as HSPTL_DURATION_DAYS,
                nrt.outbreak_ind_val            as OUTBREAK_IND,
                nrt.hospitalized_ind            as HSPTLIZD_IND,
-               nrt.inv_state_case_id           as INV_STATE_CASE_ID,
-               nrt.city_county_case_nbr        as CITY_COUNTY_CASE_NBR,
+               CASE WHEN nrt.inv_state_case_id = '' OR nrt.inv_state_case_id = 'null' THEN NULL
+                    ELSE  nrt.inv_state_case_id END          as INV_STATE_CASE_ID,
+               NULLIF(nrt.city_county_case_nbr,'')        as CITY_COUNTY_CASE_NBR,
                nrt.transmission_mode           as TRANSMISSION_MODE,
                nrt.record_status_cd            as RECORD_STATUS_CD,
                nrt.pregnant_ind                as PATIENT_PREGNANT_IND,
@@ -102,7 +113,7 @@ BEGIN
                    else null
                    end                         as ILLNESS_DURATION,
                nrt.illness_duration_unit       as ILLNESS_DURATION_UNIT,
-               nrt.contact_inv_txt             as CONTACT_INV_COMMENTS,
+               NULLIF(nrt.contact_inv_txt,'')             as CONTACT_INV_COMMENTS,
                nrt.contact_inv_priority        as CONTACT_INV_PRIORITY,
                nrt.infectious_from_date        as CONTACT_INFECTIOUS_FROM_DATE,
                nrt.infectious_to_date          as CONTACT_INFECTIOUS_TO_DATE,
@@ -117,14 +128,17 @@ BEGIN
                nrt.curr_process_state          as CURR_PROCESS_STATE,
                nrt.inv_priority_cd             as INV_PRIORITY_CD,
                nrt.coinfection_id              as COINFECTION_ID,
-               nrt.legacy_case_id              as LEGACY_CASE_ID,
-               nrt.outbreak_name               as OUTBREAK_NAME_DESC
+               NULLIF(nrt.legacy_case_id,'')              as LEGACY_CASE_ID,
+               NULLIF(nrt.outbreak_name_desc, '')               as OUTBREAK_NAME_DESC,
+               nrt.cd,
+               nrt.investigation_form_cd,
+               nrt.investigator_assigned_datetime as INV_ASSIGNED_DT_LEGACY
         into #temp_inv_table
         from dbo.nrt_investigation nrt
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
         where nrt.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
-        if @debug = 'true' select * from #temp_inv_table;
+        IF @debug = 'true' SELECT * FROM #temp_inv_table;
 
         /* Logging */
         set @rowcount = @@rowcount
@@ -146,6 +160,207 @@ BEGIN
                ,@rowcount
                ,LEFT(@id_list, 500));
 
+
+
+        SET @proc_step_name = 'Update Legacy Investigation Values -' + LEFT(@id_list, 160);
+        SET @proc_step_no = 1;
+
+
+        /* Sub-step: Update Investigation values for Legacy Investigation Forms. */
+        DECLARE @COUNT_LEGACY_INV AS int;
+        SET @COUNT_LEGACY_INV =
+                (
+                    SELECT COUNT(*)
+                    FROM #temp_inv_table tmp
+                    WHERE tmp.investigation_form_cd IN ('INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDHI',
+                                                        'INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
+                                                        'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB')
+                );
+
+
+        IF (@COUNT_LEGACY_INV>0)
+            BEGIN
+
+
+                SELECT nio.public_health_case_uid, nio.observation_id, nio.branch_id, nio.branch_type_cd
+                INTO #temp_inv_obs
+                FROM #temp_inv_table t
+                         LEFT JOIN dbo.nrt_investigation_observation nio on nio.public_health_case_uid = t.case_uid
+                WHERE nio.branch_type_cd = 'InvFrmQ';
+
+                IF @debug = 'true' SELECT '#temp_inv_obs', * FROM #temp_inv_table;
+
+                /*Coded*/
+                SELECT
+                    tnio.public_health_case_uid
+                     ,tnio.observation_id
+                     ,tnio.branch_id
+                     ,tnio.branch_type_cd
+                     ,c.cd
+                     ,c.response
+                     ,c.response_cd
+                INTO #tmp_coded
+                FROM #temp_inv_obs tnio with (nolock)
+                         INNER JOIN dbo.v_getobscode c with (nolock) on tnio.branch_id = c.branch_id
+                WHERE c.cd IN 	('INV153',	/* Import country*/
+                                  'INV154', 	/* state*/
+                                  'INV156', 	/* county*/
+                                  'INV128',	/* HSPTLIZD_IND*/
+                                  'RUB162',  /* DIE_FRM_THIS_ILLNESS_IND */
+                                  'MEA078',  /* DIE_FRM_THIS_ILLNESS_IND */
+                                  'PRT103', 	/* DIE_FRM_THIS_ILLNESS_IND */
+                                  'INV145',	/* DIE_FRM_THIS_ILLNESS_IND in Generic */
+                                  'INV149',  /* FOOD_HANDLR_IND */
+                                  'INV178',  /* PATIENT_PREGNANT_IND */
+                                  'INV148');  /* DAYCARE_ASSOCIATION_IND */
+
+                IF @debug = 'true' SELECT '#tmp_coded', * FROM #tmp_coded;
+
+                /*Text*/
+                SELECT
+                    tnio.public_health_case_uid
+                     ,tnio.observation_id
+                     ,tnio.branch_id
+                     ,tnio.branch_type_cd
+                     ,t.cd
+                     ,t.response
+                INTO #tmp_txt
+                FROM #temp_inv_obs tnio with (nolock)
+                         INNER JOIN dbo.v_getobstxt t with (nolock) ON tnio.branch_id = t.branch_id
+                WHERE t.cd = 'INV155'; /* city */
+
+                IF @debug = 'true' SELECT '#tmp_txt', * FROM #tmp_txt;
+
+                /*Numeric*/
+                SELECT
+                    tnio.public_health_case_uid
+                     ,tnio.observation_id
+                     ,tnio.branch_id
+                     ,tnio.branch_type_cd
+                     ,n.cd
+                     ,n.response
+                INTO #tmp_num
+                FROM #temp_inv_obs tnio with (nolock)
+                         INNER JOIN dbo.v_getobsnum n with (nolock) ON tnio.branch_id = n.branch_id
+                WHERE n.cd = 'INV134'; /* HSPTL_DURATION_DAYS */
+
+                IF @debug = 'true' SELECT '#tmp_num', * FROM #tmp_num;
+
+                /*Numeric*/
+                SELECT
+                    tnio.public_health_case_uid
+                     ,tnio.observation_id
+                     ,tnio.branch_id
+                     ,tnio.branch_type_cd
+                     ,d.cd
+                     ,d.response
+                INTO #tmp_date
+                FROM #temp_inv_obs tnio
+                         INNER JOIN dbo.v_getobsdate d on tnio.branch_id = d.branch_id
+                WHERE d.cd IN ('INV132',	/* HSPTL_ADMISSION_DT */
+                               'INV133'		/* HSPTL_DISCHARGE_DT */
+                    );
+
+                IF @debug = 'true' SELECT '#tmp_date', * FROM #tmp_date;
+
+
+                SELECT
+                    tnio.public_health_case_uid,
+                    max(CASE WHEN c.cd = 'INV128' THEN c.response
+                             ELSE NULL END) AS HSPTLIZD_IND,
+                    max(CASE WHEN c.cd = 'INV153' THEN c.response_cd
+                             ELSE NULL END) AS IMPORT_FRM_CNTRY_CD,
+                    max(CASE WHEN c.cd = 'INV153' THEN c.response
+                             ELSE NULL END) AS IMPORT_FRM_CNTRY,
+                    max(CASE WHEN c.cd = 'INV154' THEN c.response_cd
+                             ELSE NULL END) AS IMPORT_FRM_STATE_CD,
+                    max(CASE WHEN c.cd = 'INV154' THEN c.response
+                             ELSE NULL END) AS IMPORT_FRM_STATE,
+                    max(CASE WHEN c.cd = 'INV156' THEN c.response_cd
+                             ELSE NULL END) AS IMPORT_FRM_CNTY_CD,
+                    max(CASE WHEN c.cd = 'INV156' THEN c.response
+                             ELSE NULL END) AS IMPORT_FRM_CNTY,
+                    max(CASE WHEN c.cd = 'INV149' THEN c.response
+                             ELSE NULL END) AS FOOD_HANDLR_IND,
+                    max(CASE WHEN c.cd = 'INV178' THEN c.response
+                             ELSE NULL END) AS PATIENT_PREGNANT_IND,
+                    max(CASE WHEN c.cd = 'INV148' THEN c.response
+                             ELSE NULL END) AS DAYCARE_ASSOCIATION_IND,
+                    max(CASE WHEN c.cd = 'INV145' THEN c.response
+                             ELSE NULL END) AS DIE_FRM_THIS_ILLNESS_IND_INV145,
+                    max(CASE WHEN c.cd = 'RUB162' THEN c.response
+                             ELSE NULL END) AS DIE_FRM_THIS_ILLNESS_IND_RUB162,
+                    max(CASE WHEN c.cd = 'MEA078' THEN c.response
+                             ELSE NULL END) AS DIE_FRM_THIS_ILLNESS_IND_MEA078,
+                    max(CASE WHEN c.cd = 'PRT103' THEN c.response
+                             ELSE NULL END) AS DIE_FRM_THIS_ILLNESS_IND_PRT103,
+                    max(CASE WHEN t.cd = 'INV155' THEN t.response
+                             ELSE NULL END) AS IMPORT_FRM_CITY,
+                    max(CASE WHEN d.cd = 'INV132' THEN d.response
+                             ELSE NULL END) AS HSPTL_ADMISSION_DT,
+                    max(CASE WHEN d.cd = 'INV133' THEN d.response
+                             ELSE NULL END) AS HSPTL_DISCHARGE_DT,
+                    max(CASE WHEN n.cd = 'INV134' THEN n.response
+                             ELSE NULL END) AS HSPTL_DURATION_DAYS
+                INTO #final_inv_obs
+                FROM #temp_inv_obs tnio with (nolock)
+                         LEFT JOIN #tmp_coded c with (nolock) on tnio.public_health_case_uid = c.public_health_case_uid
+                         LEFT JOIN #tmp_txt t with (nolock) on tnio.public_health_case_uid = t.public_health_case_uid
+                         LEFT JOIN #tmp_num n with (nolock) on tnio.public_health_case_uid = n.public_health_case_uid
+                         LEFT JOIN #tmp_date d with (nolock) on tnio.observation_id = d.observation_id
+                GROUP BY tnio.public_health_case_uid;
+
+                IF @debug = 'true' SELECT '#final_inv_obs', * FROM #final_inv_obs;
+
+                /*Update statement considers Investigation codes that are mapped directly. The non-null condition is selected.*/
+                UPDATE tmp
+                SET
+                    HSPTLIZD_IND = COALESCE(tmp.HSPTLIZD_IND, obs.HSPTLIZD_IND),
+                    IMPORT_FRM_CNTRY_CD = COALESCE(tmp.IMPORT_FRM_CNTRY_CD,obs.IMPORT_FRM_CNTRY_CD),
+                    IMPORT_FRM_CNTRY = COALESCE(tmp.IMPORT_FRM_CNTRY,obs.IMPORT_FRM_CNTRY),
+                    IMPORT_FRM_STATE_CD = COALESCE(tmp.IMPORT_FRM_STATE_CD, obs.IMPORT_FRM_STATE_CD),
+                    IMPORT_FRM_STATE = COALESCE(tmp.IMPORT_FRM_STATE, obs.IMPORT_FRM_STATE),
+                    IMPORT_FRM_CNTY_CD = COALESCE(tmp.IMPORT_FRM_CNTY_CD, obs.IMPORT_FRM_CNTY_CD),
+                    IMPORT_FRM_CNTY = COALESCE(tmp.IMPORT_FRM_CNTY, obs.IMPORT_FRM_CNTY),
+                    FOOD_HANDLR_IND = COALESCE(tmp.FOOD_HANDLR_IND, obs.FOOD_HANDLR_IND),
+                    PATIENT_PREGNANT_IND = COALESCE(tmp.PATIENT_PREGNANT_IND, obs.PATIENT_PREGNANT_IND),
+                    DAYCARE_ASSOCIATION_IND = COALESCE(tmp.DAYCARE_ASSOCIATION_IND, obs.DAYCARE_ASSOCIATION_IND),
+                    DIE_FRM_THIS_ILLNESS_IND = CASE WHEN obs.DIE_FRM_THIS_ILLNESS_IND_INV145 IS NOT NULL THEN obs.DIE_FRM_THIS_ILLNESS_IND_INV145
+                                                    ELSE COALESCE(tmp.DIE_FRM_THIS_ILLNESS_IND,obs.DIE_FRM_THIS_ILLNESS_IND_PRT103, obs.DIE_FRM_THIS_ILLNESS_IND_MEA078, obs.DIE_FRM_THIS_ILLNESS_IND_RUB162)
+                        END,
+                    IMPORT_FRM_CITY = COALESCE(tmp.IMPORT_FRM_CITY, obs.IMPORT_FRM_CITY),
+                    HSPTL_ADMISSION_DT = COALESCE(tmp.HSPTL_ADMISSION_DT, obs.HSPTL_ADMISSION_DT),
+                    HSPTL_DISCHARGE_DT = COALESCE(tmp.HSPTL_DISCHARGE_DT, obs.HSPTL_DISCHARGE_DT),
+                    HSPTL_DURATION_DAYS = COALESCE(tmp.HSPTL_DURATION_DAYS, obs.HSPTL_DURATION_DAYS),
+                    INV_ASSIGNED_DT = COALESCE(tmp.INV_ASSIGNED_DT, tmp.INV_ASSIGNED_DT_LEGACY)
+                FROM #temp_inv_table tmp with (nolock)
+                         LEFT JOIN #final_inv_obs obs with (nolock) on tmp.case_uid = obs.public_health_case_uid;
+
+                IF @debug = 'true' SELECT '#temp_inv_table', * FROM #temp_inv_table;
+
+                /* Logging */
+                set @rowcount = @@rowcount
+                INSERT INTO [dbo].[job_flow_log]
+                (batch_id
+                ,[Dataflow_Name]
+                ,[package_Name]
+                ,[Status_Type]
+                ,[step_number]
+                ,[step_name]
+                ,[row_count]
+                ,[msg_description1])
+                VALUES (@batch_id
+                       ,@dataflow_name
+                       ,@package_name
+                       ,'START'
+                       ,@proc_step_no
+                       ,@proc_step_name
+                       ,@rowcount
+                       ,LEFT(@id_list, 500));
+
+            END
+
+
         /* Investigation Update Operation */
         BEGIN TRANSACTION;
         SET @proc_step_name = 'Update INVESTIGATION Dimension';
@@ -153,10 +368,10 @@ BEGIN
 
         update dbo.INVESTIGATION
         set [INVESTIGATION_KEY]             = inv.INVESTIGATION_KEY,
-            [CASE_OID]                      = inv.CASE_OID,
+            [CASE_OID]         = inv.CASE_OID,
             [CASE_UID]                      = inv.CASE_UID,
-            [INV_LOCAL_ID]                  = inv.INV_LOCAL_ID,
-            [INV_SHARE_IND]                 = inv.INV_SHARE_IND,
+            [INV_LOCAL_ID]    = inv.INV_LOCAL_ID,
+            [INV_SHARE_IND] = inv.INV_SHARE_IND,
             [OUTBREAK_NAME]                 = inv.OUTBREAK_NAME,
             [INVESTIGATION_STATUS]          = inv.INVESTIGATION_STATUS,
             [INV_CASE_STATUS]               = inv.INV_CASE_STATUS,
@@ -170,7 +385,7 @@ BEGIN
             [INV_RPT_DT]                    = inv.INV_RPT_DT,
             [INV_START_DT]                  = inv.INV_START_DT,
             [RPT_SRC_CD_DESC]               = inv.RPT_SRC_CD_DESC,
-            [EARLIEST_RPT_TO_CNTY_DT]       = inv.EARLIEST_RPT_TO_CNTY_DT,
+            [EARLIEST_RPT_TO_CNTY_DT]      = inv.EARLIEST_RPT_TO_CNTY_DT,
             [EARLIEST_RPT_TO_STATE_DT]      = inv.EARLIEST_RPT_TO_STATE_DT,
             [CASE_RPT_MMWR_WK]              = inv.CASE_RPT_MMWR_WK,
             [CASE_RPT_MMWR_YR]              = inv.CASE_RPT_MMWR_YR,
@@ -406,6 +621,7 @@ BEGIN
         where inv.investigation_key is null;
 
         COMMIT TRANSACTION;
+
         /* Logging */
         set @rowcount = @@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -527,18 +743,13 @@ BEGIN
         delete dbo.CONFIRMATION_METHOD_GROUP
         where investigation_key in
               (select investigation_key from dbo.INVESTIGATION where case_uid in
-                    (select value FROM STRING_SPLIT(@id_list, ','))
-        )
+                                                                     (select value FROM STRING_SPLIT(@id_list, ','))
+              )
 
         insert into dbo.CONFIRMATION_METHOD_GROUP ([INVESTIGATION_KEY],[CONFIRMATION_METHOD_KEY],[CONFIRMATION_DT])
         select cmt.INVESTIGATION_KEY, cm.CONFIRMATION_METHOD_KEY, cmt.CONFIRMATION_DT
         from #temp_cm_table cmt
-        left outer join dbo.confirmation_method cm with (nolock) on cmt.confirmation_method_cd = cm.confirmation_method_cd
-
-        /* Need to clear nrt table to support multi select updates */
-        delete dbo.nrt_investigation_confirmation
-        where public_health_case_uid in
-            (select public_health_case_uid from #temp_cm_table)
+                 left outer join dbo.confirmation_method cm with (nolock) on cmt.confirmation_method_cd = cm.confirmation_method_cd
 
         /* Logging */
         set @rowcount = @@rowcount
@@ -590,18 +801,20 @@ BEGIN
 
 
         SELECT nrt.public_health_case_uid         AS public_health_case_uid,
-               nrt.patient_id                     AS patient_uid,
+               nrt.patient_id               AS patient_uid,
                COALESCE(inv.INVESTIGATION_KEY, 1) AS investigation_key,
                COALESCE(pat.PATIENT_KEY, 1)       AS patient_key,
                nrt.cd                             AS condition_cd,
                dtm.Datamart                       AS datamart,
                dtm.Stored_Procedure               AS stored_procedure
         FROM dbo.nrt_investigation nrt
-                 LEFT JOIN INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.public_health_case_uid
-                 LEFT JOIN D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
+                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.public_health_case_uid
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
                  LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nrt.cd
         WHERE nrt.public_health_case_uid in
               (SELECT value FROM STRING_SPLIT(@id_list, ','));
+
+
 
     END TRY
     BEGIN CATCH

@@ -22,13 +22,8 @@ BEGIN
         VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, 0 );
 
 
-
         COMMIT TRANSACTION;
 
-        SELECT @batch_start_time = batch_start_dttm, @batch_end_time = batch_end_dttm
-        FROM [dbo].[job_batch_log]
-        WHERE type_code = 'MasterETL' AND
-            status_type = 'start';
 
         BEGIN TRANSACTION;
 
@@ -77,10 +72,9 @@ BEGIN
         /*NRT integration: Removing batch time condition*/
         SELECT inv.PUBLIC_HEALTH_CASE_UID AS 'PAGE_CASE_UID', INVESTIGATION_FORM_CD, CD, LAST_CHG_TIME
         INTO #phc_uids_REPT
-        FROM dbo.nrt_investigation as inv WITH(NOLOCK), NBS_SRTE.dbo.CONDITION_CODE WITH(NOLOCK)
+        FROM dbo.nrt_investigation as inv WITH(NOLOCK)
         WHERE inv.public_health_case_uid = @phc_id
-          AND CONDITION_CODE.CONDITION_CD = inv.CD
-          AND INVESTIGATION_FORM_CD NOT IN( 'INV_FORM_BMDGAS', 'INV_FORM_BMDGBS', 'INV_FORM_BMDGEN', 'INV_FORM_BMDNM', 'INV_FORM_BMDSP', 'INV_FORM_GEN', 'INV_FORM_HEPA', 'INV_FORM_HEPBV', 'INV_FORM_HEPCV', 'INV_FORM_HEPGEN', 'INV_FORM_MEA', 'INV_FORM_PER', 'INV_FORM_RUB', 'INV_FORM_RVCT', 'INV_FORM_VAR' )
+          AND INVESTIGATION_FORM_CD NOT IN ( 'INV_FORM_BMDGAS', 'INV_FORM_BMDGBS', 'INV_FORM_BMDGEN', 'INV_FORM_BMDNM', 'INV_FORM_BMDSP', 'INV_FORM_GEN', 'INV_FORM_HEPA', 'INV_FORM_HEPBV', 'INV_FORM_HEPCV', 'INV_FORM_HEPGEN', 'INV_FORM_MEA', 'INV_FORM_PER', 'INV_FORM_RUB', 'INV_FORM_RVCT', 'INV_FORM_VAR' );
 
         if @debug = 'true'
             select * from #phc_uids_REPT;
@@ -91,12 +85,63 @@ BEGIN
         VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
 
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
+        SET @Proc_Step_no = 3;
+        SET @Proc_Step_Name = ' Creating nrt_page temporary table to hold latest answers for act_uid: '+cast(@phc_id as VARCHAR(50));
+
+        IF OBJECT_ID('#NRT_PAGE', 'U') IS NOT NULL
+            BEGIN
+                DROP TABLE #NRT_PAGE;
+            END;
+
+        SELECT
+            act_uid,
+            nbs_case_answer_uid,
+            nbs_ui_metadata_uid,
+            nbs_rdb_metadata_uid,
+            nbs_question_uid,
+            rdb_table_nm,
+            rdb_column_nm,
+            answer_txt,
+            answer_group_seq_nbr,
+            investigation_form_cd,
+            unit_value,
+            question_identifier,
+            data_location,
+            question_label,
+            other_value_ind_cd,
+            unit_type_cd,
+            mask,
+            data_type,
+            question_group_seq_nbr,
+            code_set_group_id,
+            block_nm,
+            last_chg_time,
+            record_status_cd
+        INTO
+            #NRT_PAGE
+        FROM
+            dbo.nrt_page_case_answer AS nrt_pca WITH(NOLOCK)
+        WHERE
+            nrt_pca.act_uid = @phc_id
+          and nrt_pca.last_chg_time = (
+            select max(last_chg_time)
+            from dbo.nrt_page_case_answer
+            where act_uid = @phc_id
+        );
 
         COMMIT TRANSACTION;
 
+
+        if @debug = 'true'
+            select 'nrt_page', * from #NRT_PAGE;
+
         BEGIN TRANSACTION;
 
-        SET @Proc_Step_no = 3;
+        SET @Proc_Step_no = 4;
         SET @Proc_Step_Name = ' Generating TEXT_METADATA_REPT';
 
 
@@ -108,12 +153,11 @@ BEGIN
         -- CREATE TABLE  NBS_CASE_ANSWER AS
         SELECT nrt_page.*
         INTO #NBS_CASE_ANSWER_REPT
-        FROM dbo.nrt_page_case_answer AS nrt_page WITH(NOLOCK)
+        FROM #NRT_PAGE AS nrt_page
                  INNER JOIN
              #phc_uids_REPT AS inv
              ON inv.PAGE_CASE_UID = nrt_page.ACT_UID AND
                 nrt_page.ANSWER_GROUP_SEQ_NBR IS NOT NULL
-        WHERE nrt_page.ACT_UID = @phc_id
         --AND inv.INVESTIGATION_FORM_CD = nrt_page.INVESTIGATION_FORM_CD;
 
 
@@ -179,7 +223,7 @@ BEGIN
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
-        SET @Proc_Step_no = 4;
+        SET @Proc_Step_no = 5;
         SET @Proc_Step_Name = ' Generating CODED_TABLE_TEMP_REPT';
 
 
@@ -441,7 +485,7 @@ ON #CODED_TABLE_REPT
         BEGIN TRANSACTION;
         BEGIN
 
-            SET @Proc_Step_no = 5;
+            SET @Proc_Step_no = 6;
             SET @Proc_Step_Name = ' LOG Invalid Numeric data INTO ETL_DQ_LOG';
 
             INSERT INTO dbo.ETL_DQ_LOG( EVENT_TYPE, EVENT_LOCAL_ID, EVENT_UID, DQ_ISSUE_CD, DQ_ISSUE_DESC_TXT, DQ_ISSUE_QUESTION_IDENTIFIER, DQ_ISSUE_ANSWER_TXT, DQ_ISSUE_RDB_LOCATION, JOB_BATCH_LOG_UID, DQ_ETL_PROCESS_TABLE, DQ_ETL_PROCESS_COLUMN, DQ_STATUS_TIME, DQ_ISSUE_SOURCE_LOCATION, DQ_ISSUE_SOURCE_QUESTION_LABEL )
@@ -454,10 +498,9 @@ ON #CODED_TABLE_REPT
                     FROM #CODED_TABLE_SNTEMP_REPT as rept WITH(NOLOCK)
                              INNER JOIN dbo.nrt_investigation as inv WITH(NOLOCK)
                                         ON inv.public_health_case_uid = rept.page_case_uid
-                             INNER JOIN dbo.nrt_page_case_answer as nrt_page WITH(NOLOCK)
+                             INNER JOIN #NRT_PAGE as nrt_page
                                         ON nrt_page.act_uid = inv.public_health_case_uid
-                    WHERE nrt_page.act_uid = @phc_id
-                      AND (isNumeric(ANSWER_VALUE) != 1)
+                    WHERE (isNumeric(ANSWER_VALUE) != 1)
                       AND ltrim(rtrim(ANSWER_VALUE))<>''
                       AND nrt_page.QUESTION_GROUP_SEQ_NBR IS NOT NULL
                 );
@@ -475,7 +518,7 @@ ON #CODED_TABLE_REPT
         BEGIN TRANSACTION;
 
         DECLARE @coded_output_table_name varchar(500) = ''
-        SET @Proc_Step_no = 6;
+        SET @Proc_Step_no = 7;
         SET @coded_output_table_name = '##CODED_DATA_INV_CAT_out_'+CAST(@Batch_id as varchar(50));
         SET @Proc_Step_Name = ' Generating '+@coded_output_table_name;
 
@@ -567,7 +610,7 @@ ON #CODED_TABLE_REPT
 
         BEGIN TRANSACTION;
         DECLARE @date_output_table_name varchar(500) = ''
-        SET @Proc_Step_no = 7;
+        SET @Proc_Step_no = 8;
         SET @date_output_table_name = '##date_data_INV_out_'+CAST(@Batch_id as varchar(50));
         SET @Proc_Step_Name = ' Generating '+@date_output_table_name;
 
@@ -606,7 +649,7 @@ ON #CODED_TABLE_REPT
             (
                 SELECT 'INVESTIGATION', inv.LOCAL_ID, PUBLIC_HEALTH_CASE_UID, 'INVALID_DATE', 'BAD DATE: A poorly formatted date exists and requires update. Please correct the bad date so that it can be properly written to the reporting database during the next ETL run.',
                        nrt_page.QUESTION_IDENTIFIER, ANSWER_TXT, nrt_page.DATA_LOCATION, @Batch_id, nrt_page.rdb_table_nm, nrt_page.RDB_COLUMN_NM, GETDATE(), nrt_page.DATA_LOCATION, QUESTION_LABEL
-                FROM dbo.nrt_page_case_answer as nrt_page
+                FROM #NRT_PAGE as nrt_page
                          INNER JOIN
                      dbo.nrt_investigation as inv
                      ON nrt_page.ACT_UID = inv.PUBLIC_HEALTH_CASE_UID
@@ -614,8 +657,7 @@ ON #CODED_TABLE_REPT
                      NBS_SRTE.DBO.CONDITION_CODE
                      ON CONDITION_CODE.CONDITION_CD = inv.CD
                 WHERE
-                    nrt_page.act_uid = @phc_id
-                  AND DATA_TYPE IN( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
+                    DATA_TYPE IN( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
                     (ISDATE(ANSWER_TXT) != 1) AND
                     UPPER(nrt_page.DATA_LOCATION) = 'NBS_CASE_ANSWER.ANSWER_TXT' AND
                     ANSWER_TXT IS NOT NULL AND
@@ -689,7 +731,7 @@ ON #CODED_TABLE_REPT
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
-        SET @Proc_Step_no = 8;
+        SET @Proc_Step_no = 9;
         SET @Proc_Step_Name = 'Begin Numeric Section';
 
 
@@ -827,7 +869,7 @@ ON #CODED_TABLE_REPT
         BEGIN TRANSACTION;
         BEGIN
 
-            SET @Proc_Step_no = 9;
+            SET @Proc_Step_no = 10;
             SET @Proc_Step_Name = ' LOG Invalid Numeric data INTO ETL_DQ_LOG';
 
             INSERT INTO dbo.ETL_DQ_LOG( EVENT_TYPE, EVENT_LOCAL_ID, EVENT_UID, DQ_ISSUE_CD, DQ_ISSUE_DESC_TXT, DQ_ISSUE_QUESTION_IDENTIFIER, DQ_ISSUE_ANSWER_TXT, DQ_ISSUE_RDB_LOCATION, JOB_BATCH_LOG_UID, DQ_ETL_PROCESS_TABLE, DQ_ETL_PROCESS_COLUMN, DQ_STATUS_TIME, DQ_ISSUE_SOURCE_LOCATION, DQ_ISSUE_SOURCE_QUESTION_LABEL )
@@ -844,10 +886,10 @@ ON #CODED_TABLE_REPT
                          NBS_SRTE.DBO.CONDITION_CODE
                          ON CONDITION_CODE.CONDITION_CD = inv.CD
                              INNER JOIN
-                         dbo.nrt_page_case_answer as nrt_page
+                         #NRT_PAGE as nrt_page
                          ON nrt_page.act_uid = inv.PUBLIC_HEALTH_CASE_UID
-                    WHERE nrt_page.act_uid = @phc_id
-                      AND (isNumeric(nrt_page.ANSWER_TXT) != 1)
+                    WHERE
+                        (isNumeric(nrt_page.ANSWER_TXT) != 1)
                       AND nrt_page.ANSWER_TXT IS NOT NULL);
 
 
@@ -860,7 +902,7 @@ ON #CODED_TABLE_REPT
         COMMIT TRANSACTION;
         BEGIN TRANSACTION;
         DECLARE @numeric_output_table_name varchar(500) = ''
-        SET @Proc_Step_no = 10;
+        SET @Proc_Step_no = 11;
         SET @numeric_output_table_name = '##numeric_DATA_REPT_out_'+CAST(@Batch_id as varchar(50));
         SET @Proc_Step_Name = 'Generating FINAL TABLE FOR Numeric '+@numeric_output_table_name;
 
@@ -898,7 +940,7 @@ ON #CODED_TABLE_REPT
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
-        SET @Proc_Step_no = 11;
+        SET @Proc_Step_no = 12;
         DECLARE @staging_table_name varchar(500) = ''
         SET @staging_table_name = '##STAGING_KEY_REPT_'+CAST(@Batch_id as varchar(50));
         SET @Proc_Step_Name = 'Generating Final Staging table '+@staging_table_name;
@@ -979,7 +1021,7 @@ ON #CODED_TABLE_REPT
 
 
         BEGIN TRANSACTION;
-        SET @Proc_Step_no = 12;
+        SET @Proc_Step_no = 13;
         SET @Proc_Step_Name = 'S_INVESTIGATION_REPEAT Update';
 
 
@@ -1079,7 +1121,7 @@ ON #CODED_TABLE_REPT
 
         BEGIN TRANSACTION;
 
-        SET @Proc_Step_no = 13;
+        SET @Proc_Step_no = 14;
         SET @Proc_Step_Name = 'Insert into L_INVESTIGATION_REPEAT';
 
 
@@ -1140,7 +1182,7 @@ ON #CODED_TABLE_REPT
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
-        SET @Proc_Step_no = 14;
+        SET @Proc_Step_no = 15;
         SET @Proc_Step_Name = 'Insert into D_INVESTIGATION_REPEAT_INC';
 
         IF OBJECT_ID('dbo.D_INVESTIGATION_REPEAT', 'U') IS NULL
@@ -1174,7 +1216,7 @@ ON #CODED_TABLE_REPT
 
         BEGIN TRANSACTION;
 
-        SET @Proc_Step_no = 15;
+        SET @Proc_Step_no = 16;
         SET @Proc_Step_Name = ' Add new columns to D_INVESTIGATION_REPEAT';
 
         -- create table rdb_ui_metadata_INVESTIGATION_REPEAT as
@@ -1245,7 +1287,7 @@ ON #CODED_TABLE_REPT
 
         BEGIN TRANSACTION;
 
-        SET @Proc_Step_no = 14;
+        SET @Proc_Step_no = 17;
         SET @Proc_Step_Name = ' Inserting data into D_INVESTIGATION_REPEAT';
 
         IF NOT EXISTS
@@ -1268,13 +1310,13 @@ ON #CODED_TABLE_REPT
         WHERE NOT EXISTS
             (
                 SELECT TOP 1 d_INVESTIGATION_REPEAT_key
-                FROM [RDB].[dbo].[D_INVESTIGATION_REPEAT_INC]
+                FROM [dbo].[D_INVESTIGATION_REPEAT_INC]
                 WHERE d_INVESTIGATION_REPEAT_key = 1
             ) AND
             NOT EXISTS
                 (
                     SELECT TOP 1 D_INVESTIGATION_REPEAT_KEY
-                    FROM [RDB].[DBO].[D_INVESTIGATION_REPEAT]
+                    FROM [DBO].[D_INVESTIGATION_REPEAT]
                     WHERE D_INVESTIGATION_REPEAT_KEY = 1
                 );
 

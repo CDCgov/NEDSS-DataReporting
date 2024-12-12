@@ -9,6 +9,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 001-create_nrt_organization-001.sql
@@ -23,6 +24,7 @@ databaseChangeLog:
   - changeSet:
       id: 3
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 003-create_nrt_provider-001.sql
@@ -37,6 +39,7 @@ databaseChangeLog:
   - changeSet:
       id: 5
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 005-create_nrt_patient-001.sql
@@ -66,6 +69,7 @@ databaseChangeLog:
   - changeSet:
       id: 9
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 009-create_nrt_investigation_confirmation-001.sql
@@ -80,6 +84,7 @@ databaseChangeLog:
   - changeSet:
       id: 11
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 011-create_nrt_investigation_observation-001.sql
@@ -87,16 +92,10 @@ databaseChangeLog:
   - changeSet:
       id: 12
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 012-create_nrt_investigation_notification-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 13
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 012-create_nrt_investigation_notification-002.sql
             splitStatements: false
   - changeSet:
       id: 14
@@ -108,6 +107,7 @@ databaseChangeLog:
   - changeSet:
       id: 15
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 014-create_nrt_page_case_answer-001.sql
@@ -129,16 +129,10 @@ databaseChangeLog:
   - changeSet:
       id: 18
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 19
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 017-create_nrt_observation-002.sql
             splitStatements: false
   - changeSet:
       id: 20
@@ -247,6 +241,7 @@ databaseChangeLog:
   - changeSet:
       id: 33
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 019-create_nrt_datamart_metadata-001.sql
@@ -275,39 +270,9 @@ databaseChangeLog:
             path: 015-sp_nrt_ldf_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 37
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 017-create_nrt_observation-003.sql
-            splitStatements: false
-  - changeSet:
-      id: 38
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 007-sp_s_pagebuilder_postprocessing-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 39
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 010-sp_sld_investigation_repeat_postprocessing-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 40
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 013-sp_hepatitis_datamart_postprocessing-002.sql
-            splitStatements: false
-  - changeSet:
       id: 41
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_coded-001.sql
@@ -323,6 +288,7 @@ databaseChangeLog:
   - changeSet:
       id: 43
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_edx-001.sql
@@ -330,6 +296,7 @@ databaseChangeLog:
   - changeSet:
       id: 44
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_material-001.sql
@@ -345,6 +312,7 @@ databaseChangeLog:
   - changeSet:
       id: 46
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 017-create_nrt_observation_reason-001.sql
@@ -352,17 +320,10 @@ databaseChangeLog:
   - changeSet:
       id: 47
       author: liquibase
-      changes:
-        - sqlFile:
-            path: 017-create_nrt_observation_txt-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 48
-      author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 005-sp_nrt_investigation_postprocessing-002.sql
+            path: 017-create_nrt_observation_txt-001.sql
             splitStatements: false
   - changeSet:
       id: 49
@@ -381,37 +342,6 @@ databaseChangeLog:
             path: 017-sp_d_labtest_result_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 51
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 017-create_nrt_observation-004.sql
-            splitStatements: false
-  - changeSet:
-      id: 52
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 017-sp_d_labtest_result_postprocessing-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 53
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 016-sp_nrt_morbidity_report_postprocessing-002.sql
-            splitStatements: false
-  - changeSet:
-      id: 54
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 013-sp_hepatitis_datamart_postprocessing-003.sql
-            splitStatements: false
-  - changeSet:
       id: 55
       author: liquibase
       runOnChange: true
@@ -428,14 +358,6 @@ databaseChangeLog:
             path: 019-sp_lab100_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 57
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 005-sp_nrt_investigation_postprocessing-003.sql
-            splitStatements: false
-  - changeSet:  
       id: 58
       author: liquibase
       runOnChange: true
@@ -454,6 +376,7 @@ databaseChangeLog:
   - changeSet:
       id: 62
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 020-create_nrt_investigation_case_management-001.sql
@@ -474,15 +397,9 @@ databaseChangeLog:
             path: 022-sp_nrt_case_management_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 66
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 011-create_nrt_investigation_observation-002.sql
-            splitStatements: false
-  - changeSet:
       id: 67
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 022-create_nrt_interview-001.sql
@@ -490,6 +407,7 @@ databaseChangeLog:
   - changeSet:
       id: 68
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 022-create_nrt_metadata_columns-001.sql
@@ -497,6 +415,7 @@ databaseChangeLog:
   - changeSet:
       id: 69
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 022-create_nrt_interview_note-001.sql
@@ -504,6 +423,7 @@ databaseChangeLog:
   - changeSet:
       id: 70
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 022-create_nrt_interview_answer-001.sql
@@ -561,13 +481,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 022-create_nrt_interview_note_key-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 78
-      author: liquibase
-      changes:
-        - sqlFile:
-            path: 022-create_nrt_interview_note-002.sql
             splitStatements: false
   - changeSet:
       id: 79
