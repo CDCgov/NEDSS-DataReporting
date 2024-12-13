@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'nrt_metadata_columns'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_metadata_columns' and xtype = 'U')
 CREATE TABLE dbo.nrt_metadata_columns
 (
     TABLE_NAME       varchar(100)                                    NOT NULL,

@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'nrt_interview_answer'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview_answer' and xtype = 'U')
 CREATE TABLE dbo.nrt_interview_answer
 (
     interview_uid    bigint                                          NOT NULL,

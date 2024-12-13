@@ -1,4 +1,3 @@
-
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization' and xtype = 'U')
 CREATE TABLE dbo.nrt_organization
 (

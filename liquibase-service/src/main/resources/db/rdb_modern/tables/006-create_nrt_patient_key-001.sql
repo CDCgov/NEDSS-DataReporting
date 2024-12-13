@@ -1,6 +1,4 @@
-
-drop table if exists dbo.nrt_patient_key;
-
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient_key' and xtype = 'U')
 CREATE TABLE dbo.nrt_patient_key (
 	d_patient_key bigint IDENTITY(1,1) NOT NULL,
 	patient_uid bigint NULL

@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS dbo.nrt_confirmation_method_key;
-
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_confirmation_method_key' and xtype = 'U')
 CREATE TABLE dbo.nrt_confirmation_method_key (
 	d_confirmation_method_key bigint IDENTITY(1,1) NOT NULL,
 	confirmation_method_cd varchar(50) NULL

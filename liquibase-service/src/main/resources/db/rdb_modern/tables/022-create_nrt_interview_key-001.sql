@@ -1,6 +1,4 @@
-
-drop table if exists dbo.nrt_interview_key;
-
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview_key' and xtype = 'U')
 CREATE TABLE dbo.nrt_interview_key (
 	d_interview_key bigint IDENTITY(1,1) NOT NULL,
 	interview_uid bigint NULL

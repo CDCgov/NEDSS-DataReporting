@@ -1,4 +1,3 @@
-
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_confirmation' and xtype = 'U')
 CREATE TABLE dbo.nrt_investigation_confirmation
 (

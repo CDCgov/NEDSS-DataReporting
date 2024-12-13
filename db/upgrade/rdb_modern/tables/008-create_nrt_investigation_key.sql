@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS dbo.nrt_investigation_key;
-
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_key' and xtype = 'U')
 CREATE TABLE dbo.nrt_investigation_key (
 	d_investigation_key bigint IDENTITY(1,1) NOT NULL,
 	case_uid bigint NULL

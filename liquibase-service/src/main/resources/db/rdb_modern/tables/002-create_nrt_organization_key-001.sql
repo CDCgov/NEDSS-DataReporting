@@ -1,6 +1,4 @@
-
-drop table if exists dbo.nrt_organization_key;
-
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization_key' and xtype = 'U')
 CREATE TABLE dbo.nrt_organization_key (
     d_organization_key bigint IDENTITY (1,1) NOT NULL,
     organization_uid   bigint                NULL

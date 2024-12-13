@@ -1,6 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and xtype = 'U')
     BEGIN
-        --drop table if exists dbo.nrt_notification_key;
 
         CREATE TABLE dbo.nrt_notification_key (
             d_notification_key bigint IDENTITY (1,1) NOT NULL,
@@ -12,4 +11,5 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and 
         if @max IS NULL   --check when max is returned as null
             SET @max = 1;
         DBCC CHECKIDENT ('dbo.nrt_notification_key', RESEED, @max);
+
     END

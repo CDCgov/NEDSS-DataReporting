@@ -1,6 +1,5 @@
-
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_provider' and xtype = 'U')
-create table dbo.nrt_provider
+CREATE TABLE dbo.nrt_provider
 (
     provider_uid                   bigint                                       not null primary key,
     local_id                       varchar(50)                                  null,

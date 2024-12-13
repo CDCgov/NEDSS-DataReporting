@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS dbo.nrt_provider_key;
-
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_provider_key' and xtype = 'U')
 CREATE TABLE dbo.nrt_provider_key (
     d_provider_key bigint IDENTITY (1,1) NOT NULL,
     provider_uid   bigint                NULL

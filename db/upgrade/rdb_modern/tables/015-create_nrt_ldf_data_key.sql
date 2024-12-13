@@ -1,6 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data_key' and xtype = 'U')
     BEGIN
-        --drop table if exists dbo.nrt_ldf_data_key;
 
         CREATE TABLE dbo.nrt_ldf_data_key(
             d_ldf_data_key      bigint IDENTITY (1,1) NOT NULL,

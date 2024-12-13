@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS dbo.nrt_case_management_key;
-
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_case_management_key' and xtype = 'U')
 CREATE TABLE dbo.nrt_case_management_key (
     d_case_management_key bigint IDENTITY(1,1) NOT NULL,
     public_health_case_uid bigint NULL

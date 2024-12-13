@@ -17,6 +17,7 @@ databaseChangeLog:
   - changeSet:
       id: 2
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 002-create_nrt_organization_key-001.sql
@@ -32,9 +33,10 @@ databaseChangeLog:
   - changeSet:
       id: 4
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
-            path: 004-create_nrt_provider_key.sql
+            path: 004-create_nrt_provider_key-001.sql
             splitStatements: false
   - changeSet:
       id: 5
@@ -47,6 +49,7 @@ databaseChangeLog:
   - changeSet:
       id: 6
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 006-create_nrt_patient_key-001.sql
@@ -62,6 +65,7 @@ databaseChangeLog:
   - changeSet:
       id: 8
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 008-create_nrt_investigation_key-001.sql
@@ -77,6 +81,7 @@ databaseChangeLog:
   - changeSet:
       id: 10
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 010-create_nrt_confirmation_method_key-001.sql
@@ -100,6 +105,7 @@ databaseChangeLog:
   - changeSet:
       id: 14
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 013-create_nrt_notification_key-001.sql
@@ -115,6 +121,7 @@ databaseChangeLog:
   - changeSet:
       id: 16
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 015-create_nrt_ldf_data_key-001.sql
@@ -122,6 +129,7 @@ databaseChangeLog:
   - changeSet:
       id: 17
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 016-create_nrt_ldf_group_key-001.sql
@@ -257,9 +265,10 @@ databaseChangeLog:
   - changeSet:
       id: 35
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
-            path: 018-create-nrt_ldf_data-001.sql
+            path: 018-create_nrt_ldf_data-001.sql
             splitStatements: false
   - changeSet:
       id: 36
@@ -384,6 +393,7 @@ databaseChangeLog:
   - changeSet:
       id: 63
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 021-create_nrt_case_management_key-001.sql
@@ -471,6 +481,7 @@ databaseChangeLog:
   - changeSet:
       id: 76
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 022-create_nrt_interview_key-001.sql
@@ -478,6 +489,7 @@ databaseChangeLog:
   - changeSet:
       id: 77
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 022-create_nrt_interview_note_key-001.sql
