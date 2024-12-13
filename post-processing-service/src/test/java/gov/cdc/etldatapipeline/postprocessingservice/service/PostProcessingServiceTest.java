@@ -408,16 +408,16 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(4).contains(invTopic));
         assertTrue(topicLogList.get(5).contains(invTopic));
         assertTrue(topicLogList.get(6).contains(ntfTopic));
-        assertTrue(topicLogList.get(7).contains(cmTopic));
-        assertTrue(topicLogList.get(8).contains(cmTopic));
-        assertTrue(topicLogList.get(9).contains(intTopic));
-        assertTrue(topicLogList.get(10).contains(intTopic));
+        assertTrue(topicLogList.get(7).contains(intTopic));
+        assertTrue(topicLogList.get(8).contains(intTopic));
+        assertTrue(topicLogList.get(9).contains(cmTopic));
+        assertTrue(topicLogList.get(10).contains(cmTopic));
         assertTrue(topicLogList.get(11).contains(ldfTopic));
         assertTrue(topicLogList.get(12).contains(obsTopic));
     }
 
     @Test
-    void testPostProcessDatamart() {
+    void testPostProcessHepatitsDatamart() {
         String topic = "dummy_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
                 "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10110\"," +
@@ -426,8 +426,24 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessDatamart(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
-        verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123", "456");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey("Hepatitis_Datamart"));
+        verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123");
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName()));
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(3, logs.size());
+    }
+
+    @Test
+    void testPostProcessStdHIVDatamart() {
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
+                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10110\"," +
+                "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        verify(investigationRepositoryMock).executeStoredProcForStdHIVDatamart("123");
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.STD_HIV_DATAMART.getEntityName()));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(3, logs.size());
     }
@@ -574,8 +590,8 @@ class PostProcessingServiceTest {
         investigationResult.setPatientUid(456L);
         investigationResult.setPatientKey(patientKey);
         investigationResult.setConditionCd("10110");
-        investigationResult.setDatamart("Hepatitis_Datamart");
-        investigationResult.setStoredProcedure("sp_hepatitis_datamart_postprocessing");
+        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
+        investigationResult.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
         investigationResults.add(investigationResult);
         return investigationResults;
     }
