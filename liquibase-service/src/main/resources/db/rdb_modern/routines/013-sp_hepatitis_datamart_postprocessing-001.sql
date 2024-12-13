@@ -1,6 +1,5 @@
 CREATE OR ALTER PROCEDURE [dbo].[sp_hepatitis_datamart_postprocessing]
     @phc_id nvarchar(max),
-    @pat_ids nvarchar(max) = '',
     @debug bit = 'false'
 AS
 BEGIN
@@ -1054,7 +1053,7 @@ BEGIN
 
         IF OBJECT_ID('#TMP_Investigation', 'U') IS NOT NULL
             BEGIN
-                DROP TABLE TMP_Investigation;
+                DROP TABLE #TMP_Investigation;
 
             END;
 
@@ -1213,7 +1212,7 @@ BEGIN
 
         IF OBJECT_ID('#TMP_HEP_PAT_PROV', 'U') IS NOT NULL
             BEGIN
-                DROP TABLE TMP_HEP_PAT_PROV;
+                DROP TABLE #TMP_HEP_PAT_PROV;
 
             END;
 

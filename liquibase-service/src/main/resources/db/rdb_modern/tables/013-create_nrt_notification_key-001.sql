@@ -2,9 +2,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and 
     BEGIN
 
         CREATE TABLE dbo.nrt_notification_key (
-                                                  d_notification_key bigint IDENTITY (1,1) NOT NULL,
-                                                  notification_uid   bigint                NULL
-                                              );
+            d_notification_key bigint IDENTITY (1,1) NOT NULL,
+            notification_uid   bigint                NULL
+        );
         declare @max bigint;
         select @max=max(notification_key)+1 from dbo.NOTIFICATION ;
         select @max;

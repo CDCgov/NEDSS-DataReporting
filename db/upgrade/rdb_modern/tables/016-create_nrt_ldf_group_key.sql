@@ -10,7 +10,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_group_key' and xty
         select @max=max(ldf_group_key)+1 from dbo.ldf_group;
         select @max;
         if @max IS NULL   --check when max is returned as null
-            SET @max = 1
+            SET @max = 1;
         DBCC CHECKIDENT ('dbo.nrt_ldf_group_key', RESEED, @max);
 
     END
