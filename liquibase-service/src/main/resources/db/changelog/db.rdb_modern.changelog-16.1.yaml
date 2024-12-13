@@ -513,6 +513,7 @@ databaseChangeLog:
   - changeSet:
       id: 81
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 023-create_std_hiv_datamart-001.sql
@@ -520,6 +521,7 @@ databaseChangeLog:
   - changeSet:
       id: 82
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 024-create_inv_hiv-001.sql
