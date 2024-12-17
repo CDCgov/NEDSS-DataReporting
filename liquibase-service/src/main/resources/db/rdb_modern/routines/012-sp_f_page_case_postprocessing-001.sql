@@ -60,28 +60,12 @@ BEGIN
         WHERE inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','))
           AND INVESTIGATION_FORM_CD  NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
                                               'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
-                                              'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR');
+                                              'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
+        AND CASE_MANAGEMENT_UID is null;
 
         if @debug  = 'true' select * from #PHC_UIDS;
 
-        IF OBJECT_ID('#PHC_UIDS_ALL', 'U') IS NOT NULL
-            drop table #PHC_UIDS_ALL
-            ;
 
-        SELECT
-            inv.PUBLIC_HEALTH_CASE_UID  'PAGE_CASE_UID', /* VS LENGTH =8 AS PAGE_CASE_UID 'PAGE_CASE_UID',*/
-            CASE_MANAGEMENT_UID,
-            INVESTIGATION_FORM_CD,
-            CD,
-            LAST_CHG_TIME
-        INTO  #PHC_UIDS_ALL
-        FROM
-            dbo.nrt_investigation inv
-        WHERE inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','))
-          AND INVESTIGATION_FORM_CD
-            NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR');
-
-        if @debug  = 'true' select * from #PHC_UIDS_ALL;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -212,32 +196,37 @@ BEGIN
             drop table #DIMENSION_KEYS_PAGECASEID
             ;
 
-        select L_INV_ADMINISTRATIVE_INC.PAGE_CASE_UID as PAGE_CASE_UID
+        with LOOKUPCTE as (
+            select L_INV_ADMINISTRATIVE.PAGE_CASE_UID 	 from  dbo.L_INV_ADMINISTRATIVE  union
+            select L_INV_CLINICAL.PAGE_CASE_UID 	 from  dbo.L_INV_CLINICAL  union
+            select L_INV_COMPLICATION.PAGE_CASE_UID 	 from  dbo.L_INV_COMPLICATION  union
+            select L_INV_CONTACT.PAGE_CASE_UID 	 from  dbo.L_INV_CONTACT  union
+            select L_INV_DEATH.PAGE_CASE_UID 	 from  dbo.L_INV_DEATH  union
+            select L_INV_EPIDEMIOLOGY.PAGE_CASE_UID 	 from  dbo.L_INV_EPIDEMIOLOGY  union
+            select L_INV_HIV.PAGE_CASE_UID 	 from  dbo.L_INV_HIV  union
+            select L_INV_ISOLATE_TRACKING.PAGE_CASE_UID 	 from  dbo.L_INV_ISOLATE_TRACKING  union
+            select L_INV_LAB_FINDING.PAGE_CASE_UID 	 from  dbo.L_INV_LAB_FINDING  union
+            select L_INV_MEDICAL_HISTORY.PAGE_CASE_UID 	 from  dbo.L_INV_MEDICAL_HISTORY  union
+            select L_INV_MOTHER.PAGE_CASE_UID 	 from  dbo.L_INV_MOTHER  union
+            select L_INV_OTHER.PAGE_CASE_UID 	 from  dbo.L_INV_OTHER  union
+            select L_INV_PATIENT_OBS.PAGE_CASE_UID 	 from  dbo.L_INV_PATIENT_OBS  union
+            select L_INV_PREGNANCY_BIRTH.PAGE_CASE_UID 	 from  dbo.L_INV_PREGNANCY_BIRTH  union
+            select L_INV_RESIDENCY.PAGE_CASE_UID 	 from  dbo.L_INV_RESIDENCY  union
+            select L_INV_RISK_FACTOR.PAGE_CASE_UID 	 from  dbo.L_INV_RISK_FACTOR  union
+            select L_INV_SOCIAL_HISTORY.PAGE_CASE_UID 	 from  dbo.L_INV_SOCIAL_HISTORY  union
+            select L_INV_SYMPTOM.PAGE_CASE_UID 	 from  dbo.L_INV_SYMPTOM  union
+            select L_INV_TRAVEL.PAGE_CASE_UID 	 from  dbo.L_INV_TRAVEL  union
+            select L_INV_TREATMENT.PAGE_CASE_UID 	 from  dbo.L_INV_TREATMENT  union
+            select L_INV_UNDER_CONDITION.PAGE_CASE_UID 	 from  dbo.L_INV_UNDER_CONDITION  union
+            select L_INV_VACCINATION.PAGE_CASE_UID 	 from  dbo.L_INV_VACCINATION union
+            SELECT L_INVESTIGATION_REPEAT.PAGE_CASE_UID	 from  dbo.L_INVESTIGATION_REPEAT union
+            SELECT L_INV_PLACE_REPEAT.PAGE_CASE_UID	 from  dbo.L_INV_PLACE_REPEAT
+        )
+        select cte.*
         into #DIMENSION_KEYS_PAGECASEID
-        from  dbo.L_INV_ADMINISTRATIVE_INC  union
-        select L_INV_CLINICAL_INC.PAGE_CASE_UID 	 from  dbo.L_INV_CLINICAL_INC  union
-        select L_INV_COMPLICATION_INC.PAGE_CASE_UID 	 from  dbo.L_INV_COMPLICATION_INC  union
-        select L_INV_CONTACT_INC.PAGE_CASE_UID 	 from  dbo.L_INV_CONTACT_INC  union
-        select L_INV_DEATH_INC.PAGE_CASE_UID 	 from  dbo.L_INV_DEATH_INC  union
-        select L_INV_EPIDEMIOLOGY_INC.PAGE_CASE_UID 	 from  dbo.L_INV_EPIDEMIOLOGY_INC  union
-        select L_INV_HIV_INC.PAGE_CASE_UID 	 from  dbo.L_INV_HIV_INC  union
-        select L_INV_ISOLATE_TRACKING_INC.PAGE_CASE_UID 	 from  dbo.L_INV_ISOLATE_TRACKING_INC  union
-        select L_INV_LAB_FINDING_INC.PAGE_CASE_UID 	 from  dbo.L_INV_LAB_FINDING_INC  union
-        select L_INV_MEDICAL_HISTORY_INC.PAGE_CASE_UID 	 from  dbo.L_INV_MEDICAL_HISTORY_INC  union
-        select L_INV_MOTHER_INC.PAGE_CASE_UID 	 from  dbo.L_INV_MOTHER_INC  union
-        select L_INV_OTHER_INC.PAGE_CASE_UID 	 from  dbo.L_INV_OTHER_INC  union
-        select L_INV_PATIENT_OBS_INC.PAGE_CASE_UID 	 from  dbo.L_INV_PATIENT_OBS_INC  union
-        select L_INV_PREGNANCY_BIRTH_INC.PAGE_CASE_UID 	 from  dbo.L_INV_PREGNANCY_BIRTH_INC  union
-        select L_INV_RESIDENCY_INC.PAGE_CASE_UID 	 from  dbo.L_INV_RESIDENCY_INC  union
-        select L_INV_RISK_FACTOR_INC.PAGE_CASE_UID 	 from  dbo.L_INV_RISK_FACTOR_INC  union
-        select L_INV_SOCIAL_HISTORY_INC.PAGE_CASE_UID 	 from  dbo.L_INV_SOCIAL_HISTORY_INC  union
-        select L_INV_SYMPTOM_INC.PAGE_CASE_UID 	 from  dbo.L_INV_SYMPTOM_INC  union
-        select L_INV_TRAVEL_INC.PAGE_CASE_UID 	 from  dbo.L_INV_TRAVEL_INC  union
-        select L_INV_TREATMENT_INC.PAGE_CASE_UID 	 from  dbo.L_INV_TREATMENT_INC  union
-        select L_INV_UNDER_CONDITION_INC.PAGE_CASE_UID 	 from  dbo.L_INV_UNDER_CONDITION_INC  union
-        select L_INV_VACCINATION_INC.PAGE_CASE_UID 	 from  dbo.L_INV_VACCINATION_INC union
-        SELECT L_INVESTIGATION_REPEAT_INC.PAGE_CASE_UID	 from  [dbo].[L_INVESTIGATION_REPEAT_INC] union
-        SELECT L_INV_PLACE_REPEAT.PAGE_CASE_UID	 from  [dbo].[L_INV_PLACE_REPEAT]
+        from LOOKUPCTE cte
+         INNER JOIN #ENTITY_KEYSTORE_INC keystore --joining with this table in advance to reduce the rows
+                    ON cte.PAGE_CASE_UID = keystore.PAGE_CASE_UID
         ;
 
         if @debug  = 'true' select * from #DIMENSION_KEYS_PAGECASEID where page_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','));
@@ -262,58 +251,57 @@ BEGIN
 
         /**Updated to handle cases when there are no page builder investigation updates.*/
         select  phc.page_case_uid,
-                COALESCE(L_INV_ADMINISTRATIVE_INC.D_INV_ADMINISTRATIVE_KEY , 1) AS 	D_INV_ADMINISTRATIVE_KEY ,
-                COALESCE(L_INV_CLINICAL_INC.D_INV_CLINICAL_KEY , 1) AS 	D_INV_CLINICAL_KEY ,
-                COALESCE(L_INV_COMPLICATION_INC.D_INV_COMPLICATION_KEY , 1) AS 	D_INV_COMPLICATION_KEY ,
-                COALESCE(L_INV_CONTACT_INC.D_INV_CONTACT_KEY , 1) AS 	D_INV_CONTACT_KEY ,
-                COALESCE(L_INV_DEATH_INC.D_INV_DEATH_KEY , 1) AS 	D_INV_DEATH_KEY ,
-                COALESCE(L_INV_EPIDEMIOLOGY_INC.D_INV_EPIDEMIOLOGY_KEY , 1) AS 	D_INV_EPIDEMIOLOGY_KEY ,
-                COALESCE(L_INV_HIV_INC.D_INV_HIV_KEY , 1) AS 	D_INV_HIV_KEY ,
-                COALESCE(L_INV_PATIENT_OBS_INC.D_INV_PATIENT_OBS_KEY , 1) AS 	D_INV_PATIENT_OBS_KEY ,
-                COALESCE(L_INV_ISOLATE_TRACKING_INC.D_INV_ISOLATE_TRACKING_KEY , 1) AS 	D_INV_ISOLATE_TRACKING_KEY ,
-                COALESCE(L_INV_LAB_FINDING_INC.D_INV_LAB_FINDING_KEY , 1) AS 	D_INV_LAB_FINDING_KEY ,
-                COALESCE(L_INV_MEDICAL_HISTORY_INC.D_INV_MEDICAL_HISTORY_KEY , 1) AS 	D_INV_MEDICAL_HISTORY_KEY ,
-                COALESCE(L_INV_MOTHER_INC.D_INV_MOTHER_KEY , 1) AS 	D_INV_MOTHER_KEY ,
-                COALESCE(L_INV_OTHER_INC.D_INV_OTHER_KEY , 1) AS 	D_INV_OTHER_KEY ,
-                COALESCE(L_INV_PREGNANCY_BIRTH_INC.D_INV_PREGNANCY_BIRTH_KEY , 1) AS 	D_INV_PREGNANCY_BIRTH_KEY ,
-                COALESCE(L_INV_RESIDENCY_INC.D_INV_RESIDENCY_KEY , 1) AS 	D_INV_RESIDENCY_KEY ,
-                COALESCE(L_INV_RISK_FACTOR_INC.D_INV_RISK_FACTOR_KEY , 1) AS 	D_INV_RISK_FACTOR_KEY ,
-                COALESCE(L_INV_SOCIAL_HISTORY_INC.D_INV_SOCIAL_HISTORY_KEY , 1) AS 	D_INV_SOCIAL_HISTORY_KEY ,
-                COALESCE(L_INV_SYMPTOM_INC.D_INV_SYMPTOM_KEY , 1) AS 	D_INV_SYMPTOM_KEY ,
-                COALESCE(L_INV_TREATMENT_INC.D_INV_TREATMENT_KEY , 1) AS 	D_INV_TREATMENT_KEY ,
-                COALESCE(L_INV_TRAVEL_INC.D_INV_TRAVEL_KEY , 1) AS 	D_INV_TRAVEL_KEY ,
-                COALESCE(L_INV_UNDER_CONDITION_INC.D_INV_UNDER_CONDITION_KEY , 1) AS 	D_INV_UNDER_CONDITION_KEY ,
-                COALESCE(L_INV_VACCINATION_INC.D_INV_VACCINATION_KEY , 1) AS 	D_INV_VACCINATION_KEY ,
-                COALESCE(L_INVESTIGATION_REPEAT_INC.D_INVESTIGATION_REPEAT_KEY , 1 ) AS	D_INVESTIGATION_REPEAT_KEY,
+                COALESCE(L_INV_ADMINISTRATIVE.D_INV_ADMINISTRATIVE_KEY , 1) AS 	D_INV_ADMINISTRATIVE_KEY ,
+                COALESCE(L_INV_CLINICAL.D_INV_CLINICAL_KEY , 1) AS 	D_INV_CLINICAL_KEY ,
+                COALESCE(L_INV_COMPLICATION.D_INV_COMPLICATION_KEY , 1) AS 	D_INV_COMPLICATION_KEY ,
+                COALESCE(L_INV_CONTACT.D_INV_CONTACT_KEY , 1) AS 	D_INV_CONTACT_KEY ,
+                COALESCE(L_INV_DEATH.D_INV_DEATH_KEY , 1) AS 	D_INV_DEATH_KEY ,
+                COALESCE(L_INV_EPIDEMIOLOGY.D_INV_EPIDEMIOLOGY_KEY , 1) AS 	D_INV_EPIDEMIOLOGY_KEY ,
+                COALESCE(L_INV_HIV.D_INV_HIV_KEY , 1) AS 	D_INV_HIV_KEY ,
+                COALESCE(L_INV_PATIENT_OBS.D_INV_PATIENT_OBS_KEY , 1) AS 	D_INV_PATIENT_OBS_KEY ,
+                COALESCE(L_INV_ISOLATE_TRACKING.D_INV_ISOLATE_TRACKING_KEY , 1) AS 	D_INV_ISOLATE_TRACKING_KEY ,
+                COALESCE(L_INV_LAB_FINDING.D_INV_LAB_FINDING_KEY , 1) AS 	D_INV_LAB_FINDING_KEY ,
+                COALESCE(L_INV_MEDICAL_HISTORY.D_INV_MEDICAL_HISTORY_KEY , 1) AS 	D_INV_MEDICAL_HISTORY_KEY ,
+                COALESCE(L_INV_MOTHER.D_INV_MOTHER_KEY , 1) AS 	D_INV_MOTHER_KEY ,
+                COALESCE(L_INV_OTHER.D_INV_OTHER_KEY , 1) AS 	D_INV_OTHER_KEY ,
+                COALESCE(L_INV_PREGNANCY_BIRTH.D_INV_PREGNANCY_BIRTH_KEY , 1) AS 	D_INV_PREGNANCY_BIRTH_KEY ,
+                COALESCE(L_INV_RESIDENCY.D_INV_RESIDENCY_KEY , 1) AS 	D_INV_RESIDENCY_KEY ,
+                COALESCE(L_INV_RISK_FACTOR.D_INV_RISK_FACTOR_KEY , 1) AS 	D_INV_RISK_FACTOR_KEY ,
+                COALESCE(L_INV_SOCIAL_HISTORY.D_INV_SOCIAL_HISTORY_KEY , 1) AS 	D_INV_SOCIAL_HISTORY_KEY ,
+                COALESCE(L_INV_SYMPTOM.D_INV_SYMPTOM_KEY , 1) AS 	D_INV_SYMPTOM_KEY ,
+                COALESCE(L_INV_TREATMENT.D_INV_TREATMENT_KEY , 1) AS 	D_INV_TREATMENT_KEY ,
+                COALESCE(L_INV_TRAVEL.D_INV_TRAVEL_KEY , 1) AS 	D_INV_TRAVEL_KEY ,
+                COALESCE(L_INV_UNDER_CONDITION.D_INV_UNDER_CONDITION_KEY , 1) AS 	D_INV_UNDER_CONDITION_KEY ,
+                COALESCE(L_INV_VACCINATION.D_INV_VACCINATION_KEY , 1) AS 	D_INV_VACCINATION_KEY ,
+                COALESCE(L_INVESTIGATION_REPEAT.D_INVESTIGATION_REPEAT_KEY , 1 ) AS	D_INVESTIGATION_REPEAT_KEY,
                 COALESCE(L_INV_PLACE_REPEAT.D_INV_PLACE_REPEAT_KEY , 1 ) AS	D_INV_PLACE_REPEAT_KEY
         into #DIMENSIONAL_KEYS
         from #PHC_UIDS phc
                  LEFT OUTER JOIN  #DIMENSION_KEYS_PAGECASEID DIMC ON DIMC.PAGE_CASE_UID = phc.PAGE_CASE_UID
-                 LEFT OUTER JOIN   dbo.L_INV_ADMINISTRATIVE_INC ON  L_INV_ADMINISTRATIVE_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_CLINICAL_INC ON  L_INV_CLINICAL_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_COMPLICATION_INC ON  L_INV_COMPLICATION_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_CONTACT_INC ON  L_INV_CONTACT_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_DEATH_INC ON  L_INV_DEATH_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_EPIDEMIOLOGY_INC ON  L_INV_EPIDEMIOLOGY_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_HIV_INC ON  L_INV_HIV_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_ISOLATE_TRACKING_INC ON  L_INV_ISOLATE_TRACKING_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_LAB_FINDING_INC ON  L_INV_LAB_FINDING_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_MEDICAL_HISTORY_INC ON  L_INV_MEDICAL_HISTORY_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_MOTHER_INC ON  L_INV_MOTHER_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_OTHER_INC ON  L_INV_OTHER_INC.PAGE_CASE_UID = dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_PATIENT_OBS_INC ON  L_INV_PATIENT_OBS_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_PREGNANCY_BIRTH_INC ON  L_INV_PREGNANCY_BIRTH_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_RESIDENCY_INC ON  L_INV_RESIDENCY_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_RISK_FACTOR_INC ON  L_INV_RISK_FACTOR_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_SOCIAL_HISTORY_INC ON  L_INV_SOCIAL_HISTORY_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_SYMPTOM_INC ON  L_INV_SYMPTOM_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_TRAVEL_INC ON  L_INV_TRAVEL_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_TREATMENT_INC ON   L_INV_TREATMENT_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_UNDER_CONDITION_INC ON   L_INV_UNDER_CONDITION_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_VACCINATION_INC ON  L_INV_VACCINATION_INC.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INVESTIGATION_REPEAT_INC ON  L_INVESTIGATION_REPEAT_INC.PAGE_CASE_UID =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_ADMINISTRATIVE ON  L_INV_ADMINISTRATIVE.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_CLINICAL ON  L_INV_CLINICAL.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_COMPLICATION ON  L_INV_COMPLICATION.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_CONTACT ON  L_INV_CONTACT.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_DEATH ON  L_INV_DEATH.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_EPIDEMIOLOGY ON  L_INV_EPIDEMIOLOGY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_HIV ON  L_INV_HIV.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_ISOLATE_TRACKING ON  L_INV_ISOLATE_TRACKING.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_LAB_FINDING ON  L_INV_LAB_FINDING.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_MEDICAL_HISTORY ON  L_INV_MEDICAL_HISTORY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_MOTHER ON  L_INV_MOTHER.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_OTHER ON  L_INV_OTHER.PAGE_CASE_UID = dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_PATIENT_OBS ON  L_INV_PATIENT_OBS.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_PREGNANCY_BIRTH ON  L_INV_PREGNANCY_BIRTH.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_RESIDENCY ON  L_INV_RESIDENCY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_RISK_FACTOR ON  L_INV_RISK_FACTOR.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_SOCIAL_HISTORY ON  L_INV_SOCIAL_HISTORY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_SYMPTOM ON  L_INV_SYMPTOM.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_TRAVEL ON  L_INV_TRAVEL.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_TREATMENT ON   L_INV_TREATMENT.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_UNDER_CONDITION ON   L_INV_UNDER_CONDITION.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_VACCINATION ON  L_INV_VACCINATION.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INVESTIGATION_REPEAT ON  L_INVESTIGATION_REPEAT.PAGE_CASE_UID =  dimc.page_case_uid
                  LEFT OUTER JOIN   dbo.L_INV_PLACE_REPEAT ON  L_INV_PLACE_REPEAT.PAGE_CASE_UID =  dimc.page_case_uid
-        where phc.CASE_MANAGEMENT_UID IS NULL;
         ;
 
         if @debug  = 'true' select * from #DIMENSIONAL_KEYS;

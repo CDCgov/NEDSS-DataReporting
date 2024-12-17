@@ -47,7 +47,7 @@ BEGIN TRY
 
         SELECT
             ni.public_health_case_uid  'PAGE_CASE_UID',
-            nicm.CASE_MANAGEMENT_UID,
+                nicm.CASE_MANAGEMENT_UID,
             ni.INVESTIGATION_FORM_CD,
             ni.CD,
             ni.LAST_CHG_TIME,
@@ -253,32 +253,37 @@ BEGIN TRY
             drop table #DIMENSION_KEYS_PAGECASEID
         ;
 
-        select L_INV_ADMINISTRATIVE.PAGE_CASE_UID as PAGE_CASE_UID
+        with LOOKUPCTE as (
+            select PAGE_CASE_UID     from  dbo.L_INV_ADMINISTRATIVE  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_CLINICAL  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_COMPLICATION  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_CONTACT  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_DEATH  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_EPIDEMIOLOGY  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_HIV  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_ISOLATE_TRACKING  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_LAB_FINDING  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_MEDICAL_HISTORY  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_MOTHER  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_OTHER  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_PATIENT_OBS  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_PREGNANCY_BIRTH  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_RESIDENCY  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_RISK_FACTOR  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_SOCIAL_HISTORY  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_SYMPTOM  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_TRAVEL  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_TREATMENT  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_UNDER_CONDITION  with(nolock) union
+            select PAGE_CASE_UID 	 from  dbo.L_INV_VACCINATION  with(nolock) union
+            SELECT PAGE_CASE_UID	 from  dbo.L_INVESTIGATION_REPEAT  with(nolock) union
+            SELECT PAGE_CASE_UID	 from  dbo.L_INV_PLACE_REPEAT with(nolock)
+        )
+        select cte.*
         into #DIMENSION_KEYS_PAGECASEID
-        from  dbo.L_INV_ADMINISTRATIVE  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_CLINICAL  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_COMPLICATION  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_CONTACT  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_DEATH  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_EPIDEMIOLOGY  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_HIV  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_ISOLATE_TRACKING  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_LAB_FINDING  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_MEDICAL_HISTORY  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_MOTHER  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_OTHER  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_PATIENT_OBS  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_PREGNANCY_BIRTH  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_RESIDENCY  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_RISK_FACTOR  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_SOCIAL_HISTORY  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_SYMPTOM  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_TRAVEL  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_TREATMENT  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_UNDER_CONDITION  with(nolock) union
-        select PAGE_CASE_UID 	 from  dbo.L_INV_VACCINATION  with(nolock) union
-        SELECT PAGE_CASE_UID	    from  dbo.L_INVESTIGATION_REPEAT  with(nolock) union
-        SELECT PAGE_CASE_UID	    from  dbo.L_INV_PLACE_REPEAT with(nolock)
+        from LOOKUPCTE cte
+        INNER JOIN #ENTITY_KEYSTORE_STD keystore --joining with this table in advance to reduce the rows
+        ON cte.PAGE_CASE_UID = keystore.PAGE_CASE_UID
         ;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
