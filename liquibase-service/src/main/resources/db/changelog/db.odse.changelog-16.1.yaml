@@ -190,3 +190,11 @@ databaseChangeLog:
         - sqlFile:
             path: 002-v_rdb_ui_metadata_answers-001.sql
             splitStatements: false
+  - changeSet:
+      id: 29
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 022-sp_user_report_permissions-001.sql
+            splitStatements: false
