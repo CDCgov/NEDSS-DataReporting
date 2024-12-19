@@ -85,7 +85,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -161,7 +161,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -315,7 +315,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -396,7 +396,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -432,7 +432,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -603,7 +603,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -616,15 +616,25 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Remove Updated records';
 
+        IF OBJECT_ID('NBS_ODSE.DBO.SubjectRaceInfo_Modern') IS NULL
+            select *
+            into NBS_ODSE.DBO.SubjectRaceInfo_Modern
+            from NBS_ODSE.DBO.SubjectRaceInfo;
+
         DELETE
-        FROM NBS_ODSE.DBO.SubjectRaceInfo
+        FROM NBS_ODSE.DBO.SubjectRaceInfo_Modern
         WHERE public_health_case_uid IN (
             SELECT public_health_case_uid
             FROM #TEMP_PHCINFO1
         );
 
+        IF OBJECT_ID('NBS_ODSE.DBO.PublicHealthCaseFact_Modern') IS NULL
+            select *
+            into NBS_ODSE.DBO.PublicHealthCaseFact_Modern
+            from NBS_ODSE.DBO.PublicHealthCaseFact;
+
         DELETE
-        FROM NBS_ODSE.DBO.PublicHealthCaseFact
+        FROM NBS_ODSE.DBO.PublicHealthCaseFact_Modern
         WHERE public_health_case_uid IN (
             SELECT public_health_case_uid
             FROM #TEMP_PHCINFO1
@@ -642,7 +652,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -684,7 +694,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -724,7 +734,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -756,7 +766,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -999,7 +1009,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1027,7 +1037,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -1135,7 +1145,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1191,7 +1201,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1262,7 +1272,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1411,7 +1421,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1463,7 +1473,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1561,7 +1571,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -1619,7 +1629,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1682,7 +1692,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1734,7 +1744,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1773,7 +1783,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1897,7 +1907,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1941,7 +1951,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2017,7 +2027,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2067,7 +2077,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -2192,7 +2202,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2283,7 +2293,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'STEP-AVOIDED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -2295,9 +2305,9 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Updating PublicHealthCaseFact';
+        SET @Proc_Step_Name = 'Updating PublicHealthCaseFact_Modern';
 
-        INSERT INTO NBS_ODSE.DBO.PUBLICHEALTHCASEFACT (
+        INSERT INTO NBS_ODSE.DBO.PublicHealthCaseFact_Modern (
                                                         PUBLIC_HEALTH_CASE_UID
                                                       ,ADULTS_IN_HOUSE_NBR
                                                       ,HSPTL_ADMISSION_DT
@@ -2630,7 +2640,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2642,9 +2652,9 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Updating SubjectRaceInfo';
+        SET @Proc_Step_Name = 'Updating SubjectRaceInfo_Modern';
 
-        INSERT INTO NBS_ODSE.DBO.SUBJECTRACEINFO (
+        INSERT INTO NBS_ODSE.DBO.SubjectRaceInfo_Modern (
                                                    PUBLIC_HEALTH_CASE_UID
                                                  ,MORBREPORT_UID
                                                  ,RACE_CD
@@ -2674,7 +2684,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact'
+               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
