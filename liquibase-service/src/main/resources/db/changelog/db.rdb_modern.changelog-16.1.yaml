@@ -534,3 +534,27 @@ databaseChangeLog:
         - sqlFile:
             path: 026-sp_std_hiv_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 84
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 005-v_nrte_srte_tables-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 85
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 006-v_codeset-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 86
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 007-v_code_value_general-001.sql
+            splitStatements: false
