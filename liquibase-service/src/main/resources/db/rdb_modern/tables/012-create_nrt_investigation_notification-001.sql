@@ -1,5 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_notification' and xtype = 'U')
-CREATE TABLE dbo.nrt_notifications (
+CREATE TABLE dbo.nrt_investigation_notification (
     source_act_uid           bigint                                          NOT NULL,
     public_health_case_uid   bigint                                          NULL,
     source_class_cd          varchar(10)                                     NULL,
@@ -30,14 +30,3 @@ CREATE TABLE dbo.nrt_notifications (
     max_datetime             datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
-
-IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notifications' and xtype = 'U')
-    BEGIN
-
---CNDE-1805
-        IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_notification' and xtype = 'U')
-            BEGIN
-                EXEC sys.sp_rename N'nrt_notifications', N'nrt_investigation_notification', 'OBJECT';
-            END
-
-    END
