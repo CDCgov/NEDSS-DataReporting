@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.sp_public_health_case_fact_datamart_event @phc_id_list nvarchar(max)
+CREATE OR ALTER PROCEDURE dbo.sp_public_health_case_fact_datamart_event @phc_id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
     DECLARE @RowCount_no INT;
@@ -147,6 +147,9 @@ BEGIN
                 AND NOTIFICATION.LAST_CHG_TIME< @batch_end_time)
                 )
         */
+
+         if @debug = 'true' Select '#TEMP_UPDATE_NEW_PATIENT', * from #TEMP_UPDATE_NEW_PATIENT;
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
@@ -179,7 +182,7 @@ BEGIN
 
         SELECT
                    PER.*
-             ,(COALESCE(LTRIM(RTRIM(PNM.LAST_NM)), '') + ', ' + COALESCE(LTRIM(RTRIM(PNM.FIRST_NM)), '')) AS PATIENTNAME
+             ,PATIENTNAME
              ,case when LTRIM(RTRIM(PST.STATE_CD)) = '' then null else LTRIM(RTRIM(PST.STATE_CD)) end STATE_CD
              ,SRT1.code_short_desc_txt AS STATE
              ,case when LTRIM(RTRIM(PST.CNTY_CD)) = '' then null else LTRIM(RTRIM(PST.CNTY_CD)) end CNTY_CD
@@ -240,7 +243,13 @@ BEGIN
                  LEFT OUTER JOIN #TEMP_INV_FORM_CODE_DATA A ON A.CODE=PER.ETHNIC_GROUP_IND
             AND  A.investigation_form_cd = Condition_code.investigation_form_cd
             AND A.DATA_LOCATION LIKE '%.ETHNIC_GROUP_IND'
-                 LEFT OUTER JOIN NBS_ODSE.DBO.PERSON_NAME PNM WITH (NOLOCK) ON PER.PERSON_UID = PNM.PERSON_UID
+                 LEFT OUTER JOIN (
+                 select PERSON_UID, PATIENTNAME, isnull(RECORD_STATUS_CD, 'ACTIVE') as RECORD_STATUS_CD, NM_USE_CD
+                 	from (
+						select PERSON_UID, (COALESCE(LTRIM(RTRIM(LAST_NM)), '') + ', ' + COALESCE(LTRIM(RTRIM(FIRST_NM)), '')) AS PATIENTNAME, NM_USE_CD,
+						RECORD_STATUS_CD, LAST_CHG_TIME ,  ROW_NUMBER() OVER(partition by PERSON_UID ORDER BY last_chg_time desc ) AS rnum
+						from NBS_ODSE.DBO.PERSON_NAME WITH (NOLOCK) ) t
+					where rnum=1 ) PNM ON PER.PERSON_UID = PNM.PERSON_UID
             AND PNM.NM_USE_CD = 'L'
             AND PNM.RECORD_STATUS_CD = 'ACTIVE'
 
@@ -261,7 +270,9 @@ BEGIN
             AND CVG2.DATA_LOCATION = 'PERSON.MARITAL_STATUS_CD'
                  LEFT OUTER JOIN NBS_SRTE.DBO.LANGUAGE_CODE LNG WITH (NOLOCK) ON PER.PRIM_LANG_CD = LNG.CODE
         where Public_health_case.public_health_case_uid in (select value from string_split(@phc_id_list, ','))
-        ORDER BY PAR.ACT_UID
+        ORDER BY PAR.ACT_UID;
+
+        if @debug = 'true' Select '##TEMP_PHCPATIENTINFO', * from #TEMP_PHCPATIENTINFO;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -526,6 +537,9 @@ BEGIN
             AND t.CD='INV128'
         where PHC.public_health_case_uid in (select value from string_split(@phc_id_list, ','))
 
+
+        if @debug = 'true' Select '#TEMP_PHCINFO1', * from #TEMP_PHCINFO1;
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
         PRINT @ROWCOUNT_NO;
@@ -680,6 +694,8 @@ BEGIN
                 WHERE QUESTION_IDENTIFIER = 'TUB170'
             );
 
+        if @debug = 'true' Select '#TEMP_PHCINFO2', * from #TEMP_PHCINFO2;
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
@@ -719,6 +735,8 @@ BEGIN
             AND ACT_ID_SEQ = 1
         WHERE A.RECORD_STATUS_CD <> 'LOG_DEL'
         ORDER BY A.PUBLIC_HEALTH_CASE_UID;
+
+        if @debug = 'true' Select '#TEMP_PHCINFO3', * from #TEMP_PHCINFO3;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -908,8 +926,9 @@ BEGIN
                  LEFT OUTER JOIN NBS_SRTE.DBO.V_STATE_COUNTY_CODE_VALUE Q WITH (NOLOCK) ON t3.RPT_CNTY_CD = Q.CODE
             AND Q.CODE_SET_NM = 'COUNTY_CCD'
                  LEFT OUTER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL R WITH (NOLOCK) ON t3.OUTBREAK_NAME = R.CODE
-            AND R.CODE_SET_NM = 'OUTBREAK_NM'
+            AND R.CODE_SET_NM = 'OUTBREAK_NM';
 
+        if @debug = 'true' Select '##TEMP_PHCINFO', * from #TEMP_PHCINFO;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -1130,6 +1149,8 @@ BEGIN
         INTO #TEMP_PHCSUBJECT
         FROM #TEMP_PHCINFO t1 WITH (NOLOCK)
                  INNER JOIN #TEMP_PHCPATIENTINFO t WITH (NOLOCK) ON t1.PUBLIC_HEALTH_CASE_UID = t.PUBLIC_HEALTH_CASE_UID
+        ;
+        if @debug = 'true' Select '###TEMP_PHCSUBJECT', * from #TEMP_PHCSUBJECT;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -1186,6 +1207,8 @@ BEGIN
             AND NOTIFICATION.LAST_CHG_TIME < @batch_end_time)	*/
 
         ORDER BY PUBLIC_HEALTH_CASE_UID;
+
+        if @debug = 'true' Select '##TEMP_SUMMARYUID', * from #TEMP_SUMMARYUID;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -1258,6 +1281,8 @@ BEGIN
 
         ORDER BY PUBLIC_HEALTH_CASE_UID;
 
+        if @debug = 'true' Select '###TEMP_CASECNT', * from #TEMP_CASECNT;
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
@@ -1314,6 +1339,9 @@ BEGIN
         )*/
 
         COMMIT TRANSACTION;
+
+        if @debug = 'true' Select '#TEMP_SAS_LATEST_NOT', * from #TEMP_SAS_LATEST_NOT;
+
         BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Generating TEMP_SAS_NOTIFICATION';
@@ -1806,12 +1834,18 @@ BEGIN
              ,TYPE_CD
              ,TEL.PHONE_NBR_TXT
              ,PAR.FROM_TIME
-             ,isnull(RTRIM(LTRIM(PNM.LAST_NM)), '') + ', ' + isnull(PNM.FIRST_NM, '') AS NAME
+             ,NAME
         INTO #TEMP_PHCREPORTER
         FROM NBS_ODSE.DBO.PARTICIPATION AS PAR WITH (NOLOCK)
                  INNER JOIN #TEMP_PHCINFO t on t.public_health_CASE_UID  =PAR.ACT_UID
                  INNER JOIN NBS_ODSE.DBO.PERSON  AS P WITH (NOLOCK) ON P.PERSON_UID = PAR.SUBJECT_ENTITY_UID
-                 LEFT JOIN NBS_ODSE.DBO.PERSON_NAME AS PNM WITH (NOLOCK) ON PNM.PERSON_UID = PAR.SUBJECT_ENTITY_UID
+                 LEFT JOIN (
+                 	select PERSON_UID, NAME, isnull(RECORD_STATUS_CD, 'ACTIVE') as RECORD_STATUS_CD, NM_USE_CD
+                 	from (
+						select PERSON_UID, isnull(RTRIM(LTRIM(LAST_NM)), '') + ', ' + isnull(FIRST_NM, '') AS NAME, NM_USE_CD,
+						RECORD_STATUS_CD, LAST_CHG_TIME ,  ROW_NUMBER() OVER(partition by PERSON_UID ORDER BY last_chg_time desc ) AS rnum
+						from NBS_ODSE.DBO.PERSON_NAME WITH (NOLOCK) ) t
+					where rnum=1 ) PNM  ON PNM.PERSON_UID = PAR.SUBJECT_ENTITY_UID
             AND PNM.NM_USE_CD = 'L'
             AND PNM.RECORD_STATUS_CD = 'ACTIVE'
                  LEFT JOIN NBS_ODSE.DBO.ENTITY_LOCATOR_PARTICIPATION AS ELP WITH (NOLOCK) ON ELP.ENTITY_UID = PAR.SUBJECT_ENTITY_UID
@@ -1852,6 +1886,9 @@ BEGIN
             AND NOTIF_LAST_CHG_TIME < @batch_end_time)	*/
         ORDER BY ACT_UID
                ,TYPE_CD;
+
+
+        if @debug = 'true' Select '##TEMP_PHCREPORTER', * from #TEMP_PHCREPORTER;
 
         IF OBJECT_ID('#TEMP_ENTITY') IS NOT NULL
             DROP TABLE #TEMP_ENTITY;
@@ -2055,6 +2092,7 @@ BEGIN
         FROM #TEMP_CASE_ENTITY te
                  LEFT OUTER JOIN #TEMP_PHCPERSONRACE_CONCAT tc WITH (NOLOCK) ON te.PERSON_UID = tc.PERSON_UID;
 
+        if @debug = 'true' Select 'Final##TEMP_PHC_FACT', * from #TEMP_PHC_FACT;
         ----------------------
         -- Moved this column above SQL
         -- ALTER TABLE #TEMP_PHC_FACT ADD EVENT_TYPE VARCHAR(20);
