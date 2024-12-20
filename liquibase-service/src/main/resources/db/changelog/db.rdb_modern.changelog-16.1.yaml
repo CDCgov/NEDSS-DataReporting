@@ -588,7 +588,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 005-v_nrte_srte_tables-001.sql
+            path: 005-v_nrt_srte_totalidm-001.sql
             splitStatements: false
   - changeSet:
       id: 91
@@ -596,7 +596,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 006-v_codeset-001.sql
+            path: 006-v_nrt_srte_imrdbmapping-001.sql
             splitStatements: false
   - changeSet:
       id: 92
@@ -604,6 +604,29 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 007-v_code_value_general-001.sql
+            path: 007-v_nrt_srte_codeset-001.sql
             splitStatements: false
-            
+  - changeSet:
+      id: 93
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 008-v_nrt_srte_code_value_general-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 94
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 009-v_codeset-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 95
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 010-v_code_value_general-001.sql
+            splitStatements: false
