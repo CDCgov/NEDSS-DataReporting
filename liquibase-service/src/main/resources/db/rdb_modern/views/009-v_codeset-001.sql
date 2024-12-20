@@ -10,7 +10,3 @@ select m.unique_cd          as CD,
 from dbo.v_nrt_srte_imrdbmapping m
          left join dbo.v_nrt_srte_totalidm t on t.unique_cd = m.unique_cd
          left join dbo.v_nrt_srte_codeset c on c.code_set_nm = t.srt_reference;
-
-
-
-  
