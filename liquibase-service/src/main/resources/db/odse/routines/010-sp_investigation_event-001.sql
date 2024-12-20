@@ -30,7 +30,6 @@ BEGIN
         /*Complete Investigation section*/
         SELECT results.public_health_case_uid,
                results.program_jurisdiction_oid as program_jurisdiction_oid,
-               jc.code                          as jurisdiction_code,
                jc.code_desc_txt                 as jurisdiction_nm,
                act.mood_cd,
                act.class_cd,

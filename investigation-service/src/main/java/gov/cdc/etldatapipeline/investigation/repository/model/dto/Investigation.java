@@ -16,9 +16,6 @@ public class Investigation {
     @Column(name = "program_jurisdiction_oid")
     private Long programJurisdictionOid;
 
-    @Column(name = "jurisdiction_code")
-    private String jurisdictionCode;
-
     @Column(name = "jurisdiction_nm")
     private String jurisdictionNm;
 

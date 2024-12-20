@@ -94,8 +94,6 @@ CREATE TABLE dbo.nrt_investigation (
     cd                                  varchar(50)                                     NULL,
     cd_desc_txt                         varchar(100)                                    NULL,
     prog_area_cd                        varchar(20)                                     NULL,
-    jurisdiction_code                   varchar(20)                                     NULL,
-    jurisdiction_code_desc_txt          varchar(255)                                    NULL,
     inv_state_case_id                   varchar(199)                                    NULL,
     rdb_table_name_list                 nvarchar(max)                                   NULL,
     case_management_uid                 bigint                                          NULL,

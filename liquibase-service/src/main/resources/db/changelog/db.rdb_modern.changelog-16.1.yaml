@@ -534,3 +534,76 @@ databaseChangeLog:
         - sqlFile:
             path: 026-sp_std_hiv_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 84
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 025-create_nrt_srte_totalidm-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 85
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 026-create_nrt_srte_IMRDBMapping-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 86
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 027-create_nrt_srte_Program_area_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 87
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 028-create_nrt_srte_Condition_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 88
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 029-create_nrt_srte_Codeset-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 030-create_nrt_srte_Code_value_general-001.sql
+            splitStatements: false            
+  - changeSet:
+      id: 90
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 005-v_nrte_srte_tables-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 91
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 006-v_codeset-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 92
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 007-v_code_value_general-001.sql
+            splitStatements: false
+            

@@ -241,4 +241,14 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
             BEGIN
             ALTER TABLE dbo.nrt_investigation ADD org_as_reporter_uid bigint;
             END;
+
+--CNDE-1968
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE name = N'jurisdiction_code' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation DROP jurisdiction_code;
+            END;
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE name = N'jurisdiction_code_desc_txt' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+            ALTER TABLE dbo.nrt_investigation DROP jurisdiction_code_desc_txt;
+            END;
     END;

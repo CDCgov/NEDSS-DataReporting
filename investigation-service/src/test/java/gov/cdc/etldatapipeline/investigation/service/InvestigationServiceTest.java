@@ -239,8 +239,8 @@ class InvestigationServiceTest {
     private Investigation constructInvestigation(Long investigationUid) {
         Investigation investigation = new Investigation();
         investigation.setPublicHealthCaseUid(investigationUid);
-        investigation.setJurisdictionCode("130001");
         investigation.setJurisdictionNm("Fulton County");
+        investigation.setJurisdictionCd("130001");
         investigation.setInvestigationStatus("Open");
         investigation.setClassCd("CASE");
         investigation.setInvCaseStatus("Confirmed");
@@ -272,8 +272,8 @@ class InvestigationServiceTest {
     private InvestigationReporting constructInvestigationReporting(Long investigationUid) {
         final InvestigationReporting reporting = new InvestigationReporting();
         reporting.setPublicHealthCaseUid(investigationUid);
-        reporting.setJurisdictionCode("130001");
         reporting.setJurisdictionNm("Fulton County");
+        reporting.setJurisdictionCd("130001");
         reporting.setInvestigationStatus("Open");
         reporting.setClassCd("CASE");
         reporting.setInvCaseStatus("Confirmed");

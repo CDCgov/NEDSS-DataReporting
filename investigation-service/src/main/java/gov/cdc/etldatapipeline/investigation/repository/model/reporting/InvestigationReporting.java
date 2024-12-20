@@ -11,7 +11,6 @@ import lombok.Data;
 public class InvestigationReporting {
     private Long publicHealthCaseUid;
     private Long programJurisdictionOid;
-    private String jurisdictionCode;
     private String jurisdictionNm;
     private String moodCd;
     private String classCd;
