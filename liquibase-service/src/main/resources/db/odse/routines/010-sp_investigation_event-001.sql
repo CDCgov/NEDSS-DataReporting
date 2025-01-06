@@ -781,7 +781,7 @@ BEGIN
                  LEFT JOIN nbs_srte.dbo.state_code sc WITH (NOLOCK) ON results.imported_state_cd = sc.state_cd
                  LEFT JOIN nbs_srte.dbo.state_county_code_value sccv WITH (NOLOCK) ON results.imported_county_cd = sccv.code
                  LEFT JOIN nbs_srte.dbo.code_value_general cvg WITH (NOLOCK)
-                           ON results.detection_method_cd = cvg.code and cvg.code_set_nm = 'PHC_DET_MT'
+                           ON results.detection_method_cd = cvg.code and cvg.code_set_nm in ('PHC_DET_MT', 'PHVS_DETECTIONMETHOD_STD')
                  LEFT JOIN nbs_srte.dbo.code_value_general cvg1 WITH (NOLOCK)
                            on results.priority_cd = cvg1.code and cvg1.code_set_nm = 'NBS_PRIORITY'
                  LEFT JOIN nbs_srte.dbo.code_value_general cvg2 WITH (NOLOCK)
