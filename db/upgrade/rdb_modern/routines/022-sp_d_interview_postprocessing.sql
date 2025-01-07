@@ -243,8 +243,6 @@ BEGIN
         ' WHERE
         ix.D_INTERVIEW_KEY IS NOT NULL;';
 
-        SELECT @Update_sql;
-
         exec sp_executesql @Update_sql;
 
 
