@@ -1,7 +1,7 @@
 package gov.cdc.etldatapipeline.postprocessingservice.service;
 
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
 import lombok.RequiredArgsConstructor;
@@ -27,15 +27,15 @@ public class ProcessDatamartData {
     @Value("${spring.kafka.topic.datamart}")
     public String datamartTopic;
 
-    public void process(List<InvestigationResult> data) {
+    public void process(List<DatamartData> data) {
         if (Objects.nonNull(data) && !data.isEmpty()) {
             try {
-                for (InvestigationResult invResult : data) {
-                    if (invResult.getPatientKey().equals(1L)) continue; // skipping now for unprocessed patients
+                for (DatamartData datamartData : data) {
+                    if (datamartData.getPatientKey().equals(1L)) continue; // skipping now for unprocessed patients
 
-                    Datamart dmart = modelMapper.map(invResult, Datamart.class);
+                    Datamart dmart = modelMapper.map(datamartData, Datamart.class);
                     DatamartKey dmKey = new DatamartKey();
-                    dmKey.setPublicHealthCaseUid(invResult.getPublicHealthCaseUid());
+                    dmKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
                     String jsonKey = jsonGenerator.generateStringJson(dmKey);
                     String jsonMessage = jsonGenerator.generateStringJson(dmart);
 

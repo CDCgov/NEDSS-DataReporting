@@ -774,7 +774,7 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        SET @proc_step_name = 'Get Topic for Datamart';
+        SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 6;
 
         INSERT INTO [dbo].[job_flow_log]
@@ -801,7 +801,7 @@ BEGIN
 
 
         SELECT nrt.public_health_case_uid         AS public_health_case_uid,
-               nrt.patient_id               AS patient_uid,
+               nrt.patient_id                     AS patient_uid,
                COALESCE(inv.INVESTIGATION_KEY, 1) AS investigation_key,
                COALESCE(pat.PATIENT_KEY, 1)       AS patient_key,
                nrt.cd                             AS condition_cd,
@@ -813,7 +813,6 @@ BEGIN
                  LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nrt.cd
         WHERE nrt.public_health_case_uid in
               (SELECT value FROM STRING_SPLIT(@id_list, ','));
-
 
 
     END TRY

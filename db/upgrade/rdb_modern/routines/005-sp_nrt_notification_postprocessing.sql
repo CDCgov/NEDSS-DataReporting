@@ -283,8 +283,6 @@ BEGIN
                ,LEFT(@notification_uids,500)
                );
 
-
-
         COMMIT TRANSACTION;
 
         SET @proc_step_name='SP_COMPLETE';
@@ -316,7 +314,21 @@ BEGIN
                ,LEFT(@notification_uids,500)
                );
 
-        select 'Success';
+
+        SELECT nrt.public_health_case_uid         AS public_health_case_uid,
+               nrt.patient_id                     AS patient_uid,
+               COALESCE(inv.INVESTIGATION_KEY, 1) AS investigation_key,
+               COALESCE(pat.PATIENT_KEY, 1)       AS patient_key,
+               nrt.cd                             AS condition_cd,
+               dtm.Datamart                       AS datamart,
+               dtm.Stored_Procedure               AS stored_procedure
+        FROM dbo.nrt_investigation nrt
+                 INNER JOIN dbo.nrt_investigation_notification ntf ON ntf.public_health_case_uid = nrt.public_health_case_uid
+                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.public_health_case_uid
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
+                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nrt.cd
+        WHERE ntf.notification_uid in
+              (SELECT value FROM STRING_SPLIT(@notification_uids, ','));
 
     END TRY
 

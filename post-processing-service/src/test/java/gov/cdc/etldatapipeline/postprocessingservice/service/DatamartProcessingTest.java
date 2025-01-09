@@ -3,7 +3,7 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
 import org.junit.jupiter.api.AfterEach;
@@ -59,16 +59,16 @@ class DatamartProcessingTest {
     @Test
     void testHepDatamartProcess() throws Exception {
         String topic = "dummy_investigation";
-        List<InvestigationResult> investigationResults = new ArrayList<>();
-        InvestigationResult invResult = getInvestigationResult(123L, HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure());
-        investigationResults.add(invResult);
+        List<DatamartData> datamartDataLst = new ArrayList<>();
+        DatamartData datamartData = getDatamartData(123L, HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure());
+        datamartDataLst.add(datamartData);
 
         datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(investigationResults);
+        datamartProcessor.process(datamartDataLst);
 
         Datamart datamart = getDatamart("HepDatamart.json");
         DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(invResult.getPublicHealthCaseUid());
+        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
 
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
@@ -88,16 +88,16 @@ class DatamartProcessingTest {
     @Test
     void testStdDatamartProcess() throws Exception {
         String topic = "dummy_investigation";
-        List<InvestigationResult> investigationResults = new ArrayList<>();
-        InvestigationResult invResult = getInvestigationResult(123L, STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure());
-        investigationResults.add(invResult);
+        List<DatamartData> datamartDataLst = new ArrayList<>();
+        DatamartData datamartData = getDatamartData(123L, STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure());
+        datamartDataLst.add(datamartData);
 
         datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(investigationResults);
+        datamartProcessor.process(datamartDataLst);
 
         Datamart datamart = getDatamart("StdDatamart.json");
         DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(invResult.getPublicHealthCaseUid());
+        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
 
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
@@ -121,23 +121,21 @@ class DatamartProcessingTest {
 
     @Test
     void testDatamartProcessException() {
-        List<InvestigationResult> nullPhcResults = Collections.singletonList(getInvestigationResult(null, HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure()));
+        List<DatamartData> nullPhcResults = Collections.singletonList(getDatamartData(null, HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure()));
         assertThrows(RuntimeException.class, () -> datamartProcessor.process(nullPhcResults));
     }
 
-    private InvestigationResult getInvestigationResult(Long phcUid, String entityName, String storedProcedure) {
-        InvestigationResult investigationResult = new InvestigationResult();
-        investigationResult.setPublicHealthCaseUid(phcUid);
-        investigationResult.setInvestigationKey(100L);
-        investigationResult.setPatientUid(456L);
-        investigationResult.setPatientKey(200L);
-        investigationResult.setConditionCd("10110");
-        investigationResult.setDatamart(entityName);
-        investigationResult.setStoredProcedure(storedProcedure);
-        return investigationResult;
+    private DatamartData getDatamartData(Long phcUid, String entityName, String storedProcedure) {
+        DatamartData datamartData = new DatamartData();
+        datamartData.setPublicHealthCaseUid(phcUid);
+        datamartData.setInvestigationKey(100L);
+        datamartData.setPatientUid(456L);
+        datamartData.setPatientKey(200L);
+        datamartData.setConditionCd("10110");
+        datamartData.setDatamart(entityName);
+        datamartData.setStoredProcedure(storedProcedure);
+        return datamartData;
     }
-
-
 
     private Datamart getDatamart(String jsonFile) throws Exception {
         String dmJson = readFileData(FILE_PREFIX + jsonFile);
