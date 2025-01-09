@@ -46,13 +46,11 @@ BEGIN
 
         SELECT substring(RTRIM(LTRIM(a.FIRST_NM)), 1, 50) AS FIRST_NM,
                substring(RTRIM(LTRIM(a.LAST_NM)), 1, 50)  AS LAST_NM,
-               A.LAST_CHG_TIME                            AS LAST_UPDT_TIME,
+               a.LAST_CHG_TIME                            AS LAST_UPDT_TIME,
                a.NEDSS_ENTRY_ID,
-               A.PROVIDER_UID
+               a.PROVIDER_UID
         INTO #TMP_PROVIDER_USER_DIMENSION
-        FROM dbo.nrt_auth_user A
-                 LEFT JOIN dbo.d_provider prv
-                           ON prv.provider_uid = A.PROVIDER_UID
+        FROM dbo.nrt_auth_user a
         WHERE A.auth_user_uid IN (SELECT value FROM STRING_SPLIT(@id_list, ','))
         ORDER BY NEDSS_ENTRY_ID;
 
@@ -103,6 +101,8 @@ BEGIN
                  INNER JOIN dbo.D_PROVIDER D on
             T.PROVIDER_UID = D.PROVIDER_UID;
 
+        IF @debug = 'true' SELECT * FROM #TMP_USER_PROVIDER_KEY;
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
@@ -136,7 +136,7 @@ BEGIN
                LAST_UPDT_TIME,
                NEDSS_ENTRY_ID,
                PROVIDER_UID,
-               PROVIDER_KEY,
+               COALESCE(PROVIDER_KEY,1) AS PROVIDER_KEY,
                PROVIDER_QUICK_CODE,
                CASE
                    WHEN LEN(LAST_NM) > 0 AND LEN(FIRST_NM) > 0
@@ -151,9 +151,8 @@ BEGIN
               FROM #TMP_USER_PROFILE) AS CTE
         WHERE rowid = 1;
 
-        UPDATE #USER_PROFILE_FINAL
-        SET Provider_Key = 1
-        where Provider_key is null;
+        IF @debug = 'true' SELECT * FROM #USER_PROFILE_FINAL;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
