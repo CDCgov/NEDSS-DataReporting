@@ -247,7 +247,7 @@ public class PostProcessingService {
                     case NOTIFICATION:
                         List<DatamartData> dmDataN = processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForNotificationIds);
-                        dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().collect(Collectors.toList());
+                        dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().toList();
                         break;
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids,
