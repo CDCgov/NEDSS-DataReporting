@@ -10,5 +10,5 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<AuthUser, String> {
     @Query(nativeQuery = true, value = "execute sp_auth_user_event :user_uids")
-    Optional<List<AuthUser>> computeAuthUsers(@Param("userUids") String userUids);
+    Optional<List<AuthUser>> computeAuthUsers(@Param("user_uids") String userUids);
 }
