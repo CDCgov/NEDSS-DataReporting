@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +37,8 @@ class PostProcessingServiceTest {
     KafkaTemplate<String, String> kafkaTemplate;
     @Captor
     private ArgumentCaptor<String> topicCaptor;
+    @Captor
+    private ArgumentCaptor<String> keyCaptor;
 
     private ProcessDatamartData datamartProcessor;
 
@@ -153,7 +155,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processCachedIds();
 
         String expectedNotificationIdsString = "123";
-        verify(postProcRepositoryMock).executeStoredProcForNotificationIds(expectedNotificationIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForNotificationIds(expectedNotificationIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
@@ -358,7 +360,7 @@ class PostProcessingServiceTest {
 
         verify(postProcRepositoryMock).executeStoredProcForOrganizationIds("123,124");
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds("234,235");
-        verify(postProcRepositoryMock).executeStoredProcForNotificationIds("567,568");
+        verify(investigationRepositoryMock).executeStoredProcForNotificationIds("567,568");
     }
 
     @Test
@@ -450,19 +452,31 @@ class PostProcessingServiceTest {
 
     @Test
     void testProduceDatamartTopic() {
-        String topic = "dummy_investigation";
-        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
         String dmTopic = "dummy_datamart";
 
-        List<InvestigationResult> invResults = getInvestigationResults(123L, 200L);
+        String topicInv = "dummy_investigation";
+        String keyInv = "{\"payload\":{\"public_health_case_uid\":123}}";
+
+        String topicNtf = "dummy_notification";
+        String keyNtf = "{\"payload\":{\"notification_uid\":124}}";
 
         datamartProcessor.datamartTopic = dmTopic;
-        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.postProcessMessage(topicInv, keyInv, keyInv);
+        postProcessingServiceMock.postProcessMessage(topicNtf, keyNtf, keyNtf);
+
+        List<DatamartData> masterData = getDatamartData(123L, 200L);
+        List<DatamartData> notificationData = getDatamartData(123L, 200L);
+        notificationData.addAll(getDatamartData(124L, 201L));
+
+        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(masterData);
+        when(investigationRepositoryMock.executeStoredProcForNotificationIds("124")).thenReturn(notificationData);
         postProcessingServiceMock.processCachedIds();
 
-        verify(kafkaTemplate).send(topicCaptor.capture(), anyString(), anyString());
+        // verify that only unique datamart data items (2 of 3) are processed
+        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), anyString());
         assertEquals(dmTopic, topicCaptor.getValue());
+        assertTrue(keyCaptor.getAllValues().get(0).contains("123"));
+        assertTrue(keyCaptor.getAllValues().get(1).contains("124"));
     }
 
     @Test
@@ -472,7 +486,7 @@ class PostProcessingServiceTest {
         String dmTopic = "dummy_datamart";
 
         // patientKey=1L for no patient data in D_PATIENT
-        List<InvestigationResult> invResults = getInvestigationResults(123L, 1L);
+        List<DatamartData> invResults = getDatamartData(123L, 1L);
 
         datamartProcessor.datamartTopic = dmTopic;
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
@@ -525,7 +539,7 @@ class PostProcessingServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> postProcessingServiceMock.postProcessMessage(topic,
                 orgKey, orgKey));
-        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     @Test
@@ -582,17 +596,17 @@ class PostProcessingServiceTest {
         inOrder.verify(postProcessingServiceMock).processDatamartIds();
     }
 
-    private List<InvestigationResult> getInvestigationResults(Long phcUid, Long patientKey) {
-        List<InvestigationResult> investigationResults = new ArrayList<>();
-        InvestigationResult investigationResult = new InvestigationResult();
-        investigationResult.setPublicHealthCaseUid(phcUid);
-        investigationResult.setInvestigationKey(100L);
-        investigationResult.setPatientUid(456L);
-        investigationResult.setPatientKey(patientKey);
-        investigationResult.setConditionCd("10110");
-        investigationResult.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
-        investigationResult.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
-        investigationResults.add(investigationResult);
-        return investigationResults;
+    private List<DatamartData> getDatamartData(Long phcUid, Long patientKey) {
+        List<DatamartData> datamartDataLst = new ArrayList<>();
+        DatamartData datamartData = new DatamartData();
+        datamartData.setPublicHealthCaseUid(phcUid);
+        datamartData.setInvestigationKey(100L);
+        datamartData.setPatientUid(456L);
+        datamartData.setPatientKey(patientKey);
+        datamartData.setConditionCd("10110");
+        datamartData.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
+        datamartData.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
+        datamartDataLst.add(datamartData);
+        return datamartDataLst;
     }
 }

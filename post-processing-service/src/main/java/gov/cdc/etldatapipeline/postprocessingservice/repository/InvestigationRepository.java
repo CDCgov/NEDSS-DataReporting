@@ -1,6 +1,6 @@
 package gov.cdc.etldatapipeline.postprocessingservice.repository;
 
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
@@ -10,9 +10,12 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface InvestigationRepository extends JpaRepository<InvestigationResult, Long> {
+public interface InvestigationRepository extends JpaRepository<DatamartData, Long> {
     @Query(value = "EXEC sp_nrt_investigation_postprocessing :publicHealthCaseUids", nativeQuery = true)
-    List<InvestigationResult> executeStoredProcForPublicHealthCaseIds(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    List<DatamartData> executeStoredProcForPublicHealthCaseIds(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_nrt_notification_postprocessing :notificationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForNotificationIds(@Param("notificationUids") String notificationUids);
 
     @Procedure("sp_page_builder_postprocessing")
     void executeStoredProcForPageBuilder(@Param("phcUid") Long phcUid, @Param("rdbTableNmLst") String rdbTableNmLst);

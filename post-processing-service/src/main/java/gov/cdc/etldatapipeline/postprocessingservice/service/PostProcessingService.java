@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.InvestigationResult;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
@@ -34,6 +34,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -209,7 +210,7 @@ public class PostProcessingService {
             List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
                     .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
 
-            List<InvestigationResult> dmData = new ArrayList<>();
+            List<DatamartData> dmData = new ArrayList<>();
 
             for (Entry<String, List<Long>> entry : sortedEntries) {
                 String keyTopic = entry.getKey();
@@ -244,8 +245,9 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForCaseCount);
                         break;
                     case NOTIFICATION:
-                        processTopic(keyTopic, entity, ids,
-                                postProcRepository::executeStoredProcForNotificationIds);
+                        List<DatamartData> dmDataN = processTopic(keyTopic, entity, ids,
+                                investigationRepository::executeStoredProcForNotificationIds);
+                        dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().toList();
                         break;
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids,
@@ -309,8 +311,8 @@ public class PostProcessingService {
                 Set<Map<Long, Long>> dmSet = entry.getValue();
                 dmCache.put(dmType, ConcurrentHashMap.newKeySet());
 
-                String cases =
-                        dmSet.stream().flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
+                String cases = dmSet.stream()
+                        .flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
                 if (dmType.equals(Entity.HEPATITIS_DATAMART.getEntityName())) {
 

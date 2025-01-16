@@ -243,57 +243,6 @@ BEGIN TRY
 
     if @debug = 'true' select '##ENTITY_KEYSTORE_STD', * from #ENTITY_KEYSTORE_STD;
 
-    BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1; --4
-        SET @PROC_STEP_NAME = ' Generating DIMENSION_KEYS_PAGECASEID';
-
-
-        IF OBJECT_ID('#DIMENSION_KEYS_PAGECASEID', 'U') IS NOT NULL
-            drop table #DIMENSION_KEYS_PAGECASEID
-        ;
-
-        with LOOKUPCTE as (
-            select PAGE_CASE_UID     from  dbo.L_INV_ADMINISTRATIVE  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_CLINICAL  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_COMPLICATION  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_CONTACT  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_DEATH  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_EPIDEMIOLOGY  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_HIV  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_ISOLATE_TRACKING  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_LAB_FINDING  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_MEDICAL_HISTORY  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_MOTHER  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_OTHER  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_PATIENT_OBS  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_PREGNANCY_BIRTH  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_RESIDENCY  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_RISK_FACTOR  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_SOCIAL_HISTORY  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_SYMPTOM  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_TRAVEL  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_TREATMENT  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_UNDER_CONDITION  with(nolock) union
-            select PAGE_CASE_UID 	 from  dbo.L_INV_VACCINATION  with(nolock) union
-            SELECT PAGE_CASE_UID	 from  dbo.L_INVESTIGATION_REPEAT  with(nolock) union
-            SELECT PAGE_CASE_UID	 from  dbo.L_INV_PLACE_REPEAT with(nolock)
-        )
-        select cte.*
-        into #DIMENSION_KEYS_PAGECASEID
-        from LOOKUPCTE cte
-        INNER JOIN #ENTITY_KEYSTORE_STD keystore --joining with this table in advance to reduce the rows
-        ON cte.PAGE_CASE_UID = keystore.PAGE_CASE_UID
-        ;
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO dbo.[JOB_FLOW_LOG]
-        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
-
-    COMMIT TRANSACTION;
-
-    if @debug = 'true' select '##DIMENSION_KEYS_PAGECASEID', * from #DIMENSION_KEYS_PAGECASEID;
 
     BEGIN TRANSACTION;
 
@@ -305,7 +254,7 @@ BEGIN TRY
             drop table #DIMENSIONAL_KEYS
         ;
 
-        select  DIMC.page_case_uid,
+        select  dimc.page_case_uid,
             COALESCE(ladmin.D_INV_ADMINISTRATIVE_KEY , 1) AS 	D_INV_ADMINISTRATIVE_KEY ,
             COALESCE(licl.D_INV_CLINICAL_KEY , 1) AS 	D_INV_CLINICAL_KEY ,
             COALESCE(licomp.D_INV_COMPLICATION_KEY , 1) AS 	D_INV_COMPLICATION_KEY ,
@@ -331,7 +280,7 @@ BEGIN TRY
             COALESCE(lir.D_INVESTIGATION_REPEAT_KEY , 1 ) AS	D_INVESTIGATION_REPEAT_KEY,
             COALESCE(lipr.D_INV_PLACE_REPEAT_KEY , 1 ) AS	D_INV_PLACE_REPEAT_KEY
         into #DIMENSIONAL_KEYS
-        from #DIMENSION_KEYS_PAGECASEID DIMC
+        from  #ENTITY_KEYSTORE_STD dimc
              LEFT OUTER JOIN   dbo.L_INV_ADMINISTRATIVE ladmin  with(nolock) ON  ladmin.PAGE_CASE_UID  =  dimc.page_case_uid
              LEFT OUTER JOIN   dbo.L_INV_CLINICAL licl  with(nolock) ON  licl.PAGE_CASE_UID  =  dimc.page_case_uid
              LEFT OUTER JOIN   dbo.L_INV_COMPLICATION licomp  with(nolock) ON  licomp.PAGE_CASE_UID  =  dimc.page_case_uid
