@@ -65,6 +65,16 @@ class PersonServiceControllerTests {
     }
 
     @Test
+    void testPostUser() {
+        String payload = "{\"payload\": {\"after\": {\"auth_user_uid\": \"11\"}}}";
+
+        ResponseEntity<String> response = controller.postUser(payload);
+
+        assertEquals("Produced : " + payload, response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
     void testGetStatusHealth() {
         final String responseBody = "Person Service Status OK";
         when(dataPipelineStatusService.getHealthStatus()).thenReturn(ResponseEntity.ok(responseBody));
