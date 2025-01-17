@@ -436,7 +436,8 @@ BEGIN
             [INV_PRIORITY_CD]               = inv.INV_PRIORITY_CD,
             [COINFECTION_ID]                = inv.COINFECTION_ID,
             [LEGACY_CASE_ID]                = inv.LEGACY_CASE_ID,
-            [OUTBREAK_NAME_DESC]            = inv.OUTBREAK_NAME_DESC
+            [OUTBREAK_NAME_DESC]            = inv.OUTBREAK_NAME_DESC,
+            [INV_CLOSE_DT]            = inv.INV_CLOSE_DT
         from #temp_inv_table inv
                  inner join dbo.investigation i with (nolock) on inv.case_uid = i.case_uid
             and inv.investigation_key = i.investigation_key
@@ -545,7 +546,8 @@ BEGIN
          [INV_PRIORITY_CD],
          [COINFECTION_ID],
          [LEGACY_CASE_ID],
-         [OUTBREAK_NAME_DESC])
+         [OUTBREAK_NAME_DESC],
+         [INV_CLOSE_DT])
         select k.[d_INVESTIGATION_KEY] as INVESTIGATION_KEY,
                inv.CASE_OID,
                inv.CASE_UID,
@@ -615,7 +617,8 @@ BEGIN
                inv.INV_PRIORITY_CD,
                inv.COINFECTION_ID,
                inv.LEGACY_CASE_ID,
-               inv.OUTBREAK_NAME_DESC
+               inv.OUTBREAK_NAME_DESC,
+               inv.INV_CLOSE_DT
         FROM #temp_inv_table inv
                  join dbo.nrt_investigation_key k with (nolock) on inv.case_uid = k.case_uid
         where inv.investigation_key is null;
