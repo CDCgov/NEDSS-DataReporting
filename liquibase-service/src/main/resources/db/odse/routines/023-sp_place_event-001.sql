@@ -1,6 +1,5 @@
 CREATE OR ALTER PROCEDURE dbo.sp_place_event @id_list nvarchar(max)
 AS
-
 BEGIN
 
     BEGIN TRY
@@ -73,7 +72,6 @@ BEGIN
                                                   pl.cnty_cd as place_county_code,
                                                   pl.state_cd as place_state_code,
                                                   elp.locator_desc_txt as place_address_comments,
-                                                  elp.entity_uid           as place_elp_entity_uid,
                                                   elp.cd as place_elp_cd
                                            FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
                                                     LEFT OUTER JOIN nbs_odse.dbo.Postal_locator pl WITH (NOLOCK)
@@ -89,7 +87,6 @@ BEGIN
                                            FOR json path, INCLUDE_NULL_VALUES) AS address) AS address,
                                   -- Place/TELE
                                   (SELECT (SELECT tl.tele_locator_uid as place_tele_locator_uid,
-                                                  elp.entity_uid as tele_entity_uid,
                                                   tl.extension_txt as place_phone_ext,
                                                   tl.phone_nbr_txt as place_phone,
                                                   tl.email_address as place_email,

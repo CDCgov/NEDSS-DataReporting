@@ -243,8 +243,9 @@ BEGIN
                  FROM  #tmp_place_table s
                            LEFT JOIN #place_locator_ref r on r.place_uid = s.place_uid
                            LEFT JOIN dbo.nrt_place_key k on k.place_locator_uid = r.base_uid
-                 WHERE s.place_locator_uid IS NULL
-                    OR r.base_uid = s.place_locator_uid
+                 WHERE (s.place_locator_uid IS NULL
+                     OR r.base_uid = s.place_locator_uid)
+                   AND r.postal_base_uid IS NOT NULL
                  UNION ALL
                  --Postal: Only Postal Information
                  SELECT DISTINCT
