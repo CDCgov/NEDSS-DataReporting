@@ -198,3 +198,11 @@ databaseChangeLog:
         - sqlFile:
             path: 022-sp_user_report_permissions-001.sql
             splitStatements: false
+  - changeSet:
+      id: 30
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 023-sp_auth_user_event-001.sql
+            splitStatements: false

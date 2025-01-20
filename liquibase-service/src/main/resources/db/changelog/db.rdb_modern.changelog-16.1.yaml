@@ -638,3 +638,19 @@ databaseChangeLog:
         - sqlFile:
             path: 011-v_condition_dim-001.sql
             splitStatements: false
+  - changeSet:
+      id: 97
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 031-create_nrt_auth_user-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 98
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 027-sp_user_profile_postprocessing-001.sql
+            splitStatements: false
