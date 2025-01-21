@@ -93,7 +93,7 @@ class OrganizationServiceTest {
     void testProcessPlaceMessage() throws Exception {
         String payload = "{\"payload\": {\"after\": {\"place_uid\": \"10045001\"}}}";
 
-        Place place = objectMapper.readValue(readFileData("place/place.json"), Place.class);
+        Place place = objectMapper.readValue(readFileData("place/Place.json"), Place.class);
         when(placeRepository.computeAllPlaces(anyString())).thenReturn(Optional.of(List.of(place)));
 
         PlaceReporting expectedPlace = deserializePayload(
