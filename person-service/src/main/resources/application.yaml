@@ -5,8 +5,7 @@ spring:
       key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
     input:
       topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
-    defaultData:
-        topic-name: nbs_default
+      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
     output:
       providerElastic:
         topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
@@ -16,6 +15,8 @@ spring:
         topic-name: ${PATIENT_ELASTIC:elastic_search_patient}
       patientReporting:
         topic-name: ${PATIENT_REPORTING:nrt_patient}
+      userReporting:
+        topic-name: ${USER_REPORTING:nrt_auth_user}
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt

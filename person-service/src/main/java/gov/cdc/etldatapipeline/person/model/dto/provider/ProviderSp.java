@@ -15,10 +15,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-@Builder
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder @NoArgsConstructor @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProviderSp {
     @Id

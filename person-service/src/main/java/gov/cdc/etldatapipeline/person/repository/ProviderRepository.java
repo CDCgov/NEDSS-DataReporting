@@ -11,6 +11,5 @@ import java.util.List;
 @Repository
 public interface ProviderRepository extends JpaRepository<ProviderSp, String> {
     @Query(nativeQuery = true, value = "execute sp_provider_event :person_uids")
-    List<ProviderSp> computeProviders(@Param("person_uids") String person_uids);
-
+    List<ProviderSp> computeProviders(@Param("person_uids") String personUids);
 }

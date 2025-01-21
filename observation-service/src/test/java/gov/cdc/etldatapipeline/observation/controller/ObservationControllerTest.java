@@ -19,7 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class ObservationControllerTest {
+class ObservationControllerTest {
 
     private MockMvc mockMvc;
 
@@ -30,13 +30,13 @@ public class ObservationControllerTest {
     private ObservationController observationController;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(observationController).build();
     }
 
     @Test
-    public void publishMessageToKafkaTest() throws Exception {
+    void publishMessageToKafkaTest() throws Exception {
         String jsonData = "{\"key\":\"value\"}";
 
         mockMvc.perform(post("/publish")
