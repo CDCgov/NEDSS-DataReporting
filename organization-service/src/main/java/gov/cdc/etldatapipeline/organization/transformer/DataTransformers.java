@@ -5,18 +5,31 @@ import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationElasticSea
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationKey;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationReporting;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
+import gov.cdc.etldatapipeline.organization.model.dto.place.Place;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceKey;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceReporting;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OrganizationTransformers {
+public class DataTransformers {
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
+    private static final DataPostProcessor processor = new DataPostProcessor();
+
 
     public String buildOrganizationKey(OrganizationSp p) {
         return jsonGenerator.generateStringJson(OrganizationKey.builder().organizationUid(p.getOrganizationUid()).build());
     }
 
+    public String buildPlaceKey(Place p) {
+        return jsonGenerator.generateStringJson(PlaceKey.builder().placeUid(p.getPlaceUid()).build(), "place_uid");
+    }
+
     public String processData(OrganizationSp organizationSp, OrganizationType organizationType) {
         return jsonGenerator.generateStringJson(buildTransformedObject(organizationSp, organizationType));
+    }
+
+    public String processData(Place place) {
+        return jsonGenerator.generateStringJson(buildPlaceReporting(place), "place_uid");
     }
 
     public Object buildTransformedObject(OrganizationSp organizationSp, OrganizationType organizationType) {
@@ -25,7 +38,7 @@ public class OrganizationTransformers {
                     case ORGANIZATION_REPORTING -> buildOrganizationReporting(organizationSp);
                     case ORGANIZATION_ELASTIC_SEARCH -> buildOrganizationElasticSearch(organizationSp);
                 };
-        DataPostProcessor processor = new DataPostProcessor();
+
         processor.processOrgAddress(organizationSp.getOrganizationAddress(), transformedObj);
         processor.processOrgPhone(organizationSp.getOrganizationTelephone(), transformedObj);
         processor.processOrgFax(organizationSp.getOrganizationFax(), transformedObj);
@@ -34,7 +47,7 @@ public class OrganizationTransformers {
         return transformedObj;
     }
 
-    public OrganizationElasticSearch buildOrganizationElasticSearch(OrganizationSp orgSp) {
+    private OrganizationElasticSearch buildOrganizationElasticSearch(OrganizationSp orgSp) {
         return OrganizationElasticSearch.builder()
                 .organizationUid(orgSp.getOrganizationUid())
                 .cd(orgSp.getCd())
@@ -55,7 +68,7 @@ public class OrganizationTransformers {
                 .build();
     }
 
-    public OrganizationReporting buildOrganizationReporting(OrganizationSp orgSp) {
+    private OrganizationReporting buildOrganizationReporting(OrganizationSp orgSp) {
         return OrganizationReporting.builder()
                 .organizationUid(orgSp.getOrganizationUid())
                 .localId(orgSp.getLocalId())
@@ -71,5 +84,29 @@ public class OrganizationTransformers {
                 .addUserName(orgSp.getAddUserName())
                 .lastChgUserName(orgSp.getLastChgUserName())
                 .build();
+    }
+
+    private PlaceReporting buildPlaceReporting(Place place) {
+        PlaceReporting placeRep = PlaceReporting.builder()
+                .placeUid(place.getPlaceUid())
+                .cd(place.getCd())
+                .placeTypeDescription(place.getPlaceTypeDescription())
+                .placeLocalId(place.getPlaceLocalId())
+                .placeName(place.getPlaceName())
+                .placeGeneralComments(place.getPlaceGeneralComments())
+                .placeAddTime(place.getPlaceAddTime())
+                .placeAddUserId(place.getPlaceAddUserId())
+                .placeLastChangeTime(place.getPlaceLastChangeTime())
+                .placeLastChgUserId(place.getPlaceLastChgUserId())
+                .placeRecordStatus(place.getPlaceRecordStatus())
+                .placeRecordStatusTime(place.getPlaceRecordStatusTime())
+                .placeStatusCd(place.getPlaceStatusCd())
+                .placeStatusTime(place.getPlaceStatusTime())
+                .build();
+
+        processor.processPlaceEntity(place.getPlaceEntity(), placeRep);
+        processor.processPlaceAddress(place.getPlaceAddress(), placeRep);
+        processor.processPlacePhone(place.getPlacePhone(), placeRep);
+        return placeRep;
     }
 }

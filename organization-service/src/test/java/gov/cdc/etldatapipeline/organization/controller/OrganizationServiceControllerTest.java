@@ -4,6 +4,8 @@ import gov.cdc.etldatapipeline.organization.service.OrganizationStatusService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -63,12 +65,17 @@ class OrganizationServiceControllerTest {
         assertEquals(responseBody, response.getBody());
     }
 
-    @Test
-    void testPostError() {
+    @ParameterizedTest
+    @CsvSource({"organization", "place"})
+    void testPostError(String type) {
         final String responseError = "Server ERROR";
 
         when(mockKafkaTemplate.send(anyString(), anyString(), anyString())).thenThrow(new RuntimeException(responseError));
-        ResponseEntity<String> response = controller.postOrganization("{}");
+        ResponseEntity<String> response = switch (type) {
+            case "organization" -> controller.postOrganization("{}");
+            case "place" -> controller.postPlace("{}");
+            default -> controller.getDataPipelineStatusHealth();
+        };
         assertNotNull(response.getBody());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertTrue(response.getBody().contains(responseError));

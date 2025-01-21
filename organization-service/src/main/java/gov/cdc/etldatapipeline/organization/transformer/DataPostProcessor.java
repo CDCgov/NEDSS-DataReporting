@@ -2,12 +2,17 @@ package gov.cdc.etldatapipeline.organization.transformer;
 
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationElasticSearch;
 import gov.cdc.etldatapipeline.organization.model.dto.orgdetails.*;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceAddress;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceEntity;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceReporting;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceTelephone;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.function.Function;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
@@ -74,6 +79,32 @@ public class DataPostProcessor {
                     .filter(oPhone -> !ObjectUtils.isEmpty(oPhone.getFaxTlUid()))
                     .max(Comparator.comparing(Fax::getFaxTlUid))
                     .ifPresent(n -> n.updateOrg(org));
+        }
+    }
+
+    public void processPlaceEntity(String entity, PlaceReporting place) {
+        if (!ObjectUtils.isEmpty(entity)) {
+            Arrays.stream(requireNonNull(deserializePayload(entity, PlaceEntity[].class)))
+                    .reduce((first, second) -> second)
+                    .ifPresent(pe -> pe.update(place));
+        }
+    }
+
+    public void processPlaceAddress(String address, PlaceReporting place) {
+        if (!ObjectUtils.isEmpty(address)) {
+            Arrays.stream(requireNonNull(deserializePayload(address, PlaceAddress[].class)))
+                    .filter(pa -> Objects.nonNull(pa.getPlacePostalUid()))
+                    .max(Comparator.comparing(PlaceAddress::getPlacePostalUid))
+                    .ifPresent(pa -> pa.update(place));
+        }
+    }
+
+    public void processPlacePhone(String phone, PlaceReporting place) {
+        if (!ObjectUtils.isEmpty(phone)) {
+            Arrays.stream(requireNonNull(deserializePayload(phone, PlaceTelephone[].class)))
+                    .filter(pp -> Objects.nonNull(pp.getPlaceTeleLocatorUid()))
+                    .max(Comparator.comparing(PlaceTelephone::getPlaceTeleLocatorUid))
+                    .ifPresent(pp -> pp.update(place));
         }
     }
 }

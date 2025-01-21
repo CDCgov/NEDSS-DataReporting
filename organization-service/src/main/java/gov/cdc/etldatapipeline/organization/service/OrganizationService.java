@@ -2,14 +2,16 @@ package gov.cdc.etldatapipeline.organization.service;
 
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
+import gov.cdc.etldatapipeline.organization.model.dto.place.Place;
 import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
-import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
+import gov.cdc.etldatapipeline.organization.repository.PlaceRepository;
+import gov.cdc.etldatapipeline.organization.transformer.DataTransformers;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationType;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.SerializationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
@@ -22,32 +24,37 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
 @Service
-@Setter
 @Slf4j
+@Setter @RequiredArgsConstructor
 public class OrganizationService {
+    @Value("${spring.kafka.input.topic-name}")
+    private String orgTopic;
+
+    @Value("${spring.kafka.input.topic-name-place}")
+    private String placeTopic;
+
     @Value("${spring.kafka.output.organizationElastic.topic-name}")
     private String orgElasticSearchTopic;
 
     @Value("${spring.kafka.output.organizationReporting.topic-name}")
     private String orgReportingOutputTopic;
 
+    @Value("${spring.kafka.output.placeReporting.topic-name}")
+    private String placeReportingOutputTopic;
+
     private final OrgRepository orgRepository;
-    private final OrganizationTransformers transformer;
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private final PlaceRepository placeRepository;
+    private final DataTransformers transformer;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
-    private static String topicDebugLog = "Received Organization with id: {} from topic: {}";
-
-    @Autowired
-    public OrganizationService(OrgRepository orgRepository, OrganizationTransformers transformer, KafkaTemplate<String,String> kafkaTemplate) {
-        this.orgRepository = orgRepository;
-        this.transformer = transformer;
-        this.kafkaTemplate = kafkaTemplate;
-    }
+    private static String topicDebugLog = "Received {} with id: {} from topic: {}";
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -67,14 +74,25 @@ public class OrganizationService {
             }
     )
     @KafkaListener(
-            topics = "${spring.kafka.input.topic-name}"
+            topics = {
+                    "${spring.kafka.input.topic-name}",
+                    "${spring.kafka.input.topic-name-place}"
+            }
     )
     public void processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+        if (topic.equals(orgTopic)) {
+            processOrganization(message, topic);
+        } else if (topic.equals(placeTopic)) {
+            processPlace(message, topic);
+        }
+    }
+
+    private void processOrganization(String message, String topic) {
         String organizationUid = "";
         try {
             final String orgUid = organizationUid = extractUid(message,"organization_uid");
-            log.info(topicDebugLog, organizationUid, topic);
+            log.info(topicDebugLog, "Organization", organizationUid, topic);
             Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
 
             if (!organizations.isEmpty()) {
@@ -99,6 +117,32 @@ public class OrganizationService {
         } catch (Exception e) {
             String msg = "Error processing Organization data" +
                     (!organizationUid.isEmpty() ? " with ids '" + organizationUid + "': " : ": " + e.getMessage());
+            throw new RuntimeException(msg, e);
+        }
+    }
+
+    private void processPlace(String message, String topic) {
+        String placeUid = "";
+        try {
+            placeUid = extractUid(message,"place_uid");
+            log.info(topicDebugLog, "Place", placeUid, topic);
+            Optional<List<Place>> placeData = placeRepository.computeAllPlaces(placeUid);
+
+            if (placeData.isPresent() && !placeData.get().isEmpty()) {
+                placeData.get().forEach(place -> {
+                    String jsonKey = transformer.buildPlaceKey(place);
+                    String jsonValue = transformer.processData(place);
+                    kafkaTemplate.send(placeReportingOutputTopic, jsonKey, jsonValue);
+                    log.info("Place data (uid={}) sent to {}", place.getPlaceUid(), placeReportingOutputTopic);
+                });
+            } else {
+                throw new EntityNotFoundException("Unable to find Place data for id(s): " + placeUid);
+            }
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
+        } catch (Exception e) {
+            String msg = "Error processing Place data" +
+                    (!placeUid.isEmpty() ? " with ids '" + placeUid + "': " : ": " + e.getMessage());
             throw new RuntimeException(msg, e);
         }
     }
