@@ -22,3 +22,11 @@ databaseChangeLog:
         - sqlFile:
             path: 001-generate_data_for_data_sync_config-001.sql
             splitStatements: false
+  - changeSet:
+      id: 3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 002-alter_lab_test-001.sql
+            splitStatements: false
