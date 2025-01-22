@@ -48,7 +48,7 @@ BEGIN
             p.status_time as 'place_status_time',
             nested.entity                                  as 'place_entity',
             nested.address                               as 'place_address',
-            nested.phone                                 as 'place_phone'
+            nested.tele                                 as 'place_tele'
         FROM nbs_odse.dbo.Place p WITH (NOLOCK)
                  OUTER apply (SELECT *
                               FROM
@@ -111,7 +111,7 @@ BEGIN
                                                          ON elp.locator_uid = tl.tele_locator_uid
                                            WHERE elp.entity_uid = p.place_uid
                                              AND elp.class_cd = 'TELE'
-                                           FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone) AS nested
+                                           FOR json path, INCLUDE_NULL_VALUES) AS tele) AS tele) AS nested
         WHERE p.place_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log] (batch_id
