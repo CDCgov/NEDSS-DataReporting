@@ -639,26 +639,34 @@ databaseChangeLog:
             path: 011-v_condition_dim-001.sql
             splitStatements: false
   - changeSet:
-      id: 97
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 031-create_nrt_place-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 98
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 032-create_nrt_place_key-001.sql
-            splitStatements: false
-  - changeSet:
       id: 99
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 027-sp_nrt_place_postprocessing-001.sql
+            path: 032-create_nrt_place-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 100
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 033-create_nrt_place_tele_001.sql
+            splitStatements: false
+  - changeSet:
+      id: 101
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 034-create_nrt_place_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 102
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 028-sp_nrt_place_postprocessing-001.sql
             splitStatements: false

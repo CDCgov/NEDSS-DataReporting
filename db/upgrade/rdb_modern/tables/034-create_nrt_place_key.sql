@@ -1,6 +1,6 @@
 IF NOT EXISTS (SELECT 1
                FROM sysobjects
-               WHERE name = 'nrt_place_key_test'
+               WHERE name = 'nrt_place_key'
                  and xtype = 'U')
     BEGIN
 
@@ -15,6 +15,6 @@ IF NOT EXISTS (SELECT 1
         select @max;
         if @max IS NULL --check when max is returned as null
             SET @max = 2; --Start from key=2
-        DBCC CHECKIDENT ('dbo.nrt_place_key_test', RESEED, @max);
+        DBCC CHECKIDENT ('dbo.nrt_place_key', RESEED, @max);
 
     END

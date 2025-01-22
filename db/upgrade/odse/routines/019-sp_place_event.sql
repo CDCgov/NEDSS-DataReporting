@@ -86,7 +86,8 @@ BEGIN
                                              AND elp.CLASS_CD='PST'
                                            FOR json path, INCLUDE_NULL_VALUES) AS address) AS address,
                                   -- Place/TELE
-                                  (SELECT (SELECT tl.tele_locator_uid as place_tele_locator_uid,
+                                  (SELECT (SELECT p.place_uid,
+                                                  tl.tele_locator_uid as place_tele_locator_uid,
                                                   tl.extension_txt as place_phone_ext,
                                                   tl.phone_nbr_txt as place_phone,
                                                   tl.email_address as place_email,
