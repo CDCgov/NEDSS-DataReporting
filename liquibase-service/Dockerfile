@@ -10,19 +10,30 @@ RUN wget "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2
 
 
 #Copy sources
+#changelog
 COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
+#master
 COPY liquibase-service/src/main/resources/db/master /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/master/routines /liquibase/changelog
+#odse
 COPY liquibase-service/src/main/resources/db/odse /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/odse/routines /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/odse/views /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/rdb_modern /liquibase/changelog
+#rdb_modern
 COPY liquibase-service/src/main/resources/db/rdb_modern/routines /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/rdb_modern/tables /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/rdb_modern/views /liquibase/changelog
+#rdb
 COPY liquibase-service/src/main/resources/db/rdb /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/rdb/routines /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/rdb/tables /liquibase/changelog
+# data_ingest
+COPY liquibase-service/src/main/resources/db/data_ingest /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/data_ingest/tables /liquibase/changelog
+# msgoute
+COPY liquibase-service/src/main/resources/db/msgoute /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/msgoute/routines /liquibase/changelog
 
 #Set the Working Directory
 WORKDIR /liquibase/changelog

@@ -10,6 +10,8 @@ import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderElasticSearch;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderKey;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderReporting;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
+import gov.cdc.etldatapipeline.person.model.dto.user.AuthUser;
+import gov.cdc.etldatapipeline.person.model.dto.user.AuthUserKey;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,12 +26,20 @@ public class PersonTransformers {
         return jsonGenerator.generateStringJson(ProviderKey.builder().providerUid(p.getPersonUid()).build());
     }
 
+    public String buildUserKey(AuthUser u) {
+        return jsonGenerator.generateStringJson(AuthUserKey.builder().authUserUid(u.getAuthUserUid()).build(), "auth_user_uid");
+    }
+
     public String processData(PatientSp patientSp, PersonType personType) {
         return jsonGenerator.generateStringJson(processData(patientSp, null, personType));
     }
 
     public String processData(ProviderSp providerSp, PersonType personType) {
         return jsonGenerator.generateStringJson(processData(null, providerSp, personType));
+    }
+
+    public String processData(AuthUser user) {
+        return jsonGenerator.generateStringJson(user, "auth_user_uid");
     }
 
     public PersonExtendedProps processData(PatientSp patientSp, ProviderSp providerSp,

@@ -14,11 +14,15 @@ import java.util.UUID;
 public class PersonServiceController {
 
     private final PersonStatusService dataPipelineStatusSvc;
-
     private final KafkaTemplate<String, String> kafkaTemplate;
+
+    private static final String PRODUCED = "Produced : ";
 
     @Value("${spring.kafka.input.topic-name}")
     private String personTopicName = "nbs_Person";
+
+    @Value("${spring.kafka.input.topic-name-user}")
+    private String userTopicName = "nbs_Auth_user";
 
     @GetMapping("/reporting/person-svc/status")
     public ResponseEntity<String> getDataPipelineStatusHealth() {
@@ -29,7 +33,7 @@ public class PersonServiceController {
     public ResponseEntity<String> postProvider(@RequestBody String payLoad) {
         try {
             kafkaTemplate.send(personTopicName, UUID.randomUUID().toString(), payLoad);
-            return ResponseEntity.ok("Produced : " + payLoad);
+            return ResponseEntity.ok(PRODUCED + payLoad);
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body("Failed to process the provider. Exception : " + ex.getMessage());
         }
@@ -39,10 +43,19 @@ public class PersonServiceController {
     public ResponseEntity<String> postPatient(@RequestBody String payLoad) {
         try {
             kafkaTemplate.send(personTopicName, UUID.randomUUID().toString(), payLoad);
-            return ResponseEntity.ok("Produced : " + payLoad);
+            return ResponseEntity.ok(PRODUCED + payLoad);
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body("Failed to process the Patient. Exception : " + ex.getMessage());
         }
     }
 
+    @PostMapping(value = "/reporting/person-svc/user")
+    public ResponseEntity<String> postUser(@RequestBody String payLoad) {
+        try {
+            kafkaTemplate.send(userTopicName, UUID.randomUUID().toString(), payLoad);
+            return ResponseEntity.ok(PRODUCED + payLoad);
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body("Failed to process the User. Exception : " + ex.getMessage());
+        }
+    }
 }
