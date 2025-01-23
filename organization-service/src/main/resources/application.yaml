@@ -9,7 +9,7 @@ spring:
       topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
     output:
       organization:
-        topic-name-elastic: ${PROVIDER_ELASTIC:elastic_search_organization}
+        topic-name-elastic: ${ORGANIZATION_ELASTIC:elastic_search_organization}
         topic-name-reporting: ${ORGANIZATION_REPORTING:nrt_organization}
       place:
         topic-name: nrt_place
