@@ -5,23 +5,29 @@ import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationElasticSea
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationKey;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationReporting;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
-import gov.cdc.etldatapipeline.organization.model.dto.place.Place;
-import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceKey;
-import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceReporting;
+import gov.cdc.etldatapipeline.organization.model.dto.place.*;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class DataTransformers {
+    public static final String PLACE_UID = "place_uid";
+    public static final String PLACE_TL_UID = "place_tele_locator_uid";
+
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
     private static final DataPostProcessor processor = new DataPostProcessor();
-
 
     public String buildOrganizationKey(OrganizationSp p) {
         return jsonGenerator.generateStringJson(OrganizationKey.builder().organizationUid(p.getOrganizationUid()).build());
     }
 
     public String buildPlaceKey(Place p) {
-        return jsonGenerator.generateStringJson(PlaceKey.builder().placeUid(p.getPlaceUid()).build(), "place_uid");
+        return jsonGenerator.generateStringJson(PlaceKey.builder().placeUid(p.getPlaceUid()).build(), PLACE_UID);
+    }
+
+    public String buildPlaceTeleKey(PlaceTele p) {
+        return jsonGenerator.generateStringJson(PlaceTeleKey.builder().placeTeleLocatorUid(p.getPlaceTeleLocatorUid()).build(), PLACE_TL_UID);
     }
 
     public String processData(OrganizationSp organizationSp, OrganizationType organizationType) {
@@ -29,7 +35,15 @@ public class DataTransformers {
     }
 
     public String processData(Place place) {
-        return jsonGenerator.generateStringJson(buildPlaceReporting(place), "place_uid");
+        return jsonGenerator.generateStringJson(buildPlaceReporting(place), PLACE_UID);
+    }
+
+    public String processData(PlaceTele tele) {
+        return jsonGenerator.generateStringJson(tele, PLACE_UID, PLACE_TL_UID);
+    }
+
+    public List<PlaceTele> buildPlaceTele(String teleData) {
+        return processor.processArrayData(teleData, PlaceTele[].class);
     }
 
     public Object buildTransformedObject(OrganizationSp organizationSp, OrganizationType organizationType) {
@@ -106,7 +120,6 @@ public class DataTransformers {
 
         processor.processPlaceEntity(place.getPlaceEntity(), placeRep);
         processor.processPlaceAddress(place.getPlaceAddress(), placeRep);
-        processor.processPlacePhone(place.getPlacePhone(), placeRep);
         return placeRep;
     }
 }

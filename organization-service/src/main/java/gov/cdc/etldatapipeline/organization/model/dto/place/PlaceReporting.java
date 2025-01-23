@@ -47,14 +47,4 @@ public class PlaceReporting {
     private String placeStateDesc;
     private String placeCountyDesc;
     private String placeCountryDesc;
-
-    private Long placeTeleLocatorUid;
-    private String placePhoneExt;
-    private String placePhone;
-    private String placeEmail;
-    private String placePhoneComments;
-    private String teleUseCd;
-    private String teleCd;
-    private String placeTeleType;
-    private String placeTeleUse;
 }

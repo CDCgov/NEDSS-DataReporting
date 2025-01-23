@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder @AllArgsConstructor @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class PlaceTelephone implements PlaceExt<PlaceReporting> {
+public class PlaceTele {
+    private Long placeUid;
     private Long placeTeleLocatorUid;
     private String placePhoneExt;
     private String placePhone;
@@ -22,16 +23,4 @@ public class PlaceTelephone implements PlaceExt<PlaceReporting> {
     private String teleCd;
     private String placeTeleType;
     private String placeTeleUse;
-
-    public void update(PlaceReporting place) {
-        place.setPlaceTeleLocatorUid(placeTeleLocatorUid);
-        place.setPlacePhoneExt(placePhoneExt);
-        place.setPlacePhone(placePhone);
-        place.setPlaceEmail(placeEmail);
-        place.setPlacePhoneComments(placePhoneComments);
-        place.setTeleUseCd(teleUseCd);
-        place.setTeleCd(teleCd);
-        place.setPlaceTeleType(placeTeleType);
-        place.setPlaceTeleUse(placeTeleUse);
-    }
 }

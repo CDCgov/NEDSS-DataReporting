@@ -61,6 +61,6 @@ public class Place {
     @Column(name = "place_address")
     private String placeAddress;
 
-    @Column(name = "place_phone")
-    private String placePhone;
+    @Column(name = "place_tele")
+    private String placeTele;
 }

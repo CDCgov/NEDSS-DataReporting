@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
 @Service
@@ -111,9 +112,7 @@ public class PersonService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing Person data" +
-                    (!personUid.isEmpty() ? " with ids '" + personUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new RuntimeException(errorMessage("Person", personUid, e), e);
         }
     }
 

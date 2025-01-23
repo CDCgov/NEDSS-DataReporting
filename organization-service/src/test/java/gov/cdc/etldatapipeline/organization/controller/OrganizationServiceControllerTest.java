@@ -53,6 +53,16 @@ class OrganizationServiceControllerTest {
     }
 
     @Test
+    void testPostPlace() {
+        String payload = "{\"payload\": {\"after\": {\"place_uid\": \"10036000\"}}}";
+
+        ResponseEntity<String> response = controller.postPlace(payload);
+
+        assertEquals("Produced : " + payload, response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
     void testGetStatusHealth() {
         final String responseBody = "Organization Service Status OK";
         when(dataPipelineStatusService.getHealthStatus()).thenReturn(ResponseEntity.ok(responseBody));

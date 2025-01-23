@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.organization.service;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.model.dto.place.Place;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceTele;
 import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
 import gov.cdc.etldatapipeline.organization.repository.PlaceRepository;
 import gov.cdc.etldatapipeline.organization.transformer.DataTransformers;
@@ -23,11 +24,13 @@ import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
 @Service
@@ -40,14 +43,17 @@ public class OrganizationService {
     @Value("${spring.kafka.input.topic-name-place}")
     private String placeTopic;
 
-    @Value("${spring.kafka.output.organizationElastic.topic-name}")
+    @Value("${spring.kafka.output.organization.topic-name-elastic}")
     private String orgElasticSearchTopic;
 
-    @Value("${spring.kafka.output.organizationReporting.topic-name}")
+    @Value("${spring.kafka.output.organization.topic-name-reporting}")
     private String orgReportingOutputTopic;
 
-    @Value("${spring.kafka.output.placeReporting.topic-name}")
+    @Value("${spring.kafka.output.place.topic-name}")
     private String placeReportingOutputTopic;
+
+    @Value("${spring.kafka.output.place.topic-name-tele}")
+    private String teleOutputTopic;
 
     private final OrgRepository orgRepository;
     private final PlaceRepository placeRepository;
@@ -115,9 +121,7 @@ public class OrganizationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing Organization data" +
-                    (!organizationUid.isEmpty() ? " with ids '" + organizationUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new RuntimeException(errorMessage("Organization", organizationUid, e), e);
         }
     }
 
@@ -130,6 +134,8 @@ public class OrganizationService {
 
             if (placeData.isPresent() && !placeData.get().isEmpty()) {
                 placeData.get().forEach(place -> {
+                    processPlaceTele(place);
+
                     String jsonKey = transformer.buildPlaceKey(place);
                     String jsonValue = transformer.processData(place);
                     kafkaTemplate.send(placeReportingOutputTopic, jsonKey, jsonValue);
@@ -141,9 +147,31 @@ public class OrganizationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing Place data" +
-                    (!placeUid.isEmpty() ? " with ids '" + placeUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new RuntimeException(errorMessage("Place", placeUid, e), e);
+        }
+    }
+
+    private void processPlaceTele(Place place) {
+        try {
+            // Tombstone message to delete previous place tele data for specified place uid
+            kafkaTemplate.send(teleOutputTopic, transformer.buildPlaceKey(place), null);
+
+            List<PlaceTele> teleData = transformer.buildPlaceTele(place.getPlaceTele());
+
+            if (ObjectUtils.isEmpty(teleData)) {
+                throw new IllegalArgumentException("PlaceTele array is null.");
+            }
+
+            teleData.forEach(tele -> {
+                String jsonKey = transformer.buildPlaceTeleKey(tele);
+                String jsonValue = transformer.processData(tele);
+                kafkaTemplate.send(teleOutputTopic, jsonKey, jsonValue);
+                log.info("Place Tele data (uid={}) sent to {}", tele.getPlaceTeleLocatorUid(), teleOutputTopic);
+            });
+        } catch (IllegalArgumentException ex) {
+            log.info(ex.getMessage());
+        } catch (Exception e) {
+            log.error("Error processing Place Tele JSON array from Place data: {}", e.getMessage());
         }
     }
 }

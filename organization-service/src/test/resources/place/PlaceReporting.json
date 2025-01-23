@@ -32,15 +32,6 @@
     "place_elp_cd": "PLC",
     "place_state_desc": "Alabama",
     "place_county_desc": "Autauga County",
-    "place_country_desc": "United States",
-    "place_tele_locator_uid": 10040080,
-    "place_phone_ext": null,
-    "place_phone": "560-930-5880",
-    "place_email": "guest@cvs.com",
-    "place_phone_comments": null,
-    "tele_use_cd": "WP",
-    "tele_cd": "PH",
-    "place_tele_type": "Phone",
-    "place_tele_use": "Work Place"
+    "place_country_desc": "United States"
   }
 }

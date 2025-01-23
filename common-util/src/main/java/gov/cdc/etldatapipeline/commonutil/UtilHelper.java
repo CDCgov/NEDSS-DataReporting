@@ -36,4 +36,9 @@ public class UtilHelper {
             throw new NoSuchElementException("The " + uidName + " field is missing in the message payload.");
         }
     }
+
+    public static String errorMessage(String entityName, String ids, Exception e) {
+        return "Error processing " + entityName + " data" +
+                (!ids.isEmpty() ? " with ids '" + ids + "': " : ": " + e.getMessage());
+    }
 }

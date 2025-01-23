@@ -5,14 +5,11 @@ import gov.cdc.etldatapipeline.organization.model.dto.orgdetails.*;
 import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceAddress;
 import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceEntity;
 import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceReporting;
-import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceTelephone;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
@@ -99,12 +96,7 @@ public class DataPostProcessor {
         }
     }
 
-    public void processPlacePhone(String phone, PlaceReporting place) {
-        if (!ObjectUtils.isEmpty(phone)) {
-            Arrays.stream(requireNonNull(deserializePayload(phone, PlaceTelephone[].class)))
-                    .filter(pp -> Objects.nonNull(pp.getPlaceTeleLocatorUid()))
-                    .max(Comparator.comparing(PlaceTelephone::getPlaceTeleLocatorUid))
-                    .ifPresent(pp -> pp.update(place));
-        }
+    public <T> List<T> processArrayData(String arr, Class<T[]> clazz) {
+        return Optional.ofNullable(deserializePayload(arr, clazz)).map(Arrays::asList).orElse(null);
     }
 }

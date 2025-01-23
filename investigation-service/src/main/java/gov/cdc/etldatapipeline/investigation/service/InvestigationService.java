@@ -39,6 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
 @Service
@@ -147,9 +148,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing Investigation data" +
-                    (!publicHealthCaseUid.isEmpty() ? " with ids '" + publicHealthCaseUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new RuntimeException(errorMessage("Investigation", publicHealthCaseUid, e), e);
         }
     }
 
@@ -169,9 +168,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing Notification data" +
-                (!notificationUid.isEmpty() ? " for ids='" + notificationUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new RuntimeException(errorMessage("Notification", notificationUid, e), e);
         }
     }
 
@@ -194,9 +191,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing Interview data" +
-                    (!interviewUid.isEmpty() ? " with ids '" + interviewUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new RuntimeException(errorMessage("Interview", interviewUid, e), e);
         }
     }
 
