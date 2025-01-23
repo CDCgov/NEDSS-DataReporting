@@ -65,6 +65,16 @@ class PersonServiceControllerTests {
     }
 
     @Test
+    void testPostUser() {
+        String payload = "{\"payload\": {\"after\": {\"auth_user_uid\": \"11\"}}}";
+
+        ResponseEntity<String> response = controller.postUser(payload);
+
+        assertEquals("Produced : " + payload, response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
     void testGetStatusHealth() {
         final String responseBody = "Person Service Status OK";
         when(dataPipelineStatusService.getHealthStatus()).thenReturn(ResponseEntity.ok(responseBody));
@@ -78,13 +88,17 @@ class PersonServiceControllerTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"patient", "provider"})
+    @CsvSource({"patient", "provider", "user"})
     void testPostPatientError(String type) {
         final String responseError = "Server ERROR";
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenThrow(new RuntimeException(responseError));
-        ResponseEntity<String> response = type.equals("patient") ?
-                controller.postPatient("{}") : controller.postProvider("{}");
+        ResponseEntity<String> response = switch (type) {
+            case "patient" -> controller.postPatient("{}");
+            case "provider" -> controller.postProvider("{}");
+            case "user" -> controller.postUser("{}");
+            default -> controller.getDataPipelineStatusHealth();
+        };
         assertNotNull(response.getBody());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertTrue(response.getBody().contains(responseError));

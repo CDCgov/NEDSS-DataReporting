@@ -6,8 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
+import gov.cdc.etldatapipeline.person.model.dto.user.AuthUser;
+import gov.cdc.etldatapipeline.person.model.dto.user.AuthUserKey;
 import gov.cdc.etldatapipeline.person.repository.PatientRepository;
 import gov.cdc.etldatapipeline.person.repository.ProviderRepository;
+import gov.cdc.etldatapipeline.person.repository.UserRepository;
 import gov.cdc.etldatapipeline.person.transformer.PersonTransformers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,15 +18,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,26 +43,43 @@ class PersonServiceTest {
     ProviderRepository providerRepository;
 
     @Mock
+    UserRepository userRepository;
+
+    @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Captor
+    private ArgumentCaptor<String> topicCaptor;
+
+    @Captor
+    private ArgumentCaptor<String> keyCaptor;
+
+    @Captor
+    private ArgumentCaptor<String> valueCaptor;
 
     private PersonService personService;
 
-    private final String inputTopic = "Person";
+    private final String inputTopicPerson = "Person";
+    private final String inputTopicUser = "User";
     private final String patientReportingTopic = "PatientReporting";
     private final String patientElasticTopic = "PatientElastic";
     private final String providerReportingTopic = "ProviderReporting";
     private final String providerElasticTopic = "ProviderElastic";
+    private final String userReportingTopic = "UserRepoting";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void setUp() {
         PersonTransformers transformer = new PersonTransformers();
-        personService = new PersonService(patientRepository, providerRepository, transformer, kafkaTemplate);
+        personService = new PersonService(patientRepository, providerRepository, userRepository, transformer, kafkaTemplate);
+        personService.setPersonTopic(inputTopicPerson);
+        personService.setUserTopic(inputTopicUser);
         personService.setPatientReportingOutputTopic(patientReportingTopic);
         personService.setPatientElasticSearchOutputTopic(patientElasticTopic);
         personService.setProviderReportingOutputTopic(providerReportingTopic);
         personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
+        personService.setUserReportingOutputTopic(userReportingTopic);
     }
 
     @Test
@@ -95,22 +113,58 @@ class PersonServiceTest {
                 "rawDataFiles/provider/ProviderKey.json");
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "{\"payload\": {}}",
-            "{\"payload\": {\"after\": {}}}"
-    })
-    void testProcessMessageException(String payload) {
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> personService.processMessage(payload, inputTopic));
-        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+    @Test
+    void testProcessUserData() throws JsonProcessingException {
+        String payload = "{\"payload\": {\"after\": {\"auth_user_uid\": \"11\"}}}";
+
+        AuthUser user = constructAuthUser();
+        AuthUserKey userKey = AuthUserKey.builder().authUserUid(11L).build();
+        Mockito.when(userRepository.computeAuthUsers(anyString())).thenReturn(Optional.of(List.of(user)));
+
+        personService.processMessage(payload, inputTopicUser);
+
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        String actualTopic = topicCaptor.getValue();
+        String actualKey = keyCaptor.getValue();
+        String actualValue = valueCaptor.getValue();
+
+        var actualUser = objectMapper.readValue(
+                objectMapper.readTree(actualValue).path("payload").toString(), AuthUser.class);
+
+        var actualUserKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path("payload").toString(), AuthUserKey.class);
+
+        assertEquals(userReportingTopic, actualTopic);
+        assertEquals(userKey, actualUserKey);
+        assertEquals(user, actualUser);
     }
 
-    @Test
-    void testProcessMessageNoDataException() {
-        Long personUid = 123456789L;
-        String payload = "{\"payload\": {\"after\": {\"person_uid\": \"" + personUid + "\", \"cd\": \"PRV\"}}}";
-        when(patientRepository.computePatients(String.valueOf(personUid))).thenReturn(Collections.emptyList());
-        when(providerRepository.computeProviders(String.valueOf(personUid))).thenReturn(Collections.emptyList());
+    @ParameterizedTest
+    @CsvSource({
+            "{\"payload\": {}},Person",
+            "{\"payload\": {}},User",
+            "{\"payload\": {\"after\": {}}},Person",
+            "{\"payload\": {\"after\": {}}},User"
+    })
+    void testProcessMessageException(String payload, String inputTopic) {
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> personService.processMessage(payload, inputTopic));
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '^', value = {
+            "{\"payload\": {\"after\": {\"person_uid\": \"123456789\", \"cd\": \"PRV\"}}}^Person",
+            "{\"payload\": {\"after\": {\"auth_user_uid\": \"11\"}}}^User"
+    })
+    void testProcessMessageNoDataException(String payload, String inputTopic) {
+        if (inputTopic.equals(inputTopicPerson)) {
+            Long personUid = 123456789L;
+            when(patientRepository.computePatients(String.valueOf(personUid))).thenReturn(Collections.emptyList());
+            when(providerRepository.computeProviders(String.valueOf(personUid))).thenReturn(Collections.emptyList());
+        } else if (inputTopic.equals(inputTopicUser)) {
+            Long authUserUid = 11L;
+            when(userRepository.computeAuthUsers(String.valueOf(authUserUid))).thenReturn(Optional.of(Collections.emptyList()));
+        }
         assertThrows(NoDataException.class, () -> personService.processMessage(payload, inputTopic));
     }
 
@@ -126,11 +180,7 @@ class PersonServiceTest {
         String expectedReportingValue = readFileData(expectedReportingValueFilePath);
         String expectedElasticValue = readFileData(expectedElasticValueFilePath);
 
-        personService.processMessage(incomingChangeData, inputTopic);
-
-        ArgumentCaptor<String> topicCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+        personService.processMessage(incomingChangeData, inputTopicPerson);
 
         verify(kafkaTemplate, Mockito.times(2)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
 
@@ -174,6 +224,23 @@ class PersonServiceTest {
                 .telephoneNested(readFileData(filePathPrefix + "PersonTelephone.json"))
                 .entityDataNested(readFileData(filePathPrefix + "PersonEntityData.json"))
                 .emailNested(readFileData(filePathPrefix + "PersonEmail.json"))
+                .build();
+    }
+
+    private AuthUser constructAuthUser() {
+        return AuthUser.builder()
+                .authUserUid(11L)
+                .userId("local")
+                .firstNm("Local")
+                .lastNm("User")
+                .nedssEntryId(1001L)
+                .providerUid(10002007L)
+                .addUserId(10020003L)
+                .lastChgUserId(10030004L)
+                .addTime("2020-10-20 10:20:30")
+                .lastChgTime("2020-10-22 10:22:33")
+                .recordStatusCd("ACTIVE")
+                .recordStatusTime("2020-10-20 10:20:30")
                 .build();
     }
 }
