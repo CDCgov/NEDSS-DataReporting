@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
 @Service
@@ -102,9 +103,7 @@ public class ObservationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing Observation data" +
-                    (!observationUid.isEmpty() ? " with ids '" + observationUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new RuntimeException(errorMessage("Observation", observationUid, e), e);
         }
     }
 

@@ -7,7 +7,7 @@ import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationKey;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationReporting;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.model.dto.orgdetails.*;
-import gov.cdc.etldatapipeline.organization.transformer.OrganizationTransformers;
+import gov.cdc.etldatapipeline.organization.transformer.DataTransformers;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,7 +115,7 @@ class OrganizationDataProcessTests {
     @ParameterizedTest
     @EnumSource(OrganizationType.class)
     void testOrganizationReportingProcess(OrganizationType type) throws Exception {
-        OrganizationTransformers transformer = new OrganizationTransformers();
+        DataTransformers transformer = new DataTransformers();
         Object actual = transformer.buildTransformedObject(orgSp, type);
 
         Object expected =

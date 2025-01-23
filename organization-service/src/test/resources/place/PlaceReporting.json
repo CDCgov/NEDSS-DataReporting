@@ -1,0 +1,37 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": []
+  },
+  "payload": {
+    "place_uid": 10045001,
+    "cd": "N",
+    "place_type_description": "Shopping Mall",
+    "place_local_id": "PLC10095000GA01",
+    "place_name": "CVS",
+    "place_general_comments": null,
+    "place_add_time": "2020-10-20 20:20:20",
+    "place_add_user_id": 10010001,
+    "place_last_change_time": "2020-10-20 20:20:21",
+    "place_last_chg_user_id": 10010005,
+    "place_record_status": "ACTIVE",
+    "place_record_status_time": "2020-10-20 20:20:22",
+    "place_status_cd": "A",
+    "place_status_time": "2020-10-20 20:20:23",
+    "place_quick_code": "SHM",
+    "assigning_authority_cd": null,
+    "place_postal_uid": 10070007,
+    "place_zip": "60099",
+    "place_city": "Zion",
+    "place_country": "840",
+    "place_street_address_1": "10820 Hamilton Lane",
+    "place_street_address_2": "unit 691",
+    "place_county_code": "01001",
+    "place_state_code": "01",
+    "place_address_comments": null,
+    "place_elp_cd": "PLC",
+    "place_state_desc": "Alabama",
+    "place_county_desc": "Autauga County",
+    "place_country_desc": "United States"
+  }
+}

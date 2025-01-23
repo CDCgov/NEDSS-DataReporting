@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": []
+  },
+  "payload": {
+    "place_uid": 10045001,
+    "place_tele_locator_uid": 10040080,
+    "place_phone_ext": null,
+    "place_phone": "560-930-5880",
+    "place_email": "guest@cvs.com",
+    "place_phone_comments": null,
+    "tele_use_cd": "WP",
+    "tele_cd": "PH",
+    "place_tele_type": "Phone",
+    "place_tele_use": "Work Place"
+  }
+}

@@ -2,12 +2,14 @@ package gov.cdc.etldatapipeline.organization.transformer;
 
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationElasticSearch;
 import gov.cdc.etldatapipeline.organization.model.dto.orgdetails.*;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceAddress;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceEntity;
+import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceReporting;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 import java.util.function.Function;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
@@ -75,5 +77,26 @@ public class DataPostProcessor {
                     .max(Comparator.comparing(Fax::getFaxTlUid))
                     .ifPresent(n -> n.updateOrg(org));
         }
+    }
+
+    public void processPlaceEntity(String entity, PlaceReporting place) {
+        if (!ObjectUtils.isEmpty(entity)) {
+            Arrays.stream(requireNonNull(deserializePayload(entity, PlaceEntity[].class)))
+                    .reduce((first, second) -> second)
+                    .ifPresent(pe -> pe.update(place));
+        }
+    }
+
+    public void processPlaceAddress(String address, PlaceReporting place) {
+        if (!ObjectUtils.isEmpty(address)) {
+            Arrays.stream(requireNonNull(deserializePayload(address, PlaceAddress[].class)))
+                    .filter(pa -> Objects.nonNull(pa.getPlacePostalUid()))
+                    .max(Comparator.comparing(PlaceAddress::getPlacePostalUid))
+                    .ifPresent(pa -> pa.update(place));
+        }
+    }
+
+    public <T> List<T> processArrayData(String arr, Class<T[]> clazz) {
+        return Optional.ofNullable(deserializePayload(arr, clazz)).map(Arrays::asList).orElse(null);
     }
 }

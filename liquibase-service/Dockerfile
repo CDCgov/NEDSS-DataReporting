@@ -34,6 +34,9 @@ COPY liquibase-service/src/main/resources/db/data_ingest/tables /liquibase/chang
 # msgoute
 COPY liquibase-service/src/main/resources/db/msgoute /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/msgoute/routines /liquibase/changelog
+# srte
+COPY liquibase-service/src/main/resources/db/srte /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/srte/tables /liquibase/changelog
 
 #Set the Working Directory
 WORKDIR /liquibase/changelog

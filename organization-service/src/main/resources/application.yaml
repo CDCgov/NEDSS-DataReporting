@@ -6,13 +6,14 @@ spring:
 
     input:
       topic-name: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
-      defaultData:
-        topic-name: nbs_Default
+      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
     output:
-      organizationElastic:
-        topic-name: ${PROVIDER_ELASTIC:elastic_search_organization}
-      organizationReporting:
-        topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
+      organization:
+        topic-name-elastic: ${ORGANIZATION_ELASTIC:elastic_search_organization}
+        topic-name-reporting: ${ORGANIZATION_REPORTING:nrt_organization}
+      place:
+        topic-name: nrt_place
+        topic-name-tele: nrt_place_tele
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt
