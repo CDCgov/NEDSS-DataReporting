@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.sp_repeated_place_postprocessing
+CREATE OR ALTER PROCEDURE dbo.sp_repeated_place_postprocessing
     @Batch_id bigint,
     @phc_id bigint,
     @debug bit = 'false'
