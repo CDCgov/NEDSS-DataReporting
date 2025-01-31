@@ -54,7 +54,6 @@ public class PostProcessingService {
     static final String PAYLOAD = "payload";
     static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
     static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG = "Processing {} message topic. Calling stored proc: {} '{}'";
-    static final String PHC_UID = "public_health_case_uid";
 
     static final String MORB_REPORT = "MorbReport";
     static final String LAB_REPORT = "LabReport";
