@@ -22,7 +22,8 @@
     "block_nm": null,
     "question_group_seq_nbr": null,
     "data_type": "CODED",
-    "last_chg_time": "2024-05-29T16:05:44.537"
+    "last_chg_time": "2024-05-29T16:05:44.537",
+    "part_type_cd": null
   },
   {
     "nbs_case_answer_uid": 1235,
@@ -47,7 +48,8 @@
     "block_nm": "BLOCK_8",
     "question_group_seq_nbr": null,
     "data_type": "TEXT",
-    "last_chg_time": "2024-05-29T16:05:44.537"
+    "last_chg_time": "2024-05-29T16:05:44.537",
+    "part_type_cd": null
   },
   {
     "nbs_case_answer_uid": 1236,
@@ -72,6 +74,33 @@
     "block_nm": null,
     "question_group_seq_nbr": null,
     "data_type": "DATE",
-    "last_chg_time": "2024-05-29T16:05:44.537"
+    "last_chg_time": "2024-05-29T16:05:44.537",
+    "part_type_cd": null
+  },
+  {
+    "nbs_case_answer_uid": 214424,
+    "nbs_ui_metadata_uid": 10013069,
+    "nbs_rdb_metadata_uid": 10095279,
+    "rdb_table_nm": "D_INV_PLACE_REPEAT",
+    "rdb_column_nm": "PLACE_HANGOUT_OF_PHC",
+    "code_set_group_id": null,
+    "answer_txt": "11068355^11068356^",
+    "act_uid": 234567890,
+    "record_status_cd": "OPEN",
+    "nbs_question_uid": 10001284,
+    "investigation_form_cd": "PG_HIV_Investigation",
+    "unit_value": null,
+    "question_identifier": "NBS243",
+    "data_location": "NBS_CASE_ANSWER.ANSWER_TXT",
+    "answer_group_seq_nbr": 1,
+    "question_label": "Place",
+    "other_value_ind_cd": null,
+    "unit_type_cd": null,
+    "mask": "TXT",
+    "block_nm": "BLOCK_11",
+    "question_group_seq_nbr": 11,
+    "data_type": "TEXT",
+    "last_chg_time": "2025-01-24T20:35:53.260",
+    "part_type_cd": "PlaceAsHangoutOfPHC"
   }
 ]

@@ -1,5 +1,5 @@
 CREATE OR ALTER PROCEDURE dbo.sp_nrt_place_postprocessing @id_list nvarchar(max),
-                                                      @debug bit = 'false'
+                                                        @debug bit = 'false'
 AS
 BEGIN
 
@@ -62,21 +62,23 @@ BEGIN
                       , nrt.place_postal_uid         AS 'PLACE_POSTAL_UID'
                       , nrt.place_zip                AS 'PLACE_ZIP'
                       , nrt.place_city               AS 'PLACE_CITY'
-                      , nrt.place_country            AS 'PLACE_COUNTRY'
+                      , CASE
+                            WHEN LEN(RTRIM(LTRIM(nrt.place_state_desc))) > 0 THEN nrt.place_state_desc
+            END                                           AS PLACE_STATE
+                      , CASE WHEN len(RTRIM(LTRIM(nrt.place_country_desc))) > 0 THEN nrt.place_country_desc
+
+            END AS 'PLACE_COUNTRY'
+                      , CASE
+                            WHEN LEN(RTRIM(LTRIM(nrt.place_county_desc))) > 0 THEN nrt.place_county_desc
+            END                                      AS PLACE_COUNTY
                       , nrt.place_street_address_1   AS 'PLACE_STREET_ADDRESS_1'
                       , nrt.place_street_address_2   AS 'PLACE_STREET_ADDRESS_2'
                       , nrt.place_county_code        AS 'PLACE_COUNTY_CODE'
                       , nrt.place_state_code         AS 'PLACE_STATE_CODE'
                       , nrt.place_address_comments
-                      , CASE
-                            WHEN LEN(RTRIM(LTRIM(nrt.place_state_desc))) > 1 THEN nrt.place_state_desc
-            END                                      AS PLACE_STATE_DESC
-                      , CASE
-                            WHEN LEN(RTRIM(LTRIM(nrt.place_county_desc))) > 1 THEN nrt.place_county_desc
-            END                                      AS PLACE_COUNTY_DESC
-                      , CASE
-                            WHEN LEN(RTRIM(LTRIM(nrt.place_country_desc))) > 1 THEN nrt.place_country_desc
-            END                                      AS PLACE_COUNTRY_DESC
+                      , nrt.place_state_desc
+                      , nrt.place_county_desc
+                      , nrt.place_country_desc
                       , nrt.place_elp_cd
                       , tele.place_tele_locator_uid  AS 'PLACE_TELE_LOCATOR_UID'
                       , tele.place_phone_ext         AS 'PLACE_PHONE_EXT'

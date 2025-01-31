@@ -34,4 +34,5 @@ public class PageCaseAnswer {
     private String blockNm;
     private String lastChgTime;
     private String recordStatusCd;
+    private String partTypeCd;
 }

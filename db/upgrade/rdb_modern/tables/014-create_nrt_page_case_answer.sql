@@ -1,4 +1,7 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_page_case_answer' and xtype = 'U')
+IF NOT EXISTS (SELECT 1
+               FROM sysobjects
+               WHERE name = 'nrt_page_case_answer'
+                 and xtype = 'U')
 CREATE TABLE dbo.nrt_page_case_answer
 (
     act_uid                bigint                                          NOT NULL,
@@ -23,6 +26,7 @@ CREATE TABLE dbo.nrt_page_case_answer
     code_set_group_id      bigint                                          NULL,
     block_nm               varchar(30)                                     NULL,
     last_chg_time          datetime                                        NULL,
+    part_type_cd           varchar(30)                                     NULL,
     record_status_cd       varchar(20)                                     NOT NULL,
     refresh_datetime       datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime           datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,

@@ -437,7 +437,7 @@ class InvestigationDataProcessingTests {
         PageCaseAnswer pageCaseAnswer = constructCaseAnswer();
 
         transformer.transformInvestigationData(investigation);
-        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         assertEquals(PAGE_CASE_ANSWER_TOPIC, topicCaptor.getValue());
 
         var actualPageCaseAnswer = objectMapper.readValue(
@@ -453,7 +453,7 @@ class InvestigationDataProcessingTests {
         assertTrue(keyNode.get(1).path("optional").asBoolean());
 
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation);
-        assertEquals("D_INV_CLINICAL,D_INV_ADMINISTRATIVE", investigationTransformed.getRdbTableNameList());
+        assertEquals("D_INV_CLINICAL,D_INV_PLACE_REPEAT,D_INV_ADMINISTRATIVE", investigationTransformed.getRdbTableNameList());
     }
 
     @Test
@@ -463,7 +463,7 @@ class InvestigationDataProcessingTests {
 
         PageCaseAnswer expected = constructCaseAnswer();
 
-        assertEquals(3, answers.length);
+        assertEquals(4, answers.length);
         assertEquals(expected, answers[1]);
     }
 
@@ -551,6 +551,7 @@ class InvestigationDataProcessingTests {
         expected.setQuestionGroupSeqNbr(null);
         expected.setDataType("TEXT");
         expected.setLastChgTime("2024-05-29T16:05:44.537");
+        expected.setPartTypeCd(null);
         return expected;
     }
 
