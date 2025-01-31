@@ -32,8 +32,8 @@
     "payload": {
       "public_health_case_uid": 123,
       "patient_uid": 456,
-      "condition_cd": "10140",
-      "datamart": "Measles_Case",
-      "stored_procedure": "sp_measles_case_datamart_postprocessing"
+      "condition_cd": null,
+      "datamart": "Case_Lab_Datamart",
+      "stored_procedure": "sp_case_lab_datamart_postprocessing"
     }
   }

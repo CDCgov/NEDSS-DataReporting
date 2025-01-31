@@ -11,12 +11,6 @@ public class Datamart {
     @JsonProperty("patient_uid")
     private Long patientUid;
 
-    @JsonProperty("investigation_key")
-    private Long investigationKey;
-
-    @JsonProperty("patient_key")
-    private Long patientKey;
-
     @JsonProperty("condition_cd")
     private String conditionCd;
 

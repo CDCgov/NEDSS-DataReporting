@@ -9,15 +9,17 @@ import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datama
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.*;
@@ -55,168 +57,58 @@ class DatamartProcessingTest {
         closeable.close();
     }
 
-    @Test
-    void testHepDatamartProcess() throws Exception {
+    @ParameterizedTest
+    @MethodSource("provideTestData")
+    void testDatamartProcess(String conditionCd, String dmEntity, String dmSp, String dmJson) throws Exception {
         String topic = "dummy_investigation";
-        List<DatamartData> datamartDataLst = new ArrayList<>();
-        DatamartData datamartData = getDatamartData(123L, HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure());
-        datamartDataLst.add(datamartData);
+        DatamartData datamartData = getDatamartData(conditionCd, dmEntity, dmSp);
 
         datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(datamartDataLst);
+        datamartProcessor.process(List.of(datamartData));
+
+        Datamart datamart = getDatamart(dmJson);
+        DatamartKey datamartKey = new DatamartKey();
+        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
+
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+
+        String actualMessage = messageCaptor.getValue();
+        String actualKey = keyCaptor.getValue();
+
+        var actualReporting = objectMapper.readValue(
+                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
+        var actualDatamartKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
+
+        assertEquals(topic, topicCaptor.getValue());
+        assertEquals(datamartKey, actualDatamartKey);
+        assertEquals(datamart, actualReporting);
+    }
+
+    static Stream<Arguments> provideTestData() {
+        return Stream.of(
+                Arguments.of("10110", HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), "HepDatamart.json"),
+                Arguments.of("10110", STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), "StdDatamart.json"),
+                Arguments.of("12020", GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), "GenericCaseDatamart.json"),
+                Arguments.of("10370", CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), "CRSCaseDatamart.json"),
+                Arguments.of("10200", RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), "RubellaCaseDatamart.json"),
+                Arguments.of("10140", MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), "MeaslesCaseDatamart.json"),
+                Arguments.of(null, CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), "CaseLabDatamart.json")
+        );
+    }
+
+    @Test
+    void testExcludeCaseLabDatamart() throws Exception {
+        String topic = "dummy_investigation";
+        DatamartData datamartDataHep = getDatamartData("10110", HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure());
+        DatamartData datamartDataCaseLab = getDatamartData(null, CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure());
+
+        datamartProcessor.datamartTopic = topic;
+        datamartProcessor.process(List.of(datamartDataHep, datamartDataCaseLab));
 
         Datamart datamart = getDatamart("HepDatamart.json");
         DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
-
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-
-        String actualMessage = messageCaptor.getValue();
-        String actualKey = keyCaptor.getValue();
-
-        var actualReporting = objectMapper.readValue(
-                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
-        var actualDatamartKey = objectMapper.readValue(
-                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
-
-        assertEquals(topic, topicCaptor.getValue());
-        assertEquals(datamartKey, actualDatamartKey);
-        assertEquals(datamart, actualReporting);
-    }
-
-    @Test
-    void testStdDatamartProcess() throws Exception {
-        String topic = "dummy_investigation";
-        List<DatamartData> datamartDataLst = new ArrayList<>();
-        DatamartData datamartData = getDatamartData(123L, STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure());
-        datamartDataLst.add(datamartData);
-
-        datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(datamartDataLst);
-
-        Datamart datamart = getDatamart("StdDatamart.json");
-        DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
-
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-
-        String actualMessage = messageCaptor.getValue();
-        String actualKey = keyCaptor.getValue();
-
-        var actualReporting = objectMapper.readValue(
-                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
-        var actualDatamartKey = objectMapper.readValue(
-                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
-
-        assertEquals(topic, topicCaptor.getValue());
-        assertEquals(datamartKey, actualDatamartKey);
-        assertEquals(datamart, actualReporting);
-    }
-
-    @Test
-    void testGenericCaseDatamartProcess() throws Exception {
-        String topic = "dummy_investigation";
-        List<DatamartData> datamartDataLst = new ArrayList<>();
-        DatamartData datamartData = getDatamartData(10009757L, GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure());
-        datamartData.setConditionCd("12020");
-        datamartDataLst.add(datamartData);
-
-        datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(datamartDataLst);
-
-        Datamart datamart = getDatamart("GenericCaseDatamart.json");
-        DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
-
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-
-        String actualMessage = messageCaptor.getValue();
-        String actualKey = keyCaptor.getValue();
-
-        var actualReporting = objectMapper.readValue(
-                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
-        var actualDatamartKey = objectMapper.readValue(
-                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
-
-        assertEquals(topic, topicCaptor.getValue());
-        assertEquals(datamartKey, actualDatamartKey);
-        assertEquals(datamart, actualReporting);
-    }
-
-    @Test
-    void testCRSCaseDatamartProcess() throws Exception {
-        String topic = "dummy_investigation";
-        List<DatamartData> datamartDataLst = new ArrayList<>();
-        DatamartData datamartData = getDatamartData(101L, CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure());
-        datamartData.setConditionCd("10370");
-        datamartDataLst.add(datamartData);
-
-        datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(datamartDataLst);
-
-        Datamart datamart = getDatamart("CRSCaseDatamart.json");
-        DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
-
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-
-        String actualMessage = messageCaptor.getValue();
-        String actualKey = keyCaptor.getValue();
-
-        var actualReporting = objectMapper.readValue(
-                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
-        var actualDatamartKey = objectMapper.readValue(
-                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
-
-        assertEquals(topic, topicCaptor.getValue());
-        assertEquals(datamartKey, actualDatamartKey);
-        assertEquals(datamart, actualReporting);
-    }
-
-    @Test
-    void testRubellaCaseDatamartProcess() throws Exception {
-        String topic = "dummy_investigation";
-        List<DatamartData> datamartDataLst = new ArrayList<>();
-        DatamartData datamartData = getDatamartData(101L, RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure());
-        datamartData.setConditionCd("10200");
-        datamartDataLst.add(datamartData);
-
-        datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(datamartDataLst);
-
-        Datamart datamart = getDatamart("RubellaCaseDatamart.json");
-        DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
-
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-
-        String actualMessage = messageCaptor.getValue();
-        String actualKey = keyCaptor.getValue();
-
-        var actualReporting = objectMapper.readValue(
-                objectMapper.readTree(actualMessage).path(PAYLOAD).toString(), Datamart.class);
-        var actualDatamartKey = objectMapper.readValue(
-                objectMapper.readTree(actualKey).path(PAYLOAD).toString(), DatamartKey.class);
-
-        assertEquals(topic, topicCaptor.getValue());
-        assertEquals(datamartKey, actualDatamartKey);
-        assertEquals(datamart, actualReporting);
-    }
-
-    @Test
-    void testMeaslesCaseDatamartProcess() throws Exception {
-        String topic = "dummy_investigation";
-        List<DatamartData> datamartDataLst = new ArrayList<>();
-        DatamartData datamartData = getDatamartData(101L, MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure());
-        datamartData.setConditionCd("10140");
-        datamartDataLst.add(datamartData);
-
-        datamartProcessor.datamartTopic = topic;
-        datamartProcessor.process(datamartDataLst);
-
-        Datamart datamart = getDatamart("MeaslesCaseDatamart.json");
-        DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
+        datamartKey.setPublicHealthCaseUid(datamartDataHep.getPublicHealthCaseUid());
 
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
@@ -240,17 +132,17 @@ class DatamartProcessingTest {
 
     @Test
     void testDatamartProcessException() {
-        List<DatamartData> nullPhcResults = Collections.singletonList(getDatamartData(null, HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure()));
+        DatamartData datamartData = getDatamartData("10110", HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure());
+        datamartData.setPublicHealthCaseUid(null);
+        List<DatamartData> nullPhcResults = List.of(datamartData);
         assertThrows(RuntimeException.class, () -> datamartProcessor.process(nullPhcResults));
     }
 
-    private DatamartData getDatamartData(Long phcUid, String entityName, String storedProcedure) {
+    private DatamartData getDatamartData(String conditionCd, String entityName, String storedProcedure) {
         DatamartData datamartData = new DatamartData();
-        datamartData.setPublicHealthCaseUid(phcUid);
-        datamartData.setInvestigationKey(100L);
+        datamartData.setPublicHealthCaseUid(123L);
         datamartData.setPatientUid(456L);
-        datamartData.setPatientKey(200L);
-        datamartData.setConditionCd("10110");
+        datamartData.setConditionCd(conditionCd);
         datamartData.setDatamart(entityName);
         datamartData.setStoredProcedure(storedProcedure);
         return datamartData;
@@ -262,4 +154,4 @@ class DatamartProcessingTest {
         return objectMapper.readValue(dmNode.get(PAYLOAD).toString(), Datamart.class);
     }
 
-  }
+}

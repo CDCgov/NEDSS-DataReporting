@@ -15,6 +15,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 
+import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.CASE_LAB_DATAMART;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.HEPATITIS_DATAMART;
+
 @Component
 @RequiredArgsConstructor
 public class ProcessDatamartData {
@@ -29,9 +32,10 @@ public class ProcessDatamartData {
 
     public void process(List<DatamartData> data) {
         if (Objects.nonNull(data) && !data.isEmpty()) {
+            data = reduce(data);
             try {
                 for (DatamartData datamartData : data) {
-                    if (datamartData.getPatientKey().equals(1L)) continue; // skipping now for unprocessed patients
+                    if (Objects.isNull(datamartData.getPatientUid())) continue; // skipping now for unprocessed patients
 
                     Datamart dmart = modelMapper.map(datamartData, Datamart.class);
                     DatamartKey dmKey = new DatamartKey();
@@ -40,12 +44,27 @@ public class ProcessDatamartData {
                     String jsonMessage = jsonGenerator.generateStringJson(dmart);
 
                     kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
-                    logger.info("Datamart data: PHC uid={}, condition_cd={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getConditionCd(), datamartTopic);
+                    logger.info("Datamart data: PHC uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
                 }
             } catch (Exception e) {
-                logger.error("Error processing Datamart JSON array from investigation result data: {}", e.getMessage());
-                throw new RuntimeException(e);
+                String msg = "Error processing Datamart JSON array from investigation result data: " + e.getMessage();
+                throw new RuntimeException(msg, e);
             }
         }
+    }
+
+    private List<DatamartData> reduce(List<DatamartData> dmData) {
+        List<Long> hepUidsAlreadyInDmData =
+                dmData.stream()
+                        .filter(d -> HEPATITIS_DATAMART.getEntityName().equals(d.getDatamart()))
+                        .map(DatamartData::getPublicHealthCaseUid).toList();
+
+        return dmData.stream()
+                .filter(d -> {
+                    boolean isCaseLab = CASE_LAB_DATAMART.getEntityName().equals(d.getDatamart());
+                    boolean hasHepAlready = hepUidsAlreadyInDmData.contains(d.getPublicHealthCaseUid());
+                    // If it's Case_Lab_Datamart AND we already have that UID in Hepatitis_Datamart -> exclude
+                    return !(isCaseLab && hasHepAlready);
+                }).toList();
     }
 }

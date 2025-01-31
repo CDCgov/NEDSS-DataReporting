@@ -1562,6 +1562,33 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        SELECT inv.CASE_UID                     AS public_health_case_uid,
+               pat.PATIENT_UID                  AS patient_uid,
+               dtm.Datamart                     AS datamart,
+               c.CONDITION_CD                   AS condition_cd,
+               dtm.Stored_Procedure             AS stored_procedure
+        FROM #TMP_D_LAB_TEST_N tmp
+            INNER JOIN LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+            JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+            LEFT JOIN CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+            JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
+        WHERE ltr.INVESTIGATION_KEY <> 1
+        UNION
+        SELECT inv.CASE_UID                     AS public_health_case_uid,
+               pat.PATIENT_UID                  AS patient_uid,
+               dtm.Datamart                     AS datamart,
+               null                             AS condition_cd,
+               dtm.Stored_Procedure             AS stored_procedure
+        FROM #TMP_D_LAB_TEST_N tmp
+            INNER JOIN LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+            JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+            LEFT JOIN CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+            JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
+        WHERE ltr.INVESTIGATION_KEY <> 1;
 
     END TRY
 
@@ -1604,8 +1631,6 @@ BEGIN
 
         RETURN -1 ;
 
-
     END CATCH
-
 
 END;

@@ -132,7 +132,8 @@ BEGIN
                NULLIF(nrt.outbreak_name_desc, '')               as OUTBREAK_NAME_DESC,
                nrt.cd,
                nrt.investigation_form_cd,
-               nrt.investigator_assigned_datetime as INV_ASSIGNED_DT_LEGACY
+               nrt.investigator_assigned_datetime as INV_ASSIGNED_DT_LEGACY,
+               nrt.patient_id
         into #temp_inv_table
         from dbo.nrt_investigation nrt
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
@@ -777,7 +778,7 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        SET @proc_step_name = 'SP_COMPLETE';
+        SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 6;
 
         INSERT INTO [dbo].[job_flow_log]
@@ -803,19 +804,26 @@ BEGIN
                ,LEFT(@id_list, 500));
 
 
-        SELECT nrt.public_health_case_uid         AS public_health_case_uid,
+        SELECT nrt.CASE_UID                       AS public_health_case_uid,
                nrt.patient_id                     AS patient_uid,
-               COALESCE(inv.INVESTIGATION_KEY, 1) AS investigation_key,
-               COALESCE(pat.PATIENT_KEY, 1)       AS patient_key,
-               nrt.cd                             AS condition_cd,
                dtm.Datamart                       AS datamart,
+               nrt.cd                             AS condition_cd,
                dtm.Stored_Procedure               AS stored_procedure
-        FROM dbo.nrt_investigation nrt
-                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.public_health_case_uid
+        FROM #temp_inv_table nrt
+                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
                  LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nrt.cd
-        WHERE nrt.public_health_case_uid in
-              (SELECT value FROM STRING_SPLIT(@id_list, ','));
+        UNION
+        SELECT nrt.CASE_UID                       AS public_health_case_uid,
+               nrt.patient_id                     AS patient_uid,
+               dtm.Datamart                       AS datamart,
+               null                               AS condition_cd,
+               dtm.Stored_Procedure               AS stored_procedure
+        FROM #temp_inv_table nrt
+                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
+                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
+
 
 
     END TRY

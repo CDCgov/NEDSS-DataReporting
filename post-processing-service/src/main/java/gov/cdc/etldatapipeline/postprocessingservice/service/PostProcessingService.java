@@ -85,6 +85,7 @@ public class PostProcessingService {
         CRS_CASE(0,"CRS_Case", PHC_UID, "sp_crs_case_datamart_postprocessing"),
         RUBELLA_CASE(0,"Rubella_Case", PHC_UID, "sp_rubella_case_datamart_postprocessing"),
         MEASLES_CASE(0, "Measles_Case", PHC_UID,"sp_measles_case_datamart_postprocessing"),
+        CASE_LAB_DATAMART(0,"Case_Lab_Datamart", PHC_UID, "sp_case_lab_datamart_postprocessing"),
         UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
         private final int priority;
@@ -183,16 +184,16 @@ public class PostProcessingService {
                 logger.info("For payload: {} DataMart object is null. Skipping further processing", payloadNode);
                 return;
             }
-            Map<Long, Long> dmMap = new HashMap<>();
             if (Objects.isNull(dmData.getPublicHealthCaseUid()) || Objects.isNull(dmData.getPatientUid())) {
                 logger.info("For payload: {} DataMart Public Health Case/Patient Id is null. Skipping further processing", payloadNode);
                 return;
             }
-            dmMap.put(dmData.getPublicHealthCaseUid(), dmData.getPatientUid());
             if (Objects.isNull(dmData.getDatamart())) {
                 logger.info("For payload: {} DataMart value is null. Skipping further processing", payloadNode);
                 return;
             }
+            Map<Long, Long> dmMap = new HashMap<>();
+            dmMap.put(dmData.getPublicHealthCaseUid(), dmData.getPatientUid());
             dmCache.computeIfAbsent(dmData.getDatamart(), k -> ConcurrentHashMap.newKeySet()).add(dmMap);
         } catch (Exception e) {
             String msg = "Error processing datamart message: " + e.getMessage();
@@ -204,8 +205,8 @@ public class PostProcessingService {
     protected void processCachedIds() {
 
         // Making cache snapshot preventing out-of-sequence ids processing
-        Map<String, List<Long>> idCacheSnapshot;
-        Map<Long, String> idValsSnapshot;
+        final Map<String, List<Long>> idCacheSnapshot;
+        final Map<Long, String> idValsSnapshot;
         synchronized (cacheLock) {
             idCacheSnapshot = idCache.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
@@ -245,18 +246,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace);
                         break;
                     case INVESTIGATION:
-                        dmData = processTopic(keyTopic, entity, ids,
-                                investigationRepository::executeStoredProcForPublicHealthCaseIds);
-
-                        ids.stream().filter(idValsSnapshot::containsKey).forEach(id ->
-                            processTopic(keyTopic, Entity.CASE_ANSWERS, id, idValsSnapshot.get(id),
-                                    investigationRepository::executeStoredProcForPageBuilder));
-
-                        processTopic(keyTopic, Entity.F_PAGE_CASE, ids,
-                                investigationRepository::executeStoredProcForFPageCase);
-
-                        processTopic(keyTopic, Entity.CASE_COUNT, ids,
-                                investigationRepository::executeStoredProcForCaseCount);
+                        dmData = processInvestigation(keyTopic, entity, ids, idValsSnapshot);
                         break;
                     case NOTIFICATION:
                         List<DatamartData> dmDataN = processTopic(keyTopic, entity, ids,
@@ -264,47 +254,20 @@ public class PostProcessingService {
                         dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().toList();
                         break;
                     case CASE_MANAGEMENT:
-                        processTopic(keyTopic, entity, ids,
-                                investigationRepository::executeStoredProcForCaseManagement);
+                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
                         processTopic(keyTopic, entity.getEntityName(), ids,
                                 investigationRepository::executeStoredProcForFStdPageCase, "sp_f_std_page_case_postprocessing");
                         break;
                     case INTERVIEW:
-                        processTopic(keyTopic, entity, ids,
-                                postProcRepository::executeStoredProcForDInterview);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview);
                         processTopic(keyTopic, entity.getEntityName(), ids,
                                 postProcRepository::executeStoredProcForFInterviewCase, "sp_f_interview_case_postprocessing");
                         break;
                     case LDF_DATA:
-                        processTopic(keyTopic, entity, ids,
-                                postProcRepository::executeStoredProcForLdfIds);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
                         break;
                     case OBSERVATION:
-                        List<Long> morbIds;
-                        List<Long> labIds;
-                        synchronized (cacheLock) {
-                            morbIds = idValsSnapshot.entrySet().stream()
-                                    .filter(e -> e.getValue().equals(MORB_REPORT)).map(Entry::getKey).toList();
-                            labIds = idValsSnapshot.entrySet().stream()
-                                    .filter(e -> e.getValue().equals(LAB_REPORT)).map(Entry::getKey).toList();
-                        }
-
-                        if (!morbIds.isEmpty()) {
-                            processTopic(keyTopic, entity.getEntityName(), morbIds,
-                                    postProcRepository::executeStoredProcForMorbReport, "sp_d_morbidity_report_postprocessing");
-                        }
-
-                        if (!labIds.isEmpty()) {
-                            processTopic(keyTopic, entity.getEntityName(), labIds,
-                                    postProcRepository::executeStoredProcForLabTest, "sp_d_lab_test_postprocessing");
-                            processTopic(keyTopic, entity.getEntityName(), labIds,
-                                    postProcRepository::executeStoredProcForLabTestResult, "sp_d_labtest_result_postprocessing");
-
-                            processTopic(keyTopic, entity.getEntityName(), labIds,
-                                    postProcRepository::executeStoredProcForLab100Datamart, "sp_lab100_datamart_postprocessing");
-                            processTopic(keyTopic, entity.getEntityName(), labIds,
-                                    postProcRepository::executeStoredProcForLab101Datamart, "sp_lab101_datamart_postprocessing");
-                        }
+                        dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);
                         break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
@@ -317,14 +280,61 @@ public class PostProcessingService {
         }
     }
 
+    private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids, Map<Long, String> idValsSnapshot) {
+        List<DatamartData> dmData;
+        dmData = processTopic(keyTopic, entity, ids,
+                investigationRepository::executeStoredProcForPublicHealthCaseIds);
+
+        ids.stream().filter(idValsSnapshot::containsKey).forEach(id ->
+                processTopic(keyTopic, Entity.CASE_ANSWERS, id, idValsSnapshot.get(id),
+                        investigationRepository::executeStoredProcForPageBuilder));
+
+        processTopic(keyTopic, Entity.F_PAGE_CASE, ids,
+                investigationRepository::executeStoredProcForFPageCase);
+
+        processTopic(keyTopic, Entity.CASE_COUNT, ids,
+                investigationRepository::executeStoredProcForCaseCount);
+        return dmData;
+    }
+
+    private List<DatamartData> processObservation(Map<Long, String> idValsSnapshot, String keyTopic, Entity entity, List<DatamartData> dmData) {
+        final List<Long> morbIds;
+        final List<Long> labIds;
+        synchronized (cacheLock) {
+            morbIds = idValsSnapshot.entrySet().stream()
+                    .filter(e -> e.getValue().equals(MORB_REPORT)).map(Entry::getKey).toList();
+            labIds = idValsSnapshot.entrySet().stream()
+                    .filter(e -> e.getValue().equals(LAB_REPORT)).map(Entry::getKey).toList();
+        }
+
+        if (!morbIds.isEmpty()) {
+            List<DatamartData> dmDataM = processTopic(keyTopic, entity.getEntityName(), morbIds,
+                    postProcRepository::executeStoredProcForMorbReport, "sp_d_morbidity_report_postprocessing");
+            dmData = Stream.concat(dmData.stream(), dmDataM.stream()).distinct().toList();
+        }
+
+        if (!labIds.isEmpty()) {
+            processTopic(keyTopic, entity.getEntityName(), labIds,
+                    postProcRepository::executeStoredProcForLabTest, "sp_d_lab_test_postprocessing");
+
+            List<DatamartData> dmDataL = processTopic(keyTopic, entity.getEntityName(), labIds,
+                    postProcRepository::executeStoredProcForLabTestResult, "sp_d_labtest_result_postprocessing");
+            dmData = Stream.concat(dmData.stream(), dmDataL.stream()).distinct().toList();
+
+            processTopic(keyTopic, entity.getEntityName(), labIds,
+                    postProcRepository::executeStoredProcForLab100Datamart, "sp_lab100_datamart_postprocessing");
+            processTopic(keyTopic, entity.getEntityName(), labIds,
+                    postProcRepository::executeStoredProcForLab101Datamart, "sp_lab101_datamart_postprocessing");
+        }
+        return dmData;
+    }
+
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
     protected void processDatamartIds() {
         for (Map.Entry<String, Set<Map<Long, Long>>> entry : dmCache.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 String dmType = entry.getKey();
-
                 Set<Map<Long, Long>> dmSet = entry.getValue();
-
                 dmCache.put(dmType, ConcurrentHashMap.newKeySet());
 
                 String cases = dmSet.stream()
@@ -333,6 +343,10 @@ public class PostProcessingService {
                 //make sure the entity names for datamart enum values follows the same naming as the enum itself
                 switch (Entity.valueOf(dmType.toUpperCase())) {
                     case HEPATITIS_DATAMART:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, Entity.CASE_LAB_DATAMART.getEntityName(), Entity.CASE_LAB_DATAMART.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForCaseLabDatamart(cases);
+                        completeLog(Entity.CASE_LAB_DATAMART.getStoredProcedure());
+
                         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.HEPATITIS_DATAMART.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForHepDatamart(cases);
                         completeLog(Entity.HEPATITIS_DATAMART.getStoredProcedure());
@@ -361,6 +375,11 @@ public class PostProcessingService {
                         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.MEASLES_CASE.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForMeaslesCaseDatamart(cases);
                         completeLog(Entity.MEASLES_CASE.getStoredProcedure());
+                        break;
+                    case CASE_LAB_DATAMART:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.CASE_LAB_DATAMART.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForCaseLabDatamart(cases);
+                        completeLog(Entity.CASE_LAB_DATAMART.getStoredProcedure());
                         break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ",dmType);
@@ -428,9 +447,14 @@ public class PostProcessingService {
 
     private <T> List<T> processTopic(String keyTopic, Entity entity, List<Long> ids,
                                      Function<String, List<T>> repositoryMethod) {
-        String idsString = prepareAndLog(keyTopic, ids, entity.getEntityName(), entity.getStoredProcedure());
+        return processTopic(keyTopic, entity.getEntityName(), ids, repositoryMethod, entity.getStoredProcedure());
+    }
+
+    private <T> List<T> processTopic(String keyTopic, String name, List<Long> ids,
+                                     Function<String, List<T>> repositoryMethod, String spName) {
+        String idsString = prepareAndLog(keyTopic, ids, name, spName);
         List<T> result = repositoryMethod.apply(idsString);
-        completeLog(entity.getStoredProcedure());
+        completeLog(spName);
         return result;
     }
 

@@ -144,4 +144,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            FROM dbo.nrt_datamart_metadata ndm
                            WHERE ndm.condition_cd = measles_codes.condition_cd);
             END;
+
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Case_Lab_Datamart')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                VALUES ('', '', 'Case_Lab_Datamart', 'sp_case_lab_datamart_postprocessing')
+            END;
     END;

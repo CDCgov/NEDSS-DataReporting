@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_d_morbidity_report_postprocessing]
+CREATE OR ALTER PROCEDURE  [dbo].[sp_d_morbidity_report_postprocessing]
 (@pMorbidityIdList nvarchar(max)
 , @pDebug bit = 'false')
 
@@ -1300,6 +1300,34 @@ BEGIN
                                  );
 
         COMMIT TRANSACTION;
+
+        SELECT inv.CASE_UID                     AS public_health_case_uid,
+               pat.PATIENT_UID                  AS patient_uid,
+               dtm.Datamart                     AS datamart,
+               c.CONDITION_CD                   AS condition_cd,
+               dtm.Stored_Procedure             AS stored_procedure
+        FROM #nrt_morbidity_observation nrt
+            INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
+            INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
+            JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
+            LEFT JOIN CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
+            JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
+        WHERE mre.INVESTIGATION_KEY <> 1
+        UNION
+        SELECT inv.CASE_UID                     AS public_health_case_uid,
+               pat.PATIENT_UID                  AS patient_uid,
+               dtm.Datamart                     AS datamart,
+               null                             AS condition_cd,
+               dtm.Stored_Procedure             AS stored_procedure
+        FROM #nrt_morbidity_observation nrt
+            INNER JOIN MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
+            INNER JOIN MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
+            LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
+        WHERE mre.INVESTIGATION_KEY <> 1
 
     END TRY
 

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,7 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
+import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.*;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.CASE_LAB_DATAMART;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -31,7 +36,7 @@ class PostProcessingServiceTest {
     @Mock
     private PostProcRepository postProcRepositoryMock;
     @Mock
-    private InvestigationRepository investigationRepositoryMock;
+    private static InvestigationRepository investigationRepositoryMock;
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
@@ -435,100 +440,58 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(14).contains(obsTopic));
     }
 
-    @Test
-    void testPostProcessHepatitsDatamart() {
+    @ParameterizedTest
+    @MethodSource("datamartTestData")
+    void testPostProcessDatamart(DatamartTestCase testCase) {
         String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
-                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10110\"," +
-                "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
 
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
-
-        verify(investigationRepositoryMock).executeStoredProcForHepDatamart("123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName()));
+        testCase.verificationStep.accept(investigationRepositoryMock, "123");
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
+        assertEquals(testCase.logSize, logs.size());
+        assertEquals(logs.getLast().getFormattedMessage(), "Stored proc execution completed: " + testCase.storedProcedure);
     }
 
-    @Test
-    void testPostProcessStdHIVDatamart() {
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
-                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10110\"," +
-                "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        verify(investigationRepositoryMock).executeStoredProcForStdHIVDatamart("123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.STD_HIV_DATAMART.getEntityName()));
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-    }
-
-    @Test
-    void testPostProcessGenericCaseDatamart() {
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
-                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"12020\"," +
-                "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart("123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.GENERIC_CASE.getEntityName()));
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-    }
-
-    @Test
-    void testPostProcessCRSCaseDatamart() {
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
-                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10370\"," +
-                "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_crs_case_datamart_postprocessing\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        verify(investigationRepositoryMock).executeStoredProcForCRSCaseDatamart("123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.CRS_CASE.getEntityName()));
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-    }
-
-    @Test
-    void testPostProcessRubellaCaseDatamart() {
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
-                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10200\"," +
-                "\"datamart\":\"Rubella_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        verify(investigationRepositoryMock).executeStoredProcForRubellaCaseDatamart("123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.RUBELLA_CASE.getEntityName()));
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-    }
-
-    @Test
-    void testPostProcessMeaslesCaseDatamart() {
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
-                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10140\"," +
-                "\"datamart\":\"Measles_Case\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        verify(investigationRepositoryMock).executeStoredProcForMeaslesCaseDatamart("123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(PostProcessingService.Entity.MEASLES_CASE.getEntityName()));
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
+    static Stream<DatamartTestCase> datamartTestData() {
+        return Stream.of(
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                    "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}",
+                    HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), 5,
+                    (repo, uid) -> verify(repo).executeStoredProcForHepDatamart(uid)),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                    "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}",
+                    STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), 3,
+                    (repo, uid) -> verify(repo).executeStoredProcForStdHIVDatamart(uid)),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                    "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}",
+                    GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), 3,
+                    (repo, uid) -> verify(repo).executeStoredProcForGenericCaseDatamart(uid)),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
+                    "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
+                    CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), 3,
+                    (repo, uid) -> verify(repo).executeStoredProcForCRSCaseDatamart(uid)),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
+                    "\"datamart\":\"Rubella_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
+                    RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), 3,
+                    (repo, uid) -> verify(repo).executeStoredProcForRubellaCaseDatamart(uid)),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
+                    "\"datamart\":\"Measles_Case\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}",
+                    MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), 3,
+                    (repo, uid) -> verify(repo).executeStoredProcForMeaslesCaseDatamart(uid)),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null," +
+                    "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
+                    CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
+                    (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid))
+        );
     }
 
     @Test
@@ -567,7 +530,7 @@ class PostProcessingServiceTest {
         String dmTopic = "dummy_datamart";
 
         // patientKey=1L for no patient data in D_PATIENT
-        List<DatamartData> invResults = getDatamartData(123L, 1L);
+        List<DatamartData> invResults = getDatamartData(123L, null);
 
         datamartProcessor.datamartTopic = dmTopic;
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
@@ -606,7 +569,6 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.idCache.containsKey(userProfileTopic));
 
         postProcessingServiceMock.processCachedIds();
-
         verify(postProcRepositoryMock).executeStoredProcForUserProfile("123,124");
     }
 
@@ -720,6 +682,8 @@ class PostProcessingServiceTest {
     @CsvSource({
             "'{\"payload\":null}'",
             "'{\"payload\":{}}'",
+            "'{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
+            "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":null,\"datamart\":\"dummy\"}}'",
             "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'"
     })
     void testPostProcessDatamartIncompleteData(String msg) {
@@ -743,8 +707,7 @@ class PostProcessingServiceTest {
     @Test
     void testProcessDatamartInvalidKey() {
         String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456," +
-                "\"investigation_key\":100,\"patient_key\":200,\"condition_cd\":\"10370\"," +
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                 "\"datamart\":\"UNKNOWN\",\"stored_procedure\":\"sp_nrt_unknown_postprocessing\"}}";
 
         postProcessingServiceMock.postProcessDatamart(topic, msg);
@@ -778,17 +741,32 @@ class PostProcessingServiceTest {
         inOrder.verify(postProcessingServiceMock).processDatamartIds();
     }
 
-    private List<DatamartData> getDatamartData(Long phcUid, Long patientKey) {
+    private List<DatamartData> getDatamartData(Long phcUid, Long patientUid) {
         List<DatamartData> datamartDataLst = new ArrayList<>();
         DatamartData datamartData = new DatamartData();
         datamartData.setPublicHealthCaseUid(phcUid);
-        datamartData.setInvestigationKey(100L);
-        datamartData.setPatientUid(456L);
-        datamartData.setPatientKey(patientKey);
+        datamartData.setPatientUid(patientUid);
         datamartData.setConditionCd("10110");
         datamartData.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
         datamartData.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
         datamartDataLst.add(datamartData);
         return datamartDataLst;
+    }
+
+    static class DatamartTestCase {
+        String msg;
+        String datamartEntityName;
+        String storedProcedure;
+        int logSize;
+        BiConsumer<InvestigationRepository, String> verificationStep;
+
+        DatamartTestCase(String msg, String datamartEntityName, String storedProcedure,
+                         int logSize, BiConsumer<InvestigationRepository, String> verificationStep) {
+            this.msg = msg;
+            this.datamartEntityName = datamartEntityName;
+            this.storedProcedure = storedProcedure;
+            this.logSize = logSize;
+            this.verificationStep = verificationStep;
+        }
     }
 }

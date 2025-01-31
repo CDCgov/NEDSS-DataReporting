@@ -13,15 +13,6 @@
         "field":"patient_uid"
       },
       {
-        "type":"int64",
-        "optional":true,
-        "field":"investigation_key"
-      },
-      {"type":"int64",
-        "optional":true,
-        "field":"patient_key"
-      },
-      {
         "type":"string",
         "optional":true,
         "field":"condition_cd"
@@ -42,8 +33,6 @@
   {
     "public_health_case_uid":123,
     "patient_uid":456,
-    "investigation_key":100,
-    "patient_key":200,
     "condition_cd":"10110",
     "datamart":"Hepatitis_Datamart",
     "stored_procedure":"sp_hepatitis_datamart_postprocessing"

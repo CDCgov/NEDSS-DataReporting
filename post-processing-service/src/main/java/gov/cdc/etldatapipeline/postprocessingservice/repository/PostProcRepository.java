@@ -1,13 +1,16 @@
 package gov.cdc.etldatapipeline.postprocessingservice.repository;
 
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.PostProcSp;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
-public interface PostProcRepository extends JpaRepository<PostProcSp, Long> {
+public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_nrt_organization_postprocessing")
     void executeStoredProcForOrganizationIds(@Param("organizationUids") String organizationUids);
 
@@ -20,14 +23,14 @@ public interface PostProcRepository extends JpaRepository<PostProcSp, Long> {
     @Procedure("sp_nrt_ldf_postprocessing")
     void executeStoredProcForLdfIds(@Param("ldfUids") String ldfUids);
 
-    @Procedure("sp_d_morbidity_report_postprocessing")
-    void executeStoredProcForMorbReport(@Param("observationUids") String observationUids);
+    @Query(value = "EXEC sp_d_morbidity_report_postprocessing :observationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForMorbReport(@Param("observationUids") String observationUids);
 
     @Procedure("sp_d_lab_test_postprocessing")
     void executeStoredProcForLabTest(@Param("observationUids") String observationUids);
 
-    @Procedure("sp_d_labtest_result_postprocessing")
-    void executeStoredProcForLabTestResult(@Param("observationUids") String observationUids);
+    @Query(value = "EXEC sp_d_labtest_result_postprocessing :observationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLabTestResult(@Param("observationUids") String observationUids);
 
     @Procedure("sp_lab100_datamart_postprocessing")
     void executeStoredProcForLab100Datamart(@Param("observationUids") String observationUids);

@@ -1,33 +1,28 @@
 package gov.cdc.etldatapipeline.postprocessingservice.repository.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-@Data
 @Entity
+@Data
+@AllArgsConstructor @NoArgsConstructor
+@IdClass(DatamartDataId.class)
 public class DatamartData {
 
     @Id
     @Column(name = "public_health_case_uid")
     private Long publicHealthCaseUid;
 
+    @Id
     @Column(name = "datamart")
     private String datamart;
 
     @Column(name = "patient_uid")
     @EqualsAndHashCode.Exclude
     private Long patientUid;
-
-    @Column(name = "investigation_key")
-    @EqualsAndHashCode.Exclude
-    private Long investigationKey;
-
-    @Column(name = "patient_key")
-    @EqualsAndHashCode.Exclude
-    private Long patientKey;
 
     @Column(name = "condition_cd")
     @EqualsAndHashCode.Exclude
