@@ -21,14 +21,16 @@ BEGIN
         , [Status_Type]
         , [step_number]
         , [step_name]
-        , [row_count])
+        , [row_count]
+        , [msg_description1])
         VALUES ( @batch_id
                , @dataflow_name
                , @package_name
                , 'START'
                , 0
                , 'SP_Start'
-               , 0);
+               , 0
+               ,LEFT(CAST(@phc_id AS VARCHAR(10)), 500));
 
         SET @proc_step_name = 'Create PLACE_INIT_OUT Temp table -' + CAST(@phc_id AS VARCHAR(10));
         SET @proc_step_no = 1;
@@ -173,6 +175,9 @@ BEGIN
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
+        SET @proc_step_name = 'Create L_INV_PLACE_REPEAT if missing';
+        SET @proc_step_no = @proc_step_no + 1;
+
 
         IF OBJECT_ID('dbo.L_INV_PLACE_REPEAT', 'U') IS NULL
             BEGIN
@@ -186,13 +191,193 @@ BEGIN
 
             END;
 
+        /* Logging */
+        SET @rowcount = @@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        ( batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count]
+        )
+        VALUES ( @batch_id
+               , @dataflow_name
+               , @package_name
+               , 'START'
+               , @proc_step_no
+               , @proc_step_name
+               , @rowcount
+               );
+
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
-        SET @proc_step_name = 'Create #S_INV_PLACE_REPEAT';
+        SET @proc_step_name = 'Create D_INV_PLACE_REPEAT if missing';
         SET @proc_step_no = @proc_step_no + 1;
 
-        /*Key generation: If PAGE_CASE_UID doesn't exist in L_INV_PLACE_REPEAT. */
+
+        IF OBJECT_ID('dbo.D_INV_PLACE_REPEAT', 'U') IS NULL
+            BEGIN
+                CREATE TABLE [dbo].[D_INV_PLACE_REPEAT]
+                (
+                    PAGE_CASE_UID numeric(20,0) NULL,
+                    answer_group_seq_nbr numeric(11,0) NULL,
+                    PLACE_HANGOUT_OF_PHC varchar(2000) NULL,
+                    PLACE_AS_SEX_OF_PHC varchar(2000) NULL,
+                    PLACE_KEY float NULL,
+                    PLACE_ADD_TIME datetime2(3) NULL,
+                    PLACE_ADD_USER_ID numeric(21,0) NULL,
+                    PLACE_ADDED_BY varchar(102) NULL,
+                    PLACE_ADDRESS_COMMENTS varchar(2000) NULL,
+                    PLACE_CITY varchar(100) NULL,
+                    PLACE_COUNTRY varchar(20) NULL,
+                    PLACE_COUNTRY_DESC varchar(50) NULL,
+                    PLACE_COUNTY_CODE varchar(20) NULL,
+                    PLACE_COUNTY_DESC varchar(255) NULL,
+                    PLACE_EMAIL varchar(100) NULL,
+                    PLACE_GENERAL_COMMENTS varchar(1000) NULL,
+                    PLACE_LAST_CHANGE_TIME datetime2(3) NULL,
+                    PLACE_LAST_CHG_USER_ID numeric(21,0) NULL,
+                    PLACE_LAST_UPDATED_BY varchar(102) NULL,
+                    PLACE_LOCAL_ID varchar(50) NULL,
+                    PLACE_LOCATOR_UID varchar(30) NULL,
+                    PLACE_NAME varchar(50) NULL,
+                    PLACE_PHONE varchar(20) NULL,
+                    PLACE_PHONE_COMMENTS varchar(2000) NULL,
+                    PLACE_PHONE_EXT varchar(20) NULL,
+                    PLACE_POSTAL_UID numeric(21,0) NULL,
+                    PLACE_QUICK_CODE varchar(100) NULL,
+                    PLACE_RECORD_STATUS varchar(20) NULL,
+                    PLACE_RECORD_STATUS_TIME datetime2(3) NULL,
+                    PLACE_STATE_CODE varchar(20) NULL,
+                    PLACE_STATE_DESC varchar(50) NULL,
+                    PLACE_STATUS_CD varchar(1) NULL,
+                    PLACE_STATUS_TIME datetime2(3) NULL,
+                    PLACE_STREET_ADDRESS_1 varchar(100) NULL,
+                    PLACE_STREET_ADDRESS_2 varchar(100) NULL,
+                    PLACE_TELE_LOCATOR_UID numeric(21,0) NULL,
+                    PLACE_TELE_TYPE varchar(14) NULL,
+                    PLACE_TELE_USE varchar(10) NULL,
+                    PLACE_TYPE_DESCRIPTION varchar(25) NULL,
+                    PLACE_UID numeric(21,0) NULL,
+                    PLACE_ZIP varchar(20) NULL,
+                    D_INV_PLACE_REPEAT_KEY float NULL
+                )
+                    ON [PRIMARY];
+
+                IF NOT EXISTS
+                    (
+                        SELECT D_INV_PLACE_REPEAT_KEY
+                        FROM [dbo].[D_INV_PLACE_REPEAT]
+                        WHERE D_INV_PLACE_REPEAT_KEY = 1
+                    )
+                    BEGIN
+                        INSERT INTO [dbo].[D_INV_PLACE_REPEAT]( [D_INV_PLACE_REPEAT_KEY] )
+                        VALUES( 1 );
+                    END;
+
+            END;
+
+        /* Logging */
+        SET @rowcount = @@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        ( batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count]
+        )
+        VALUES ( @batch_id
+               , @dataflow_name
+               , @package_name
+               , 'START'
+               , @proc_step_no
+               , @proc_step_name
+               , @rowcount
+               );
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @proc_step_name = 'Update D_INV_PLACE_REPEAT Schema';
+        SET @proc_step_no = @proc_step_no + 1;
+
+
+        IF EXISTS(
+            SELECT 1
+            FROM tempdb.INFORMATION_SCHEMA.COLUMNS s
+            WHERE TABLE_NAME LIKE '#S_INV_PLACE_REPEAT%'
+              AND NOT EXISTS (
+                SELECT 1
+                FROM INFORMATION_SCHEMA.COLUMNS d
+                WHERE  TABLE_NAME = 'D_INV_PLACE_REPEAT' AND d.COLUMN_NAME = s.COLUMN_NAME
+            )
+        )
+            BEGIN
+                DECLARE @colAlt NVARCHAR(MAX) =''
+                SELECT @colAlt = @colAlt +'ALTER TABLE dbo.D_INV_PLACE_REPEAT ADD ['+COLUMN_NAME+'] '+DATA_TYPE +
+                                 CASE
+                                     WHEN DATA_TYPE IN( 'char', 'varchar', 'nchar', 'nvarchar' )
+                                         THEN ' (' +
+                                              CASE
+                                                  WHEN CHARACTER_MAXIMUM_LENGTH > 2000 OR CHARACTER_MAXIMUM_LENGTH = -1
+                                                      THEN '2000'
+                                                  ELSE CAST(CHARACTER_MAXIMUM_LENGTH AS VARCHAR(10))
+                                                  END + ')'
+                                     ELSE ''
+                                     END +
+                                 CASE
+                                     WHEN IS_NULLABLE = 'NO' THEN ' NOT NULL '
+                                     ELSE ' NULL '
+                                     END +'; '
+                FROM tempdb.INFORMATION_SCHEMA.COLUMNS AS c
+                WHERE TABLE_NAME LIKE '#S_INV_PLACE_REPEAT%' AND
+                    NOT EXISTS
+                        (
+                            SELECT 1
+                            FROM INFORMATION_SCHEMA.COLUMNS
+                            WHERE TABLE_NAME = 'D_INV_PLACE_REPEAT' AND
+                                COLUMN_NAME = c.COLUMN_NAME
+                        ) ;
+
+                IF @debug = 'true' print @colAlt;
+                IF @colAlt <> ''
+                    EXEC sp_executesql @colAlt;
+
+            END;
+
+
+        /* Logging */
+        SET @rowcount = @@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        ( batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count]
+        )
+        VALUES ( @batch_id
+               , @dataflow_name
+               , @package_name
+               , 'START'
+               , @proc_step_no
+               , @proc_step_name
+               , @rowcount
+               );
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @proc_step_name = 'Generate D_INV_PLACE_REPEAT_KEY';
+        SET @proc_step_no = @proc_step_no + 1;
+
+        /*Key generation: If PAGE_CASE_UID doesn't exist in L_INV_PLACE_REPEAT.*/
         WITH key_vals AS
                  (
                      SELECT DISTINCT PAGE_CASE_UID,
@@ -212,7 +397,6 @@ BEGIN
         WHERE NOT EXISTS (
             SELECT 1 FROM dbo.L_INV_PLACE_REPEAT l
             WHERE kv.PAGE_CASE_UID = l.PAGE_CASE_UID
-            --AND l.D_INV_PLACE_REPEAT_KEY = kv.temp_key + ko.max_key
         );
 
         /* Logging */
@@ -244,8 +428,8 @@ BEGIN
         SET
             PAGE_CASE_UID = s.PAGE_CASE_UID,
             answer_group_seq_nbr = s.answer_group_seq_nbr,
-            --PlaceAsSexOfPHC = s.PlaceAsSexOfPHC,
-            --PlaceAsHangoutOfPHC = s.PlaceAsHangoutOfPHC,
+            PlaceAsSexOfPHC = s.PlaceAsSexOfPHC,
+            PlaceAsHangoutOfPHC = s.PlaceAsHangoutOfPHC,
             PLACE_HANGOUT_OF_PHC = s.PLACE_HANGOUT_OF_PHC,
             PLACE_AS_SEX_OF_PHC = s.PLACE_AS_SEX_OF_PHC,
             PLACE_KEY = s.PLACE_KEY,
@@ -317,13 +501,13 @@ BEGIN
 
         INSERT INTO dbo.D_INV_PLACE_REPEAT
         (PAGE_CASE_UID, answer_group_seq_nbr,
-            --PlaceAsSexOfPHC, PlaceAsHangoutOfPHC,
+         PlaceAsSexOfPHC, PlaceAsHangoutOfPHC,
          PLACE_HANGOUT_OF_PHC, PLACE_AS_SEX_OF_PHC, PLACE_KEY, PLACE_ADD_TIME, PLACE_ADD_USER_ID, PLACE_ADDED_BY, PLACE_ADDRESS_COMMENTS, PLACE_CITY, PLACE_COUNTRY, PLACE_COUNTRY_DESC, PLACE_COUNTY_CODE, PLACE_COUNTY_DESC, PLACE_EMAIL, PLACE_GENERAL_COMMENTS, PLACE_LAST_CHANGE_TIME, PLACE_LAST_CHG_USER_ID, PLACE_LAST_UPDATED_BY, PLACE_LOCAL_ID, PLACE_LOCATOR_UID, PLACE_NAME, PLACE_PHONE, PLACE_PHONE_COMMENTS, PLACE_PHONE_EXT, PLACE_POSTAL_UID, PLACE_QUICK_CODE, PLACE_RECORD_STATUS, PLACE_RECORD_STATUS_TIME, PLACE_STATE_CODE, PLACE_STATE_DESC, PLACE_STATUS_CD, PLACE_STATUS_TIME, PLACE_STREET_ADDRESS_1, PLACE_STREET_ADDRESS_2, PLACE_TELE_LOCATOR_UID, PLACE_TELE_TYPE, PLACE_TELE_USE, PLACE_TYPE_DESCRIPTION, PLACE_UID, PLACE_ZIP, D_INV_PLACE_REPEAT_KEY)
         SELECT
             s.PAGE_CASE_UID,
             s.answer_group_seq_nbr,
-            --s.PlaceAsSexOfPHC,
-            --s.PlaceAsHangoutOfPHC,
+            s.PlaceAsSexOfPHC,
+            s.PlaceAsHangoutOfPHC,
             s.PLACE_HANGOUT_OF_PHC,
             s.PLACE_AS_SEX_OF_PHC,
             s.PLACE_KEY,
