@@ -1,5 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_date' and xtype = 'U')
-CREATE TABLE rdb_modern.dbo.nrt_observation_date (
+CREATE TABLE dbo.nrt_observation_date (
     observation_uid     bigint                                          NOT NULL,
     ovd_from_date       datetime                                        NULL,
     ovd_to_date         datetime                                        NULL,

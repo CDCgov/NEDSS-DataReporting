@@ -43,4 +43,7 @@ public interface PostProcRepository extends JpaRepository<PostProcSp, Long> {
 
     @Procedure("sp_nrt_place_postprocessing")
     void executeStoredProcForDPlace(@Param("placeUids") String placeUids);
+
+    @Procedure("sp_user_profile_postprocessing")
+    void executeStoredProcForUserProfile(@Param("userProfileUids") String userProfileUids);
 }

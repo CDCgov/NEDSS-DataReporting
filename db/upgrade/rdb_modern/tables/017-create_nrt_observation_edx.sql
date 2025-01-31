@@ -1,5 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_edx' and xtype = 'U')
-CREATE TABLE rdb_modern.dbo.nrt_observation_edx (
+CREATE TABLE dbo.nrt_observation_edx (
     edx_document_uid    bigint                                          NOT NULL,
     edx_act_uid         bigint                                          NOT NULL,
     edx_add_time        datetime                                        NOT NULL,

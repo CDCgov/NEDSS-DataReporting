@@ -52,6 +52,7 @@ public class PostProcessingService {
 
     static final String PAYLOAD = "payload";
     static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
+    static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG = "Processing {} message topic. Calling stored proc: {} '{}'";
     static final String PHC_UID = "public_health_case_uid";
 
     static final String MORB_REPORT = "MorbReport";
@@ -66,19 +67,24 @@ public class PostProcessingService {
         ORGANIZATION(1, "organization", "organization_uid", "sp_nrt_organization_postprocessing"),
         PROVIDER(2, "provider", "provider_uid", "sp_nrt_provider_postprocessing"),
         PATIENT(3, "patient", "patient_uid", "sp_nrt_patient_postprocessing"),
-        D_PLACE(4, "place", "place_uid", "sp_nrt_place_postprocessing"),
-        INVESTIGATION(5, "investigation", PHC_UID, "sp_nrt_investigation_postprocessing"),
-        NOTIFICATION(6, "notification", "notification_uid", "sp_nrt_notification_postprocessing"),
-        INTERVIEW(7, "interview", "interview_uid", "sp_d_interview_postprocessing"),
-        CASE_MANAGEMENT(8, "case_management", PHC_UID, "sp_nrt_case_management_postprocessing"),
-        LDF_DATA(9, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
-        OBSERVATION(10, "observation", "observation_uid", null),
+        USER_PROFILE(4, "user_profile", "userProfileUids", "sp_user_profile_postprocessing"),
+        D_PLACE(5, "place", "place_uid", "sp_nrt_place_postprocessing"),
+        INVESTIGATION(6, "investigation", PHC_UID, "sp_nrt_investigation_postprocessing"),
+        NOTIFICATION(7, "notification", "notification_uid", "sp_nrt_notification_postprocessing"),
+        INTERVIEW(8, "interview", "interview_uid", "sp_d_interview_postprocessing"),
+        CASE_MANAGEMENT(9, "case_management", PHC_UID, "sp_nrt_case_management_postprocessing"),
+        LDF_DATA(10, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
+        OBSERVATION(11, "observation", "observation_uid", null),
         F_PAGE_CASE(0, "fact page case", PHC_UID, "sp_f_page_case_postprocessing"),
         CASE_ANSWERS(0, "case answers", PHC_UID, "sp_page_builder_postprocessing"),
         CASE_COUNT(0, "case count", PHC_UID, "sp_nrt_case_count_postprocessing"),
         F_STD_PAGE_CASE(0, "fact std page case", PHC_UID, "sp_f_std_page_case_postprocessing"),
         HEPATITIS_DATAMART(0, "Hepatitis_Datamart", PHC_UID, "sp_hepatitis_datamart_postprocessing"),
         STD_HIV_DATAMART(0, "Std_Hiv_Datamart", PHC_UID, "sp_std_hiv_datamart_postprocessing"),
+        GENERIC_CASE(0,"Generic_Case", PHC_UID, "sp_generic_case_datamart_postprocessing"),
+        CRS_CASE(0,"CRS_Case", PHC_UID, "sp_crs_case_datamart_postprocessing"),
+        RUBELLA_CASE(0,"Rubella_Case", PHC_UID, "sp_rubella_case_datamart_postprocessing"),
+        MEASLES_CASE(0, "Measles_Case", PHC_UID,"sp_measles_case_datamart_postprocessing"),
         UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
         private final int priority;
@@ -120,7 +126,8 @@ public class PostProcessingService {
             "${spring.kafka.topic.interview}",
             "${spring.kafka.topic.ldf_data}",
             "${spring.kafka.topic.observation}",
-            "${spring.kafka.topic.place}"
+            "${spring.kafka.topic.place}",
+            "${spring.kafka.topic.user_profile}"
     })
     public void postProcessMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -231,6 +238,9 @@ public class PostProcessingService {
                     case PATIENT:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
                         break;
+                    case USER_PROFILE:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile);
+                        break;
                     case D_PLACE:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace);
                         break;
@@ -312,24 +322,48 @@ public class PostProcessingService {
         for (Map.Entry<String, Set<Map<Long, Long>>> entry : dmCache.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 String dmType = entry.getKey();
+
                 Set<Map<Long, Long>> dmSet = entry.getValue();
+
                 dmCache.put(dmType, ConcurrentHashMap.newKeySet());
 
                 String cases = dmSet.stream()
                         .flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
-                if (dmType.equals(Entity.HEPATITIS_DATAMART.getEntityName())) {
-
-                    logger.info("Processing {} message topic. Calling stored proc: {} '{}'", dmType,
-                            Entity.HEPATITIS_DATAMART.getStoredProcedure(), cases);
-                    investigationRepository.executeStoredProcForHepDatamart(cases);
-                    completeLog(Entity.HEPATITIS_DATAMART.getStoredProcedure());
-                } else if (dmType.equals(Entity.STD_HIV_DATAMART.getEntityName())) {
-
-                    logger.info("Processing {} message topic. Calling stored proc: {} '{}'", dmType,
-                            Entity.STD_HIV_DATAMART.getStoredProcedure(), cases);
-                    investigationRepository.executeStoredProcForStdHIVDatamart(cases);
-                    completeLog(Entity.STD_HIV_DATAMART.getStoredProcedure());
+                //make sure the entity names for datamart enum values follows the same naming as the enum itself
+                switch (Entity.valueOf(dmType.toUpperCase())) {
+                    case HEPATITIS_DATAMART:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.HEPATITIS_DATAMART.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForHepDatamart(cases);
+                        completeLog(Entity.HEPATITIS_DATAMART.getStoredProcedure());
+                        break;
+                    case STD_HIV_DATAMART:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.STD_HIV_DATAMART.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForStdHIVDatamart(cases);
+                        completeLog(Entity.STD_HIV_DATAMART.getStoredProcedure());
+                        break;
+                    case GENERIC_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.GENERIC_CASE.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForGenericCaseDatamart(cases);
+                        completeLog(Entity.GENERIC_CASE.getStoredProcedure());
+                        break;
+                    case CRS_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.CRS_CASE.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForCRSCaseDatamart(cases);
+                        completeLog(Entity.CRS_CASE.getStoredProcedure());
+                        break;
+                    case RUBELLA_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.RUBELLA_CASE.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForRubellaCaseDatamart(cases);
+                        completeLog(Entity.RUBELLA_CASE.getStoredProcedure());
+                        break;
+                    case MEASLES_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, Entity.MEASLES_CASE.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForMeaslesCaseDatamart(cases);
+                        completeLog(Entity.MEASLES_CASE.getStoredProcedure());
+                        break;
+                    default:
+                        logger.info("No associated datamart processing logic found for the key: {} ",dmType);
                 }
             } else {
                 logger.info("No data to process from the datamart topics.");

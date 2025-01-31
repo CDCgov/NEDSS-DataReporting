@@ -1,5 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_material' and xtype = 'U')
-CREATE TABLE rdb_modern.dbo.nrt_observation_material (
+CREATE TABLE dbo.nrt_observation_material (
     act_uid                         bigint                                          NOT NULL,
     type_cd                         varchar(50)                                     NULL,
     material_id                     bigint                                          NOT NULL,

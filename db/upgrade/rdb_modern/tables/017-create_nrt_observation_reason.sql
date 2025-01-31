@@ -1,5 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_reason' and xtype = 'U')
-CREATE TABLE rdb_modern.dbo.nrt_observation_reason(
+CREATE TABLE dbo.nrt_observation_reason(
     observation_uid     bigint                                          NOT NULL,
     reason_cd           varchar(20)                                     NULL,
     reason_desc_txt     varchar(100)                                    NULL,

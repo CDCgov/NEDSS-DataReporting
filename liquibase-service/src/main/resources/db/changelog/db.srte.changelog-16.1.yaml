@@ -15,3 +15,11 @@ databaseChangeLog:
         - sqlFile:
             path: 001-alter_condition_code-001.sql
             splitStatements: false
+  - changeSet:
+      id: 2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 001-alter_imrdbmapping_code-001.sql
+            splitStatements: false

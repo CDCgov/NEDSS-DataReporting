@@ -1,5 +1,5 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_coded' and xtype = 'U')
-CREATE TABLE rdb_modern.dbo.nrt_observation_coded (
+CREATE TABLE dbo.nrt_observation_coded (
     observation_uid bigint NOT NULL,
     ovc_code varchar(20) NOT NULL,
     ovc_code_system_cd varchar(300) NULL,

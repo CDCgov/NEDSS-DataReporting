@@ -1,0 +1,51 @@
+{
+    "schema": {
+      "type": "struct",
+      "fields": [
+        {
+          "type": "int64",
+          "optional": false,
+          "field": "public_health_case_uid"
+        },
+        {
+          "type": "int64",
+          "optional": false,
+          "field": "patient_uid"
+        },
+        {
+          "type": "int64",
+          "optional": true,
+          "field": "investigation_key"
+        },
+        {
+          "type": "int64",
+          "optional": true,
+          "field": "patient_key"
+        },
+        {
+          "type": "string",
+          "optional": true,
+          "field": "condition_cd"
+        },
+        {
+          "type": "string",
+          "optional": true,
+          "field": "datamart"
+        },
+        {
+          "type": "string",
+          "optional": true,
+          "field": "stored_procedure"
+        }
+      ]
+    },
+    "payload": {
+      "public_health_case_uid": 101,
+      "patient_uid": 456,
+      "investigation_key": 100,
+      "patient_key": 200,
+      "condition_cd": "10370",
+      "datamart": "CRS_Case",
+      "stored_procedure": "sp_crs_case_datamart_postprocessing"
+    }
+  }
