@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.*;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 

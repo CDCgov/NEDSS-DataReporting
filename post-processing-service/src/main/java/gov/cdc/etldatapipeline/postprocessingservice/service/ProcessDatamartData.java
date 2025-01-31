@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.CASE_LAB_DATAMART;
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.HEPATITIS_DATAMART;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.CASE_LAB_DATAMART;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.HEPATITIS_DATAMART;
 
 @Component
 @RequiredArgsConstructor

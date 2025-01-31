@@ -22,8 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.*;
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.Entity.CASE_LAB_DATAMART;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -149,7 +148,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(8, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.INVESTIGATION.getStoredProcedure()));
+        assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -166,7 +165,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.NOTIFICATION.getStoredProcedure()));
+        assertTrue(logs.get(2).getFormattedMessage().contains(NOTIFICATION.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -184,9 +183,9 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(6, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.CASE_MANAGEMENT.getStoredProcedure()));
+        assertTrue(logs.get(2).getFormattedMessage().contains(CASE_MANAGEMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
-        assertTrue(logs.get(4).getFormattedMessage().contains(PostProcessingService.Entity.F_STD_PAGE_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(F_STD_PAGE_CASE.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -231,7 +230,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(6, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.INTERVIEW.getStoredProcedure()));
+        assertTrue(logs.get(2).getFormattedMessage().contains(INTERVIEW.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -251,7 +250,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.LDF_DATA.getStoredProcedure()));
+        assertTrue(logs.get(2).getFormattedMessage().contains(LDF_DATA.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -553,7 +552,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.USER_PROFILE.getStoredProcedure()));
+        assertTrue(logs.get(2).getFormattedMessage().contains(USER_PROFILE.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -596,7 +595,7 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(4, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PostProcessingService.Entity.D_PLACE.getStoredProcedure()));
+        assertTrue(logs.get(2).getFormattedMessage().contains(D_PLACE.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -747,8 +746,8 @@ class PostProcessingServiceTest {
         datamartData.setPublicHealthCaseUid(phcUid);
         datamartData.setPatientUid(patientUid);
         datamartData.setConditionCd("10110");
-        datamartData.setDatamart(PostProcessingService.Entity.HEPATITIS_DATAMART.getEntityName());
-        datamartData.setStoredProcedure(PostProcessingService.Entity.HEPATITIS_DATAMART.getStoredProcedure());
+        datamartData.setDatamart(HEPATITIS_DATAMART.getEntityName());
+        datamartData.setStoredProcedure(HEPATITIS_DATAMART.getStoredProcedure());
         datamartDataLst.add(datamartData);
         return datamartDataLst;
     }
