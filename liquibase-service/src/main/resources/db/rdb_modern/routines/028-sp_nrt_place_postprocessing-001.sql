@@ -63,13 +63,13 @@ BEGIN
                       , nrt.place_zip                AS 'PLACE_ZIP'
                       , nrt.place_city               AS 'PLACE_CITY'
                       , CASE
-                            WHEN LEN(RTRIM(LTRIM(nrt.place_state_desc))) > 1 THEN nrt.place_state_desc
+                            WHEN LEN(RTRIM(LTRIM(nrt.place_state_desc))) > 0 THEN nrt.place_state_desc
             END                                           AS PLACE_STATE
-                      , CASE WHEN len(RTRIM(LTRIM(nrt.place_country_desc))) > 1 THEN nrt.place_country_desc
+                      , CASE WHEN len(RTRIM(LTRIM(nrt.place_country_desc))) > 0 THEN nrt.place_country_desc
 
             END AS 'PLACE_COUNTRY'
                       , CASE
-                            WHEN LEN(RTRIM(LTRIM(nrt.place_county_desc))) > 1 THEN nrt.place_county_desc
+                            WHEN LEN(RTRIM(LTRIM(nrt.place_county_desc))) > 0 THEN nrt.place_county_desc
             END                                      AS PLACE_COUNTY
                       , nrt.place_street_address_1   AS 'PLACE_STREET_ADDRESS_1'
                       , nrt.place_street_address_2   AS 'PLACE_STREET_ADDRESS_2'
