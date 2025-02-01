@@ -1226,7 +1226,11 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        IF OBJECT_ID('tmp_Morbidity_Report', 'U') IS NOT NULL  DROP TABLE    	tmp_Morbidity_Report	;
+        EXEC ('IF OBJECT_ID(''tempdb.'+@tmp_Morbidity_Report+''', ''U'') IS NOT NULL
+		BEGIN
+			DROP TABLE '+@tmp_Morbidity_Report+';
+		END;')
+
         IF OBJECT_ID('#tmp_morb_root', 'U') IS NOT NULL  DROP TABLE    	#tmp_morb_root 	;
         IF OBJECT_ID('#tmp_MorbFrmQ', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQ 	;
         IF OBJECT_ID('#tmp_MorbFrmQCoded', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQCoded 	;
@@ -1310,8 +1314,8 @@ BEGIN
             INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
             INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
             JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
-            LEFT JOIN CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            LEFT JOIN CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN dbo.CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
             JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
             JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
         WHERE mre.INVESTIGATION_KEY <> 1
@@ -1322,12 +1326,12 @@ BEGIN
                null                             AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure
         FROM #nrt_morbidity_observation nrt
-            INNER JOIN MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
-            INNER JOIN MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
+            INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
+            INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
             LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
             LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
             INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
-        WHERE mre.INVESTIGATION_KEY <> 1
+        WHERE mre.INVESTIGATION_KEY <> 1;
 
     END TRY
 

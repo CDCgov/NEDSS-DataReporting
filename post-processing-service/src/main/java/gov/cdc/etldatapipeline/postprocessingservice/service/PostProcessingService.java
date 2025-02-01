@@ -420,7 +420,9 @@ public class PostProcessingService {
     }
 
     private void processTopic(String keyTopic, Entity entity, Long id, String vals, BiConsumer<Long, String> repositoryMethod) {
-        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", StringUtils.capitalize(entity.getEntityName()), keyTopic,
+        String name = entity.getEntityName();
+        name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
+        logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", name, keyTopic,
                 entity.getStoredProcedure(), id, vals);
         repositoryMethod.accept(id, vals);
         completeLog(entity.getStoredProcedure());

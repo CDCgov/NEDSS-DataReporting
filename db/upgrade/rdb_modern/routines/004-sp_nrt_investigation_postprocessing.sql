@@ -822,9 +822,7 @@ BEGIN
         FROM #temp_inv_table nrt
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
-                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
-
-
+                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart';
 
     END TRY
     BEGIN CATCH

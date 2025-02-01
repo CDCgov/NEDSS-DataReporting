@@ -257,7 +257,7 @@ BEGIN
              ,ntfe.NOTIFICATION_UPD_DT_KEY
         FROM #temp_ntf_event_table ntfe
                  JOIN dbo.nrt_notification_key k with (nolock) ON ntfe.notification_uid = k.notification_uid
-        WHERE ntfe.NOTIFICATION_KEY IS NULL
+        WHERE ntfe.NOTIFICATION_KEY IS NULL;
 
         /* Logging */
         set @rowcount=@@rowcount
@@ -322,20 +322,9 @@ BEGIN
                dtm.Stored_Procedure               AS stored_procedure
         FROM #temp_ntf_event_table ntf
             LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ntf.INVESTIGATION_KEY
-            LEFT JOIN CONDITION c ON c.CONDITION_KEY = ntf.CONDITION_KEY
+            LEFT JOIN dbo.CONDITION c ON c.CONDITION_KEY = ntf.CONDITION_KEY
             LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ntf.PATIENT_KEY
-            LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
-        UNION
-        SELECT inv.CASE_UID                       AS public_health_case_uid,
-               pat.PATIENT_UID                    AS patient_uid,
-               dtm.Datamart                       AS datamart,
-               null                               AS condition_cd,
-               dtm.Stored_Procedure               AS stored_procedure
-        FROM #temp_ntf_event_table ntf
-                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ntf.INVESTIGATION_KEY
-                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ntf.PATIENT_KEY
-                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
-
+            LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD;
 
     END TRY
 
