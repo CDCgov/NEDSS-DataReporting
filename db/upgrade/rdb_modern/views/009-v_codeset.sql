@@ -1,4 +1,4 @@
-CREATE OR ALTER  VIEW dbo.v_codeset_cnde1991 as
+CREATE OR ALTER VIEW dbo.v_codeset as
 WITH totalidm AS (
     SELECT
         unique_cd as  'CD',
