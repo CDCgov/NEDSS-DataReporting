@@ -435,6 +435,7 @@ BEGIN
                                                         block_nm,
                                                         question_group_seq_nbr,
                                                         data_type,
+                                                        part_type_cd,
                                                         last_chg_time
                                                  FROM (SELECT *,
                                                               ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt
@@ -463,7 +464,8 @@ BEGIN
                                                                              nuim.unit_type_cd,
                                                                              nuim.mask,
                                                                              nuim.question_group_seq_nbr,
-                                                                             nuim.data_type
+                                                                             nuim.data_type,
+                                                                             nuim.part_type_cd
                                                              from nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
                                                                       inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
                                                                                  on
@@ -506,13 +508,13 @@ BEGIN
                                                         init_foll_up_clinic_code                                                       as init_fup_clinic_code,
                                                         surv_assigned_date                                                             as surv_investigator_assgn_dt,
                                                         surv_closed_date                                                               as surv_closed_dt,
-                                                        surv_provider_contact                                                          as surv_provider_contact_cd,
+                                                        surv_provider_contact                           as surv_provider_contact_cd,
                                                         (select *
                                                          from fn_get_value_by_cvg(surv_provider_contact, 'PRVDR_CONTACT_OUTCOME'))     as surv_provider_contact,
                                                         surv_prov_exm_reason,
                                                         (select *
                                                          from fn_get_value_by_cvg(surv_prov_exm_reason, 'PRVDR_EXAM_REASON'))          as surv_provider_exam_reason,
-                                                        surv_prov_diagnosis                                                            as surv_provider_diagnosis,
+                                                        surv_prov_diagnosis                        as surv_provider_diagnosis,
                                                         surv_patient_foll_up,
                                                         (select *
                                                          from fn_get_value_by_cvg(surv_patient_foll_up,
@@ -542,7 +544,7 @@ BEGIN
                                                         (select * from fn_get_value_by_cvg(fld_foll_up_expected_in, 'YN'))             as fl_fup_expected_in_ind,
                                                         fld_foll_up_expected_date                                                      as fl_fup_expected_dt,
                                                         fld_foll_up_exam_date                                                          as fl_fup_exam_dt,
-                                                        fld_foll_up_dispo                                                              as fl_fup_disposition_cd,
+                                                        fld_foll_up_dispo                            as fl_fup_disposition_cd,
                                                         (select *
                                                          from fn_get_value_by_cvg(fld_foll_up_dispo,
                                                                                   'FIELD_FOLLOWUP_DISPOSITION_STDHIV'))                as fl_fup_disposition_desc,
