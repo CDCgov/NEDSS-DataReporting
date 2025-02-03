@@ -339,5 +339,17 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
                 EXEC sys.sp_rename N'nrt_observation.cd_desc_text', N'cd_desc_txt', 'COLUMN';
             END;
 
+--CNDE-2096
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'record_status_time'   AND Object_ID = Object_ID(N'nrt_observation'))
+            BEGIN
+                ALTER TABLE nrt_observation
+                    ADD record_status_time datetime;
+            END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'status_time'   AND Object_ID = Object_ID(N'nrt_observation'))
+            BEGIN
+                ALTER TABLE nrt_observation
+                    ADD status_time datetime;
+            END;
+
     END;
 

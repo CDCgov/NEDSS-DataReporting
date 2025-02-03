@@ -77,7 +77,9 @@ BEGIN
                          when o.last_chg_user_id > 0 then (select * from dbo.fn_get_user_name(o.last_chg_user_id))
                          end AS      last_chg_user_name,
                      o.add_time      add_time,
-                     o.last_chg_time last_chg_time
+                     o.last_chg_time last_chg_time,
+                     o.record_status_time,
+                     o.status_time
                       ,nesteddata.person_participations
                       ,nesteddata.organization_participations
                       ,nesteddata.material_participations
