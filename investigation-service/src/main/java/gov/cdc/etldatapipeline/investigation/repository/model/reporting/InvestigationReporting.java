@@ -32,6 +32,7 @@ public class InvestigationReporting {
     private String currProcessState;
     private String investigationStatusCd;
     private String investigationStatus;
+    private String statusTime;
     private String recordStatusCd;
     private String sharedInd;
     private String txt;

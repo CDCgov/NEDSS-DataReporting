@@ -17,6 +17,8 @@ public class ObservationReporting {
     private String moodCd;
     private Long actUid;
     private String recordStatusCd;
+    private String recordStatusTime;
+    private String statusTime;
     private String jurisdictionCd;
     private Long programJurisdictionOid;
     private String progAreaCd;

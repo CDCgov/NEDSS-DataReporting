@@ -94,6 +94,9 @@ public class Investigation {
     @Column(name = "investigation_status_cd")
     private String investigationStatusCd;
 
+    @Column(name = "status_time")
+    private String statusTime;
+
     @Column(name = "investigation_status")
     private String investigationStatus;
 
