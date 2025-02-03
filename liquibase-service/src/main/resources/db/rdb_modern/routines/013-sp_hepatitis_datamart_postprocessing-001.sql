@@ -1081,7 +1081,7 @@ BEGIN
         VALUES( @BATCH_ID, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO );
 
         COMMIT TRANSACTION;
-
+    -- CNDE-2058 delete this entire section related to TMP_Notif and #TMP_Event
         BEGIN TRANSACTION;
 
         SET @Proc_Step_name = 'Generating  #TMP_Notif and #TMP_Event';
@@ -1203,7 +1203,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-
+    -- CNDE-2058: delete till here
 ---------------------------------------------------17. CREATE TABLE TMP_HEP_PAT_PROV ---------------------------
         BEGIN TRANSACTION;
 
@@ -2151,6 +2151,47 @@ BEGIN
 
 
         ---------------------------------------------------------Final Table 26 TMP_HEPATITIS_CASE_BASE------------------------------------------------------------------------------------------------
+
+        --CNDE-2058 execute case lab datamart for EVENT_DATE/TYPE
+
+        /*
+         BEGIN TRANSACTION;
+
+SET @Proc_Step_Name = 'Updating EVENT DATE AND TYPE in HEPATITIS_DATAMART';
+SET @Proc_Step_no = 26;
+
+-- Execute Case Lab Post Process proc for EVENT_DATE/TYPE
+DECLARE @RetCode int
+EXEC @RetCode = [dbo].[sp_case_lab_datamart_postprocessing]
+    @phc_id = @phc_id,
+    @debug = @debug;
+
+IF @RetCode <> 0
+BEGIN
+    INSERT INTO [DBO].[JOB_FLOW_LOG]
+    (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME],[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT],[Error_Description])
+    VALUES(@BATCH_ID,'HEPATITIS_DATAMART','Hepatitis_Case_DATAMART','ERROR',@PROC_STEP_NO,@PROC_STEP_NAME,0,
+    'sp_case_lab_datamart_postprocessing failed with return code: ' + CAST(@RetCode as varchar(10)));
+
+    RETURN -1;
+END
+
+-- Update EVENT_DATE and EVENT_DATE_TYPE from Case Lab temp tables
+UPDATE ISD
+SET ISD.EVENT_DATE = TCLD.EVENT_DATE,
+    ISD.EVENT_DATE_TYPE = TCLD.EVENT_DATE_TYPE
+FROM [dbo].[HEPATITIS_DATAMART] ISD
+LEFT OUTER JOIN #TMP_CLDM_CASE_LAB_DATAMART_FINAL TCLD WITH (NOLOCK)
+    ON ISD.INVESTIGATION_KEY = TCLD.INVESTIGATION_KEY;
+
+SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+INSERT INTO [DBO].[JOB_FLOW_LOG]
+(BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME],[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+VALUES(@BATCH_ID,'HEPATITIS_DATAMART','Hepatitis_Case_DATAMART','START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+COMMIT TRANSACTION;
+         */
         BEGIN TRANSACTION;
 
         SET @Proc_Step_name = 'Updating HEPATITIS_CASE_BASE';
@@ -2814,7 +2855,7 @@ BEGIN
 
         if @debug = 'true' select * from  #TMP_HEPATITIS_CASE_BASE;
 
-
+-- CNDE-2058: delete this entire section
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 27;
@@ -2839,7 +2880,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-
+-- CNDE-2058: delete till here
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no =  28;
