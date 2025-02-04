@@ -77,6 +77,8 @@ CREATE TABLE dbo.nrt_observation
     assistant_interpreter_id_assign_auth    varchar(199)                                    NULL,
     assistant_interpreter_auth_type         varchar(100)                                    NULL,
     priority_cd                             varchar(20)                                     NULL,
+    record_status_time                      datetime                                        NULL,
+    status_time                             datetime                                        NULL,
     refresh_datetime                        datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime                            datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
