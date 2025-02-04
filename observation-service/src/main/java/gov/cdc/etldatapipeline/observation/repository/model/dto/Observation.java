@@ -141,6 +141,12 @@ public class Observation {
     @Column(name = "last_chg_time")
     private String lastChgTime;
 
+    @Column(name = "record_status_time")
+    private String recordStatusTime;
+
+    @Column(name = "status_time")
+    private String statusTime;
+
     @Column(name = "person_participations")
     private String personParticipations;
 
