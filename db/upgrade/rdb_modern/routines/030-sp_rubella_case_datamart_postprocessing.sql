@@ -121,13 +121,14 @@ BEGIN
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
             WHERE RDB_TABLE = @tgt_table_nm and db_field = 'code'
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR isc.column_name IS NOT NULL);
-
+              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
             if
                 @debug = 'true'
                 select @Proc_Step_Name as step, *
                 from #OBS_CODED_Rubella_Case;
+
+
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -162,7 +163,7 @@ BEGIN
                 ON UPPER(isc.TABLE_NAME) = UPPER(RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(col_nm)
             WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt'
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR isc.column_name IS NOT NULL);
+              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
             if
                 @debug = 'true'
@@ -202,7 +203,7 @@ BEGIN
                 ON UPPER(isc.TABLE_NAME) = UPPER(RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(col_nm)
             WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'from_time' or unique_cd in ('INV132','INV133'))
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR isc.column_name IS NOT NULL);
+              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
             if
                 @debug = 'true'
@@ -248,7 +249,7 @@ BEGIN
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
             WHERE rom.RDB_TABLE = @tgt_table_nm and rom.db_field = 'numeric_value_1'
-            and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR isc.column_name IS NOT NULL);
+            and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
             if
                 @debug = 'true'
@@ -264,6 +265,7 @@ BEGIN
                     @RowCount_no);
 
         COMMIT TRANSACTION;
+
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;

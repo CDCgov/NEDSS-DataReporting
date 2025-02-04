@@ -77,7 +77,7 @@ BEGIN TRY
             INV_ASSIGNED_DT_KEY,
             LDF_GROUP_KEY,
             GEOCODING_LOCATION_KEY,
-            effective_duration_amt as ILLNESS_DURATION,
+            NULLIF(effective_duration_amt, '') as ILLNESS_DURATION,
             effective_duration_unit_cd as ILLNESS_DURATION_UNIT,
             pat_age_at_onset as PATIENT_AGE_AT_ONSET,
             pat_age_at_onset_unit_cd as PATIENT_AGE_AT_ONSET_UNIT,
@@ -126,7 +126,7 @@ BEGIN TRY
              on UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
              and UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
         WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'code')
-          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_ids, ',')) or isc.column_name IS NOT NULL)
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_ids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL))
         ;
 
         if
@@ -164,7 +164,7 @@ BEGIN TRY
                 on UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 and UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
         WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'from_time')
-          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_ids, ',')) or isc.column_name IS NOT NULL)
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_ids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL))
          and  unique_cd != 'INV110';
 
         if
@@ -209,7 +209,7 @@ BEGIN TRY
             ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
             AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
         WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'numeric_value_1')
-          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_ids, ',')) or isc.column_name IS NOT NULL)
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_ids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL))
         ;
 
         if
