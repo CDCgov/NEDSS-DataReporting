@@ -52,7 +52,7 @@ BEGIN
         cc.CONTACT_ENTITY_PHC_UID AS CONTACT_ENTITY_PHC_UID ,
         cc.CONTACT_ENTITY_UID AS CONTACT_ENTITY_UID ,
         cc.CONTACT_REFERRAL_BASIS_CD,
-        cc.CONTACT_STATUS,
+        cc.CONTACT_STATUS as CTT_STATUS, --todo: check format conversion in SAS code
         cc.CT_CONTACT_UID,
         cc.DISPOSITION_CD,
         cc.DISPOSITION_DATE AS CTT_DISPO_DT,
@@ -109,7 +109,8 @@ BEGIN
         cvg11.code_short_desc_txt as CTT_PROCESSING_DECISION ,
         cvg12.code_short_desc_txt as CTT_GROUP_LOT_ID  ,
         cvg13.code_short_desc_txt as CTT_TRT_COMPLETE_IND,
-        cvg14.code_short_desc_txt as CTT_HEALTH_STATUS
+        cvg14.code_short_desc_txt as CTT_HEALTH_STATUS,
+        cvg15.code_short_desc_txt as CTT_REFERRAL_BASIS
     into #CONTACT_RECORD_INIT
     from nbs_odse.dbo.CT_CONTACT cc
     left outer join nbs_srte.dbo.PROGRAM_AREA_CODE pac on cc.prog_area_cd  = pac.prog_area_cd
@@ -128,6 +129,7 @@ BEGIN
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg12 on cc.GROUP_NAME_CD  = cvg12.code and cvg12.code_set_nm = 'NBS_GROUP_NM'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg13 on cc.TREATMENT_END_CD  = cvg13.code and cvg13.code_set_nm = 'YNU'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg14 on cc.HEALTH_STATUS_CD  = cvg14.code and cvg14.code_set_nm = 'NBS_HEALTH_STATUS'
+    left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg15 on cc.CONTACT_REFERRAL_BASIS_CD  = cvg14.code and cvg15.code_set_nm = 'REFERRAL_BASIS'
     where CT_CONTACT_UID in (SELECT value FROM STRING_SPLIT(@cc_uids, ','));
 
     if
