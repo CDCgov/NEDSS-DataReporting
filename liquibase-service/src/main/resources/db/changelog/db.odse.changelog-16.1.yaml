@@ -215,3 +215,19 @@ databaseChangeLog:
         - sqlFile:
             path: 024-sp_place_event-001.sql
             splitStatements: false
+  - changeSet:
+      id: 32
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 003-v_rdb_ui_metadata_answers_contact-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 33
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 025-sp_contact_record_event-001.sql
+            splitStatements: false
