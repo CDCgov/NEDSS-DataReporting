@@ -4,6 +4,7 @@ spring:
       topic-name-phc: nbs_Public_health_case
       topic-name-ntf: nbs_Notification
       topic-name-int: nbs_Interview
+      topic-name-ctr: nbs_Contact
     output:
       topic-name-reporting: nrt_investigation
       topic-name-confirmation: nrt_investigation_confirmation
@@ -15,6 +16,8 @@ spring:
       topic-name-interview-answer: nrt_interview_answer
       topic-name-interview-note: nrt_interview_note
       topic-name-rdb-metadata-columns: nrt_metadata_columns
+      topic-name-contact: nrt_contact
+      topic-name-contact-answer: nrt_contact_answer
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt

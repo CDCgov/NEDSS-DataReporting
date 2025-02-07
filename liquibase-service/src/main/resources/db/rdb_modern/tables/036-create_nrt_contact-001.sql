@@ -1,6 +1,6 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_contact' and xtype = 'U')
    CREATE TABLE dbo.nrt_contact (
-     CT_CONTACT_UID 			float,
+     CONTACT_UID 			float,
      ADD_TIME 				datetime NULL,
      ADD_USER_ID		 		numeric(18,0) NULL,
      CONTACT_ENTITY_EPI_LINK_ID varchar(4000) NULL,

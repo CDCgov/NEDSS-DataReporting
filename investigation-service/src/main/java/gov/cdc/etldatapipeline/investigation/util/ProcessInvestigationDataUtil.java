@@ -50,6 +50,12 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-interview-answer}")
     private String interviewAnswerOutputTopicName;
 
+    @Value("${spring.kafka.output.topic-name-contact}")
+    private String contactOutputTopicName;
+
+    @Value("${spring.kafka.output.topic-name-contact-answer}")
+    private String contactAnswerOutputTopicName;
+
     @Value("${spring.kafka.output.topic-name-interview-note}")
     private String interviewNoteOutputTopicName;
 
@@ -376,7 +382,7 @@ public class ProcessInvestigationDataUtil {
 
     /**
      * Utility method to transform and send kafka message for various nrt_interview_*** stage tables
-     * @param interview Entity bean returned from stroed procedures
+     * @param interview Entity bean returned from stored procedures
      */
     public void processInterview(Interview interview) {
         try {
@@ -506,6 +512,116 @@ public class ProcessInvestigationDataUtil {
         } catch (Exception e) {
             logger.error("Error processing Investigation Interview Note JSON array from interview data: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Utility method to transform and send kafka message for nrt_contact and nrt_contact_answer stage tables
+     * @param contact Entity bean returned from stored procedures
+     */
+    public void processContact(Contact contact) {
+        try {
+
+            // creating key for kafka
+            ContactReportingKey contactReportingKey = new ContactReportingKey();
+            contactReportingKey.setContactUid(contact.getContactUid());
+
+            // constructing reporting(nrt) beans
+            ContactReporting contactReporting = transformContact(contact);
+
+            /*
+               sending reporting(nrt) beans as json to kafka
+               starting with the nrt_contact and then
+                   create and send nrt_contact_answer
+             */
+            String jsonKey = jsonGenerator.generateStringJson(contactReportingKey);
+            String jsonValue = jsonGenerator.generateStringJson(contactReporting, "contact_uid");
+            kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
+                    .whenComplete((res, e) -> logger.info("Contact Record data (uid={}) sent to {}", contact.getContactUid(), contactOutputTopicName))
+                    .thenRunAsync(() -> transformAndSendContactAnswer(contact));
+
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Contact Record");
+        } catch (Exception e) {
+            logger.error("Error processing Contact Record or any of the associated data from contact data: {}", e.getMessage());
+        }
+    }
+
+    private void transformAndSendContactAnswer(Contact contact) {
+        try {
+
+            JsonNode answerArray = parseJsonArray(contact.getAnswers());
+
+            for (JsonNode node : answerArray) {
+                final Long contactUid = contact.getContactUid();
+                final String rdbColumnNm = node.get("RDB_COLUMN_NM").asText();
+
+                ContactAnswerKey contactAnswerKey = new ContactAnswerKey();
+                contactAnswerKey.setContactUid(contactUid);
+                contactAnswerKey.setRdbColumnNm(rdbColumnNm);
+
+                ContactAnswer contactAnswer = new ContactAnswer();
+                contactAnswer.setContactUid(contactUid);
+                contactAnswer.setRdbColumnNm(rdbColumnNm);
+                contactAnswer.setAnswerVal(node.get("ANSWER_VAL").asText());
+
+                String jsonKey = jsonGenerator.generateStringJson(contactAnswerKey);
+                String jsonValue = jsonGenerator.generateStringJson(contactAnswer);
+                kafkaTemplate.send(contactAnswerOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Contact Record Answers data (uid={}) sent to {}", contact.getContactUid(), contactAnswerOutputTopicName));
+
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Contact Record Answer");
+        } catch (Exception e) {
+            logger.error("Error processing Contact Record Answer JSON array from contact data: {}", e.getMessage());
+        }
+    }
+
+    private ContactReporting transformContact(Contact contact) {
+        ContactReporting contactReporting = new ContactReporting();
+        contactReporting.setContactUid(contact.getContactUid());
+        contactReporting.setAddTime(contact.getAddTime());
+        contactReporting.setAddUserId(contact.getAddUserId());
+        contactReporting.setContactEntityEpiLinkId(contact.getContactEntityEpiLinkId());
+        contactReporting.setCttReferralBasis(contact.getCttReferralBasis());
+        contactReporting.setCttStatus(contact.getCttStatus());
+        contactReporting.setCttDispoDt(contact.getCttDispoDt());
+        contactReporting.setCttDisposition(contact.getCttDisposition());
+        contactReporting.setCttEvalCompleted(contact.getCttEvalCompleted());
+        contactReporting.setCttEvalDt(contact.getCttEvalDt());
+        contactReporting.setCttEvalNotes(contact.getCttEvalNotes());
+        contactReporting.setCttGroupLotId(contact.getCttGroupLotId());
+        contactReporting.setCttHealthStatus(contact.getCttHealthStatus());
+        contactReporting.setCttInvAssignedDt(contact.getCttInvAssignedDt());
+        contactReporting.setCttJurisdictionNm(contact.getCttJurisdictionNm());
+        contactReporting.setCttNamedOnDt(contact.getCttNamedOnDt());
+        contactReporting.setCttNotes(contact.getCttNotes());
+        contactReporting.setCttPriority(contact.getCttPriority());
+        contactReporting.setCttProcessingDecision(contact.getCttProcessingDecision());
+        contactReporting.setCttProgramArea(contact.getCttProgramArea());
+        contactReporting.setCttRelationship(contact.getCttRelationship());
+        contactReporting.setCttRiskInd(contact.getCttRiskInd());
+        contactReporting.setCttRiskNotes(contact.getCttRiskNotes());
+        contactReporting.setCttSharedInd(contact.getCttSharedInd());
+        contactReporting.setCttSympInd(contact.getCttSympInd());
+        contactReporting.setCttSympNotes(contact.getCttSympNotes());
+        contactReporting.setCttSympOnsetDt(contact.getCttSympOnsetDt());
+        contactReporting.setCttTrtCompleteInd(contact.getCttTrtCompleteInd());
+        contactReporting.setCttTrtEndDt(contact.getCttTrtEndDt());
+        contactReporting.setCttTrtInitiatedInd(contact.getCttTrtInitiatedInd());
+        contactReporting.setCttTrtNotCompleteRsn(contact.getCttTrtNotCompleteRsn());
+        contactReporting.setCttTrtNotStartRsn(contact.getCttTrtNotStartRsn());
+        contactReporting.setCttTrtNotes(contact.getCttTrtNotes());
+        contactReporting.setCttTrtStartDt(contact.getCttTrtStartDt());
+        contactReporting.setLastChgTime(contact.getLastChgTime());
+        contactReporting.setLastChgUserId(contact.getLastChgUserId());
+        contactReporting.setLocalId(contact.getLocalId());
+        contactReporting.setProgramJurisdictionOid(contact.getProgramJurisdictionOid());
+        contactReporting.setRecordStatusCd(contact.getRecordStatusCd());
+        contactReporting.setRecordStatusTime(contact.getRecordStatusTime());
+        contactReporting.setSubjectEntityEpiLinkId(contact.getSubjectEntityEpiLinkId());
+        contactReporting.setVersionCtrlNbr(contact.getVersionCtrlNbr());
+        return contactReporting;
     }
 
     /**
