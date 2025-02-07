@@ -767,3 +767,27 @@ databaseChangeLog:
         - sqlFile:
             path: 035-sp_repeated_place_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 113
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 036-create_nrt_contact-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 114
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 037-create_nrt_contact_answer-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 115
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 038-create_nrt_contact_key-001.sql
+            splitStatements: false
