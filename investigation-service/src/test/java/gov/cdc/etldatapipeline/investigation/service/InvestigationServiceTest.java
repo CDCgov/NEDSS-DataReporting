@@ -268,6 +268,12 @@ class InvestigationServiceTest {
         assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
+    @Test
+    void testProcessContactNoDataException() {
+        String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"\"}}}";
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, contactTopic, consumer));
+    }
+
     private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
 
         investigationService.processMessage(payload, investigationTopic, consumer);
