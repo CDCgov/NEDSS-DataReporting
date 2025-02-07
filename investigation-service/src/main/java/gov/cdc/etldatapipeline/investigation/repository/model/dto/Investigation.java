@@ -103,6 +103,9 @@ public class Investigation {
     @Column(name = "record_status_cd")
     private String recordStatusCd;
 
+    @Column(name = "record_status_time")
+    private String recordStatusTime;
+
     @Column(name = "shared_ind")
     private String sharedInd;
 

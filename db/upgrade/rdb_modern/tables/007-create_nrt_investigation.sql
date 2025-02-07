@@ -131,6 +131,7 @@ CREATE TABLE dbo.nrt_investigation
     org_as_reporter_uid               bigint                                          NULL,
     detection_method_cd               varchar(20)                                     NULL,
     status_time                       datetime                                        NULL,
+    record_status_time                datetime                                        NULL,
     refresh_datetime                  datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime                      datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)

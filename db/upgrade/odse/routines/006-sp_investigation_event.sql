@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max)
+CREATE OR ALTER PROCEDURE [dbo].[sp_investigation_event_copy] @phc_id_list nvarchar(max)
 AS
 BEGIN
 
@@ -121,6 +121,7 @@ BEGIN
                results.coinfection_id,
                NULLIF(results.contact_inv_txt, '')                                  as contact_inv_txt,
                results.status_time,
+               results.record_status_time,
                pac.prog_area_desc_txt                                               as program_area_description,
                cm.case_management_uid,
                investigation_act_entity.nac_page_case_uid,
@@ -203,6 +204,7 @@ BEGIN
                                            'INV109'))
                          end as                   investigation_status,
                      phc.record_status_cd,
+                     phc.record_status_time,
                      phc.shared_ind,
                      phc.txt,
                      phc.effective_from_time,

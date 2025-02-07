@@ -265,4 +265,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
                 ALTER TABLE dbo.nrt_investigation ADD status_time datetime;
             END;
 
+--CNDE-2093
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'record_status_time' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_investigation ADD record_status_time datetime;
+            END;
+
     END;
