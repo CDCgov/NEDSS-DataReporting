@@ -262,10 +262,10 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
-        var actualContactKey1 = objectMapper.readValue(
+        var actualContactKey = objectMapper.readValue(
                 objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
 
         var actualContactValue = objectMapper.readValue(
@@ -274,7 +274,7 @@ class InvestigationDataProcessingTests {
         var actualContactAnswerValue = objectMapper.readValue(
                 objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactAnswer.class);
 
-        assertEquals(contactReportingKey, actualContactKey1);
+        assertEquals(contactReportingKey, actualContactKey);
         assertEquals(contactReportingValue, actualContactValue);
         assertEquals(contactAnswerValue, actualContactAnswerValue);
 
