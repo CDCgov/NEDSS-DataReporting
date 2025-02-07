@@ -243,90 +243,6 @@ class InvestigationDataProcessingTests {
 
     }
 
-    @Test
-    void testProcessContacts() throws JsonProcessingException {
-
-        Contact contact = constructContact(CONTACT_UID);
-        contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
-        transformer.setContactOutputTopicName(CONTACT_TOPIC);
-        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
-
-        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
-        contactReportingKey.setContactUid(CONTACT_UID);
-
-        final ContactReporting  contactReportingValue = constructContactReporting(CONTACT_UID);
-        final ContactAnswer contactAnswerValue = constructContactAnswers(CONTACT_UID);
-
-        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        transformer.processContact(contact);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
-
-        var actualContactKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
-
-        var actualContactValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactReporting.class);
-
-        var actualContactAnswerValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactAnswer.class);
-
-        assertEquals(contactReportingKey, actualContactKey);
-        assertEquals(contactReportingValue, actualContactValue);
-        assertEquals(contactAnswerValue, actualContactAnswerValue);
-
-
-    }
-
-    @Test
-    void testProcessContactAnswers() throws JsonProcessingException {
-
-        Contact contact = constructContact(CONTACT_UID);
-        contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
-        transformer.setContactOutputTopicName(CONTACT_TOPIC);
-        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
-
-        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
-        contactReportingKey.setContactUid(CONTACT_UID);
-
-        final  ContactAnswerKey contactAnswerKey = new ContactAnswerKey();
-        contactAnswerKey.setContactUid(CONTACT_UID);
-        contactAnswerKey.setRdbColumnNm("CTT_EXPOSURE_TYPE");
-
-        final ContactReporting  contactReportingValue = constructContactReporting(CONTACT_UID);
-        final ContactAnswer contactAnswerValue = constructContactAnswers(CONTACT_UID);
-
-        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        transformer.processContact(contact);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
-
-        //contact key
-        var actualContactKey1 = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
-        //contact value
-        var actualContactValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactReporting.class);
-
-        //contact answer key
-        var actualContactAnswerKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(2)).path("payload").toString(), ContactAnswerKey.class);
-        //contact answer value
-        var actualContactAnswerValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), ContactAnswer.class);
-
-        assertEquals(contactReportingKey, actualContactKey1);
-        assertEquals(contactReportingValue, actualContactValue);
-        assertEquals(contactAnswerKey, actualContactAnswerKey);
-        assertEquals(contactAnswerValue, actualContactAnswerValue);
-    }
-
 
     @Test
     void testProcessInterviewAnswers() throws JsonProcessingException {
@@ -489,6 +405,105 @@ class InvestigationDataProcessingTests {
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
                         verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+    }
+
+    @Test
+    void testProcessContacts() throws JsonProcessingException {
+
+        Contact contact = constructContact(CONTACT_UID);
+        contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
+        transformer.setContactOutputTopicName(CONTACT_TOPIC);
+        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
+
+        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
+        contactReportingKey.setContactUid(CONTACT_UID);
+        final ContactReporting  contactReportingValue = constructContactReporting(CONTACT_UID);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processContact(contact);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        var actualContactKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
+
+        var actualContactValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactReporting.class);
+
+        assertEquals(contactReportingKey, actualContactKey);
+        assertEquals(contactReportingValue, actualContactValue);
+
+    }
+
+    @Test
+    void testProcessContactAnswers() throws JsonProcessingException {
+
+        Contact contact = constructContact(CONTACT_UID);
+        contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
+        transformer.setContactOutputTopicName(CONTACT_TOPIC);
+        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
+
+        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
+        contactReportingKey.setContactUid(CONTACT_UID);
+
+        final  ContactAnswerKey contactAnswerKey = new ContactAnswerKey();
+        contactAnswerKey.setContactUid(CONTACT_UID);
+        contactAnswerKey.setRdbColumnNm("CTT_EXPOSURE_TYPE");
+
+        final ContactReporting  contactReportingValue = constructContactReporting(CONTACT_UID);
+        final ContactAnswer contactAnswerValue = constructContactAnswers(CONTACT_UID);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processContact(contact);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        //contact key
+        var actualContactKey1 = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
+        //contact value
+        var actualContactValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactReporting.class);
+
+        //contact answer key
+        var actualContactAnswerKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), ContactAnswerKey.class);
+        //contact answer value
+        var actualContactAnswerValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), ContactAnswer.class);
+
+        assertEquals(contactReportingKey, actualContactKey1);
+        assertEquals(contactReportingValue, actualContactValue);
+        assertEquals(contactAnswerKey, actualContactAnswerKey);
+        assertEquals(contactAnswerValue, actualContactAnswerValue);
+    }
+
+    @Test
+    void testProcessContactError(){
+
+        Contact contact = new Contact();
+        contact.setContactUid(CONTACT_UID);
+        contact.setAnswers(INVALID_JSON);
+
+        transformer.setContactOutputTopicName(CONTACT_TOPIC);
+        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processContact(contact);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         ILoggingEvent log = listAppender.list.getLast();

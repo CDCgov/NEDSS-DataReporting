@@ -535,7 +535,7 @@ public class ProcessInvestigationDataUtil {
              */
             String jsonKey = jsonGenerator.generateStringJson(contactReportingKey);
             String jsonValue = jsonGenerator.generateStringJson(contactReporting, "contact_uid");
-            kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
+            kafkaTemplate.send(contactOutputTopicName, jsonKey, jsonValue)
                     .whenComplete((res, e) -> logger.info("Contact Record data (uid={}) sent to {}", contact.getContactUid(), contactOutputTopicName))
                     .thenRunAsync(() -> transformAndSendContactAnswer(contact));
 

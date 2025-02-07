@@ -67,31 +67,37 @@ class InvestigationServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String FILE_PATH_PREFIX = "rawDataFiles/";
+    //input topics
     private final String investigationTopic = "Investigation";
     private final String notificationTopic = "Notification";
     private final String interviewTopic = "Interview";
+    private final String contactTopic = "Contact";
+    //output topics
     private final String investigationTopicOutput = "InvestigationOutput";
     private final String notificationTopicOutput = "investigationNotification";
     private final String interviewTopicOutput = "InterviewOutput";
-    private final String contactTopic = "Contact";
-    private final String contactTopicOutput = "contactOutput";
+    private final String contactTopicOutput = "ContactOutput";
 
 
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
-        transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
-        transformer.setInvestigationObservationOutputTopicName("investigationObservation");
-        transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
-        transformer.setInterviewOutputTopicName(interviewTopicOutput);
+
         investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, kafkaTemplate, transformer);
+
         investigationService.setPhcDatamartEnable(true);
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
         investigationService.setInterviewTopic(interviewTopic);
-        investigationService.setInterviewOutputTopicReporting(interviewTopicOutput);
+        investigationService.setContactTopic(contactTopic);
+
+        transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
+        transformer.setInvestigationObservationOutputTopicName("investigationObservation");
+        transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
+        transformer.setInterviewOutputTopicName(interviewTopicOutput);
+        transformer.setContactOutputTopicName(contactTopicOutput);
     }
 
     @AfterEach
@@ -234,7 +240,7 @@ class InvestigationServiceTest {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         String actualTopic = topicCaptor.getAllValues().get(0);
@@ -461,6 +467,8 @@ class InvestigationServiceTest {
         contact.setRecordStatusTime("2024-02-06T08:00:00");
         contact.setSubjectEntityEpiLinkId("EPI456");
         contact.setVersionCtrlNbr(1L);
+        contact.setRdbCols(readFileData(FILE_PATH_PREFIX + "RdbColumns.json"));
+        contact.setAnswers(readFileData(FILE_PATH_PREFIX + "ContactAnswers.json"));
         return contact;
     }
 
@@ -511,11 +519,4 @@ class InvestigationServiceTest {
         return contactReporting;
     }
 
-    private ContactAnswer constructContactAnswers(Long contactUid) {
-        ContactAnswer contactAnswer = new ContactAnswer();
-        contactAnswer.setContactUid(contactUid);
-        contactAnswer.setAnswerVal("Common Space");
-        contactAnswer.setRdbColumnNm("CTT_EXPOSURE_TYPE");
-        return contactAnswer;
-    }
 }

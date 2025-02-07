@@ -64,9 +64,6 @@ public class InvestigationService {
     @Value("${spring.kafka.output.topic-name-reporting}")
     public String investigationTopicReporting;
 
-    @Value("${spring.kafka.output.topic-name-interview}")
-    private String interviewOutputTopicReporting; //todo: remove if not used in this class
-
     @Value("${service.phc-datamart-enable}")
     public boolean phcDatamartEnable;
 
