@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_investigation_event_copy] @phc_id_list nvarchar(max)
+CREATE OR ALTER PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max)
 AS
 BEGIN
 
