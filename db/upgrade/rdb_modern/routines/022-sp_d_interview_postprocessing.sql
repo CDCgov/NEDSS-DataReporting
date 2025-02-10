@@ -14,7 +14,7 @@ BEGIN
     DECLARE @Insert_sql NVARCHAR(MAX) = '';
     DECLARE @Update_sql NVARCHAR(MAX) = '';
     -- number of columns for the dynamic sql
-    DECLARE @Col_number BIGINT = (SELECT COUNT(*) FROM dbo.nrt_metadata_columns);
+    DECLARE @Col_number BIGINT = (SELECT COUNT(*) FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW');
 
     BEGIN TRY
 
@@ -187,7 +187,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'UPDATE D_INTERVIEW';
 
         SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
-                             FROM dbo.nrt_metadata_columns);
+                             FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW' );
 
 
         /*
@@ -216,7 +216,7 @@ BEGIN
         dl.IX_LOCATION = ix.IX_LOCATION 
         ' + CASE
                 WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('dl.' + QUOTENAME(RDB_COLUMN_NM) + ' = pv.' + QUOTENAME(RDB_COLUMN_NM),',')
-                                                 FROM dbo.nrt_metadata_columns)
+                                                 FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW')
             ELSE '' END +
         ' FROM 
         #INTERVIEW_INIT ix
@@ -261,7 +261,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'INSERT INTO D_INTERVIEW';
 
         SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
-                             FROM dbo.nrt_metadata_columns);
+                             FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW');
 
         /*
         Query is built one part after another, adding in extra parts
@@ -290,7 +290,7 @@ BEGIN
         ' + CASE
         WHEN @Col_number > 0 THEN ',' +
         (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
-        FROM dbo.nrt_metadata_columns) + ') '
+        FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW') + ') '
         ELSE ')' end +
                           ' SELECT 
                           ixk.D_INTERVIEW_KEY,
@@ -314,7 +314,7 @@ BEGIN
                           ' + CASE
                           WHEN @Col_number > 0 THEN ',' +
                           (SELECT STRING_AGG('pv.' + QUOTENAME(RDB_COLUMN_NM), ',')
-                          FROM dbo.nrt_metadata_columns)
+                          FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW')
                           ELSE ' ' END +
                           'FROM #INTERVIEW_INIT ix 
                           LEFT JOIN dbo.nrt_interview_key ixk 

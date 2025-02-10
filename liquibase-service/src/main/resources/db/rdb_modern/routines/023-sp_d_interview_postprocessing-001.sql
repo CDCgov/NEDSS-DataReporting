@@ -14,7 +14,7 @@ BEGIN
     DECLARE @Insert_sql NVARCHAR(MAX) = '';
     DECLARE @Update_sql NVARCHAR(MAX) = '';
     -- number of columns for the dynamic sql
-    DECLARE @Col_number BIGINT = (SELECT COUNT(*) FROM dbo.nrt_metadata_columns);
+    DECLARE @Col_number BIGINT = (SELECT COUNT(*) FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW');
 
     BEGIN TRY
 
@@ -94,7 +94,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #INTERVIEW_INIT';
 
         SELECT ix.INTERVIEW_UID,
-               ixk.D_INTERVIEW_KEY, 
+               ixk.D_INTERVIEW_KEY,
                ix.interview_status_cd AS IX_STATUS_CD,
                ix.interview_date      AS IX_DATE,
                ix.interviewee_role_cd AS IX_INTERVIEWEE_ROLE_CD,
@@ -187,7 +187,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'UPDATE D_INTERVIEW';
 
         SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
-                             FROM dbo.nrt_metadata_columns);
+                             FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW' );
 
 
         /*
@@ -195,8 +195,8 @@ BEGIN
         for the dynamic columns if @Col_number > 0
         */
         SET @Update_sql = '
-        UPDATE dl 
-        SET 
+        UPDATE dl
+        SET
         dl.IX_STATUS_CD = ix.IX_STATUS_CD,
         dl.IX_DATE = ix.IX_DATE,
         dl.IX_INTERVIEWEE_ROLE_CD = ix.IX_INTERVIEWEE_ROLE_CD,
@@ -213,33 +213,33 @@ BEGIN
         dl.IX_STATUS = ix.IX_STATUS,
         dl.IX_INTERVIEWEE_ROLE = ix.IX_INTERVIEWEE_ROLE,
         dl.IX_TYPE = ix.IX_TYPE,
-        dl.IX_LOCATION = ix.IX_LOCATION 
+        dl.IX_LOCATION = ix.IX_LOCATION
         ' + CASE
                 WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('dl.' + QUOTENAME(RDB_COLUMN_NM) + ' = pv.' + QUOTENAME(RDB_COLUMN_NM),',')
-                                                 FROM dbo.nrt_metadata_columns)
+                                                 FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW')
             ELSE '' END +
-        ' FROM 
+        ' FROM
         #INTERVIEW_INIT ix
         LEFT JOIN dbo.D_INTERVIEW dl
             ON ix.d_interview_key = dl.d_interview_key '
         + CASE
-              WHEN @Col_number > 0 THEN 
+              WHEN @Col_number > 0 THEN
         ' LEFT JOIN (
         SELECT interview_uid, ' + @PivotColumns + '
         FROM (
-            SELECT 
-                interview_uid, 
-                rdb_column_nm, 
+            SELECT
+                interview_uid,
+                rdb_column_nm,
                 answer_val
-            FROM 
+            FROM
                 #INTERVIEW_ANSWERS
         ) AS SourceData
         PIVOT (
-            MAX(answer_val) 
+            MAX(answer_val)
             FOR rdb_column_nm IN (' + @PivotColumns + ')
-        ) AS PivotTable) pv 
+        ) AS PivotTable) pv
         ON pv.interview_uid = ix.interview_uid'
-        ELSE ' ' END + 
+        ELSE ' ' END +
         ' WHERE
         ix.D_INTERVIEW_KEY IS NOT NULL;';
 
@@ -261,7 +261,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'INSERT INTO D_INTERVIEW';
 
         SET @PivotColumns = (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
-                             FROM dbo.nrt_metadata_columns);
+                             FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW');
 
         /*
         Query is built one part after another, adding in extra parts
@@ -290,9 +290,9 @@ BEGIN
         ' + CASE
         WHEN @Col_number > 0 THEN ',' +
         (SELECT STRING_AGG(QUOTENAME(RDB_COLUMN_NM), ',')
-        FROM dbo.nrt_metadata_columns) + ') '
+        FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW') + ') '
         ELSE ')' end +
-                          ' SELECT 
+                          ' SELECT
                           ixk.D_INTERVIEW_KEY,
                           ix.IX_STATUS_CD,
                           ix.IX_DATE,
@@ -310,15 +310,15 @@ BEGIN
                           ix.IX_STATUS,
                           ix.IX_INTERVIEWEE_ROLE,
                           ix.IX_TYPE,
-                          ix.IX_LOCATION 
+                          ix.IX_LOCATION
                           ' + CASE
                           WHEN @Col_number > 0 THEN ',' +
                           (SELECT STRING_AGG('pv.' + QUOTENAME(RDB_COLUMN_NM), ',')
-                          FROM dbo.nrt_metadata_columns)
+                          FROM dbo.nrt_metadata_columns where TABLE_NAME ='D_INTERVIEW')
                           ELSE ' ' END +
-                          'FROM #INTERVIEW_INIT ix 
-                          LEFT JOIN dbo.nrt_interview_key ixk 
-                              ON ixk.interview_uid = ix.interview_uid 
+                          'FROM #INTERVIEW_INIT ix
+                          LEFT JOIN dbo.nrt_interview_key ixk
+                              ON ixk.interview_uid = ix.interview_uid
                           LEFT JOIN dbo.D_INTERVIEW dint
                               ON ixk.D_INTERVIEW_KEY = dint.D_INTERVIEW_KEY
                              '
@@ -327,21 +327,21 @@ BEGIN
          ' LEFT JOIN (
         SELECT interview_uid, ' + @PivotColumns + '
     FROM (
-        SELECT 
-            interview_uid, 
-            rdb_column_nm, 
+        SELECT
+            interview_uid,
+            rdb_column_nm,
             answer_val
-        FROM 
+        FROM
             #INTERVIEW_ANSWERS
     ) AS SourceData
     PIVOT (
-        MAX(answer_val) 
+        MAX(answer_val)
         FOR rdb_column_nm IN (' + @PivotColumns + ')
-    ) AS PivotTable) pv 
+    ) AS PivotTable) pv
     ON pv.interview_uid = ix.interview_uid '
         ELSE ' ' END
         + ' WHERE (ix.D_INTERVIEW_KEY IS NULL
-             OR dint.D_INTERVIEW_KEY IS NULL) 
+             OR dint.D_INTERVIEW_KEY IS NULL)
              AND ixk.D_INTERVIEW_KEY IS NOT NULL';
 
 
@@ -400,12 +400,12 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'Remove existing comments from D_INTERVIEW_NOTE';
 
-        /* 
+        /*
         There is no update step for D_INTERVIEW_NOTE.
         This is because each time a new interview note is created or an existing interview note is updated/deleted,
         all associated interview notes are deleted from NBS_ODSE.dbo.NBS_ANSWER.
 
-        So, it is necessary to delete and reinsert every time. 
+        So, it is necessary to delete and reinsert every time.
         */
         DELETE FROM dbo.D_INTERVIEW_NOTE
         WHERE D_INTERVIEW_KEY IN (SELECT D_INTERVIEW_KEY FROM #INTERVIEW_NOTE_INIT WHERE D_INTERVIEW_KEY IS NOT NULL);
@@ -482,7 +482,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        
+
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'COMPLETE', 999, 'COMPLETE', 0);

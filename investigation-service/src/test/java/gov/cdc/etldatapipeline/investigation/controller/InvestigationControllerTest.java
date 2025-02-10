@@ -48,7 +48,8 @@ class InvestigationControllerTest {
     @CsvSource({
             "/reporting/investigation-svc/investigation",
             "/reporting/investigation-svc/notification",
-            "/reporting/investigation-svc/interview"
+            "/reporting/investigation-svc/interview",
+            "/reporting/investigation-svc/contact"
     })
     void testControllerMethods(String endpoint) throws Exception  {
         String jsonData = "{\"key\":\"value\"}";

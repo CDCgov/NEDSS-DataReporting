@@ -52,7 +52,7 @@ BEGIN
         cc.CONTACT_ENTITY_PHC_UID AS CONTACT_ENTITY_PHC_UID ,
         cc.CONTACT_ENTITY_UID AS CONTACT_ENTITY_UID ,
         cc.CONTACT_REFERRAL_BASIS_CD,
-        cc.CONTACT_STATUS,
+        cc.CONTACT_STATUS as CTT_STATUS,
         cc.CT_CONTACT_UID,
         cc.DISPOSITION_CD,
         cc.DISPOSITION_DATE AS CTT_DISPO_DT,
@@ -109,7 +109,12 @@ BEGIN
         cvg11.code_short_desc_txt as CTT_PROCESSING_DECISION ,
         cvg12.code_short_desc_txt as CTT_GROUP_LOT_ID  ,
         cvg13.code_short_desc_txt as CTT_TRT_COMPLETE_IND,
-        cvg14.code_short_desc_txt as CTT_HEALTH_STATUS
+        cvg14.code_short_desc_txt as CTT_HEALTH_STATUS,
+        cvg15.code_short_desc_txt as CTT_REFERRAL_BASIS,
+        cc.version_ctrl_nbr,
+        act_entities.entity_uid as CONTACT_EXPOSURE_SITE_UID,
+        act_entities.entity_uid as PROVIDER_CONTACT_INVESTIGATOR_UID,
+        act_entities.entity_uid as DISPOSITIONED_BY_UID
     into #CONTACT_RECORD_INIT
     from nbs_odse.dbo.CT_CONTACT cc
     left outer join nbs_srte.dbo.PROGRAM_AREA_CODE pac on cc.prog_area_cd  = pac.prog_area_cd
@@ -128,6 +133,10 @@ BEGIN
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg12 on cc.GROUP_NAME_CD  = cvg12.code and cvg12.code_set_nm = 'NBS_GROUP_NM'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg13 on cc.TREATMENT_END_CD  = cvg13.code and cvg13.code_set_nm = 'YNU'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg14 on cc.HEALTH_STATUS_CD  = cvg14.code and cvg14.code_set_nm = 'NBS_HEALTH_STATUS'
+    left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg15 on cc.CONTACT_REFERRAL_BASIS_CD  = cvg15.code and cvg15.code_set_nm = 'REFERRAL_BASIS'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and act_entities.TYPE_CD='SiteOfExposure'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and TYPE_CD='InvestgrOfContact'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and TYPE_CD='DispoInvestgrOfConRec'
     where CT_CONTACT_UID in (SELECT value FROM STRING_SPLIT(@cc_uids, ','));
 
     if
@@ -204,14 +213,14 @@ BEGIN
             rdb_table_nm,
             answer_group_seq_nbr
         FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
-        WHERE CT_CONTACT_UID IN (SELECT value FROM STRING_SPLIT(@cc_uids, ','))
-    ) as metadata
-    INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
-    ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
-    WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
+        WHERE
+        CODE_SET_NM = 'NBS_DATA_TYPE'
       AND UPPER(data_type) = 'CODED'
       AND rdb_table_nm = 'D_CONTACT_RECORD'
-      AND ANSWER_GROUP_SEQ_NBR IS NULL;
+      AND ANSWER_GROUP_SEQ_NBR IS NULL
+      AND CT_CONTACT_UID IN (SELECT value FROM STRING_SPLIT(@cc_uids, ','))
+    ) as metadata
+    ;
 
     if
         @debug = 'true'
@@ -323,36 +332,34 @@ BEGIN
         @PROC_STEP_NAME = 'GENERATING #CODED_TABLE_SNTEMP';
 
 
-    SELECT NBS_ANSWER_UID,
-    CODE_SET_GROUP_ID,
-    RDB_COLUMN_NM,
-    CT_CONTACT_UID,
-    RECORD_STATUS_CD,
-    NBS_QUESTION_UID,
-    CASE
-        WHEN CHARINDEX('^', ANSWER_TXT) > 0
-            THEN SUBSTRING(ANSWER_TXT, CHARINDEX('^', ANSWER_TXT) + 1, LEN(ANSWER_TXT))
-        ELSE NULL
-        END AS ANSWER_TXT_CODE,
-    CASE
-        WHEN CHARINDEX('^', ANSWER_TXT) > 0
-            THEN CAST(SUBSTRING(ANSWER_TXT, 1, CHARINDEX('^', ANSWER_TXT) - 1) AS INT)
-            ELSE NULL
-            END AS ANSWER_VALUE
+    SELECT
+	    NBS_ANSWER_UID,
+	    CODE_SET_GROUP_ID,
+	    RDB_COLUMN_NM,
+	    CT_CONTACT_UID,
+	    RECORD_STATUS_CD,
+	    NBS_QUESTION_UID,
+	    CASE
+	        WHEN CHARINDEX('^', ANSWER_TXT) > 0
+	            THEN SUBSTRING(ANSWER_TXT, CHARINDEX('^', ANSWER_TXT) + 1, LEN(ANSWER_TXT))
+	        ELSE NULL
+	        END AS ANSWER_TXT_CODE,
+	    CASE
+	        WHEN CHARINDEX('^', ANSWER_TXT) > 0
+	            THEN CAST(SUBSTRING(ANSWER_TXT, 1, CHARINDEX('^', ANSWER_TXT) - 1) AS INT)
+	            ELSE NULL
+	            END AS ANSWER_VALUE
     INTO #CODED_TABLE_SNTEMP
     FROM (
         SELECT DISTINCT
-        NBS_ANSWER_UID,
-        NBS_QUESTION_UID,
-        ANSWER_TXT,
-        RDB_COLUMN_NM,
-        unit_value,
-        INVESTIGATION_FORM_CD,
-        CODE_SET_GROUP_ID,
-        QUESTION_GROUP_SEQ_NBR,
-        DATA_TYPE,
-        CT_CONTACT_UID,
-        RECORD_STATUS_CD
+	        NBS_ANSWER_UID,
+	        NBS_QUESTION_UID,
+	        ANSWER_TXT,
+	        RDB_COLUMN_NM,
+	        CODE_SET_GROUP_ID,
+	        DATA_TYPE,
+	        CT_CONTACT_UID,
+	        RECORD_STATUS_CD
         FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
         WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
             AND QUESTION_GROUP_SEQ_NBR IS NULL
@@ -361,10 +368,10 @@ BEGIN
             (UPPER(DATA_TYPE) = 'NUMERIC' AND UPPER(mask) = 'NUM_SN' AND unit_type_cd = 'CODED')
             )
             AND RDB_COLUMN_NM NOT LIKE '%_CD'
-            AND ANSWER_GROUP_SEQ_NBR IS NULL) metadata
-        INNER JOIN nbs_srte.dbo.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
-                    ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
-                        AND upper(data_type) = 'CODED';
+            AND ANSWER_GROUP_SEQ_NBR IS NULL
+            AND upper(data_type) = 'CODED'
+        ) metadata
+            ;
 
 
     if
@@ -401,7 +408,7 @@ BEGIN
         REPLACE(CODED.ANSWER_VALUE, ' ', '') + ' ' + REPLACE(CVG.CODE_SHORT_DESC_TXT, ' ', '') AS ANSWER_TXT
     INTO #CODED_TABLE_SNTEMP_TRANS
     FROM #CODED_TABLE_SNTEMP CODED
-    LEFT JOIN nbs_srte.dbo.CODESET_GROUP_METADATA METADATA WITH (NOLOCK)
+    LEFT JOIN nbs_srte.dbo.CODESET_GROUP_METADATA metadata WITH (NOLOCK)
             ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
     LEFT JOIN nbs_srte.dbo.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
             ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
@@ -488,7 +495,7 @@ BEGIN
         aa.NBS_QUESTION_UID,
         ctsm.RDB_COLUMN_NM,
         CASE
-            WHEN LEN(ANSWER_DESC11) > 0 AND RIGHT(RTRIM(ANSWER_DESC11), 1) = '|'
+            WHEN LEN(RTRIM(LTRIM(ANSWER_DESC11))) > 0 AND RIGHT(RTRIM(ANSWER_DESC11), 1) = '|'
                 THEN LEFT(RTRIM(ANSWER_DESC11), LEN(RTRIM(ANSWER_DESC11)) - 1)
             ELSE RTRIM(ANSWER_DESC11)
             END AS ANSWER_DESC11,
@@ -587,7 +594,7 @@ BEGIN
         cct.RDB_COLUMN_NM,
         cct.NBS_ANSWER_UID,
         CASE
-            WHEN LEN(ANSWER_DESC11) > 0
+            WHEN LEN(LTRIM(RTRIM(ANSWER_DESC11))) > 0
             AND RIGHT(RTRIM(ANSWER_DESC11),
             1) = '|'
                         THEN LEFT(RTRIM(ANSWER_DESC11),
@@ -704,27 +711,22 @@ BEGIN
         CT_CONTACT_UID,
         NBS_QUESTION_UID
     INTO #TEXT_FINAL
-    FROM (SELECT DISTINCT
-        NBS_ANSWER_UID,
-        CODE_SET_GROUP_ID,
-        RDB_COLUMN_NM,
-        ANSWER_TXT,
-        CT_CONTACT_UID,
-        RECORD_STATUS_CD,
-        NBS_QUESTION_UID,
-        data_type,
-        rdb_table_nm,
-        answer_group_seq_nbr
+    FROM (
+    	SELECT DISTINCT
+	        NBS_ANSWER_UID,
+	        RDB_COLUMN_NM,
+	        ANSWER_TXT,
+	        CT_CONTACT_UID,
+	        NBS_QUESTION_UID
         FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
-        WHERE CT_CONTACT_UID IN (SELECT value FROM STRING_SPLIT(@cc_uids, ','))
+        WHERE
+        CODE_SET_NM = 'NBS_DATA_TYPE'
+        AND CODE = 'TEXT'
+        AND rdb_table_nm = 'D_CONTACT_RECORD'
+        AND ANSWER_GROUP_SEQ_NBR IS NULL
+        AND CT_CONTACT_UID IN (SELECT value FROM STRING_SPLIT(@cc_uids, ','))
     ) as metadata
-    INNER JOIN nbs_srte.dbo.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
-                ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
-    WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
-    AND CODE = 'TEXT'
-    and rdb_table_nm = 'D_CONTACT_RECORD'
-    AND ANSWER_GROUP_SEQ_NBR IS NULL;
-
+    ;
 
     if
         @debug = 'true'
@@ -748,35 +750,34 @@ BEGIN
     SET
         @PROC_STEP_NAME = 'GENERATING #NUMERIC_BASE_DATA';
 
-     SELECT ct_contact_answer_uid as NBS_ANSWER_UID,
-        metadata.CODE_SET_GROUP_ID,
+     SELECT
+		NBS_ANSWER_UID,
+		CODE_SET_GROUP_ID,
         RDB_COLUMN_NM,
         ANSWER_TXT,
         CT_CONTACT_UID,
-        PA.RECORD_STATUS_CD,
-        metadata.NBS_QUESTION_UID
+        NBS_QUESTION_UID,
+        RECORD_STATUS_CD
     INTO #NUMERIC_BASE_DATA
-    FROM (SELECT DISTINCT RDB_COLUMN_NM,
-                        NBS_QUESTION_UID,
-                        CODE_SET_GROUP_ID,
-                        INVESTIGATION_FORM_CD,
-                        QUESTION_GROUP_SEQ_NBR,
-                        DATA_TYPE
+    FROM (
+    	SELECT DISTINCT
+	    	NBS_ANSWER_UID,
+	        RDB_COLUMN_NM,
+	        ANSWER_TXT,
+	        CT_CONTACT_UID,
+	        NBS_QUESTION_UID,
+	        CODE_SET_GROUP_ID,
+	        RECORD_STATUS_CD
         FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
         WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
             AND QUESTION_GROUP_SEQ_NBR IS NULL
-            AND UPPER(DATA_TYPE) = 'TEXT'
+            AND ANSWER_GROUP_SEQ_NBR IS NULL
             AND data_location = 'CT_CONTACT_ANSWER.ANSWER_TXT'
+            AND CODE_SET_NM = 'NBS_DATA_TYPE'
+	    	AND CODE IN ('Numeric', 'NUMERIC')
             AND CT_CONTACT_UID IN (SELECT value FROM STRING_SPLIT(@cc_uids, ','))
         ) metadata
-    LEFT JOIN NBS_ODSE.dbo.CT_CONTACT_ANSWER AS PA WITH (NOLOCK)
-        ON metadata.nbs_question_uid = PA.nbs_question_uid
-            INNER JOIN
-        nbs_srte.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
-        ON UPPER(CVG.CODE) = UPPER(metadata.DATA_TYPE)
-    WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
-    AND CVG.CODE IN ('Numeric', 'NUMERIC')
-    AND PA.ANSWER_GROUP_SEQ_NBR IS NULL;
+
 
 
     if
@@ -1020,28 +1021,26 @@ BEGIN
            CT_CONTACT_UID,
            FORMAT(TRY_CAST(ANSWER_TXT AS datetime2), 'yyyy-MM-dd HH:mm:ss.fff') AS ANSWER_TXT1
     INTO #DATE_DATA
-    FROM (SELECT DISTINCT RDB_COLUMN_NM,
-                          NBS_QUESTION_UID,
-                          CODE_SET_GROUP_ID,
-                          INVESTIGATION_FORM_CD,
-                          QUESTION_GROUP_SEQ_NBR,
-                          DATA_TYPE
+    FROM (
+    	SELECT DISTINCT
+    	    CT_CONTACT_UID,
+    		RDB_COLUMN_NM,
+              NBS_QUESTION_UID,
+              CODE_SET_GROUP_ID,
+              INVESTIGATION_FORM_CD,
+              QUESTION_GROUP_SEQ_NBR,
+              ANSWER_TXT,
+              DATA_TYPE
           FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
           WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
             AND QUESTION_GROUP_SEQ_NBR IS NULL
-            AND DATA_TYPE in ('Date/Time', 'Date', 'DATETIME', 'DATE')
             AND data_location = 'CT_CONTACT_ANSWER.ANSWER_TXT'
+            AND CODE_SET_NM = 'NBS_DATA_TYPE'
+		      AND CODE IN ('DATETIME', 'DATE')
+		      AND ANSWER_GROUP_SEQ_NBR IS NULL
             AND CT_CONTACT_UID IN (SELECT value FROM STRING_SPLIT(@cc_uids, ','))
-            ) metadata
-             LEFT JOIN
-         NBS_ODSE.dbo.CT_CONTACT_ANSWER AS PA WITH (NOLOCK)
-         ON metadata.nbs_question_uid = PA.nbs_question_uid
-             INNER JOIN
-         nbs_srte.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
-         ON UPPER(CVG.CODE) = UPPER(metadata.DATA_TYPE)
-    WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
-      AND CVG.CODE IN ('DATETIME', 'DATE')
-      AND PA.ANSWER_GROUP_SEQ_NBR IS NULL;
+   ) metadata
+;
 
 
 
@@ -1068,25 +1067,27 @@ BEGIN
         @PROC_STEP_NAME = 'GENERATING #UNIONED_DATA';
 
 
-    WITH ud AS (SELECT CT_CONTACT_UID,
-       RDB_COLUMN_NM,
-       ANSWER_DESC11 AS ANSWER_VAL
-    FROM #CODED_TABLE_FINAL
-    UNION ALL
-    SELECT CT_CONTACT_UID,
-        RDB_COLUMN_NM,
-        ANSWER_TXT1 AS ANSWER_VAL
-    FROM #DATE_DATA
-    UNION ALL
-    SELECT CT_CONTACT_UID,
-        RDB_COLUMN_NM,
-        ANSWER_TXT AS ANSWER_VAL
-    FROM #NUMERIC_DATA_TRANS1
-    UNION ALL
-    SELECT CT_CONTACT_UID,
-        RDB_COLUMN_NM,
-        ANSWER_TXT AS ANSWER_VAL
-    FROM #TEXT_FINAL)
+    WITH ud AS (
+	    SELECT CT_CONTACT_UID,
+	       RDB_COLUMN_NM,
+	       ANSWER_DESC11 AS ANSWER_VAL
+	    FROM #CODED_TABLE_FINAL
+	    UNION ALL
+	    SELECT CT_CONTACT_UID,
+	        RDB_COLUMN_NM,
+	        ANSWER_TXT1 AS ANSWER_VAL
+	    FROM #DATE_DATA
+	    UNION ALL
+	    SELECT CT_CONTACT_UID,
+	        RDB_COLUMN_NM,
+	        ANSWER_TXT AS ANSWER_VAL
+	    FROM #NUMERIC_DATA_TRANS1
+	    UNION ALL
+	    SELECT CT_CONTACT_UID,
+	        RDB_COLUMN_NM,
+	        ANSWER_TXT AS ANSWER_VAL
+	    FROM #TEXT_FINAL
+    )
     SELECT CT_CONTACT_UID,
         RDB_COLUMN_NM,
         ANSWER_VAL
@@ -1118,7 +1119,7 @@ BEGIN
 
 
     WITH ordered_list AS (
-        SELECT RDB_TABLE_NM,
+        SELECT RDB_TABLE_NM as TABLE_NAME,
             RDB_COLUMN_NM,
             1                                                                          AS NEW_FLAG,
             LAST_CHG_TIME,
@@ -1128,7 +1129,7 @@ BEGIN
         FROM NBS_ODSE.dbo.NBS_rdb_metadata WITH (NOLOCK)
         WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
     )
-    SELECT RDB_TABLE_NM,
+    SELECT distinct TABLE_NAME,
            RDB_COLUMN_NM,
            NEW_FLAG,
            LAST_CHG_TIME,
@@ -1166,7 +1167,7 @@ BEGIN
     CONTACT_ENTITY_PHC_UID ,
     CONTACT_ENTITY_UID ,
     CONTACT_REFERRAL_BASIS_CD,
-    CONTACT_STATUS,
+    CTT_STATUS,
     CT_CONTACT_UID,
     DISPOSITION_CD,
     CTT_DISPO_DT,
@@ -1224,6 +1225,11 @@ BEGIN
     CTT_GROUP_LOT_ID  ,
     CTT_TRT_COMPLETE_IND,
     CTT_HEALTH_STATUS,
+    CTT_REFERRAL_BASIS,
+    VERSION_CTRL_NBR,
+    CONTACT_EXPOSURE_SITE_UID,
+    PROVIDER_CONTACT_INVESTIGATOR_UID,
+    DISPOSITIONED_BY_UID,
     nesteddata.answers,
     nesteddata.rdb_cols
     FROM #CONTACT_RECORD_INIT ix
@@ -1234,7 +1240,7 @@ BEGIN
                         FROM #UNIONED_DATA ud
                         WHERE ud.CT_CONTACT_UID = ix.CT_CONTACT_UID
                         FOR json path,INCLUDE_NULL_VALUES) AS answers) AS answers,
-            (SELECT (SELECT RDB_TABLE_NM,
+            (SELECT (SELECT TABLE_NAME,
                            RDB_COLUMN_NM,
                            NEW_FLAG,
                            LAST_CHG_TIME,

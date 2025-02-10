@@ -59,10 +59,13 @@ class InvestigationDataProcessingTests {
     private static final String CASE_MANAGEMENT_TOPIC = "caseManagementTopic";
     private static final String INTERVIEW_TOPIC = "interviewTopic";
     private static final String INTERVIEW_ANSWERS_TOPIC = "interviewAnswersTopic";
-    private static final String INTERVIEW_NOTE_TOPIC = "interviewAnswersTopic";
+    private static final String INTERVIEW_NOTE_TOPIC = "interviewNoteTopic";
     private static final String RDB_METADATA_COLS_TOPIC = "rdbMetadataColsTopic";
+    private static final String CONTACT_TOPIC = "contactTopic";
+    private static final String CONTACT_ANSWERS_TOPIC = "contactAnswersTopic";
     private static final Long INVESTIGATION_UID = 234567890L;
     private static final Long INTERVIEW_UID = 234567890L;
+    private static final Long CONTACT_UID = 12345678L;
     private static final String INVALID_JSON = "invalidJSON";
     ProcessInvestigationDataUtil transformer;
 
@@ -240,6 +243,7 @@ class InvestigationDataProcessingTests {
 
     }
 
+
     @Test
     void testProcessInterviewAnswers() throws JsonProcessingException {
 
@@ -401,6 +405,105 @@ class InvestigationDataProcessingTests {
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
                         verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+    }
+
+    @Test
+    void testProcessContacts() throws JsonProcessingException {
+
+        Contact contact = constructContact(CONTACT_UID);
+        contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
+        transformer.setContactOutputTopicName(CONTACT_TOPIC);
+        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
+
+        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
+        contactReportingKey.setContactUid(CONTACT_UID);
+        final ContactReporting  contactReportingValue = constructContactReporting(CONTACT_UID);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processContact(contact);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        var actualContactKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
+
+        var actualContactValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactReporting.class);
+
+        assertEquals(contactReportingKey, actualContactKey);
+        assertEquals(contactReportingValue, actualContactValue);
+
+    }
+
+    @Test
+    void testProcessContactAnswers() throws JsonProcessingException {
+
+        Contact contact = constructContact(CONTACT_UID);
+        contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
+        transformer.setContactOutputTopicName(CONTACT_TOPIC);
+        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
+
+        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
+        contactReportingKey.setContactUid(CONTACT_UID);
+
+        final  ContactAnswerKey contactAnswerKey = new ContactAnswerKey();
+        contactAnswerKey.setContactUid(CONTACT_UID);
+        contactAnswerKey.setRdbColumnNm("CTT_EXPOSURE_TYPE");
+
+        final ContactReporting  contactReportingValue = constructContactReporting(CONTACT_UID);
+        final ContactAnswer contactAnswerValue = constructContactAnswers(CONTACT_UID);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processContact(contact);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        //contact key
+        var actualContactKey1 = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
+        //contact value
+        var actualContactValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactReporting.class);
+
+        //contact answer key
+        var actualContactAnswerKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), ContactAnswerKey.class);
+        //contact answer value
+        var actualContactAnswerValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), ContactAnswer.class);
+
+        assertEquals(contactReportingKey, actualContactKey1);
+        assertEquals(contactReportingValue, actualContactValue);
+        assertEquals(contactAnswerKey, actualContactAnswerKey);
+        assertEquals(contactAnswerValue, actualContactAnswerValue);
+    }
+
+    @Test
+    void testProcessContactError(){
+
+        Contact contact = new Contact();
+        contact.setContactUid(CONTACT_UID);
+        contact.setAnswers(INVALID_JSON);
+
+        transformer.setContactOutputTopicName(CONTACT_TOPIC);
+        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processContact(contact);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         ILoggingEvent log = listAppender.list.getLast();
@@ -675,4 +778,111 @@ class InvestigationDataProcessingTests {
         return interviewNote;
     }
 
+    private Contact constructContact(Long contactUid) {
+        Contact contact = new Contact();
+        contact.setContactUid(contactUid);
+        contact.setAddTime("2024-01-01T10:00:00");
+        contact.setAddUserId(100L);
+        contact.setContactEntityEpiLinkId("EPI123");
+        contact.setCttReferralBasis("Referral");
+        contact.setCttStatus("Active");
+        contact.setCttDispoDt("2024-01-10");
+        contact.setCttDisposition("Completed");
+        contact.setCttEvalCompleted("Yes");
+        contact.setCttEvalDt("2024-01-05");
+        contact.setCttEvalNotes("Evaluation completed successfully.");
+        contact.setCttGroupLotId("LOT123");
+        contact.setCttHealthStatus("Good");
+        contact.setCttInvAssignedDt("2024-01-02");
+        contact.setCttJurisdictionNm("JurisdictionA");
+        contact.setCttNamedOnDt("2024-01-03");
+        contact.setCttNotes("General notes.");
+        contact.setCttPriority("High");
+        contact.setCttProcessingDecision("Approved");
+        contact.setCttProgramArea("ProgramX");
+        contact.setCttRelationship("Close Contact");
+        contact.setCttRiskInd("Low");
+        contact.setCttRiskNotes("Minimal risk identified.");
+        contact.setCttSharedInd("Yes");
+        contact.setCttSympInd("No");
+        contact.setCttSympNotes("No symptoms reported.");
+        contact.setCttSympOnsetDt(null);
+        contact.setCttTrtCompleteInd("Yes");
+        contact.setCttTrtEndDt("2024-02-01");
+        contact.setCttTrtInitiatedInd("Yes");
+        contact.setCttTrtNotCompleteRsn(null);
+        contact.setCttTrtNotStartRsn(null);
+        contact.setCttTrtNotes("Treatment completed successfully.");
+        contact.setCttTrtStartDt("2024-01-15");
+        contact.setLastChgTime("2024-02-05T12:00:00");
+        contact.setLastChgUserId(200L);
+        contact.setLocalId("LOC456");
+        contact.setProgramJurisdictionOid(300L);
+        contact.setRecordStatusCd("Active");
+        contact.setRecordStatusTime("2024-02-06T08:00:00");
+        contact.setSubjectEntityEpiLinkId("EPI456");
+        contact.setVersionCtrlNbr(1L);
+        contact.setContactExposureSiteUid(123L);
+        contact.setProviderContactInvestigatorUid(1234L);
+        contact.setDispositionedByUid(123L);
+        return contact;
+    }
+
+    private ContactReporting constructContactReporting(Long contactUid) {
+        ContactReporting contactReporting = new ContactReporting();
+        contactReporting.setContactUid(contactUid);
+        contactReporting.setAddTime("2024-01-01T10:00:00");
+        contactReporting.setAddUserId(100L);
+        contactReporting.setContactEntityEpiLinkId("EPI123");
+        contactReporting.setCttReferralBasis("Referral");
+        contactReporting.setCttStatus("Active");
+        contactReporting.setCttDispoDt("2024-01-10");
+        contactReporting.setCttDisposition("Completed");
+        contactReporting.setCttEvalCompleted("Yes");
+        contactReporting.setCttEvalDt("2024-01-05");
+        contactReporting.setCttEvalNotes("Evaluation completed successfully.");
+        contactReporting.setCttGroupLotId("LOT123");
+        contactReporting.setCttHealthStatus("Good");
+        contactReporting.setCttInvAssignedDt("2024-01-02");
+        contactReporting.setCttJurisdictionNm("JurisdictionA");
+        contactReporting.setCttNamedOnDt("2024-01-03");
+        contactReporting.setCttNotes("General notes.");
+        contactReporting.setCttPriority("High");
+        contactReporting.setCttProcessingDecision("Approved");
+        contactReporting.setCttProgramArea("ProgramX");
+        contactReporting.setCttRelationship("Close Contact");
+        contactReporting.setCttRiskInd("Low");
+        contactReporting.setCttRiskNotes("Minimal risk identified.");
+        contactReporting.setCttSharedInd("Yes");
+        contactReporting.setCttSympInd("No");
+        contactReporting.setCttSympNotes("No symptoms reported.");
+        contactReporting.setCttSympOnsetDt(null);
+        contactReporting.setCttTrtCompleteInd("Yes");
+        contactReporting.setCttTrtEndDt("2024-02-01");
+        contactReporting.setCttTrtInitiatedInd("Yes");
+        contactReporting.setCttTrtNotCompleteRsn(null);
+        contactReporting.setCttTrtNotStartRsn(null);
+        contactReporting.setCttTrtNotes("Treatment completed successfully.");
+        contactReporting.setCttTrtStartDt("2024-01-15");
+        contactReporting.setLastChgTime("2024-02-05T12:00:00");
+        contactReporting.setLastChgUserId(200L);
+        contactReporting.setLocalId("LOC456");
+        contactReporting.setProgramJurisdictionOid(300L);
+        contactReporting.setRecordStatusCd("Active");
+        contactReporting.setRecordStatusTime("2024-02-06T08:00:00");
+        contactReporting.setSubjectEntityEpiLinkId("EPI456");
+        contactReporting.setVersionCtrlNbr(1L);
+        contactReporting.setContactExposureSiteUid(123L);
+        contactReporting.setProviderContactInvestigatorUid(1234L);
+        contactReporting.setDispositionedByUid(123L);
+        return contactReporting;
+    }
+
+    private ContactAnswer constructContactAnswers(Long contactUid) {
+        ContactAnswer contactAnswer = new ContactAnswer();
+        contactAnswer.setContactUid(contactUid);
+        contactAnswer.setAnswerVal("Common Space");
+        contactAnswer.setRdbColumnNm("CTT_EXPOSURE_TYPE");
+        return contactAnswer;
+    }
 }

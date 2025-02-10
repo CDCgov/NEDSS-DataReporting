@@ -2,13 +2,11 @@ package gov.cdc.etldatapipeline.investigation.service;
 
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.investigation.repository.ContactRepository;
 import gov.cdc.etldatapipeline.investigation.repository.InterviewRepository;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
+import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.InvestigationTransformed;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
@@ -60,11 +58,11 @@ public class InvestigationService {
     @Value("${spring.kafka.input.topic-name-int}")
     private String interviewTopic;
 
+    @Value("${spring.kafka.input.topic-name-ctr}")
+    private String contactTopic;
+
     @Value("${spring.kafka.output.topic-name-reporting}")
     public String investigationTopicReporting;
-
-    @Value("${spring.kafka.output.topic-name-interview}")
-    private String interviewOutputTopicReporting;
 
     @Value("${service.phc-datamart-enable}")
     public boolean phcDatamartEnable;
@@ -72,6 +70,7 @@ public class InvestigationService {
     private final InvestigationRepository investigationRepository;
     private final NotificationRepository notificationRepository;
     private final InterviewRepository interviewRepository;
+    private final ContactRepository contactRepository;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessInvestigationDataUtil processDataUtil;
@@ -102,7 +101,8 @@ public class InvestigationService {
             topics = {
                     "${spring.kafka.input.topic-name-phc}",
                     "${spring.kafka.input.topic-name-ntf}",
-                    "${spring.kafka.input.topic-name-int}"
+                    "${spring.kafka.input.topic-name-int}",
+                    "${spring.kafka.input.topic-name-ctr}"
             }
     )
     public void processMessage(String message,
@@ -115,6 +115,8 @@ public class InvestigationService {
             processNotification(message);
         } else if (topic.equals(interviewTopic)) {
             processInterview(message);
+        } else if (topic.equals(contactTopic)) {
+            processContact(message);
         }
         consumer.commitSync();
     }
@@ -192,6 +194,27 @@ public class InvestigationService {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             throw new RuntimeException(errorMessage("Interview", interviewUid, e), e);
+        }
+    }
+
+    private void processContact(String value) {
+        String contactUid = "";
+        try {
+            contactUid = extractUid(value, "ct_contact_uid");
+
+            logger.info(topicDebugLog, "Contact", contactUid, contactTopic);
+            Optional<Contact> contactData = contactRepository.computeContact(contactUid);
+            if(contactData.isPresent()) {
+                Contact contact = contactData.get();
+                processDataUtil.processContact(contact);
+                processDataUtil.processColumnMetadata(contact.getRdbCols(), contact.getContactUid());
+            } else {
+                throw new EntityNotFoundException("Unable to find Contact with id: " + contactUid);
+            }
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
+        } catch (Exception e) {
+            throw new RuntimeException(errorMessage("Contact", contactUid, e), e);
         }
     }
 

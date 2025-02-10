@@ -21,7 +21,9 @@ SELECT PA.ct_contact_answer_uid as nbs_answer_uid,
        nuim.block_nm,
        question_group_seq_nbr,
        data_type,
-       pa.last_chg_time
+       pa.last_chg_time,
+       cvg.code,
+       cvg.code_set_nm
 from nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
 inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
 	on nrdbm.nbs_ui_metadata_uid = nuim.nbs_ui_metadata_uid

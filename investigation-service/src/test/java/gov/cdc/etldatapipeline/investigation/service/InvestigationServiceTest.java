@@ -3,15 +3,14 @@ package gov.cdc.etldatapipeline.investigation.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.investigation.repository.ContactRepository;
 import gov.cdc.etldatapipeline.investigation.repository.InterviewRepository;
+import gov.cdc.etldatapipeline.investigation.repository.model.dto.Contact;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReportingKey;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -46,6 +45,9 @@ class InvestigationServiceTest {
     private InterviewRepository interviewRepository;
 
     @Mock
+    private ContactRepository contactRepository;
+
+    @Mock
     KafkaTemplate<String, String> kafkaTemplate;
 
     @Mock
@@ -65,29 +67,37 @@ class InvestigationServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String FILE_PATH_PREFIX = "rawDataFiles/";
+    //input topics
     private final String investigationTopic = "Investigation";
     private final String notificationTopic = "Notification";
     private final String interviewTopic = "Interview";
+    private final String contactTopic = "Contact";
+    //output topics
     private final String investigationTopicOutput = "InvestigationOutput";
     private final String notificationTopicOutput = "investigationNotification";
     private final String interviewTopicOutput = "InterviewOutput";
+    private final String contactTopicOutput = "ContactOutput";
 
 
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
-        transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
-        transformer.setInvestigationObservationOutputTopicName("investigationObservation");
-        transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
-        transformer.setInterviewOutputTopicName(interviewTopicOutput);
-        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, kafkaTemplate, transformer);
+
+        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, kafkaTemplate, transformer);
+
         investigationService.setPhcDatamartEnable(true);
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
         investigationService.setInterviewTopic(interviewTopic);
-        investigationService.setInterviewOutputTopicReporting(interviewTopicOutput);
+        investigationService.setContactTopic(contactTopic);
+
+        transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
+        transformer.setInvestigationObservationOutputTopicName("investigationObservation");
+        transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
+        transformer.setInterviewOutputTopicName(interviewTopicOutput);
+        transformer.setContactOutputTopicName(contactTopicOutput);
     }
 
     @AfterEach
@@ -211,6 +221,58 @@ class InvestigationServiceTest {
         assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, interviewTopic, consumer));
     }
 
+    @Test
+    void testProcessContactMessage() throws JsonProcessingException {
+        Long contactUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"" + contactUid + "\"}}}";
+
+        final Contact contact = constructContact(contactUid);
+        when(contactRepository.computeContact(String.valueOf(contactUid))).thenReturn(Optional.of(contact));
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+        investigationService.processMessage(payload, contactTopic, consumer);
+
+        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
+        contactReportingKey.setContactUid(contactUid);
+
+        final ContactReporting  contactReportingValue = constructContactReporting(contactUid);
+
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        String actualTopic = topicCaptor.getAllValues().get(0);
+        String actualKey = keyCaptor.getAllValues().get(0);
+        String actualValue = messageCaptor.getAllValues().get(0);
+
+
+        var actualContactKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path("payload").toString(), ContactReportingKey.class);
+        var actualContactValue = objectMapper.readValue(
+                objectMapper.readTree(actualValue).path("payload").toString(), ContactReporting.class);
+
+        assertEquals(contactTopicOutput, actualTopic);
+        assertEquals(contactReportingKey, actualContactKey);
+        assertEquals(contactReportingValue, actualContactValue);
+
+        verify(contactRepository).computeContact(String.valueOf(contactUid));
+    }
+
+    @Test
+    void testProcessContactException() {
+        String invalidPayload = "{\"payload\": {\"after\": {}}}";
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> investigationService.processMessage(invalidPayload, contactTopic, consumer));
+        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+    }
+
+    @Test
+    void testProcessContactNoDataException() {
+        String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"\"}}}";
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, contactTopic, consumer));
+    }
 
     private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
 
@@ -366,4 +428,107 @@ class InvestigationServiceTest {
         interviewReporting.setVersionCtrlNbr(1L);
         return interviewReporting;
     }
+
+    private Contact constructContact(Long contactUid) {
+        Contact contact = new Contact();
+        contact.setContactUid(contactUid);
+        contact.setAddTime("2024-01-01T10:00:00");
+        contact.setAddUserId(100L);
+        contact.setContactEntityEpiLinkId("EPI123");
+        contact.setCttReferralBasis("Referral");
+        contact.setCttStatus("Active");
+        contact.setCttDispoDt("2024-01-10");
+        contact.setCttDisposition("Completed");
+        contact.setCttEvalCompleted("Yes");
+        contact.setCttEvalDt("2024-01-05");
+        contact.setCttEvalNotes("Evaluation completed successfully.");
+        contact.setCttGroupLotId("LOT123");
+        contact.setCttHealthStatus("Good");
+        contact.setCttInvAssignedDt("2024-01-02");
+        contact.setCttJurisdictionNm("JurisdictionA");
+        contact.setCttNamedOnDt("2024-01-03");
+        contact.setCttNotes("General notes.");
+        contact.setCttPriority("High");
+        contact.setCttProcessingDecision("Approved");
+        contact.setCttProgramArea("ProgramX");
+        contact.setCttRelationship("Close Contact");
+        contact.setCttRiskInd("Low");
+        contact.setCttRiskNotes("Minimal risk identified.");
+        contact.setCttSharedInd("Yes");
+        contact.setCttSympInd("No");
+        contact.setCttSympNotes("No symptoms reported.");
+        contact.setCttSympOnsetDt(null);
+        contact.setCttTrtCompleteInd("Yes");
+        contact.setCttTrtEndDt("2024-02-01");
+        contact.setCttTrtInitiatedInd("Yes");
+        contact.setCttTrtNotCompleteRsn(null);
+        contact.setCttTrtNotStartRsn(null);
+        contact.setCttTrtNotes("Treatment completed successfully.");
+        contact.setCttTrtStartDt("2024-01-15");
+        contact.setLastChgTime("2024-02-05T12:00:00");
+        contact.setLastChgUserId(200L);
+        contact.setLocalId("LOC456");
+        contact.setProgramJurisdictionOid(300L);
+        contact.setRecordStatusCd("Active");
+        contact.setRecordStatusTime("2024-02-06T08:00:00");
+        contact.setSubjectEntityEpiLinkId("EPI456");
+        contact.setVersionCtrlNbr(1L);
+        contact.setContactExposureSiteUid(123L);
+        contact.setProviderContactInvestigatorUid(1234L);
+        contact.setDispositionedByUid(123L);
+        contact.setRdbCols(readFileData(FILE_PATH_PREFIX + "RdbColumns.json"));
+        contact.setAnswers(readFileData(FILE_PATH_PREFIX + "ContactAnswers.json"));
+        return contact;
+    }
+
+    private ContactReporting constructContactReporting(Long contactUid) {
+        ContactReporting contactReporting = new ContactReporting();
+        contactReporting.setContactUid(contactUid);
+        contactReporting.setAddTime("2024-01-01T10:00:00");
+        contactReporting.setAddUserId(100L);
+        contactReporting.setContactEntityEpiLinkId("EPI123");
+        contactReporting.setCttReferralBasis("Referral");
+        contactReporting.setCttStatus("Active");
+        contactReporting.setCttDispoDt("2024-01-10");
+        contactReporting.setCttDisposition("Completed");
+        contactReporting.setCttEvalCompleted("Yes");
+        contactReporting.setCttEvalDt("2024-01-05");
+        contactReporting.setCttEvalNotes("Evaluation completed successfully.");
+        contactReporting.setCttGroupLotId("LOT123");
+        contactReporting.setCttHealthStatus("Good");
+        contactReporting.setCttInvAssignedDt("2024-01-02");
+        contactReporting.setCttJurisdictionNm("JurisdictionA");
+        contactReporting.setCttNamedOnDt("2024-01-03");
+        contactReporting.setCttNotes("General notes.");
+        contactReporting.setCttPriority("High");
+        contactReporting.setCttProcessingDecision("Approved");
+        contactReporting.setCttProgramArea("ProgramX");
+        contactReporting.setCttRelationship("Close Contact");
+        contactReporting.setCttRiskInd("Low");
+        contactReporting.setCttRiskNotes("Minimal risk identified.");
+        contactReporting.setCttSharedInd("Yes");
+        contactReporting.setCttSympInd("No");
+        contactReporting.setCttSympNotes("No symptoms reported.");
+        contactReporting.setCttSympOnsetDt(null);
+        contactReporting.setCttTrtCompleteInd("Yes");
+        contactReporting.setCttTrtEndDt("2024-02-01");
+        contactReporting.setCttTrtInitiatedInd("Yes");
+        contactReporting.setCttTrtNotCompleteRsn(null);
+        contactReporting.setCttTrtNotStartRsn(null);
+        contactReporting.setCttTrtNotes("Treatment completed successfully.");
+        contactReporting.setCttTrtStartDt("2024-01-15");
+        contactReporting.setLastChgTime("2024-02-05T12:00:00");
+        contactReporting.setLastChgUserId(200L);
+        contactReporting.setLocalId("LOC456");
+        contactReporting.setProgramJurisdictionOid(300L);
+        contactReporting.setRecordStatusCd("Active");
+        contactReporting.setRecordStatusTime("2024-02-06T08:00:00");
+        contactReporting.setSubjectEntityEpiLinkId("EPI456");
+        contactReporting.setVersionCtrlNbr(1L);
+        contactReporting.setContactExposureSiteUid(123L);
+        contactReporting.setProviderContactInvestigatorUid(1234L);
+        contactReporting.setDispositionedByUid(123L);
+        return contactReporting;
+    }
+
 }
