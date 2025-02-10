@@ -69,6 +69,7 @@ public class ProcessInvestigationDataUtil {
     private final InvestigationRepository investigationRepository;
 
     public static final String TYPE_CD = "type_cd";
+    public static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
 
     @Transactional
     public InvestigationTransformed transformInvestigationData(Investigation investigation) {
@@ -452,7 +453,7 @@ public class ProcessInvestigationDataUtil {
 
             for (JsonNode node : answerArray) {
                 final Long interviewUid = interview.getInterviewUid();
-                final String rdbColumnNm = node.get("RDB_COLUMN_NM").asText();
+                final String rdbColumnNm = node.get(RDB_COLUMN_NM).asText();
 
                 InterviewAnswerKey interviewAnswerKey = new InterviewAnswerKey();
                 interviewAnswerKey.setInterviewUid(interviewUid);
@@ -553,7 +554,7 @@ public class ProcessInvestigationDataUtil {
 
             for (JsonNode node : answerArray) {
                 final Long contactUid = contact.getContactUid();
-                final String rdbColumnNm = node.get("RDB_COLUMN_NM").asText();
+                final String rdbColumnNm = node.get(RDB_COLUMN_NM).asText();
 
                 ContactAnswerKey contactAnswerKey = new ContactAnswerKey();
                 contactAnswerKey.setContactUid(contactUid);
@@ -639,7 +640,7 @@ public class ProcessInvestigationDataUtil {
             JsonNode columnArray = parseJsonArray(rdbCols);
             for (JsonNode node : columnArray) {
                 String tableName = node.get("TABLE_NAME").asText();
-                String columnName = node.get("RDB_COLUMN_NM").asText();
+                String columnName = node.get(RDB_COLUMN_NM).asText();
 
                 // creating key for kafka
                 MetadataColumnKey metadataColumnKey = new MetadataColumnKey();
