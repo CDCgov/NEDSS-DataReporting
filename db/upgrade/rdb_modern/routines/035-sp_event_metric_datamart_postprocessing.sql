@@ -622,7 +622,7 @@ SELECT 'PHCInvForm'                                                             
        phc.program_jurisdiction_oid,
        phc.jurisdiction_cd                                                       as Jurisdiction_cd,
        j.code_desc_txt                                                           as Jurisdiction_desc_txt,
-       phc.raw_record_status_cd,
+       phc.raw_record_status_cd                                                  as record_status_cd,
        c.code_desc_txt                                                           as Record_status_desc_txt,
        phc.record_status_time,
        NULL                                                                      as electronic_ind,
