@@ -68,8 +68,8 @@ public class ProcessInvestigationDataUtil {
 
     private final InvestigationRepository investigationRepository;
 
-    public static final String TYPE_CD = "type_cd";
-    public static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
+    private static final String TYPE_CD = "type_cd";
+    private static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
 
     @Transactional
     public InvestigationTransformed transformInvestigationData(Investigation investigation) {
