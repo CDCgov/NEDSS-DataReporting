@@ -581,7 +581,7 @@ SELECT 'MorbReport',
        NULL,
        NULL,
        NULL,
-       ADD_USER_NAME,---27		                        -- in nrt
+       ADD_USER_NAME,
        last_chg_user_name
 FROM #TMP_EVENT_OBS o
 WHERE o.obs_domain_cd_st_1 = 'Order'
@@ -693,7 +693,7 @@ INSERT INTO #TMP_EVENT_METRIC
 SELECT 'CONTACT',
        ct.CONTACT_UID,
        ct.LOCAL_ID,
-       PERSON.LOCAL_ID                                               AS LOCAL_PATIENT_ID,
+       pat.LOCAL_ID                                                  AS LOCAL_PATIENT_ID,
        NULL                                                          as Condition_cd,
        NULL                                                          as Condition_desc_txt,
        ct.PROG_AREA_CD,
@@ -719,9 +719,8 @@ SELECT 'CONTACT',
        RTRIM(Ltrim(up1.last_nm)) + ', ' + RTRIM(Ltrim(up1.first_nm)) as ADD_USER_NAME,
        RTRIM(Ltrim(up2.last_nm)) + ', ' + RTRIM(Ltrim(up2.first_nm)) as LAST_CHG_USER_NAME
 FROM dbo.nrt_contact ct
-         INNER JOIN [NBS_ODSE].dbo.PERSON
-with (nolock)
-ON PERSON.PERSON_UID = ct.SUBJECT_ENTITY_UID
+    LEFT JOIN dbo.nrt_patient pat
+ON ct.subject_entity_uid = pat.patient_uid
     INNER JOIN [NBS_SRTE].dbo.PROGRAM_AREA_CODE AS P
 with (nolock)
 ON ct.PROG_AREA_CD = P.PROG_AREA_CD
