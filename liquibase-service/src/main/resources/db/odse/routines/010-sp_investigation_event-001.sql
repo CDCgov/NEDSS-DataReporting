@@ -63,6 +63,7 @@ BEGIN
                    when (results.record_status_cd is not null or results.record_status_cd != '')
                        then dbo.fn_get_record_status(results.record_status_cd)
                    end                                                              as record_status_cd,
+               results.record_status_cd                                             as raw_record_status_cd,
                results.shared_ind,
                NULLIF(results.txt, '')                                              as txt,
                results.effective_from_time,

@@ -271,4 +271,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
                 ALTER TABLE dbo.nrt_investigation ADD record_status_time datetime;
             END;
 
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'raw_record_status_cd' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_investigation ADD raw_record_status_cd varchar(20);
+            END;
+
     END;
