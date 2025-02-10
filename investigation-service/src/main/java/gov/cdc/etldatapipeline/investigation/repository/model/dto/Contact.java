@@ -136,6 +136,15 @@ public class Contact {
     @Column(name="version_ctrl_nbr")
     private Long versionCtrlNbr;
 
+    @Column(name="contact_exposure_site_uid")
+    private Long contactExposureSiteUid;
+
+    @Column(name="provider_contact_investigator_uid")
+    private Long providerContactInvestigatorUid;
+
+    @Column(name="dispositioned_by_uid")
+    private Long dispositionedByUid;
+
     @Column(name="rdb_cols")
     private String rdbCols;
 

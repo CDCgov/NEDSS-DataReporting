@@ -45,6 +45,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_contact' and xtype = '
         PROG_AREA_CD        varchar(20) NULL,
         JURISDICTION_CD     varchar(20) NULL,
         VERSION_CTRL_NBR    	smallint NULL,
+        CONTACT_EXPOSURE_SITE_UID bigint NULL,
+        PROVIDER_CONTACT_INVESTIGATOR_UID bigint NULL,
+        DISPOSITIONED_BY_UID bigint NULL,
         refresh_datetime    datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
         max_datetime        datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
         PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)

@@ -621,6 +621,9 @@ public class ProcessInvestigationDataUtil {
         contactReporting.setRecordStatusTime(contact.getRecordStatusTime());
         contactReporting.setSubjectEntityEpiLinkId(contact.getSubjectEntityEpiLinkId());
         contactReporting.setVersionCtrlNbr(contact.getVersionCtrlNbr());
+        contactReporting.setContactExposureSiteUid(contact.getContactExposureSiteUid());
+        contactReporting.setProviderContactInvestigatorUid(contact.getProviderContactInvestigatorUid());
+        contactReporting.setDispositionedByUid(contact.getDispositionedByUid());
         return contactReporting;
     }
 

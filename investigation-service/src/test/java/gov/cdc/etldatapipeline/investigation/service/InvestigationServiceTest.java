@@ -473,6 +473,9 @@ class InvestigationServiceTest {
         contact.setRecordStatusTime("2024-02-06T08:00:00");
         contact.setSubjectEntityEpiLinkId("EPI456");
         contact.setVersionCtrlNbr(1L);
+        contact.setContactExposureSiteUid(123L);
+        contact.setProviderContactInvestigatorUid(1234L);
+        contact.setDispositionedByUid(123L);
         contact.setRdbCols(readFileData(FILE_PATH_PREFIX + "RdbColumns.json"));
         contact.setAnswers(readFileData(FILE_PATH_PREFIX + "ContactAnswers.json"));
         return contact;
@@ -522,6 +525,9 @@ class InvestigationServiceTest {
         contactReporting.setRecordStatusTime("2024-02-06T08:00:00");
         contactReporting.setSubjectEntityEpiLinkId("EPI456");
         contactReporting.setVersionCtrlNbr(1L);
+        contactReporting.setContactExposureSiteUid(123L);
+        contactReporting.setProviderContactInvestigatorUid(1234L);
+        contactReporting.setDispositionedByUid(123L);
         return contactReporting;
     }
 

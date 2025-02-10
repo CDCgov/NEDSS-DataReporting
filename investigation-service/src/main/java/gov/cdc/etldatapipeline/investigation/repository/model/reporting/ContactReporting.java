@@ -51,4 +51,7 @@ public class ContactReporting {
     private String recordStatusTime;
     private String subjectEntityEpiLinkId;
     private Long versionCtrlNbr;
+    private Long contactExposureSiteUid;
+    private Long providerContactInvestigatorUid;
+    private Long dispositionedByUid;
 }

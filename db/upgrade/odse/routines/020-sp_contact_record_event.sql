@@ -111,7 +111,10 @@ BEGIN
         cvg13.code_short_desc_txt as CTT_TRT_COMPLETE_IND,
         cvg14.code_short_desc_txt as CTT_HEALTH_STATUS,
         cvg15.code_short_desc_txt as CTT_REFERRAL_BASIS,
-        cc.version_ctrl_nbr
+        cc.version_ctrl_nbr,
+        act_entities.entity_uid as CONTACT_EXPOSURE_SITE_UID,
+        act_entities.entity_uid as PROVIDER_CONTACT_INVESTIGATOR_UID,
+        act_entities.entity_uid as DISPOSITIONED_BY_UID
     into #CONTACT_RECORD_INIT
     from nbs_odse.dbo.CT_CONTACT cc
     left outer join nbs_srte.dbo.PROGRAM_AREA_CODE pac on cc.prog_area_cd  = pac.prog_area_cd
@@ -131,6 +134,9 @@ BEGIN
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg13 on cc.TREATMENT_END_CD  = cvg13.code and cvg13.code_set_nm = 'YNU'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg14 on cc.HEALTH_STATUS_CD  = cvg14.code and cvg14.code_set_nm = 'NBS_HEALTH_STATUS'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg15 on cc.CONTACT_REFERRAL_BASIS_CD  = cvg15.code and cvg15.code_set_nm = 'REFERRAL_BASIS'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and act_entities.TYPE_CD='SiteOfExposure'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and TYPE_CD='InvestgrOfContact'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and TYPE_CD='DispoInvestgrOfConRec'
     where CT_CONTACT_UID in (SELECT value FROM STRING_SPLIT(@cc_uids, ','));
 
     if
@@ -1115,7 +1121,7 @@ BEGIN
     WITH ordered_list AS (
         SELECT RDB_TABLE_NM as TABLE_NAME,
             RDB_COLUMN_NM,
-            1    as NEW_FLAG,
+            1                                                                          AS NEW_FLAG,
             LAST_CHG_TIME,
             LAST_CHG_USER_ID,
             ROW_NUMBER() OVER (PARTITION BY RDB_COLUMN_NM ORDER BY LAST_CHG_TIME DESC) AS rn
@@ -1221,6 +1227,9 @@ BEGIN
     CTT_HEALTH_STATUS,
     CTT_REFERRAL_BASIS,
     VERSION_CTRL_NBR,
+    CONTACT_EXPOSURE_SITE_UID,
+    PROVIDER_CONTACT_INVESTIGATOR_UID,
+    DISPOSITIONED_BY_UID,
     nesteddata.answers,
     nesteddata.rdb_cols
     FROM #CONTACT_RECORD_INIT ix
