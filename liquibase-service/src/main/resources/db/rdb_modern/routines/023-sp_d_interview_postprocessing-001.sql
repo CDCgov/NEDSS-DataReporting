@@ -10,7 +10,6 @@ BEGIN
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
     DECLARE @ColumnAdd_sql NVARCHAR(MAX) = '';
     DECLARE @PivotColumns NVARCHAR(MAX) = '';
-    DECLARE @Pivot_sql NVARCHAR(MAX) = '';
     DECLARE @Insert_sql NVARCHAR(MAX) = '';
     DECLARE @Update_sql NVARCHAR(MAX) = '';
     -- number of columns for the dynamic sql
@@ -77,7 +76,8 @@ BEGIN
         UPDATE dbo.nrt_metadata_columns
         SET NEW_FLAG = 0
         WHERE NEW_FLAG = 1
-          AND TABLE_NAME = 'D_INTERVIEW';
+          AND TABLE_NAME = 'D_INTERVIEW'
+          AND RDB_COLUMN_NM in (select RDB_COLUMN_NM from #NEW_COLUMNS);
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 

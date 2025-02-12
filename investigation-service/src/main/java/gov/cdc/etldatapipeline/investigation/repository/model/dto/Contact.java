@@ -22,6 +22,12 @@ public class Contact {
     @Column(name="contact_entity_epi_link_id")
     private String contactEntityEpiLinkId;
 
+    @Column(name="CONTACT_ENTITY_PHC_UID")
+    private Long contactEntityPhcUid;
+
+    @Column(name="CONTACT_ENTITY_UID")
+    private Long contactEntityUid;
+
     @Column(name="ctt_referral_basis")
     private String cttReferralBasis;
 
@@ -88,6 +94,12 @@ public class Contact {
     @Column(name="ctt_symp_notes")
     private String cttSympNotes;
 
+    @Column(name="THIRD_PARTY_ENTITY_PHC_UID")
+    private Long thirdPartyEntityPhcUid;
+
+    @Column(name="THIRD_PARTY_ENTITY_UID")
+    private Long thirdPartyEntityUid;
+
     @Column(name="ctt_symp_onset_dt")
     private String cttSympOnsetDt;
 
@@ -121,6 +133,9 @@ public class Contact {
     @Column(name="local_id")
     private String localId;
 
+    @Column(name="NAMED_DURING_INTERVIEW_UID")
+    private Long namedDuringInterviewUid;
+
     @Column(name="program_jurisdiction_oid")
     private Long programJurisdictionOid;
 
@@ -132,6 +147,9 @@ public class Contact {
 
     @Column(name="subject_entity_epi_link_id")
     private String subjectEntityEpiLinkId;
+
+    @Column(name="SUBJECT_ENTITY_PHC_UID")
+    private Long subjectEntityPhcUid;
 
     @Column(name="version_ctrl_nbr")
     private Long versionCtrlNbr;

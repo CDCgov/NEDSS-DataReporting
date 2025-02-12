@@ -584,6 +584,8 @@ public class ProcessInvestigationDataUtil {
         contactReporting.setAddTime(contact.getAddTime());
         contactReporting.setAddUserId(contact.getAddUserId());
         contactReporting.setContactEntityEpiLinkId(contact.getContactEntityEpiLinkId());
+        contactReporting.setContactEntityPhcUid(contact.getContactEntityPhcUid());
+        contactReporting.setContactEntityUid(contact.getContactEntityUid());
         contactReporting.setCttReferralBasis(contact.getCttReferralBasis());
         contactReporting.setCttStatus(contact.getCttStatus());
         contactReporting.setCttDispoDt(contact.getCttDispoDt());
@@ -607,6 +609,8 @@ public class ProcessInvestigationDataUtil {
         contactReporting.setCttSympInd(contact.getCttSympInd());
         contactReporting.setCttSympNotes(contact.getCttSympNotes());
         contactReporting.setCttSympOnsetDt(contact.getCttSympOnsetDt());
+        contactReporting.setThirdPartyEntityPhcUid(contact.getThirdPartyEntityPhcUid());
+        contactReporting.setThirdPartyEntityUid(contact.getThirdPartyEntityUid());
         contactReporting.setCttTrtCompleteInd(contact.getCttTrtCompleteInd());
         contactReporting.setCttTrtEndDt(contact.getCttTrtEndDt());
         contactReporting.setCttTrtInitiatedInd(contact.getCttTrtInitiatedInd());
@@ -617,10 +621,12 @@ public class ProcessInvestigationDataUtil {
         contactReporting.setLastChgTime(contact.getLastChgTime());
         contactReporting.setLastChgUserId(contact.getLastChgUserId());
         contactReporting.setLocalId(contact.getLocalId());
+        contactReporting.setNamedDuringInterviewUid(contact.getNamedDuringInterviewUid());
         contactReporting.setProgramJurisdictionOid(contact.getProgramJurisdictionOid());
         contactReporting.setRecordStatusCd(contact.getRecordStatusCd());
         contactReporting.setRecordStatusTime(contact.getRecordStatusTime());
         contactReporting.setSubjectEntityEpiLinkId(contact.getSubjectEntityEpiLinkId());
+        contactReporting.setSubjectEntityPhcUid(contact.getSubjectEntityPhcUid());
         contactReporting.setVersionCtrlNbr(contact.getVersionCtrlNbr());
         contactReporting.setContactExposureSiteUid(contact.getContactExposureSiteUid());
         contactReporting.setProviderContactInvestigatorUid(contact.getProviderContactInvestigatorUid());

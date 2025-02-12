@@ -15,6 +15,7 @@ enum Entity {
     CASE_MANAGEMENT(9, "case_management", Constants.PHC_UID, "sp_nrt_case_management_postprocessing"),
     LDF_DATA(10, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
     OBSERVATION(11, "observation", "observation_uid", null),
+    CONTACT(12, "contact", "contact_uid", "sp_d_contact_record_postprocessing"),
     F_PAGE_CASE(0, "fact page case", Constants.PHC_UID, "sp_f_page_case_postprocessing"),
     CASE_ANSWERS(0, "case answers", Constants.PHC_UID, "sp_page_builder_postprocessing"),
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),

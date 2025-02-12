@@ -13,6 +13,8 @@ public class ContactReporting {
     private String addTime;
     private Long addUserId;
     private String contactEntityEpiLinkId;
+    private Long contactEntityPhcUid;
+    private Long contactEntityUid;
     private String cttReferralBasis;
     private String cttStatus;
     private String cttDispoDt;
@@ -36,6 +38,8 @@ public class ContactReporting {
     private String cttSympInd;
     private String cttSympNotes;
     private String cttSympOnsetDt;
+    private Long thirdPartyEntityPhcUid;
+    private Long thirdPartyEntityUid;
     private String cttTrtCompleteInd;
     private String cttTrtEndDt;
     private String cttTrtInitiatedInd;
@@ -46,10 +50,12 @@ public class ContactReporting {
     private String lastChgTime;
     private Long lastChgUserId;
     private String localId;
+    private Long namedDuringInterviewUid;
     private Long programJurisdictionOid;
     private String recordStatusCd;
     private String recordStatusTime;
     private String subjectEntityEpiLinkId;
+    private Long subjectEntityPhcUid;
     private Long versionCtrlNbr;
     private Long contactExposureSiteUid;
     private Long providerContactInvestigatorUid;

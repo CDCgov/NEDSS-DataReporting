@@ -12,6 +12,7 @@ spring:
       ldf_data: nrt_ldf_data
       place: nrt_place
       user_profile: nrt_user_profile
+      contact_record: nrt_contact
       datamart: nbs_Datamart
     dlq:
       retry-suffix: -retry

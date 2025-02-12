@@ -784,6 +784,8 @@ class InvestigationDataProcessingTests {
         contact.setAddTime("2024-01-01T10:00:00");
         contact.setAddUserId(100L);
         contact.setContactEntityEpiLinkId("EPI123");
+        contact.setContactEntityPhcUid(1L);
+        contact.setContactEntityUid(1L);
         contact.setCttReferralBasis("Referral");
         contact.setCttStatus("Active");
         contact.setCttDispoDt("2024-01-10");
@@ -807,6 +809,8 @@ class InvestigationDataProcessingTests {
         contact.setCttSympInd("No");
         contact.setCttSympNotes("No symptoms reported.");
         contact.setCttSympOnsetDt(null);
+        contact.setThirdPartyEntityPhcUid(1L);
+        contact.setThirdPartyEntityUid(1L);
         contact.setCttTrtCompleteInd("Yes");
         contact.setCttTrtEndDt("2024-02-01");
         contact.setCttTrtInitiatedInd("Yes");
@@ -817,10 +821,12 @@ class InvestigationDataProcessingTests {
         contact.setLastChgTime("2024-02-05T12:00:00");
         contact.setLastChgUserId(200L);
         contact.setLocalId("LOC456");
+        contact.setNamedDuringInterviewUid(1L);
         contact.setProgramJurisdictionOid(300L);
         contact.setRecordStatusCd("Active");
         contact.setRecordStatusTime("2024-02-06T08:00:00");
         contact.setSubjectEntityEpiLinkId("EPI456");
+        contact.setSubjectEntityPhcUid(10L);
         contact.setVersionCtrlNbr(1L);
         contact.setContactExposureSiteUid(123L);
         contact.setProviderContactInvestigatorUid(1234L);
@@ -834,6 +840,8 @@ class InvestigationDataProcessingTests {
         contactReporting.setAddTime("2024-01-01T10:00:00");
         contactReporting.setAddUserId(100L);
         contactReporting.setContactEntityEpiLinkId("EPI123");
+        contactReporting.setContactEntityPhcUid(1L);
+        contactReporting.setContactEntityUid(1L);
         contactReporting.setCttReferralBasis("Referral");
         contactReporting.setCttStatus("Active");
         contactReporting.setCttDispoDt("2024-01-10");
@@ -857,6 +865,8 @@ class InvestigationDataProcessingTests {
         contactReporting.setCttSympInd("No");
         contactReporting.setCttSympNotes("No symptoms reported.");
         contactReporting.setCttSympOnsetDt(null);
+        contactReporting.setThirdPartyEntityPhcUid(1L);
+        contactReporting.setThirdPartyEntityUid(1L);
         contactReporting.setCttTrtCompleteInd("Yes");
         contactReporting.setCttTrtEndDt("2024-02-01");
         contactReporting.setCttTrtInitiatedInd("Yes");
@@ -867,10 +877,12 @@ class InvestigationDataProcessingTests {
         contactReporting.setLastChgTime("2024-02-05T12:00:00");
         contactReporting.setLastChgUserId(200L);
         contactReporting.setLocalId("LOC456");
+        contactReporting.setNamedDuringInterviewUid(1L);
         contactReporting.setProgramJurisdictionOid(300L);
         contactReporting.setRecordStatusCd("Active");
         contactReporting.setRecordStatusTime("2024-02-06T08:00:00");
         contactReporting.setSubjectEntityEpiLinkId("EPI456");
+        contactReporting.setSubjectEntityPhcUid(10L);
         contactReporting.setVersionCtrlNbr(1L);
         contactReporting.setContactExposureSiteUid(123L);
         contactReporting.setProviderContactInvestigatorUid(1234L);

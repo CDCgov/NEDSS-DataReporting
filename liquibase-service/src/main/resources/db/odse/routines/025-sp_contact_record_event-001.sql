@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_contact_record_event] @cc_uids nvarchar(max),
+CREATE or ALTER  PROCEDURE [dbo].[sp_contact_record_event] @cc_uids nvarchar(max),
                                                      @debug bit = 'false'
 AS
 BEGIN
@@ -112,9 +112,9 @@ BEGIN
         cvg14.code_short_desc_txt as CTT_HEALTH_STATUS,
         cvg15.code_short_desc_txt as CTT_REFERRAL_BASIS,
         cc.version_ctrl_nbr,
-        act_entities.entity_uid as CONTACT_EXPOSURE_SITE_UID,
-        act_entities.entity_uid as PROVIDER_CONTACT_INVESTIGATOR_UID,
-        act_entities.entity_uid as DISPOSITIONED_BY_UID
+        act_entities1.entity_uid as CONTACT_EXPOSURE_SITE_UID,
+        act_entities2.entity_uid as PROVIDER_CONTACT_INVESTIGATOR_UID,
+        act_entities3.entity_uid as DISPOSITIONED_BY_UID
     into #CONTACT_RECORD_INIT
     from nbs_odse.dbo.CT_CONTACT cc
     left outer join nbs_srte.dbo.PROGRAM_AREA_CODE pac on cc.prog_area_cd  = pac.prog_area_cd
@@ -134,9 +134,9 @@ BEGIN
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg13 on cc.TREATMENT_END_CD  = cvg13.code and cvg13.code_set_nm = 'YNU'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg14 on cc.HEALTH_STATUS_CD  = cvg14.code and cvg14.code_set_nm = 'NBS_HEALTH_STATUS'
     left outer join nbs_srte.dbo.CODE_VALUE_GENERAL cvg15 on cc.CONTACT_REFERRAL_BASIS_CD  = cvg15.code and cvg15.code_set_nm = 'REFERRAL_BASIS'
-	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and act_entities.TYPE_CD='SiteOfExposure'
-	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and TYPE_CD='InvestgrOfContact'
-	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities on cc.CT_CONTACT_UID = act_entities.ACT_UID and TYPE_CD='DispoInvestgrOfConRec'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities1 on cc.CT_CONTACT_UID = act_entities1.ACT_UID and act_entities1.TYPE_CD='SiteOfExposure'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities2 on cc.CT_CONTACT_UID = act_entities2.ACT_UID and act_entities2.TYPE_CD='InvestgrOfContact'
+	left outer join nbs_odse.dbo.NBS_ACT_ENTITY act_entities3 on cc.CT_CONTACT_UID = act_entities3.ACT_UID and act_entities3.TYPE_CD='DispoInvestgrOfConRec'
     where CT_CONTACT_UID in (SELECT value FROM STRING_SPLIT(@cc_uids, ','));
 
     if
@@ -173,7 +173,7 @@ BEGIN
        CASE
            WHEN CHARINDEX('^', answer_txt) > 0 THEN
                CASE
-                   WHEN UPPER(SUBSTRING(answer_txt, 1, CHARINDEX('^', answer_txt) - 1)) = 'OTH' THEN 'OTH'
+      WHEN UPPER(SUBSTRING(answer_txt, 1, CHARINDEX('^', answer_txt) - 1)) = 'OTH' THEN 'OTH'
                    ELSE SUBSTRING(answer_txt, 1, CHARINDEX('^', answer_txt) - 1)
                    END
            ELSE answer_txt
@@ -1025,7 +1025,7 @@ BEGIN
     	SELECT DISTINCT
     	    CT_CONTACT_UID,
     		RDB_COLUMN_NM,
-              NBS_QUESTION_UID,
+           NBS_QUESTION_UID,
               CODE_SET_GROUP_ID,
               INVESTIGATION_FORM_CD,
               QUESTION_GROUP_SEQ_NBR,
@@ -1127,7 +1127,7 @@ BEGIN
             ROW_NUMBER() OVER (PARTITION BY RDB_COLUMN_NM ORDER BY LAST_CHG_TIME DESC) AS rn
 
         FROM NBS_ODSE.dbo.NBS_rdb_metadata WITH (NOLOCK)
-        WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
+        WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD' and RDB_COLUMN_NM in (select RDB_COLUMN_NM from #UNIONED_DATA)
     )
     SELECT distinct TABLE_NAME,
            RDB_COLUMN_NM,

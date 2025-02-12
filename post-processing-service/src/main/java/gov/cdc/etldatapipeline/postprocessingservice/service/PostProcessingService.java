@@ -89,7 +89,8 @@ public class PostProcessingService {
             "${spring.kafka.topic.ldf_data}",
             "${spring.kafka.topic.observation}",
             "${spring.kafka.topic.place}",
-            "${spring.kafka.topic.user_profile}"
+            "${spring.kafka.topic.user_profile}",
+            "${spring.kafka.topic.contact_record}"
     })
     public void postProcessMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -208,6 +209,9 @@ public class PostProcessingService {
                         break;
                     case INVESTIGATION:
                         dmData = processInvestigation(keyTopic, entity, ids, idValsSnapshot);
+                        break;
+                    case CONTACT:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
                         break;
                     case NOTIFICATION:
                         List<DatamartData> dmDataN = processTopic(keyTopic, entity, ids,
@@ -388,6 +392,12 @@ public class PostProcessingService {
         return Arrays.asList(vals).contains(value);
     }
 
+    /**
+     * Gets the Entity by using the string passed to this function
+     * E.g: if dummy_contact_record is passed, it will return the entity CONTACT_RECORD
+     * @param topic
+     * @return Entity
+     */
     private Entity getEntityByTopic(String topic) {
         return Arrays.stream(Entity.values())
                 .filter(entity -> entity.getPriority() > 0)
