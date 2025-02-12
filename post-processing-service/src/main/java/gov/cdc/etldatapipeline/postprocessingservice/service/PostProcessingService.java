@@ -184,6 +184,11 @@ public class PostProcessingService {
 
             List<DatamartData> dmData = new ArrayList<>();
 
+            List<Long> investigationUids = new ArrayList<>();
+            List<Long> observationUids = new ArrayList<>();
+            List<Long> notificationUids = new ArrayList<>();
+            List<Long> contactRecordUids = new ArrayList<>();
+
             for (Entry<String, List<Long>> entry : sortedEntries) {
                 String keyTopic = entry.getKey();
                 List<Long> ids = entry.getValue();
@@ -209,14 +214,17 @@ public class PostProcessingService {
                         break;
                     case INVESTIGATION:
                         dmData = processInvestigation(keyTopic, entity, ids, idValsSnapshot);
+                        investigationUids = ids;
                         break;
                     case CONTACT:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
+                        contactRecordUids = ids;
                         break;
                     case NOTIFICATION:
                         List<DatamartData> dmDataN = processTopic(keyTopic, entity, ids,
                                 investigationRepository::executeStoredProcForNotificationIds);
                         dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().toList();
+                        notificationUids = ids;
                         break;
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
@@ -233,6 +241,7 @@ public class PostProcessingService {
                         break;
                     case OBSERVATION:
                         dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);
+                        observationUids = ids;
                         break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
@@ -240,6 +249,8 @@ public class PostProcessingService {
                 }
             }
             datamartProcessor.process(dmData);
+
+            processEventMetricDatamart(investigationUids, observationUids, notificationUids, contactRecordUids);
         } else {
             logger.info("No ids to process from the topics.");
         }
@@ -352,6 +363,22 @@ public class PostProcessingService {
             } else {
                 logger.info("No data to process from the datamart topics.");
             }
+        }
+    }
+
+    private void processEventMetricDatamart(List<Long> investigationUids, List<Long> observationUids, List<Long> notificationUids, List<Long> contactRecordUids) {
+        String invString = investigationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
+        String obsString = observationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
+        String notifString = notificationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
+        String ctrString = contactRecordUids.stream().map(String::valueOf).collect(Collectors.joining(","));
+
+        int totalLength = invString.length() + obsString.length() + notifString.length() + ctrString.length();
+
+        if (totalLength > 0) {
+            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
+        }
+        else {
+            logger.info("No updates to EVENT_METRIC Datamart");
         }
     }
 
