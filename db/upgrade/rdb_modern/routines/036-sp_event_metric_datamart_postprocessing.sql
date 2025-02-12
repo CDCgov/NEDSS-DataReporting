@@ -1,7 +1,4 @@
-CREATE
-OR
-ALTER PROCEDURE dbo.sp_event_metric_datamart_postprocessing
-    @phc_uids nvarchar(max),
+CREATE OR ALTER PROCEDURE dbo.sp_event_metric_datamart_postprocessing @phc_uids nvarchar(max),
     @obs_uids nvarchar(max),
     @notif_uids nvarchar(max),
     @ct_uids nvarchar(max),
@@ -35,21 +32,21 @@ BEGIN
 TRANSACTION;
 
 INSERT INTO dbo.job_flow_log
-(   batch_id
+( batch_id
 , [Dataflow_Name]
 , [package_Name]
 , [Status_Type]
 , [step_number]
 , [step_name]
-, [row_count]
+, [ row_count]
 , [Msg_Description1])
-VALUES (          @batch_id
-           ,      @datamart_nm
-           ,      @datamart_nm
-           ,      'START'
-           ,      @Proc_Step_no
-           ,      @Proc_Step_Name
-           ,      0
+VALUES ( @batch_id
+           , @datamart_nm
+           , @datamart_nm
+           , 'START'
+           , @Proc_Step_no
+           , @Proc_Step_Name
+           , 0
            , LEFT('ID List-' + @phc_uids, 500));
 
 COMMIT TRANSACTION;
@@ -63,20 +60,46 @@ BEGIN
 TRANSACTION;
 
         SET
-@Proc_Step_name='Generating #TMP_EVENT_METRIC';
-		SET
+@Proc_Step_name = 'Generating #TMP_EVENT_METRIC';
+        SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
-									IF
+        IF
 OBJECT_ID('#TMP_EVENT_METRIC', 'U') IS NOT NULL
 drop table #TMP_EVENT_METRIC;
 
-SELECT
-    [EVENT_TYPE], [EVENT_UID], [LOCAL_ID], [LOCAL_PATIENT_ID], [CONDITION_CD], [CONDITION_DESC_TXT], [PROG_AREA_CD], [PROG_AREA_DESC_TXT], [PROGRAM_JURISDICTION_OID], [JURISDICTION_CD], [JURISDICTION_DESC_TXT], [RECORD_STATUS_CD], [RECORD_STATUS_DESC_TXT], [RECORD_STATUS_TIME], [ELECTRONIC_IND], [STATUS_CD], [STATUS_DESC_TXT], [STATUS_TIME], [ADD_TIME], [ADD_USER_ID], [LAST_CHG_TIME], [LAST_CHG_USER_ID], [CASE_CLASS_CD], [CASE_CLASS_DESC_TXT], [INVESTIGATION_STATUS_CD], [INVESTIGATION_STATUS_DESC_TXT], [ADD_USER_NAME], [LAST_CHG_USER_NAME]
+SELECT [EVENT_TYPE],
+    [EVENT_UID],
+    [LOCAL_ID],
+    [LOCAL_PATIENT_ID],
+    [CONDITION_CD],
+    [CONDITION_DESC_TXT],
+    [PROG_AREA_CD],
+    [PROG_AREA_DESC_TXT],
+    [PROGRAM_JURISDICTION_OID],
+    [JURISDICTION_CD],
+    [JURISDICTION_DESC_TXT],
+    [RECORD_STATUS_CD],
+    [RECORD_STATUS_DESC_TXT],
+    [RECORD_STATUS_TIME],
+    [ELECTRONIC_IND],
+    [STATUS_CD],
+    [STATUS_DESC_TXT],
+    [STATUS_TIME],
+    [ADD_TIME],
+    [ADD_USER_ID],
+    [LAST_CHG_TIME],
+    [LAST_CHG_USER_ID],
+    [CASE_CLASS_CD],
+    [CASE_CLASS_DESC_TXT],
+    [INVESTIGATION_STATUS_CD],
+    [INVESTIGATION_STATUS_DESC_TXT],
+    [ADD_USER_NAME],
+    [LAST_CHG_USER_NAME]
 INTO #TMP_EVENT_METRIC
 FROM dbo.EVENT_METRIC
-WHERE 1=0;
+WHERE 1 = 0;
 
 
 COMMIT TRANSACTION;
@@ -87,13 +110,13 @@ BEGIN
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Generating #TMP_NOTIFICATION';
-        SET
+                SET
+@Proc_Step_name = 'Generating #TMP_NOTIFICATION';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
-        IF
+                IF
 OBJECT_ID('#TMP_NOTIFICATION', 'U') IS NOT NULL
 drop table #TMP_NOTIFICATION;
 
@@ -131,21 +154,20 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Generating #TMP_NOT_PROG';
-        SET
+                SET
+@Proc_Step_name = 'Generating #TMP_NOT_PROG';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
-        IF
+                IF
 OBJECT_ID('#TMP_NOT_PROG', 'U') IS NOT NULL
 drop table #TMP_NOT_PROG;
 
@@ -182,8 +204,7 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
@@ -191,13 +212,13 @@ COMMIT TRANSACTION;
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Generating #TMP_NOT_PROG_JURI';
-        SET
+                SET
+@Proc_Step_name = 'Generating #TMP_NOT_PROG_JURI';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
-        IF
+                IF
 OBJECT_ID('#TMP_NOT_PROG_JURI', 'U') IS NOT NULL
 drop table #TMP_NOT_PROG_JURI;
 
@@ -235,8 +256,7 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
@@ -244,13 +264,13 @@ COMMIT TRANSACTION;
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Generating #TMP_NOT_PROG_JURI_CVG';
-        SET
+                SET
+@Proc_Step_name = 'Generating #TMP_NOT_PROG_JURI_CVG';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
-        IF
+                IF
 OBJECT_ID('#TMP_NOT_PROG_JURI_CVG', 'U') IS NOT NULL
 drop table #TMP_NOT_PROG_JURI_CVG;
 
@@ -278,7 +298,7 @@ FROM #TMP_NOT_PROG_JURI N
          LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general as C
 with (nolock)
 on N.record_status_cd = C.code
-    and c.code_set_nm='REC_STAT';
+    and c.code_set_nm = 'REC_STAT';
 
 
 if
@@ -290,8 +310,7 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
@@ -299,9 +318,9 @@ COMMIT TRANSACTION;
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Inserting Notifications into #TMP_EVENT_METRIC';
-        SET
+                SET
+@Proc_Step_name = 'Inserting Notifications into #TMP_EVENT_METRIC';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
@@ -341,25 +360,24 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 END;
 
-    IF
+        IF
 @obs_uids != ''
 BEGIN
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Generating #TMP_EVENT_OBS';
-        SET
+                SET
+@Proc_Step_name = 'Generating #TMP_EVENT_OBS';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
-        IF
+                IF
 OBJECT_ID('#TMP_EVENT_OBS', 'U') IS NOT NULL
 drop table #TMP_EVENT_OBS;
 
@@ -414,18 +432,17 @@ ON o.cd = q.condition_cd
     LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general as c
 with (nolock)
 ON o.record_status_cd = c.code AND
-    c.code_set_nm='REC_STAT'
+    c.code_set_nm = 'REC_STAT'
     left outer join [NBS_SRTE].dbo.code_value_general as cvgst
 with (nolock)
 ON o.status_cd = cvgst.code
-    and cvgst.code_set_nm='ACT_OBJ_ST'
+    and cvgst.code_set_nm = 'ACT_OBJ_ST'
     LEFT JOIN dbo.nrt_patient pat
 with (nolock)
 ON pat.patient_uid = o.patient_id
 WHERE o.observation_uid in (SELECT value
     FROM STRING_SPLIT(@obs_uids
     , ','));
-
 
 
 if
@@ -437,19 +454,17 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
-
 
 
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Inserting Non-ELR LabReports into #TMP_EVENT_METRIC';
-        SET
+                SET
+@Proc_Step_name = 'Inserting Non-ELR LabReports into #TMP_EVENT_METRIC';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 INSERT INTO #TMP_EVENT_METRIC
@@ -490,17 +505,16 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Inserting ELR LabReports into #TMP_EVENT_METRIC';
-        SET
+                SET
+@Proc_Step_name = 'Inserting ELR LabReports into #TMP_EVENT_METRIC';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 INSERT INTO #TMP_EVENT_METRIC
@@ -541,17 +555,16 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Inserting Morbidity Reports into #TMP_EVENT_METRIC';
-        SET
+                SET
+@Proc_Step_name = 'Inserting Morbidity Reports into #TMP_EVENT_METRIC';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 INSERT INTO #TMP_EVENT_METRIC
@@ -591,22 +604,21 @@ SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 END;
 
-    IF
+        IF
 @phc_uids != ''
 BEGIN
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Inserting Public Health Cases into #TMP_EVENT_METRIC';
-        SET
+                SET
+@Proc_Step_name = 'Inserting Public Health Cases into #TMP_EVENT_METRIC';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
@@ -650,42 +662,40 @@ ON phc.jurisdiction_cd = j.code
     LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general c
 with (nolock)
 ON phc.record_status_cd = c.code AND
-    c.code_set_nm='REC_STAT'
+    c.code_set_nm = 'REC_STAT'
     LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general d
 with (nolock)
 ON phc.case_class_cd = d.code AND
-    d.code_set_nm='PHC_CLASS'
+    d.code_set_nm = 'PHC_CLASS'
     LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general e
 with (nolock)
 ON phc.investigation_status_cd = e.code AND
-    e.code_set_nm='PHC_IN_STS'
+    e.code_set_nm = 'PHC_IN_STS'
 WHERE phc.public_health_case_uid in (SELECT value
     FROM STRING_SPLIT(@phc_uids
     , ','));;
-
 
 
 SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 END;
 
 
-    IF
+        IF
 @ct_uids != ''
 BEGIN
 BEGIN
 TRANSACTION;
 
-        SET
-@Proc_Step_name='Inserting CT_Contact Records into #TMP_EVENT_METRIC';
-        SET
+                SET
+@Proc_Step_name = 'Inserting CT_Contact Records into #TMP_EVENT_METRIC';
+                SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
@@ -719,9 +729,9 @@ SELECT 'CONTACT',
        RTRIM(Ltrim(up1.last_nm)) + ', ' + RTRIM(Ltrim(up1.first_nm)) as ADD_USER_NAME,
        RTRIM(Ltrim(up2.last_nm)) + ', ' + RTRIM(Ltrim(up2.first_nm)) as LAST_CHG_USER_NAME
 FROM dbo.nrt_contact ct
-    LEFT JOIN dbo.nrt_patient pat
-ON ct.subject_entity_uid = pat.patient_uid
-    INNER JOIN [NBS_SRTE].dbo.PROGRAM_AREA_CODE AS P
+         LEFT JOIN dbo.nrt_patient pat
+                   ON ct.subject_entity_uid = pat.patient_uid
+         INNER JOIN [NBS_SRTE].dbo.PROGRAM_AREA_CODE AS P
 with (nolock)
 ON ct.PROG_AREA_CD = P.PROG_AREA_CD
     INNER JOIN [NBS_SRTE].dbo.JURISDICTION_CODE AS J
@@ -729,7 +739,7 @@ with (nolock)
 ON ct.JURISDICTION_CD = J.CODE
     INNER JOIN [NBS_SRTE].dbo.CODE_VALUE_GENERAL C
 with (nolock)
-ON ct.RECORD_STATUS_CD = C.CODE AND C.CODE_SET_NM='REC_STAT'
+ON ct.RECORD_STATUS_CD = C.CODE AND C.CODE_SET_NM = 'REC_STAT'
     LEFT OUTER JOIN dbo.nrt_auth_user AS UP1
 with (nolock)
 ON ct.ADD_USER_ID = UP1.NEDSS_ENTRY_ID
@@ -741,13 +751,11 @@ WHERE ct.CONTACT_UID in (SELECT value
     , ','));
 
 
-
 SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
@@ -762,8 +770,8 @@ BEGIN
 TRANSACTION;
 
         SET
-@Proc_Step_name='Generating #TMP_EVENT_METRIC_FINAL';
-		SET
+@Proc_Step_name = 'Generating #TMP_EVENT_METRIC_FINAL';
+        SET
 @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 /*
@@ -775,65 +783,120 @@ TRANSACTION;
     When this table is brought in, change this value to the result of a query that references whatever
     is in the aforementioned table as opposed to the hardcoded value.
 */
-DECLARE @lookback_days BIGINT = 730;
+        DECLARE
+@lookback_days BIGINT = 730;
 
 
-IF OBJECT_ID('#TMP_EVENT_METRIC_FINAL', 'U') IS NOT NULL
+        IF
+OBJECT_ID('#TMP_EVENT_METRIC_FINAL', 'U') IS NOT NULL
 drop table #TMP_EVENT_METRIC_FINAL;
 
-SELECT
-    TEM.[EVENT_TYPE], TEM.[EVENT_UID], TEM.[LOCAL_ID], TEM.[LOCAL_PATIENT_ID], TEM.[CONDITION_CD], TEM.[CONDITION_DESC_TXT], TEM.[PROG_AREA_CD], TEM.[PROG_AREA_DESC_TXT], TEM.[PROGRAM_JURISDICTION_OID], TEM.[JURISDICTION_CD], TEM.[JURISDICTION_DESC_TXT], TEM.[RECORD_STATUS_CD], TEM.[RECORD_STATUS_DESC_TXT], TEM.[RECORD_STATUS_TIME], TEM.[ELECTRONIC_IND], TEM.[STATUS_CD], TEM.[STATUS_DESC_TXT], TEM.[STATUS_TIME], TEM.[ADD_TIME], TEM.[ADD_USER_ID], TEM.[LAST_CHG_TIME], TEM.[LAST_CHG_USER_ID], TEM.[CASE_CLASS_CD], TEM.[CASE_CLASS_DESC_TXT], TEM.[INVESTIGATION_STATUS_CD], TEM.[INVESTIGATION_STATUS_DESC_TXT], TEM.[ADD_USER_NAME], TEM.[LAST_CHG_USER_NAME],
-    CASE WHEN DATEDIFF(day, TEM.[ADD_TIME],GETDATE()) between 0 and @lookback_days THEN 1
-    ELSE 0
-    END AS CURRENT_FLAG,
-    CASE WHEN (EM.[EVENT_UID] IS NULL AND EM.[EVENT_TYPE] IS NULL) THEN 'I'
-    ELSE 'U'
-    END AS DML_IND
+SELECT TEM.[EVENT_TYPE],
+       TEM.[EVENT_UID],
+       TEM.[LOCAL_ID],
+       TEM.[LOCAL_PATIENT_ID],
+       TEM.[CONDITION_CD],
+       TEM.[CONDITION_DESC_TXT],
+       TEM.[PROG_AREA_CD],
+       TEM.[PROG_AREA_DESC_TXT],
+       TEM.[PROGRAM_JURISDICTION_OID],
+       TEM.[JURISDICTION_CD],
+       TEM.[JURISDICTION_DESC_TXT],
+       TEM.[RECORD_STATUS_CD],
+       TEM.[RECORD_STATUS_DESC_TXT],
+       TEM.[RECORD_STATUS_TIME],
+       TEM.[ELECTRONIC_IND],
+       TEM.[STATUS_CD],
+       TEM.[STATUS_DESC_TXT],
+       TEM.[STATUS_TIME],
+       TEM.[ADD_TIME],
+       TEM.[ADD_USER_ID],
+       TEM.[LAST_CHG_TIME],
+       TEM.[LAST_CHG_USER_ID],
+       TEM.[CASE_CLASS_CD],
+       TEM.[CASE_CLASS_DESC_TXT],
+       TEM.[INVESTIGATION_STATUS_CD],
+       TEM.[INVESTIGATION_STATUS_DESC_TXT],
+       TEM.[ADD_USER_NAME],
+       TEM.[LAST_CHG_USER_NAME],
+       CASE
+           WHEN DATEDIFF(day, TEM.[ADD_TIME], GETDATE()) between 0 and @lookback_days THEN 1
+           ELSE 0
+           END AS CURRENT_FLAG,
+       CASE
+           WHEN (EM.[EVENT_UID] IS NULL AND EM.[EVENT_TYPE] IS NULL) THEN 'I'
+           ELSE 'U'
+           END AS DML_IND
 INTO #TMP_EVENT_METRIC_FINAL
 FROM #TMP_EVENT_METRIC TEM
-LEFT JOIN dbo.EVENT_METRIC_INC EM
-    ON EM.[EVENT_UID] = TEM.[EVENT_UID]
-  and EM.[EVENT_TYPE]= TEM.[EVENT_TYPE];
+         LEFT JOIN dbo.EVENT_METRIC_INC EM
+                   ON EM.[EVENT_UID] = TEM.[EVENT_UID]
+                       and EM.[EVENT_TYPE] = TEM.[EVENT_TYPE];
 
 COMMIT TRANSACTION;
 
 BEGIN
 TRANSACTION
-
-					           SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					           SET
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
 @PROC_STEP_NAME = 'Update [dbo].[EVENT_METRIC_INC]';
 
 UPDATE [dbo].[EVENT_METRIC_INC]
 
-SET [EVENT_TYPE]=TEM.[EVENT_TYPE], [EVENT_UID]= TEM.[EVENT_UID], [LOCAL_ID] =TEM.[LOCAL_ID], [LOCAL_PATIENT_ID]=TEM.[LOCAL_PATIENT_ID], [CONDITION_CD]=TEM.[CONDITION_CD], [CONDITION_DESC_TXT]=TEM.[CONDITION_DESC_TXT], [PROG_AREA_CD]=TEM.[PROG_AREA_CD], [PROG_AREA_DESC_TXT]=TEM.[PROG_AREA_DESC_TXT], [PROGRAM_JURISDICTION_OID]=TEM.[PROGRAM_JURISDICTION_OID], [JURISDICTION_CD]=TEM.[JURISDICTION_CD], [JURISDICTION_DESC_TXT]=TEM.[JURISDICTION_DESC_TXT], [RECORD_STATUS_CD]=TEM.[RECORD_STATUS_CD], [RECORD_STATUS_DESC_TXT]=TEM.[RECORD_STATUS_DESC_TXT], [RECORD_STATUS_TIME]=TEM.[RECORD_STATUS_TIME], [ELECTRONIC_IND]=TEM.[ELECTRONIC_IND], [STATUS_CD]=TEM.[STATUS_CD], [STATUS_DESC_TXT]=TEM.[STATUS_DESC_TXT], [STATUS_TIME]=TEM.[STATUS_TIME], [ADD_TIME]=TEM.[ADD_TIME], [ADD_USER_ID]=TEM.[ADD_USER_ID], [LAST_CHG_TIME]=TEM.[LAST_CHG_TIME], [LAST_CHG_USER_ID]=TEM.[LAST_CHG_USER_ID], [CASE_CLASS_CD]=TEM.[CASE_CLASS_CD], [CASE_CLASS_DESC_TXT]=TEM.[CASE_CLASS_DESC_TXT], [INVESTIGATION_STATUS_CD]=TEM.[INVESTIGATION_STATUS_CD], [INVESTIGATION_STATUS_DESC_TXT]=TEM.[INVESTIGATION_STATUS_DESC_TXT], [ADD_USER_NAME]=TEM.[ADD_USER_NAME], [LAST_CHG_USER_NAME]=TEM.[LAST_CHG_USER_NAME]
+SET [EVENT_TYPE]=TEM.[EVENT_TYPE],
+    [EVENT_UID]= TEM.[EVENT_UID],
+    [LOCAL_ID] =TEM.[LOCAL_ID],
+    [LOCAL_PATIENT_ID]=TEM.[LOCAL_PATIENT_ID],
+    [CONDITION_CD]=TEM.[CONDITION_CD],
+    [CONDITION_DESC_TXT]=TEM.[CONDITION_DESC_TXT],
+    [PROG_AREA_CD]=TEM.[PROG_AREA_CD],
+    [PROG_AREA_DESC_TXT]=TEM.[PROG_AREA_DESC_TXT],
+    [PROGRAM_JURISDICTION_OID]=TEM.[PROGRAM_JURISDICTION_OID],
+    [JURISDICTION_CD]=TEM.[JURISDICTION_CD],
+    [JURISDICTION_DESC_TXT]=TEM.[JURISDICTION_DESC_TXT],
+    [RECORD_STATUS_CD]=TEM.[RECORD_STATUS_CD],
+    [RECORD_STATUS_DESC_TXT]=TEM.[RECORD_STATUS_DESC_TXT],
+    [RECORD_STATUS_TIME]=TEM.[RECORD_STATUS_TIME],
+    [ELECTRONIC_IND]=TEM.[ELECTRONIC_IND],
+    [STATUS_CD]=TEM.[STATUS_CD],
+    [STATUS_DESC_TXT]=TEM.[STATUS_DESC_TXT],
+    [STATUS_TIME]=TEM.[STATUS_TIME],
+    [ADD_TIME]=TEM.[ADD_TIME],
+    [ADD_USER_ID]=TEM.[ADD_USER_ID],
+    [LAST_CHG_TIME]=TEM.[LAST_CHG_TIME],
+    [LAST_CHG_USER_ID]=TEM.[LAST_CHG_USER_ID],
+    [CASE_CLASS_CD]=TEM.[CASE_CLASS_CD],
+    [CASE_CLASS_DESC_TXT]=TEM.[CASE_CLASS_DESC_TXT],
+    [INVESTIGATION_STATUS_CD]=TEM.[INVESTIGATION_STATUS_CD],
+    [INVESTIGATION_STATUS_DESC_TXT]=TEM.[INVESTIGATION_STATUS_DESC_TXT],
+    [ADD_USER_NAME]=TEM.[ADD_USER_NAME],
+    [LAST_CHG_USER_NAME]=TEM.[LAST_CHG_USER_NAME]
 FROM #TMP_EVENT_METRIC_FINAL TEM
 WHERE TEM.DML_IND = 'U'
   and TEM.[EVENT_UID] = [dbo].[EVENT_METRIC_INC].[EVENT_UID]
-  and TEM.[EVENT_TYPE]= [dbo].[EVENT_METRIC_INC].[EVENT_TYPE]
+  and TEM.[EVENT_TYPE] = [dbo].[EVENT_METRIC_INC].[EVENT_TYPE]
 
 
 SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 
-
 BEGIN
 TRANSACTION
-                               SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					           SET
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
 @PROC_STEP_NAME = 'INSERTING INTO EVENT METRIC_INC';
 
 
 INSERT INTO dbo.EVENT_METRIC_INC
 ([EVENT_TYPE], [EVENT_UID], [LOCAL_ID], [LOCAL_PATIENT_ID], [CONDITION_CD], [CONDITION_DESC_TXT],
-    [PROG_AREA_CD], [PROG_AREA_DESC_TXT], [PROGRAM_JURISDICTION_OID], [JURISDICTION_CD], [JURISDICTION_DESC_TXT],
+    [PROG_AREA_CD], [PROG_AREA_DESC_TXT], [PROGRAM_JURISDICTION_OID], [JURISDICTION_CD],
+    [JURISDICTION_DESC_TXT],
     [RECORD_STATUS_CD], [RECORD_STATUS_DESC_TXT], [RECORD_STATUS_TIME], [ELECTRONIC_IND], [STATUS_CD],
     [STATUS_DESC_TXT], [STATUS_TIME], [ADD_TIME], [ADD_USER_ID], [LAST_CHG_TIME], [LAST_CHG_USER_ID],
     [CASE_CLASS_CD], [CASE_CLASS_DESC_TXT], [INVESTIGATION_STATUS_CD], [INVESTIGATION_STATUS_DESC_TXT],
@@ -857,57 +920,91 @@ SELECT TEM.[EVENT_TYPE],
        TEM.[ELECTRONIC_IND],
        TEM.[STATUS_CD],
        TEM.[STATUS_DESC_TXT],
-       TEM.[STATUS_TIME], [ADD_TIME], TEM.[ADD_USER_ID], TEM.[LAST_CHG_TIME], TEM.[LAST_CHG_USER_ID], TEM.[CASE_CLASS_CD], TEM.[CASE_CLASS_DESC_TXT], TEM.[INVESTIGATION_STATUS_CD], TEM.[INVESTIGATION_STATUS_DESC_TXT], TEM.[ADD_USER_NAME], TEM.[LAST_CHG_USER_NAME]
+       TEM.[STATUS_TIME],
+    [ADD_TIME],
+    TEM.[ADD_USER_ID],
+    TEM.[LAST_CHG_TIME],
+    TEM.[LAST_CHG_USER_ID],
+    TEM.[CASE_CLASS_CD],
+    TEM.[CASE_CLASS_DESC_TXT],
+    TEM.[INVESTIGATION_STATUS_CD],
+    TEM.[INVESTIGATION_STATUS_DESC_TXT],
+    TEM.[ADD_USER_NAME],
+    TEM.[LAST_CHG_USER_NAME]
 
 FROM #TMP_EVENT_METRIC_FINAL TEM
 WHERE TEM.DML_IND = 'I'
-    
+
 
 SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 BEGIN
 TRANSACTION
-
-					           SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					           SET
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
 @PROC_STEP_NAME = 'Update [dbo].[EVENT_METRIC]';
 
 UPDATE [dbo].[EVENT_METRIC]
 
-SET [EVENT_TYPE]=TEM.[EVENT_TYPE], [EVENT_UID]= TEM.[EVENT_UID], [LOCAL_ID] =TEM.[LOCAL_ID], [LOCAL_PATIENT_ID]=TEM.[LOCAL_PATIENT_ID], [CONDITION_CD]=TEM.[CONDITION_CD], [CONDITION_DESC_TXT]=TEM.[CONDITION_DESC_TXT], [PROG_AREA_CD]=TEM.[PROG_AREA_CD], [PROG_AREA_DESC_TXT]=TEM.[PROG_AREA_DESC_TXT], [PROGRAM_JURISDICTION_OID]=TEM.[PROGRAM_JURISDICTION_OID], [JURISDICTION_CD]=TEM.[JURISDICTION_CD], [JURISDICTION_DESC_TXT]=TEM.[JURISDICTION_DESC_TXT], [RECORD_STATUS_CD]=TEM.[RECORD_STATUS_CD], [RECORD_STATUS_DESC_TXT]=TEM.[RECORD_STATUS_DESC_TXT], [RECORD_STATUS_TIME]=TEM.[RECORD_STATUS_TIME], [ELECTRONIC_IND]=TEM.[ELECTRONIC_IND], [STATUS_CD]=TEM.[STATUS_CD], [STATUS_DESC_TXT]=TEM.[STATUS_DESC_TXT], [STATUS_TIME]=TEM.[STATUS_TIME], [ADD_TIME]=TEM.[ADD_TIME], [ADD_USER_ID]=TEM.[ADD_USER_ID], [LAST_CHG_TIME]=TEM.[LAST_CHG_TIME], [LAST_CHG_USER_ID]=TEM.[LAST_CHG_USER_ID], [CASE_CLASS_CD]=TEM.[CASE_CLASS_CD], [CASE_CLASS_DESC_TXT]=TEM.[CASE_CLASS_DESC_TXT], [INVESTIGATION_STATUS_CD]=TEM.[INVESTIGATION_STATUS_CD], [INVESTIGATION_STATUS_DESC_TXT]=TEM.[INVESTIGATION_STATUS_DESC_TXT], [ADD_USER_NAME]=TEM.[ADD_USER_NAME], [LAST_CHG_USER_NAME]=TEM.[LAST_CHG_USER_NAME]
+SET [EVENT_TYPE]=TEM.[EVENT_TYPE],
+    [EVENT_UID]= TEM.[EVENT_UID],
+    [LOCAL_ID] =TEM.[LOCAL_ID],
+    [LOCAL_PATIENT_ID]=TEM.[LOCAL_PATIENT_ID],
+    [CONDITION_CD]=TEM.[CONDITION_CD],
+    [CONDITION_DESC_TXT]=TEM.[CONDITION_DESC_TXT],
+    [PROG_AREA_CD]=TEM.[PROG_AREA_CD],
+    [PROG_AREA_DESC_TXT]=TEM.[PROG_AREA_DESC_TXT],
+    [PROGRAM_JURISDICTION_OID]=TEM.[PROGRAM_JURISDICTION_OID],
+    [JURISDICTION_CD]=TEM.[JURISDICTION_CD],
+    [JURISDICTION_DESC_TXT]=TEM.[JURISDICTION_DESC_TXT],
+    [RECORD_STATUS_CD]=TEM.[RECORD_STATUS_CD],
+    [RECORD_STATUS_DESC_TXT]=TEM.[RECORD_STATUS_DESC_TXT],
+    [RECORD_STATUS_TIME]=TEM.[RECORD_STATUS_TIME],
+    [ELECTRONIC_IND]=TEM.[ELECTRONIC_IND],
+    [STATUS_CD]=TEM.[STATUS_CD],
+    [STATUS_DESC_TXT]=TEM.[STATUS_DESC_TXT],
+    [STATUS_TIME]=TEM.[STATUS_TIME],
+    [ADD_TIME]=TEM.[ADD_TIME],
+    [ADD_USER_ID]=TEM.[ADD_USER_ID],
+    [LAST_CHG_TIME]=TEM.[LAST_CHG_TIME],
+    [LAST_CHG_USER_ID]=TEM.[LAST_CHG_USER_ID],
+    [CASE_CLASS_CD]=TEM.[CASE_CLASS_CD],
+    [CASE_CLASS_DESC_TXT]=TEM.[CASE_CLASS_DESC_TXT],
+    [INVESTIGATION_STATUS_CD]=TEM.[INVESTIGATION_STATUS_CD],
+    [INVESTIGATION_STATUS_DESC_TXT]=TEM.[INVESTIGATION_STATUS_DESC_TXT],
+    [ADD_USER_NAME]=TEM.[ADD_USER_NAME],
+    [LAST_CHG_USER_NAME]=TEM.[LAST_CHG_USER_NAME]
 FROM #TMP_EVENT_METRIC_FINAL TEM
 WHERE TEM.DML_IND = 'U'
   and TEM.[EVENT_UID] = [dbo].[EVENT_METRIC].[EVENT_UID]
-  and TEM.[EVENT_TYPE]= [dbo].[EVENT_METRIC].[EVENT_TYPE]
+  and TEM.[EVENT_TYPE] = [dbo].[EVENT_METRIC].[EVENT_TYPE]
 
 
 SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 
-
 BEGIN
 TRANSACTION
-                               SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					           SET
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
 @PROC_STEP_NAME = 'INSERTING INTO EVENT_METRIC';
 
 INSERT INTO dbo.EVENT_METRIC
 ([EVENT_TYPE], [EVENT_UID], [LOCAL_ID], [LOCAL_PATIENT_ID], [CONDITION_CD], [CONDITION_DESC_TXT],
-    [PROG_AREA_CD], [PROG_AREA_DESC_TXT], [PROGRAM_JURISDICTION_OID], [JURISDICTION_CD], [JURISDICTION_DESC_TXT],
+    [PROG_AREA_CD], [PROG_AREA_DESC_TXT], [PROGRAM_JURISDICTION_OID], [JURISDICTION_CD],
+    [JURISDICTION_DESC_TXT],
     [RECORD_STATUS_CD], [RECORD_STATUS_DESC_TXT], [RECORD_STATUS_TIME], [ELECTRONIC_IND], [STATUS_CD],
     [STATUS_DESC_TXT], [STATUS_TIME], [ADD_TIME], [ADD_USER_ID], [LAST_CHG_TIME], [LAST_CHG_USER_ID],
     [CASE_CLASS_CD], [CASE_CLASS_DESC_TXT], [INVESTIGATION_STATUS_CD], [INVESTIGATION_STATUS_DESC_TXT],
@@ -931,25 +1028,34 @@ SELECT TEM.[EVENT_TYPE],
        TEM.[ELECTRONIC_IND],
        TEM.[STATUS_CD],
        TEM.[STATUS_DESC_TXT],
-       TEM.[STATUS_TIME], [ADD_TIME], TEM.[ADD_USER_ID], TEM.[LAST_CHG_TIME], TEM.[LAST_CHG_USER_ID], TEM.[CASE_CLASS_CD], TEM.[CASE_CLASS_DESC_TXT], TEM.[INVESTIGATION_STATUS_CD], TEM.[INVESTIGATION_STATUS_DESC_TXT], TEM.[ADD_USER_NAME], TEM.[LAST_CHG_USER_NAME]
+       TEM.[STATUS_TIME],
+    [ADD_TIME],
+    TEM.[ADD_USER_ID],
+    TEM.[LAST_CHG_TIME],
+    TEM.[LAST_CHG_USER_ID],
+    TEM.[CASE_CLASS_CD],
+    TEM.[CASE_CLASS_DESC_TXT],
+    TEM.[INVESTIGATION_STATUS_CD],
+    TEM.[INVESTIGATION_STATUS_DESC_TXT],
+    TEM.[ADD_USER_NAME],
+    TEM.[LAST_CHG_USER_NAME]
 
 
 FROM #TMP_EVENT_METRIC_FINAL TEM
-WHERE TEM.DML_IND = 'I' AND TEM.CURRENT_FLAG = 1;
+WHERE TEM.DML_IND = 'I'
+  AND TEM.CURRENT_FLAG = 1;
 
 SELECT @RowCount_no = @@ROWCOUNT;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 COMMIT TRANSACTION;
 
 INSERT INTO [dbo].[job_flow_log]
 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-VALUES
-    (@batch_id, @datamart_nm, @datamart_nm, 'COMPLETE', 999, 'COMPLETE', 0);
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'COMPLETE', 999, 'COMPLETE', 0);
 
 
 END TRY
@@ -972,7 +1078,7 @@ IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 
 INSERT INTO [dbo].[job_flow_log]
-(      batch_id
+( batch_id
     , [Dataflow_Name]
     , [package_Name]
     , [Status_Type]
@@ -980,14 +1086,13 @@ INSERT INTO [dbo].[job_flow_log]
     , [step_name]
     , [Error_Description]
     , [row_count])
-VALUES
-    ( @batch_id
+VALUES ( @batch_id
         , @datamart_nm
         , @datamart_nm
         , 'ERROR'
         , @Proc_Step_no
         , 'ERROR - ' + @Proc_Step_name
-        , 'Step -' + CAST (@Proc_Step_no AS VARCHAR (3)) + ' -' + CAST (@ErrorMessage AS VARCHAR (500))
+        , 'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
         , 0);
 
 
