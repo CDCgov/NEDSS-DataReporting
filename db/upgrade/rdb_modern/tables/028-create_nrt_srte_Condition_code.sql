@@ -1,4 +1,6 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' and xtype = 'U')
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' and xtype = 'U')
+   DROP TABLE dbo.nrt_srte_Condition_code;
+
 CREATE TABLE dbo.nrt_srte_Condition_code (
 	condition_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	condition_codeset_nm varchar(256) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -33,6 +35,11 @@ CREATE TABLE dbo.nrt_srte_Condition_code (
 	port_req_ind_cd char(1) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	family_cd varchar(256) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	coinfection_grp_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+    rhap_parse_nbs_ind varchar(1) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+    rhap_action_value varchar(200) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	CONSTRAINT PK_Condition_code182 PRIMARY KEY (condition_cd)
 );
 
+CREATE UNIQUE NONCLUSTERED INDEX UQ__Condition_code__276EDEB3 ON dbo.nrt_srte_Condition_code (  nbs_uid ASC  )
+	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 90   ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
+	 ON [PRIMARY ] ;

@@ -1,6 +1,8 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_IMRDBMapping' and xtype = 'U')
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_IMRDBMapping' and xtype = 'U')
+   DROP TABLE dbo.nrt_srte_IMRDBMapping;
+
 CREATE TABLE dbo.nrt_srte_IMRDBMapping (
-	IMRDBMapping_id int IDENTITY(1,1) NOT NULL,
+	IMRDBMapping_id int NOT NULL,
 	unique_cd varchar(255) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	unique_name varchar(255) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	description varchar(255) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
