@@ -1,5 +1,5 @@
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_TotalIDM' and xtype = 'U')
-DROP TABLE nrt_srte_TotalIDM;
+   DROP TABLE dbo.nrt_srte_TotalIDM;
 
 CREATE TABLE dbo.nrt_srte_TotalIDM (
 	TotalIDM_id int NOT NULL,
