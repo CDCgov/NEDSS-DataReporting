@@ -570,7 +570,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processCachedIds();
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(logs.getLast().getFormattedMessage(), "No updates to EVENT_METRIC Datamart");
+        assertEquals("No updates to EVENT_METRIC Datamart", logs.getLast().getFormattedMessage());
 
 
     }
