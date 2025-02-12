@@ -76,8 +76,13 @@ BEGIN
         UPDATE dbo.nrt_metadata_columns
         SET NEW_FLAG = 0
         WHERE NEW_FLAG = 1
-          AND TABLE_NAME = 'D_INTERVIEW'
-          AND RDB_COLUMN_NM in (select RDB_COLUMN_NM from #NEW_COLUMNS);
+        AND TABLE_NAME = 'D_INTERVIEW'
+        AND RDB_COLUMN_NM IN (
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = 'D_INTERVIEW'
+              AND TABLE_SCHEMA = 'dbo'
+        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 

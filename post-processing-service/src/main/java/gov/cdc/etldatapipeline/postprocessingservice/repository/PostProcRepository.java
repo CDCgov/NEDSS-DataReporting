@@ -52,4 +52,7 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
 
     @Procedure("sp_d_contact_record_postprocessing")
     void executeStoredProcForDContactRecord(@Param("contactUids") String contactUids);
+
+    @Procedure("sp_f_contact_record_case_postprocessing")
+    void executeStoredProcForFContactRecordCase(@Param("contactUids") String contactUids);
 }

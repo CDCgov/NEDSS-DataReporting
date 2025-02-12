@@ -212,6 +212,8 @@ public class PostProcessingService {
                         break;
                     case CONTACT:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
+                        processTopic(keyTopic, entity.getEntityName(), ids,
+                                postProcRepository::executeStoredProcForFContactRecordCase, "sp_f_contact_record_case_postprocessing");
                         break;
                     case NOTIFICATION:
                         List<DatamartData> dmDataN = processTopic(keyTopic, entity, ids,
