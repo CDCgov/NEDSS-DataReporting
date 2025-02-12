@@ -38,7 +38,7 @@ INSERT INTO dbo.job_flow_log
 , [Status_Type]
 , [step_number]
 , [step_name]
-, [ row_count]
+, [row_count]
 , [Msg_Description1])
 VALUES ( @batch_id
            , @datamart_nm
