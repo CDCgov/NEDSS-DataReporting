@@ -419,6 +419,12 @@ public class PostProcessingService {
         return Arrays.asList(vals).contains(value);
     }
 
+    /**
+     * Gets the Entity by using the string passed to this function
+     * E.g: if dummy_contact_record is passed, it will return the entity CONTACT_RECORD
+     * @param topic
+     * @return Entity
+     */
     private Entity getEntityByTopic(String topic) {
         return Arrays.stream(Entity.values())
                 .filter(entity -> entity.getPriority() > 0)
