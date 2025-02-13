@@ -511,7 +511,14 @@ class PostProcessingServiceTest {
                     "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null," +
                     "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
                     CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid))
+                    (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                                "\"datamart\":\"Bmird_Case_Datamart\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
+                        BMIRD_CASE_DATAMART.getEntityName(),
+                        BMIRD_CASE_DATAMART.getStoredProcedure(),
+                        3,
+                        (repo, uid) -> verify(repo).executeStoredProcForBmirdCaseDatamart(uid))
         );
     }
 

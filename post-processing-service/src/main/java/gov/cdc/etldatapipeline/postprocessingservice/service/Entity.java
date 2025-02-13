@@ -27,6 +27,7 @@ enum Entity {
     RUBELLA_CASE(0, "Rubella_Case", Constants.PHC_UID, "sp_rubella_case_datamart_postprocessing"),
     MEASLES_CASE(0, "Measles_Case", Constants.PHC_UID, "sp_measles_case_datamart_postprocessing"),
     CASE_LAB_DATAMART(0, "Case_Lab_Datamart", Constants.PHC_UID, "sp_case_lab_datamart_postprocessing"),
+    BMIRD_CASE_DATAMART(0, "Bmird_Case_Datamart", Constants.PHC_UID, "sp_bmird_case_datamart_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;
