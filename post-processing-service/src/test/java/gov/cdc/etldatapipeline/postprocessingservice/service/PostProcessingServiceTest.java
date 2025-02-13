@@ -55,6 +55,7 @@ class PostProcessingServiceTest {
         datamartProcessor = new ProcessDatamartData(kafkaTemplate);
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor));
+        postProcessingServiceMock.setEventMetricEnabled(true);
         Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         listAppender.start();
         logger.addAppender(listAppender);
@@ -515,9 +516,9 @@ class PostProcessingServiceTest {
                     (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                                "\"datamart\":\"Bmird_Case_Datamart\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
-                        BMIRD_CASE_DATAMART.getEntityName(),
-                        BMIRD_CASE_DATAMART.getStoredProcedure(),
+                                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
+                        BMIRD_CASE.getEntityName(),
+                        BMIRD_CASE.getStoredProcedure(),
                         3,
                         (repo, uid) -> verify(repo).executeStoredProcForBmirdCaseDatamart(uid))
         );
@@ -579,8 +580,6 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals("No updates to EVENT_METRIC Datamart", logs.getLast().getFormattedMessage());
-
-
     }
 
     @Test
@@ -606,7 +605,6 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processCachedIds();
 
         verify(postProcRepositoryMock).executeStoredProcForEventMetric("126,235", "130", "127", "123");
-
     }
 
     @Test

@@ -33,7 +33,7 @@
     "public_health_case_uid": 123,
     "patient_uid": 456,
     "condition_cd": "10160",
-    "datamart": "Bmird_Case_Datamart",
+    "datamart": "BMIRD_Case",
     "stored_procedure": "sp_bmird_case_datamart_postprocessing"
   }
 }

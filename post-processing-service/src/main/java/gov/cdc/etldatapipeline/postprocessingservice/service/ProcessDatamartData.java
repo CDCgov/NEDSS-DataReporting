@@ -56,10 +56,12 @@ public class ProcessDatamartData {
     private List<DatamartData> reduce(List<DatamartData> dmData) {
         List<Long> hepUidsAlreadyInDmData =
                 dmData.stream()
+                        .filter(Objects::nonNull)
                         .filter(d -> HEPATITIS_DATAMART.getEntityName().equals(d.getDatamart()))
                         .map(DatamartData::getPublicHealthCaseUid).toList();
 
         return dmData.stream()
+                .filter(Objects::nonNull)
                 .filter(d -> {
                     boolean isCaseLab = CASE_LAB_DATAMART.getEntityName().equals(d.getDatamart());
                     boolean hasHepAlready = hepUidsAlreadyInDmData.contains(d.getPublicHealthCaseUid());

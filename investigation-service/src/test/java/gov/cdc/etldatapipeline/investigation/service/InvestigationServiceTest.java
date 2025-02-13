@@ -87,6 +87,8 @@ class InvestigationServiceTest {
         investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, kafkaTemplate, transformer);
 
         investigationService.setPhcDatamartEnable(true);
+        investigationService.setBmirdCaseEnable(true);
+        investigationService.setContactRecordEnable(true);
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
@@ -108,7 +110,7 @@ class InvestigationServiceTest {
     @Test
     void testProcessInvestigationMessage() throws JsonProcessingException {
         Long investigationUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\"}}}";
+        String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\", \"prog_area_cd\": \"BMIRD\"}}}";
 
         final Investigation investigation = constructInvestigation(investigationUid);
         when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
@@ -118,6 +120,19 @@ class InvestigationServiceTest {
 
         verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid));
         verify(investigationRepository).populatePhcFact(String.valueOf(investigationUid));
+    }
+
+    @Test
+    void testProcessInvestigationBmirdFeatureDisabled() {
+        Long investigationUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\", \"prog_area_cd\": \"BMIRD\"}}}";
+
+        final Investigation investigation = constructInvestigation(investigationUid);
+        when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
+
+        investigationService.setBmirdCaseEnable(false);
+        investigationService.processMessage(payload, investigationTopic, consumer);
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -258,6 +273,19 @@ class InvestigationServiceTest {
         assertEquals(contactReportingValue, actualContactValue);
 
         verify(contactRepository).computeContact(String.valueOf(contactUid));
+    }
+
+    @Test
+    void testProcessContactMessageWhenFeatureDisabled() {
+        Long contactUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"" + contactUid + "\"}}}";
+
+        final Contact contact = constructContact(contactUid);
+        when(contactRepository.computeContact(String.valueOf(contactUid))).thenReturn(Optional.of(contact));
+
+        investigationService.setContactRecordEnable(false);
+        investigationService.processMessage(payload, contactTopic, consumer);
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test

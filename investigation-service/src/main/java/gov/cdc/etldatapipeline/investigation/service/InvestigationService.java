@@ -37,8 +37,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.*;
 
 @Service
 @Setter
@@ -62,10 +61,16 @@ public class InvestigationService {
     private String contactTopic;
 
     @Value("${spring.kafka.output.topic-name-reporting}")
-    public String investigationTopicReporting;
+    private String investigationTopicReporting;
 
-    @Value("${service.phc-datamart-enable}")
-    public boolean phcDatamartEnable;
+    @Value("${featureFlag.phc-datamart-enable}")
+    private boolean phcDatamartEnable;
+
+    @Value("${featureFlag.bmird-case-enable}")
+    private boolean bmirdCaseEnable;
+
+    @Value("${featureFlag.contact-record-enable}")
+    public boolean contactRecordEnable;
 
     private final InvestigationRepository investigationRepository;
     private final NotificationRepository notificationRepository;
@@ -115,7 +120,7 @@ public class InvestigationService {
             processNotification(message);
         } else if (topic.equals(interviewTopic)) {
             processInterview(message);
-        } else if (topic.equals(contactTopic)) {
+        } else if (topic.equals(contactTopic) && contactRecordEnable) {
             processContact(message);
         }
         consumer.commitSync();
@@ -128,6 +133,12 @@ public class InvestigationService {
 
             if (phcDatamartEnable) {
                 CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
+            }
+
+            // Check if feature flag for BMIRD is enabled
+            final String programArea = extractValue(value, "prog_area_cd");
+            if ("BMIRD".equals(programArea) && !bmirdCaseEnable) {
+                return;
             }
 
             logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);

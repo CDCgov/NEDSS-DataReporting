@@ -150,15 +150,14 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                 INSERT INTO dbo.nrt_datamart_metadata
                 VALUES ('', '', 'Case_Lab_Datamart', 'sp_case_lab_datamart_postprocessing')
             END;
-    END;
 
-    /*BMIRD_Case Datamart condition code addition script.*/
+        /*BMIRD_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Bmird_Case_Datamart')
             BEGIN
                 INSERT INTO dbo.nrt_datamart_metadata
                 SELECT condition_cd,
                        condition_desc_txt,
-                       'Bmird_Case_Datamart',
+                       'BMIRD_Case',
                        'sp_bmird_case_datamart_postprocessing'
                 FROM
                     (SELECT distinct cc.condition_cd, cc.condition_desc_txt
@@ -170,3 +169,4 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            FROM dbo.nrt_datamart_metadata ndm
                            WHERE ndm.condition_cd = bmird_codes.condition_cd);
             END;
+    END;

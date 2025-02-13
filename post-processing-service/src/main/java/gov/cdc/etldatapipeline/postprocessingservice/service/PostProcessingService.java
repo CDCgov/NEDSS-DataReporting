@@ -8,9 +8,11 @@ import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartDa
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.retrytopic.DltStrategy;
@@ -39,6 +41,7 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 
 @Service
 @RequiredArgsConstructor
+@Setter
 @EnableScheduling
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
@@ -61,6 +64,9 @@ public class PostProcessingService {
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
+
+    @Value("${featureFlag.event-metric-enable}")
+    private boolean eventMetricEnabled;
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -252,7 +258,9 @@ public class PostProcessingService {
             }
             datamartProcessor.process(dmData);
 
-            processEventMetricDatamart(investigationUids, observationUids, notificationUids, contactRecordUids);
+            if (eventMetricEnabled) {
+                processEventMetricDatamart(investigationUids, observationUids, notificationUids, contactRecordUids);
+            }
         } else {
             logger.info("No ids to process from the topics.");
         }
@@ -359,10 +367,10 @@ public class PostProcessingService {
                         investigationRepository.executeStoredProcForCaseLabDatamart(cases);
                         completeLog(CASE_LAB_DATAMART.getStoredProcedure());
                         break;
-                    case BMIRD_CASE_DATAMART:
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, BMIRD_CASE_DATAMART.getStoredProcedure(), cases);
+                    case BMIRD_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, BMIRD_CASE.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForBmirdCaseDatamart(cases);
-                        completeLog(BMIRD_CASE_DATAMART.getStoredProcedure());
+                        completeLog(BMIRD_CASE.getStoredProcedure());
                         break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ",dmType);

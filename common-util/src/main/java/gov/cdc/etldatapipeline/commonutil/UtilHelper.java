@@ -37,6 +37,11 @@ public class UtilHelper {
         }
     }
 
+    public static String extractValue(String message, String fieldName) throws Exception {
+        JsonNode jsonNode = objectMapper.readTree(message);
+        return jsonNode.get("payload").path("after").path(fieldName).asText();
+    }
+
     public static String errorMessage(String entityName, String ids, Exception e) {
         return "Error processing " + entityName + " data" +
                 (!ids.isEmpty() ? " with ids '" + ids + "': " : ": " + e.getMessage());

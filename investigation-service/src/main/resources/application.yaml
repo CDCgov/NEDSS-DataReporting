@@ -43,7 +43,9 @@ spring:
       url: ${DB_RDB_URL:jdbc:sqlserver://localhost:1433;databaseName=:RDB;encrypt=true;trustServerCertificate=true;}
   liquibase:
     change-log: db/changelog/db.changelog-master.yaml
-service:
-  phc-datamart-enable: ${PHC_DM_ENABLE:false}
+featureFlag:
+  phc-datamart-enable: ${FF_PHC_DM_ENABLE:false}
+  bmird-case-enable: ${FF_BMIRD_CASE_ENABLE:false}
+  contact-record-enable: ${FF_CONTACT_RECORD_ENABLE:false}
 server:
   port: '8093'

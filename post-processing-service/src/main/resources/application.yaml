@@ -35,6 +35,8 @@ spring:
   jpa:
     properties:
       javax.persistence.query.timeout: -1
+featureFlag:
+  event-metric-enable: ${FF_EVENT_METRIC_ENABLE:false}
 service:
   fixed-delay:
     cached-ids: ${FIXED_DELAY_ID:20000}
