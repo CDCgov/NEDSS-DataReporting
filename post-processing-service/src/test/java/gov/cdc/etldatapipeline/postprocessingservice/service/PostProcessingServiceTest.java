@@ -390,9 +390,10 @@ class PostProcessingServiceTest {
 
         String expectedIntIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForDContactRecord(expectedIntIdsString);
+        verify(postProcRepositoryMock).executeStoredProcForFContactRecordCase(expectedIntIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(4, logs.size());
+        assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(CONTACT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }

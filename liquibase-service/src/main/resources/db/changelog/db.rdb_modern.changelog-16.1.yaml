@@ -807,3 +807,11 @@ databaseChangeLog:
         - sqlFile:
             path: 037-sp_event_metric_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 118
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 038-sp_f_contact_record_case_postprocessing-001.sql
+            splitStatements: false

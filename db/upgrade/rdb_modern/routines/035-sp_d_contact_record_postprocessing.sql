@@ -92,8 +92,13 @@ BEGIN
         UPDATE dbo.NRT_METADATA_COLUMNS
         SET NEW_FLAG = 0
         WHERE NEW_FLAG = 1
-          AND TABLE_NAME = 'D_CONTACT_RECORD'
-          AND RDB_COLUMN_NM in (select RDB_COLUMN_NM from #NEW_COLUMNS);
+        AND TABLE_NAME = 'D_CONTACT_RECORD'
+        AND RDB_COLUMN_NM in (
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = 'D_CONTACT_RECORD'
+              AND TABLE_SCHEMA = 'dbo'
+        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -286,7 +291,7 @@ BEGIN
         dl.VERSION_CTRL_NBR = ix.VERSION_CTRL_NBR
         ' + CASE
                 WHEN @Col_number > 0 THEN ',' + (SELECT STRING_AGG('dl.' + QUOTENAME(RDB_COLUMN_NM) + ' = pv.' + QUOTENAME(RDB_COLUMN_NM),',')
-                    FROM dbo.NRT_METADATA_COLUMNS where TABLE_NAME ='D_CONTACT_RECORD' and RDB_COLUMN_NM  in (select rdb_column_nm from #CONTACT_ANSWERS))
+                    FROM dbo.NRT_METADATA_COLUMNS where TABLE_NAME ='D_CONTACT_RECORD' )
             ELSE '' END +
         ' FROM
         #CONTACT_INIT ix
