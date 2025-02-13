@@ -38,7 +38,7 @@ INSERT INTO dbo.job_flow_log
 , [Status_Type]
 , [step_number]
 , [step_name]
-, [ row_count]
+, [row_count]
 , [Msg_Description1])
 VALUES ( @batch_id
            , @datamart_nm
@@ -661,7 +661,7 @@ with (nolock)
 ON phc.jurisdiction_cd = j.code
     LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general c
 with (nolock)
-ON phc.record_status_cd = c.code AND
+ON phc.raw_record_status_cd = c.code AND
     c.code_set_nm = 'REC_STAT'
     LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general d
 with (nolock)
