@@ -55,7 +55,7 @@ class PostProcessingServiceTest {
         datamartProcessor = new ProcessDatamartData(kafkaTemplate);
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor));
-        postProcessingServiceMock.setEventMetricEnabled(true);
+        postProcessingServiceMock.setEventMetricEnable(true);
         Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         listAppender.start();
         logger.addAppender(listAppender);
@@ -605,6 +605,18 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processCachedIds();
 
         verify(postProcRepositoryMock).executeStoredProcForEventMetric("126,235", "130", "127", "123");
+    }
+
+    @Test
+    void testPostProcessEventMetricWhenDisabled() {
+
+        String investigationKey1 = "{\"payload\":{\"public_health_case_uid\":126}}";
+        String invTopic = "dummy_investigation";
+        postProcessingServiceMock.setEventMetricEnable(false);
+        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(postProcRepositoryMock, never()).executeStoredProcForEventMetric(anyString(), anyString(), anyString(), anyString());
     }
 
     @Test

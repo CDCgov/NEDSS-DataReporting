@@ -66,7 +66,7 @@ public class PostProcessingService {
     private final Object cacheLock = new Object();
 
     @Value("${featureFlag.event-metric-enable}")
-    private boolean eventMetricEnabled;
+    private boolean eventMetricEnable;
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -258,7 +258,7 @@ public class PostProcessingService {
             }
             datamartProcessor.process(dmData);
 
-            if (eventMetricEnabled) {
+            if (eventMetricEnable) {
                 processEventMetricDatamart(investigationUids, observationUids, notificationUids, contactRecordUids);
             }
         } else {
@@ -437,7 +437,7 @@ public class PostProcessingService {
     /**
      * Gets the Entity by using the string passed to this function
      * E.g: if dummy_contact_record is passed, it will return the entity CONTACT_RECORD
-     * @param topic
+     * @param topic Incoming Kafka topic
      * @return Entity
      */
     private Entity getEntityByTopic(String topic) {

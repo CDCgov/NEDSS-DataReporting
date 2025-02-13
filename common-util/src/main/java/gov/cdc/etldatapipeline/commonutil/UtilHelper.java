@@ -27,7 +27,7 @@ public class UtilHelper {
         return null;
     }
 
-    public static String extractUid(String value, String uidName) throws Exception {
+    public static String extractUid(String value, String uidName) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(value);
         JsonNode payloadNode = jsonNode.get("payload").path("after");
         if (!payloadNode.isMissingNode() && payloadNode.has(uidName)) {
@@ -37,7 +37,7 @@ public class UtilHelper {
         }
     }
 
-    public static String extractValue(String message, String fieldName) throws Exception {
+    public static String extractValue(String message, String fieldName) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(message);
         return jsonNode.get("payload").path("after").path(fieldName).asText();
     }
