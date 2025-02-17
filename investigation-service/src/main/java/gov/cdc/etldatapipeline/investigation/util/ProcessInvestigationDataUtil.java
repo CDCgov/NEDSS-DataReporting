@@ -24,10 +24,13 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+
 @Setter
 public class ProcessInvestigationDataUtil {
     private static final Logger logger = LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    public static final String TOMBSTONE_MSG_SENT = "Tombstone message sent to delete {} for {} uid: {} ";
+    public static final String TOMBSTONE_MSG_ACCEPTED = "Deleting message accepted for {}, initializing inserts";
 
     @Value("${spring.kafka.output.topic-name-confirmation}")
     public String investigationConfirmationOutputTopicName;
@@ -225,139 +228,155 @@ public class ProcessInvestigationDataUtil {
     }
 
     private void transformObservationIds(String investigationObservationIds, InvestigationTransformed investigationTransformed) {
-        try {
-            JsonNode investigationObservationIdsJsonArray = parseJsonArray(investigationObservationIds);
-            InvestigationObservation investigationObservation = new InvestigationObservation();
-            InvestigationObservationKey investigationObservationKey = new InvestigationObservationKey();
+        Long phcUid = investigationTransformed.getPublicHealthCaseUid();
 
-            investigationKey.setPublicHealthCaseUid(investigationTransformed.getPublicHealthCaseUid());
-            String jsonKey = jsonGenerator.generateStringJson(investigationKey);
-            kafkaTemplate.send(investigationObservationOutputTopicName, jsonKey, null);
+        // Tombstone message to delete all legacy observations for specified phc uid
+        investigationKey.setPublicHealthCaseUid(phcUid);
+        String jsonKeyDel = jsonGenerator.generateStringJson(investigationKey);
+        logger.info(TOMBSTONE_MSG_SENT, "investigation observations", "phc", phcUid);
+        kafkaTemplate.send(investigationObservationOutputTopicName, jsonKeyDel, null)
+                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "investigation observations"))
+                .thenRunAsync(() -> {
+                    try {
+                        JsonNode investigationObservationIdsJsonArray = parseJsonArray(investigationObservationIds);
 
-            for(JsonNode node : investigationObservationIdsJsonArray) {
-                String sourceClassCode = node.path("source_class_cd").asText();
-                String actTypeCode = node.path("act_type_cd").asText();
-                Long sourceActId = node.get("source_act_uid").asLong();
-                Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
-                String rootTypeCd = node.path("act_type_cd").asText();
+                        List<InvestigationObservation> investigationObservations = new ArrayList<>();
+                        for(JsonNode node : investigationObservationIdsJsonArray) {
+                            InvestigationObservation investigationObservation = new InvestigationObservation();
 
-                if(sourceClassCode.equals("OBS") && actTypeCode.equals("PHCInvForm")) {
-                    investigationTransformed.setPhcInvFormId(sourceActId);
-                }
+                            String sourceClassCode = node.path("source_class_cd").asText();
+                            String actTypeCode = node.path("act_type_cd").asText();
+                            Long sourceActId = node.get("source_act_uid").asLong();
+                            Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
+                            String rootTypeCd = node.path("act_type_cd").asText();
 
-                investigationObservationKey.setPublicHealthCaseUid(publicHealthCaseUid);
-                investigationObservationKey.setObservationId(sourceActId);
-                investigationObservationKey.setBranchId(null);
+                            if(sourceClassCode.equals("OBS") && actTypeCode.equals("PHCInvForm")) {
+                                investigationTransformed.setPhcInvFormId(sourceActId);
+                            }
 
-                investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
-                investigationObservation.setObservationId(sourceActId);
-                investigationObservation.setRootTypeCd(rootTypeCd);
-                investigationObservation.setBranchId(null);
-                investigationObservation.setBranchTypeCd(null);
+                            investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
+                            investigationObservation.setObservationId(sourceActId);
+                            investigationObservation.setRootTypeCd(rootTypeCd);
+                            investigationObservation.setBranchId(null);
+                            investigationObservation.setBranchTypeCd(null);
 
-                Optional.ofNullable(node.get("branch_uid")).filter(n -> !n.isNull())
-                        .ifPresent(n -> {
-                            investigationObservationKey.setBranchId(n.asLong());
-                            investigationObservation.setBranchId(n.asLong());
+                            Optional.ofNullable(node.get("branch_uid")).filter(n -> !n.isNull())
+                                    .ifPresent(n -> investigationObservation.setBranchId(n.asLong()));
+                            Optional.ofNullable(node.get("branch_type_cd")).filter(n -> !n.isNull())
+                                    .ifPresent(n -> investigationObservation.setBranchTypeCd(n.asText()));
 
+                            investigationObservations.add(investigationObservation);
+                        }
+
+                        investigationObservations.forEach(obs -> {
+                            InvestigationObservationKey key = new InvestigationObservationKey();
+                            key.setPublicHealthCaseUid(obs.getPublicHealthCaseUid());
+                            key.setObservationId(obs.getObservationId());
+                            key.setBranchId(obs.getBranchId());
+
+                            String jsonKey = jsonGenerator.generateStringJson(key);
+                            String jsonValue = jsonGenerator.generateStringJson(obs);
+                            kafkaTemplate.send(investigationObservationOutputTopicName, jsonKey, jsonValue);
                         });
-                Optional.ofNullable(node.get("branch_type_cd")).filter(n -> !n.isNull())
-                        .ifPresent(n -> investigationObservation.setBranchTypeCd(n.asText()));
 
-                jsonKey = jsonGenerator.generateStringJson(investigationObservationKey);
-                String jsonValue = jsonGenerator.generateStringJson(investigationObservation);
-                kafkaTemplate.send(investigationObservationOutputTopicName, jsonKey, jsonValue);
-            }
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "InvestigationObservationIds");
-        } catch (Exception e) {
-            logger.error("Error processing Observation Ids JSON array from investigation data: {}", e.getMessage());
-        }
+                    } catch (IllegalArgumentException ex) {
+                        logger.info(ex.getMessage(), "InvestigationObservationIds");
+                    } catch (Exception e) {
+                        logger.error("Error processing Observation Ids JSON array from investigation data: {}", e.getMessage());
+                    }
+                });
     }
 
     private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod, InvestigationTransformed investigationTransformed) {
-        try {
-            Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
-            // Tombstone message to delete all confirmation methods for specified phc uid
-            String jsonKey = jsonGenerator.generateStringJson(new InvestigationConfirmationMethodUidKey(publicHealthCaseUid));
-            kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, null);
+        Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
 
-            JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod);
+        // Tombstone message to delete all confirmation methods for specified phc uid
+        String jsonKeyDel = jsonGenerator.generateStringJson(new InvestigationConfirmationMethodUidKey(publicHealthCaseUid));
+        logger.info(TOMBSTONE_MSG_SENT, "confirmation method", "phc", publicHealthCaseUid);
+        kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKeyDel, null)
+                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "confirmation method"))
+                .thenRunAsync(() -> {
+                    try {
+                        JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod);
 
-            InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
-            InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
-            Map<String, String> confirmationMethodMap = new HashMap<>();
-            String confirmationMethodTime = null;
+                        InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
+                        InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
+                        Map<String, String> confirmationMethodMap = new HashMap<>();
+                        String confirmationMethodTime = null;
 
-            // Redundant time variable in case if confirmation_method_time is null in all rows of the array
-            String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
+                        // Redundant time variable in case if confirmation_method_time is null in all rows of the array
+                        String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
 
-            for(JsonNode node : investigationConfirmationMethodJsonArray) {
-                JsonNode timeNode = node.get("confirmation_method_time");
-                if (timeNode != null && !timeNode.isNull()) {
-                    confirmationMethodTime = timeNode.asText();
-                }
-                confirmationMethodMap.put(node.get("confirmation_method_cd").asText(), node.get("confirmation_method_desc_txt").asText());
-            }
-            investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
-            investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
+                        for(JsonNode node : investigationConfirmationMethodJsonArray) {
+                            JsonNode timeNode = node.get("confirmation_method_time");
+                            if (timeNode != null && !timeNode.isNull()) {
+                                confirmationMethodTime = timeNode.asText();
+                            }
+                            confirmationMethodMap.put(node.get("confirmation_method_cd").asText(), node.get("confirmation_method_desc_txt").asText());
+                        }
+                        investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
+                        investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
 
-            investigationConfirmation.setConfirmationMethodTime(
-                    confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
+                        investigationConfirmation.setConfirmationMethodTime(
+                                confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
 
-            for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
-                investigationConfirmation.setConfirmationMethodCd(entry.getKey());
-                investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
-                investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
-                jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
-                String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
-                kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
-            }
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "InvestigationConfirmationMethod");
-        } catch (Exception e) {
-            logger.error("Error processing investigation confirmation method JSON array from investigation data: {}", e.getMessage());
-        }
+                        for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
+                            investigationConfirmation.setConfirmationMethodCd(entry.getKey());
+                            investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
+                            investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
+                            String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
+                            String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
+                            kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
+                        }
+                    } catch (IllegalArgumentException ex) {
+                        logger.info(ex.getMessage(), "InvestigationConfirmationMethod");
+                    } catch (Exception e) {
+                        logger.error("Error processing investigation confirmation method JSON array from investigation data: {}", e.getMessage());
+                    }
+                });
     }
 
     private void processInvestigationPageCaseAnswer(String investigationCaseAnswer, InvestigationTransformed investigationTransformed) {
-        try {
-            Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
+        Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
 
-            // Tombstone message to delete all page case answers for specified actUid
-            PageCaseAnswerUidKey pageCaseAnswerUidKey = new PageCaseAnswerUidKey(publicHealthCaseUid);
-            String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerUidKey);
-            kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, null);
+        // Tombstone message to delete all page case answers for specified actUid
+        PageCaseAnswerUidKey pageCaseAnswerUidKey = new PageCaseAnswerUidKey(publicHealthCaseUid);
+        String jsonKeyDel = jsonGenerator.generateStringJson(pageCaseAnswerUidKey);
+        logger.info(TOMBSTONE_MSG_SENT, "page case answers", "phc", publicHealthCaseUid);
+        kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKeyDel, null)
+                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "page case answers"))
+                .thenRunAsync(() -> {
+                    try {
+                        JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
 
-            JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
+                        Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
+                        List<PageCaseAnswer> pageCaseAnswerList = new ArrayList<>();
 
-            Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
-            List<PageCaseAnswer> pageCaseAnswerList = new ArrayList<>();
+                        PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
+                        pageCaseAnswerKey.setActUid(actUid);
 
-            PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
-            pageCaseAnswerKey.setActUid(actUid);
+                        for(JsonNode node : investigationCaseAnswerJsonArray) {
+                            PageCaseAnswer pageCaseAnswer = objectMapper.treeToValue(node, PageCaseAnswer.class);
+                            pageCaseAnswerList.add(pageCaseAnswer);
 
-            for(JsonNode node : investigationCaseAnswerJsonArray) {
-                PageCaseAnswer pageCaseAnswer = objectMapper.treeToValue(node, PageCaseAnswer.class);
-                pageCaseAnswerList.add(pageCaseAnswer);
+                            pageCaseAnswerKey.setNbsCaseAnswerUid(pageCaseAnswer.getNbsCaseAnswerUid());
+                            String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerKey);
+                            String jsonValue = jsonGenerator.generateStringJson(pageCaseAnswer);
 
-                pageCaseAnswerKey.setNbsCaseAnswerUid(pageCaseAnswer.getNbsCaseAnswerUid());
-                jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerKey);
-                String jsonValue = jsonGenerator.generateStringJson(pageCaseAnswer);
+                            kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, jsonValue);
+                        }
 
-                kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, jsonValue);
-            }
-
-            String rdbTblNms = String.join(",", pageCaseAnswerList.stream()
-                            .map(PageCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
-            if (!rdbTblNms.isEmpty()) {
-                investigationTransformed.setRdbTableNameList(rdbTblNms);
-            }
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "PageCaseAnswer");
-        } catch (Exception e) {
-            logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
-        }
+                        String rdbTblNms = String.join(",", pageCaseAnswerList.stream()
+                                .map(PageCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
+                        if (!rdbTblNms.isEmpty()) {
+                            investigationTransformed.setRdbTableNameList(rdbTblNms);
+                        }
+                    } catch (IllegalArgumentException ex) {
+                        logger.info(ex.getMessage(), "PageCaseAnswer");
+                    } catch (Exception e) {
+                        logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
+                    }
+                });
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
@@ -444,75 +463,81 @@ public class ProcessInvestigationDataUtil {
     }
 
     public void transformAndSendInterviewAnswer(Interview interview) {
-        try {
-            // Tombstone message to delete all interview answers for specified interview uid
-            String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
-            kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKey1, null);
+        // Tombstone message to delete all interview answers for specified interview uid
+        String jsonKeyDel = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
+        logger.info(TOMBSTONE_MSG_SENT, "interview answers", "interview", interview.getInterviewUid());
+        kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKeyDel, null)
+                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "interview answers"))
+                .thenRunAsync(() -> {
+                    try {
+                        JsonNode answerArray = parseJsonArray(interview.getAnswers());
 
-            JsonNode answerArray = parseJsonArray(interview.getAnswers());
+                        for (JsonNode node : answerArray) {
+                            final Long interviewUid = interview.getInterviewUid();
+                            final String rdbColumnNm = node.get(RDB_COLUMN_NM).asText();
 
-            for (JsonNode node : answerArray) {
-                final Long interviewUid = interview.getInterviewUid();
-                final String rdbColumnNm = node.get(RDB_COLUMN_NM).asText();
+                            InterviewAnswerKey interviewAnswerKey = new InterviewAnswerKey();
+                            interviewAnswerKey.setInterviewUid(interviewUid);
+                            interviewAnswerKey.setRdbColumnNm(rdbColumnNm);
 
-                InterviewAnswerKey interviewAnswerKey = new InterviewAnswerKey();
-                interviewAnswerKey.setInterviewUid(interviewUid);
-                interviewAnswerKey.setRdbColumnNm(rdbColumnNm);
+                            InterviewAnswer interviewAnswer = new InterviewAnswer();
+                            interviewAnswer.setInterviewUid(interviewUid);
+                            interviewAnswer.setRdbColumnNm(rdbColumnNm);
+                            interviewAnswer.setAnswerVal(node.get("ANSWER_VAL").asText());
 
-                InterviewAnswer interviewAnswer = new InterviewAnswer();
-                interviewAnswer.setInterviewUid(interviewUid);
-                interviewAnswer.setRdbColumnNm(rdbColumnNm);
-                interviewAnswer.setAnswerVal(node.get("ANSWER_VAL").asText());
+                            String jsonKey = jsonGenerator.generateStringJson(interviewAnswerKey);
+                            String jsonValue = jsonGenerator.generateStringJson(interviewAnswer);
+                            kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKey, jsonValue)
+                                    .whenComplete((res, e) -> logger.info("Interview Answer data (uid={}) sent to {}", interview.getInterviewUid(), interviewAnswerOutputTopicName));
 
-                String jsonKey = jsonGenerator.generateStringJson(interviewAnswerKey);
-                String jsonValue = jsonGenerator.generateStringJson(interviewAnswer);
-                kafkaTemplate.send(interviewAnswerOutputTopicName, jsonKey, jsonValue)
-                        .whenComplete((res, e) -> logger.info("Interview Answer data (uid={}) sent to {}", interview.getInterviewUid(), interviewAnswerOutputTopicName));
-
-            }
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "Investigation Interview Answer");
-        } catch (Exception e) {
-            logger.error("Error processing Investigation Interview Answer JSON array from interview data: {}", e.getMessage());
-        }
+                        }
+                    } catch (IllegalArgumentException ex) {
+                        logger.info(ex.getMessage(), "Investigation Interview Answer");
+                    } catch (Exception e) {
+                        logger.error("Error processing Investigation Interview Answer JSON array from interview data: {}", e.getMessage());
+                    }
+                });
     }
 
     public void transformAndSendInterviewNote(Interview interview) {
-        try {
-            // Tombstone message to delete all interview note for specified interview uid
-            String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
-            kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey1, null);
+        // Tombstone message to delete all interview note for specified interview uid
+        String jsonKey1 = jsonGenerator.generateStringJson(new InterviewReportingKey(interview.getInterviewUid()));
+        logger.info(TOMBSTONE_MSG_SENT, "interview notes", "interview", interview.getInterviewUid());
+        kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey1, null)
+                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "interview notes"))
+                .thenRunAsync(() -> {
+                    try {
+                        JsonNode answerArray = parseJsonArray(interview.getNotes());
 
-            JsonNode answerArray = parseJsonArray(interview.getNotes());
+                        for (JsonNode node : answerArray) {
+                            final Long interviewUid = interview.getInterviewUid();
+                            final Long nbsAnswerUid = node.get("NBS_ANSWER_UID").asLong();
 
-            for (JsonNode node : answerArray) {
-                final Long interviewUid = interview.getInterviewUid();
-                final Long nbsAnswerUid = node.get("NBS_ANSWER_UID").asLong();
+                            InterviewNoteKey interviewNoteKey = new InterviewNoteKey();
+                            interviewNoteKey.setInterviewUid(interviewUid);
+                            interviewNoteKey.setNbsAnswerUid(nbsAnswerUid);
 
-                InterviewNoteKey interviewNoteKey = new InterviewNoteKey();
-                interviewNoteKey.setInterviewUid(interviewUid);
-                interviewNoteKey.setNbsAnswerUid(nbsAnswerUid);
+                            InterviewNote interviewNote = new InterviewNote();
+                            interviewNote.setInterviewUid(interview.getInterviewUid());
+                            interviewNote.setNbsAnswerUid(nbsAnswerUid);
+                            interviewNote.setUserFirstName(node.get("USER_FIRST_NAME").asText());
+                            interviewNote.setUserLastName(node.get("USER_LAST_NAME").asText());
+                            interviewNote.setUserComment(node.get("USER_COMMENT").asText());
+                            interviewNote.setCommentDate(node.get("COMMENT_DATE").asText());
+                            interviewNote.setRecordStatusCd(node.get("RECORD_STATUS_CD").asText());
 
-                InterviewNote interviewNote = new InterviewNote();
-                interviewNote.setInterviewUid(interview.getInterviewUid());
-                interviewNote.setNbsAnswerUid(nbsAnswerUid);
-                interviewNote.setUserFirstName(node.get("USER_FIRST_NAME").asText());
-                interviewNote.setUserLastName(node.get("USER_LAST_NAME").asText());
-                interviewNote.setUserComment(node.get("USER_COMMENT").asText());
-                interviewNote.setCommentDate(node.get("COMMENT_DATE").asText());
-                interviewNote.setRecordStatusCd(node.get("RECORD_STATUS_CD").asText());
+                            String jsonKey = jsonGenerator.generateStringJson(interviewNoteKey);
+                            String jsonValue = jsonGenerator.generateStringJson(interviewNote);
+                            kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey, jsonValue)
+                                    .whenComplete((res, e) -> logger.info("Interview Note data (uid={}) sent to {}", interview.getInterviewUid(), interviewNoteOutputTopicName));
 
-                String jsonKey = jsonGenerator.generateStringJson(interviewNoteKey);
-                String jsonValue = jsonGenerator.generateStringJson(interviewNote);
-                kafkaTemplate.send(interviewNoteOutputTopicName, jsonKey, jsonValue)
-                        .whenComplete((res, e) -> logger.info("Interview Note data (uid={}) sent to {}", interview.getInterviewUid(), interviewNoteOutputTopicName));
-
-            }
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "Investigation Interview Note");
-        } catch (Exception e) {
-            logger.error("Error processing Investigation Interview Note JSON array from interview data: {}", e.getMessage());
-        }
+                        }
+                    } catch (IllegalArgumentException ex) {
+                        logger.info(ex.getMessage(), "Investigation Interview Note");
+                    } catch (Exception e) {
+                        logger.error("Error processing Investigation Interview Note JSON array from interview data: {}", e.getMessage());
+                    }
+                });
     }
 
     /**

@@ -100,6 +100,9 @@ class InvestigationServiceTest {
         transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
         transformer.setInterviewOutputTopicName(interviewTopicOutput);
         transformer.setContactOutputTopicName(contactTopicOutput);
+        transformer.setPageCaseAnswerOutputTopicName("pageCaseAnswer");
+        transformer.setInterviewAnswerOutputTopicName("interviewAnswer");
+        transformer.setInterviewNoteOutputTopicName("interviewNote");
     }
 
     @AfterEach
@@ -114,8 +117,8 @@ class InvestigationServiceTest {
 
         final Investigation investigation = constructInvestigation(investigationUid);
         when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
-        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
         validateInvestigationData(payload, investigation);
 
         verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid));
@@ -169,7 +172,7 @@ class InvestigationServiceTest {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> investigationService.processMessage(invalidPayload, notificationTopic, consumer));
-        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     @Test
@@ -189,6 +192,7 @@ class InvestigationServiceTest {
         final gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview interview = constructInterview(interviewUid);
         when(interviewRepository.computeInterviews(String.valueOf(interviewUid))).thenReturn(Optional.of(interview));
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
 
         investigationService.processMessage(payload, interviewTopic, consumer);
 
@@ -224,7 +228,7 @@ class InvestigationServiceTest {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> investigationService.processMessage(invalidPayload, interviewTopic, consumer));
-        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     @Test
@@ -293,7 +297,7 @@ class InvestigationServiceTest {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> investigationService.processMessage(invalidPayload, contactTopic, consumer));
-        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     @Test
