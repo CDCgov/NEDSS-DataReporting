@@ -11,7 +11,7 @@ spring:
       interview: nrt_interview
       ldf_data: nrt_ldf_data
       place: nrt_place
-      user_profile: nrt_user_profile
+      auth_user: nrt_auth_user
       contact_record: nrt_contact
       datamart: nbs_Datamart
     dlq:

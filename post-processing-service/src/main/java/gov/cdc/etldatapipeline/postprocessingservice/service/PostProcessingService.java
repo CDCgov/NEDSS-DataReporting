@@ -95,7 +95,7 @@ public class PostProcessingService {
             "${spring.kafka.topic.ldf_data}",
             "${spring.kafka.topic.observation}",
             "${spring.kafka.topic.place}",
-            "${spring.kafka.topic.user_profile}",
+            "${spring.kafka.topic.auth_user}",
             "${spring.kafka.topic.contact_record}"
     })
     public void postProcessMessage(
@@ -212,7 +212,7 @@ public class PostProcessingService {
                     case PATIENT:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
                         break;
-                    case USER_PROFILE:
+                    case AUTH_USER:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile);
                         break;
                     case D_PLACE:
