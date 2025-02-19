@@ -77,7 +77,7 @@ class PostProcessingServiceTest {
             "dummy_investigation, '{\"payload\":{\"public_health_case_uid\":123}}', 123",
             "dummy_notification, '{\"payload\":{\"notification_uid\":123}}', 123",
             "dummy_ldf_data, '{\"payload\":{\"ldf_uid\":123}}', 123",
-            "dummy_auth_user, '{\"payload\":{\"userProfileUids\":123}}', 123"
+            "dummy_auth_user, '{\"payload\":{\"auth_user_uid\":123}}', 123"
     })
     void testPostProcessMessage(String topic, String messageKey, Long expectedId) {
         postProcessingServiceMock.postProcessMessage(topic, messageKey, messageKey);
@@ -404,7 +404,7 @@ class PostProcessingServiceTest {
         String orgKey = "{\"payload\":{\"organization_uid\":123}}";
         String providerKey = "{\"payload\":{\"provider_uid\":124}}";
         String patientKey = "{\"payload\":{\"patient_uid\":125}}";
-        String userProfileKey = "{\"payload\":{\"userProfileUids\":132}}";
+        String userProfileKey = "{\"payload\":{\"auth_user_uid\":132}}";
         String placeKey = "{\"payload\":{\"place_uid\":131}}";
         String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
         String notificationKey = "{\"payload\":{\"notification_uid\":127}}";
@@ -622,7 +622,7 @@ class PostProcessingServiceTest {
     @Test
     void testPostProcessUserProfileMessage() {
         String topic = "dummy_auth_user";
-        String key = "{\"payload\":{\"userProfileUids\":123}}";
+        String key = "{\"payload\":{\"auth_user_uid\":123}}";
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -638,8 +638,8 @@ class PostProcessingServiceTest {
 
     @Test
     void testPostProcessMultipleMessages_WithUserProfile() {
-        String userProfileKey1 = "{\"payload\":{\"userProfileUids\":123}}";
-        String userProfileKey2 = "{\"payload\":{\"userProfileUids\":124}}";
+        String userProfileKey1 = "{\"payload\":{\"auth_user_uid\":123}}";
+        String userProfileKey2 = "{\"payload\":{\"auth_user_uid\":124}}";
         String userProfileTopic = "dummy_auth_user";
 
         postProcessingServiceMock.postProcessMessage(userProfileTopic, userProfileKey1, userProfileKey1);

@@ -7,7 +7,7 @@ enum Entity {
     ORGANIZATION(1, "organization", "organization_uid", "sp_nrt_organization_postprocessing"),
     PROVIDER(2, "provider", "provider_uid", "sp_nrt_provider_postprocessing"),
     PATIENT(3, "patient", "patient_uid", "sp_nrt_patient_postprocessing"),
-    AUTH_USER(4, "auth_user", "userProfileUids", "sp_user_profile_postprocessing"),
+    AUTH_USER(4, "auth_user", "auth_user_uid", "sp_user_profile_postprocessing"),
     D_PLACE(5, "place", "place_uid", "sp_nrt_place_postprocessing"),
     INVESTIGATION(6, "investigation", Constants.PHC_UID, "sp_nrt_investigation_postprocessing"),
     NOTIFICATION(7, "notification", "notification_uid", "sp_nrt_notification_postprocessing"),
