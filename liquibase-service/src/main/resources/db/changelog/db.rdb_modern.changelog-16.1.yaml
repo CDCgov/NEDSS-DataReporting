@@ -855,4 +855,43 @@ databaseChangeLog:
         - sqlFile:
             path: 042-create_nrt_treatment-001.sql
             splitStatements: false
-            
+  - changeSet:
+      id: 124
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 043-create_nrt_antimicrobial_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 125
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 044-create_nrt_antimicrobial_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 126
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 045-create_nrt_bmird_multi_val_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 127
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 046-create_nrt_bmird_multi_val_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 128
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 040-sp_bmird_case_datamart_postprocessing-001.sql
+            splitStatements: false
