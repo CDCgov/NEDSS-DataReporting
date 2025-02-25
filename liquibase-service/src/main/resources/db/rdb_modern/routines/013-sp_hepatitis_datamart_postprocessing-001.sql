@@ -1458,7 +1458,13 @@ BEGIN
 
         SELECT C.CONDITION_KEY, M.block_nm, M.investigation_form_cd, M.question_identifier
         INTO #TMP_METADATA_TEST
-        FROM RDB_MODERN.dbo.nrt_page_case_answer AS M WITH(NOLOCK)
+        FROM (
+            select pca.*
+            from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
+            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+            on pca.public_health_case_uid = inv.public_health_case_uid
+            where pca.batch_id = inv.batch_id
+        ) AS M
                  INNER JOIN
              #TMP_CONDITION AS C
              ON M.INVESTIGATION_FORM_CD = C.DISEASE_GRP_DESC
