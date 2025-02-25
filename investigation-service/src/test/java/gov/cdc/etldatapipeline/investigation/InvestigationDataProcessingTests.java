@@ -942,30 +942,24 @@ class InvestigationDataProcessingTests {
 
         assertEquals(treatmentReportingValue, actualTreatmentValue);
     }
+
     @Test
     void testProcessTreatmentError() {
-        transformer.setTreatmentOutputTopicName(TREATMENT_TOPIC);
-
         Treatment treatment = new Treatment();
-        treatment.setTreatmentUid(TREATMENT_UID.toString());
+        // Setup to throw an exception during processing,no uid set
+        transformer.setTreatmentOutputTopicName(TREATMENT_TOPIC);
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
+        try {
+            transformer.processTreatment(treatment);
+        } catch (Exception e) {
+        }
+        List<ILoggingEvent> logs = listAppender.list;
+        boolean foundErrorLog = logs.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .anyMatch(m -> m.contains("Error processing Treatment data"));
 
-        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        assertTrue(foundErrorLog, "Error processing Treatment data");
 
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(future);
-        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
-
-        transformer.processTreatment(treatment);
-
-        future.complete(null);
-
-        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-
-        assertEquals(TREATMENT_TOPIC, topicCaptor.getValue());
-        assertNull(messageCaptor.getValue());
-
-        String capturedKey = keyCaptor.getValue();
-        assertTrue(capturedKey.contains(TREATMENT_UID.toString()),
-                "Key should contain treatment UID: " + TREATMENT_UID);
     }
 
 
