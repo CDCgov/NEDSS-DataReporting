@@ -1872,7 +1872,7 @@ WHERE RowNum BETWEEN :startRow AND :endRow');
 END;
 
 IF
-NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'Act_relationship')
+NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'VAR_PAM_LDF')
 BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
