@@ -625,6 +625,42 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessHep100_NoIds() {
+        // Test with an event that doesn't trigger the event metric datamart procedure
+        String contactKey = "{\"payload\":{\"contact_uid\":123}}";
+        String crTopic = "dummy_contact";
+        postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
+        postProcessingServiceMock.processCachedIds();
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals("No updates to HEP100 Datamart", logs.getLast().getFormattedMessage());
+    }
+
+    @Test
+    void testPostProcessHep100() {
+
+        String investigationKey1 = "{\"payload\":{\"public_health_case_uid\":126}}";
+        String investigationKey2 = "{\"payload\":{\"public_health_case_uid\":235}}";
+        String patientKey = "{\"payload\":{\"patient_uid\":127}}";
+        String providerKey = "{\"payload\":{\"provider_uid\":130}}";
+        String organizationKey = "{\"payload\":{\"organization_uid\":123}}";
+
+        String invTopic = "dummy_investigation";
+        String patTopic = "dummy_patient";
+        String provTopic = "dummy_provider";
+        String orgTopic = "dummy_organization";
+
+        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
+        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey2, investigationKey2);
+        postProcessingServiceMock.postProcessMessage(patTopic, patientKey, patientKey);
+        postProcessingServiceMock.postProcessMessage(provTopic, providerKey, providerKey);
+        postProcessingServiceMock.postProcessMessage(orgTopic, organizationKey, organizationKey);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(postProcRepositoryMock).executeStoredProcForHep100("126,235", "127", "130", "123");
+    }
+
+    @Test
     void testPostProcessUserProfileMessage() {
         String topic = "dummy_auth_user";
         String key = "{\"payload\":{\"auth_user_uid\":123}}";
