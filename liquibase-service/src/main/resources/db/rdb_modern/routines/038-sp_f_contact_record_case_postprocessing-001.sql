@@ -103,17 +103,17 @@ BEGIN
 		LEFT JOIN
 			dbo.NRT_CONTACT nc  with (nolock) on nc.CONTACT_UID = crsik.CONTACT_UID
 		LEFT JOIN
-			dbo.L_ORGANIZATION org  with (nolock) on org.ORGANIZATION_UID  = nc.CONTACT_EXPOSURE_SITE_UID
+			dbo.D_ORGANIZATION org  with (nolock) on org.ORGANIZATION_UID  = nc.CONTACT_EXPOSURE_SITE_UID
 		LEFT JOIN
-			dbo.L_PROVIDER pv1  with (nolock) on pv1.PROVIDER_UID  = nc.PROVIDER_CONTACT_INVESTIGATOR_UID
+			dbo.D_PROVIDER pv1  with (nolock) on pv1.PROVIDER_UID  = nc.PROVIDER_CONTACT_INVESTIGATOR_UID
 		LEFT JOIN
-			dbo.L_PROVIDER pv2  with (nolock) on pv2.PROVIDER_UID  = nc.DISPOSITIONED_BY_UID
+			dbo.D_PROVIDER pv2  with (nolock) on pv2.PROVIDER_UID  = nc.DISPOSITIONED_BY_UID
 		LEFT JOIN
-			dbo.L_PATIENT pt1  with (nolock) on pt1.PATIENT_UID = nc.THIRD_PARTY_ENTITY_UID
+			dbo.D_PATIENT pt1  with (nolock) on pt1.PATIENT_UID = nc.THIRD_PARTY_ENTITY_UID
 		LEFT JOIN
-			dbo.L_PATIENT pt2  with (nolock) on pt2.PATIENT_UID = nc.CONTACT_ENTITY_UID
+			dbo.D_PATIENT pt2  with (nolock) on pt2.PATIENT_UID = nc.CONTACT_ENTITY_UID
 		LEFT JOIN
-			dbo.L_PATIENT pt3  with (nolock) on pt3.PATIENT_UID = nc.SUBJECT_ENTITY_UID
+			dbo.D_PATIENT pt3  with (nolock) on pt3.PATIENT_UID = nc.SUBJECT_ENTITY_UID
 		LEFT JOIN
 			dbo.INVESTIGATION inv1  with (nolock) on inv1.CASE_UID = nc.THIRD_PARTY_ENTITY_PHC_UID
 		LEFT JOIN
@@ -121,7 +121,7 @@ BEGIN
 		LEFT JOIN
 			dbo.INVESTIGATION inv3  with (nolock) on inv2.CASE_UID = nc.CONTACT_ENTITY_PHC_UID
 		LEFT JOIN
-			dbo.L_INTERVIEW intw  with (nolock) on intw.INTERVIEW_UID = nc.NAMED_DURING_INTERVIEW_UID
+			dbo.NRT_INTERVIEW_KEY intw  with (nolock) on intw.INTERVIEW_UID = nc.NAMED_DURING_INTERVIEW_UID
 			;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;

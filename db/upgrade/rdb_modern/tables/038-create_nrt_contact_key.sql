@@ -8,6 +8,12 @@ BEGIN
     select @max=max(d_contact_record_key)+1 from dbo.D_CONTACT_RECORD ;
     select @max;
     if @max IS NULL
-        SET @max = 1;
+        SET @max = 2;
     DBCC CHECKIDENT ('dbo.nrt_contact_key', RESEED, @max);
 END
+
+IF NOT EXISTS (SELECT 1 FROM dbo.D_CONTACT_RECORD)
+BEGIN
+    INSERT INTO dbo.D_CONTACT_RECORD (d_contact_record_key)
+    SELECT 1;
+END;
