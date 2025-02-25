@@ -1839,7 +1839,7 @@ VALUES
 END;
 
 IF
-NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'Act_relationship')
+NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'TREATMENT')
 BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
@@ -1850,7 +1850,16 @@ VALUES
        FROM TREATMENT
     )
     SELECT * FROM PaginatedResults
-    WHERE RowNum BETWEEN :startRow AND :endRow'), ('TREATMENT_EVENT', 'RDB', 'SELECT TREATMENT_EVENT.* FROM TREATMENT_EVENT', NULL, 'SELECT COUNT(*) FROM TREATMENT_EVENT', 'WITH PaginatedResults AS (
+    WHERE RowNum BETWEEN :startRow AND :endRow');
+END;
+
+IF
+NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'TREATMENT_EVENT')
+BEGIN
+INSERT INTO [RDB].[dbo].[data_sync_config]
+(table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
+VALUES
+    ('TREATMENT_EVENT', 'RDB', 'SELECT TREATMENT_EVENT.* FROM TREATMENT_EVENT', NULL, 'SELECT COUNT(*) FROM TREATMENT_EVENT', 'WITH PaginatedResults AS (
        SELECT TREATMENT_EVENT.*,
               ROW_NUMBER() OVER (ORDER BY TREATMENT_EVENT.TREATMENT_DT_KEY, TREATMENT_EVENT.TREATMENT_PROVIDING_ORG_KEY, TREATMENT_EVENT.PATIENT_KEY,' +
     'TREATMENT_EVENT.TREATMENT_KEY, TREATMENT_EVENT.MORB_RPT_KEY, TREATMENT_EVENT.TREATMENT_PHYSICIAN_KEY,' +
@@ -1859,6 +1868,7 @@ FROM TREATMENT_EVENT
 )
 SELECT * FROM PaginatedResults
 WHERE RowNum BETWEEN :startRow AND :endRow');
+
 END;
 
 IF
@@ -1877,7 +1887,7 @@ VALUES
 END;
 
 IF
-NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'Act_relationship')
+NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'STD_HIV_DATAMART')
 BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
