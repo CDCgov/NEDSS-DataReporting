@@ -165,7 +165,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForNotificationIds(expectedNotificationIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(4, logs.size());
+        assertEquals(5, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(NOTIFICATION.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -183,7 +183,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForFStdPageCase(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(7, logs.size());
+        assertEquals(8, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(CASE_MANAGEMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
         assertTrue(logs.get(4).getFormattedMessage().contains(F_STD_PAGE_CASE.getStoredProcedure()));
@@ -230,7 +230,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForFInterviewCase(expectedIntIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(7, logs.size());
+        assertEquals(8, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INTERVIEW.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -250,7 +250,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForLdfIds(expectedLdfIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(LDF_DATA.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -272,7 +272,7 @@ class PostProcessingServiceTest {
         String expectedObsIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForMorbReport(expectedObsIdsString);
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(4, logs.size());
+        assertEquals(5, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_morbidity_report_postprocessing"));assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
 
     }
@@ -303,7 +303,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForLabTest(expectedObsIdsString);
         verify(postProcRepositoryMock).executeStoredProcForLabTestResult(expectedObsIdsString);
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
+        assertEquals(11, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_lab_test_postprocessing"));
         assertTrue(logs.get(4).getFormattedMessage().contains("sp_d_labtest_result_postprocessing"));
         assertTrue(logs.get(6).getFormattedMessage().contains("sp_lab100_datamart_postprocessing"));
@@ -335,7 +335,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock, never()).executeStoredProcForLabTest(expectedObsIdsString);
         verify(postProcRepositoryMock, never()).executeStoredProcForLabTestResult(expectedObsIdsString);
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(2, logs.size());
+        assertEquals(3, logs.size());
     }
 
     @Test
@@ -394,7 +394,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForFContactRecordCase(expectedIntIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
+        assertEquals(7, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(CONTACT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -672,7 +672,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForUserProfile(expectedUserProfileIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(AUTH_USER.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -715,7 +715,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForDPlace(expectedPlaceIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(D_PLACE.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -847,7 +847,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
         List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(logs.size() - 2).getFormattedMessage().contains("Unknown topic: " + topic + " cannot be processed"));
+        assertTrue(logs.get(logs.size() - 3).getFormattedMessage().contains("Unknown topic: " + topic + " cannot be processed"));
     }
 
     @Test
