@@ -3,15 +3,12 @@ package gov.cdc.etldatapipeline.investigation.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
-import gov.cdc.etldatapipeline.investigation.repository.ContactRepository;
-import gov.cdc.etldatapipeline.investigation.repository.InterviewRepository;
+import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Contact;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
-import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
-import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.awaitility.Awaitility;
@@ -47,6 +44,9 @@ class InvestigationServiceTest {
 
     @Mock
     private ContactRepository contactRepository;
+
+    @Mock
+    private VaccinationRepository vaccinationRepository;
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
@@ -85,7 +85,7 @@ class InvestigationServiceTest {
         closeable = MockitoAnnotations.openMocks(this);
         ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
 
-        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, kafkaTemplate, transformer);
+        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository, kafkaTemplate, transformer);
 
         investigationService.setPhcDatamartEnable(true);
         investigationService.setBmirdCaseEnable(true);
