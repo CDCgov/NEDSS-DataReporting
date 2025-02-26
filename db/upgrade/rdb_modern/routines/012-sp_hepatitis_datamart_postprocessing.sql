@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_hepatitis_datamart_postprocessing]
+CREATE   PROCEDURE [dbo].[sp_hepatitis_datamart_postprocessing]
     @phc_id nvarchar(max),
     @debug bit = 'false'
 AS
@@ -69,6 +69,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+       
 
 ---------------------------------------------------------------------3. CREATE TABLE #TMP_F_PAGE_CASE-------------------------------------
         BEGIN TRANSACTION;
@@ -86,16 +87,18 @@ BEGIN
         SELECT F_PAGE_CASE.INVESTIGATION_KEY, T.CONDITION_KEY, F_PAGE_CASE.PATIENT_KEY
         INTO #TMP_F_PAGE_CASE
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)---Original table
-                 INNER JOIN	 #TMP_CONDITION AS T WITH(NOLOCK) ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY  ------(my table condition)
+                 INNER JOIN	 dbo.#TMP_CONDITION T WITH(NOLOCK) ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY  ------(my table condition)
                  INNER JOIN	 dbo.D_PATIENT WITH(NOLOCK)		 ON F_PAGE_CASE.PATIENT_KEY = D_PATIENT.PATIENT_KEY
                  INNER JOIN	 dbo.INVESTIGATION WITH(NOLOCK)		 ON INVESTIGATION.INVESTIGATION_KEY = F_PAGE_CASE.INVESTIGATION_KEY
                  LEFT JOIN	 dbo.HEPATITIS_DATAMART hd WITH(NOLOCK) ON F_PAGE_CASE.INVESTIGATION_KEY = hd.INVESTIGATION_KEY
         WHERE   (hd.INVESTIGATION_KEY IS NULL
             OR  (INVESTIGATION.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','))))
           AND INVESTIGATION.RECORD_STATUS_CD = 'ACTIVE'
-        ORDER BY F_PAGE_CASE.INVESTIGATION_KEY;
+        ORDER BY F_PAGE_CASE.INVESTIGATION_KEY
+        OPTION (MAXDOP 1);
 
-        IF @debug ='true' SELECT '#TMP_F_PAGE_CASE', * FROM #TMP_F_PAGE_CASE;
+        
+       IF @debug ='true' SELECT * FROM #TMP_F_PAGE_CASE;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -189,7 +192,7 @@ BEGIN
         SELECT F_PAGE_CASE.D_INV_CLINICAL_KEY, F_PAGE_CASE.INVESTIGATION_KEY
         INTO #TMP_F_INV_CLINICAL
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)
-                 INNER JOIN	 #TMP_F_PAGE_CASE AS PAGE_CASE ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY ---(my Table)
+  INNER JOIN	 #TMP_F_PAGE_CASE AS PAGE_CASE ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY ---(my Table)
         ORDER BY D_INV_CLINICAL_KEY;
 
 
@@ -287,7 +290,7 @@ BEGIN
 
         IF OBJECT_ID('#TMP_D_INV_EPIDEMIOLOGY', 'U') IS NOT NULL
             BEGIN
-                DROP TABLE #TMP_D_INV_EPIDEMIOLOGY;
+      DROP TABLE #TMP_D_INV_EPIDEMIOLOGY;
             END;
 
 
@@ -358,7 +361,7 @@ BEGIN
 
         SELECT F.D_INV_EPIDEMIOLOGY_KEY as D_INV_EPIDEMIOLOGY_KEY1, F.INVESTIGATION_KEY AS EPIDEMIOLOGY_INV_KEY,
                EPI_ChildCareCase	AS	CHILDCARE_CASE_IND, ----1
-               EPI_CNTRY_USUAL_RESID	AS	CNTRY_USUAL_RESIDENCE, --2
+        EPI_CNTRY_USUAL_RESID	AS	CNTRY_USUAL_RESIDENCE, --2
                EPI_ContactBabysitter	AS	CT_BABYSITTER_IND, ----3
                EPI_ContactChildcare	AS	CT_CHILDCARE_IND, --4
                EPI_ContactHousehold	AS	CT_HOUSEHOLD_IND, --5
@@ -437,7 +440,7 @@ BEGIN
                         CAST( null  AS date) AS LAB_HBeAg_Date, ---8
                         CAST( null  AS varchar(2000)) AS LAB_HBsAg, --9
                         CAST( null  AS date) AS LAB_HBsAg_Date, --10
-                        CAST( null  AS varchar(2000)) AS LAB_HBV_NAT, -----11
+                 CAST( null  AS varchar(2000)) AS LAB_HBV_NAT, -----11
                         CAST( null  AS date) AS LAB_HBV_NAT_Date, ---12
                         CAST( null  AS varchar(2000)) AS LAB_HCVRNA, ---13
                         CAST( null  AS date) AS LAB_HCVRNA_Date, ---14
@@ -676,7 +679,7 @@ BEGIN
              ( SELECT D_INV_MOTHER_KEY,
                       MTH_MotherBornOutsideUS,
                       MTH_MotherEthnicity,
-                      MTH_MotherHBsAgPosPrior,
+                MTH_MotherHBsAgPosPrior,
                       MTH_MotherPositiveAfter,
                       MTH_MotherRace,
                       MTH_MothersBirthCountry,
@@ -824,7 +827,7 @@ BEGIN
                RTRIM(LTRIM(RSK_BloodTransfusion))	AS	BLD_RECVD_IND, ----2
                RSK_BloodTransfusionDate	AS	BLD_RECVD_DT, ---3
                RTRIM(LTRIM(RSK_BloodWorkerCnctFreq))	AS	MED_DEN_BLD_CT_FRQ, ---4
-               RTRIM(LTRIM(RSK_BloodWorkerEver))	AS	MED_DEN_EMP_EVER_IND, ---5
+      RTRIM(LTRIM(RSK_BloodWorkerEver))	AS	MED_DEN_EMP_EVER_IND, ---5
                RTRIM(LTRIM(RSK_BloodWorkerOnset))	AS	MED_DEN_EMPLOYEE_IND, ---6
                RTRIM(LTRIM(RSK_ClottingPrior87))	AS	CLOTFACTOR_PRIOR_1987, ----7
                RTRIM(LTRIM(RSK_ContaminatedStick))	AS	BLD_CONTAM_IND, ----8
@@ -893,7 +896,7 @@ BEGIN
         SELECT F_PAGE_CASE.D_INV_TRAVEL_KEY, F_PAGE_CASE.INVESTIGATION_KEY
         INTO #TMP_F_INV_TRAVEL
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)
-                 INNER JOIN
+                INNER JOIN
              #TMP_F_PAGE_CASE AS PAGE_CASE
              ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY---(my table)
         ORDER BY D_INV_TRAVEL_KEY;
@@ -984,7 +987,7 @@ BEGIN
                       VAC_Vacc_Rcvd,
                       VAC_VaccineDoses,
                       VAC_YearofLastDose,
-                      VAC_VaccinationDate
+      VAC_VaccinationDate
                FROM dbo.D_INV_VACCINATION
              ) AS vacc;
 
@@ -1458,7 +1461,7 @@ BEGIN
 
         SELECT C.CONDITION_KEY, M.block_nm, M.investigation_form_cd, M.question_identifier
         INTO #TMP_METADATA_TEST
-        FROM RDB_MODERN.dbo.nrt_page_case_answer AS M WITH(NOLOCK)
+        FROM dbo.nrt_page_case_answer AS M WITH(NOLOCK)
                  INNER JOIN
              #TMP_CONDITION AS C
              ON M.INVESTIGATION_FORM_CD = C.DISEASE_GRP_DESC
@@ -1491,7 +1494,7 @@ BEGIN
             D.D_INVESTIGATION_REPEAT_KEY, D.INVESTIGATION_KEY,
             VAC_VaccinationDate1 VAC_VaccinationDate ,
             VAC_VaccineDoseNum1 VAC_VaccineDoseNum,
-            D.PAGE_CASE_UID, D.ANSWER_GROUP_SEQ_NBR AS SEQNBR, D.BLOCK_NM, CAST(NULL  AS varchar(1000)) AS VAC_GT_4_IND, -----Date Indicator
+   D.PAGE_CASE_UID, D.ANSWER_GROUP_SEQ_NBR AS SEQNBR, D.BLOCK_NM, CAST(NULL  AS varchar(1000)) AS VAC_GT_4_IND, -----Date Indicator
             CAST(NULL AS varchar(1000)) AS VAC_DOSE_4_IND, ---Dose Indicator
             CAST(NULL  AS varchar(1000)) AS VACC_GT_4_IND   ---------FinalIndicator
         INTO #TMP_VAC_REPEAT
@@ -1721,7 +1724,7 @@ BEGIN
             LEN(VACC_DOSE_NBR_3) > 0 OR
             LEN(VACC_DOSE_NBR_4) > 0 OR
             LEN(VACC_DOSE_NBR_5) > 0 AND
-            PAGE_CASE_UID > 0;
+          PAGE_CASE_UID > 0;
 
         UPDATE #TMP_VAC_REPEAT_OUT_NUM
         SET VAC_DOSE_4_IND = CASE
@@ -1815,7 +1818,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]( BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT] )
-        VALUES( @BATCH_ID, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO );
+ VALUES( @BATCH_ID, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO );
 
         COMMIT TRANSACTION;
 
@@ -1897,7 +1900,7 @@ BEGIN
             L.HCV_RNA_DT, ----62
             -- L.HEP_D_TEST_IND, ----63
             CASE WHEN  L.HEP_D_TEST_IND IS NULL THEN NULL
-                 WHEN  L.HEP_D_TEST_IND = 'Yes' THEN 'Y'
+      WHEN  L.HEP_D_TEST_IND = 'Yes' THEN 'Y'
                  WHEN  L.HEP_D_TEST_IND = 'No' THEN 'N'
                  ELSE 'U' END AS HEP_D_TEST_IND,
             L.HEP_A_IGM_ANTIBODY, ----64
@@ -2124,11 +2127,12 @@ BEGIN
         INSERT INTO [DBO].[JOB_FLOW_LOG]( BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT] )
         VALUES( @BATCH_ID, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO );
 
-        COMMIT TRANSACTION;
 
         ------------------------------------------------------------------------------------------------------------------------------------------------------
         DELETE FROM #TMP_HEPATITIS_CASE_BASE
         WHERE PATIENT_UID IS NULL;
+
+        COMMIT TRANSACTION;
 
         /*
 
@@ -2379,7 +2383,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'Inserting new entries dbo.HEPATITIS_DATAMART';
 
         INSERT INTO dbo.[HEPATITIS_DATAMART]( INNC_NOTIFICATION_DT, ---1
-                                              CASE_RPT_MMWR_WEEK, ---2
+                 CASE_RPT_MMWR_WEEK, ---2
                                               CASE_RPT_MMWR_YEAR, ----3
                                               HEP_D_INFECTION_IND, ----4
                                               HEP_MEDS_RECVD_IND, ----5
@@ -2435,7 +2439,7 @@ BEGIN
                                               HEP_E_ANTIGEN, ----55
                                               HBE_AG_DT, ---56
                                               HEP_B_SURFACE_ANTIGEN, ----57
-                                              HBS_AG_DT, ----58
+                                        HBS_AG_DT, ----58
                                               HEP_B_DNA, -----59
                                               HBV_NAT_DT, ----60
                                               HCV_RNA, ----61
@@ -2546,7 +2550,7 @@ BEGIN
                                               TRAVEL_OUT_USACAN_LOC, -----166
                                               HOUSEHOLD_TRAVEL_LOC, ----167
                                               TRAVEL_REASON, -----168
-                                              IMM_GLOB_RECVD_IND, ----169
+                    IMM_GLOB_RECVD_IND, ----169
                                               GLOB_LAST_RECVD_YR, ----170
                                               VACC_RECVD_IND, ----171
                                               VACC_DOSE_NBR_1, ----172
@@ -2610,7 +2614,7 @@ BEGIN
                 cast(CONTACT_TYPE_OTH as varchar(100)),
                 cast(CT_PLAYMATE_IND as varchar(300)),
                 cast(SEXUAL_PARTNER_IND as varchar(300)),
-                cast(DNP_HOUSEHOLD_CT_IND as varchar(300)),
+             cast(DNP_HOUSEHOLD_CT_IND as varchar(300)),
                 cast(HEP_A_EPLINK_IND as varchar(300)),
                 FEMALE_SEX_PRTNR_NBR,
                 cast(FOODHNDLR_PRIOR_IND as varchar(300)),
@@ -2694,7 +2698,7 @@ BEGIN
                 cast(PAT_CITY as varchar(50)),
                 cast(PAT_COUNTRY as varchar(300)),
                 cast(PAT_COUNTY as varchar(300)),
-                cast(PAT_CURR_GENDER as varchar(300)),
+             cast(PAT_CURR_GENDER as varchar(300)),
                 PAT_DOB,
                 cast(PAT_ETHNICITY as varchar(300)),
                 cast(PAT_FIRST_NM as varchar(50)),
@@ -2772,7 +2776,7 @@ BEGIN
                 cast(CONDITION_CD as varchar(300)),
                 EVENT_DATE,
                 cast(IMPORT_FROM_CITY as varchar(300)),
-                cast(IMPORT_FROM_COUNTRY as varchar(300)),
+         cast(IMPORT_FROM_COUNTRY as varchar(300)),
                 cast(IMPORT_FROM_COUNTY as varchar(300)),
                 cast(IMPORT_FROM_STATE as varchar(300)),
                 INVESTIGATION_KEY,
@@ -2865,7 +2869,7 @@ BEGIN
 
 ---------------------------------------------------------------------------Dropping All TMP Tables------------------------------------------------------------
 
-        SELECT 'Transaction_count',@@TRANCOUNT;
+        -- SELECT 'Transaction_count',@@TRANCOUNT;
 
         IF @@TRANCOUNT > 0
             BEGIN
@@ -2900,19 +2904,18 @@ BEGIN
 
         DECLARE @ErrorLine int= ERROR_LINE();
 
-        DECLARE @ErrorMessage nvarchar(4000)= ERROR_MESSAGE();
+        DECLARE @ErrorMessage nvarchar(max)= ERROR_MESSAGE();
 
         DECLARE @ErrorSeverity int= ERROR_SEVERITY();
 
         DECLARE @ErrorState int= ERROR_STATE();
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
-        VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no, 'ERROR - ' + @Proc_Step_name, 'Step -' + CAST(@Proc_Step_no AS varchar(3)) + ' -' + CAST(@ErrorMessage AS varchar(500)), 0 );
+        VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no,  @Proc_Step_name,  CAST(@ErrorMessage AS varchar(500)),0
+        );
 
         RETURN -1;
 
     END CATCH;
 
 END;
-
----First begin;
