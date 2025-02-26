@@ -392,13 +392,13 @@ public class PostProcessingService {
 
     private void processMultiIDDatamart(List<Long> investigationUids, List<Long> patientUids, List<Long> providerUids, List<Long> organizationUids, List<Long> observationUids, List<Long> notificationUids, List<Long> contactRecordUids)
     {
-        String invString = concatenateList(investigationUids, ",");
-        String patString = concatenateList(patientUids, ",");
-        String provString = concatenateList(providerUids, ",");
-        String orgString = concatenateList(organizationUids, ",");
-        String obsString = concatenateList(observationUids, ",");
-        String notifString = concatenateList(notificationUids, ",");
-        String ctrString = concatenateList(contactRecordUids, ",");
+        String invString = listToParameterString(investigationUids);
+        String patString = listToParameterString(patientUids);
+        String provString = listToParameterString(providerUids);
+        String orgString = listToParameterString(organizationUids);
+        String obsString = listToParameterString(observationUids);
+        String notifString = listToParameterString(notificationUids);
+        String ctrString = listToParameterString(contactRecordUids);
 
         int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length() + ctrString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
@@ -419,8 +419,8 @@ public class PostProcessingService {
 
     }
 
-    private String concatenateList(List<Long> inputList, String delim) {
-        return inputList.stream().map(String::valueOf).collect(Collectors.joining(delim));
+    private String listToParameterString(List<Long> inputList) {
+        return inputList.stream().map(String::valueOf).collect(Collectors.joining(","));
     }
 
     @PreDestroy
