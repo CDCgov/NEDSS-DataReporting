@@ -1,4 +1,4 @@
-CREATE   PROCEDURE [dbo].[sp_hepatitis_datamart_postprocessing]
+CREATE  OR ALTER  PROCEDURE [dbo].[sp_hepatitis_datamart_postprocessing]
     @phc_id nvarchar(max),
     @debug bit = 'false'
 AS
