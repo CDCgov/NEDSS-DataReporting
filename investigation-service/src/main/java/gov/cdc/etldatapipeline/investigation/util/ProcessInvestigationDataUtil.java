@@ -67,7 +67,6 @@ public class ProcessInvestigationDataUtil {
     private String rdbMetadataColumnsOutputTopicName;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    InvestigationKey investigationKey = new InvestigationKey();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
     private final InvestigationRepository investigationRepository;
@@ -76,9 +75,9 @@ public class ProcessInvestigationDataUtil {
     private static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
 
     @Transactional
-    public InvestigationTransformed transformInvestigationData(Investigation investigation) {
+    public InvestigationTransformed transformInvestigationData(Investigation investigation, long batchId) {
 
-        InvestigationTransformed investigationTransformed = new InvestigationTransformed(investigation.getPublicHealthCaseUid());
+        InvestigationTransformed investigationTransformed = new InvestigationTransformed(investigation.getPublicHealthCaseUid(), batchId);
 
         transformPersonParticipations(investigation.getPersonParticipations(), investigationTransformed);
         transformCaseCountInfo(investigation.getInvestigationCaseCnt(), investigationTransformed);
@@ -246,63 +245,55 @@ public class ProcessInvestigationDataUtil {
     }
 
     private void transformObservationIds(String investigationObservationIds, InvestigationTransformed investigationTransformed) {
-        Long phcUid = investigationTransformed.getPublicHealthCaseUid();
+        try {
+            JsonNode investigationObservationIdsJsonArray = parseJsonArray(investigationObservationIds);
+            long batchId = investigationTransformed.getBatchId();
 
-        // Tombstone message to delete all legacy observations for specified phc uid
-        investigationKey.setPublicHealthCaseUid(phcUid);
-        String jsonKeyDel = jsonGenerator.generateStringJson(investigationKey);
-        logger.info(TOMBSTONE_MSG_SENT, "investigation observations", "phc", phcUid);
-        kafkaTemplate.send(investigationObservationOutputTopicName, jsonKeyDel, null)
-                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "investigation observations"))
-                .thenRunAsync(() -> {
-                    try {
-                        JsonNode investigationObservationIdsJsonArray = parseJsonArray(investigationObservationIds);
+            List<InvestigationObservation> investigationObservations = new ArrayList<>();
+            for(JsonNode node : investigationObservationIdsJsonArray) {
+                InvestigationObservation investigationObservation = new InvestigationObservation();
 
-                        List<InvestigationObservation> investigationObservations = new ArrayList<>();
-                        for(JsonNode node : investigationObservationIdsJsonArray) {
-                            InvestigationObservation investigationObservation = new InvestigationObservation();
+                String sourceClassCode = node.path("source_class_cd").asText();
+                String actTypeCode = node.path("act_type_cd").asText();
+                Long sourceActId = node.get("source_act_uid").asLong();
+                Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
+                String rootTypeCd = node.path("act_type_cd").asText();
 
-                            String sourceClassCode = node.path("source_class_cd").asText();
-                            String actTypeCode = node.path("act_type_cd").asText();
-                            Long sourceActId = node.get("source_act_uid").asLong();
-                            Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
-                            String rootTypeCd = node.path("act_type_cd").asText();
+                if(sourceClassCode.equals("OBS") && actTypeCode.equals("PHCInvForm")) {
+                    investigationTransformed.setPhcInvFormId(sourceActId);
+                }
 
-                            if(sourceClassCode.equals("OBS") && actTypeCode.equals("PHCInvForm")) {
-                                investigationTransformed.setPhcInvFormId(sourceActId);
-                            }
+                investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
+                investigationObservation.setObservationId(sourceActId);
+                investigationObservation.setRootTypeCd(rootTypeCd);
+                investigationObservation.setBranchId(null);
+                investigationObservation.setBranchTypeCd(null);
+                investigationObservation.setBatchId(batchId);
 
-                            investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
-                            investigationObservation.setObservationId(sourceActId);
-                            investigationObservation.setRootTypeCd(rootTypeCd);
-                            investigationObservation.setBranchId(null);
-                            investigationObservation.setBranchTypeCd(null);
+                Optional.ofNullable(node.get("branch_uid")).filter(n -> !n.isNull())
+                        .ifPresent(n -> investigationObservation.setBranchId(n.asLong()));
+                Optional.ofNullable(node.get("branch_type_cd")).filter(n -> !n.isNull())
+                        .ifPresent(n -> investigationObservation.setBranchTypeCd(n.asText()));
 
-                            Optional.ofNullable(node.get("branch_uid")).filter(n -> !n.isNull())
-                                    .ifPresent(n -> investigationObservation.setBranchId(n.asLong()));
-                            Optional.ofNullable(node.get("branch_type_cd")).filter(n -> !n.isNull())
-                                    .ifPresent(n -> investigationObservation.setBranchTypeCd(n.asText()));
+                investigationObservations.add(investigationObservation);
+            }
 
-                            investigationObservations.add(investigationObservation);
-                        }
+            investigationObservations.forEach(obs -> {
+                InvestigationObservationKey key = new InvestigationObservationKey();
+                key.setPublicHealthCaseUid(obs.getPublicHealthCaseUid());
+                key.setObservationId(obs.getObservationId());
+                key.setBranchId(obs.getBranchId());
 
-                        investigationObservations.forEach(obs -> {
-                            InvestigationObservationKey key = new InvestigationObservationKey();
-                            key.setPublicHealthCaseUid(obs.getPublicHealthCaseUid());
-                            key.setObservationId(obs.getObservationId());
-                            key.setBranchId(obs.getBranchId());
+                String jsonKey = jsonGenerator.generateStringJson(key);
+                String jsonValue = jsonGenerator.generateStringJson(obs);
+                kafkaTemplate.send(investigationObservationOutputTopicName, jsonKey, jsonValue);
+            });
 
-                            String jsonKey = jsonGenerator.generateStringJson(key);
-                            String jsonValue = jsonGenerator.generateStringJson(obs);
-                            kafkaTemplate.send(investigationObservationOutputTopicName, jsonKey, jsonValue);
-                        });
-
-                    } catch (IllegalArgumentException ex) {
-                        logger.info(ex.getMessage(), "InvestigationObservationIds");
-                    } catch (Exception e) {
-                        logger.error("Error processing Observation Ids JSON array from investigation data: {}", e.getMessage());
-                    }
-                });
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationObservationIds");
+        } catch (Exception e) {
+            logger.error("Error processing Observation Ids JSON array from investigation data: {}", e.getMessage());
+        }
     }
 
     private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod, InvestigationTransformed investigationTransformed) {

@@ -287,4 +287,11 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
                 ALTER TABLE dbo.nrt_investigation ADD chronic_care_fac_uid bigint;
             END;
 
+--CNDE-2295
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'batch_id'   AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+                ALTER TABLE nrt_investigation
+                    ADD batch_id bigint;
+            END;
+
     END;
