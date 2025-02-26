@@ -390,31 +390,15 @@ public class PostProcessingService {
         }
     }
 
-    // private void processEventMetricDatamart(List<Long> investigationUids, List<Long> observationUids, List<Long> notificationUids, List<Long> contactRecordUids) {
-    //     String invString = investigationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-    //     String obsString = observationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-    //     String notifString = notificationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-    //     String ctrString = contactRecordUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-
-    //     int totalLength = invString.length() + obsString.length() + notifString.length() + ctrString.length();
-
-    //     if (totalLength > 0) {
-    //         postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
-    //     }
-    //     else {
-    //         logger.info("No updates to EVENT_METRIC Datamart");
-    //     }
-    // }
-
     private void processMultiIDDatamart(List<Long> investigationUids, List<Long> patientUids, List<Long> providerUids, List<Long> organizationUids, List<Long> observationUids, List<Long> notificationUids, List<Long> contactRecordUids)
     {
-        String invString = investigationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String patString = patientUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String provString = providerUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String orgString = organizationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String obsString = observationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String notifString = notificationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String ctrString = contactRecordUids.stream().map(String::valueOf).collect(Collectors.joining(","));
+        String invString = concatenateList(investigationUids, ",");
+        String patString = concatenateList(patientUids, ",");
+        String provString = concatenateList(providerUids, ",");
+        String orgString = concatenateList(organizationUids, ",");
+        String obsString = concatenateList(observationUids, ",");
+        String notifString = concatenateList(notificationUids, ",");
+        String ctrString = concatenateList(contactRecordUids, ",");
 
         int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length() + ctrString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
@@ -433,7 +417,10 @@ public class PostProcessingService {
             logger.info("No updates to HEP100 Datamart");
         }
 
+    }
 
+    private String concatenateList(List<Long> inputList, String delim) {
+        return inputList.stream().map(String::valueOf).collect(Collectors.joining(delim));
     }
 
     @PreDestroy
