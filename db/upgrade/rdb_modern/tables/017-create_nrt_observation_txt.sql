@@ -4,6 +4,7 @@ CREATE TABLE dbo.nrt_observation_txt (
     ovt_seq             smallint                                        NOT NULL,
     ovt_txt_type_cd     varchar(20)                                     NULL,
     ovt_value_txt       varchar(2000)                                   NULL,
+    batch_id            bigint                                          NULL,
     refresh_datetime    datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime        datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
