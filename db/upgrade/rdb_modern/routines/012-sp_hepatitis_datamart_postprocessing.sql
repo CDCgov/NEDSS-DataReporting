@@ -1,4 +1,4 @@
-CREATE  OR ALTER  PROCEDURE [dbo].[sp_hepatitis_datamart_postprocessing]
+CREATE  or alter PROCEDURE [dbo].[sp_hepatitis_datamart_postprocessing]
     @phc_id nvarchar(max),
     @debug bit = 'false'
 AS
@@ -87,7 +87,7 @@ BEGIN
         SELECT F_PAGE_CASE.INVESTIGATION_KEY, T.CONDITION_KEY, F_PAGE_CASE.PATIENT_KEY
         INTO #TMP_F_PAGE_CASE
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)---Original table
-                 INNER JOIN	 dbo.#TMP_CONDITION T WITH(NOLOCK) ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY  ------(my table condition)
+                 INNER JOIN	 #TMP_CONDITION T WITH(NOLOCK) ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY  ------(my table condition)
                  INNER JOIN	 dbo.D_PATIENT WITH(NOLOCK)		 ON F_PAGE_CASE.PATIENT_KEY = D_PATIENT.PATIENT_KEY
                  INNER JOIN	 dbo.INVESTIGATION WITH(NOLOCK)		 ON INVESTIGATION.INVESTIGATION_KEY = F_PAGE_CASE.INVESTIGATION_KEY
                  LEFT JOIN	 dbo.HEPATITIS_DATAMART hd WITH(NOLOCK) ON F_PAGE_CASE.INVESTIGATION_KEY = hd.INVESTIGATION_KEY
@@ -95,7 +95,7 @@ BEGIN
             OR  (INVESTIGATION.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','))))
           AND INVESTIGATION.RECORD_STATUS_CD = 'ACTIVE'
         ORDER BY F_PAGE_CASE.INVESTIGATION_KEY
-        OPTION (MAXDOP 1);
+        OPTION (MAXDOP 1); -- tentative fix 
 
         
        IF @debug ='true' SELECT * FROM #TMP_F_PAGE_CASE;
@@ -591,7 +591,7 @@ BEGIN
         INTO #D_INV_MED_HIST_TEMP_COLS
         FROM (
                  SELECT CAST( NULL  AS date) AS MDH_DiabetesDxDate,
-                        NULL AS MDH_Diabetes,
+           NULL AS MDH_Diabetes,
                         NULL AS MDH_Jaundiced,
                         NULL AS MDH_PrevAwareInfection,
                         NULL AS MDH_ProviderOfCare,
@@ -680,7 +680,7 @@ BEGIN
                       MTH_MotherBornOutsideUS,
                       MTH_MotherEthnicity,
                 MTH_MotherHBsAgPosPrior,
-                      MTH_MotherPositiveAfter,
+          MTH_MotherPositiveAfter,
                       MTH_MotherRace,
                       MTH_MothersBirthCountry,
                       MTH_MotherPosTestDate
@@ -897,7 +897,7 @@ BEGIN
         INTO #TMP_F_INV_TRAVEL
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)
                 INNER JOIN
-             #TMP_F_PAGE_CASE AS PAGE_CASE
+        #TMP_F_PAGE_CASE AS PAGE_CASE
              ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY---(my table)
         ORDER BY D_INV_TRAVEL_KEY;
 
@@ -1104,7 +1104,7 @@ BEGIN
          * INIT_NND_NOT_DT is rpt_sent_time from Notification. Data is pulled from NRT tables to reference original value. */
 
         SELECT I.INVESTIGATION_KEY
-             ,MIN(notif.rpt_sent_time) AS FIRSTNOTIFICATIONSENDDATE
+            ,MIN(notif.rpt_sent_time) AS FIRSTNOTIFICATIONSENDDATE
         INTO #TMP_Notif
         FROM #TMP_Investigation AS I WITH(NOLOCK)
                  LEFT JOIN dbo.NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
@@ -1166,7 +1166,7 @@ BEGIN
                 CASE
                     WHEN SPECIMEN_COLLECTION_DT IS NOT NULL THEN 'Specimen Collection Date of Earliest Associated Lab'
                     WHEN ILLNESS_ONSET_DT IS NOT NULL THEN 'Illness Onset Date'
-                    WHEN DIAGNOSIS_DT IS NOT NULL THEN 'Date of Diagnosis'
+                WHEN DIAGNOSIS_DT IS NOT NULL THEN 'Date of Diagnosis'
                     WHEN minEventDate.min_date = EARLIEST_RPT_TO_STATE_DT THEN 'Earliest date received by the state health department'
                     WHEN minEventDate.min_date = EARLIEST_RPT_TO_CNTY THEN 'Earliest date received by the county/local health department'
                     WHEN minEventDate.min_date = INV_RPT_DT THEN 'Date of Report'
@@ -1238,7 +1238,7 @@ BEGIN
                             ELSE NULL
             END AS PHYSICIAN_ADDRESS_USE_DESC
                       ,CASE WHEN LEN(COALESCE(RTRIM(LTRIM(REPTORG.ORGANIZATION_COUNTY)),RTRIM(LTRIM(REPTORG.ORGANIZATION_STATE)),RTRIM(LTRIM(REPTORG.ORGANIZATION_CITY))))>0 THEN 'Office'
-                            ELSE CAST(NULL AS varchar(300))
+                 ELSE CAST(NULL AS varchar(300))
             END AS PHYSICIAN_ADDRESS_TYPE_DESC
                       ,P.PROVIDER_ADD_TIME
                       ,P.PROVIDER_LAST_CHANGE_TIME
@@ -1610,7 +1610,7 @@ BEGIN
         FROM #TMP_VAC_REPEAT_OUT_DATE_Pivot
         WHERE LEN(VACC_RECVD_DT_1) > 0 OR
             LEN(VACC_RECVD_DT_2) > 0 OR
-            LEN(VACC_RECVD_DT_3) > 0 OR
+   LEN(VACC_RECVD_DT_3) > 0 OR
             LEN(VACC_RECVD_DT_4) > 0 OR
             LEN(VACC_RECVD_DT_5) > 0 AND
             PAGE_CASE_UID > 0;
@@ -1727,7 +1727,7 @@ BEGIN
           PAGE_CASE_UID > 0;
 
         UPDATE #TMP_VAC_REPEAT_OUT_NUM
-        SET VAC_DOSE_4_IND = CASE
+    SET VAC_DOSE_4_IND = CASE
                                  WHEN VACC_DOSE_NBR_5 IS NULL THEN NULL
                                  ELSE 'True'
             END;
@@ -2497,7 +2497,7 @@ BEGIN
                                               PAT_LAST_NM, ---113
                                               PAT_LOCAL_ID, ---114
                                               PAT_MIDDLE_NM, ---115
-                                              PAT_PREGNANT_IND, ---116
+           PAT_PREGNANT_IND, ---116
                                               PAT_RACE, ----117
                                               PAT_STATE, ----118
                                               PAT_STREET_ADDR_1, ---119
@@ -2552,7 +2552,7 @@ BEGIN
                                               TRAVEL_REASON, -----168
                     IMM_GLOB_RECVD_IND, ----169
                                               GLOB_LAST_RECVD_YR, ----170
-                                              VACC_RECVD_IND, ----171
+                               VACC_RECVD_IND, ----171
                                               VACC_DOSE_NBR_1, ----172
                                               VACC_RECVD_DT_1, ----173
                                               VACC_DOSE_NBR_2, ----174
@@ -2701,7 +2701,7 @@ BEGIN
              cast(PAT_CURR_GENDER as varchar(300)),
                 PAT_DOB,
                 cast(PAT_ETHNICITY as varchar(300)),
-                cast(PAT_FIRST_NM as varchar(50)),
+   cast(PAT_FIRST_NM as varchar(50)),
                 cast(PAT_LAST_NM as varchar(50)),
                 cast(PAT_LOCAL_ID as varchar(25)),
                 cast(PAT_MIDDLE_NM as varchar(50)),
@@ -2778,7 +2778,7 @@ BEGIN
                 cast(IMPORT_FROM_CITY as varchar(300)),
          cast(IMPORT_FROM_COUNTRY as varchar(300)),
                 cast(IMPORT_FROM_COUNTY as varchar(300)),
-                cast(IMPORT_FROM_STATE as varchar(300)),
+            cast(IMPORT_FROM_STATE as varchar(300)),
                 INVESTIGATION_KEY,
                 cast(INVESTIGATOR_NAME as varchar(300)),
                 cast(PAT_ELECTRONIC_IND as varchar(300)),
