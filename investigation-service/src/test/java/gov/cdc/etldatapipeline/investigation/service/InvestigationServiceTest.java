@@ -101,6 +101,7 @@ class InvestigationServiceTest {
         transformer.setInvestigationNotificationsOutputTopicName(notificationTopicOutput);
         transformer.setInterviewOutputTopicName(interviewTopicOutput);
         transformer.setContactOutputTopicName(contactTopicOutput);
+        transformer.setContactAnswerOutputTopicName("ContactAnswerOutput");
         transformer.setPageCaseAnswerOutputTopicName("pageCaseAnswer");
         transformer.setInvestigationCaseManagementTopicName("investigationCaseManagement");
         transformer.setInterviewAnswerOutputTopicName("interviewAnswer");
@@ -403,10 +404,13 @@ class InvestigationServiceTest {
         reporting.setPhysicianId(14253651L);            // PersonParticipations.json, entity_id for type_cd=PhysicianOfPHC
         reporting.setPatientId(321432537L);             // PersonParticipations.json, entity_id for type_cd=SubjOfPHC
         reporting.setOrganizationId(34865315L);         // OrganizationParticipations.json, entity_id for type_cd=OrgAsReporterOfPHC
+        reporting.setHospitalUid(30303034L);            // OrganizationParticipations.json, entity_id for type_cd=HospOfADT
+        reporting.setChronicCareFacUid(31096761L);      // OrganizationParticipations.json, entity_id for type_cd=ChronicCareFac
+        reporting.setDaycareFacUid(30303007L);          // OrganizationParticipations.json, entity_id for type_cd=DaycareFac
         reporting.setInvStateCaseId("12-345-STA");      // ActIds.json, root_extension_txt for type_cd=STATE
         reporting.setCityCountyCaseNbr("12-345-CTY");   // ActIds.json, root_extension_txt for type_cd=CITY
         reporting.setLegacyCaseId("12-345-LGY");        // ActIds.json, root_extension_txt for type_cd=LEGACY
-        reporting.setPhcInvFormId(10638298L);          // InvestigationObservationIds.json, source_act_uid for act_type_cd=PHCInvForm
+        reporting.setPhcInvFormId(10638298L);           // InvestigationObservationIds.json, source_act_uid for act_type_cd=PHCInvForm
         reporting.setRdbTableNameList("D_INV_CLINICAL,D_INV_PLACE_REPEAT,D_INV_ADMINISTRATIVE"); // InvestigationCaseAnswers.json, rdb_table_nm
         reporting.setInvestigationCount(1L);
         reporting.setCaseCount(1L);

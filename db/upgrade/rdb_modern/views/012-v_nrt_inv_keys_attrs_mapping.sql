@@ -113,6 +113,8 @@ select inv.public_health_case_uid,
        coalesce(dpro3.provider_key, 1)     as Reporter_key,
        coalesce(dorg1.organization_key, 1) as Rpt_Src_Org_key,
        coalesce(dorg2.Organization_key, 1) as ADT_HSPTL_KEY,
+       coalesce(dorg3.Organization_key, 1) as NURSING_HOME_KEY,
+       coalesce(dorg4.Organization_key, 1) as DAYCARE_FACILITY_KEY,
        coalesce(rd1.Date_key, 1)           as Inv_Assigned_dt_key,
        coalesce(rd2.Date_key, 1)           as INV_START_DT_KEY,
        coalesce(rd3.Date_key, 1)           as DIAGNOSIS_DT_KEY,
@@ -138,6 +140,10 @@ from dbo.nrt_investigation inv
     inv.organization_id = dorg1.organization_uid
     left outer join dbo.D_ORGANIZATION dorg2 with (nolock) on
     inv.hospital_uid = dorg2.organization_uid
+    left outer join dbo.D_ORGANIZATION dorg3 with (nolock) on
+    inv.chronic_care_fac_uid = dorg3.organization_uid
+    left outer join dbo.D_ORGANIZATION dorg4 with (nolock) on
+    inv.daycare_fac_uid = dorg4.organization_uid
     left outer join dbo.RDB_DATE rd1 with (nolock) on
     inv.investigator_assigned_datetime = rd1.DATE_MM_DD_YYYY
     left outer join dbo.RDB_DATE rd2 with (nolock) on
