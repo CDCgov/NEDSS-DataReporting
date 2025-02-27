@@ -31,4 +31,5 @@ public class InterviewReporting {
     private Long providerUid;
     private Long organizationUid;
     private Long patientUid;
+    private Long batchId;
 }

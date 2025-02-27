@@ -201,18 +201,20 @@ class InvestigationServiceTest {
         final Interview interview = constructInterview(interviewUid);
         when(interviewRepository.computeInterviews(String.valueOf(interviewUid))).thenReturn(Optional.of(interview));
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
 
-        investigationService.processMessage(getRecord(interviewTopic, payload), consumer);
+        ConsumerRecord<String, String> rec = getRecord(interviewTopic, payload);
+        investigationService.processMessage(rec, consumer);
 
         final InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
         interviewReportingKey.setInterviewUid(interviewUid);
 
         final InterviewReporting interviewReportingValue = constructInvestigationInterview(interviewUid);
+        interviewReportingValue.setBatchId(toBatchId.applyAsLong(rec));
+
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         String actualTopic = topicCaptor.getAllValues().getFirst();

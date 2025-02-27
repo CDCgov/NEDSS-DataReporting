@@ -125,7 +125,7 @@ public class InvestigationService {
         } else if (topic.equals(notificationTopic)) {
             processNotification(message);
         } else if (topic.equals(interviewTopic)) {
-            processInterview(message);
+            processInterview(message, batchId);
         } else if (topic.equals(contactTopic) && contactRecordEnable) {
             processContact(message);
         }
@@ -192,7 +192,7 @@ public class InvestigationService {
     }
 
 
-    private void processInterview(String value) {
+    private void processInterview(String value, long batchId) {
         String interviewUid = "";
         try {
             interviewUid = extractUid(value, "interview_uid");
@@ -201,7 +201,7 @@ public class InvestigationService {
             Optional<Interview> interviewData = interviewRepository.computeInterviews(interviewUid);
             if (interviewData.isPresent()) {
                 Interview interview = interviewData.get();
-                processDataUtil.processInterview(interview);
+                processDataUtil.processInterview(interview, batchId);
                 processDataUtil.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
 
             } else {

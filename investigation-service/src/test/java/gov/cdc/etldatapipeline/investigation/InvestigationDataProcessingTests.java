@@ -241,22 +241,15 @@ class InvestigationDataProcessingTests {
         final InterviewNote interviewNoteValue = constructInvestigationInterviewNote();
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
 
-        transformer.processInterview(interview);
+        transformer.processInterview(interview, BATCH_ID);
         Awaitility.await()
                 .atMost(2, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
-        //test interview key
-        InterviewReportingKey actualInterviewKey1 = null;
-        //interview key used for interview answer tombstone message
-        InterviewReportingKey actualInterviewKey2 = null;
-        //interview key used for interview note tombstone message
-        InterviewReportingKey actualInterviewKey3 = null;
-
+        InterviewReportingKey actualInterviewKey = null;
         InterviewAnswerKey actualInterviewAnswerKey = null;
         InterviewNoteKey actualInterviewNoteKey = null;
 
@@ -270,7 +263,7 @@ class InvestigationDataProcessingTests {
         for (int i = 0; i < topics.size(); i++) {
             switch (topics.get(i)) {
                 case INTERVIEW_TOPIC:
-                    actualInterviewKey1 = objectMapper.readValue(
+                    actualInterviewKey = objectMapper.readValue(
                             objectMapper.readTree(keys.get(i)).path("payload").toString(),
                             InterviewReportingKey.class);
                     actualInterviewValue = objectMapper.readValue(
@@ -278,42 +271,27 @@ class InvestigationDataProcessingTests {
                             InterviewReporting.class);
                     break;
                 case INTERVIEW_ANSWERS_TOPIC:
-                    if (messages.get(i) == null) {
-                        actualInterviewKey2 = objectMapper.readValue(
-                                objectMapper.readTree(keys.get(i)).path("payload").toString(),
-                                InterviewReportingKey.class);
-                    } else {
-                        actualInterviewAnswerKey = objectMapper.readValue(
-                                objectMapper.readTree(keys.get(i)).path("payload").toString(),
-                                InterviewAnswerKey.class);
-                        actualInterviewAnswerValue = objectMapper.readValue(
-                                objectMapper.readTree(messages.get(i)).path("payload").toString(),
-                                InterviewAnswer.class);
-                    }
+                    actualInterviewAnswerKey = objectMapper.readValue(
+                            objectMapper.readTree(keys.get(i)).path("payload").toString(),
+                            InterviewAnswerKey.class);
+                    actualInterviewAnswerValue = objectMapper.readValue(
+                            objectMapper.readTree(messages.get(i)).path("payload").toString(),
+                            InterviewAnswer.class);
                     break;
                 case INTERVIEW_NOTE_TOPIC:
-                    if (messages.get(i) == null) {
-                        actualInterviewKey3 = objectMapper.readValue(
-                                objectMapper.readTree(keys.get(i)).path("payload").toString(),
-                                InterviewReportingKey.class);
-                    } else {
-                        actualInterviewNoteKey = objectMapper.readValue(
-                                objectMapper.readTree(keys.get(i)).path("payload").toString(),
-                                InterviewNoteKey.class);
-                        actualInterviewNoteValue = objectMapper.readValue(
-                                objectMapper.readTree(messages.get(i)).path("payload").toString(),
-                                InterviewNote.class);
-                    }
+                    actualInterviewNoteKey = objectMapper.readValue(
+                            objectMapper.readTree(keys.get(i)).path("payload").toString(),
+                            InterviewNoteKey.class);
+                    actualInterviewNoteValue = objectMapper.readValue(
+                            objectMapper.readTree(messages.get(i)).path("payload").toString(),
+                            InterviewNote.class);
                     break;
                 default:
                     break;
             }
         }
 
-        assertEquals(interviewReportingKey, actualInterviewKey1);
-        assertEquals(interviewReportingKey, actualInterviewKey2);
-        assertEquals(interviewReportingKey, actualInterviewKey3);
-
+        assertEquals(interviewReportingKey, actualInterviewKey);
         assertEquals(interviewAnswerKey, actualInterviewAnswerKey);
         assertEquals(interviewNoteKey, actualInterviewNoteKey);
 
@@ -344,7 +322,7 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
-        verify(kafkaTemplate, times (1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
         var actualRdbMetadataColumnKey = objectMapper.readValue(
                 objectMapper.readTree(keyCaptor.getValue()).path("payload").toString(), MetadataColumnKey.class);
@@ -370,13 +348,22 @@ class InvestigationDataProcessingTests {
         transformer.setInterviewNoteOutputTopicName(INTERVIEW_NOTE_TOPIC);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
-        transformer.processInterview(interview);
+        transformer.processInterview(interview, BATCH_ID);
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+                .untilAsserted(() -> verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
+
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+    }
+
+    @Test
+    void testProcessColumnMetadataError(){
+
+        transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
+        transformer.setRdbMetadataColumnsOutputTopicName(RDB_METADATA_COLS_TOPIC);
+
+        transformer.processColumnMetadata(INVALID_JSON, BATCH_ID);
 
         ILoggingEvent log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
@@ -722,6 +709,7 @@ class InvestigationDataProcessingTests {
         interviewReporting.setRecordStatusCd("ACTIVE");
         interviewReporting.setRecordStatusTime("2024-11-13 20:27:39.587");
         interviewReporting.setVersionCtrlNbr(1L);
+        interviewReporting.setBatchId(BATCH_ID);
         return interviewReporting;
     }
 
@@ -730,6 +718,7 @@ class InvestigationDataProcessingTests {
         interviewAnswer.setInterviewUid(INTERVIEW_UID);
         interviewAnswer.setAnswerVal("Yes");
         interviewAnswer.setRdbColumnNm("IX_CONTACTS_NAMED_IND");
+        interviewAnswer.setBatchId(BATCH_ID);
         return interviewAnswer;
     }
 
@@ -742,6 +731,7 @@ class InvestigationDataProcessingTests {
         interviewNote.setUserLastName("user");
         interviewNote.setUserComment("Test123");
         interviewNote.setRecordStatusCd("");
+        interviewNote.setBatchId(BATCH_ID);
         return interviewNote;
     }
 
