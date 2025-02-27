@@ -1463,7 +1463,7 @@ BEGIN
             from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
             left outer join dbo.NRT_INVESTIGATION inv with(nolock)
             on pca.public_health_case_uid = inv.public_health_case_uid
-            where pca.batch_id = inv.batch_id
+            where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
         ) AS M
                  INNER JOIN
              #TMP_CONDITION AS C

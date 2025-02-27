@@ -151,7 +151,7 @@ BEGIN
             from dbo.NRT_INTERVIEW_ANSWER intans  with(nolock)
             left outer join dbo.NRT_INTERVIEW inv with(nolock)
             on intans.interview_uid = inv.interview_uid
-            where intans.batch_id = inv.batch_id
+            where isnull(intans.batch_id, 1) = isnull(inv.batch_id, 1)
         )
         WHERE interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
@@ -387,7 +387,7 @@ BEGIN
             from dbo.NRT_INTERVIEW_NOTE intnote  with(nolock)
             left outer join dbo.NRT_INTERVIEW inv with(nolock)
             on intnote.interview_uid = inv.interview_uid
-            where intnote.batch_id = inv.batch_id
+            where isnull(intnote.batch_id, 1) = isnull(inv.batch_id, 1)
         ) ixn
         LEFT JOIN dbo.NRT_INTERVIEW_KEY ixk
             ON ixn.interview_uid = ixk.interview_uid
