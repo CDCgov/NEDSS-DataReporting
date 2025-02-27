@@ -23,7 +23,9 @@ BEGIN
     DECLARE @RowCount_no INT ;
     DECLARE @Proc_Step_no FLOAT = 0 ;
     DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
-    DECLARE @datamart_nm VARCHAR(100) = 'D_Morbidity_Report';
+
+    DECLARE @Dataflow_Name VARCHAR(200) = 'D_Morbidity_Report Post-Processing Event';
+    DECLARE @Package_Name VARCHAR(200) = 'sp_d_morbidity_report_postprocessing';
 
 
 
@@ -37,7 +39,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID, @datamart_nm, @datamart_nm,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID, @Dataflow_Name, @Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -97,7 +99,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -113,18 +115,18 @@ BEGIN
         from (
                  select *
                  from dbo.nrt_observation_txt
-                 where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
+                 where observation_uid in (select value from STRING_SPLIT(@pMorbidityIdList, ',') )
              ) obstxt
                  left outer join dbo.nrt_observation obs
                  on obs.observation_uid = obstxt.observation_uid
-        where obs.batch_id = obstxt.batch_id
+        where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
        ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         COMMIT TRANSACTION;
 
@@ -139,18 +141,18 @@ BEGIN
         from (
                  select *
                  from dbo.nrt_observation_coded
-                 where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
+                 where observation_uid in (select value from STRING_SPLIT(@pMorbidityIdList, ',') )
              ) obscoded
                  left outer join dbo.nrt_observation obs
                  on obs.observation_uid = obscoded.observation_uid
-        where obs.batch_id = obscoded.batch_id
+        where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1)
         ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         COMMIT TRANSACTION;
 
@@ -165,18 +167,18 @@ BEGIN
         from (
                  select *
                  from dbo.nrt_investigation_observation
-                 where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
+                 where observation_id in (select value from STRING_SPLIT(@pMorbidityIdList, ',') )
              ) invobs
                  left outer join dbo.nrt_observation obs
-                                 on obs.observation_uid = invobs.observation_uid
-        where obs.batch_id = invobs.batch_id
+                                 on obs.observation_uid = invobs.observation_id
+        where isnull(obs.batch_id,1) = isnull(invobs.batch_id,1)
         ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         COMMIT TRANSACTION;
         BEGIN TRANSACTION;
@@ -308,7 +310,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -339,7 +341,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -364,7 +366,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -387,7 +389,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -410,7 +412,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -460,7 +462,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -508,7 +510,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -553,7 +555,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -580,7 +582,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -606,7 +608,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -632,7 +634,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -752,7 +754,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -796,7 +798,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -907,7 +909,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES
-            (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -987,7 +989,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES 		(@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES 		(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1040,7 +1042,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,@datamart_nm,@datamart_nm,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1122,7 +1124,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,@datamart_nm,@datamart_nm,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1164,7 +1166,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1224,7 +1226,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
-        VALUES  (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1258,7 +1260,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES
-            (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+            (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1300,7 +1302,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES
-            (@BATCH_ID,@datamart_nm,@datamart_nm,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+            (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1374,8 +1376,8 @@ BEGIN
         )
         VALUES  				   (
                                    @batch_id,
-                                   @datamart_nm
-                                 ,@datamart_nm
+                                   @Dataflow_Name
+                                 ,@Package_Name
                                  ,'COMPLETE'
                                  ,@Proc_Step_no
                                  ,@Proc_Step_name
@@ -1418,11 +1420,13 @@ BEGIN
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE @ErrorLine INT = ERROR_LINE();
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -1437,16 +1441,14 @@ BEGIN
         VALUES
             (
               @batch_id
-            ,@datamart_nm
-            ,@datamart_nm
+            ,@Dataflow_Name
+            ,@Package_Name
             ,'ERROR'
             ,@Proc_Step_no
-            ,'ERROR - '+ @Proc_Step_name
-            , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
+            ,@Proc_Step_name
+            , @FullErrorMessage
             ,0
             );
-
-        --COMMIT TRANSACTION;
 
         RETURN -1 ;
 
