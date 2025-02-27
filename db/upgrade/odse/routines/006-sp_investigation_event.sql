@@ -156,9 +156,7 @@ BEGIN
                results.investigation_case_answer,
                results.investigation_case_management,
                results.investigation_notifications,
-               results.notification_history,
-               results.investigation_case_count
-                ,
+               results.investigation_case_count,
                con.investigation_form_cd
         -- ,results.investigation_act_entity
         -- ,results.ldf_public_health_case
@@ -310,7 +308,6 @@ BEGIN
                      nesteddata.investigation_case_answer,
                      nesteddata.investigation_case_management,
                      nesteddata.investigation_notifications,
-                     nesteddata.notification_history,
                      nesteddata.investigation_case_count
               --,nesteddata.ldf_public_health_case
               FROM
@@ -616,7 +613,19 @@ BEGIN
                                                         per.local_id           as 'local_patient_id',
                                                         per.person_uid         as 'local_patient_uid',
                                                         phc.cd                 as 'condition_cd',
-                                                        phc.cd_desc_txt        as 'condition_desc'
+                                                        phc.cd_desc_txt        as 'condition_desc',
+                                                        nh.first_notification_status,
+                                                        nh.notif_rejected_count,
+                                                        nh.notif_created_count,
+                                                        nh.notif_sent_count,
+                                                        nh.first_notification_senddate,
+                                                        nh.notif_created_pending_count,
+                                                        nh.last_notification_date,
+                                                        nh.last_notification_senddate,
+                                                        nh.first_notification_date,
+                                                        nh.first_notification_submittedby,
+                                                        nh.last_notification_submittedby,
+                                                        nh.notification_date
                                                  FROM act_relationship act WITH (NOLOCK)
                                                           join notification notif WITH (NOLOCK)
                                                                on act.source_act_uid = notif.notification_uid
@@ -624,85 +633,13 @@ BEGIN
                                                                ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
                                                           join nbs_odse.dbo.person per with (nolock)
                                                                ON per.cd = 'PAT' AND per.person_uid = part.subject_entity_uid
+                                                          join nbs_odse.dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                    AND notif.cd not in
                                                        ('EXP_NOTF', 'SHARE_NOTF', 'EXP_NOTF_PHDC', 'SHARE_NOTF_PHDC')
                                                    AND act.source_class_cd = 'NOTF'
                                                    AND act.target_class_cd = 'CASE'
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_notifications) AS investigation_notifications,
-                                        (select (select distinct min(case
-                                                                         when version_ctrl_nbr = 1
-                                                                             then nf.record_status_cd
-                                            end)                         as first_notification_status
-                                                               , sum(case
-                                                                         when nf.record_status_cd = 'REJECTED'
-                                                                             then 1
-                                                                         else 0
-                                                end)                        notif_rejected_count
-                                                               , sum(case
-                                                                         when nf.record_status_cd = 'APPROVED'
-                                                                             or nf.record_status_cd = 'PEND_APPR'
-                                                                             then 1
-                                                                         when nf.record_status_cd = 'REJECTED'
-                                                                             then -1
-                                                                         else 0
-                                                end)                        notif_created_count
-                                                               , sum(case
-                                                                         when nf.record_status_cd = 'COMPLETED'
-                                                                             then 1
-                                                                         else 0
-                                                end)                        notif_sent_count
-                                                               , min(case
-                                                                         when nf.record_status_cd = 'COMPLETED'
-                                                                             then rpt_sent_time
-                                                end)                     as first_notification_send_date
-                                                               , sum(case
-                                                                         when nf.record_status_cd = 'PEND_APPR'
-                                                                             then 1
-                                                                         else 0
-                                                end)                        notif_created_pendings_count
-                                                               , max(case
-                                                                         when nf.record_status_cd = 'APPROVED'
-                                                                             or nf.record_status_cd = 'PEND_APPR'
-                                                                             then nf.last_chg_time
-                                                end)                     as last_notification_date
-                                                               ,
-                                                               --done?
-                                                     max(case
-                                                             when nf.record_status_cd = 'COMPLETED'
-                                                                 then rpt_sent_time
-                                                         end)            as last_notification_send_date
-                                                               ,
-                                                               --done?
-                                                     min(nf.add_time)    as first_notification_date
-                                                               ,
-                                                               --done
-                                                     min(nf.add_user_id) as first_notification_submitted_by
-                                                               ,
-                                                               --done
-                                                     min(nf.add_user_id) as last_notification_submittedby
-                                                               --done
-                                                               --min(case when record_status_cd='completed' then  last_chg_user_id end) as firstnotificationsubmittedby,
-                                                               , min(case
-                                                                         when nf.record_status_cd = 'COMPLETED'
-                                                                             and rpt_sent_time is not null
-                                                                             then rpt_sent_time
-                                                end)                     as notificationdate
-                                                 from nbs_odse.dbo.act_relationship ar with (nolock)
-                                                          inner join nbs_odse.dbo.notification_hist nf with (nolock)
-                                                                     on ar.source_act_uid = nf.notification_uid
-                                                 where ar.target_act_uid = phc.public_health_case_uid
-                                                   and source_class_cd = 'NOTF'
-                                                   and target_class_cd = 'CASE'
-                                                   and nf.cd = 'NOTF'
-                                                   and (
-                                                     nf.record_status_cd = 'COMPLETED'
-                                                         OR nf.record_status_cd = 'MSG_FAIL'
-                                                         OR nf.record_status_cd = 'REJECTED'
-                                                         OR nf.record_status_cd = 'PEND_APPR'
-                                                         OR nf.record_status_cd = 'APPROVED'
-                                                     )
-                                                 FOR json path,INCLUDE_NULL_VALUES) AS notification_history) AS notification_history,
                                         (select (select phcase.group_case_cnt                                         as investigation_count,
                                                         round(COALESCE(gcs.group_case_cnt, phcase.group_case_cnt), 0) as case_count,
                                                         par2.from_time                                                as investigator_assigned_datetime
@@ -735,17 +672,17 @@ BEGIN
                                                  where phcase.public_health_case_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) as investigation_case_count) as investigation_case_count
                       /*
-                       -- ldf_phc associated with phc
-             ,(
-         SELECT
-                          (
-                           select * from nbs_odse..v_ldf_phc ldf
-                             WHERE ldf.public_health_case_uid = phc.public_health_case_uid
-    Order By ldf.public_health_case_uid, ldf.display_order_nbr
-                                     FOR json path,INCLUDE_NULL_VALUES
-                          ) AS ldf_public_health_case
-                      ) AS ldf_public_health_case
-                      */
+                              -- ldf_phc associated with phc
+                    ,(
+                SELECT
+                                 (
+                                  select * from nbs_odse..v_ldf_phc ldf
+                                    WHERE ldf.public_health_case_uid = phc.public_health_case_uid
+           Order By ldf.public_health_case_uid, ldf.display_order_nbr
+                                            FOR json path,INCLUDE_NULL_VALUES
+                                 ) AS ldf_public_health_case
+                             ) AS ldf_public_health_case
+                             */
 
                   ) as nestedData
               WHERE phc.public_health_case_uid in (SELECT value
@@ -842,7 +779,7 @@ BEGIN
                , 0
                , LEFT(@phc_id_list, 199)
                , @ErrorMessage
-            );
+               );
         return @ErrorMessage;
 
     END CATCH
