@@ -63,9 +63,13 @@ class InvestigationDataProcessingTests {
     private static final String RDB_METADATA_COLS_TOPIC = "rdbMetadataColsTopic";
     private static final String CONTACT_TOPIC = "contactTopic";
     private static final String CONTACT_ANSWERS_TOPIC = "contactAnswersTopic";
+    private static final String VACCINATION_TOPIC = "vaccinationTopic";
+    private static final String VACCINATION_ANSWERS_TOPIC = "vaccinationAnswersTopic";
+
     private static final Long INVESTIGATION_UID = 234567890L;
     private static final Long INTERVIEW_UID = 234567890L;
     private static final Long CONTACT_UID = 12345678L;
+    private static final Long VACCINATION_UID = 12345678L;
     private static final String INVALID_JSON = "invalidJSON";
     ProcessInvestigationDataUtil transformer;
 
@@ -482,6 +486,58 @@ class InvestigationDataProcessingTests {
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
     }
 
+
+    void testProcessVaccination() throws JsonProcessingException {
+
+        Vaccination vaccination = constructVaccination();
+        vaccination.setAnswers(null);
+        transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
+        transformer.setVaccinationAnswerOutputTopicName(VACCINATION_ANSWERS_TOPIC);
+
+        final  VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
+        vaccinationReportingKey.setVaccinationUid(VACCINATION_UID);
+
+        final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting();
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processVaccination(vaccination);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        var actualVacKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().getFirst()).path("payload").toString(), VaccinationReportingKey.class);
+
+        var actualVacValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), VaccinationReporting.class);
+
+        assertEquals(vaccinationReportingKey, actualVacKey);
+        assertEquals(vaccinationReportingValue, actualVacValue);
+    }
+
+    @Test
+    void testProcessVaccinationError(){
+
+        Vaccination vaccination = constructVaccination();
+        vaccination.setAnswers(INVALID_JSON);
+
+        transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
+        transformer.setVaccinationAnswerOutputTopicName(VACCINATION_ANSWERS_TOPIC);
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processVaccination(vaccination);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+    }
+
     @Test
     void testProcessMissingOrInvalidNotifications() {
         Investigation investigation = new Investigation();
@@ -885,5 +941,37 @@ class InvestigationDataProcessingTests {
         contactAnswer.setAnswerVal("Common Space");
         contactAnswer.setRdbColumnNm("CTT_EXPOSURE_TYPE");
         return contactAnswer;
+    }
+
+    private Vaccination constructVaccination() {
+        Vaccination vaccination = new Vaccination();
+        vaccination.setVaccinationUid(VACCINATION_UID);
+        vaccination.setAddTime("2024-01-01T10:00:00");
+        vaccination.setAddUserId(100L);
+        vaccination.setAgeAtVaccination(20);
+        vaccination.setAgeAtVaccinationUnit(null);
+        vaccination.setLocalId("VAC23");
+        vaccination.setElectronicInd("");
+        vaccination.setVaccinationAdministeredNm("");
+        vaccination.setVaccineExpirationDt("2024-02-06T08:00:00");
+        vaccination.setVaccinationAnatomicalSite("");
+        vaccination.setVaccineManufacturerNm("test");
+        return vaccination;
+    }
+
+    private VaccinationReporting constructVaccinationReporting() {
+        VaccinationReporting vaccinationReporting = new VaccinationReporting();
+        vaccinationReporting.setVaccinationUid(VACCINATION_UID);
+        vaccinationReporting.setAddTime("2024-01-01T10:00:00");
+        vaccinationReporting.setAddUserId(100L);
+        vaccinationReporting.setAgeAtVaccination(20);
+        vaccinationReporting.setAgeAtVaccinationUnit(null);
+        vaccinationReporting.setLocalId("VAC23");
+        vaccinationReporting.setElectronicInd("");
+        vaccinationReporting.setVaccinationAdministeredNm("");
+        vaccinationReporting.setVaccineExpirationDt("2024-02-06T08:00:00");
+        vaccinationReporting.setVaccinationAnatomicalSite("");
+        vaccinationReporting.setVaccineManufacturerNm("test");
+        return vaccinationReporting;
     }
 }

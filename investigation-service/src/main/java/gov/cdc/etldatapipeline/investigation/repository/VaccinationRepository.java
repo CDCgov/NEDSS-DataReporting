@@ -9,6 +9,6 @@ import java.util.Optional;
 
 public interface VaccinationRepository extends JpaRepository<Vaccination, String> {
 
-    @Query(nativeQuery = true, value = "exec sp_vaccination_record_event :vaccination_uid")
+    @Query(nativeQuery = true, value = "exec sp_vaccination_event :vaccination_uid")
     Optional<Vaccination> computeVaccination(@Param("vaccination_uid") String vaccinationUid);
 }

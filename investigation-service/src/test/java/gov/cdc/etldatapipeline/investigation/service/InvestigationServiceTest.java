@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.investigation.repository.*;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.Contact;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.Interview;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.NotificationUpdate;
-import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
+import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -68,16 +65,20 @@ class InvestigationServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String FILE_PATH_PREFIX = "rawDataFiles/";
+
     //input topics
     private final String investigationTopic = "Investigation";
     private final String notificationTopic = "Notification";
     private final String interviewTopic = "Interview";
     private final String contactTopic = "Contact";
+    private final String vaccinationTopic = "Vaccination";
+
     //output topics
     private final String investigationTopicOutput = "InvestigationOutput";
     private final String notificationTopicOutput = "investigationNotification";
     private final String interviewTopicOutput = "InterviewOutput";
     private final String contactTopicOutput = "ContactOutput";
+    private final String vaccinationTopicOutput = "VaccinationOutput";
 
 
     @BeforeEach
@@ -95,6 +96,7 @@ class InvestigationServiceTest {
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
         investigationService.setInterviewTopic(interviewTopic);
         investigationService.setContactTopic(contactTopic);
+        investigationService.setVaccinationTopic(vaccinationTopic);
 
         transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
         transformer.setInvestigationObservationOutputTopicName("investigationObservation");
@@ -107,6 +109,8 @@ class InvestigationServiceTest {
         transformer.setInterviewAnswerOutputTopicName("interviewAnswer");
         transformer.setInterviewNoteOutputTopicName("interviewNote");
         transformer.setRdbMetadataColumnsOutputTopicName("metadataColumns");
+        transformer.setVaccinationOutputTopicName(vaccinationTopicOutput);
+        transformer.setVaccinationAnswerOutputTopicName("VaccinationAnswerOutput");
     }
 
     @AfterEach
@@ -306,6 +310,58 @@ class InvestigationServiceTest {
     void testProcessContactNoDataException() {
         String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"\"}}}";
         assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, contactTopic, consumer));
+    }
+
+    @Test
+    void testProcessVaccinationMessage() throws JsonProcessingException {
+        Long vaccinationUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"" + vaccinationUid + "\"}}}";
+
+        final Vaccination vaccination = constructVaccination(vaccinationUid);
+        when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid))).thenReturn(Optional.of(vaccination));
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+        investigationService.processMessage(payload, vaccinationTopic, consumer);
+
+        final  VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
+        vaccinationReportingKey.setVaccinationUid(vaccinationUid);
+
+        final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting(vaccinationUid);
+
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        String actualTopic = topicCaptor.getAllValues().getFirst();
+        String actualKey = keyCaptor.getAllValues().getFirst();
+        String actualValue = messageCaptor.getAllValues().getFirst();
+
+        var actualVaccinationKey = objectMapper.readValue(
+                objectMapper.readTree(actualKey).path("payload").toString(), VaccinationReportingKey.class);
+        var actualVaccinationValue = objectMapper.readValue(
+                objectMapper.readTree(actualValue).path("payload").toString(), VaccinationReporting.class);
+
+        assertEquals(vaccinationTopicOutput, actualTopic);
+        assertEquals(vaccinationReportingKey, actualVaccinationKey);
+        assertEquals(vaccinationReportingValue, actualVaccinationValue);
+
+        verify(vaccinationRepository).computeVaccination(String.valueOf(vaccinationUid));
+    }
+
+    @Test
+    void testProcessVaccinationException() {
+        String invalidPayload = "{\"payload\": {\"after\": {}}}";
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> investigationService.processMessage(invalidPayload, vaccinationTopic, consumer));
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+    }
+
+    @Test
+    void testProcessVaccinationNoDataException() {
+        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"\"}}}";
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, vaccinationTopic, consumer));
     }
 
     private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
@@ -578,4 +634,35 @@ class InvestigationServiceTest {
         return contactReporting;
     }
 
+    private Vaccination constructVaccination(Long vaccinationUid) {
+        Vaccination vaccination = new Vaccination();
+        vaccination.setVaccinationUid(vaccinationUid);
+        vaccination.setAddTime("2024-01-01T10:00:00");
+        vaccination.setAddUserId(100L);
+        vaccination.setAgeAtVaccination(20);
+        vaccination.setAgeAtVaccinationUnit(null);
+        vaccination.setLocalId("VAC23");
+        vaccination.setElectronicInd("");
+        vaccination.setVaccinationAdministeredNm("");
+        vaccination.setVaccineExpirationDt("2024-02-06T08:00:00");
+        vaccination.setVaccinationAnatomicalSite("");
+        vaccination.setVaccineManufacturerNm("test");
+        return vaccination;
+    }
+
+    private VaccinationReporting constructVaccinationReporting(Long vaccinationUid) {
+        VaccinationReporting vaccinationReporting = new VaccinationReporting();
+        vaccinationReporting.setVaccinationUid(vaccinationUid);
+        vaccinationReporting.setAddTime("2024-01-01T10:00:00");
+        vaccinationReporting.setAddUserId(100L);
+        vaccinationReporting.setAgeAtVaccination(20);
+        vaccinationReporting.setAgeAtVaccinationUnit(null);
+        vaccinationReporting.setLocalId("VAC23");
+        vaccinationReporting.setElectronicInd("");
+        vaccinationReporting.setVaccinationAdministeredNm("");
+        vaccinationReporting.setVaccineExpirationDt("2024-02-06T08:00:00");
+        vaccinationReporting.setVaccinationAnatomicalSite("");
+        vaccinationReporting.setVaccineManufacturerNm("test");
+        return vaccinationReporting;
+    }
 }

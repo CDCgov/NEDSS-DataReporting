@@ -63,7 +63,7 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-contact-answer}")
     private String contactAnswerOutputTopicName;
 
-    @Value("${spring.kafka.output.topic-name-vaccination")
+    @Value("${spring.kafka.output.topic-name-vaccination}")
     private String vaccinationOutputTopicName;
 
     @Value("${spring.kafka.output.topic-name-vaccination-answer}")
@@ -80,6 +80,7 @@ public class ProcessInvestigationDataUtil {
 
     private static final String TYPE_CD = "type_cd";
     private static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
+    private static final String ANSWER_VAL = "ANSWER_VAL";
 
     @Transactional
     public InvestigationTransformed transformInvestigationData(Investigation investigation) {
@@ -504,7 +505,7 @@ public class ProcessInvestigationDataUtil {
                             InterviewAnswer interviewAnswer = new InterviewAnswer();
                             interviewAnswer.setInterviewUid(interviewUid);
                             interviewAnswer.setRdbColumnNm(rdbColumnNm);
-                            interviewAnswer.setAnswerVal(node.get("ANSWER_VAL").asText());
+                            interviewAnswer.setAnswerVal(node.get(ANSWER_VAL).asText());
 
                             String jsonKey = jsonGenerator.generateStringJson(interviewAnswerKey);
                             String jsonValue = jsonGenerator.generateStringJson(interviewAnswer);
@@ -609,7 +610,7 @@ public class ProcessInvestigationDataUtil {
                 ContactAnswer contactAnswer = new ContactAnswer();
                 contactAnswer.setContactUid(contactUid);
                 contactAnswer.setRdbColumnNm(rdbColumnNm);
-                contactAnswer.setAnswerVal(node.get("ANSWER_VAL").asText());
+                contactAnswer.setAnswerVal(node.get(ANSWER_VAL).asText());
 
                 String jsonKey = jsonGenerator.generateStringJson(contactAnswerKey);
                 String jsonValue = jsonGenerator.generateStringJson(contactAnswer);
@@ -717,16 +718,16 @@ public class ProcessInvestigationDataUtil {
                 final Long vaccinationUid = vaccination.getVaccinationUid();
                 final String rdbColumnNm = node.get(RDB_COLUMN_NM).asText();
 
-                VaccinationAnswerKey contactAnswerKey = new VaccinationAnswerKey();
-                contactAnswerKey.setVaccinationUid(vaccinationUid);
-                contactAnswerKey.setRdbColumnNm(rdbColumnNm);
+                VaccinationAnswerKey vaccinationAnswerKey = new VaccinationAnswerKey();
+                vaccinationAnswerKey.setVaccinationUid(vaccinationUid);
+                vaccinationAnswerKey.setRdbColumnNm(rdbColumnNm);
 
                 VaccinationAnswer vaccinationAnswer = new VaccinationAnswer();
                 vaccinationAnswer.setVaccinationUid(vaccinationUid);
                 vaccinationAnswer.setRdbColumnNm(rdbColumnNm);
-                vaccinationAnswer.setAnswerVal(node.get("ANSWER_VAL").asText());
+                vaccinationAnswer.setAnswerVal(node.get(ANSWER_VAL).asText());
 
-                String jsonKey = jsonGenerator.generateStringJson(contactAnswerKey);
+                String jsonKey = jsonGenerator.generateStringJson(vaccinationAnswerKey);
                 String jsonValue = jsonGenerator.generateStringJson(vaccinationAnswer);
                 kafkaTemplate.send(vaccinationAnswerOutputTopicName, jsonKey, jsonValue)
                         .whenComplete((res, e) -> logger.info("Vaccination Answers data (uid={}) sent to {}", vaccination.getVaccinationUid(), vaccinationAnswerOutputTopicName));

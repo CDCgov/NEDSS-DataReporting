@@ -57,6 +57,9 @@ public class InvestigationService {
     @Value("${spring.kafka.input.topic-name-ctr}")
     private String contactTopic;
 
+    @Value("${spring.kafka.input.topic-name-vac}")
+    private String vaccinationTopic;
+
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String investigationTopicReporting;
 
@@ -105,7 +108,8 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-phc}",
                     "${spring.kafka.input.topic-name-ntf}",
                     "${spring.kafka.input.topic-name-int}",
-                    "${spring.kafka.input.topic-name-ctr}"
+                    "${spring.kafka.input.topic-name-ctr}",
+                    "${spring.kafka.input.topic-name-vac}"
             }
     )
     public void processMessage(String message,
@@ -120,6 +124,8 @@ public class InvestigationService {
             processInterview(message);
         } else if (topic.equals(contactTopic) && contactRecordEnable) {
             processContact(message);
+        } else if (topic.equals(vaccinationTopic)) {
+            processVaccination(message);
         }
         consumer.commitSync();
     }
@@ -230,9 +236,9 @@ public class InvestigationService {
     private void processVaccination(String value) {
         String vaccinationUid = "";
         try {
-            vaccinationUid = extractUid(value, "vaccination_uid");
+            vaccinationUid = extractUid(value, "intervention_uid");
 
-            logger.info(topicDebugLog, "Vaccination", vaccinationUid, contactTopic);
+            logger.info(topicDebugLog, "Vaccination", vaccinationUid, vaccinationTopic);
             Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
             if(vacData.isPresent()) {
                 Vaccination vaccination = vacData.get();
