@@ -486,7 +486,7 @@ class InvestigationDataProcessingTests {
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
     }
 
-
+    @Test
     void testProcessVaccination() throws JsonProcessingException {
 
         Vaccination vaccination = constructVaccination();
@@ -504,7 +504,7 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         var actualVacKey = objectMapper.readValue(
@@ -515,6 +515,52 @@ class InvestigationDataProcessingTests {
 
         assertEquals(vaccinationReportingKey, actualVacKey);
         assertEquals(vaccinationReportingValue, actualVacValue);
+    }
+
+    @Test
+    void testProcessVaccinationAnswers() throws JsonProcessingException {
+
+        Vaccination vaccination = constructVaccination();
+        vaccination.setAnswers(readFileData(FILE_PREFIX + "VaccinationAnswers.json"));
+        transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
+        transformer.setVaccinationAnswerOutputTopicName(VACCINATION_ANSWERS_TOPIC);
+
+        final  VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
+        vaccinationReportingKey.setVaccinationUid(VACCINATION_UID);
+        final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting();
+
+        final VaccinationAnswerKey vaccinationAnswerKey = new VaccinationAnswerKey();
+        vaccinationAnswerKey.setVaccinationUid(VACCINATION_UID);
+        vaccinationAnswerKey.setRdbColumnNm("TEST");
+        final VaccinationAnswer vaccinationAnswerValue = constructVaccinationAnswers();
+
+
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processVaccination(vaccination);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+
+        // key
+        var actualVacKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), VaccinationReportingKey.class);
+        // value
+        var actualVacValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), VaccinationReporting.class);
+
+        // answer key
+        var actualVacAnswerKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), VaccinationAnswerKey.class);
+        // answer value
+        var actualVacAnswerValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), VaccinationAnswer.class);
+
+        assertEquals(vaccinationReportingKey, actualVacKey);
+        assertEquals(vaccinationReportingValue, actualVacValue);
+        assertEquals(vaccinationAnswerKey, actualVacAnswerKey);
+        assertEquals(vaccinationAnswerValue, actualVacAnswerValue);
     }
 
     @Test
@@ -973,5 +1019,13 @@ class InvestigationDataProcessingTests {
         vaccinationReporting.setVaccinationAnatomicalSite("");
         vaccinationReporting.setVaccineManufacturerNm("test");
         return vaccinationReporting;
+    }
+
+    private VaccinationAnswer constructVaccinationAnswers() {
+        VaccinationAnswer vaccinationAnswer = new VaccinationAnswer();
+        vaccinationAnswer.setVaccinationUid(VACCINATION_UID);
+        vaccinationAnswer.setRdbColumnNm("TEST");
+        vaccinationAnswer.setAnswerVal("TEST VAL");
+        return vaccinationAnswer;
     }
 }
