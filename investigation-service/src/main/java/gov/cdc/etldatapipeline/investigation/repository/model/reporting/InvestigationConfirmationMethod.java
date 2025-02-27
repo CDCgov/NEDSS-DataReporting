@@ -11,4 +11,5 @@ public class InvestigationConfirmationMethod {
     private String confirmationMethodCd;
     private String confirmationMethodDescTxt;
     private String confirmationMethodTime;
+    private Long batchId;
 }

@@ -325,7 +325,7 @@ class InvestigationServiceTest {
         final InvestigationReporting reportingModel = constructInvestigationReporting(investigation.getPublicHealthCaseUid());
         reportingModel.setBatchId(toBatchId.applyAsLong(rec));
 
-        verify(kafkaTemplate, times(17)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(15)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
         String actualTopic = null;
         String actualKey = null;

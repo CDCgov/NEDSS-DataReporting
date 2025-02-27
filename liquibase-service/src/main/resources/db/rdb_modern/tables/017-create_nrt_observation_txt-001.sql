@@ -16,7 +16,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_txt' AND xtype
 --CNDE-2295
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'batch_id' AND Object_ID = Object_ID(N'nrt_observation_txt'))
             BEGIN
-                ALTER TABLE nrt_observation_txt
+                ALTER TABLE dbo.nrt_observation_txt
                     ADD batch_id bigint;
             END;
 

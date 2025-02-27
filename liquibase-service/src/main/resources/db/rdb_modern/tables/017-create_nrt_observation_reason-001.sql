@@ -15,7 +15,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_reason' AND xt
 --CNDE-2295
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'batch_id' AND Object_ID = Object_ID(N'nrt_observation_reason'))
             BEGIN
-                ALTER TABLE nrt_observation_reason
+                ALTER TABLE dbo.nrt_observation_reason
                     ADD batch_id bigint;
             END;
 

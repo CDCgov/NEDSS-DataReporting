@@ -10,6 +10,7 @@ import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
 import lombok.Setter;
+import org.modelmapper.ModelMapper;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -68,6 +69,7 @@ public class ProcessInvestigationDataUtil {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
+    private final ModelMapper modelMapper = new ModelMapper();
 
     private final InvestigationRepository investigationRepository;
 
@@ -299,60 +301,47 @@ public class ProcessInvestigationDataUtil {
     private void transformInvestigationConfirmationMethod(String investigationConfirmationMethod, InvestigationTransformed investigationTransformed) {
         Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
 
-        // Tombstone message to delete all confirmation methods for specified phc uid
-        String jsonKeyDel = jsonGenerator.generateStringJson(new InvestigationConfirmationMethodUidKey(publicHealthCaseUid));
-        logger.info(TOMBSTONE_MSG_SENT, "confirmation method", "phc", publicHealthCaseUid);
-        kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKeyDel, null)
-                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "confirmation method"))
-                .thenRunAsync(() -> {
-                    try {
-                        JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod);
+        try {
+            JsonNode investigationConfirmationMethodJsonArray = parseJsonArray(investigationConfirmationMethod);
 
-                        InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
-                        InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
-                        Map<String, String> confirmationMethodMap = new HashMap<>();
-                        String confirmationMethodTime = null;
+            InvestigationConfirmationMethodKey investigationConfirmationMethodKey = new InvestigationConfirmationMethodKey();
+            InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
+            Map<String, String> confirmationMethodMap = new HashMap<>();
+            String confirmationMethodTime = null;
 
-                        // Redundant time variable in case if confirmation_method_time is null in all rows of the array
-                        String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
+            // Redundant time variable in case if confirmation_method_time is null in all rows of the array
+            String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
 
-                        for(JsonNode node : investigationConfirmationMethodJsonArray) {
-                            JsonNode timeNode = node.get("confirmation_method_time");
-                            if (timeNode != null && !timeNode.isNull()) {
-                                confirmationMethodTime = timeNode.asText();
-                            }
-                            confirmationMethodMap.put(node.get("confirmation_method_cd").asText(), node.get("confirmation_method_desc_txt").asText());
-                        }
-                        investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
-                        investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
+            for(JsonNode node : investigationConfirmationMethodJsonArray) {
+                JsonNode timeNode = node.get("confirmation_method_time");
+                if (timeNode != null && !timeNode.isNull()) {
+                    confirmationMethodTime = timeNode.asText();
+                }
+                confirmationMethodMap.put(node.get("confirmation_method_cd").asText(), node.get("confirmation_method_desc_txt").asText());
+            }
+            investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
+            investigationConfirmation.setBatchId(investigationTransformed.getBatchId());
+            investigationConfirmation.setConfirmationMethodTime(
+                    confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
 
-                        investigationConfirmation.setConfirmationMethodTime(
-                                confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
+            investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
 
-                        for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
-                            investigationConfirmation.setConfirmationMethodCd(entry.getKey());
-                            investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
-                            investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
-                            String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
-                            String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
-                            kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
-                        }
-                    } catch (IllegalArgumentException ex) {
-                        logger.info(ex.getMessage(), "InvestigationConfirmationMethod");
-                    } catch (Exception e) {
-                        logger.error("Error processing investigation confirmation method JSON array from investigation data: {}", e.getMessage());
-                    }
-                });
+            for(Map.Entry<String, String> entry : confirmationMethodMap.entrySet()) {
+                investigationConfirmation.setConfirmationMethodCd(entry.getKey());
+                investigationConfirmation.setConfirmationMethodDescTxt(entry.getValue());
+                investigationConfirmationMethodKey.setConfirmationMethodCd(entry.getKey());
+                String jsonKey = jsonGenerator.generateStringJson(investigationConfirmationMethodKey);
+                String jsonValue = jsonGenerator.generateStringJson(investigationConfirmation);
+                kafkaTemplate.send(investigationConfirmationOutputTopicName, jsonKey, jsonValue);
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationConfirmationMethod");
+        } catch (Exception e) {
+            logger.error("Error processing investigation confirmation method JSON array from investigation data: {}", e.getMessage());
+        }
     }
 
     private void processInvestigationPageCaseAnswer(String investigationCaseAnswer, InvestigationTransformed investigationTransformed) {
-        Long publicHealthCaseUid = investigationTransformed.getPublicHealthCaseUid();
-
-        // Tombstone message to delete all page case answers for specified actUid
-        PageCaseAnswerUidKey pageCaseAnswerUidKey = new PageCaseAnswerUidKey(publicHealthCaseUid);
-        String jsonKeyDel = jsonGenerator.generateStringJson(pageCaseAnswerUidKey);
-        kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKeyDel, null);
-
         try {
             JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
 
@@ -364,6 +353,7 @@ public class ProcessInvestigationDataUtil {
 
             for(JsonNode node : investigationCaseAnswerJsonArray) {
                 PageCaseAnswer pageCaseAnswer = objectMapper.treeToValue(node, PageCaseAnswer.class);
+                pageCaseAnswer.setBatchId(investigationTransformed.getBatchId());
                 pageCaseAnswerList.add(pageCaseAnswer);
 
                 pageCaseAnswerKey.setNbsCaseAnswerUid(pageCaseAnswer.getNbsCaseAnswerUid());
@@ -558,7 +548,7 @@ public class ProcessInvestigationDataUtil {
             contactReportingKey.setContactUid(contact.getContactUid());
 
             // constructing reporting(nrt) beans
-            ContactReporting contactReporting = transformContact(contact);
+            ContactReporting contactReporting = modelMapper.map(contact, ContactReporting.class);
 
             /*
                sending reporting(nrt) beans as json to kafka
@@ -571,8 +561,6 @@ public class ProcessInvestigationDataUtil {
                     .whenComplete((res, e) -> logger.info("Contact Record data (uid={}) sent to {}", contact.getContactUid(), contactOutputTopicName))
                     .thenRunAsync(() -> transformAndSendContactAnswer(contact));
 
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "Contact Record");
         } catch (Exception e) {
             logger.error("Error processing Contact Record or any of the associated data from contact data: {}", e.getMessage());
         }
@@ -607,62 +595,6 @@ public class ProcessInvestigationDataUtil {
         } catch (Exception e) {
             logger.error("Error processing Contact Record Answer JSON array from contact data: {}", e.getMessage());
         }
-    }
-
-    private ContactReporting transformContact(Contact contact) {
-        ContactReporting contactReporting = new ContactReporting();
-        contactReporting.setContactUid(contact.getContactUid());
-        contactReporting.setAddTime(contact.getAddTime());
-        contactReporting.setAddUserId(contact.getAddUserId());
-        contactReporting.setContactEntityEpiLinkId(contact.getContactEntityEpiLinkId());
-        contactReporting.setContactEntityPhcUid(contact.getContactEntityPhcUid());
-        contactReporting.setContactEntityUid(contact.getContactEntityUid());
-        contactReporting.setCttReferralBasis(contact.getCttReferralBasis());
-        contactReporting.setCttStatus(contact.getCttStatus());
-        contactReporting.setCttDispoDt(contact.getCttDispoDt());
-        contactReporting.setCttDisposition(contact.getCttDisposition());
-        contactReporting.setCttEvalCompleted(contact.getCttEvalCompleted());
-        contactReporting.setCttEvalDt(contact.getCttEvalDt());
-        contactReporting.setCttEvalNotes(contact.getCttEvalNotes());
-        contactReporting.setCttGroupLotId(contact.getCttGroupLotId());
-        contactReporting.setCttHealthStatus(contact.getCttHealthStatus());
-        contactReporting.setCttInvAssignedDt(contact.getCttInvAssignedDt());
-        contactReporting.setCttJurisdictionNm(contact.getCttJurisdictionNm());
-        contactReporting.setCttNamedOnDt(contact.getCttNamedOnDt());
-        contactReporting.setCttNotes(contact.getCttNotes());
-        contactReporting.setCttPriority(contact.getCttPriority());
-        contactReporting.setCttProcessingDecision(contact.getCttProcessingDecision());
-        contactReporting.setCttProgramArea(contact.getCttProgramArea());
-        contactReporting.setCttRelationship(contact.getCttRelationship());
-        contactReporting.setCttRiskInd(contact.getCttRiskInd());
-        contactReporting.setCttRiskNotes(contact.getCttRiskNotes());
-        contactReporting.setCttSharedInd(contact.getCttSharedInd());
-        contactReporting.setCttSympInd(contact.getCttSympInd());
-        contactReporting.setCttSympNotes(contact.getCttSympNotes());
-        contactReporting.setCttSympOnsetDt(contact.getCttSympOnsetDt());
-        contactReporting.setThirdPartyEntityPhcUid(contact.getThirdPartyEntityPhcUid());
-        contactReporting.setThirdPartyEntityUid(contact.getThirdPartyEntityUid());
-        contactReporting.setCttTrtCompleteInd(contact.getCttTrtCompleteInd());
-        contactReporting.setCttTrtEndDt(contact.getCttTrtEndDt());
-        contactReporting.setCttTrtInitiatedInd(contact.getCttTrtInitiatedInd());
-        contactReporting.setCttTrtNotCompleteRsn(contact.getCttTrtNotCompleteRsn());
-        contactReporting.setCttTrtNotStartRsn(contact.getCttTrtNotStartRsn());
-        contactReporting.setCttTrtNotes(contact.getCttTrtNotes());
-        contactReporting.setCttTrtStartDt(contact.getCttTrtStartDt());
-        contactReporting.setLastChgTime(contact.getLastChgTime());
-        contactReporting.setLastChgUserId(contact.getLastChgUserId());
-        contactReporting.setLocalId(contact.getLocalId());
-        contactReporting.setNamedDuringInterviewUid(contact.getNamedDuringInterviewUid());
-        contactReporting.setProgramJurisdictionOid(contact.getProgramJurisdictionOid());
-        contactReporting.setRecordStatusCd(contact.getRecordStatusCd());
-        contactReporting.setRecordStatusTime(contact.getRecordStatusTime());
-        contactReporting.setSubjectEntityEpiLinkId(contact.getSubjectEntityEpiLinkId());
-        contactReporting.setSubjectEntityPhcUid(contact.getSubjectEntityPhcUid());
-        contactReporting.setVersionCtrlNbr(contact.getVersionCtrlNbr());
-        contactReporting.setContactExposureSiteUid(contact.getContactExposureSiteUid());
-        contactReporting.setProviderContactInvestigatorUid(contact.getProviderContactInvestigatorUid());
-        contactReporting.setDispositionedByUid(contact.getDispositionedByUid());
-        return contactReporting;
     }
 
     /**

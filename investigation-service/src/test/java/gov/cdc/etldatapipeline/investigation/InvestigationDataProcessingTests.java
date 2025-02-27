@@ -105,9 +105,7 @@ class InvestigationDataProcessingTests {
         confirmationMethod.setConfirmationMethodCd("LD");
         confirmationMethod.setConfirmationMethodDescTxt("Laboratory confirmed");
         confirmationMethod.setConfirmationMethodTime("2024-01-15T10:20:57.001");
-
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
-        when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
+        confirmationMethod.setBatchId(BATCH_ID);
 
         transformer.setInvestigationObservationOutputTopicName(OBSERVATION_TOPIC);
         transformer.setPageCaseAnswerOutputTopicName(PAGE_CASE_ANSWER_TOPIC);
@@ -116,7 +114,7 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         assertEquals(CONFIRMATION_TOPIC, topicCaptor.getAllValues().getFirst());
@@ -143,7 +141,6 @@ class InvestigationDataProcessingTests {
         investigation.setInvestigationCaseAnswer(INVALID_JSON);
         investigation.setInvestigationCaseCnt(INVALID_JSON);
 
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.setInvestigationObservationOutputTopicName(OBSERVATION_TOPIC);
         transformer.setPageCaseAnswerOutputTopicName(PAGE_CASE_ANSWER_TOPIC);
         transformer.setInvestigationConfirmationOutputTopicName(CONFIRMATION_TOPIC);
@@ -172,15 +169,12 @@ class InvestigationDataProcessingTests {
         observation.setBranchTypeCd("COMP");
         observation.setBatchId(BATCH_ID);
 
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
-        when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
-
         transformer.transformInvestigationData(investigation, BATCH_ID);
 
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(8)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
 
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getAllValues().getFirst());
@@ -389,37 +383,7 @@ class InvestigationDataProcessingTests {
     }
 
     @Test
-    void testProcessContacts() throws JsonProcessingException {
-
-        Contact contact = constructContact();
-        contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
-        transformer.setContactOutputTopicName(CONTACT_TOPIC);
-        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
-
-        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
-        contactReportingKey.setContactUid(CONTACT_UID);
-        final ContactReporting  contactReportingValue = constructContactReporting();
-
-        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        transformer.processContact(contact);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
-
-        var actualContactKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().getFirst()).path("payload").toString(), ContactReportingKey.class);
-
-        var actualContactValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), ContactReporting.class);
-
-        assertEquals(contactReportingKey, actualContactKey);
-        assertEquals(contactReportingValue, actualContactValue);
-    }
-
-    @Test
-    void testProcessContactAnswers() throws JsonProcessingException {
+    void testProcessContactWithAnswers() throws JsonProcessingException {
 
         Contact contact = constructContact();
         contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
@@ -445,20 +409,20 @@ class InvestigationDataProcessingTests {
                 );
 
         //contact key
-        var actualContactKey1 = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(0)).path("payload").toString(), ContactReportingKey.class);
+        var actualContactKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().getFirst()).path("payload").toString(), ContactReportingKey.class);
         //contact value
         var actualContactValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(0)).path("payload").toString(), ContactReporting.class);
+                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), ContactReporting.class);
 
         //contact answer key
         var actualContactAnswerKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), ContactAnswerKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().getLast()).path("payload").toString(), ContactAnswerKey.class);
         //contact answer value
         var actualContactAnswerValue = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), ContactAnswer.class);
+                objectMapper.readTree(messageCaptor.getAllValues().getLast()).path("payload").toString(), ContactAnswer.class);
 
-        assertEquals(contactReportingKey, actualContactKey1);
+        assertEquals(contactReportingKey, actualContactKey);
         assertEquals(contactReportingValue, actualContactValue);
         assertEquals(contactAnswerKey, actualContactAnswerKey);
         assertEquals(contactAnswerValue, actualContactAnswerValue);
@@ -466,6 +430,21 @@ class InvestigationDataProcessingTests {
 
     @Test
     void testProcessContactError(){
+
+        Contact contact = new Contact();
+
+        transformer.setContactOutputTopicName(CONTACT_TOPIC);
+        transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
+
+        transformer.processContact(contact);
+        verify(kafkaTemplate, never()).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains("Error processing Contact Record "));
+    }
+
+    @Test
+    void testProcessContactAnswerError(){
 
         Contact contact = new Contact();
         contact.setContactUid(CONTACT_UID);
@@ -478,9 +457,7 @@ class InvestigationDataProcessingTests {
         transformer.processContact(contact);
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+                .untilAsserted(() -> verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
 
         ILoggingEvent log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
@@ -508,29 +485,26 @@ class InvestigationDataProcessingTests {
         transformer.setPageCaseAnswerOutputTopicName(PAGE_CASE_ANSWER_TOPIC);
         transformer.setInvestigationConfirmationOutputTopicName(CONFIRMATION_TOPIC);
 
-        PageCaseAnswer caseAnswer = new PageCaseAnswer();
-        caseAnswer.setActUid(INVESTIGATION_UID);
-
         PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
         pageCaseAnswerKey.setActUid(INVESTIGATION_UID);
         pageCaseAnswerKey.setNbsCaseAnswerUid(1235L);
 
         PageCaseAnswer pageCaseAnswer = constructCaseAnswer();
+        pageCaseAnswer.setBatchId(BATCH_ID);
 
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation, BATCH_ID);
 
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
         assertEquals(PAGE_CASE_ANSWER_TOPIC, topicCaptor.getValue());
 
         var actualPageCaseAnswer = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(3)).path("payload").toString(), PageCaseAnswer.class);
+                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), PageCaseAnswer.class);
         var actualKey = objectMapper.readValue(
-                objectMapper.readTree(keyCaptor.getAllValues().get(3)).path("payload").toString(), PageCaseAnswerKey.class);
+                objectMapper.readTree(keyCaptor.getAllValues().get(1)).path("payload").toString(), PageCaseAnswerKey.class);
 
         assertEquals(pageCaseAnswerKey, actualKey);
         assertEquals(pageCaseAnswer, actualPageCaseAnswer);
