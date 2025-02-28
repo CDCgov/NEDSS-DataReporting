@@ -96,6 +96,7 @@ class InvestigationServiceTest {
         investigationService.setInterviewTopic(interviewTopic);
         investigationService.setContactTopic(contactTopic);
         investigationService.setTreatmentTopic(treatmentTopic);
+        investigationService.setTreatmentOutputTopicName(treatmentTopicOutput);
 
         transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
         transformer.setInvestigationObservationOutputTopicName("investigationObservation");
@@ -107,7 +108,6 @@ class InvestigationServiceTest {
         transformer.setInterviewAnswerOutputTopicName("interviewAnswer");
         transformer.setInterviewNoteOutputTopicName("interviewNote");
         transformer.setRdbMetadataColumnsOutputTopicName("metadataColumns");
-        transformer.setTreatmentOutputTopicName(treatmentTopicOutput);
         investigationService.setTreatmentEnable(true);
     }
 
@@ -586,35 +586,28 @@ class InvestigationServiceTest {
         when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
 
         CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
-
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
-        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(future);
 
         investigationService.processMessage(payload, treatmentTopic, consumer);
-
         future.complete(null);
 
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
-
         verify(treatmentRepository).computeTreatment(String.valueOf(treatmentUid));
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
-        assertEquals(treatmentTopicOutput, topicCaptor.getAllValues().get(0));
-        assertNull(messageCaptor.getAllValues().get(0));
+        assertEquals(treatmentTopicOutput, topicCaptor.getValue());
 
-        assertEquals(treatmentTopicOutput, topicCaptor.getAllValues().get(1));
-
-        String treatmentJson = messageCaptor.getAllValues().get(1);
-        TreatmentReporting actualTreatment = objectMapper.readValue(
+        String treatmentJson = messageCaptor.getValue();
+        Treatment actualTreatment = objectMapper.readValue(
                 objectMapper.readTree(treatmentJson).path("payload").toString(),
-                TreatmentReporting.class);
+                Treatment.class);
 
-        TreatmentReporting expectedTreatment = constructTreatmentReporting(treatmentUid);
-
-        assertEquals(expectedTreatment, actualTreatment);
+        String keyJson = keyCaptor.getValue();
+        TreatmentReportingKey keyObject = objectMapper.readValue(
+                objectMapper.readTree(keyJson).path("payload").toString(),
+                TreatmentReportingKey.class);
+        assertEquals(treatment.getTreatmentUid(), keyObject.getTreatmentUid());
+        
+        assertEquals(treatment, actualTreatment);
     }
 
     @Test
@@ -675,35 +668,5 @@ class InvestigationServiceTest {
         return treatment;
     }
 
-    private TreatmentReporting constructTreatmentReporting(Long treatmentUid) {
-        TreatmentReporting treatmentReporting = new TreatmentReporting();
-        treatmentReporting.setTreatmentUid(treatmentUid.toString());
-        treatmentReporting.setPublicHealthCaseUid("12345");
-        treatmentReporting.setOrganizationUid("67890");
-        treatmentReporting.setProviderUid("11111");
-        treatmentReporting.setPatientTreatmentUid("22222");
-        treatmentReporting.setTreatmentName("Test Treatment");
-        treatmentReporting.setTreatmentOid("33333");
-        treatmentReporting.setTreatmentComments("Test Comments");
-        treatmentReporting.setTreatmentSharedInd("Y");
-        treatmentReporting.setCd("TEST_CD");
-        treatmentReporting.setTreatmentDate("2024-01-01T10:00:00");
-        treatmentReporting.setTreatmentDrug("Drug123");
-        treatmentReporting.setTreatmentDrugName("Test Drug");
-        treatmentReporting.setTreatmentDosageStrength("100");
-        treatmentReporting.setTreatmentDosageStrengthUnit("mg");
-        treatmentReporting.setTreatmentFrequency("Daily");
-        treatmentReporting.setTreatmentDuration("7");
-        treatmentReporting.setTreatmentDurationUnit("days");
-        treatmentReporting.setTreatmentRoute("Oral");
-        treatmentReporting.setLocalId("LOC123");
-        treatmentReporting.setRecordStatusCd("Active");
-        treatmentReporting.setAddTime("2024-01-01T10:00:00");
-        treatmentReporting.setAddUserId("44444");
-        treatmentReporting.setLastChangeTime("2024-01-01T10:00:00");
-        treatmentReporting.setLastChangeUserId("55555");
-        treatmentReporting.setVersionControlNumber("1");
-        return treatmentReporting;
-    }
 
 }

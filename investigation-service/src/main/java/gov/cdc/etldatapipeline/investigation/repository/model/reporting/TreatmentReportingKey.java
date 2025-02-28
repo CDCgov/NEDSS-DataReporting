@@ -1,18 +1,18 @@
 package gov.cdc.etldatapipeline.investigation.repository.model.reporting;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TreatmentReportingKey {
     @NonNull
-    @JsonProperty("treatment_uid")
     private String treatmentUid;
 }

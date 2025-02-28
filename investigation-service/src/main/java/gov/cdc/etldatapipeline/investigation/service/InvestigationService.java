@@ -6,6 +6,7 @@ import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.TreatmentReportingKey;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,9 @@ public class InvestigationService {
 
     @Value("${spring.kafka.output.topic-name-tmt}")
     private String treatmentTopic;
+
+    @Value("${spring.kafka.output.topic-name-treatment}")
+    private String treatmentOutputTopicName;
 
     @Value("${featureFlag.phc-datamart-enable}")
     private boolean phcDatamartEnable;
@@ -245,7 +249,17 @@ public class InvestigationService {
             Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
             if(treatmentData.isPresent()) {
                 Treatment treatment = treatmentData.get();
-                processDataUtil.processTreatment(treatment);
+
+                // Using Treatment directly as the reporting object
+                TreatmentReportingKey treatmentReportingKey = new TreatmentReportingKey(treatment.getTreatmentUid());
+
+                String jsonKey = jsonGenerator.generateStringJson(treatmentReportingKey);
+                String jsonValue = jsonGenerator.generateStringJson(treatment);
+
+                kafkaTemplate.send(treatmentOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Treatment data (uid={}) sent to {}",
+                                treatment.getTreatmentUid(), treatmentOutputTopicName));
+
             } else {
                 throw new EntityNotFoundException("Unable to find treatment with id: " + treatmentUid);
             }

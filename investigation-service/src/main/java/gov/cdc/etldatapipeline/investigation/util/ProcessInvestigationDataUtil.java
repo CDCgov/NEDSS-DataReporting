@@ -62,9 +62,6 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-interview-note}")
     private String interviewNoteOutputTopicName;
 
-    @Value("${spring.kafka.output.topic-name-treatment}")
-    private String treatmentOutputTopicName;
-
     @Value("${spring.kafka.output.topic-name-rdb-metadata-columns}")
     private String rdbMetadataColumnsOutputTopicName;
 
@@ -660,80 +657,6 @@ public class ProcessInvestigationDataUtil {
         contactReporting.setDispositionedByUid(contact.getDispositionedByUid());
         return contactReporting;
     }
-
-    /**
-     * Process treatment data and send to Kafka topic
-     * @param treatment Entity bean returned from stored procedures
-     */
-    public void processTreatment(Treatment treatment) {
-        try {
-            // Tombstone message to delete all treatment records for specified treatment uid
-            TreatmentReportingKey treatmentReportingKey = new TreatmentReportingKey(treatment.getTreatmentUid());
-            String jsonKeyDel = jsonGenerator.generateStringJson(treatmentReportingKey);
-            logger.info(TOMBSTONE_MSG_SENT, "treatment", "treatment", treatment.getTreatmentUid());
-
-            kafkaTemplate.send(treatmentOutputTopicName, jsonKeyDel, null)
-                    .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "treatment"))
-                    .thenRunAsync(() -> {
-                        try {
-                            // Transform and send the treatment data
-                            TreatmentReporting treatmentReporting = transformTreatment(treatment);
-
-                            String jsonKey = jsonGenerator.generateStringJson(treatmentReportingKey);
-                            String jsonValue = jsonGenerator.generateStringJson(treatmentReporting);
-
-                            kafkaTemplate.send(treatmentOutputTopicName, jsonKey, jsonValue)
-                                    .whenComplete((res, e) -> logger.info("Treatment data (uid={}) sent to {}",
-                                            treatment.getTreatmentUid(), treatmentOutputTopicName));
-
-                        } catch (Exception e) {
-                            logger.error("Error processing Treatment data: {}", e.getMessage());
-                            throw new RuntimeException(e);
-                        }
-                    });
-
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "Treatment");
-        } catch (Exception e) {
-           logger.error("Error processing Treatment data: {}", e.getMessage());
-            throw e;
-        }
-    }
-
-    private TreatmentReporting transformTreatment(Treatment treatment) {
-        TreatmentReporting treatmentReporting = new TreatmentReporting();
-
-        treatmentReporting.setTreatmentUid(treatment.getTreatmentUid());
-        treatmentReporting.setPublicHealthCaseUid(treatment.getPublicHealthCaseUid());
-        treatmentReporting.setOrganizationUid(treatment.getOrganizationUid());
-        treatmentReporting.setProviderUid(treatment.getProviderUid());
-        treatmentReporting.setPatientTreatmentUid(treatment.getPatientTreatmentUid());
-        treatmentReporting.setTreatmentName(treatment.getTreatmentName());
-        treatmentReporting.setTreatmentOid(treatment.getTreatmentOid());
-        treatmentReporting.setTreatmentComments(treatment.getTreatmentComments());
-        treatmentReporting.setTreatmentSharedInd(treatment.getTreatmentSharedInd());
-        treatmentReporting.setCd(treatment.getCd());
-        treatmentReporting.setTreatmentDate(treatment.getTreatmentDate());
-        treatmentReporting.setTreatmentDrug(treatment.getTreatmentDrug());
-        treatmentReporting.setTreatmentDrugName(treatment.getTreatmentDrugName());
-        treatmentReporting.setTreatmentDosageStrength(treatment.getTreatmentDosageStrength());
-        treatmentReporting.setTreatmentDosageStrengthUnit(treatment.getTreatmentDosageStrengthUnit());
-        treatmentReporting.setTreatmentFrequency(treatment.getTreatmentFrequency());
-        treatmentReporting.setTreatmentDuration(treatment.getTreatmentDuration());
-        treatmentReporting.setTreatmentDurationUnit(treatment.getTreatmentDurationUnit());
-        treatmentReporting.setTreatmentRoute(treatment.getTreatmentRoute());
-        treatmentReporting.setLocalId(treatment.getLocalId());
-        treatmentReporting.setRecordStatusCd(treatment.getRecordStatusCd());
-        treatmentReporting.setAddTime(treatment.getAddTime());
-        treatmentReporting.setAddUserId(treatment.getAddUserId());
-        treatmentReporting.setLastChangeTime(treatment.getLastChangeTime());
-        treatmentReporting.setLastChangeUserId(treatment.getLastChangeUserId());
-        treatmentReporting.setVersionControlNumber(treatment.getVersionControlNumber());
-
-        return treatmentReporting;
-    }
-
-
     /**
      * Parse and send RDB metadata column information sourced from the odse nbs_rdb_metadata
      * To a generic kafka topic to handle all types of rdb column metadata

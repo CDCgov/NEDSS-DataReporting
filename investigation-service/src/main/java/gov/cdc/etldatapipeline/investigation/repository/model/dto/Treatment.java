@@ -1,5 +1,7 @@
 package gov.cdc.etldatapipeline.investigation.repository.model.dto;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -7,6 +9,7 @@ import lombok.Data;
 
 @Entity
 @Data
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Treatment {
     @Id
     @Column(name = "treatment_uid")
@@ -24,72 +27,66 @@ public class Treatment {
     @Column(name = "patient_treatment_uid")
     private String patientTreatmentUid;
 
-    @Column(name = "Treatment_nm")
+    @Column(name = "treatment_name")
     private String treatmentName;
 
-    @Column(name = "Treatment_oid")
+    @Column(name = "treatment_oid")
     private String treatmentOid;
 
-    @Column(name = "Treatment_comments")
+    @Column(name = "treatment_comments")
     private String treatmentComments;
 
-    @Column(name = "Treatment_shared_ind")
+    @Column(name = "treatment_shared_ind")
     private String treatmentSharedInd;
 
     @Column(name = "cd")
     private String cd;
 
-    @Column(name = "Treatment_dt")
+    @Column(name = "treatment_date")
     private String treatmentDate;
 
-    @Column(name = "Treatment_drug")
+    @Column(name = "treatment_drug")
     private String treatmentDrug;
 
-    @Column(name = "Treatment_drug_nm")
+    @Column(name = "treatment_drug_name")
     private String treatmentDrugName;
 
-    @Column(name = "Treatment_dosage_strength")
+    @Column(name = "treatment_dosage_strength")
     private String treatmentDosageStrength;
 
-    @Column(name = "Treatment_dosage_strength_unit")
+    @Column(name = "treatment_dosage_strength_unit")
     private String treatmentDosageStrengthUnit;
 
-    @Column(name = "Treatment_frequency")
+    @Column(name = "treatment_frequency")
     private String treatmentFrequency;
 
-    @Column(name = "Treatment_duration")
+    @Column(name = "treatment_duration")
     private String treatmentDuration;
 
-    @Column(name = "Treatment_duration_unit")
+    @Column(name = "treatment_duration_unit")
     private String treatmentDurationUnit;
 
-    @Column(name = "Treatment_route")
+    @Column(name = "treatment_route")
     private String treatmentRoute;
 
-    @Column(name = "LOCAL_ID")
+    @Column(name = "local_id")
     private String localId;
 
     @Column(name = "record_status_cd")
     private String recordStatusCd;
 
-    @Column(name = "ADD_TIME")
+    @Column(name = "add_time")
     private String addTime;
 
-    @Column(name = "ADD_USER_ID")
+    @Column(name = "add_user_id")
     private String addUserId;
 
-    @Column(name = "LAST_CHG_TIME")
+    @Column(name = "last_chg_time")
     private String lastChangeTime;
 
-    @Column(name = "LAST_CHG_USER_ID")
+    @Column(name = "last_chg_user_id")
     private String lastChangeUserId;
 
-    @Column(name = "VERSION_CTRL_NBR")
+    @Column(name = "version_ctrl_nbr")
     private String versionControlNumber;
-
-    @Column(name = "refresh_datetime")
-    private String refreshDatetime;
-
-    @Column(name = "max_datetime")
-    private String maxDatetime;
 }
