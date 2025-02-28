@@ -62,4 +62,11 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
             
     @Procedure("sp_f_contact_record_case_postprocessing")
     void executeStoredProcForFContactRecordCase(@Param("contactUids") String contactUids);
+
+    @Procedure("sp_hep100_datamart_postprocessing")
+    void executeStoredProcForHep100(
+            @Param("publicHealthCaseUids") String publicHealthCaseUids,
+            @Param("patientUids") String patientUids,
+            @Param("providerUids") String providerUids,
+            @Param("organizationUids") String organizationUids);
 }

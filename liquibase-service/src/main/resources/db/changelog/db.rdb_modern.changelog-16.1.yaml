@@ -895,3 +895,19 @@ databaseChangeLog:
         - sqlFile:
             path: 040-sp_bmird_case_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 129
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 041-fn_get_proper_case-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 130
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 042-sp_hep100_datamart_postprocessing-001.sql
+            splitStatements: false

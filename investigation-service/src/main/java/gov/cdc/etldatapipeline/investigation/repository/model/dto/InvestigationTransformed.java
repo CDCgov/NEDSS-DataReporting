@@ -9,6 +9,9 @@ public class InvestigationTransformed {
     private Long physicianId;
     private Long patientId;
     private Long organizationId;
+    private Long hospitalUid;
+    private Long daycareFacUid;
+    private Long chronicCareFacUid;
     private String invStateCaseId;
     private String cityCountyCaseNbr;
     private String legacyCaseId;

@@ -97,6 +97,8 @@ public class InvestigationReporting {
     private String nacAddTime;
     private Long personAsReporterUid;
     private Long hospitalUid;
+    private Long daycareFacUid;
+    private Long chronicCareFacUid;
     private Long orderingFacilityUid;
     private Long investigatorId;
     private Long physicianId;
