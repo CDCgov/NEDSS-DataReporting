@@ -28,3 +28,14 @@ CREATE TABLE dbo.nrt_interview
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
 
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview' and xtype = 'U')
+    BEGIN
+
+--CNDE-2295
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'batch_id' AND Object_ID = Object_ID(N'nrt_interview'))
+            BEGIN
+                ALTER TABLE dbo.nrt_interview
+                    ADD batch_id bigint;
+            END;
+
+    END;

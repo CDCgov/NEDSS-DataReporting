@@ -9,6 +9,7 @@ CREATE TABLE dbo.nrt_observation_coded (
     ovc_alt_cd_desc_txt         varchar(100)                                    NULL,
     ovc_alt_cd_system_cd        varchar(300)                                    NULL,
     ovc_alt_cd_system_desc_txt  varchar(100)                                    NULL,
+    batch_id                    bigint                                          NULL,
     refresh_datetime            datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime                datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)

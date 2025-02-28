@@ -43,4 +43,6 @@ public class ObservationTransformed {
 
     private String accessionNumber;
     private Long materialId;
+
+    private Long batchId;
 }

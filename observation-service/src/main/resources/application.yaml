@@ -11,7 +11,6 @@ spring:
       topic-name-numeric: nrt_observation_numeric
       topic-name-reason: nrt_observation_reason
       topic-name-txt: nrt_observation_txt
-      topic-name-es: elastic_search_observation
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt

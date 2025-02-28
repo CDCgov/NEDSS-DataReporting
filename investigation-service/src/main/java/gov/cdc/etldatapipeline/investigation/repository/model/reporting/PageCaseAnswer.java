@@ -35,4 +35,5 @@ public class PageCaseAnswer {
     private String lastChgTime;
     private String recordStatusCd;
     private String partTypeCd;
+    private Long batchId;
 }
