@@ -399,6 +399,27 @@ class PostProcessingServiceTest {
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
+
+    @Test
+    void testPostProcessVaccinationData() {
+        String topic = "dummy_vaccination";
+        String key = "{\"payload\":{\"vaccination_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedIntIdsString = "123";
+        verify(postProcRepositoryMock).executeStoredProcForDVaccination(expectedIntIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(5, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(VACCINATION.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
     @Test
     void testPostProcessCacheIdsPriority() {
         String orgKey = "{\"payload\":{\"organization_uid\":123}}";
@@ -414,6 +435,7 @@ class PostProcessingServiceTest {
         String observationKey = "{\"payload\":{\"observation_uid\":130}}";
         String observationMsg = "{\"payload\":{\"observation_uid\":130, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"MorbReport\"}}";
         String contactKey = "{\"payload\":{\"contact_uid\":123}}";
+        String vacKey = "{\"payload\":{\"vaccination_uid\":123}}";
 
         String orgTopic = "dummy_organization";
         String providerTopic = "dummy_provider";
@@ -427,6 +449,7 @@ class PostProcessingServiceTest {
         String cmTopic = "dummy_case_management";
         String obsTopic = "dummy_observation";
         String contactTopic = "dummy_contact";
+        String vacTopic = "dummy_vaccination";
 
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
@@ -440,6 +463,8 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(ldfTopic, ldfKey, ldfKey);
         postProcessingServiceMock.postProcessMessage(cmTopic, caseManagementKey, caseManagementKey);
         postProcessingServiceMock.postProcessMessage(contactTopic, contactKey, contactKey);
+        postProcessingServiceMock.postProcessMessage(vacTopic, vacKey, vacKey);
+
         postProcessingServiceMock.processCachedIds();
 
         List<ILoggingEvent> logs = listAppender.list;
