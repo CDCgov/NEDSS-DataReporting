@@ -12,4 +12,5 @@ public class ObservationReason {
     private Long observationUid;
     private String reasonCd;
     private String reasonDescTxt;
+    private Long batchId;
 }

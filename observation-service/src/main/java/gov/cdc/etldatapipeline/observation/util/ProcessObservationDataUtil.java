@@ -60,10 +60,11 @@ public class ProcessObservationDataUtil {
     public static final String ORDER = "Order";
     public static final String RESULT = "Result";
 
-    public ObservationTransformed transformObservationData(Observation observation) {
+    public ObservationTransformed transformObservationData(Observation observation, long batchId) {
         ObservationTransformed observationTransformed = new ObservationTransformed();
         observationTransformed.setObservationUid(observation.getObservationUid());
         observationTransformed.setReportObservationUid(observation.getObservationUid());
+        observationTransformed.setBatchId(batchId);
 
         observationKey.setObservationUid(observation.getObservationUid());
         String obsDomainCdSt1 = observation.getObsDomainCdSt1();
@@ -74,12 +75,12 @@ public class ProcessObservationDataUtil {
         transformFollowupObservations(observation.getFollowupObservations(), obsDomainCdSt1, observationTransformed);
         transformParentObservations(observation.getParentObservations(), observationTransformed);
         transformActIds(observation.getActIds(), observationTransformed);
-        transformObservationCoded(observation.getObsCode());
+        transformObservationCoded(observation.getObsCode(), batchId);
         transformObservationDate(observation.getObsDate());
         transformObservationEdx(observation.getEdxIds());
         transformObservationNumeric(observation.getObsNum());
-        transformObservationReasons(observation.getObsReason());
-        transformObservationTxt(observation.getObsTxt());
+        transformObservationReasons(observation.getObsReason(), batchId);
+        transformObservationTxt(observation.getObsTxt(), batchId);
 
         return observationTransformed;
     }
@@ -320,16 +321,14 @@ public class ProcessObservationDataUtil {
         }
     }
 
-    private void transformObservationCoded(String observationCoded) {
-        // Tombstone message to delete previous observation coded data for specified uid
-        sendToKafka(observationKey, null, codedTopicName, observationKey.getObservationUid(), null);
-
+    private void transformObservationCoded(String observationCoded, long batchId) {
         try {
             JsonNode observationCodedJsonArray = parseJsonArray(observationCoded);
 
             ObservationCodedKey codedKey = new ObservationCodedKey();
             for (JsonNode jsonNode : observationCodedJsonArray) {
                 ObservationCoded coded = objectMapper.treeToValue(jsonNode, ObservationCoded.class);
+                coded.setBatchId(batchId);
                 codedKey.setObservationUid(coded.getObservationUid());
                 codedKey.setOvcCode(coded.getOvcCode());
                 sendToKafka(codedKey, coded, codedTopicName, coded.getObservationUid(), "Observation Coded data (uid={}) sent to {}");
@@ -388,16 +387,14 @@ public class ProcessObservationDataUtil {
         }
     }
 
-    private void transformObservationReasons(String observationReasons) {
+    private void transformObservationReasons(String observationReasons, long batchId) {
         try {
-            // Tombstone message to delete previous observation reason data for specified uid
-            sendToKafka(observationKey, null, reasonTopicName, observationKey.getObservationUid(), null);
-
             JsonNode observationReasonsJsonArray = parseJsonArray(observationReasons);
 
             ObservationReasonKey reasonKey = new ObservationReasonKey();
             for (JsonNode jsonNode : observationReasonsJsonArray) {
                 ObservationReason reason = objectMapper.treeToValue(jsonNode, ObservationReason.class);
+                reason.setBatchId(batchId);
                 reasonKey.setObservationUid(reason.getObservationUid());
                 reasonKey.setReasonCd(reason.getReasonCd());
                 sendToKafka(reasonKey, reason, reasonTopicName, reason.getObservationUid(), "Observation Reason data (uid={}) sent to {}");
@@ -409,16 +406,14 @@ public class ProcessObservationDataUtil {
         }
     }
 
-    private void transformObservationTxt(String observationTxt) {
-        // Tombstone message to delete previous observation txt data for specified uid
-        sendToKafka(observationKey, null, txtTopicName, observationKey.getObservationUid(), null);
-
+    private void transformObservationTxt(String observationTxt, long batchId) {
         try {
             JsonNode observationTxtJsonArray = parseJsonArray(observationTxt);
 
             ObservationTxtKey txtKey = new ObservationTxtKey();
             for (JsonNode jsonNode : observationTxtJsonArray) {
                 ObservationTxt txt = objectMapper.treeToValue(jsonNode, ObservationTxt.class);
+                txt.setBatchId(batchId);
                 txtKey.setObservationUid(txt.getObservationUid());
                 txtKey.setOvtSeq(txt.getOvtSeq());
                 sendToKafka(txtKey, txt, txtTopicName, txt.getObservationUid(), "Observation Txt data (uid={}) sent to {}");

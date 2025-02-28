@@ -16,4 +16,5 @@ public class InterviewNote {
     private String userComment;
     private String commentDate;
     private String recordStatusCd;
+    private Long batchId;
 }

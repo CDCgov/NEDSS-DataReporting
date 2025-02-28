@@ -20,8 +20,10 @@ public class InvestigationTransformed {
     private Long investigationCount;
     private Long caseCount;
     private String investigatorAssignedDatetime;
+    private Long batchId;
 
-    public InvestigationTransformed(Long publicHealthCaseUid) {
+    public InvestigationTransformed(Long publicHealthCaseUid, Long batchId) {
         this.publicHealthCaseUid = publicHealthCaseUid;
+        this.batchId = batchId;
     }
 }

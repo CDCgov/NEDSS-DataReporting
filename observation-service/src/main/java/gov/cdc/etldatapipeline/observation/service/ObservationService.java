@@ -12,6 +12,7 @@ import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -22,13 +23,12 @@ import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.function.ToLongFunction;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
@@ -43,19 +43,18 @@ public class ObservationService {
     private String observationTopic;
 
     @Value("${spring.kafka.output.topic-name-reporting}")
-    public String observationTopicOutputReporting;
-
-    @Value("${spring.kafka.output.topic-name-es}")
-    public String observationTopicOutputElasticSearch;
+    private String observationTopicOutputReporting;
 
     private final IObservationRepository iObservationRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessObservationDataUtil processObservationDataUtil;
-    ObservationKey observationKey = new ObservationKey();
     private final ModelMapper modelMapper = new ModelMapper();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
     private static String topicDebugLog = "Received Observation with id: {} from topic: {}";
+    public static final ToLongFunction<ConsumerRecord<String, String>> toBatchId = rec -> rec.timestamp()+rec.offset()+rec.partition();
+
+    ObservationKey observationKey = new ObservationKey();
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -77,13 +76,13 @@ public class ObservationService {
     @KafkaListener(
             topics = "${spring.kafka.input.topic-name}"
     )
-    public void processMessage(String message,
-                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-        logger.debug(topicDebugLog, message, topic);
-        processObservation(message);
+    public void processMessage(ConsumerRecord<String, String> rec) {
+        logger.debug(topicDebugLog, rec.value(), rec.topic());
+        long batchId = toBatchId.applyAsLong(rec);
+        processObservation(rec.value(), batchId);
     }
 
-    private void processObservation(String value) {
+    private void processObservation(String value, long batchId) {
         String observationUid = "";
         try {
             observationUid = extractUid(value,"observation_uid");
@@ -92,7 +91,7 @@ public class ObservationService {
             Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
             if(observationData.isPresent()) {
                 ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
-                ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get());
+                ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get(), batchId);
                 modelMapper.map(observationTransformed, reportingModel);
                 pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
                 logger.info("Observation data (uid={}) sent to {}", observationUid, observationTopicOutputReporting);
