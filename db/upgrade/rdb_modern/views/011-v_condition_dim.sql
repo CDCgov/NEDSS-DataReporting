@@ -1,5 +1,6 @@
 CREATE OR ALTER VIEW dbo.v_condition_dim AS
 -- default record for the dimension
+-- default record for the dimension
 with default_record as (
     SELECT 1 AS CONDITION_KEY
 ),
@@ -45,9 +46,9 @@ SELECT
     END AS disease_grp_desc,
     effective_from_time
 FROM 
-    NBS_SRTE.dbo.CONDITION_CODE cc
+    dbo.nrt_srte_CONDITION_CODE cc
     LEFT JOIN
-    NBS_SRTE.dbo.Program_area_code pac
+    dbo.nrt_srte_Program_area_code pac
         on  cc.prog_area_cd = pac.prog_area_cd
 ),
 -- section for records containing only program area information
@@ -103,8 +104,8 @@ SELECT
     NULL AS condition_cd,
     NULL AS condition_desc, 
     NULL AS condition_short_nm, 
-    NULL AS condition_cd_eff_dt, 
-    NULL AS condition_cd_end_dt, 
+ NULL AS condition_cd_eff_dt, 
+   NULL AS condition_cd_end_dt, 
     NULL AS nnd_ind, 
     condition_key,
     NULL AS disease_grp_cd, 
@@ -116,4 +117,3 @@ SELECT
     NULL AS assigning_authority_desc,
     NULL AS condition_cd_sys_cd
 from pam_only;
-
