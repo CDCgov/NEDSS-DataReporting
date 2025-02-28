@@ -618,13 +618,13 @@ BEGIN
                                                         nh.notif_rejected_count,
                                                         nh.notif_created_count,
                                                         nh.notif_sent_count,
-                                                        nh.first_notification_senddate,
+                                                        nh.first_notification_send_date,
                                                         nh.notif_created_pending_count,
                                                         nh.last_notification_date,
-                                                        nh.last_notification_senddate,
+                                                        nh.last_notification_send_date,
                                                         nh.first_notification_date,
-                                                        nh.first_notification_submittedby,
-                                                        nh.last_notification_submittedby,
+                                                        nh.first_notification_submitted_by,
+                                                        nh.last_notification_submitted_by,
                                                         nh.notification_date
                                                  FROM act_relationship act WITH (NOLOCK)
                                                           join notification notif WITH (NOLOCK)

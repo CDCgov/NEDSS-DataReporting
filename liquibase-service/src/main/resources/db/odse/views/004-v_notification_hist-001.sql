@@ -1,3 +1,5 @@
+-- dbo.v_notification_hist source
+
 CREATE OR ALTER VIEW dbo.v_notification_hist
 AS
 WITH NotifHist AS (
@@ -79,12 +81,12 @@ WITH NotifHist AS (
 SELECT DISTINCT MIN(CASE
                         WHEN VERSION_CTRL_NBR = 1
                             THEN RECORD_STATUS_CD
-    END) AS FIRSTNOTIFICATIONSTATUS
+    END) AS first_notification_status
               ,SUM(CASE
                        WHEN RECORD_STATUS_CD = 'REJECTED'
                            THEN 1
                        ELSE 0
-    END) NOTIFREJECTEDCOUNT
+    END) notif_rejected_count
               ,SUM(CASE
                        WHEN RECORD_STATUS_CD = 'APPROVED'
                            OR RECORD_STATUS_CD = 'PEND_APPR'
@@ -92,38 +94,38 @@ SELECT DISTINCT MIN(CASE
                        WHEN RECORD_STATUS_CD = 'REJECTED'
                            THEN -1
                        ELSE 0
-    END) NOTIFCREATEDCOUNT
+    END) notif_created_count
               ,SUM(CASE
                        WHEN RECORD_STATUS_CD = 'COMPLETED'
                            THEN 1
                        ELSE 0
-    END) NOTIFSENTCOUNT
+    END) notif_sent_count
               ,MIN(CASE
                        WHEN RECORD_STATUS_CD = 'COMPLETED'
                            THEN RPT_SENT_TIME
-    END) AS FIRSTNOTIFICATIONSENDDATE
+    END) AS first_notification_send_date
               ,SUM(CASE
                        WHEN RECORD_STATUS_CD = 'PEND_APPR'
                            THEN 1
                        ELSE 0
-    END) NOTIFCREATEDPENDINGSCOUNT
+    END) notif_created_pending_count
               ,MAX(CASE
                        WHEN RECORD_STATUS_CD = 'APPROVED'
                            OR RECORD_STATUS_CD = 'PEND_APPR'
                            THEN LAST_CHG_TIME
-    END) AS LASTNOTIFICATIONDATE
+    END) AS last_notification_date
               ,MAX(CASE
                        WHEN RECORD_STATUS_CD = 'COMPLETED'
                            THEN RPT_SENT_TIME
-    END) AS LASTNOTIFICATIONSENDDATE
-              ,MIN(ADD_TIME) AS FIRSTNOTIFICATIONDATE
-              ,MIN(ADD_USER_ID) AS FIRSTNOTIFICATIONSUBMITTEDBY
-              ,MIN(ADD_USER_ID) AS LASTNOTIFICATIONSUBMITTEDBY
+    END) AS last_notification_send_date
+              ,MIN(ADD_TIME) AS first_notification_date
+              ,MIN(ADD_USER_ID) AS first_notification_submitted_by
+              ,MIN(ADD_USER_ID) AS last_notification_submitted_by
               ,MIN(CASE
                        WHEN RECORD_STATUS_CD = 'COMPLETED'
                            AND RPT_SENT_TIME IS NOT NULL
                            THEN RPT_SENT_TIME
-    END) AS NOTIFICATIONDATE
+    END) AS notification_date
               ,PUBLIC_HEALTH_CASE_UID
               ,notification_uid
 FROM NotifHist

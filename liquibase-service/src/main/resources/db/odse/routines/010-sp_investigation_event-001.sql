@@ -614,18 +614,18 @@ BEGIN
                                                         per.person_uid         as 'local_patient_uid',
                                                         phc.cd                 as 'condition_cd',
                                                         phc.cd_desc_txt        as 'condition_desc',
-                                                        nh.firstnotificationstatus,
-                                                        nh.notifrejectedcount,
-                                                        nh.notifcreatedcount,
-                                                        nh.notifsentcount,
-                                                        nh.firstnotificationsenddate,
-                                                        nh.notifcreatedpendingscount,
-                                                        nh.lastnotificationdate,
-                                                        nh.lastnotificationsenddate,
-                                                        nh.firstnotificationdate,
-                                                        nh.firstnotificationsubmittedby,
-                                                        nh.lastnotificationsubmittedby,
-                                                        nh.notificationdate
+                                                        nh.first_notification_status,
+                                                        nh.notif_rejected_count,
+                                                        nh.notif_created_count,
+                                                        nh.notif_sent_count,
+                                                        nh.first_notification_send_date,
+                                                        nh.notif_created_pending_count,
+                                                        nh.last_notification_date,
+                                                        nh.last_notification_send_date,
+                                                        nh.first_notification_date,
+                                                        nh.first_notification_submitted_by,
+                                                        nh.last_notification_submitted_by,
+                                                        nh.notification_date
                                                  FROM act_relationship act WITH (NOLOCK)
                                                           join notification notif WITH (NOLOCK)
                                                                on act.source_act_uid = notif.notification_uid

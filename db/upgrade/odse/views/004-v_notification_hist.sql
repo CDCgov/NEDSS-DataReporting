@@ -1,4 +1,6 @@
-CREATE VIEW dbo.v_notification_hist
+-- dbo.v_notification_hist source
+
+CREATE OR ALTER VIEW dbo.v_notification_hist
 AS
 WITH NotifHist AS (
     SELECT  DISTINCT
@@ -101,7 +103,7 @@ SELECT DISTINCT MIN(CASE
               ,MIN(CASE
                        WHEN RECORD_STATUS_CD = 'COMPLETED'
                            THEN RPT_SENT_TIME
-    END) AS first_notification_senddate
+    END) AS first_notification_send_date
               ,SUM(CASE
                        WHEN RECORD_STATUS_CD = 'PEND_APPR'
                            THEN 1
@@ -115,10 +117,10 @@ SELECT DISTINCT MIN(CASE
               ,MAX(CASE
                        WHEN RECORD_STATUS_CD = 'COMPLETED'
                            THEN RPT_SENT_TIME
-    END) AS last_notification_senddate
+    END) AS last_notification_send_date
               ,MIN(ADD_TIME) AS first_notification_date
-              ,MIN(ADD_USER_ID) AS first_notification_submittedby
-              ,MIN(ADD_USER_ID) AS last_notification_submittedby
+              ,MIN(ADD_USER_ID) AS first_notification_submitted_by
+              ,MIN(ADD_USER_ID) AS last_notification_submitted_by
               ,MIN(CASE
                        WHEN RECORD_STATUS_CD = 'COMPLETED'
                            AND RPT_SENT_TIME IS NOT NULL
