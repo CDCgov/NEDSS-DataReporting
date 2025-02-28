@@ -201,7 +201,7 @@ BEGIN
          ) obstxt
          left outer join dbo.nrt_observation obs
           on obs.observation_uid = obstxt.observation_uid
-          where obs.batch_id = obstxt.batch_id
+          where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
         ;
 
         SELECT @RowCount_no = @@ROWCOUNT;

@@ -142,7 +142,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #INTERVIEW_ANSWERS';
 
-        SELECT interview_uid,
+        SELECT intans.interview_uid,
                rdb_column_nm,
                answer_val
         INTO #INTERVIEW_ANSWERS
