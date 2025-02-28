@@ -124,7 +124,12 @@ BEGIN
         INTO
             #NRT_PAGE
         FROM
-            dbo.nrt_page_case_answer AS nrt_pca WITH(NOLOCK)
+        (select pca.*
+            from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
+            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+            on pca.public_health_case_uid = inv.public_health_case_uid
+            where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
+        ) AS nrt_pca
         WHERE
             nrt_pca.act_uid = @phc_id
           and nrt_pca.last_chg_time = (
@@ -132,7 +137,7 @@ BEGIN
             from dbo.nrt_page_case_answer
             where act_uid = @phc_id
         );
-        
+
         COMMIT TRANSACTION;
 
 

@@ -1140,8 +1140,13 @@ BEGIN
                  LEFT JOIN dbo.CONFIRMATION_METHOD_GROUP CMG WITH(NOLOCK) ON CMG.INVESTIGATION_KEY = I.INVESTIGATION_KEY
                  LEFT JOIN dbo.NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
                  LEFT JOIN
-             (SELECT DISTINCT public_health_case_uid, observation_id
-              FROM dbo.nrt_investigation_observation with (nolock)
+             (SELECT
+                DISTINCT invobs.public_health_case_uid, invobs.observation_id
+                FROM dbo.NRT_INVESTIGATION_OBSERVATION invobs with (nolock)
+                left outer join dbo.NRT_INVESTIGATION inv
+                on inv.public_health_case_uid = invobs.public_health_case_uid
+                where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
+
              ) NIO ON nio.public_health_case_uid = i.case_uid
                  LEFT JOIN dbo.nrt_observation no2 WITH(NOLOCK) ON nio.observation_id = no2.observation_uid
                  LEFT JOIN dbo.nrt_notification_key nk WITH(NOLOCK)ON NE.notification_key = nk.d_notification_key
@@ -1458,14 +1463,13 @@ BEGIN
                 DROP TABLE #TMP_METADATA_TEST;
             END;
 
-
         SELECT C.CONDITION_KEY, M.block_nm, M.investigation_form_cd, M.question_identifier
         INTO #TMP_METADATA_TEST
         FROM (
             select pca.*
             from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
             left outer join dbo.NRT_INVESTIGATION inv with(nolock)
-            on pca.public_health_case_uid = inv.public_health_case_uid
+            on pca.act_uid = inv.public_health_case_uid
             where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
         ) AS M
                  INNER JOIN

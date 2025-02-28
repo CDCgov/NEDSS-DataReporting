@@ -46,7 +46,12 @@ BEGIN
             PART_TYPE_CD
         INTO #PLACE_INIT_OUT
         FROM
-            dbo.nrt_page_case_answer NBS_CASE_ANSWER
+            (select pca.*
+            from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
+            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+            on pca.public_health_case_uid = inv.public_health_case_uid
+            where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
+        ) NBS_CASE_ANSWER
         WHERE act_uid = @phc_id
           AND PART_TYPE_CD IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC')
         ORDER BY
@@ -630,7 +635,7 @@ BEGIN
                );
 
 
-        return @ErrorMessage;
+        return -1;
 
     END CATCH
 

@@ -66,7 +66,12 @@ BEGIN
         INTO
             #NRT_PAGE
         FROM
-            dbo.nrt_page_case_answer AS nrt_pca WITH(NOLOCK)
+            (select pca.*
+                    from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
+                    left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+                    on pca.public_health_case_uid = inv.public_health_case_uid
+                    where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
+            ) AS nrt_pca
         WHERE
             nrt_pca.act_uid = @phc_id
           and nrt_pca.last_chg_time = (
@@ -94,11 +99,10 @@ BEGIN
             NBS_CASE_ANSWER_UID, nrt_page.CODE_SET_GROUP_ID, nrt_page.RDB_COLUMN_NM, CAST(REPLACE(ANSWER_TXT, CHAR(13) + CHAR(10), ' ') AS varchar(2000)) AS ANSWER_TXT, COALESCE(ACT_UID, 1) AS PAGE_CASE_UID_TEXT, nrt_page.RECORD_STATUS_CD, nrt_page.NBS_QUESTION_UID
         INTO #text_data_INV
         FROM #NRT_PAGE AS nrt_page
-                 INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
-             ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
-        WHERE
-            nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
+            INNER JOIN
+            NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+            ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
+        WHERE nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
             AND (nrt_page.RDB_TABLE_NM = @rdb_table_name AND nrt_page.QUESTION_GROUP_SEQ_NBR IS NULL AND UPPER(nrt_page.DATA_TYPE) = 'TEXT')
             OR (nrt_page.RDB_TABLE_NM = @rdb_table_name AND nrt_page.QUESTION_GROUP_SEQ_NBR IS NULL AND nrt_page.RDB_COLUMN_NM LIKE '%_CD')
             AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
@@ -822,7 +826,7 @@ BEGIN
                      NBS_SRTE.DBO.CONDITION_CODE
                      ON CONDITION_CODE.CONDITION_CD = inv.CD
                 WHERE
-                  DATA_TYPE IN ( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
+                    DATA_TYPE IN ( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
                     (ISDATE(ANSWER_TXT) != 1) AND
                     UPPER(nrt_page.DATA_LOCATION) = 'NBS_CASE_ANSWER.ANSWER_TXT' AND
                     ANSWER_TXT IS NOT NULL AND
@@ -1305,7 +1309,7 @@ BEGIN
                      #NRT_PAGE nrt_page
                      ON nrt_page.act_uid = inv.public_health_case_uid
                 WHERE
-                  (isNumeric(numeric_inv.ANSWER_TXT) != 1) AND
+                    (isNumeric(numeric_inv.ANSWER_TXT) != 1) AND
                     numeric_inv.ANSWER_TXT IS NOT NULL AND
                     CONDITION_CODE.INVESTIGATION_FORM_CD = nrt_page.INVESTIGATION_FORM_CD);
 

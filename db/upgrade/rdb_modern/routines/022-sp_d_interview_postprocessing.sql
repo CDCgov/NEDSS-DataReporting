@@ -27,8 +27,8 @@ BEGIN
         SELECT @ROWCOUNT_NO = 0;
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Msg_Description1])
-        VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT(@interview_uids, 199));
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
+        VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -146,7 +146,13 @@ BEGIN
                rdb_column_nm,
                answer_val
         INTO #INTERVIEW_ANSWERS
-        FROM dbo.nrt_interview_answer
+        FROM (
+            select *
+            from dbo.NRT_INTERVIEW_ANSWER intans  with(nolock)
+            left outer join dbo.NRT_INTERVIEW inv with(nolock)
+            on intans.interview_uid = inv.interview_uid
+            where isnull(intans.batch_id, 1) = isnull(inv.batch_id, 1)
+        )
         WHERE interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
         if
@@ -376,12 +382,18 @@ BEGIN
                ixn.user_comment,
                ixn.comment_date
         INTO #INTERVIEW_NOTE_INIT
-        FROM dbo.nrt_interview_note ixn
-            LEFT JOIN dbo.nrt_interview_key ixk
-                ON ixn.interview_uid = ixk.interview_uid
-            LEFT JOIN dbo.nrt_interview_note_key ixnk
-                ON ixn.nbs_answer_uid = ixnk.nbs_answer_uid
-                AND ixk.d_interview_key = ixnk.d_interview_key
+        FROM (
+            select *
+            from dbo.NRT_INTERVIEW_NOTE intnote  with(nolock)
+            left outer join dbo.NRT_INTERVIEW inv with(nolock)
+            on intnote.interview_uid = inv.interview_uid
+            where isnull(intnote.batch_id, 1) = isnull(inv.batch_id, 1)
+        ) ixn
+        LEFT JOIN dbo.NRT_INTERVIEW_KEY ixk
+            ON ixn.interview_uid = ixk.interview_uid
+        LEFT JOIN dbo.NRT_INTERVIEW_NOTE_KEY ixnk
+            ON ixn.nbs_answer_uid = ixnk.nbs_answer_uid
+            AND ixk.d_interview_key = ixnk.d_interview_key
         WHERE ixn.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
 

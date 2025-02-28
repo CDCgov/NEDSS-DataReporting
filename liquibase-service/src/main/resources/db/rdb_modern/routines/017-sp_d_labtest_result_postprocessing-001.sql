@@ -167,12 +167,12 @@ BEGIN
         into #tmp_nrt_investigation_observation
         from (
                  select *
-                 from dbo.nrt_investigation_observation
+                 from dbo.NRT_INVESTIGATION_OBSERVATION
                  where observation_id in (select value from STRING_SPLIT(@pLabResultList, ',') )
              ) invobs
-                 left outer join dbo.nrt_observation obs
-                 on obs.observation_uid = invobs.observation_id
-        where isnull(obs.batch_id,1) = isnull(invobs.batch_id,1)
+                 left outer join dbo.NRT_INVESTIGATION inv
+                 on inv.public_health_case_uid = invobs.public_health_case_uid
+        where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
         ;
 
         SELECT @RowCount_no = @@ROWCOUNT;

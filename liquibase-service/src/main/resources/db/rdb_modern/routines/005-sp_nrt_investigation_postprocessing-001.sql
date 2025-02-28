@@ -188,10 +188,10 @@ BEGIN
                 FROM #temp_inv_table t
                 LEFT JOIN (
                     select invobs.*
-                    from dbo.nrt_investigation_observation invobs
-                    left outer join dbo.nrt_observation obs
-                    on obs.observation_uid = invobs.observation_uid
-                    where isnull(obs.batch_id,1) = isnull(invobs.batch_id,1)
+                    from dbo.NRT_INVESTIGATION_OBSERVATION invobs
+                    left outer join dbo.NRT_INVESTIGATION inv
+                    on inv.public_health_case_uid = invobs.public_health_case_uid
+                    where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
                 ) nio on nio.public_health_case_uid = t.case_uid
                 WHERE nio.branch_type_cd = 'InvFrmQ';
 

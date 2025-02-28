@@ -492,7 +492,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id,@DataAsset_nm,@Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
+        VALUES (@batch_id,@Dataflow_Name,@Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
 
     END TRY
     BEGIN CATCH
