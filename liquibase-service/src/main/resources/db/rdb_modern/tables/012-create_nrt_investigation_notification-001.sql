@@ -52,9 +52,9 @@ CREATE TABLE dbo.nrt_investigation_notification (
             ALTER TABLE dbo.nrt_investigation_notification ADD notif_sent_count bigint;
         END;
 
-    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'first_notification_senddate' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
+    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'first_notification_send_date' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
         BEGIN
-            ALTER TABLE dbo.nrt_investigation_notification ADD first_notification_senddate datetime;
+            ALTER TABLE dbo.nrt_investigation_notification ADD first_notification_send_date datetime;
         END;
 
     IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'notif_created_pending_count' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
@@ -67,9 +67,9 @@ CREATE TABLE dbo.nrt_investigation_notification (
             ALTER TABLE dbo.nrt_investigation_notification ADD last_notification_date datetime;
         END;
 
-    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'last_notification_senddate' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
+    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'last_notification_send_date' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
         BEGIN
-            ALTER TABLE dbo.nrt_investigation_notification ADD last_notification_senddate datetime;
+            ALTER TABLE dbo.nrt_investigation_notification ADD last_notification_send_date datetime;
         END;
 
     IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'first_notification_date' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
@@ -77,14 +77,14 @@ CREATE TABLE dbo.nrt_investigation_notification (
             ALTER TABLE dbo.nrt_investigation_notification ADD first_notification_date datetime;
         END;
 
-    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'first_notification_submittedby' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
+    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'first_notification_submitted_by' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
         BEGIN
-            ALTER TABLE dbo.nrt_investigation_notification ADD first_notification_submittedby bigint;
+            ALTER TABLE dbo.nrt_investigation_notification ADD first_notification_submitted_by bigint;
         END;
 
-    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'last_notification_submittedby' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
+    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'last_notification_submitted_by' AND Object_ID = Object_ID(N'nrt_investigation_notification'))
         BEGIN
-            ALTER TABLE dbo.nrt_investigation_notification ADD last_notification_submittedby bigint;
+            ALTER TABLE dbo.nrt_investigation_notification ADD last_notification_submitted_by bigint;
         END;
 
     IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'notification_date' AND Object_ID = Object_ID(N'nrt_investigation_notification'))

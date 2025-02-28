@@ -36,13 +36,13 @@ CREATE TABLE dbo.nrt_investigation_notification
     notif_rejected_count           bigint                                          NULL,
     notif_created_count            bigint                                          NULL,
     notif_sent_count               bigint                                          NULL,
-    first_notification_senddate    datetime                                        NULL,
+    first_notification_send_date    datetime                                        NULL,
     notif_created_pending_count    bigint                                          NULL,
     last_notification_date         datetime                                        NULL,
-    last_notification_senddate     datetime                                        NULL,
+    last_notification_send_date     datetime                                        NULL,
     first_notification_date        datetime                                        NULL,
-    first_notification_submittedby bigint                                          NULL,
-    last_notification_submittedby  bigint                                          NULL,
+    first_notification_submitted_by bigint                                          NULL,
+    last_notification_submitted_by  bigint                                          NULL,
     notification_date              datetime                                        NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
