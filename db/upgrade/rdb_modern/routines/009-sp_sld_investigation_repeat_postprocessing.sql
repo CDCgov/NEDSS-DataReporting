@@ -124,13 +124,11 @@ BEGIN
         INTO
             #NRT_PAGE
         FROM
-        (select pca.*
-            from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
-            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
-            on pca.public_health_case_uid = inv.public_health_case_uid
-            where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
-        ) AS nrt_pca
-        WHERE
+        dbo.NRT_PAGE_CASE_ANSWER nrt_pca with(nolock)
+        left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+        on nrt_pca.act_uid = inv.public_health_case_uid
+        where isnull(nrt_pca.batch_id, 1) = isnull(inv.batch_id, 1)
+        and
             nrt_pca.act_uid = @phc_id
           and nrt_pca.last_chg_time = (
             select max(last_chg_time)

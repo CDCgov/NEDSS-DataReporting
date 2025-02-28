@@ -146,14 +146,12 @@ BEGIN
                rdb_column_nm,
                answer_val
         INTO #INTERVIEW_ANSWERS
-        FROM (            
-            select * 
-            from dbo.NRT_INTERVIEW_ANSWER intans  with(nolock)
-            left outer join dbo.NRT_INTERVIEW inv with(nolock)
-            on intans.interview_uid = inv.interview_uid
-            where isnull(intans.batch_id, 1) = isnull(inv.batch_id, 1)
-        )
-        WHERE interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
+        FROM 
+        dbo.NRT_INTERVIEW_ANSWER intans  with(nolock)
+        left outer join dbo.NRT_INTERVIEW inv with(nolock)
+        on intans.interview_uid = inv.interview_uid
+        where isnull(intans.batch_id, 1) = isnull(inv.batch_id, 1)
+        and inv.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
         if
             @debug = 'true'
@@ -382,19 +380,16 @@ BEGIN
                ixn.user_comment,
                ixn.comment_date
         INTO #INTERVIEW_NOTE_INIT
-        FROM (
-            select * 
-            from dbo.NRT_INTERVIEW_NOTE intnote  with(nolock)
-            left outer join dbo.NRT_INTERVIEW inv with(nolock)
-            on intnote.interview_uid = inv.interview_uid
-            where isnull(intnote.batch_id, 1) = isnull(inv.batch_id, 1)
-        ) ixn
+        FROM 
+            dbo.NRT_INTERVIEW_NOTE ixn  with(nolock)
+        left join dbo.NRT_INTERVIEW inv with(nolock)
+        on ixn.interview_uid = inv.interview_uid
         LEFT JOIN dbo.NRT_INTERVIEW_KEY ixk
             ON ixn.interview_uid = ixk.interview_uid
         LEFT JOIN dbo.NRT_INTERVIEW_NOTE_KEY ixnk
             ON ixn.nbs_answer_uid = ixnk.nbs_answer_uid
             AND ixk.d_interview_key = ixnk.d_interview_key
-        WHERE ixn.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
+        WHERE isnull(ixn.batch_id, 1) = isnull(inv.batch_id, 1) and ixn.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
 
 
         if

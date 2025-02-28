@@ -665,13 +665,9 @@ BEGIN
                         nrt.CONFIRMATION_METHOD_TIME as CONFIRMATION_DT,
                         cm.CONFIRMATION_METHOD_KEY
         into #temp_cm_table
-        from (
-            select invconf.*
-            from dbo.NRT_INVESTIGATION_CONFIRMATION invconf with(nolock)
-            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
-            on invconf.public_health_case_uid = inv.public_health_case_uid
-            where isnull(invconf.batch_id,1) = isnull(inv.batch_id,1)
-        ) nrt
+        from dbo.NRT_INVESTIGATION_CONFIRMATION nrt with(nolock)
+        left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+        on nrt.public_health_case_uid = inv.public_health_case_uid and isnull(nrt.batch_id,1) = isnull(inv.batch_id,1)
         left join dbo.confirmation_method cm with (nolock) on cm.confirmation_method_cd = nrt.confirmation_method_cd
         left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
         where nrt.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','));

@@ -46,13 +46,11 @@ BEGIN
             PART_TYPE_CD
         INTO #PLACE_INIT_OUT
         FROM
-            (select pca.*
-            from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
+            dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
             left outer join dbo.NRT_INVESTIGATION inv with(nolock)
-            on pca.public_health_case_uid = inv.public_health_case_uid
+            on pca.act_uid = inv.public_health_case_uid
             where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
-        ) NBS_CASE_ANSWER
-        WHERE act_uid = @phc_id
+         and act_uid = @phc_id
           AND PART_TYPE_CD IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC')
         ORDER BY
             ACT_UID,
