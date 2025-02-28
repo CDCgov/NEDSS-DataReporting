@@ -1292,25 +1292,24 @@ BEGIN
             DROP TABLE #TEMP_MIN_MAX_NOTIFICATION;
 
         SELECT DISTINCT
-            min(rpt_sent_time) AS FIRSTNOTIFICATIONSENDDATE
---						first_notification_status AS FIRSTNOTIFICATIONSTATUS
---                      , notif_rejected_count AS NOTIFREJECTEDCOUNT
---                      , notif_created_count AS  NOTIFCREATEDCOUNT
---                      , notif_sent_count AS NOTIFSENTCOUNT
---                      , first_notification_senddate AS FIRSTNOTIFICATIONSENDDATE
---                      , notif_created_pending_count AS NOTIFCREATEDPENDINGSCOUNT
---                      , last_notification_date AS LASTNOTIFICATIONDATE
---                      , last_notification_senddate AS LASTNOTIFICATIONSENDDATE
---                      , first_notification_date AS FIRSTNOTIFICATIONDATE
---                      , first_notification_submittedby AS FIRSTNOTIFICATIONSUBMITTEDBY
---                      , last_notification_submittedby AS LASTNOTIFICATIONSUBMITTEDBY
---                      , notification_date AS NOTIFICATIONDATE
+            first_notification_status AS FIRSTNOTIFICATIONSTATUS
+                      , notif_rejected_count AS NOTIFREJECTEDCOUNT
+                      , notif_created_count AS  NOTIFCREATEDCOUNT
+                      , notif_sent_count AS NOTIFSENTCOUNT
+                      , first_notification_send_date AS FIRSTNOTIFICATIONSENDDATE
+                      , notif_created_pending_count AS NOTIFCREATEDPENDINGSCOUNT
+                      , last_notification_date AS LASTNOTIFICATIONDATE
+                      , last_notification_send_date AS LASTNOTIFICATIONSENDDATE
+                      , first_notification_date AS FIRSTNOTIFICATIONDATE
+                      , first_notification_submitted_by AS FIRSTNOTIFICATIONSUBMITTEDBY
+                      , last_notification_submitted_by AS LASTNOTIFICATIONSUBMITTEDBY
+                      , notification_date AS NOTIFICATIONDATE
                       , PUBLIC_HEALTH_CASE_UID
         INTO #TEMP_MIN_MAX_NOTIFICATION
         FROM dbo.nrt_investigation_notification WITH (NOLOCK)
         WHERE notification_uid IN (SELECT value FROM STRING_SPLIT(@notif_uids, ','))
            OR PUBLIC_HEALTH_CASE_UID IN (SELECT CASE_UID FROM #TMP_CASE_LAB_DATAMART_MODIFIED_output)
-        GROUP BY PUBLIC_HEALTH_CASE_UID;
+        ;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TEMP_MIN_MAX_NOTIFICATION;
 
@@ -1464,7 +1463,7 @@ BEGIN
 ----------------------------------------------------------------------------
         BEGIN TRANSACTION ;
 
-        SET @Proc_Step_no =  @Proc_Step_no + 1 ;
+        SET @Proc_Step_no =  999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
         SELECT @ROWCOUNT_NO = 0;
 
@@ -1484,7 +1483,7 @@ BEGIN
               'INV_SUMM_DATAMART'
             ,'INV_SUMM_DATAMART'
             ,'COMPLETE'
-            ,@Proc_Step_no
+            ,999
             ,@Proc_Step_name
             ,@RowCount_no
             );
