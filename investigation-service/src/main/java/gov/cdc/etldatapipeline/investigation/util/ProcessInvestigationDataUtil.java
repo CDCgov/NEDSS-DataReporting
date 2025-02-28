@@ -31,6 +31,7 @@ public class ProcessInvestigationDataUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     public static final String TOMBSTONE_MSG_SENT = "Tombstone message sent to delete {} for {} uid: {} ";
     public static final String TOMBSTONE_MSG_ACCEPTED = "Deleting message accepted for {}, initializing inserts";
+    public static final String ENTITY_ID = "entity_id";
 
     @Value("${spring.kafka.output.topic-name-confirmation}")
     public String investigationConfirmationOutputTopicName;
@@ -145,7 +146,8 @@ public class ProcessInvestigationDataUtil {
                 String typeCode = node.get(TYPE_CD).asText();
                 String subjectClassCode = node.get("subject_class_cd").asText();
                 String personCode = node.get("person_cd").asText();
-                Long entityId = node.get("entity_id").asLong();
+                Long entityId = Optional.ofNullable(node.get(ENTITY_ID))
+                        .filter(e -> !e.isNull()).map(JsonNode::asLong).orElse(null);
 
                 if (typeCode.equals("InvestgrOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
                     investigationTransformed.setInvestigatorId(entityId);
@@ -188,9 +190,26 @@ public class ProcessInvestigationDataUtil {
             for (JsonNode node : organizationParticipationsJsonArray) {
                 String typeCode = node.get(TYPE_CD).asText();
                 String subjectClassCode = node.get("subject_class_cd").asText();
+                Long entityId = Optional.ofNullable(node.get(ENTITY_ID))
+                        .filter(e -> !e.isNull()).map(JsonNode::asLong).orElse(null);
 
-                if (typeCode.equals("OrgAsReporterOfPHC") && subjectClassCode.equals("ORG")) {
-                    investigationTransformed.setOrganizationId(node.get("entity_id").asLong());
+                if ("ORG".equals(subjectClassCode)) {
+                    switch (typeCode) {
+                        case "OrgAsReporterOfPHC":
+                            investigationTransformed.setOrganizationId(entityId);
+                            break;
+                        case "HospOfADT":
+                            investigationTransformed.setHospitalUid(entityId);
+                            break;
+                        case "ChronicCareFac":
+                            investigationTransformed.setChronicCareFacUid(entityId);
+                            break;
+                        case "DaycareFac":
+                            investigationTransformed.setDaycareFacUid(entityId);
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         } catch (IllegalArgumentException ex) {
@@ -341,41 +360,38 @@ public class ProcessInvestigationDataUtil {
         // Tombstone message to delete all page case answers for specified actUid
         PageCaseAnswerUidKey pageCaseAnswerUidKey = new PageCaseAnswerUidKey(publicHealthCaseUid);
         String jsonKeyDel = jsonGenerator.generateStringJson(pageCaseAnswerUidKey);
-        logger.info(TOMBSTONE_MSG_SENT, "page case answers", "phc", publicHealthCaseUid);
-        kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKeyDel, null)
-                .whenComplete((res, e) -> logger.info(TOMBSTONE_MSG_ACCEPTED, "page case answers"))
-                .thenRunAsync(() -> {
-                    try {
-                        JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
+        kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKeyDel, null);
 
-                        Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
-                        List<PageCaseAnswer> pageCaseAnswerList = new ArrayList<>();
+        try {
+            JsonNode investigationCaseAnswerJsonArray = parseJsonArray(investigationCaseAnswer);
 
-                        PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
-                        pageCaseAnswerKey.setActUid(actUid);
+            Long actUid = investigationCaseAnswerJsonArray.get(0).get("act_uid").asLong();
+            List<PageCaseAnswer> pageCaseAnswerList = new ArrayList<>();
 
-                        for(JsonNode node : investigationCaseAnswerJsonArray) {
-                            PageCaseAnswer pageCaseAnswer = objectMapper.treeToValue(node, PageCaseAnswer.class);
-                            pageCaseAnswerList.add(pageCaseAnswer);
+            PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
+            pageCaseAnswerKey.setActUid(actUid);
 
-                            pageCaseAnswerKey.setNbsCaseAnswerUid(pageCaseAnswer.getNbsCaseAnswerUid());
-                            String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerKey);
-                            String jsonValue = jsonGenerator.generateStringJson(pageCaseAnswer);
+            for(JsonNode node : investigationCaseAnswerJsonArray) {
+                PageCaseAnswer pageCaseAnswer = objectMapper.treeToValue(node, PageCaseAnswer.class);
+                pageCaseAnswerList.add(pageCaseAnswer);
 
-                            kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, jsonValue);
-                        }
+                pageCaseAnswerKey.setNbsCaseAnswerUid(pageCaseAnswer.getNbsCaseAnswerUid());
+                String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerKey);
+                String jsonValue = jsonGenerator.generateStringJson(pageCaseAnswer);
 
-                        String rdbTblNms = String.join(",", pageCaseAnswerList.stream()
-                                .map(PageCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
-                        if (!rdbTblNms.isEmpty()) {
-                            investigationTransformed.setRdbTableNameList(rdbTblNms);
-                        }
-                    } catch (IllegalArgumentException ex) {
-                        logger.info(ex.getMessage(), "PageCaseAnswer");
-                    } catch (Exception e) {
-                        logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
-                    }
-                });
+                kafkaTemplate.send(pageCaseAnswerOutputTopicName, jsonKey, jsonValue);
+            }
+
+            String rdbTblNms = String.join(",", pageCaseAnswerList.stream()
+                    .map(PageCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
+            if (!rdbTblNms.isEmpty()) {
+                investigationTransformed.setRdbTableNameList(rdbTblNms);
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "PageCaseAnswer");
+        } catch (Exception e) {
+            logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
+        }
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)

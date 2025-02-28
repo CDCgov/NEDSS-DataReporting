@@ -106,6 +106,8 @@ CREATE TABLE dbo.nrt_investigation
     nac_add_time                      datetime                                        NULL,
     person_as_reporter_uid            bigint                                          NULL,
     hospital_uid                      bigint                                          NULL,
+    daycare_fac_uid                   bigint                                          NULL,
+    chronic_care_fac_uid              bigint                                          NULL,
     ordering_facility_uid             bigint                                          NULL,
     investigation_form_cd             varchar(50)                                     NULL,
     outbreak_name_desc                varchar(100)                                    NULL,

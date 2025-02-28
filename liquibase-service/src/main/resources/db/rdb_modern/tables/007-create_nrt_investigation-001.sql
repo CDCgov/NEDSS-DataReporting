@@ -276,4 +276,15 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
                 ALTER TABLE dbo.nrt_investigation ADD raw_record_status_cd varchar(20);
             END;
 
+--CNDE-2254
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'daycare_fac_uid' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_investigation ADD daycare_fac_uid bigint;
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'chronic_care_fac_uid' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_investigation ADD chronic_care_fac_uid bigint;
+            END;
+
     END;

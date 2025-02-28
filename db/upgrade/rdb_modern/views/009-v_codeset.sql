@@ -1,11 +1,11 @@
-CREATE OR ALTER VIEW dbo.v_codeset as
+CREATE OR ALTER  VIEW dbo.v_codeset as
 WITH totalidm AS (
     SELECT
         unique_cd as  'CD',
         SRT_reference as  'code_set_nm',
         format as  'format',
         label as  'cd_desc'
-    FROM dbo.v_nrt_srte_totalidm t
+    FROM dbo.nrt_srte_totalidm t
 ),
      ALL_CODESET as (
          SELECT
@@ -13,7 +13,7 @@ WITH totalidm AS (
              LEFT(RDB_table, 32) as  'TBL_NM',
              RDB_attribute as  'COL_NM',
              condition_cd as  'condition_cd'
-         FROM dbo.v_nrt_srte_imrdbmapping),
+         FROM dbo.nrt_srte_imrdbmapping),
      RDBCodeset AS
          (
              SELECT
@@ -38,4 +38,4 @@ SELECT
     NULLIF(c.code_set_nm,'') as code_set_nm,
     COALESCE(c.code_set_desc_txt,agg.cd_desc)	as CD_DESC
 FROM RDBCodeset agg
-         LEFT JOIN dbo.v_nrt_srte_codeset c on c.code_set_nm = agg.code_set_nm;
+         LEFT JOIN dbo.nrt_srte_codeset c on c.code_set_nm = agg.code_set_nm;

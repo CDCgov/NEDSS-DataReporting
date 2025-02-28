@@ -131,6 +131,7 @@ BEGIN
                    cd,
                    DB_field,
                    rdb_table,
+                   label,
                    col_nm,
                    response
             INTO #OBS_CODED_CRS_Case
