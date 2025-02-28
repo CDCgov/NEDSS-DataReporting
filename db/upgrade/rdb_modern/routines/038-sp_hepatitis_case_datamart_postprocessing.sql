@@ -73,7 +73,9 @@ BEGIN
 
             select public_health_case_uid,
                    unique_cd      as cd,
-                   col_nm,
+                   CASE WHEN col_nm = 'NATION_CD' THEN 'PLACE_OF_BIRTH'
+                   ELSE col_nm
+                   END AS col_nm,
                    rom.DB_field,
                    rom.rdb_table,
                    rom.label,
@@ -84,7 +86,7 @@ BEGIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'code'
+            WHERE (RDB_TABLE = @tgt_table_nm OR unique_cd = 'HEP255') and db_field = 'code'
               and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
 

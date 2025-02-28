@@ -10,5 +10,5 @@ select v.code                 as CODE_VAL,
        ROW_NUMBER () over (ORDER BY c.cd) AS CODE_KEY
 from dbo.v_codeset c
          join
-     dbo.v_nrt_srte_code_Value_General v
+     dbo.nrt_srte_code_Value_General v
      on c.code_set_nm = v.code_set_nm;

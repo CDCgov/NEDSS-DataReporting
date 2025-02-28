@@ -10,7 +10,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_hepatitis_case_multi_v
 
         --check for null and set default to 2
         DECLARE @max bigint = (SELECT ISNULL(MAX(HEP_MULTI_VAL_DATA_KEY) + 1, 2) FROM dbo.hep_multi_value_field);
-        DBCC CHECKIDENT('dbo.nrt_hepatitis_case_case_multi_val_key', RESEED, @max);
+        DBCC CHECKIDENT('dbo.nrt_hepatitis_case_multi_val_key', RESEED, @max);
 
     END;
 
