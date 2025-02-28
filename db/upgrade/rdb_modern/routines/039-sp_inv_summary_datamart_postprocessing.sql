@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[sp_inv_summary_datamart_postprocessing_cnde2152]
+CREATE OR ALTER PROCEDURE [dbo].[sp_inv_summary_datamart_postprocessing]
     @phc_uids nvarchar(max) = '',
     @notif_uids nvarchar(max) = '',
     @obs_uids nvarchar(max) = '',
@@ -11,8 +11,6 @@ BEGIN
         DECLARE @RowCount_no INT ;
         DECLARE @Proc_Step_no FLOAT = 0 ;
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
-        DECLARE @batch_start_time datetime = null ;
-        DECLARE @batch_end_time datetime = null ;
         DECLARE @batch_id bigint;
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
 

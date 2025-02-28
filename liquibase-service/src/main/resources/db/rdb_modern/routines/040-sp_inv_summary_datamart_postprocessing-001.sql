@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[sp_inv_summary_datamart_postprocessing_cnde2152]
+CREATE OR ALTER PROCEDURE [dbo].[sp_inv_summary_datamart_postprocessing]
     @phc_uids nvarchar(max) = '',
     @notif_uids nvarchar(max) = '',
     @obs_uids nvarchar(max) = '',

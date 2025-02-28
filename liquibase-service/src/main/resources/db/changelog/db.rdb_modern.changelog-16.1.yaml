@@ -855,4 +855,28 @@ databaseChangeLog:
         - sqlFile:
             path: 042-create_nrt_treatment-001.sql
             splitStatements: false
+  - changeSet:
+      id: 124
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 043-create_f_var_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 125
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 044-create-f_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 125
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 040-sp_inv_summary_datamart_postprocessing-001.sql
+            splitStatements: false
             
