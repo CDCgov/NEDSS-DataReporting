@@ -682,7 +682,18 @@ class InvestigationDataProcessingTests {
         notifications.setLocalPatientUid(75395128L);
         notifications.setConditionCd("11065");
         notifications.setConditionDesc("Novel Coronavirus");
-
+        notifications.setFirstNotificationStatus("APPROVED");
+        notifications.setNotifRejectedCount(0L);
+        notifications.setNotifCreatedCount(1L);
+        notifications.setNotifSentCount(1L);
+        notifications.setFirstNotificationSendDate("2025-02-25T20:01:14.210");
+        notifications.setNotifCreatedPendingCount(0L);
+        notifications.setLastNotificationDate("2025-02-25T16:28:18.923");
+        notifications.setLastNotificationSendDate("2025-02-25T20:01:14.210");
+        notifications.setFirstNotificationDate("2025-02-25T16:28:18.923");
+        notifications.setFirstNotificationSubmittedBy(10055282L);
+        notifications.setLastNotificationSubmittedBy(10055282L);
+        notifications.setNotificationDate("2025-02-25T20:01:14.210");
         return notifications;
     }
 

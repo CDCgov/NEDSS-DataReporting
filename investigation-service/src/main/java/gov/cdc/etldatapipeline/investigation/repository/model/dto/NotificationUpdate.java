@@ -15,7 +15,4 @@ public class NotificationUpdate {
 
     @Column(name = "investigation_notifications")
     private String investigationNotifications;
-
-    @Column(name = "notification_history")
-    private String notificationHistory;
 }
