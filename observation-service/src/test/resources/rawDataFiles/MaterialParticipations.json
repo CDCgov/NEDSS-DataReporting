@@ -15,5 +15,17 @@
     "material_desc": "Lymphocytes",
     "risk_cd": null,
     "risk_desc_txt": null
+  },
+  {
+    "act_uid": 100000003,
+    "type_cd": "TST",
+    "entity_id": 10000005,
+    "subject_class_cd": "MAT"
+  },
+  {
+    "act_uid": 100000003,
+    "type_cd": "SPC",
+    "entity_id": 10000005,
+    "subject_class_cd": "TST"
   }
 ]

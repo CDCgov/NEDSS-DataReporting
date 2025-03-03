@@ -12,4 +12,5 @@ public class InterviewAnswer {
     private Long interviewUid;
     private String rdbColumnNm;
     private String answerVal;
+    private Long batchId;
 }

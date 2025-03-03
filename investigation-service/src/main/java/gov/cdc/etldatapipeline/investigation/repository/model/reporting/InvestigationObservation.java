@@ -12,4 +12,5 @@ public class InvestigationObservation {
     private String rootTypeCd;
     private Long branchId;
     private String branchTypeCd;
+    private Long batchId;
 }

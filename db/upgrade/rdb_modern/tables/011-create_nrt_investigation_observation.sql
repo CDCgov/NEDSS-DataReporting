@@ -5,6 +5,7 @@ CREATE TABLE dbo.nrt_investigation_observation (
     root_type_cd           varchar(50)                                     NULL,
     branch_id              bigint                                          NULL,
     branch_type_cd         varchar(50)                                     NULL,
+    batch_id               bigint                                          NULL,
     refresh_datetime       datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime           datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
