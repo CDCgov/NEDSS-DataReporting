@@ -151,6 +151,9 @@ public class Contact {
     @Column(name="SUBJECT_ENTITY_PHC_UID")
     private Long subjectEntityPhcUid;
 
+    @Column(name="SUBJECT_ENTITY_UID")
+    private Long subjectEntityUid;
+
     @Column(name="version_ctrl_nbr")
     private Long versionCtrlNbr;
 
