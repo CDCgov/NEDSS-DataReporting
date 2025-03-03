@@ -957,7 +957,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 051-create_f_var_pam-001.sql
+            path: 051-create_nrt_vaccination-001.sql
             splitStatements: false
   - changeSet:
       id: 137
@@ -965,7 +965,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 052-create-f_tb_pam-001.sql
+            path: 052-create_nrt_vaccination_key-001.sql
             splitStatements: false
   - changeSet:
       id: 138
@@ -973,6 +973,38 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 044-sp_inv_summary_datamart_postprocessing-001.sql
+            path: 053-create_nrt_vaccination_answer-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 139
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 044-sp_d_vaccination_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 140
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 054-create_f_var_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 141
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 055-create-f_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 142
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 045-sp_inv_summary_datamart_postprocessing-001.sql
             splitStatements: false
 

@@ -97,7 +97,8 @@ public class PostProcessingService {
             "${spring.kafka.topic.place}",
             "${spring.kafka.topic.auth_user}",
             "${spring.kafka.topic.contact_record}",
-            "${spring.kafka.topic.treatment}"
+            "${spring.kafka.topic.treatment}",
+            "${spring.kafka.topic.vaccination}"
     })
     public void postProcessMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -260,6 +261,9 @@ public class PostProcessingService {
                     case OBSERVATION:
                         dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);
                         observationUids = ids;
+                        break;
+                    case VACCINATION:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
                         break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
