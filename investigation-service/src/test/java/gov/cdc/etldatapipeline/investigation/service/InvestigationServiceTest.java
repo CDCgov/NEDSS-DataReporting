@@ -497,37 +497,6 @@ class InvestigationServiceTest {
         assertThrows(NoDataException.class, () -> investigationService.processMessage(rec, consumer));
     }
 
-    private Treatment constructTreatment(Long treatmentUid) {
-        Treatment treatment = new Treatment();
-        treatment.setTreatmentUid(String.valueOf(treatmentUid));
-        treatment.setPublicHealthCaseUid("12345");
-        treatment.setOrganizationUid("67890");
-        treatment.setProviderUid("11111");
-        treatment.setPatientTreatmentUid("22222");
-        treatment.setTreatmentName("Test Treatment");
-        treatment.setTreatmentOid("33333");
-        treatment.setTreatmentComments("Test Comments");
-        treatment.setTreatmentSharedInd("Y");
-        treatment.setCd("TEST_CD");
-        treatment.setTreatmentDate("2024-01-01T10:00:00");
-        treatment.setTreatmentDrug("Drug123");
-        treatment.setTreatmentDrugName("Test Drug");
-        treatment.setTreatmentDosageStrength("100");
-        treatment.setTreatmentDosageStrengthUnit("mg");
-        treatment.setTreatmentFrequency("Daily");
-        treatment.setTreatmentDuration("7");
-        treatment.setTreatmentDurationUnit("days");
-        treatment.setTreatmentRoute("Oral");
-        treatment.setLocalId("LOC123");
-        treatment.setRecordStatusCd("Active");
-        treatment.setAddTime("2024-01-01T10:00:00");
-        treatment.setAddUserId("44444");
-        treatment.setLastChangeTime("2024-01-01T10:00:00");
-        treatment.setLastChangeUserId("55555");
-        treatment.setVersionControlNumber("1");
-        return treatment;
-    }
-
     private ConsumerRecord<String, String> getRecord(String topic, String payload) {
         return new ConsumerRecord<>(topic, 0,  11L, null, payload);
     }
