@@ -53,14 +53,20 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-interview-answer}")
     private String interviewAnswerOutputTopicName;
 
+    @Value("${spring.kafka.output.topic-name-interview-note}")
+    private String interviewNoteOutputTopicName;
+
     @Value("${spring.kafka.output.topic-name-contact}")
     private String contactOutputTopicName;
 
     @Value("${spring.kafka.output.topic-name-contact-answer}")
     private String contactAnswerOutputTopicName;
 
-    @Value("${spring.kafka.output.topic-name-interview-note}")
-    private String interviewNoteOutputTopicName;
+    @Value("${spring.kafka.output.topic-name-vaccination}")
+    private String vaccinationOutputTopicName;
+
+    @Value("${spring.kafka.output.topic-name-vaccination-answer}")
+    private String vaccinationAnswerOutputTopicName;
 
     @Value("${spring.kafka.output.topic-name-rdb-metadata-columns}")
     private String rdbMetadataColumnsOutputTopicName;
@@ -73,6 +79,7 @@ public class ProcessInvestigationDataUtil {
 
     private static final String TYPE_CD = "type_cd";
     private static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
+    private static final String ANSWER_VAL = "ANSWER_VAL";
 
     @Transactional
     public InvestigationTransformed transformInvestigationData(Investigation investigation, long batchId) {
@@ -443,7 +450,7 @@ public class ProcessInvestigationDataUtil {
                 InterviewAnswer interviewAnswer = new InterviewAnswer();
                 interviewAnswer.setInterviewUid(interviewUid);
                 interviewAnswer.setRdbColumnNm(rdbColumnNm);
-                interviewAnswer.setAnswerVal(node.path("ANSWER_VAL").asText());
+                interviewAnswer.setAnswerVal(node.path(ANSWER_VAL).asText());
                 interviewAnswer.setBatchId(batchId);
 
                 String jsonKey = jsonGenerator.generateStringJson(interviewAnswerKey);
@@ -462,9 +469,9 @@ public class ProcessInvestigationDataUtil {
         try {
             JsonNode answerArray = parseJsonArray(interview.getNotes());
 
-                        for (JsonNode node : answerArray) {
-                            final Long interviewUid = interview.getInterviewUid();
-                            final Long nbsAnswerUid = node.get("NBS_ANSWER_UID").asLong();
+            for (JsonNode node : answerArray) {
+                final Long interviewUid = interview.getInterviewUid();
+                final Long nbsAnswerUid = node.get("NBS_ANSWER_UID").asLong();
 
                 InterviewNoteKey interviewNoteKey = new InterviewNoteKey();
                 interviewNoteKey.setInterviewUid(interviewUid);
@@ -535,7 +542,7 @@ public class ProcessInvestigationDataUtil {
                 ContactAnswer contactAnswer = new ContactAnswer();
                 contactAnswer.setContactUid(contactUid);
                 contactAnswer.setRdbColumnNm(rdbColumnNm);
-                contactAnswer.setAnswerVal(node.path("ANSWER_VAL").asText());
+                contactAnswer.setAnswerVal(node.path(ANSWER_VAL).asText());
 
                 String jsonKey = jsonGenerator.generateStringJson(contactAnswerKey);
                 String jsonValue = jsonGenerator.generateStringJson(contactAnswer);
@@ -547,6 +554,91 @@ public class ProcessInvestigationDataUtil {
         } catch (Exception e) {
             logger.error("Error processing Contact Record Answer JSON array from contact data: {}", e.getMessage());
         }
+    }
+
+
+    public void processVaccination(Vaccination vaccination) {
+        try {
+
+            // creating key for kafka
+            VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
+            vaccinationReportingKey.setVaccinationUid(vaccination.getVaccinationUid());
+
+            // constructing reporting(nrt) beans
+            VaccinationReporting vaccinationReporting = transformVaccination(vaccination);
+
+            /*
+               sending reporting(nrt) beans as json to kafka
+               starting with the nrt_vaccination and then
+                   create and send nrt_vaccination_answer
+             */
+            String jsonKey = jsonGenerator.generateStringJson(vaccinationReportingKey);
+            String jsonValue = jsonGenerator.generateStringJson(vaccinationReporting, "vaccination_uid");
+            kafkaTemplate.send(vaccinationOutputTopicName, jsonKey, jsonValue)
+                    .whenComplete((res, e) -> logger.info("Vaccination data (uid={}) sent to {}", vaccination.getVaccinationUid(), vaccinationOutputTopicName))
+                    .thenRunAsync(() -> transformAndSendVaccinationAnswer(vaccination));
+
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Vaccination");
+        } catch (Exception e) {
+            logger.error("Error processing Vaccination or any of the associated data from vac data: {}", e.getMessage());
+        }
+    }
+
+    private void transformAndSendVaccinationAnswer(Vaccination vaccination) {
+        try {
+
+            JsonNode answerArray = parseJsonArray(vaccination.getAnswers());
+
+            for (JsonNode node : answerArray) {
+                final Long vaccinationUid = vaccination.getVaccinationUid();
+                final String rdbColumnNm = node.get(RDB_COLUMN_NM).asText();
+
+                VaccinationAnswerKey vaccinationAnswerKey = new VaccinationAnswerKey();
+                vaccinationAnswerKey.setVaccinationUid(vaccinationUid);
+                vaccinationAnswerKey.setRdbColumnNm(rdbColumnNm);
+
+                VaccinationAnswer vaccinationAnswer = new VaccinationAnswer();
+                vaccinationAnswer.setVaccinationUid(vaccinationUid);
+                vaccinationAnswer.setRdbColumnNm(rdbColumnNm);
+                vaccinationAnswer.setAnswerVal(node.get(ANSWER_VAL).asText());
+
+                String jsonKey = jsonGenerator.generateStringJson(vaccinationAnswerKey);
+                String jsonValue = jsonGenerator.generateStringJson(vaccinationAnswer);
+                kafkaTemplate.send(vaccinationAnswerOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Vaccination Answers data (uid={}) sent to {}", vaccination.getVaccinationUid(), vaccinationAnswerOutputTopicName));
+
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "Vaccination Answer");
+        } catch (Exception e) {
+            logger.error("Error processing Vaccination Answer JSON array from vac data: {}", e.getMessage());
+        }
+    }
+
+    private VaccinationReporting transformVaccination(Vaccination vaccination) {
+        VaccinationReporting vaccinationReporting = new VaccinationReporting();
+        vaccinationReporting.setVaccinationUid(vaccination.getVaccinationUid());
+        vaccinationReporting.setAddTime(vaccination.getAddTime());
+        vaccinationReporting.setAddUserId(vaccination.getAddUserId());
+        vaccinationReporting.setAgeAtVaccination(vaccination.getAgeAtVaccination());
+        vaccinationReporting.setAgeAtVaccinationUnit(vaccination.getAgeAtVaccinationUnit());
+        vaccinationReporting.setLastChgTime(vaccination.getLastChgTime());
+        vaccinationReporting.setLastChgUserId(vaccination.getLastChgUserId());
+        vaccinationReporting.setLocalId(vaccination.getLocalId());
+        vaccinationReporting.setRecordStatusCd(vaccination.getRecordStatusCd());
+        vaccinationReporting.setRecordStatusTime(vaccination.getRecordStatusTime());
+        vaccinationReporting.setVaccinationAdministeredNm(vaccination.getVaccinationAdministeredNm());
+        vaccinationReporting.setVaccineDoseNbr(vaccination.getVaccineDoseNbr());
+        vaccinationReporting.setVaccineAdministeredDate(vaccination.getVaccineAdministeredDate());
+        vaccinationReporting.setVaccinationAnatomicalSite(vaccination.getVaccinationAnatomicalSite());
+        vaccinationReporting.setVaccineExpirationDt(vaccination.getVaccineExpirationDt());
+        vaccinationReporting.setVaccineInfoSource(vaccination.getVaccineInfoSource());
+        vaccinationReporting.setVaccineLotNumberTxt(vaccination.getVaccineLotNumberTxt());
+        vaccinationReporting.setVaccineManufacturerNm(vaccination.getVaccineManufacturerNm());
+        vaccinationReporting.setVersionCtrlNbr(vaccination.getVersionCtrlNbr());
+        vaccinationReporting.setElectronicInd(vaccination.getElectronicInd());
+        return vaccinationReporting;
     }
 
     /**

@@ -26,8 +26,8 @@ public class InvestigationController {
     @Value("${spring.kafka.input.topic-name-ctr}")
     private String contactTopic;
 
-    @Value("${spring.kafka.input.topic-name-tmt}")
-    private String treatmentTopic;
+    @Value("${spring.kafka.input.topic-name-vac}")
+    private String vaccinationTopic;
 
 
     @GetMapping("/reporting/investigation-svc/status")
@@ -56,8 +56,8 @@ public class InvestigationController {
         producerService.sendMessage(contactTopic, jsonData);
     }
 
-    @PostMapping("/reporting/investigation-svc/treatment")
-    public void postTreatment(@RequestBody String jsonData) {producerService.sendMessage(treatmentTopic, jsonData);}
-
-
+    @PostMapping("/reporting/investigation-svc/vaccination")
+    public void postVaccination(@RequestBody String jsonData) {
+        producerService.sendMessage(vaccinationTopic, jsonData);
+    }
 }
