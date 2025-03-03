@@ -239,3 +239,11 @@ databaseChangeLog:
         - sqlFile:
             path: 026-sp_treatment_event-001.sql
             splitStatements: false
+  - changeSet:
+      id: 35
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 027-sp_vaccination_event-001.sql
+            splitStatements: false
