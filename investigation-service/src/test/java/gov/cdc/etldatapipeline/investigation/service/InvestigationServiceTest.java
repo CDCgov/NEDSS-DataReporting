@@ -591,6 +591,7 @@ class InvestigationServiceTest {
         contactReporting.setDispositionedByUid(123L);
         return contactReporting;
     }
+
     @Test
     void testProcessTreatmentMessage() throws JsonProcessingException {
         Long treatmentUid = 234567890L;
@@ -603,7 +604,9 @@ class InvestigationServiceTest {
         CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
 
-        investigationService.processMessage(payload, treatmentTopic, consumer);
+        // Create a ConsumerRecord object
+        ConsumerRecord<String, String> rec = getRecord(treatmentTopic, payload);
+        investigationService.processMessage(rec, consumer);
         future.complete(null);
 
         verify(treatmentRepository).computeTreatment(String.valueOf(treatmentUid));
@@ -621,7 +624,7 @@ class InvestigationServiceTest {
                 objectMapper.readTree(keyJson).path("payload").toString(),
                 TreatmentReportingKey.class);
         assertEquals(treatment.getTreatmentUid(), keyObject.getTreatmentUid());
-        
+
         assertEquals(treatment, actualTreatment);
     }
 
@@ -634,22 +637,28 @@ class InvestigationServiceTest {
         when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
 
         investigationService.setTreatmentEnable(false);
-        investigationService.processMessage(payload, treatmentTopic, consumer);
+        // Create a ConsumerRecord object
+        ConsumerRecord<String, String> rec = getRecord(treatmentTopic, payload);
+        investigationService.processMessage(rec, consumer);
         verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
     void testProcessTreatmentException() {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
+        // Create a ConsumerRecord object
+        ConsumerRecord<String, String> rec = getRecord(treatmentTopic, invalidPayload);
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> investigationService.processMessage(invalidPayload, treatmentTopic, consumer));
+                () -> investigationService.processMessage(rec, consumer));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     @Test
     void testProcessTreatmentNoDataException() {
         String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"\"}}}";
-        assertThrows(NoDataException.class, () -> investigationService.processMessage(payload, treatmentTopic, consumer));
+        // Create a ConsumerRecord object
+        ConsumerRecord<String, String> rec = getRecord(treatmentTopic, payload);
+        assertThrows(NoDataException.class, () -> investigationService.processMessage(rec, consumer));
     }
 
     private Treatment constructTreatment(Long treatmentUid) {
@@ -682,8 +691,6 @@ class InvestigationServiceTest {
         treatment.setVersionControlNumber("1");
         return treatment;
     }
-
-
     private ConsumerRecord<String, String> getRecord(String topic, String payload) {
         return new ConsumerRecord<>(topic, 0,  11L, null, payload);
     }
