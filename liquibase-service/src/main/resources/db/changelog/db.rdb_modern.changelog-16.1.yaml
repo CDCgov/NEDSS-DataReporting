@@ -917,5 +917,45 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 043-sp_d_vaccination_postprocessing-001.sql
+            path: 047-create_nrt_pertussis_source_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 132
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 048-create_nrt_pertussis_source_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 133
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 049-create_nrt_pertussis_treatment_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 134
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 050-create_nrt_pertussis_treatment_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 135
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 043-sp_pertussis_case_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 136
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 051-sp_d_vaccination_postprocessing-001.sql
             splitStatements: false

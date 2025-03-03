@@ -25,6 +25,8 @@ BEGIN
     DECLARE @RowCount_no INT ;
     DECLARE @Proc_Step_no FLOAT = 0 ;
     DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
+ 	DECLARE @Dataflow_Name VARCHAR(200) = 'D_LABTEST_RESULTS Post-Processing Event';
+    DECLARE @Package_Name VARCHAR(200) = 'sp_d_labtest_result_postprocessing';
 
     BEGIN TRY
 
@@ -39,7 +41,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -98,10 +100,88 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
+        BEGIN TRANSACTION;
+                SET
+        @PROC_STEP_NO = @PROC_STEP_NO + 1;
+                SET
+        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
+
+
+        select obstxt.*
+        into #tmp_nrt_observation_txt
+        from (
+                 select *
+                 from dbo.nrt_observation_txt
+                 where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
+         ) obstxt
+             left outer join dbo.nrt_observation obs
+             on obs.observation_uid = obstxt.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
+        ;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+                        SET
+        @PROC_STEP_NO = @PROC_STEP_NO + 1;
+                        SET
+        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_coded';
+
+        select obscoded.*
+        into #tmp_nrt_observation_coded
+        from (
+                 select *
+                 from dbo.nrt_observation_coded
+                 where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
+         ) obscoded
+             left outer join dbo.nrt_observation obs
+             on obs.observation_uid = obscoded.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1)
+       ;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET
+        @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_investigation_observation';
+
+        select invobs.*
+        into #tmp_nrt_investigation_observation
+        from (
+                 select *
+                 from dbo.NRT_INVESTIGATION_OBSERVATION
+                 where observation_id in (select value from STRING_SPLIT(@pLabResultList, ',') )
+             ) invobs
+                 left outer join dbo.NRT_INVESTIGATION inv
+                 on inv.public_health_case_uid = invobs.public_health_case_uid
+        where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
+        ;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+        COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
@@ -183,7 +263,7 @@ BEGIN
                  LEFT JOIN
              ( select distinct public_health_case_uid, observation_id
                from
-                   dbo.nrt_investigation_observation with (nolock)
+                   #tmp_nrt_investigation_observation
              ) ninv ON ninv.observation_id = tst.lab_test_uid
                  LEFT JOIN dbo.investigation AS inv with (nolock) ON ninv.public_health_case_uid = inv.case_uid;
 
@@ -195,7 +275,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -223,7 +303,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -244,7 +324,7 @@ BEGIN
         INTO #TMP_Lab_Result_Comment
         FROM
             #TMP_Result_And_R_Result		AS lab104
-                INNER JOIN dbo.nrt_observation_txt AS ovt with (nolock) ON ovt.observation_uid =  lab104.lab_test_uid
+                INNER JOIN #tmp_nrt_observation_txt AS ovt ON ovt.observation_uid =  lab104.lab_test_uid
         WHERE 	ovt.ovt_value_txt IS NOT NULL
           AND ovt.ovt_txt_type_cd = 'N'
           AND ovt.ovt_seq <>  0;
@@ -256,7 +336,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -276,7 +356,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -327,7 +407,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -422,7 +502,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -465,7 +545,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -552,7 +632,7 @@ BEGIN
             NULL, --Test_Result_Val_Key
             NULL --lab_result_txt_val1
         FROM #TMP_Result_And_R_Result		as rslt
-                 LEFT JOIN dbo.nrt_observation_txt	as otxt  with (nolock)	ON rslt.lab_test_uid = otxt.observation_uid
+                 LEFT JOIN #tmp_nrt_observation_txt	as otxt	ON rslt.lab_test_uid = otxt.observation_uid
             AND ((otxt.ovt_txt_type_cd IS NULL) OR (rslt.ELR_IND = 'Y' AND otxt.ovt_txt_type_cd <>  'N'))
             --AND otxt.OBS_VALUE_TXT_SEQ =1
             /*
@@ -560,7 +640,7 @@ BEGIN
             AND otxt.OBS_VALUE_TXT_SEQ =1
             */
                  LEFT JOIN dbo.nrt_observation_numeric	as onum  with (nolock)	ON rslt.lab_test_uid = onum.observation_uid
-                 LEFT JOIN dbo.nrt_observation_coded		as code	 with (nolock)	ON rslt.lab_test_uid = code.observation_uid
+                 LEFT JOIN #tmp_nrt_observation_coded	as code	 ON rslt.lab_test_uid = code.observation_uid
                  LEFT JOIN dbo.nrt_observation_date		as ndate  with (nolock)	ON rslt.lab_test_uid = ndate.observation_uid
 
         --LEFT JOIN (SELECT *, ROW_NUMBER() OVER (PARTITION BY observation_uid ORDER BY refresh_datetime DESC) AS cr
@@ -574,7 +654,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -633,7 +713,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -663,7 +743,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -736,7 +816,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -804,7 +884,8 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -831,7 +912,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
         COMMIT TRANSACTION;
 
 
@@ -869,7 +950,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -897,7 +978,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -918,7 +999,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -960,7 +1041,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -990,7 +1071,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1019,7 +1100,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1082,7 +1163,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1112,7 +1193,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1179,7 +1260,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1200,7 +1281,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1220,7 +1301,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1246,7 +1327,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1296,7 +1377,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1338,7 +1419,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1403,7 +1484,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1451,7 +1532,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
@@ -1478,7 +1559,7 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'D_LABTEST_RESULTS','D_LABTEST_RESULTS','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -1551,8 +1632,8 @@ BEGIN
         VALUES
             (
               @batch_id,
-              'D_LABTEST_RESULTS'
-            ,'D_LABTEST_RESULTS'
+              @Dataflow_Name
+            ,@Package_Name
             ,'COMPLETE'
             ,@Proc_Step_no
             ,@Proc_Step_name
@@ -1599,11 +1680,13 @@ BEGIN
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
 
-        DECLARE @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE @ErrorLine INT = ERROR_LINE();
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
         INSERT INTO [dbo].[job_flow_log] (
@@ -1619,12 +1702,12 @@ BEGIN
         VALUES
             (
               @batch_id
-            ,'D_LABTEST_RESULTS'
-            ,'D_LABTEST_RESULTS'
+            ,@Dataflow_Name
+            ,@Package_Name
             ,'ERROR'
             ,@Proc_Step_no
-            ,'ERROR - '+ @Proc_Step_name
-            , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
+            ,@Proc_Step_name
+            , @FullErrorMessage
             ,0
             );
 

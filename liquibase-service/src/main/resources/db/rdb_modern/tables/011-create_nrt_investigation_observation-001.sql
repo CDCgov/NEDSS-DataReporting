@@ -26,4 +26,11 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_observation'
                 ALTER TABLE dbo.nrt_investigation_observation ADD branch_type_cd VARCHAR(50);
             END;
 
+--CNDE-2295
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'batch_id'   AND Object_ID = Object_ID(N'nrt_investigation_observation'))
+            BEGIN
+                ALTER TABLE nrt_investigation_observation
+                    ADD batch_id bigint;
+            END;
+
     END;

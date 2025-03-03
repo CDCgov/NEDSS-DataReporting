@@ -54,6 +54,8 @@ class ObservationDataProcessTests {
     private static final String REASON_TOPIC = "reasonTopic";
     private static final String TXT_TOPIC = "txtTopic";
 
+    private static final Long BATCH_ID = 11L;
+
     ProcessObservationDataUtil transformer;
 
     private AutoCloseable closeable;
@@ -99,7 +101,7 @@ class ObservationDataProcessTests {
         observation.setMaterialParticipations(readFileData(FILE_PREFIX + "MaterialParticipations.json"));
         observation.setFollowupObservations(readFileData(FILE_PREFIX + "FollowupObservations.json"));
 
-        ObservationTransformed observationTransformed = transformer.transformObservationData(observation);
+        ObservationTransformed observationTransformed = transformer.transformObservationData(observation, BATCH_ID);
 
         Long patId = observationTransformed.getPatientId();
         Long ordererId = observationTransformed.getOrderingPersonId();
@@ -127,7 +129,7 @@ class ObservationDataProcessTests {
         final var expected = getObservationTransformed();
 
         observation.setPersonParticipations(readFileData(FILE_PREFIX + "PersonParticipations.json"));
-        ObservationTransformed observationTransformed = transformer.transformObservationData(observation);
+        ObservationTransformed observationTransformed = transformer.transformObservationData(observation, BATCH_ID);
         Assertions.assertEquals(expected, observationTransformed);
     }
 
@@ -144,9 +146,10 @@ class ObservationDataProcessTests {
         expected.setPatientId(10000055L);
         expected.setMorbPhysicianId(10000033L);
         expected.setMorbReporterId(10000044L);
+        expected.setBatchId(BATCH_ID);
 
         observation.setPersonParticipations(readFileData(FILE_PREFIX + "PersonParticipationsMorb.json"));
-        ObservationTransformed observationTransformed = transformer.transformObservationData(observation);
+        ObservationTransformed observationTransformed = transformer.transformObservationData(observation, BATCH_ID);
         Assertions.assertEquals(expected, observationTransformed);
     }
 
@@ -158,7 +161,7 @@ class ObservationDataProcessTests {
 
         observation.setOrganizationParticipations(readFileData(FILE_PREFIX + "OrganizationParticipations.json"));
 
-        ObservationTransformed observationTransformed = transformer.transformObservationData(observation);
+        ObservationTransformed observationTransformed = transformer.transformObservationData(observation, BATCH_ID);
         Long authorOrgId = observationTransformed.getAuthorOrganizationId();
         Long ordererOrgId = observationTransformed.getOrderingOrganizationId();
         Long performerOrgId = observationTransformed.getPerformingOrganizationId();
@@ -176,9 +179,9 @@ class ObservationDataProcessTests {
         observation.setMaterialParticipations(readFileData(FILE_PREFIX + "MaterialParticipations.json"));
 
         ObservationMaterial material = constructObservationMaterial(100000003L);
-        ObservationTransformed observationTransformed = transformer.transformObservationData(observation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(MATERIAL_TOPIC, topicCaptor.getAllValues().getFirst());
+        ObservationTransformed observationTransformed = transformer.transformObservationData(observation, BATCH_ID);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(MATERIAL_TOPIC, topicCaptor.getValue());
         assertEquals(10000005L, observationTransformed.getMaterialId());
 
         List<ILoggingEvent> logs = listAppender.list;
@@ -198,7 +201,7 @@ class ObservationDataProcessTests {
         observation.setParentObservations("[{\"parent_type_cd\":\"MorbFrmQ\",\"parent_uid\":234567888,\"parent_domain_cd_st_1\":\"R_Order\"}]");
 
         observation.setObsDomainCdSt1(domainCd);
-        ObservationTransformed observationTransformed = transformer.transformObservationData(observation);
+        ObservationTransformed observationTransformed = transformer.transformObservationData(observation, BATCH_ID);
         assertEquals(234567888L, observationTransformed.getReportObservationUid());
         assertNull(observationTransformed.getReportRefrUid());
         assertNull(observationTransformed.getReportSprtUid());
@@ -218,15 +221,16 @@ class ObservationDataProcessTests {
         coded.setOvcDisplayName("Normal]");
         coded.setOvcAltCd("A-124");
         coded.setOvcAltCdDescTxt("NORMAL");
+        coded.setBatchId(BATCH_ID);
 
-        transformer.transformObservationData(observation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(CODED_TOPIC, topicCaptor.getAllValues().get(1));
+        transformer.transformObservationData(observation, BATCH_ID);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(CODED_TOPIC, topicCaptor.getValue());
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(6).getFormattedMessage().contains("Observation Coded data (uid=10001234) sent to "+CODED_TOPIC));
 
         var actualCoded = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), ObservationCoded.class);
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), ObservationCoded.class);
 
         assertEquals(coded, actualCoded);
     }
@@ -242,14 +246,14 @@ class ObservationDataProcessTests {
         obd.setOvdFromDate("2024-08-16T00:00:00");
         obd.setOvdSeq(1);
 
-        transformer.transformObservationData(observation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(DATE_TOPIC, topicCaptor.getAllValues().get(1));
+        transformer.transformObservationData(observation, BATCH_ID);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(DATE_TOPIC, topicCaptor.getValue());
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(7).getFormattedMessage().contains("Observation Date data (uid=10001234) sent to "+DATE_TOPIC));
 
         var actualObd = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), ObservationDate.class);
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), ObservationDate.class);
 
         assertEquals(obd, actualObd);
     }
@@ -266,14 +270,14 @@ class ObservationDataProcessTests {
         edx.setEdxActUid(observation.getActUid());
         edx.setEdxAddTime("2024-09-30T21:08:19.017");
 
-        transformer.transformObservationData(observation);
-        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(EDX_TOPIC, topicCaptor.getAllValues().get(1));
+        transformer.transformObservationData(observation, BATCH_ID);
+        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(EDX_TOPIC, topicCaptor.getValue());
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(8).getFormattedMessage().contains("Observation Edx data (edx doc uid=10101) sent to "+EDX_TOPIC));
 
         var actualEdx = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), ObservationEdx.class);
+                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), ObservationEdx.class);
 
         assertEquals(edx, actualEdx);
     }
@@ -295,14 +299,14 @@ class ObservationDataProcessTests {
         numeric.setOvnSeparatorCd(":");
         numeric.setOvnSeq(1);
 
-        transformer.transformObservationData(observation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(NUMERIC_TOPIC, topicCaptor.getAllValues().get(1));
+        transformer.transformObservationData(observation, BATCH_ID);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(NUMERIC_TOPIC, topicCaptor.getValue());
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(9).getFormattedMessage().contains("Observation Numeric data (uid=10001234) sent to "+NUMERIC_TOPIC));
 
         var actualNumeric = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(1)).path("payload").toString(), ObservationNumeric.class);
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), ObservationNumeric.class);
 
         assertEquals(numeric, actualNumeric);
     }
@@ -317,15 +321,16 @@ class ObservationDataProcessTests {
         reason.setObservationUid(observation.getObservationUid());
         reason.setReasonCd("80008");
         reason.setReasonDescTxt("PRESENCE OF REASON");
+        reason.setBatchId(BATCH_ID);
 
-        transformer.transformObservationData(observation);
-        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(REASON_TOPIC, topicCaptor.getAllValues().get(2));
+        transformer.transformObservationData(observation, BATCH_ID);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(REASON_TOPIC, topicCaptor.getValue());
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(10).getFormattedMessage().contains("Observation Reason data (uid=10001234) sent to "+REASON_TOPIC));
 
         var actualReason = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(2)).path("payload").toString(), ObservationReason.class);
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), ObservationReason.class);
 
         assertEquals(reason, actualReason);
     }
@@ -341,15 +346,16 @@ class ObservationDataProcessTests {
         txt.setOvtSeq(1);
         txt.setOvtTxtTypeCd("N");
         txt.setOvtValueTxt("RECOMMENDED IN SUCH INSTANCES.");
+        txt.setBatchId(BATCH_ID);
 
-        transformer.transformObservationData(observation);
-        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-        assertEquals(TXT_TOPIC, topicCaptor.getAllValues().get(2));
+        transformer.transformObservationData(observation, BATCH_ID);
+        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        assertEquals(TXT_TOPIC, topicCaptor.getValue());
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.get(11).getFormattedMessage().contains("Observation Txt data (uid=10001234) sent to "+TXT_TOPIC));
 
         var actualTxt = objectMapper.readValue(
-                objectMapper.readTree(messageCaptor.getAllValues().get(3)).path("payload").toString(), ObservationTxt.class);
+                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), ObservationTxt.class);
 
         assertEquals(txt, actualTxt);
     }
@@ -359,7 +365,7 @@ class ObservationDataProcessTests {
         Observation observation = new Observation();
         observation.setObservationUid(10001234L);
         observation.setOrganizationParticipations("{\"act_uid\": 10000003}");
-        transformer.transformObservationData(observation);
+        transformer.transformObservationData(observation, BATCH_ID);
 
         List<ILoggingEvent> logs = listAppender.list;
         logs.forEach(le -> assertTrue(le.getFormattedMessage().matches("^\\w+ array is null.")));
@@ -384,7 +390,7 @@ class ObservationDataProcessTests {
         observation.setObsReason(invalidJSON);
         observation.setObsTxt(invalidJSON);
 
-        transformer.transformObservationData(observation);
+        transformer.transformObservationData(observation, BATCH_ID);
 
         List<ILoggingEvent> logs = listAppender.list;
         logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
@@ -403,7 +409,7 @@ class ObservationDataProcessTests {
         observation.setMaterialParticipations(dummyJSON);
         observation.setFollowupObservations(dummyJSON);
 
-        transformer.transformObservationData(observation);
+        transformer.transformObservationData(observation, BATCH_ID);
 
         List<ILoggingEvent> logs = listAppender.list.subList(0, 4);
         logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidDomainCode + " is not valid")));
@@ -426,7 +432,7 @@ class ObservationDataProcessTests {
         observation.setFollowupObservations(payload);
         observation.setParentObservations(payload);
 
-        transformer.transformObservationData(observation);
+        transformer.transformObservationData(observation, BATCH_ID);
 
         List<ILoggingEvent> logs = listAppender.list.subList(0, 4);
         logs.forEach(le -> assertTrue(le.getFormattedMessage().matches("^Field \\w+ is null or not found.*")));
@@ -457,6 +463,8 @@ class ObservationDataProcessTests {
 
         expected.setSpecimenCollectorId(10000033L);
         expected.setCopyToProviderId(10000044L);
+
+        expected.setBatchId(BATCH_ID);
 
         return expected;
     }

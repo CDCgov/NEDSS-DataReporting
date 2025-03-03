@@ -182,5 +182,45 @@
     "role_cd": "CT",
     "role_subject_class_cd": "PROV",
     "role_scoping_class_cd": null
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "ASS",
+    "entity_id": 10000077,
+    "subject_class_cd": "PSN"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "ASS",
+    "entity_id": 10000077,
+    "subject_class_cd": "PSN",
+    "person_id_val": null,
+    "person_id_type_desc": null,
+    "person_id_assign_auth_cd": null,
+    "last_nm": null,
+    "first_nm": null
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "ENT",
+    "entity_id": 10000088,
+    "subject_class_cd": "PSN"
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "ENT",
+    "entity_id": 10000088,
+    "subject_class_cd": "PSN",
+    "person_id_val": null,
+    "person_id_type_desc": null,
+    "person_id_assign_auth_cd": null,
+    "last_nm": null,
+    "first_nm": null
+  },
+  {
+    "act_uid": 10000003,
+    "type_cd": "TST",
+    "entity_id": 10000088,
+    "subject_class_cd": "PSN"
   }
 ]

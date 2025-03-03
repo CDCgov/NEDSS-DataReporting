@@ -107,7 +107,7 @@ BEGIN
             rdb_column_nm,
             answer_txt,
             answer_group_seq_nbr,
-            investigation_form_cd,
+            nrt_pca.investigation_form_cd,
             unit_value,
             question_identifier,
             data_location,
@@ -119,20 +119,23 @@ BEGIN
             question_group_seq_nbr,
             code_set_group_id,
             block_nm,
-            last_chg_time,
-            record_status_cd
+            nrt_pca.last_chg_time,
+            nrt_pca.record_status_cd
         INTO
             #NRT_PAGE
         FROM
-            dbo.nrt_page_case_answer AS nrt_pca WITH(NOLOCK)
-        WHERE
+        dbo.NRT_PAGE_CASE_ANSWER nrt_pca with(nolock)
+        left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+        on nrt_pca.act_uid = inv.public_health_case_uid
+        where isnull(nrt_pca.batch_id, 1) = isnull(inv.batch_id, 1)
+        and
             nrt_pca.act_uid = @phc_id
           and nrt_pca.last_chg_time = (
             select max(last_chg_time)
             from dbo.nrt_page_case_answer
             where act_uid = @phc_id
         );
-        
+
         COMMIT TRANSACTION;
 
 

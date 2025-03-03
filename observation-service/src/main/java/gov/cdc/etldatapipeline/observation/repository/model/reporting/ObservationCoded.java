@@ -18,4 +18,5 @@ public class ObservationCoded {
     private String ovcAltCdDescTxt;
     private String ovcAltCdSystemCd;
     private String ovcAltCdSystemDescTxt;
+    private Long batchId;
 }

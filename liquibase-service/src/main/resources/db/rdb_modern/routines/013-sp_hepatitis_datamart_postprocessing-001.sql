@@ -70,6 +70,7 @@ BEGIN
         COMMIT TRANSACTION;
 
 
+
 ---------------------------------------------------------------------3. CREATE TABLE #TMP_F_PAGE_CASE-------------------------------------
         BEGIN TRANSACTION;
 
@@ -86,16 +87,18 @@ BEGIN
         SELECT F_PAGE_CASE.INVESTIGATION_KEY, T.CONDITION_KEY, F_PAGE_CASE.PATIENT_KEY
         INTO #TMP_F_PAGE_CASE
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)---Original table
-                 INNER JOIN	 #TMP_CONDITION AS T WITH(NOLOCK) ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY  ------(my table condition)
+                 INNER JOIN	 #TMP_CONDITION T WITH(NOLOCK) ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY  ------(my table condition)
                  INNER JOIN	 dbo.D_PATIENT WITH(NOLOCK)		 ON F_PAGE_CASE.PATIENT_KEY = D_PATIENT.PATIENT_KEY
                  INNER JOIN	 dbo.INVESTIGATION WITH(NOLOCK)		 ON INVESTIGATION.INVESTIGATION_KEY = F_PAGE_CASE.INVESTIGATION_KEY
                  LEFT JOIN	 dbo.HEPATITIS_DATAMART hd WITH(NOLOCK) ON F_PAGE_CASE.INVESTIGATION_KEY = hd.INVESTIGATION_KEY
         WHERE   (hd.INVESTIGATION_KEY IS NULL
             OR  (INVESTIGATION.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','))))
           AND INVESTIGATION.RECORD_STATUS_CD = 'ACTIVE'
-        ORDER BY F_PAGE_CASE.INVESTIGATION_KEY;
+        ORDER BY F_PAGE_CASE.INVESTIGATION_KEY
+        OPTION (MAXDOP 1); -- tentative fix
 
-        IF @debug ='true' SELECT '#TMP_F_PAGE_CASE', * FROM #TMP_F_PAGE_CASE;
+
+       IF @debug ='true' SELECT * FROM #TMP_F_PAGE_CASE;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -189,7 +192,7 @@ BEGIN
         SELECT F_PAGE_CASE.D_INV_CLINICAL_KEY, F_PAGE_CASE.INVESTIGATION_KEY
         INTO #TMP_F_INV_CLINICAL
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)
-                 INNER JOIN	 #TMP_F_PAGE_CASE AS PAGE_CASE ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY ---(my Table)
+  INNER JOIN	 #TMP_F_PAGE_CASE AS PAGE_CASE ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY ---(my Table)
         ORDER BY D_INV_CLINICAL_KEY;
 
 
@@ -1137,8 +1140,13 @@ BEGIN
                  LEFT JOIN dbo.CONFIRMATION_METHOD_GROUP CMG WITH(NOLOCK) ON CMG.INVESTIGATION_KEY = I.INVESTIGATION_KEY
                  LEFT JOIN dbo.NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
                  LEFT JOIN
-             (SELECT DISTINCT public_health_case_uid, observation_id
-              FROM dbo.nrt_investigation_observation with (nolock)
+             (SELECT
+                DISTINCT invobs.public_health_case_uid, invobs.observation_id
+                FROM dbo.NRT_INVESTIGATION_OBSERVATION invobs with (nolock)
+                left outer join dbo.NRT_INVESTIGATION inv
+                on inv.public_health_case_uid = invobs.public_health_case_uid
+                where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
+
              ) NIO ON nio.public_health_case_uid = i.case_uid
                  LEFT JOIN dbo.nrt_observation no2 WITH(NOLOCK) ON nio.observation_id = no2.observation_uid
                  LEFT JOIN dbo.nrt_notification_key nk WITH(NOLOCK)ON NE.notification_key = nk.d_notification_key
@@ -1455,10 +1463,15 @@ BEGIN
                 DROP TABLE #TMP_METADATA_TEST;
             END;
 
-
         SELECT C.CONDITION_KEY, M.block_nm, M.investigation_form_cd, M.question_identifier
         INTO #TMP_METADATA_TEST
-        FROM RDB_MODERN.dbo.nrt_page_case_answer AS M WITH(NOLOCK)
+        FROM (
+            select pca.*
+            from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
+            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+            on pca.act_uid = inv.public_health_case_uid
+            where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
+        ) AS M
                  INNER JOIN
              #TMP_CONDITION AS C
              ON M.INVESTIGATION_FORM_CD = C.DISEASE_GRP_DESC
@@ -2124,11 +2137,12 @@ BEGIN
         INSERT INTO [DBO].[JOB_FLOW_LOG]( BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT] )
         VALUES( @BATCH_ID, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO );
 
-        COMMIT TRANSACTION;
 
         ------------------------------------------------------------------------------------------------------------------------------------------------------
         DELETE FROM #TMP_HEPATITIS_CASE_BASE
         WHERE PATIENT_UID IS NULL;
+
+        COMMIT TRANSACTION;
 
         /*
 
@@ -2900,19 +2914,18 @@ BEGIN
 
         DECLARE @ErrorLine int= ERROR_LINE();
 
-        DECLARE @ErrorMessage nvarchar(4000)= ERROR_MESSAGE();
+        DECLARE @ErrorMessage nvarchar(max)= ERROR_MESSAGE();
 
         DECLARE @ErrorSeverity int= ERROR_SEVERITY();
 
         DECLARE @ErrorState int= ERROR_STATE();
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
-        VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no, 'ERROR - ' + @Proc_Step_name, 'Step -' + CAST(@Proc_Step_no AS varchar(3)) + ' -' + CAST(@ErrorMessage AS varchar(500)), 0 );
+        VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no,  @Proc_Step_name,  CAST(@ErrorMessage AS varchar(500)),0
+        );
 
         RETURN -1;
 
     END CATCH;
 
 END;
-
----First begin;

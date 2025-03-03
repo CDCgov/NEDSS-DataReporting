@@ -13,4 +13,5 @@ public class ObservationTxt {
     private Integer ovtSeq;
     private String ovtTxtTypeCd;
     private String ovtValueTxt;
+    private Long batchId;
 }
