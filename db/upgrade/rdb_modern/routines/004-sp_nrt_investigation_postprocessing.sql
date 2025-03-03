@@ -192,6 +192,7 @@ BEGIN
                     left outer join dbo.NRT_INVESTIGATION inv
                     on inv.public_health_case_uid = invobs.public_health_case_uid
                     where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
+                    and invobs.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
                 ) nio on nio.public_health_case_uid = t.case_uid
                 WHERE nio.branch_type_cd = 'InvFrmQ';
 
@@ -665,12 +666,16 @@ BEGIN
                         nrt.CONFIRMATION_METHOD_TIME as CONFIRMATION_DT,
                         cm.CONFIRMATION_METHOD_KEY
         into #temp_cm_table
-        from dbo.NRT_INVESTIGATION_CONFIRMATION nrt with(nolock)
-        left outer join dbo.NRT_INVESTIGATION inv with(nolock)
-        on nrt.public_health_case_uid = inv.public_health_case_uid and isnull(nrt.batch_id,1) = isnull(inv.batch_id,1)
+        from (
+            select nrtc.*
+            from dbo.NRT_INVESTIGATION_CONFIRMATION nrtc with(nolock)
+            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+            on nrtc.public_health_case_uid = inv.public_health_case_uid
+            where isnull(nrtc.batch_id,1) = isnull(inv.batch_id,1)
+            and nrtc.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','))
+        ) nrt
         left join dbo.confirmation_method cm with (nolock) on cm.confirmation_method_cd = nrt.confirmation_method_cd
-        left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
-        where nrt.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','));
+        left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid;
 
         if @debug = 'true' select * from #temp_cm_table;
 
