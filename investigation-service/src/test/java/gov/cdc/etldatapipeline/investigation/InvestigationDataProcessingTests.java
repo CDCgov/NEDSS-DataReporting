@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
+import static gov.cdc.etldatapipeline.investigation.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -222,7 +223,7 @@ class InvestigationDataProcessingTests {
     @Test
     void testProcessInterviews() throws JsonProcessingException {
 
-        Interview interview = constructInterview();
+        Interview interview = constructInterview(INTERVIEW_UID);
         interview.setAnswers(readFileData(FILE_PREFIX + "InterviewAnswers.json"));
         interview.setNotes(readFileData(FILE_PREFIX + "InterviewNotes.json"));
         transformer.setInterviewOutputTopicName(INTERVIEW_TOPIC);
@@ -240,9 +241,9 @@ class InvestigationDataProcessingTests {
         interviewNoteKey.setInterviewUid(INTERVIEW_UID);
         interviewNoteKey.setNbsAnswerUid(21L);
 
-        final InterviewReporting interviewReportingValue = constructInvestigationInterview();
-        final InterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer();
-        final InterviewNote interviewNoteValue = constructInvestigationInterviewNote();
+        final InterviewReporting interviewReportingValue = constructInvestigationInterview(INTERVIEW_UID, BATCH_ID);
+        final InterviewAnswer interviewAnswerValue = constructInvestigationInterviewAnswer(INTERVIEW_UID, BATCH_ID);
+        final InterviewNote interviewNoteValue = constructInvestigationInterviewNote(INTERVIEW_UID, BATCH_ID);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
@@ -308,7 +309,7 @@ class InvestigationDataProcessingTests {
     void testProcessColumnMetadata() throws JsonProcessingException {
         final var rdb_col_name = "CLN_CARE_STATUS_IXS";
         final var tbl_name = "D_INTERVIEW";
-        Interview interview = constructInterview();
+        Interview interview = constructInterview(INTERVIEW_UID);
         interview.setRdbCols(readFileData(FILE_PREFIX + "RdbColumns.json"));
 
         transformer.setRdbMetadataColumnsOutputTopicName(RDB_METADATA_COLS_TOPIC);
@@ -376,7 +377,7 @@ class InvestigationDataProcessingTests {
     @Test
     void testProcessContactWithAnswers() throws JsonProcessingException {
 
-        Contact contact = constructContact();
+        Contact contact = constructContact(CONTACT_UID);
         contact.setAnswers(readFileData(FILE_PREFIX + "ContactAnswers.json"));
         transformer.setContactOutputTopicName(CONTACT_TOPIC);
         transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
@@ -388,8 +389,8 @@ class InvestigationDataProcessingTests {
         contactAnswerKey.setContactUid(CONTACT_UID);
         contactAnswerKey.setRdbColumnNm("CTT_EXPOSURE_TYPE");
 
-        final ContactReporting  contactReportingValue = constructContactReporting();
-        final ContactAnswer contactAnswerValue = constructContactAnswers();
+        final ContactReporting  contactReportingValue = constructContactReporting(CONTACT_UID);
+        final ContactAnswer contactAnswerValue = constructContactAnswers(CONTACT_UID);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processContact(contact);
@@ -457,7 +458,7 @@ class InvestigationDataProcessingTests {
     @Test
     void testProcessVaccination() throws JsonProcessingException {
 
-        Vaccination vaccination = constructVaccination();
+        Vaccination vaccination = constructVaccination(VACCINATION_UID);
         vaccination.setAnswers(null);
         transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
         transformer.setVaccinationAnswerOutputTopicName(VACCINATION_ANSWERS_TOPIC);
@@ -465,7 +466,7 @@ class InvestigationDataProcessingTests {
         final  VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
         vaccinationReportingKey.setVaccinationUid(VACCINATION_UID);
 
-        final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting();
+        final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting(VACCINATION_UID);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processVaccination(vaccination);
@@ -488,19 +489,19 @@ class InvestigationDataProcessingTests {
     @Test
     void testProcessVaccinationAnswers() throws JsonProcessingException {
 
-        Vaccination vaccination = constructVaccination();
+        Vaccination vaccination = constructVaccination(VACCINATION_UID);
         vaccination.setAnswers(readFileData(FILE_PREFIX + "VaccinationAnswers.json"));
         transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
         transformer.setVaccinationAnswerOutputTopicName(VACCINATION_ANSWERS_TOPIC);
 
         final  VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
         vaccinationReportingKey.setVaccinationUid(VACCINATION_UID);
-        final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting();
+        final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting(VACCINATION_UID);
 
         final VaccinationAnswerKey vaccinationAnswerKey = new VaccinationAnswerKey();
         vaccinationAnswerKey.setVaccinationUid(VACCINATION_UID);
         vaccinationAnswerKey.setRdbColumnNm("TEST");
-        final VaccinationAnswer vaccinationAnswerValue = constructVaccinationAnswers();
+        final VaccinationAnswer vaccinationAnswerValue = constructVaccinationAnswers(VACCINATION_UID);
 
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
@@ -534,7 +535,7 @@ class InvestigationDataProcessingTests {
     @Test
     void testProcessVaccinationError(){
 
-        Vaccination vaccination = constructVaccination();
+        Vaccination vaccination = constructVaccination(VACCINATION_UID);
         vaccination.setAnswers(INVALID_JSON);
 
         transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
@@ -627,7 +628,7 @@ class InvestigationDataProcessingTests {
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
         var caseManagementKey = new InvestigationCaseManagementKey(INVESTIGATION_UID, 1001L);
-        var caseManagement = constructCaseManagement();
+        var caseManagement = constructCaseManagement(INVESTIGATION_UID);
 
         transformer.processInvestigationCaseManagement(investigation.getInvestigationCaseManagement());
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
@@ -714,286 +715,4 @@ class InvestigationDataProcessingTests {
         return expected;
     }
 
-    private InvestigationCaseManagement constructCaseManagement() {
-        InvestigationCaseManagement expected = new InvestigationCaseManagement();
-        expected.setCaseManagementUid(1001L);
-        expected.setPublicHealthCaseUid(INVESTIGATION_UID);
-        expected.setAddUserId(10055001L);
-        expected.setCaseOid(1300110031L);
-        expected.setInitFupInitialFollUpCd("SF");
-        expected.setInitFupInitialFollUp("Surveillance Follow-up");
-        expected.setInitFupInternetFollUpCd("N");
-        expected.setInternetFollUp("No");
-        expected.setInitFupNotifiableCd("06");
-        expected.setInitFollUpNotifiable("6-Yes, Notifiable");
-        expected.setInitFupClinicCode("80000");
-        expected.setSurvInvestigatorAssgnDt("2024-07-15T00:00:00");
-        expected.setSurvClosedDt("2024-07-22T00:00:00");
-        expected.setSurvProviderContactCd("S");
-        expected.setSurvProviderContact("S - Successful");
-        expected.setSurvProvExmReason("M");
-        expected.setSurvProviderExamReason("Community Screening");
-        expected.setSurvProviderDiagnosis("900");
-        expected.setSurvPatientFollUp("FF");
-        expected.setSurvPatientFollUpCd("Field Follow-up");
-        expected.setAdi900StatusCd("02");
-        expected.setStatus900("2 - Newly Diagnosed");
-        expected.setFlFupFieldRecordNum("1310005124");
-        expected.setFlFupInvestigatorAssgnDt("2024-07-23T00:00:00");
-        expected.setFlFupInitAssgnDt("2024-07-23T00:00:00");
-        expected.setFldFollUpProvExmReason("M");
-        expected.setFlFupProvExmReason("Community Screening");
-        expected.setFldFollUpProvDiagnosis("900");
-        expected.setFlFupProvDiagnosis("900");
-        expected.setFldFollUpNotificationPlan("3");
-        expected.setFlFupNotificationPlanCd("3 - Dual");
-        expected.setFldFollUpExpectedIn("Y");
-        expected.setFlFupExpectedInInd("Yes");
-        expected.setFlFupExpectedDt("2024-07-21T00:00:00");
-        expected.setFlFupExamDt("2024-07-19T00:00:00");
-        expected.setFlFupDispositionCd("1");
-        expected.setFlFupDispositionDesc("1 - Prev. Pos");
-        expected.setFlFupDispoDt("2024-07-23T00:00:00");
-        expected.setActRefTypeCd("2");
-        expected.setFlFupActualRefType("2 - Provider");
-        expected.setFlFupInternetOutcomeCd("I1");
-        expected.setFlFupInternetOutcome("I1 - Informed, Urgent Health Matter");
-        expected.setCaInterviewerAssignDt("2024-07-22T00:00:00");
-        expected.setCaInitIntvwrAssgnDt("2024-07-22T00:00:00");
-        expected.setEpiLinkId("1310005124");
-        expected.setPatIntvStatusCd("A");
-        expected.setCaPatientIntvStatus("A - Awaiting");
-        expected.setInitiatingAgncy("Arizona");
-        expected.setOojInitgAgncyRecdDate("2024-07-15T00:00:00");
-        return expected;
-    }
-
-    private Interview constructInterview() {
-        Interview interview = new Interview();
-        interview.setInterviewUid(INTERVIEW_UID);
-        interview.setInterviewDate("2024-11-11 00:00:00.000");
-        interview.setInterviewStatusCd("COMPLETE");
-        interview.setInterviewLocCd("C");
-        interview.setInterviewTypeCd("REINTVW");
-        interview.setIntervieweeRoleCd("SUBJECT");
-        interview.setIxIntervieweeRole("Subject of Investigation");
-        interview.setIxLocation("Clinic");
-        interview.setIxStatus("Closed/Completed");
-        interview.setIxType("Re-Interview");
-        interview.setLastChgTime("2024-11-13 20:27:39.587");
-        interview.setAddTime("2024-11-13 20:27:39.587");
-        interview.setAddUserId(10055282L);
-        interview.setLastChgUserId(10055282L);
-        interview.setLocalId("INT10099004GA01");
-        interview.setRecordStatusCd("ACTIVE");
-        interview.setRecordStatusTime("2024-11-13 20:27:39.587");
-        interview.setVersionCtrlNbr(1L);
-        return interview;
-    }
-
-    private InterviewReporting constructInvestigationInterview() {
-        InterviewReporting interviewReporting = new InterviewReporting();
-        interviewReporting.setInterviewUid(INTERVIEW_UID);
-        interviewReporting.setInterviewDate("2024-11-11 00:00:00.000");
-        interviewReporting.setInterviewStatusCd("COMPLETE");
-        interviewReporting.setInterviewLocCd("C");
-        interviewReporting.setInterviewTypeCd("REINTVW");
-        interviewReporting.setIntervieweeRoleCd("SUBJECT");
-        interviewReporting.setIxIntervieweeRole("Subject of Investigation");
-        interviewReporting.setIxLocation("Clinic");
-        interviewReporting.setIxStatus("Closed/Completed");
-        interviewReporting.setIxType("Re-Interview");
-        interviewReporting.setLastChgTime("2024-11-13 20:27:39.587");
-        interviewReporting.setAddTime("2024-11-13 20:27:39.587");
-        interviewReporting.setAddUserId(10055282L);
-        interviewReporting.setLastChgUserId(10055282L);
-        interviewReporting.setLocalId("INT10099004GA01");
-        interviewReporting.setRecordStatusCd("ACTIVE");
-        interviewReporting.setRecordStatusTime("2024-11-13 20:27:39.587");
-        interviewReporting.setVersionCtrlNbr(1L);
-        interviewReporting.setBatchId(BATCH_ID);
-        return interviewReporting;
-    }
-
-    private InterviewAnswer constructInvestigationInterviewAnswer() {
-        InterviewAnswer interviewAnswer = new InterviewAnswer();
-        interviewAnswer.setInterviewUid(INTERVIEW_UID);
-        interviewAnswer.setAnswerVal("Yes");
-        interviewAnswer.setRdbColumnNm("IX_CONTACTS_NAMED_IND");
-        interviewAnswer.setBatchId(BATCH_ID);
-        return interviewAnswer;
-    }
-
-    private InterviewNote constructInvestigationInterviewNote() {
-        InterviewNote interviewNote = new InterviewNote();
-        interviewNote.setInterviewUid(INTERVIEW_UID);
-        interviewNote.setNbsAnswerUid(21L);
-        interviewNote.setCommentDate("2024-11-13T15:27:00");
-        interviewNote.setUserFirstName("super");
-        interviewNote.setUserLastName("user");
-        interviewNote.setUserComment("Test123");
-        interviewNote.setRecordStatusCd("");
-        interviewNote.setBatchId(BATCH_ID);
-        return interviewNote;
-    }
-
-    private Contact constructContact() {
-        Contact contact = new Contact();
-        contact.setContactUid(CONTACT_UID);
-        contact.setAddTime("2024-01-01T10:00:00");
-        contact.setAddUserId(100L);
-        contact.setContactEntityEpiLinkId("EPI123");
-        contact.setContactEntityPhcUid(1L);
-        contact.setContactEntityUid(1L);
-        contact.setCttReferralBasis("Referral");
-        contact.setCttStatus("Active");
-        contact.setCttDispoDt("2024-01-10");
-        contact.setCttDisposition("Completed");
-        contact.setCttEvalCompleted("Yes");
-        contact.setCttEvalDt("2024-01-05");
-        contact.setCttEvalNotes("Evaluation completed successfully.");
-        contact.setCttGroupLotId("LOT123");
-        contact.setCttHealthStatus("Good");
-        contact.setCttInvAssignedDt("2024-01-02");
-        contact.setCttJurisdictionNm("JurisdictionA");
-        contact.setCttNamedOnDt("2024-01-03");
-        contact.setCttNotes("General notes.");
-        contact.setCttPriority("High");
-        contact.setCttProcessingDecision("Approved");
-        contact.setCttProgramArea("ProgramX");
-        contact.setCttRelationship("Close Contact");
-        contact.setCttRiskInd("Low");
-        contact.setCttRiskNotes("Minimal risk identified.");
-        contact.setCttSharedInd("Yes");
-        contact.setCttSympInd("No");
-        contact.setCttSympNotes("No symptoms reported.");
-        contact.setCttSympOnsetDt(null);
-        contact.setThirdPartyEntityPhcUid(1L);
-        contact.setThirdPartyEntityUid(1L);
-        contact.setCttTrtCompleteInd("Yes");
-        contact.setCttTrtEndDt("2024-02-01");
-        contact.setCttTrtInitiatedInd("Yes");
-        contact.setCttTrtNotCompleteRsn(null);
-        contact.setCttTrtNotStartRsn(null);
-        contact.setCttTrtNotes("Treatment completed successfully.");
-        contact.setCttTrtStartDt("2024-01-15");
-        contact.setLastChgTime("2024-02-05T12:00:00");
-        contact.setLastChgUserId(200L);
-        contact.setLocalId("LOC456");
-        contact.setNamedDuringInterviewUid(1L);
-        contact.setProgramJurisdictionOid(300L);
-        contact.setRecordStatusCd("Active");
-        contact.setRecordStatusTime("2024-02-06T08:00:00");
-        contact.setSubjectEntityEpiLinkId("EPI456");
-        contact.setSubjectEntityPhcUid(10L);
-        contact.setVersionCtrlNbr(1L);
-        contact.setContactExposureSiteUid(123L);
-        contact.setProviderContactInvestigatorUid(1234L);
-        contact.setDispositionedByUid(123L);
-        return contact;
-    }
-
-    private ContactReporting constructContactReporting() {
-        ContactReporting contactReporting = new ContactReporting();
-        contactReporting.setContactUid(CONTACT_UID);
-        contactReporting.setAddTime("2024-01-01T10:00:00");
-        contactReporting.setAddUserId(100L);
-        contactReporting.setContactEntityEpiLinkId("EPI123");
-        contactReporting.setContactEntityPhcUid(1L);
-        contactReporting.setContactEntityUid(1L);
-        contactReporting.setCttReferralBasis("Referral");
-        contactReporting.setCttStatus("Active");
-        contactReporting.setCttDispoDt("2024-01-10");
-        contactReporting.setCttDisposition("Completed");
-        contactReporting.setCttEvalCompleted("Yes");
-        contactReporting.setCttEvalDt("2024-01-05");
-        contactReporting.setCttEvalNotes("Evaluation completed successfully.");
-        contactReporting.setCttGroupLotId("LOT123");
-        contactReporting.setCttHealthStatus("Good");
-        contactReporting.setCttInvAssignedDt("2024-01-02");
-        contactReporting.setCttJurisdictionNm("JurisdictionA");
-        contactReporting.setCttNamedOnDt("2024-01-03");
-        contactReporting.setCttNotes("General notes.");
-        contactReporting.setCttPriority("High");
-        contactReporting.setCttProcessingDecision("Approved");
-        contactReporting.setCttProgramArea("ProgramX");
-        contactReporting.setCttRelationship("Close Contact");
-        contactReporting.setCttRiskInd("Low");
-        contactReporting.setCttRiskNotes("Minimal risk identified.");
-        contactReporting.setCttSharedInd("Yes");
-        contactReporting.setCttSympInd("No");
-        contactReporting.setCttSympNotes("No symptoms reported.");
-        contactReporting.setCttSympOnsetDt(null);
-        contactReporting.setThirdPartyEntityPhcUid(1L);
-        contactReporting.setThirdPartyEntityUid(1L);
-        contactReporting.setCttTrtCompleteInd("Yes");
-        contactReporting.setCttTrtEndDt("2024-02-01");
-        contactReporting.setCttTrtInitiatedInd("Yes");
-        contactReporting.setCttTrtNotCompleteRsn(null);
-        contactReporting.setCttTrtNotStartRsn(null);
-        contactReporting.setCttTrtNotes("Treatment completed successfully.");
-        contactReporting.setCttTrtStartDt("2024-01-15");
-        contactReporting.setLastChgTime("2024-02-05T12:00:00");
-        contactReporting.setLastChgUserId(200L);
-        contactReporting.setLocalId("LOC456");
-        contactReporting.setNamedDuringInterviewUid(1L);
-        contactReporting.setProgramJurisdictionOid(300L);
-        contactReporting.setRecordStatusCd("Active");
-        contactReporting.setRecordStatusTime("2024-02-06T08:00:00");
-        contactReporting.setSubjectEntityEpiLinkId("EPI456");
-        contactReporting.setSubjectEntityPhcUid(10L);
-        contactReporting.setVersionCtrlNbr(1L);
-        contactReporting.setContactExposureSiteUid(123L);
-        contactReporting.setProviderContactInvestigatorUid(1234L);
-        contactReporting.setDispositionedByUid(123L);
-        return contactReporting;
-    }
-
-    private ContactAnswer constructContactAnswers() {
-        ContactAnswer contactAnswer = new ContactAnswer();
-        contactAnswer.setContactUid(CONTACT_UID);
-        contactAnswer.setAnswerVal("Common Space");
-        contactAnswer.setRdbColumnNm("CTT_EXPOSURE_TYPE");
-        return contactAnswer;
-    }
-
-    private Vaccination constructVaccination() {
-        Vaccination vaccination = new Vaccination();
-        vaccination.setVaccinationUid(VACCINATION_UID);
-        vaccination.setAddTime("2024-01-01T10:00:00");
-        vaccination.setAddUserId(100L);
-        vaccination.setAgeAtVaccination(20);
-        vaccination.setAgeAtVaccinationUnit(null);
-        vaccination.setLocalId("VAC23");
-        vaccination.setElectronicInd("");
-        vaccination.setVaccinationAdministeredNm("");
-        vaccination.setVaccineExpirationDt("2024-02-06T08:00:00");
-        vaccination.setVaccinationAnatomicalSite("");
-        vaccination.setVaccineManufacturerNm("test");
-        return vaccination;
-    }
-
-    private VaccinationReporting constructVaccinationReporting() {
-        VaccinationReporting vaccinationReporting = new VaccinationReporting();
-        vaccinationReporting.setVaccinationUid(VACCINATION_UID);
-        vaccinationReporting.setAddTime("2024-01-01T10:00:00");
-        vaccinationReporting.setAddUserId(100L);
-        vaccinationReporting.setAgeAtVaccination(20);
-        vaccinationReporting.setAgeAtVaccinationUnit(null);
-        vaccinationReporting.setLocalId("VAC23");
-        vaccinationReporting.setElectronicInd("");
-        vaccinationReporting.setVaccinationAdministeredNm("");
-        vaccinationReporting.setVaccineExpirationDt("2024-02-06T08:00:00");
-        vaccinationReporting.setVaccinationAnatomicalSite("");
-        vaccinationReporting.setVaccineManufacturerNm("test");
-        return vaccinationReporting;
-    }
-
-    private VaccinationAnswer constructVaccinationAnswers() {
-        VaccinationAnswer vaccinationAnswer = new VaccinationAnswer();
-        vaccinationAnswer.setVaccinationUid(VACCINATION_UID);
-        vaccinationAnswer.setRdbColumnNm("TEST");
-        vaccinationAnswer.setAnswerVal("TEST VAL");
-        return vaccinationAnswer;
-    }
 }

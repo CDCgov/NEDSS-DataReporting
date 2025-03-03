@@ -450,7 +450,7 @@ public class ProcessInvestigationDataUtil {
                 InterviewAnswer interviewAnswer = new InterviewAnswer();
                 interviewAnswer.setInterviewUid(interviewUid);
                 interviewAnswer.setRdbColumnNm(rdbColumnNm);
-                interviewAnswer.setAnswerVal(node.path("ANSWER_VAL").asText());
+                interviewAnswer.setAnswerVal(node.path(ANSWER_VAL).asText());
                 interviewAnswer.setBatchId(batchId);
 
                 String jsonKey = jsonGenerator.generateStringJson(interviewAnswerKey);
@@ -542,7 +542,7 @@ public class ProcessInvestigationDataUtil {
                 ContactAnswer contactAnswer = new ContactAnswer();
                 contactAnswer.setContactUid(contactUid);
                 contactAnswer.setRdbColumnNm(rdbColumnNm);
-                contactAnswer.setAnswerVal(node.path("ANSWER_VAL").asText());
+                contactAnswer.setAnswerVal(node.path(ANSWER_VAL).asText());
 
                 String jsonKey = jsonGenerator.generateStringJson(contactAnswerKey);
                 String jsonValue = jsonGenerator.generateStringJson(contactAnswer);

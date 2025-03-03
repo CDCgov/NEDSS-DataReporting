@@ -3,7 +3,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_vaccination_key' and x
     BEGIN
         CREATE TABLE dbo.nrt_vaccination_key (
             d_vaccination_key bigint IDENTITY (1,1) NOT NULL,
-            VACCINATION_UID   bigint                NULL
+            vaccination_uid   bigint                NULL
         );
         declare @max bigint;
         select @max=max(d_vaccination_key)+1 from dbo.D_VACCINATION ;
