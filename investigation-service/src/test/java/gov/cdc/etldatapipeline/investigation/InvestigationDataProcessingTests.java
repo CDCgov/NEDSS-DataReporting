@@ -22,7 +22,6 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.awaitility.Awaitility;
-import org.springframework.kafka.support.SendResult;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -64,11 +63,9 @@ class InvestigationDataProcessingTests {
     private static final String RDB_METADATA_COLS_TOPIC = "rdbMetadataColsTopic";
     private static final String CONTACT_TOPIC = "contactTopic";
     private static final String CONTACT_ANSWERS_TOPIC = "contactAnswersTopic";
-    private static final String TREATMENT_TOPIC = "treatmentTopic";
     private static final Long INVESTIGATION_UID = 234567890L;
     private static final Long INTERVIEW_UID = 234567890L;
     private static final Long CONTACT_UID = 12345678L;
-    private static final Long TREATMENT_UID = 34567890L;
     private static final String INVALID_JSON = "invalidJSON";
     ProcessInvestigationDataUtil transformer;
 

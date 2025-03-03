@@ -125,11 +125,7 @@ BEGIN
             rx2.effective_duration_unit_cd AS treatment_duration_unit,
             rx2.route_cd AS treatment_route,
             t.local_id,
-            CASE
-                WHEN rx1.record_status_cd = '' THEN 'ACTIVE'
-                WHEN rx1.record_status_cd = 'LOG_DEL' THEN 'INACTIVE'
-                ELSE rx1.record_status_cd
-                END as record_status_cd,
+            dbo.fn_get_record_status(rx1.record_status_cd) as record_status_cd,
             t.add_time,
             t.add_user_id,
             t.last_chg_time,

@@ -61,7 +61,7 @@ public class InvestigationService {
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String investigationTopicReporting;
 
-    @Value("${spring.kafka.output.topic-name-tmt}")
+    @Value("${spring.kafka.input.topic-name-tmt}")
     private String treatmentTopic;
 
     @Value("${spring.kafka.output.topic-name-treatment}")
