@@ -917,7 +917,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 047-create_f_var_pam-001.sql
+            path: 047-create_nrt_pertussis_source_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 132
@@ -925,7 +925,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 048-create-f_tb_pam-001.sql
+            path: 048-create_nrt_pertussis_source_key-001.sql
             splitStatements: false
   - changeSet:
       id: 133
@@ -933,6 +933,46 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 043-sp_inv_summary_datamart_postprocessing-001.sql
+            path: 049-create_nrt_pertussis_treatment_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 134
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 050-create_nrt_pertussis_treatment_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 135
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 043-sp_pertussis_case_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 136
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 051-create_f_var_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 137
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 052-create-f_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 138
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 044-sp_inv_summary_datamart_postprocessing-001.sql
             splitStatements: false
 

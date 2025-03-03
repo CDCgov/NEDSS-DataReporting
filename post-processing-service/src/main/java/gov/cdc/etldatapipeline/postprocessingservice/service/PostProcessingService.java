@@ -96,7 +96,8 @@ public class PostProcessingService {
             "${spring.kafka.topic.observation}",
             "${spring.kafka.topic.place}",
             "${spring.kafka.topic.auth_user}",
-            "${spring.kafka.topic.contact_record}"
+            "${spring.kafka.topic.contact_record}",
+            "${spring.kafka.topic.treatment}"
     })
     public void postProcessMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -239,6 +240,9 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForNotificationIds);
                         dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().toList();
                         notificationUids = ids;
+                        break;
+                    case TREATMENT:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment);
                         break;
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);

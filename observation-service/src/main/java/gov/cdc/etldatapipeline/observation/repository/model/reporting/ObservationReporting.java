@@ -96,4 +96,6 @@ public class ObservationReporting {
     private Long lastChgUserId;
     private String lastChgUserName;
     private String lastChgTime;
+
+    private Long batchId;
 }

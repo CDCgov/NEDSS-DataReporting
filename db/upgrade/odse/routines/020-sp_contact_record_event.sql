@@ -8,7 +8,11 @@ BEGIN
     DECLARE
         @Proc_Step_no FLOAT = 0;
     DECLARE
-        @Proc_Step_Name VARCHAR(200) = '';
+        @Proc_Step_Name VARCHAR(200) = 'Contact_Record PRE-Processing Event';
+    DECLARE
+        @Dataflow_Name VARCHAR(200) = 'Contact_Record PRE-Processing Event';
+    DECLARE
+        @Package_Name VARCHAR(200) = 'NBS_ODSE.sp_contact_record_event';
 
     BEGIN TRY
 
@@ -30,8 +34,8 @@ BEGIN
     , [row_count]
     , [Msg_Description1])
     VALUES ( @batch_id
-           , 'Contact_Record PRE-Processing Event'
-           , 'NBS_ODSE.sp_contact_record_event'
+           , @Dataflow_Name
+           , @Package_Name
            , 'START'
            , 0
            , LEFT('Pre ID-' + @cc_uids, 199)
@@ -149,7 +153,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -232,7 +236,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -276,7 +280,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -319,7 +323,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -383,7 +387,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -423,7 +427,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -468,7 +472,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -515,7 +519,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -562,7 +566,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -619,7 +623,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -660,7 +664,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -692,7 +696,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -737,7 +741,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -789,7 +793,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -848,7 +852,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -887,7 +891,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -927,7 +931,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
     COMMIT TRANSACTION;
@@ -973,7 +977,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
     COMMIT TRANSACTION;
@@ -1005,7 +1009,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
     COMMIT TRANSACTION;
@@ -1053,7 +1057,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -1103,7 +1107,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -1148,7 +1152,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -1254,7 +1258,7 @@ BEGIN
 
     INSERT INTO [rdb_modern].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, 'Contact_Record PRE-Processing Event', 'nrt_contact_record', 'START', @Proc_Step_no, @Proc_Step_Name,
+    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
 
 
@@ -1271,8 +1275,8 @@ BEGIN
     , [row_count]
     , [Msg_Description1])
     VALUES ( @batch_id
-           , 'Contact_Record PRE-Processing Event'
-           , 'NBS_ODSE.sp_contact_record_event'
+           , @Dataflow_Name
+           , @Package_Name
            , 'COMPLETE'
            , 0
            , LEFT('Pre ID-' + @cc_uids, 199)
@@ -1285,7 +1289,13 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+         DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
+
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
@@ -1297,16 +1307,16 @@ BEGIN
         , [Msg_Description1]
         , [Error_Description])
         VALUES ( @batch_id
-               , 'Contact_Record PRE-Processing Event'
-               , 'NBS_ODSE.sp_contact_record_event'
+               , @Dataflow_Name
+               , @Package_Name
                , 'ERROR'
-               , 0
-               , 'Contact_Record PRE-Processing Event'
+               , @Proc_Step_no
+               , @Proc_Step_Name
                , 0
                , LEFT(@cc_uids, 199)
-               ,@ErrorMessage
+               ,@FullErrorMessage
         );
-        return @ErrorMessage;
+        return -1;
 
     END CATCH
 
