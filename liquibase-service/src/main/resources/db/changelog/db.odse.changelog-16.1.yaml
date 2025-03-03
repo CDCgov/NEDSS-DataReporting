@@ -80,6 +80,14 @@ databaseChangeLog:
             path: 009-sp_observation_event-001.sql
             splitStatements: false
   - changeSet:
+      id: 9.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 004-v_notification_hist-001.sql
+            splitStatements: false
+  - changeSet:
       id: 10
       author: liquibase
       runOnChange: true
@@ -238,12 +246,4 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 026-sp_treatment_event-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 35
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 004-v_notification_hist-001.sql
             splitStatements: false
