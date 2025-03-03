@@ -137,4 +137,5 @@ public class InvestigationReporting {
     private Long perAsProviderOfPediatricsUid;
     private Long orgAsReporterUid;
     private String detectionMethodCd;
+    private Long batchId;
 }

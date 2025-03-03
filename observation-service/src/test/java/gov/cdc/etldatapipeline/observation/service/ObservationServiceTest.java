@@ -8,6 +8,7 @@ import gov.cdc.etldatapipeline.observation.repository.model.dto.Observation;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationKey;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationReporting;
 import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
+import static gov.cdc.etldatapipeline.observation.service.ObservationService.toBatchId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -88,28 +90,33 @@ class ObservationServiceTest {
     void testProcessMessageException() {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(invalidPayload, inputTopicName));
-        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(rec));
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     @Test
     void testProcessMessageNoDataException() {
         Long observationUid = 123456789L;
         String payload = "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
+        ConsumerRecord<String, String> rec = getRecord(payload);
 
         when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.empty());
-        assertThrows(NoDataException.class, () -> observationService.processMessage(payload, inputTopicName));
+        assertThrows(NoDataException.class, () -> observationService.processMessage(rec));
     }
 
     private void validateData(String payload, Observation observation) throws JsonProcessingException {
-        observationService.processMessage(payload, inputTopicName);
+        ConsumerRecord<String, String> rec = getRecord(payload);
+        observationService.processMessage(rec);
 
         ObservationKey observationKey = new ObservationKey();
         observationKey.setObservationUid(observation.getObservationUid());
 
         var reportingModel = constructObservationReporting(observation.getObservationUid(), observation.getObsDomainCdSt1());
+        reportingModel.setBatchId(toBatchId.applyAsLong(rec));
 
-        verify(kafkaTemplate, times(5)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
         String actualTopic = topicCaptor.getValue();
         String actualKey = keyCaptor.getValue();
         String actualValue = messageCaptor.getValue();
@@ -188,5 +195,9 @@ class ObservationServiceTest {
         observation.setAccessionNumber("20120601114");
 
         return observation;
+    }
+
+    private ConsumerRecord<String, String> getRecord(String payload) {
+        return new ConsumerRecord<>(inputTopicName, 0,  11L, null, payload);
     }
 }

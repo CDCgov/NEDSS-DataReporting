@@ -356,6 +356,10 @@ class PostProcessingServiceTest {
         String placeKey2 = "{\"payload\":{\"place_uid\":124}}";
         String placeTopic = "dummy_place";
 
+        String treatmentKey1 = "{\"payload\":{\"treatment_uid\":789}}";
+        String treatmentKey2 = "{\"payload\":{\"treatment_uid\":790}}";
+        String treatmentTopic = "dummy_treatment";
+
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey1, orgKey1);
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey2, orgKey2);
         postProcessingServiceMock.postProcessMessage(ntfTopic, ntfKey1, ntfKey1);
@@ -364,11 +368,14 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(invTopic, invKey2, invKey2);
         postProcessingServiceMock.postProcessMessage(placeTopic, placeKey1, placeKey1);
         postProcessingServiceMock.postProcessMessage(placeTopic, placeKey2, placeKey2);
+        postProcessingServiceMock.postProcessMessage(treatmentTopic, treatmentKey1, treatmentKey1);
+        postProcessingServiceMock.postProcessMessage(treatmentTopic, treatmentKey2, treatmentKey2);
 
         assertTrue(postProcessingServiceMock.idCache.containsKey(orgTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(invTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(ntfTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(placeTopic));
+        assertTrue(postProcessingServiceMock.idCache.containsKey(treatmentTopic));
 
         postProcessingServiceMock.processCachedIds();
 
@@ -376,6 +383,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds("234,235");
         verify(investigationRepositoryMock).executeStoredProcForNotificationIds("567,568");
         verify(postProcRepositoryMock).executeStoredProcForDPlace("123,124");
+        verify(postProcRepositoryMock).executeStoredProcForTreatment("789,790");
     }
 
     @Test
@@ -414,6 +422,7 @@ class PostProcessingServiceTest {
         String observationKey = "{\"payload\":{\"observation_uid\":130}}";
         String observationMsg = "{\"payload\":{\"observation_uid\":130, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"MorbReport\"}}";
         String contactKey = "{\"payload\":{\"contact_uid\":123}}";
+        String treatmentKey = "{\"payload\":{\"treatment_uid\":133}}";
 
         String orgTopic = "dummy_organization";
         String providerTopic = "dummy_provider";
@@ -427,6 +436,7 @@ class PostProcessingServiceTest {
         String cmTopic = "dummy_case_management";
         String obsTopic = "dummy_observation";
         String contactTopic = "dummy_contact";
+        String treatmentTopic = "dummy_treatment";
 
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
@@ -435,6 +445,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(placeTopic, placeKey, placeKey);
         postProcessingServiceMock.postProcessMessage(intTopic, interviewKey, interviewKey);
         postProcessingServiceMock.postProcessMessage(ntfTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.postProcessMessage(treatmentTopic, treatmentKey, treatmentKey);
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
         postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationMsg);
         postProcessingServiceMock.postProcessMessage(ldfTopic, ldfKey, ldfKey);
@@ -455,12 +466,13 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(6).contains(invTopic));
         assertTrue(topicLogList.get(7).contains(invTopic));
         assertTrue(topicLogList.get(8).contains(ntfTopic));
-        assertTrue(topicLogList.get(9).contains(intTopic));
+        assertTrue(topicLogList.get(9).contains(treatmentTopic));
         assertTrue(topicLogList.get(10).contains(intTopic));
-        assertTrue(topicLogList.get(11).contains(cmTopic));
+        assertTrue(topicLogList.get(11).contains(intTopic));
         assertTrue(topicLogList.get(12).contains(cmTopic));
-        assertTrue(topicLogList.get(13).contains(ldfTopic));
-        assertTrue(topicLogList.get(14).contains(obsTopic));
+        assertTrue(topicLogList.get(13).contains(cmTopic));
+        assertTrue(topicLogList.get(14).contains(ldfTopic));
+        assertTrue(topicLogList.get(15).contains(obsTopic));
     }
 
     @ParameterizedTest
@@ -744,6 +756,37 @@ class PostProcessingServiceTest {
                 () -> postProcessingServiceMock.postProcessMessage(topic, placeKey, placeKey));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
+
+    @Test
+    void testPostProcessTreatmentMessage() {
+        String topic = "dummy_treatment";
+        String key = "{\"payload\":{\"treatment_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedTreatmentIdsString = "123";
+        verify(postProcRepositoryMock).executeStoredProcForTreatment(expectedTreatmentIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(6, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(TREATMENT.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
+    void testPostProcessNoTreatmentUidException() {
+        String treatmentKey = "{\"payload\":{}}";
+        String topic = "dummy_treatment";
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> postProcessingServiceMock.postProcessMessage(topic, treatmentKey, treatmentKey));
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+    }
+
     @ParameterizedTest
     @CsvSource({
             "'{\"payload\":{\"public_health_case_uid\":123,\"rdb_table_name_list\":null}}'",

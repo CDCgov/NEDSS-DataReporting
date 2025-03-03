@@ -8,6 +8,7 @@ CREATE TABLE dbo.nrt_interview_note
     user_comment     varchar(2000)                                   NULL,
     comment_date     datetime                                        NULL,
     record_status_cd varchar(4000)                                   NULL,
+    batch_id         bigint                                          NULL,
     refresh_datetime datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime     datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
