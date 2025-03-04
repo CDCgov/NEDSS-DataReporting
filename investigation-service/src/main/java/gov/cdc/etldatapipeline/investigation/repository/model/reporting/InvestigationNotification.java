@@ -35,5 +35,17 @@ public class InvestigationNotification {
     private Long localPatientUid;
     private String conditionCd;
     private String conditionDesc;
+    private String firstNotificationStatus;
+    private Long notifRejectedCount;
+    private Long notifCreatedCount;
+    private Long notifSentCount;
+    private String firstNotificationSendDate;
+    private Long notifCreatedPendingCount;
+    private String lastNotificationDate;
+    private String lastNotificationSendDate;
+    private String firstNotificationDate;
+    private Long firstNotificationSubmittedBy;
+    private Long lastNotificationSubmittedBy;
+    private  String notificationDate;
 }
 

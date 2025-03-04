@@ -5,6 +5,7 @@ spring:
       topic-name-ntf: nbs_Notification
       topic-name-int: nbs_Interview
       topic-name-ctr: nbs_CT_contact
+      topic-name-vac: nbs_Intervention
     output:
       topic-name-reporting: nrt_investigation
       topic-name-confirmation: nrt_investigation_confirmation
@@ -18,6 +19,8 @@ spring:
       topic-name-rdb-metadata-columns: nrt_metadata_columns
       topic-name-contact: nrt_contact
       topic-name-contact-answer: nrt_contact_answer
+      topic-name-vaccination: nrt_vaccination
+      topic-name-vaccination-answer: nrt_vaccination_answer
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt

@@ -14,6 +14,7 @@ spring:
       place: nrt_place
       auth_user: nrt_auth_user
       contact_record: nrt_contact
+      vaccination: nrt_vaccination
       datamart: nbs_Datamart
     dlq:
       retry-suffix: -retry

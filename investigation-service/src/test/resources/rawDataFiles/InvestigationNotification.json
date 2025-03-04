@@ -25,6 +25,18 @@
     "local_patient_id": "ABC7539512AB01",
     "local_patient_uid": 75395128,
     "condition_cd": "11065",
-    "condition_desc": "Novel Coronavirus"
+    "condition_desc": "Novel Coronavirus",
+    "first_notification_status": "APPROVED",
+    "notif_rejected_count": 0,
+    "notif_created_count": 1,
+    "notif_sent_count": 1,
+    "first_notification_send_date": "2025-02-25T20:01:14.210",
+    "notif_created_pending_count": 0,
+    "last_notification_date": "2025-02-25T16:28:18.923",
+    "last_notification_send_date": "2025-02-25T20:01:14.210",
+    "first_notification_date": "2025-02-25T16:28:18.923",
+    "first_notification_submitted_by": 10055282,
+    "last_notification_submitted_by": 10055282,
+    "notification_date": "2025-02-25T20:01:14.210"
   }
 ]

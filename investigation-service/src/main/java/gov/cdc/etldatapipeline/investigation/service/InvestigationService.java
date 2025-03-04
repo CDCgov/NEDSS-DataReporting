@@ -2,13 +2,10 @@ package gov.cdc.etldatapipeline.investigation.service;
 
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
-import gov.cdc.etldatapipeline.investigation.repository.ContactRepository;
-import gov.cdc.etldatapipeline.investigation.repository.InterviewRepository;
+import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
-import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
-import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +57,9 @@ public class InvestigationService {
     @Value("${spring.kafka.input.topic-name-ctr}")
     private String contactTopic;
 
+    @Value("${spring.kafka.input.topic-name-vac}")
+    private String vaccinationTopic;
+
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String investigationTopicReporting;
 
@@ -76,6 +76,7 @@ public class InvestigationService {
     private final NotificationRepository notificationRepository;
     private final InterviewRepository interviewRepository;
     private final ContactRepository contactRepository;
+    private final VaccinationRepository vaccinationRepository;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessInvestigationDataUtil processDataUtil;
@@ -109,7 +110,8 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-phc}",
                     "${spring.kafka.input.topic-name-ntf}",
                     "${spring.kafka.input.topic-name-int}",
-                    "${spring.kafka.input.topic-name-ctr}"
+                    "${spring.kafka.input.topic-name-ctr}",
+                    "${spring.kafka.input.topic-name-vac}"
             }
     )
     public void processMessage(ConsumerRecord<String, String> rec,
@@ -128,6 +130,8 @@ public class InvestigationService {
             processInterview(message, batchId);
         } else if (topic.equals(contactTopic) && contactRecordEnable) {
             processContact(message);
+        } else if (topic.equals(vaccinationTopic)) {
+            processVaccination(message);
         }
         consumer.commitSync();
     }
@@ -232,6 +236,27 @@ public class InvestigationService {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             throw new RuntimeException(errorMessage("Contact", contactUid, e), e);
+        }
+    }
+
+    private void processVaccination(String value) {
+        String vaccinationUid = "";
+        try {
+            vaccinationUid = extractUid(value, "intervention_uid");
+
+            logger.info(topicDebugLog, "Vaccination", vaccinationUid, vaccinationTopic);
+            Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
+            if(vacData.isPresent()) {
+                Vaccination vaccination = vacData.get();
+                processDataUtil.processVaccination(vaccination);
+                processDataUtil.processColumnMetadata(vaccination.getRdbCols(), vaccination.getVaccinationUid());
+            } else {
+                throw new EntityNotFoundException("Unable to find Vaccination with id: " + vaccinationUid);
+            }
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
+        } catch (Exception e) {
+            throw new RuntimeException(errorMessage("Vaccination", vaccinationUid, e), e);
         }
     }
 
