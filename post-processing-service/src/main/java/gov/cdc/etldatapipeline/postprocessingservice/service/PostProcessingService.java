@@ -415,21 +415,25 @@ public class PostProcessingService {
 
         int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length() + ctrString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
+        int totalLengthInvSummary =  invString.length() + notifString.length() + obsString.length();
 
         if (totalLengthEventMetric > 0 && eventMetricEnable) {
             postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
-        }
-        else {
+        } else {
             logger.info("No updates to EVENT_METRIC Datamart");
         }
 
         if (totalLengthHep100 > 0) {
             postProcRepository.executeStoredProcForHep100(invString, patString, provString, orgString);
-        }
-        else {
+        } else {
             logger.info("No updates to HEP100 Datamart");
         }
 
+        if(totalLengthInvSummary > 0) {
+            postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+        } else {
+            logger.info("No updates to INV_SUMMARY Datamart");
+        }
     }
 
     private String listToParameterString(List<Long> inputList) {
