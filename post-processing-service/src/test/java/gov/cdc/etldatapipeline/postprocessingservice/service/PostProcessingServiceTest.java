@@ -698,6 +698,37 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessInvSummary() {
+
+        String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
+        String notificationKey = "{\"payload\":{\"notification_uid\":127}}";
+        String observationKey = "{\"payload\":{\"observation_uid\":130}}";
+
+        String invTopic = "dummy_investigation";
+        String notTopic = "dummy_notification";
+        String obsTopic = "dummy_observation";
+
+        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
+        postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(postProcRepositoryMock).executeStoredProcForInvSummaryDatamart("126", "127", "130");
+    }
+
+    @Test
+    void testPostProcessInvSummary_IncompleteIds() {
+
+        String contactKey = "{\"payload\":{\"contact_uid\":123}}";
+        String crTopic = "dummy_contact";
+        postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
+        postProcessingServiceMock.processCachedIds();
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals("No updates to INV_SUMMARY Datamart", logs.getLast().getFormattedMessage());
+    }
+
+    @Test
     void testPostProcessUserProfileMessage() {
         String topic = "dummy_auth_user";
         String key = "{\"payload\":{\"auth_user_uid\":123}}";
