@@ -389,6 +389,11 @@ public class PostProcessingService {
                         investigationRepository.executeStoredProcForHepatitisCaseDatamart(cases);
                         completeLog(HEPATITIS_CASE.getStoredProcedure());
                         break;
+                    case PERTUSSIS_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, PERTUSSIS_CASE.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForPertussisCaseDatamart(cases);
+                        completeLog(PERTUSSIS_CASE.getStoredProcedure());
+                        break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ",dmType);
                 }

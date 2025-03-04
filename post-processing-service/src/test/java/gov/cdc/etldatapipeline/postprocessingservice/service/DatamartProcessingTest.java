@@ -95,7 +95,8 @@ class DatamartProcessingTest {
                 Arguments.of("10140", MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), "MeaslesCaseDatamart.json"),
                 Arguments.of(null, CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), "CaseLabDatamart.json"),
                 Arguments.of("10160", BMIRD_CASE.getEntityName(), BMIRD_CASE.getStoredProcedure(), "BMIRDCaseDatamart.json"),
-                Arguments.of("10140", HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), "HepatitisCaseDatamart.json")
+                Arguments.of("10140", HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), "HepatitisCaseDatamart.json"),
+                Arguments.of("10190", PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), "PertussisCaseDatamart.json")
         );
     }
 

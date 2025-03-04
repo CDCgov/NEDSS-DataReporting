@@ -30,7 +30,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                          , '10103'
                          , '10105'
                          , '50248'
-                    )
+                          )
                     ) hep_codes
                 WHERE NOT EXISTS
                           (SELECT 1
@@ -167,7 +167,15 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            FROM dbo.nrt_datamart_metadata ndm
                            WHERE ndm.condition_cd = bmird_codes.condition_cd);
             END;
+
+
         /*CNDE-2129: Separate Hepatitis Datamart condition code addition script.*/
+        --fix to remove incorrectly mapped
+        IF EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Datamart'
+            and condition_cd in ( '999999','10481', '10102') )
+        BEGIN
+            DELETE FROM dbo.nrt_datamart_metadata where Datamart = 'Hepatitis_Datamart' and condition_cd in ( '999999','10481', '10102') ;
+        END
         --adding the legacy Hep cases
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Case')
             BEGIN
@@ -178,12 +186,31 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                        'sp_hepatitis_case_datamart_postprocessing'
                 FROM
                     (SELECT distinct cc.condition_cd, cc.condition_desc_txt
-                     FROM NBS_SRTE.[dbo].[Condition_code] cc WITH (NOLOCK)
+                     FROM NBS_SRTE.dbo.Condition_code cc
                      WHERE (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE 'INV_FORM_HEP%')
                     ) hep_codes
                 WHERE NOT EXISTS
                           (SELECT 1
                            FROM dbo.nrt_datamart_metadata ndm
                            WHERE ndm.condition_cd = hep_codes.condition_cd);
+            END;
+
+        --adding the legacy pertussis cases
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Pertussis_Case')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT condition_cd,
+                       condition_desc_txt,
+                       'Pertussis_Case',
+                       'sp_pertussis_case_datamart_postprocessing'
+                FROM
+                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
+                     FROM NBS_SRTE.dbo.Condition_code cc
+                     WHERE (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE 'INV_FORM_PER%')
+                    ) per_codes
+                WHERE NOT EXISTS
+                          (SELECT 1
+                           FROM dbo.nrt_datamart_metadata ndm
+                           WHERE ndm.condition_cd = per_codes.condition_cd);
             END;
     END;
