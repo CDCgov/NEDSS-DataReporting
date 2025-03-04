@@ -537,7 +537,12 @@ class PostProcessingServiceTest {
                 "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                         "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
                         HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), 3,
-                (repo, uid) -> verify(repo).executeStoredProcForHepatitisCaseDatamart(uid))
+                (repo, uid) -> verify(repo).executeStoredProcForHepatitisCaseDatamart(uid)),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
+                        PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid))
         );
     }
 

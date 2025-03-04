@@ -30,6 +30,7 @@ enum Entity {
     CASE_LAB_DATAMART(0, "Case_Lab_Datamart", Constants.PHC_UID, "sp_case_lab_datamart_postprocessing"),
     BMIRD_CASE(0, "BMIRD_Case", Constants.PHC_UID, "sp_bmird_case_datamart_postprocessing"),
     HEPATITIS_CASE(0, "Hepatitis_Case", Constants.PHC_UID, "sp_hepatitis_case_datamart_postprocessing"),
+    PERTUSSIS_CASE(0, "Pertussis_Case", Constants.PHC_UID, "sp_pertussis_case_datamart_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;
