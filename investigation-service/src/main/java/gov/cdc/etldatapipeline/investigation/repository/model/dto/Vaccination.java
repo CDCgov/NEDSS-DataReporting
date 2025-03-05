@@ -69,6 +69,18 @@ public class Vaccination {
     @Column(name="electronic_ind")
     private String electronicInd;
 
+    @Column(name="PROVIDER_UID")
+    private Long providerUid;
+
+    @Column(name="ORGANIZATION_UID")
+    private Long organizationUid;
+
+    @Column(name="PHC_UID")
+    private Long phcUid;
+
+    @Column(name="PATIENT_UID")
+    private Long patientUid;
+
     @Column(name="rdb_cols")
     private String rdbCols;
 
