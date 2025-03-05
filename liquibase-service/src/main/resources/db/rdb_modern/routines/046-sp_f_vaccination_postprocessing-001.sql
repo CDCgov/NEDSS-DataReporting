@@ -64,7 +64,7 @@ BEGIN TRY
     SET @PROC_STEP_NAME = ' GENERATING #F_VAC_INIT';
 
     SELECT
-        vik.D_VACCINATION_KEY,
+        dim.D_VACCINATION_KEY,
 
         nc.PATIENT_UID,
         coalesce(pt1.PATIENT_KEY, 1) as PATIENT_KEY,
@@ -81,17 +81,19 @@ BEGIN TRY
         coalesce(inv1.INVESTIGATION_KEY, 1) as INVESTIGATION_KEY
 
     INTO #F_VAC_INIT
-    FROM
-        #F_VAC_INIT_KEYS vik
-            LEFT JOIN
-        dbo.NRT_VACCINATION nc  with (nolock) on nc.VACCINATION_UID = vik.VACCINATION_UID
-        LEFT JOIN
+    FROM (
+        SELECT *
+        FROM dbo.NRT_VACCINATION WHERE VACCINATION_UID IN (SELECT value FROM STRING_SPLIT(@vac_uids, ',') )
+    ) nc
+    LEFT JOIN
+        dbo.D_VACCINATION dim with (nolock) on dim.VACCINATION_UID = nc.VACCINATION_UID
+    LEFT JOIN
         dbo.D_ORGANIZATION org  with (nolock) on org.ORGANIZATION_UID  = nc.ORGANIZATION_UID
-        LEFT JOIN
+    LEFT JOIN
         dbo.D_PROVIDER pv1  with (nolock) on pv1.PROVIDER_UID  = nc.PROVIDER_UID
-        LEFT JOIN
+    LEFT JOIN
         dbo.D_PATIENT pt1  with (nolock) on pt1.PATIENT_UID = nc.PATIENT_UID
-        LEFT JOIN
+    LEFT JOIN
         dbo.INVESTIGATION inv1  with (nolock) on inv1.CASE_UID = nc.PHC_UID;
 
 

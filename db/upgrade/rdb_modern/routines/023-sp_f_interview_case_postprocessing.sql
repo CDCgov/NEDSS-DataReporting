@@ -49,7 +49,7 @@ BEGIN
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = ' GENERATING #L_INTERVIEW_INIT';
-
+        --This step to capture from the nrt key table is needed because interview_uid is not maintained in the dimension
         SELECT
             INTERVIEW_UID,
             D_INTERVIEW_KEY

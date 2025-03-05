@@ -38,7 +38,7 @@ BEGIN
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #F_CRC_INIT_KEYS';
-
+        --This step to capture from the nrt key table is needed because contact_uid is not maintained in the dimension
         SELECT
         	D_CONTACT_RECORD_KEY
         	,CONTACT_UID
