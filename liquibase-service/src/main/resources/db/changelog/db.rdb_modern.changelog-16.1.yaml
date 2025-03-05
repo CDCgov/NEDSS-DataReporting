@@ -1007,4 +1007,28 @@ databaseChangeLog:
         - sqlFile:
             path: 045-sp_inv_summary_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 143
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 056-create_treatment.sql
+            splitStatements: false
+  - changeSet:
+      id: 144
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 057-create_treatment_event.sql
+            splitStatements: false
+  - changeSet:
+      id: 145
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 058-create_nrt_treatment_key.sql
+            splitStatements: false
 
