@@ -15,6 +15,8 @@ BEGIN
         DECLARE @Dataflow_Name VARCHAR(200) = 'INV_SUMM_DATAMART Post-Processing Event';
         DECLARE @Package_Name VARCHAR(200) = 'sp_inv_summary_datamart_postprocessing';
 
+        if @debug = 'true' print @batch_id;
+
         DECLARE @COUNTSTD AS int;
 
         SET @Proc_Step_no = 1;
@@ -302,7 +304,7 @@ BEGIN
                                 I.ILLNESS_ONSET_DT                                AS 'ILLNESS_ONSET_DATE', ---7
                                 SUBSTRING(I.INV_CASE_STATUS, 1, 50)               AS 'CASE_STATUS',---8
                                 I.CASE_RPT_MMWR_WK                                AS 'MMWR_WEEK', ---9
-                                I.CASE_RPT_MMWR_YR                                AS 'MMWR_YEAR', ---10
+                                I.CASE_RPT_MMWR_YR AS 'MMWR_YEAR', ---10
                                 I.CASE_OID                                        AS 'PROGRAM_JURISDICTION_OID',---11
                                 I.HSPTL_ADMISSION_DT                              AS 'HSPTL_ADMISSION_DT',--12
                                 I.INV_START_DT                                    AS 'INV_START_DT',---13
@@ -685,7 +687,7 @@ BEGIN
                                 ELSE NULL END                                                                           AS 'NOTIFICATION_CREATE_DATE',
                             CASE
                                 WHEN NOTI.NOTIFICATION_STATUS IS NOT NULL THEN RDB_DATE_SENT.DATE_MM_DD_YYYY
-                                ELSE NULL END                                                                           AS 'NOTIFICATION_SENT_DATE',
+                                ELSE NULL END                                                                 AS 'NOTIFICATION_SENT_DATE',
                             ROW_NUMBER() OVER (Partition by A.Investigation_Key Order by RDB_DATE.DATE_MM_DD_YYYY ASC ) as rn
                      --INTO #TMP_S_INV_SUMM_DATAMART_INIT
                      FROM #TMP_PATIENT_DETAILS A
@@ -944,7 +946,7 @@ BEGIN
             [PATIENT_KEY]                    = ISD.[PATIENT_KEY],----3
             [INVESTIGATION_LOCAL_ID]         = ISD.[INVESTIGATION_LOCAL_ID],---4
             [DISEASE]                        = ISD.[DISEASE],---5
-            [DISEASE_CD]                     = ISD.[DISEASE_CD],---6
+            [DISEASE_CD]     = ISD.[DISEASE_CD],---6
             [PATIENT_FIRST_NAME]             = ISD.[PATIENT_FIRST_NAME],---7
             [PATIENT_LAST_NAME]              = ISD.[PATIENT_LAST_NAME],---8
             [PATIENT_DOB]                    = ISD.[PATIENT_DOB],---9
@@ -1261,7 +1263,7 @@ BEGIN
                       , notif_created_count             AS NOTIFCREATEDCOUNT
                       , notif_sent_count                AS NOTIFSENTCOUNT
                       , first_notification_send_date    AS FIRSTNOTIFICATIONSENDDATE
-                      , notif_created_pending_count     AS NOTIFCREATEDPENDINGSCOUNT
+                      , notif_created_pending_count    AS NOTIFCREATEDPENDINGSCOUNT
                       , last_notification_date          AS LASTNOTIFICATIONDATE
                       , last_notification_send_date     AS LASTNOTIFICATIONSENDDATE
                       , first_notification_date         AS FIRSTNOTIFICATIONDATE
@@ -1272,7 +1274,8 @@ BEGIN
         INTO #TEMP_MIN_MAX_NOTIFICATION
         FROM dbo.nrt_investigation_notification WITH (NOLOCK)
         WHERE notification_uid IN (SELECT value FROM STRING_SPLIT(@notif_uids, ','))
-           OR PUBLIC_HEALTH_CASE_UID IN (SELECT CASE_UID FROM #TMP_CASE_LAB_DATAMART_MODIFIED_output);
+           OR PUBLIC_HEALTH_CASE_UID IN (SELECT CASE_UID FROM #TMP_CASE_LAB_DATAMART_MODIFIED_output)
+        OPTION (MAXDOP 1);
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TEMP_MIN_MAX_NOTIFICATION;
 
@@ -1418,9 +1421,9 @@ BEGIN
                                          , [step_number]
                                          , [step_name]
                                          , [row_count])
-        VALUES ( @batch_id,
-                 'INV_SUMM_DATAMART'
-               , 'INV_SUMM_DATAMART'
+        VALUES ( @batch_id
+               , @Dataflow_Name
+               , @Package_Name
                , 'COMPLETE'
                , 999
                , @Proc_Step_name
