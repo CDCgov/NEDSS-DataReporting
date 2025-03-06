@@ -1013,7 +1013,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 056-create_treatment.sql
+            path: 056-create_treatment-001.sql
             splitStatements: false
   - changeSet:
       id: 144
@@ -1021,7 +1021,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 057-create_treatment_event.sql
+            path: 057-create_treatment_event-001.sql
             splitStatements: false
   - changeSet:
       id: 145
@@ -1029,6 +1029,6 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 058-create_nrt_treatment_key.sql
+            path: 058-create_nrt_treatment_key-001.sql
             splitStatements: false
 
