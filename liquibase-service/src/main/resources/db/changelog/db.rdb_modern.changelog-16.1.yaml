@@ -445,7 +445,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 001-v_getobscode-001.sql
+            path: 009-v_codeset-001.sql
             splitStatements: false
   - changeSet:
       id: 72
@@ -621,7 +621,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 009-v_codeset-001.sql
+            path: 001-v_getobscode-001.sql
             splitStatements: false
   - changeSet:
       id: 95
