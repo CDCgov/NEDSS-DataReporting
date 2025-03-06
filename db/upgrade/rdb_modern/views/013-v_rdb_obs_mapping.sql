@@ -1,7 +1,8 @@
 /*
     CNDE-2531:
     Added CROSS JOIN with two dummy rows. This allows for a code to ALWAYS be represented alongside a null PHC_UID.
-    This is important for ensuring that when a selection is removed from the UI 
+    This is important for ensuring that when a selection is removed from the UI, it is properly represented and set
+    to null in the target table.
 */
 CREATE OR ALTER VIEW dbo.v_rdb_obs_mapping
 AS
