@@ -52,6 +52,7 @@ WITH InvFormQObservations AS
                  dbo.nrt_investigation_observation tnio with (nolock)
                      inner join dbo.nrt_observation_coded ovc with (nolock) ON ovc.observation_uid = tnio.branch_id
                      inner join dbo.nrt_observation o with (nolock) ON o.observation_uid = ovc.observation_uid
+                    AND ISNULL(ovc.batch_id, 1) = ISNULL(o.batch_id, 1)
              WHERE branch_type_cd = 'InvFrmQ'
 
          )
@@ -80,7 +81,7 @@ SELECT
     END AS response_cd,
     label
 FROM InvFormQObservations obs
-         LEFT JOIN dbo.codeset cs with (nolock) on cs.cd = obs.cd
+         LEFT JOIN dbo.v_codeset cs with (nolock) on cs.cd = obs.cd
          LEFT JOIN nbs_srte.dbo.code_value_general cvg with (nolock)  on
     cvg.code_set_nm = cs.CODE_SET_NM and cvg.code = obs.ovc_code
          LEFT JOIN nbs_srte.dbo.Country_code cc with (nolock) on cc.code = obs.ovc_code

@@ -445,7 +445,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 001-v_getobscode-001.sql
+            path: 009-v_codeset-001.sql
             splitStatements: false
   - changeSet:
       id: 72
@@ -621,7 +621,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 009-v_codeset-001.sql
+            path: 001-v_getobscode-001.sql
             splitStatements: false
   - changeSet:
       id: 95
@@ -1013,22 +1013,6 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 056-create_treatment-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 144
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 057-create_treatment_event-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 145
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 058-create_nrt_treatment_key-001.sql
+            path: 046-sp_f_vaccination_postprocessing-001.sql
             splitStatements: false
 

@@ -21,6 +21,10 @@ CREATE TABLE dbo.nrt_vaccination
     vaccine_manufacturer_nm     varchar(300) NULL,
     version_ctrl_nbr            numeric(18,0) NULL,
     electronic_ind              char(1) NULL,
+    provider_uid            bigint NULL,
+    organization_uid        bigint NULL,
+    phc_uid                 bigint NULL,
+    patient_uid             bigint NULL,
     refresh_datetime    datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime        datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)

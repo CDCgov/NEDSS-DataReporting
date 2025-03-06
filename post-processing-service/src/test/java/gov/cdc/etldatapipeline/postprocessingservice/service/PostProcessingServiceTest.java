@@ -421,9 +421,10 @@ class PostProcessingServiceTest {
 
         String expectedIntIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForDVaccination(expectedIntIdsString);
+        verify(postProcRepositoryMock).executeStoredProcForFVaccination(expectedIntIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(7, logs.size());
+        assertEquals(9, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(VACCINATION.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }

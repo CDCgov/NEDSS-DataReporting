@@ -638,6 +638,10 @@ public class ProcessInvestigationDataUtil {
         vaccinationReporting.setVaccineManufacturerNm(vaccination.getVaccineManufacturerNm());
         vaccinationReporting.setVersionCtrlNbr(vaccination.getVersionCtrlNbr());
         vaccinationReporting.setElectronicInd(vaccination.getElectronicInd());
+        vaccinationReporting.setProviderUid(vaccination.getProviderUid());
+        vaccinationReporting.setPhcUid(vaccination.getPhcUid());
+        vaccinationReporting.setOrganizationUid(vaccination.getOrganizationUid());
+        vaccinationReporting.setPatientUid(vaccination.getPatientUid());
         return vaccinationReporting;
     }
 
