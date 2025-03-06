@@ -5,11 +5,17 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment_key' and xty
                                                treatment_uid   bigint                NULL
         );
 
-        DECLARE @max bigint;
-        SELECT @max = MAX(TREATMENT_KEY) + 1 FROM dbo.TREATMENT;
-
-        IF @max IS NULL   --check when max is returned as null
-            SET @max = 1;
-
+        declare @max bigint;
+        select @max=max(TREATMENT_KEY)+1 from dbo.TREATMENT ;
+        select @max;
+        if @max IS NULL   --check when max is returned as null
+            SET @max = 2; -- default to 2
         DBCC CHECKIDENT ('dbo.nrt_treatment_key', RESEED, @max);
     END
+
+IF NOT EXISTS (SELECT 1 FROM dbo.TREATMENT)
+    BEGIN
+        INSERT INTO dbo.TREATMENT (TREATMENT_KEY, RECORD_STATUS_CD)
+        SELECT 1,'ACTIVE'; --Default record with ACTIVE status as per CHK_TREATMENT_RECORD_STATUS constraint
+
+    END;
