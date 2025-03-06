@@ -1,3 +1,9 @@
+/*
+    CNDE-2531:
+    Added CROSS JOIN with two dummy rows. This allows for a code to ALWAYS be represented alongside a null PHC_UID.
+    This is important for ensuring that when a selection is removed from the UI, it is properly represented and set
+    to null in the target table.
+*/
 CREATE OR ALTER VIEW dbo.v_rdb_obs_mapping
 AS
 SELECT  imrdb.RDB_table,
@@ -24,8 +30,16 @@ SELECT  imrdb.RDB_table,
             ELSE NULL
             END AS date_response,
         ovc.label
-FROM nbs_srte.dbo.imrdbmapping imrdb
-         LEFT JOIN dbo.v_getobscode ovc ON imrdb.unique_cd = ovc.cd
-         LEFT JOIN dbo.v_getobsnum ovn ON imrdb.unique_cd = ovn.cd
-         LEFT JOIN dbo.v_getobstxt ovt ON imrdb.unique_cd = ovt.cd
-         LEFT JOIN dbo.v_getobsdate ovd ON imrdb.unique_cd = ovd.cd;
+FROM (SELECT
+        RDB_table,
+        unique_cd,
+        RDB_attribute,
+        db_field,
+        r.n 
+    FROM nbs_srte.dbo.imrdbmapping
+CROSS JOIN (SELECT 1 AS n UNION ALL SELECT 2) r) imrdb
+         LEFT JOIN dbo.v_getobscode ovc ON imrdb.unique_cd = ovc.cd and imrdb.n = 2
+         LEFT JOIN dbo.v_getobsnum ovn ON imrdb.unique_cd = ovn.cd and imrdb.n = 2
+         LEFT JOIN dbo.v_getobstxt ovt ON imrdb.unique_cd = ovt.cd and imrdb.n = 2
+         LEFT JOIN dbo.v_getobsdate ovd ON imrdb.unique_cd = ovd.cd and imrdb.n = 2
+where (imrdb.n = 1 or COALESCE(ovc.public_health_case_uid, ovn.public_health_case_uid, ovt.public_health_case_uid, ovd.public_health_case_uid) IS NOT NULL);
