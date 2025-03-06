@@ -1272,10 +1272,13 @@ BEGIN
                       , notification_date               AS NOTIFICATIONDATE
                       , PUBLIC_HEALTH_CASE_UID
         INTO #TEMP_MIN_MAX_NOTIFICATION
-        FROM dbo.nrt_investigation_notification WITH (NOLOCK)
-        WHERE notification_uid IN (SELECT value FROM STRING_SPLIT(@notif_uids, ','))
-           OR PUBLIC_HEALTH_CASE_UID IN (SELECT CASE_UID FROM #TMP_CASE_LAB_DATAMART_MODIFIED_output)
-        OPTION (MAXDOP 1);
+        FROM dbo.nrt_investigation_notification n WITH (NOLOCK)
+        LEFT JOIN (
+            SELECT value FROM STRING_SPLIT(@notif_uids, ',')
+        ) nu ON n.notification_uid = nu.value
+        LEFT JOIN
+            #TMP_CASE_LAB_DATAMART_MODIFIED_output pc ON n.PUBLIC_HEALTH_CASE_UID = pc.CASE_UID
+        WHERE nu.value is not null or pc.CASE_UID is not null;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TEMP_MIN_MAX_NOTIFICATION;
 
