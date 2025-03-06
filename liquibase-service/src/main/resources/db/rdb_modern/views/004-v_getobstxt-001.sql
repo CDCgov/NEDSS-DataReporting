@@ -7,6 +7,7 @@ SELECT
      ,tnio.branch_type_cd
      ,o.cd
      ,ovt.ovt_value_txt as response
+     ,ovt.batch_id
 FROM
     dbo.nrt_investigation_observation tnio with (nolock)
     INNER JOIN dbo.nrt_investigation inv on tnio.public_health_case_uid = inv.public_health_case_uid and ISNULL(tnio.batch_id, 1) = ISNULL(inv.batch_id, 1)
