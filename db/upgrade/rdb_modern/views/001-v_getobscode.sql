@@ -53,7 +53,6 @@ WITH InvFormQObservations AS
                      INNER JOIN dbo.nrt_investigation inv with (nolock) on tnio.public_health_case_uid = inv.public_health_case_uid and ISNULL(tnio.batch_id, 1) = ISNULL(inv.batch_id, 1)
                      inner join dbo.nrt_observation_coded ovc with (nolock) ON ovc.observation_uid = tnio.branch_id
                      inner join dbo.nrt_observation o with (nolock) ON o.observation_uid = ovc.observation_uid
-                    AND ISNULL(ovc.batch_id, 1) = ISNULL(o.batch_id, 1)
              WHERE branch_type_cd = 'InvFrmQ'
 
          )
