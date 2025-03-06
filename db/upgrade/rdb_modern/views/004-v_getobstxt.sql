@@ -10,7 +10,7 @@ SELECT
      ,ovt.batch_id
 FROM
     dbo.nrt_investigation_observation tnio with (nolock)
-    INNER JOIN dbo.nrt_investigation inv on tnio.public_health_case_uid = inv.public_health_case_uid and ISNULL(tnio.batch_id, 1) = ISNULL(inv.batch_id, 1)
+    INNER JOIN dbo.nrt_investigation inv with (nolock) on tnio.public_health_case_uid = inv.public_health_case_uid and ISNULL(tnio.batch_id, 1) = ISNULL(inv.batch_id, 1)
         LEFT JOIN dbo.nrt_observation o with (nolock) ON o.observation_uid = tnio.branch_id
         LEFT JOIN dbo.nrt_observation_txt ovt with (nolock) ON ovt.observation_uid = o.observation_uid 
         AND ISNULL(ovt.batch_id, 1) = ISNULL(o.batch_id, 1)
