@@ -1045,7 +1045,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 060-create_summary_report_group-001.sql
+            path: 059-create_summary_report_group-001.sql
             splitStatements: false
   - changeSet:
       id: 148
@@ -1053,5 +1053,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 061-create-summary-report-case-001.sql
+            path: 060-create-summary-report-case-001.sql
             splitStatements: false
