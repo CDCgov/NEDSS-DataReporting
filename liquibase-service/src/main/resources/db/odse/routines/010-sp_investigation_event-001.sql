@@ -247,7 +247,7 @@ BEGIN
                      case
                          when (phc.hospitalized_ind_cd is not null or phc.hospitalized_ind_cd != '') then (select *
                                                                                                            from dbo.fn_get_value_by_cd_codeset(phc.hospitalized_ind_cd, 'INV128'))
-                         end as                   hospitalized_ind,
+                         end as      hospitalized_ind,
                      phc.transmission_mode_cd,
                      case
                          when (phc.transmission_mode_cd is not null or phc.transmission_mode_cd != '') then (select *
@@ -378,12 +378,9 @@ BEGIN
                                                         act1.target_class_cd as root_source_class_cd,
                                                         act1.source_class_cd as branch_source_class_cd,
                                                         act1.type_cd         as branch_type_cd
-                                                 FROM dbo.act_id WITH (NOLOCK)
-                                                          join dbo.act_relationship act WITH (NOLOCK)
-                                                               on act_id.act_uid = act.target_act_uid
+                                                 FROM dbo.act_relationship act WITH (NOLOCK)
                                                           left join dbo.act_relationship act1 WITH (NOLOCK)
                                                                     on act.source_act_uid = act1.target_act_uid
-
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
                                         -- act_ids associated with public health case
@@ -508,7 +505,7 @@ BEGIN
                                                         (select *
                                                          from fn_get_value_by_cvg(init_foll_up_notifiable, 'NOTIFIABLE'))              as init_foll_up_notifiable,
                                                         init_foll_up_clinic_code                                                       as init_fup_clinic_code,
-                                                        surv_assigned_date                                                             as surv_investigator_assgn_dt,
+                                                        surv_assigned_date                              as surv_investigator_assgn_dt,
                                                         surv_closed_date                                                               as surv_closed_dt,
                                                         surv_provider_contact                           as surv_provider_contact_cd,
                                                         (select *
@@ -523,7 +520,7 @@ BEGIN
                                                                                   'SURVEILLANCE_PATIENT_FOLLOWUP'))                    as surv_patient_foll_up_cd,
                                                         status_900                                                                     as adi_900_status_cd,
                                                         (select * from fn_get_value_by_cvg(status_900, 'STATUS_900'))                  as status_900,
-                                                        ehars_id                                                                       as adi_ehars_id,
+                                                        ehars_id           as adi_ehars_id,
                                                         subj_height                                                                    as adi_height,
                                                         subj_height                                                                    as adi_height_legacy_case,
                                                         subj_size_build                                                                as adi_size_build,
@@ -573,7 +570,7 @@ BEGIN
                                                         pat_intv_status_cd,
                                                         (select *
                                                          from fn_get_value_by_cvg(pat_intv_status_cd, 'PAT_INTVW_STATUS'))             as ca_patient_intv_status,
-                                                        case_closed_date                                                               as cc_closed_dt,
+                                                        case_closed_date                                 as cc_closed_dt,
                                                         (select *
                                                          from fn_get_value_by_cvg(initiating_agncy, 'OOJ_AGENCY_LOCAL'))               as initiating_agncy,
                                                         ooj_initg_agncy_recd_date,
@@ -629,11 +626,11 @@ BEGIN
                                                  FROM act_relationship act WITH (NOLOCK)
                                                           join notification notif WITH (NOLOCK)
                                                                on act.source_act_uid = notif.notification_uid
-                                                          join nbs_odse.dbo.participation part with (nolock)
-                                                               ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
-                                                          join nbs_odse.dbo.person per with (nolock)
-                                                               ON per.cd = 'PAT' AND per.person_uid = part.subject_entity_uid
-                                                          join nbs_odse.dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
+                                                          left join nbs_odse.dbo.participation part with (nolock)
+                                                                    ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
+                                                          left join nbs_odse.dbo.person per with (nolock)
+                                                                    ON per.cd = 'PAT' AND per.person_uid = part.subject_entity_uid
+                                                          left join nbs_odse.dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                    AND notif.cd not in
                                                        ('EXP_NOTF', 'SHARE_NOTF', 'EXP_NOTF_PHDC', 'SHARE_NOTF_PHDC')
@@ -714,7 +711,7 @@ BEGIN
                               MAX(CASE WHEN type_cd = 'ClosureInvestgrOfPHC' THEN entity_uid END)       closure_investgr_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'DispoFldFupInvestgrOfPHC' THEN entity_uid END)   dispo_fld_fupinvestgr_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'FldFupInvestgrOfPHC' THEN entity_uid END)        fld_fup_investgr_of_phc_uid,
-                              MAX(CASE WHEN type_cd = 'FldFupProvOfPHC' THEN entity_uid END)            fld_fup_prov_of_phc_uid,
+                              MAX(CASE WHEN type_cd = 'FldFupProvOfPHC' THEN entity_uid END)      fld_fup_prov_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'FldFupSupervisorOfPHC' THEN entity_uid END)      fld_fup_supervisor_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'InitFldFupInvestgrOfPHC' THEN entity_uid END)    init_fld_fup_investgr_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'InitFupInvestgrOfPHC' THEN entity_uid END)       init_fup_investgr_of_phc_uid,
