@@ -438,7 +438,10 @@ BEGIN
                                                         question_group_seq_nbr,
                                                         data_type,
                                                         part_type_cd,
-                                                        last_chg_time
+                                                        last_chg_time,
+                                                        datamart_column_nm,
+                                                        seq_nbr,
+                                                        ldf_status_cd
                                                  FROM (SELECT *,
                                                               ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt
                                                                   order by
@@ -467,7 +470,11 @@ BEGIN
                                                                              nuim.mask,
                                                                              nuim.question_group_seq_nbr,
                                                                              nuim.data_type,
-                                                                             nuim.part_type_cd
+                                                                             nuim.part_type_cd,
+                                                                             --NEW COLUMNS
+                                                                            null as datamart_column_nm,
+                                                                            pa.seq_nbr,
+                                                                            nuim.ldf_status_cd
                                                              from nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
                                                                       inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
                                                                                  on
@@ -488,7 +495,48 @@ BEGIN
                                                                and nuim.investigation_form_cd = cc.investigation_form_cd
                                                                and pa.act_uid = phc.public_health_case_uid
                                                                 --and pa.last_chg_time>=phc.last_chg_time
-                                                            ) as answer_table) as answer_table
+                                                             union
+                                                                 SELECT distinct
+                                                                        pa.nbs_case_answer_uid,
+                                                                        pa.act_uid,
+                                                                        pa.record_status_cd,
+                                                                        pa.last_chg_time,
+                                                                        pa.answer_txt,
+                                                                        pa.answer_group_seq_nbr,
+                                                                        nuim.nbs_ui_metadata_uid,
+                                                                        nuim.code_set_group_id,
+                                                                        nuim.nbs_question_uid,
+                                                                        nuim.investigation_form_cd,
+                                                                        nuim.unit_value,
+                                                                        nuim.question_identifier,
+                                                                        nuim.data_location,
+                                                                        nuim.block_nm,
+                                                                        null as nbs_rdb_metadata_uid,
+                                                                        null as rdb_table_nm,
+                                                                        null as rdb_column_nm,
+                                                                        nuim.question_label,
+                                                                        nuim.other_value_ind_cd,
+                                                                        nuim.unit_type_cd,
+                                                                        nuim.mask,
+                                                                        nuim.question_group_seq_nbr,
+                                                                        nuim.data_type,
+                                                                        nuim.part_type_cd,
+                                                                        --NEW COLUMNS
+                                                                        pq.datamart_column_nm,
+                                                                        pa.seq_nbr,
+                                                                        nuim.ldf_status_cd
+                                                                from nbs_odse.dbo.nbs_question pq
+                                                                    join nbs_odse.dbo.nbs_case_answer pa on pq.nbs_question_uid = pa.nbs_question_uid
+                                                                    left join nbs_odse.dbo.nbs_ui_metadata nuim on
+                                                                        pq.nbs_question_uid = nuim.nbs_question_uid
+                                                                    inner join nbs_srte.dbo.condition_code cc with (nolock)
+                                                                        on
+                                                                        cc.condition_cd = phc.cd
+                                                            where pq.datamart_column_nm is not null 
+                                                            and nuim.investigation_form_cd = cc.investigation_form_cd
+                                                            and nuim.investigation_form_cd = 'INV_FORM_RVCT'
+                                                            and pa.act_uid = phc.public_health_case_uid
+                                                    ) as answer_table) as answer_table
                                                  where rowid = 1
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_case_answer) AS investigation_case_answer,
                                         -- get associated case management

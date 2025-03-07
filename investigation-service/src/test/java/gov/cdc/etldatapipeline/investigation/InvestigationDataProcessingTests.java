@@ -723,6 +723,9 @@ class InvestigationDataProcessingTests {
         expected.setDataType("TEXT");
         expected.setLastChgTime("2024-05-29T16:05:44.537");
         expected.setPartTypeCd(null);
+        expected.setDatamartColumnNm("CASE_VERIFICATION");
+        expected.setSeqNbr(0L);
+        expected.setLdfStatusCd(null);
         return expected;
     }
 
