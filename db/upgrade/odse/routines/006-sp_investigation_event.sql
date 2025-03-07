@@ -525,9 +525,11 @@ BEGIN
                                                                         pq.datamart_column_nm,
                                                                         pa.seq_nbr,
                                                                         nuim.ldf_status_cd
-                                                                from nbs_odse.dbo.nbs_question pq
-                                                                    join nbs_odse.dbo.nbs_case_answer pa on pq.nbs_question_uid = pa.nbs_question_uid
-                                                                    left join nbs_odse.dbo.nbs_ui_metadata nuim on
+                                                                from nbs_odse.dbo.nbs_question pq with (nolock)
+                                                                    join nbs_odse.dbo.nbs_case_answer pa with (nolock)
+                                                                        on pq.nbs_question_uid = pa.nbs_question_uid
+                                                                    left join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
+                                                                        on
                                                                         pq.nbs_question_uid = nuim.nbs_question_uid
                                                                     inner join nbs_srte.dbo.condition_code cc with (nolock)
                                                                         on
