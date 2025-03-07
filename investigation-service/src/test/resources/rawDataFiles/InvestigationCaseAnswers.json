@@ -23,7 +23,10 @@
     "question_group_seq_nbr": null,
     "data_type": "CODED",
     "last_chg_time": "2024-05-29T16:05:44.537",
-    "part_type_cd": null
+    "part_type_cd": null,
+    "datamart_column_nm": "IGRA_COLLECT_DATE",
+    "seq_nbr": 0,
+    "ldf_status_cd": null
   },
   {
     "nbs_case_answer_uid": 1235,
@@ -49,7 +52,10 @@
     "question_group_seq_nbr": null,
     "data_type": "TEXT",
     "last_chg_time": "2024-05-29T16:05:44.537",
-    "part_type_cd": null
+    "part_type_cd": null,
+    "datamart_column_nm": "CASE_VERIFICATION",
+    "seq_nbr": 0,
+    "ldf_status_cd": null
   },
   {
     "nbs_case_answer_uid": 1236,
@@ -75,7 +81,10 @@
     "question_group_seq_nbr": null,
     "data_type": "DATE",
     "last_chg_time": "2024-05-29T16:05:44.537",
-    "part_type_cd": null
+    "part_type_cd": null,
+    "datamart_column_nm": "IGRA_RESULT",
+    "seq_nbr": 0,
+    "ldf_status_cd": null
   },
   {
     "nbs_case_answer_uid": 214424,
@@ -101,6 +110,10 @@
     "question_group_seq_nbr": 11,
     "data_type": "TEXT",
     "last_chg_time": "2025-01-24T20:35:53.260",
-    "part_type_cd": "PlaceAsHangoutOfPHC"
+    "part_type_cd": "PlaceAsHangoutOfPHC",
+    "datamart_column_nm": "IGRA_RESULT",
+    "seq_nbr": 0
   }
 ]
+
+
