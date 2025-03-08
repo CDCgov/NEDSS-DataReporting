@@ -10,6 +10,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: 001-create_data_sync_config-001.sql
