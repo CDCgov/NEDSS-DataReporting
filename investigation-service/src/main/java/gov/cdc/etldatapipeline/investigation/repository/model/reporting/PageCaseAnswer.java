@@ -31,8 +31,12 @@ public class PageCaseAnswer {
     private String dataType;
     private String questionGroupSeqNbr;
     private Long codeSetGroupId;
-    private String blockNm;
+    private String blockNm;  
     private String lastChgTime;
     private String recordStatusCd;
     private String partTypeCd;
+    private Long batchId;
+    private String datamartColumnNm;
+    private Long seqNbr; 
+    private String ldfStatusCd;
 }

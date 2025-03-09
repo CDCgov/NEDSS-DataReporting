@@ -3,7 +3,7 @@ AS
 WITH InvFormQObservations AS
          (
              SELECT
-                 public_health_case_uid
+                 tnio.public_health_case_uid
                   ,observation_id
                   ,branch_id
                   ,branch_type_cd
@@ -50,6 +50,7 @@ WITH InvFormQObservations AS
                         ELSE 'cvg_code' END AS label
              FROM
                  dbo.nrt_investigation_observation tnio with (nolock)
+                     INNER JOIN dbo.nrt_investigation inv with (nolock) on tnio.public_health_case_uid = inv.public_health_case_uid and ISNULL(tnio.batch_id, 1) = ISNULL(inv.batch_id, 1)
                      inner join dbo.nrt_observation_coded ovc with (nolock) ON ovc.observation_uid = tnio.branch_id
                      inner join dbo.nrt_observation o with (nolock) ON o.observation_uid = ovc.observation_uid
              WHERE branch_type_cd = 'InvFrmQ'
@@ -80,7 +81,7 @@ SELECT
     END AS response_cd,
     label
 FROM InvFormQObservations obs
-         LEFT JOIN dbo.codeset cs with (nolock) on cs.cd = obs.cd
+         LEFT JOIN dbo.v_codeset cs with (nolock) on cs.cd = obs.cd
          LEFT JOIN nbs_srte.dbo.code_value_general cvg with (nolock)  on
     cvg.code_set_nm = cs.CODE_SET_NM and cvg.code = obs.ovc_code
          LEFT JOIN nbs_srte.dbo.Country_code cc with (nolock) on cc.code = obs.ovc_code

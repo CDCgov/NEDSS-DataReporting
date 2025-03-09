@@ -8,8 +8,8 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT = 0;
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
-    DECLARE @ColumnAdd_sql NVARCHAR(MAX) = '';
-    DECLARE @DataAsset_nm NVARCHAR(100) = 'F_CONTACT_RECORD_CASE';
+    DECLARE @Dataflow_Name VARCHAR(200) = 'F_CONTACT_RECORD_CASE Post-Processing Event';
+    DECLARE @Package_Name VARCHAR(200) = 'sp_f_contact_record_case_postprocessing';
 
 
 
@@ -30,7 +30,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @DataAsset_nm, @DataAsset_nm, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
 
@@ -38,7 +38,7 @@ BEGIN
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #F_CRC_INIT_KEYS';
-
+        --This step to capture from the nrt key table is needed because contact_uid is not maintained in the dimension
         SELECT
         	D_CONTACT_RECORD_KEY
         	,CONTACT_UID
@@ -50,7 +50,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @DataAsset_nm, @DataAsset_nm, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -119,7 +119,7 @@ BEGIN
 		LEFT JOIN
 			dbo.INVESTIGATION inv2  with (nolock) on inv2.CASE_UID = nc.SUBJECT_ENTITY_PHC_UID
 		LEFT JOIN
-			dbo.INVESTIGATION inv3  with (nolock) on inv2.CASE_UID = nc.CONTACT_ENTITY_PHC_UID
+			dbo.INVESTIGATION inv3  with (nolock) on inv3.CASE_UID = nc.CONTACT_ENTITY_PHC_UID
 		LEFT JOIN
 			dbo.NRT_INTERVIEW_KEY intw  with (nolock) on intw.INTERVIEW_UID = nc.NAMED_DURING_INTERVIEW_UID
 			;
@@ -128,7 +128,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @DataAsset_nm, @DataAsset_nm, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -173,7 +173,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @DataAsset_nm, @DataAsset_nm, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -219,7 +219,7 @@ BEGIN
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @DataAsset_nm, @DataAsset_nm, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
@@ -254,7 +254,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @DataAsset_nm, @DataAsset_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
         COMMIT TRANSACTION;
@@ -263,7 +263,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @DataAsset_nm, @DataAsset_nm, 'COMPLETE', 999, 'COMPLETE', 0);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
 
     END TRY
     BEGIN CATCH
@@ -272,28 +272,30 @@ BEGIN
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 
-        DECLARE @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE @ErrorLine INT = ERROR_LINE();
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
-                                         , [Dataflow_Name]
-                                         , [package_Name]
-                                         , [Status_Type]
-                                         , [step_number]
-                                         , [step_name]
-                                         , [Error_Description]
-                                         , [row_count])
+                                     , [Dataflow_Name]
+                                     , [package_Name]
+                                     , [Status_Type]
+                                     , [step_number]
+                                     , [step_name]
+                                     , [Error_Description]
+                                     , [row_count])
         VALUES ( @batch_id
-               , 'D_CONTACT_RECORD'
-               , 'D_CONTACT_RECORD'
+               , @Dataflow_Name
+               , @Package_Name
                , 'ERROR'
                , @Proc_Step_no
-               , 'ERROR - ' + @Proc_Step_name
-               , 'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
+               , @Proc_Step_name
+               , @FullErrorMessage
                , 0);
 
 

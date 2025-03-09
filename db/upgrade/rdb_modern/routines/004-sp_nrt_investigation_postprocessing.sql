@@ -186,7 +186,14 @@ BEGIN
                 SELECT nio.public_health_case_uid, nio.observation_id, nio.branch_id, nio.branch_type_cd
                 INTO #temp_inv_obs
                 FROM #temp_inv_table t
-                         LEFT JOIN dbo.nrt_investigation_observation nio on nio.public_health_case_uid = t.case_uid
+                LEFT JOIN (
+                    select invobs.*
+                    from dbo.NRT_INVESTIGATION_OBSERVATION invobs
+                    left outer join dbo.NRT_INVESTIGATION inv
+                    on inv.public_health_case_uid = invobs.public_health_case_uid
+                    where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
+                    and invobs.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
+                ) nio on nio.public_health_case_uid = t.case_uid
                 WHERE nio.branch_type_cd = 'InvFrmQ';
 
                 IF @debug = 'true' SELECT '#temp_inv_obs', * FROM #temp_inv_table;
@@ -659,10 +666,16 @@ BEGIN
                         nrt.CONFIRMATION_METHOD_TIME as CONFIRMATION_DT,
                         cm.CONFIRMATION_METHOD_KEY
         into #temp_cm_table
-        from dbo.nrt_investigation_confirmation nrt
-                 left join dbo.confirmation_method cm with (nolock) on cm.confirmation_method_cd = nrt.confirmation_method_cd
-                 left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
-        where nrt.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','));
+        from (
+            select nrtc.*
+            from dbo.NRT_INVESTIGATION_CONFIRMATION nrtc with(nolock)
+            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+            on nrtc.public_health_case_uid = inv.public_health_case_uid
+            where isnull(nrtc.batch_id,1) = isnull(inv.batch_id,1)
+            and nrtc.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','))
+        ) nrt
+        left join dbo.confirmation_method cm with (nolock) on cm.confirmation_method_cd = nrt.confirmation_method_cd
+        left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid;
 
         if @debug = 'true' select * from #temp_cm_table;
 
@@ -832,7 +845,14 @@ BEGIN
 
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
 
-        /* Logging */
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
+
         INSERT INTO [dbo].[job_flow_log]
         (batch_id
         ,[create_dttm]
@@ -851,7 +871,7 @@ BEGIN
                ,@package_name
                ,'ERROR'
                ,@Proc_Step_no
-               ,'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
+               ,@FullErrorMessage
                ,0
                ,LEFT(@id_list, 500));
 

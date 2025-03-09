@@ -46,6 +46,7 @@ BEGIN
             par.subject_entity_uid AS organization_uid,
             par1.subject_entity_uid AS provider_uid,
             viewPatientKeys.treatment_uid AS patient_treatment_uid,
+            act2.target_act_uid AS morbidity_uid,
             rx1.LOCAL_ID,
             rx1.ADD_TIME,
             rx1.ADD_USER_ID,
@@ -73,6 +74,11 @@ BEGIN
                                AND par1.act_class_cd = 'TRMT'
                  LEFT JOIN NBS_ODSE.dbo.uvw_treatment_patient_keys AS viewPatientKeys WITH (NOLOCK)
                            ON rx1.treatment_uid = viewPatientKeys.treatment_uid
+                 LEFT JOIN NBS_ODSE.dbo.act_relationship AS act2 WITH (NOLOCK)
+                           ON rx1.Treatment_uid = act2.source_act_uid
+                               AND act2.target_class_cd = 'OBS'
+                               AND act2.source_class_cd = 'TRMT'
+                               AND act2.type_cd = 'TreatmentToMorb'
         WHERE rx1.treatment_uid IN (
             SELECT value
             FROM STRING_SPLIT(@treatment_uids, ',')
@@ -110,6 +116,7 @@ BEGIN
             t.organization_uid,
             t.provider_uid,
             t.patient_treatment_uid,
+            t.morbidity_uid,
             rx1.cd_desc_txt AS Treatment_nm,
             rx1.program_jurisdiction_oid AS Treatment_oid,
             REPLACE(REPLACE(rx1.txt, CHAR(13) + CHAR(10), ' '), CHAR(10), ' ') AS Treatment_comments,
@@ -167,6 +174,7 @@ BEGIN
             t.public_health_case_uid,
             t.organization_uid,
             t.provider_uid,
+            t.morbidity_uid,
             t.patient_treatment_uid,
             t.Treatment_nm,
             t.Treatment_oid,

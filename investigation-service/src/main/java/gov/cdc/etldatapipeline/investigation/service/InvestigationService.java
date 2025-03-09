@@ -2,18 +2,16 @@ package gov.cdc.etldatapipeline.investigation.service;
 
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
-import gov.cdc.etldatapipeline.investigation.repository.ContactRepository;
-import gov.cdc.etldatapipeline.investigation.repository.InterviewRepository;
+import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
-import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
-import gov.cdc.etldatapipeline.investigation.repository.NotificationRepository;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -24,10 +22,8 @@ import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
@@ -36,6 +32,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.ToLongFunction;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.*;
 
@@ -60,6 +57,9 @@ public class InvestigationService {
     @Value("${spring.kafka.input.topic-name-ctr}")
     private String contactTopic;
 
+    @Value("${spring.kafka.input.topic-name-vac}")
+    private String vaccinationTopic;
+
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String investigationTopicReporting;
 
@@ -76,14 +76,17 @@ public class InvestigationService {
     private final NotificationRepository notificationRepository;
     private final InterviewRepository interviewRepository;
     private final ContactRepository contactRepository;
+    private final VaccinationRepository vaccinationRepository;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessInvestigationDataUtil processDataUtil;
-    InvestigationKey investigationKey = new InvestigationKey();
     private final ModelMapper modelMapper = new ModelMapper();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
+    public static final ToLongFunction<ConsumerRecord<String, String>> toBatchId = rec -> rec.timestamp()+rec.offset()+rec.partition();
+
+    InvestigationKey investigationKey = new InvestigationKey();
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
@@ -107,26 +110,33 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-phc}",
                     "${spring.kafka.input.topic-name-ntf}",
                     "${spring.kafka.input.topic-name-int}",
-                    "${spring.kafka.input.topic-name-ctr}"
+                    "${spring.kafka.input.topic-name-ctr}",
+                    "${spring.kafka.input.topic-name-vac}"
             }
     )
-    public void processMessage(String message,
-                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+    public void processMessage(ConsumerRecord<String, String> rec,
                                Consumer<?,?> consumer) {
+        String topic = rec.topic();
+        String message = rec.value();
+        long batchId = toBatchId.applyAsLong(rec);
+
         logger.debug(topicDebugLog, "message", message, topic);
+
         if (topic.equals(investigationTopic)) {
-            processInvestigation(message);
+            processInvestigation(message, batchId);
         } else if (topic.equals(notificationTopic)) {
             processNotification(message);
         } else if (topic.equals(interviewTopic)) {
-            processInterview(message);
+            processInterview(message, batchId);
         } else if (topic.equals(contactTopic) && contactRecordEnable) {
             processContact(message);
+        } else if (topic.equals(vaccinationTopic)) {
+            processVaccination(message);
         }
         consumer.commitSync();
     }
 
-    public void processInvestigation(String value) {
+    public void processInvestigation(String value, long batchId) {
         String publicHealthCaseUid = "";
         try {
             final String phcUid = publicHealthCaseUid = extractUid(value, "public_health_case_uid");
@@ -146,7 +156,7 @@ public class InvestigationService {
             if (investigationData.isPresent()) {
                 Investigation investigation = investigationData.get();
                 investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
-                InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation);
+                InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation, batchId);
                 InvestigationReporting reportingModel = buildReportingModelForTransformedData(investigation, investigationTransformed);
                 pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
                         // only process and send notifications when investigation data has been sent
@@ -186,7 +196,7 @@ public class InvestigationService {
     }
 
 
-    private void processInterview(String value) {
+    private void processInterview(String value, long batchId) {
         String interviewUid = "";
         try {
             interviewUid = extractUid(value, "interview_uid");
@@ -195,7 +205,7 @@ public class InvestigationService {
             Optional<Interview> interviewData = interviewRepository.computeInterviews(interviewUid);
             if (interviewData.isPresent()) {
                 Interview interview = interviewData.get();
-                processDataUtil.processInterview(interview);
+                processDataUtil.processInterview(interview, batchId);
                 processDataUtil.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
 
             } else {
@@ -229,6 +239,27 @@ public class InvestigationService {
         }
     }
 
+    private void processVaccination(String value) {
+        String vaccinationUid = "";
+        try {
+            vaccinationUid = extractUid(value, "intervention_uid");
+
+            logger.info(topicDebugLog, "Vaccination", vaccinationUid, vaccinationTopic);
+            Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
+            if(vacData.isPresent()) {
+                Vaccination vaccination = vacData.get();
+                processDataUtil.processVaccination(vaccination);
+                processDataUtil.processColumnMetadata(vaccination.getRdbCols(), vaccination.getVaccinationUid());
+            } else {
+                throw new EntityNotFoundException("Unable to find Vaccination with id: " + vaccinationUid);
+            }
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
+        } catch (Exception e) {
+            throw new RuntimeException(errorMessage("Vaccination", vaccinationUid, e), e);
+        }
+    }
+
     // This same method can be used for elastic search as well and that is why the generic model is present
     private CompletableFuture<SendResult<String, String>> pushKeyValuePairToKafka(InvestigationKey investigationKey, Object model, String topicName) {
         String jsonKey = jsonGenerator.generateStringJson(investigationKey);
@@ -256,6 +287,8 @@ public class InvestigationService {
                 uid -> {}, () -> reportingModel.setHospitalUid(investigationTransformed.getHospitalUid()));
         reportingModel.setDaycareFacUid(investigationTransformed.getDaycareFacUid());
         reportingModel.setChronicCareFacUid(investigationTransformed.getChronicCareFacUid());
+
+        reportingModel.setBatchId(investigationTransformed.getBatchId());
 
         return reportingModel;
     }

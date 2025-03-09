@@ -45,8 +45,17 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 @EnableScheduling
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
+
+    //cache to store ids from nrt topics that needs to be processed for loading dims and facts
+    //a map of nrt topic name and it's associated ids
     final Map<String, Queue<Long>> idCache = new ConcurrentHashMap<>();
+
+    //cache to store ids and additional information specific to those IDs like page case information
+    //a map of ids (phc_ids as of now) and a comma seperated string of information
     final Map<Long, String> idVals = new ConcurrentHashMap<>();
+
+    //cache to store ids that needs to be processed for datamarts
+    //a map of datamart names and the needed ids
     final Map<String, Set<Map<Long, Long>>> dmCache = new ConcurrentHashMap<>();
 
     private final PostProcRepository postProcRepository;
@@ -96,7 +105,9 @@ public class PostProcessingService {
             "${spring.kafka.topic.observation}",
             "${spring.kafka.topic.place}",
             "${spring.kafka.topic.auth_user}",
-            "${spring.kafka.topic.contact_record}"
+            "${spring.kafka.topic.contact_record}",
+            "${spring.kafka.topic.treatment}",
+            "${spring.kafka.topic.vaccination}"
     })
     public void postProcessMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -191,6 +202,9 @@ public class PostProcessingService {
             List<DatamartData> dmData = new ArrayList<>();
 
             List<Long> investigationUids = new ArrayList<>();
+            List<Long> patientUids = new ArrayList<>();
+            List<Long> providerUids = new ArrayList<>();
+            List<Long> organizationUids = new ArrayList<>();
             List<Long> observationUids = new ArrayList<>();
             List<Long> notificationUids = new ArrayList<>();
             List<Long> contactRecordUids = new ArrayList<>();
@@ -205,12 +219,15 @@ public class PostProcessingService {
                 switch (entity) {
                     case ORGANIZATION:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds);
+                        organizationUids = ids;
                         break;
                     case PROVIDER:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds);
+                        providerUids = ids;
                         break;
                     case PATIENT:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
+                        patientUids = ids;
                         break;
                     case AUTH_USER:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile);
@@ -234,6 +251,9 @@ public class PostProcessingService {
                         dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().toList();
                         notificationUids = ids;
                         break;
+                    case TREATMENT:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment);
+                        break;
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
                         processTopic(keyTopic, entity.getEntityName(), ids,
@@ -251,6 +271,11 @@ public class PostProcessingService {
                         dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);
                         observationUids = ids;
                         break;
+                    case VACCINATION:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
+                        processTopic(keyTopic, entity.getEntityName(), ids,
+                                postProcRepository::executeStoredProcForFVaccination, "sp_f_vaccination_postprocessing");
+                        break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
                         break;
@@ -258,9 +283,7 @@ public class PostProcessingService {
             }
             datamartProcessor.process(dmData);
 
-            if (eventMetricEnable) {
-                processEventMetricDatamart(investigationUids, observationUids, notificationUids, contactRecordUids);
-            }
+            processMultiIDDatamart(investigationUids, patientUids, providerUids, organizationUids, observationUids, notificationUids, contactRecordUids);
         } else {
             logger.info("No ids to process from the topics.");
         }
@@ -377,6 +400,11 @@ public class PostProcessingService {
                         investigationRepository.executeStoredProcForHepatitisCaseDatamart(cases);
                         completeLog(HEPATITIS_CASE.getStoredProcedure());
                         break;
+                    case PERTUSSIS_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, PERTUSSIS_CASE.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForPertussisCaseDatamart(cases);
+                        completeLog(PERTUSSIS_CASE.getStoredProcedure());
+                        break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ",dmType);
                 }
@@ -386,20 +414,41 @@ public class PostProcessingService {
         }
     }
 
-    private void processEventMetricDatamart(List<Long> investigationUids, List<Long> observationUids, List<Long> notificationUids, List<Long> contactRecordUids) {
-        String invString = investigationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String obsString = observationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String notifString = notificationUids.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String ctrString = contactRecordUids.stream().map(String::valueOf).collect(Collectors.joining(","));
+    private void processMultiIDDatamart(List<Long> investigationUids, List<Long> patientUids, List<Long> providerUids, List<Long> organizationUids, List<Long> observationUids, List<Long> notificationUids, List<Long> contactRecordUids)
+    {
+        String invString = listToParameterString(investigationUids);
+        String patString = listToParameterString(patientUids);
+        String provString = listToParameterString(providerUids);
+        String orgString = listToParameterString(organizationUids);
+        String obsString = listToParameterString(observationUids);
+        String notifString = listToParameterString(notificationUids);
+        String ctrString = listToParameterString(contactRecordUids);
 
-        int totalLength = invString.length() + obsString.length() + notifString.length() + ctrString.length();
+        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length() + ctrString.length();
+        int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
+        int totalLengthInvSummary =  invString.length() + notifString.length() + obsString.length();
 
-        if (totalLength > 0) {
+        if (totalLengthEventMetric > 0 && eventMetricEnable) {
             postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
-        }
-        else {
+        } else {
             logger.info("No updates to EVENT_METRIC Datamart");
         }
+
+        if (totalLengthHep100 > 0) {
+            postProcRepository.executeStoredProcForHep100(invString, patString, provString, orgString);
+        } else {
+            logger.info("No updates to HEP100 Datamart");
+        }
+
+        if(totalLengthInvSummary > 0) {
+            postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+        } else {
+            logger.info("No updates to INV_SUMMARY Datamart");
+        }
+    }
+
+    private String listToParameterString(List<Long> inputList) {
+        return inputList.stream().map(String::valueOf).collect(Collectors.joining(","));
     }
 
     @PreDestroy
