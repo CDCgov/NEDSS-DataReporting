@@ -1,7 +1,7 @@
 
 
 
-CREATE or replace PROCEDURE [dbo].sp_dyn_dm_page_builder_d_inv_post_processing
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_page_builder_d_inv_post_processing
  
             @batch_id BIGINT,
 			@DATAMART_NAME VARCHAR(100),
