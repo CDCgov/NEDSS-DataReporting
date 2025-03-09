@@ -1055,3 +1055,11 @@ databaseChangeLog:
         - sqlFile:
             path: 060-create-summary-report-case-001.sql
             splitStatements: false
+  - changeSet:
+      id: 157
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 135-sp_dyn_dm_org_data_post_processing-001.sql
+            splitStatements: false
