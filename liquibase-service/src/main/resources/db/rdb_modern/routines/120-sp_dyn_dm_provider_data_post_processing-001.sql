@@ -1,7 +1,7 @@
 
 
 
-CREATE OR REPLACE PROCEDURE [dbo].sp_dyn_dm_provider_data_post_processing
+CREATE OR alter PROCEDURE [dbo].sp_dyn_dm_provider_data_post_processing
  
             @batch_id BIGINT,
 			@DATAMART_NAME VARCHAR(100), @prv_id_list nvarchar(max)
