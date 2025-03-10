@@ -282,7 +282,7 @@ BEGIN TRY
 		FROM #S_TB_HIV
 		EXCEPT 
 		SELECT TB_PAM_UID 
-		FROM [dbo].D_TB_HIV; 
+		FROM [dbo].D_TB_HIV WITH (NOLOCK); 
 
 		-- delete from key table and insert new elements to get all new D_TB_HIV_KEY for new elements
 		DELETE FROM [dbo].[nrt_d_tb_hiv_key]; 
@@ -423,7 +423,7 @@ BEGIN TRY
 		IF
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
-            FROM  [dbo].D_TB_HIV WHERE TB_PAM_UID IN (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+            FROM  [dbo].D_TB_HIV WITH (NOLOCK) WHERE TB_PAM_UID IN (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -483,7 +483,7 @@ BEGIN TRY
 				HIV_STATUS = S.HIV_STATUS,
 				HIV_CITY_CNTY_PATIENT_NUM = S.HIV_CITY_CNTY_PATIENT_NUM,
 				LAST_CHG_TIME = S.LAST_CHG_TIME
-			FROM  [dbo].D_TB_HIV D 
+			FROM  [dbo].D_TB_HIV D WITH (NOLOCK)
 			INNER JOIN #L_TB_HIV_E L on L.D_TB_HIV_KEY = D.D_TB_HIV_KEY
 			INNER JOIN #S_TB_HIV S ON S.TB_PAM_UID = L.TB_PAM_UID;
 
@@ -492,9 +492,9 @@ BEGIN TRY
 		IF
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
-            FROM RDB_MODERN.DBO.D_TB_HIV  D
-			INNER JOIN #D_TB_HIV_E DE 
-				ON DE.TB_PAM_UID = D.TB_PAM_UID; 
+            FROM  [dbo].D_TB_HIV D WITH (NOLOCK)
+			INNER JOIN #L_TB_HIV_E L 
+				ON L.TB_PAM_UID = D.TB_PAM_UID; 
 			
 
 		INSERT INTO [dbo].[job_flow_log]
