@@ -1,6 +1,5 @@
 For EKS deployment Refer the Readme here: **data-reporting-service/readme.md**
 
-
 ###  Person Service DTS1 deployment :
 
 - [Health Check](https://app.dts1.nbspreview.com/reporting/organization-svc/status)
