@@ -37,13 +37,14 @@ BEGIN
             **/
             SELECT BC.*, C.CONDITION_CD
             into #INVKEYS
-            FROM dbo.BMIRD_CASE BC with (nolock) 
-			INNER JOIN dbo.CONDITION C with (nolock) 
-				ON BC.CONDITION_KEY = C.CONDITION_KEY 
-			INNER JOIN dbo.INVESTIGATION I with (nolock) 
-				ON BC.INVESTIGATION_KEY = I.INVESTIGATION_KEY
+            FROM
+                dbo.BMIRD_CASE BC with (nolock)
+			INNER JOIN
+			    dbo.CONDITION C with (nolock) ON BC.CONDITION_KEY = C.CONDITION_KEY
+			INNER JOIN
+			    dbo.INVESTIGATION I with (nolock) ON BC.INVESTIGATION_KEY = I.INVESTIGATION_KEY
             WHERE (BC.INVESTIGATION_KEY <> 1) AND (C.CONDITION_CD in ('11723','11717','11720'))  
-            AND (I.RECORD_STATUS_CD = 'ACTIVE') --AND I.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+            AND (I.RECORD_STATUS_CD = 'ACTIVE') AND I.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
             ORDER BY BC.INVESTIGATION_KEY;	
 
 
@@ -62,9 +63,9 @@ BEGIN
             SET @Proc_Step_no = @Proc_Step_no + 1;
             SET @Proc_Step_name = 'Generating #BMIRD_PATIENT1';
    
-            /**
-            Creating a dataset of all patient details pertaining to BMIRD case and the same conditions
-            **/
+/**
+Creating a dataset of all patient details pertaining to BMIRD case and the same conditions
+**/
 
             select  BC.PATIENT_KEY, BC.INVESTIGATION_KEY,
             BC.TYPES_OF_OTHER_INFECTION	AS TYPE_INFECTION_OTHER_SPECIFY,
@@ -162,7 +163,9 @@ BEGIN
             SET @Proc_Step_no = @Proc_Step_no + 1;
             SET @Proc_Step_name = ' Generating #BMIRD_PAT_INV';
    
-            --create dataset of investigation information from the prior dataset but filtered for only active and case_type <> 'S' 
+/**
+    Create dataset of investigation information from the prior dataset but filtered for only active and case_type <> 'S'
+ */
             select bpa.*,
                 i.INV_LOCAL_ID AS INVESTIGATION_LOCAL_ID,
                 i.EARLIEST_RPT_TO_CNTY_DT,
@@ -211,9 +214,11 @@ BEGIN
             SET @Proc_Step_name = ' Generating #BMIRD_WITH_EVENT_DATE';
    
             
-            -- Get the earliest date from the four date columns
-            -- PHC_ADD_TIME, EARLIEST_RPT_TO_STATE_DT, FIRST_POSITIVE_CULTURE_DT, ILLNESS_ONSET_DATE
-            -- and assign the corresponding column name to EVENT_TYP and retain the min value in a new column EVENT_DATE
+/**
+    Get the earliest date from the four date columns
+    PHC_ADD_TIME, EARLIEST_RPT_TO_STATE_DT, FIRST_POSITIVE_CULTURE_DT, ILLNESS_ONSET_DATE
+    and assign the corresponding column name to EVENT_TYP and retain the min value in a new column EVENT_DATE
+ */
             SELECT *,
                 CASE
                     WHEN PHC_ADD_TIME = (
@@ -673,8 +678,7 @@ Step 4: Merge the new table with the BMIRD_ANTIMICRO table
                 on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
             WHERE A.STREP_PNEUMO_2_CULTURE_SITES IS NOT NULL
             ORDER BY bc.INVESTIGATION_KEY, 	a.STREP_PNEUMO_2_CULTURE_SITES;
-            
-            if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_UPDATED_INV_WITH_NOTIF;
+
 
             SELECT @ROWCOUNT_NO = @@ROWCOUNT;
             INSERT INTO [DBO].[JOB_FLOW_LOG]
