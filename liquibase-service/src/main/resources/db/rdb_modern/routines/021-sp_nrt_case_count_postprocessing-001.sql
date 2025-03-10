@@ -110,7 +110,7 @@ BEGIN TRY
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO dbo.[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'CASE_COUNT','CASE_COUNT','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@dataflow_name, @package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING Case Count Table - Insert';
@@ -159,7 +159,7 @@ BEGIN TRY
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO dbo.[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-        VALUES(@BATCH_ID,'CASE_COUNT','CASE_COUNT','START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        VALUES(@BATCH_ID,@dataflow_name, @package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
     COMMIT TRANSACTION;
 
@@ -171,7 +171,7 @@ BEGIN TRY
     INSERT INTO dbo.[job_flow_log]
     (batch_id,[Dataflow_Name],[package_Name],[Status_Type] ,[step_number],[step_name],[row_count])
     VALUES
-        (@batch_id,'Case Count','Case Count','COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
+        (@batch_id,@dataflow_name, @package_name,'COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
 
 
 
@@ -201,8 +201,8 @@ INSERT INTO dbo.[job_flow_log] (
 VALUES
     (
     @batch_id
-        ,'Case Count'
-        ,'Case Count'
+        ,@dataflow_name
+        ,@package_name
         ,'ERROR'
         ,@Proc_Step_no
         ,'ERROR - '+ @Proc_Step_name

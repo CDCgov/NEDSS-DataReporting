@@ -1055,3 +1055,11 @@ databaseChangeLog:
         - sqlFile:
             path: 060-create-summary-report-case-001.sql
             splitStatements: false
+  - changeSet:
+      id: 149
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 047-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql
+            splitStatements: false
