@@ -21,6 +21,7 @@ enum Entity {
     F_PAGE_CASE(0, "fact page case", Constants.PHC_UID, "sp_f_page_case_postprocessing"),
     CASE_ANSWERS(0, "case answers", Constants.PHC_UID, "sp_page_builder_postprocessing"),
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),
+    D_TB_HIV(0, "d_tb_hiv", Constants.PHC_UID, "sp_nrt_d_tb_hiv_postprocessing"),
     F_STD_PAGE_CASE(0, "fact std page case", Constants.PHC_UID, "sp_f_std_page_case_postprocessing"),
     HEPATITIS_DATAMART(0, "Hepatitis_Datamart", Constants.PHC_UID, "sp_hepatitis_datamart_postprocessing"),
     STD_HIV_DATAMART(0, "Std_Hiv_Datamart", Constants.PHC_UID, "sp_std_hiv_datamart_postprocessing"),
@@ -38,7 +39,6 @@ enum Entity {
     private final String entityName;
     private final String storedProcedure;
     private final String uidName;
-
 
     Entity(int priority, String entityName, String uidName, String storedProcedure) {
         this.priority = priority;
