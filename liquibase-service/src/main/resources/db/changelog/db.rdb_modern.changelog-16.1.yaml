@@ -1112,6 +1112,14 @@ databaseChangeLog:
             path: 020-v_nrt_nbs_d_patient_rdb_table_metadata-001.sql
             splitStatements: false
   - changeSet:
+      id: 161
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 125-sp_dyn_dm_page_builder_d_inv_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 162
       author: liquibase
       runOnChange: true
