@@ -554,11 +554,11 @@ class PostProcessingServiceTest {
                     (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
-                        BMIRD_CASE.getEntityName(),
-                        BMIRD_CASE.getStoredProcedure(),
-                        3,
-                        (repo, uid) -> verify(repo).executeStoredProcForBmirdCaseDatamart(uid)),
+                                "\"datamart\":\"Bmird_Strep_Pneumo_Datamart\",\"stored_procedure\":\"sp_bmird_strep_pneumo_datamart_postprocessing\"}}",
+                        BMIRD_STREP_PNEUMO_DATAMART.getEntityName(),
+                        BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(),
+                        5,
+                        (repo, uid) -> verify(repo).executeStoredProcForBmirdStrepPneumoDatamart(uid)),
                 new DatamartTestCase(
                 "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                         "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
