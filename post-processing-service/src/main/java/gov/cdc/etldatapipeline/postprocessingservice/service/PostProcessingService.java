@@ -391,7 +391,6 @@ public class PostProcessingService {
                         completeLog(CASE_LAB_DATAMART.getStoredProcedure());
                         break;
                     case BMIRD_CASE:
-                    case BMIRD_STREP_PNEUMO_DATAMART:
                         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, BMIRD_CASE.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForBmirdCaseDatamart(cases);
                         completeLog(BMIRD_CASE.getStoredProcedure());
