@@ -761,7 +761,6 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(userProfileTopic, userProfileKey2, userProfileKey2);
 
         assertTrue(postProcessingServiceMock.idCache.containsKey(userProfileTopic));
-
         postProcessingServiceMock.processCachedIds();
         verify(postProcRepositoryMock).executeStoredProcForUserProfile("123,124");
     }
