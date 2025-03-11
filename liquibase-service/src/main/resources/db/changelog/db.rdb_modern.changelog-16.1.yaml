@@ -1056,26 +1056,26 @@ databaseChangeLog:
             path: 060-create-summary-report-case-001.sql
             splitStatements: false
   - changeSet:
-      id: 149
+      id: 152
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 061-create_d_tb_hiv-001.sql
+            path: 063-create_d_tb_hiv-001.sql
             splitStatements: false
   - changeSet:
-      id: 150
+      id: 153
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 062-create_nrt_d_tb_hiv_key-001.sql
+            path: 064-create_nrt_d_tb_hiv_key-001.sql
             splitStatements: false
   - changeSet:
-      id: 151
+      id: 154
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 047-sp_nrt_d_tb_hiv_postprocessing-001.sql
+            path: 048-sp_nrt_d_tb_hiv_postprocessing-001.sql
             splitStatements: false
