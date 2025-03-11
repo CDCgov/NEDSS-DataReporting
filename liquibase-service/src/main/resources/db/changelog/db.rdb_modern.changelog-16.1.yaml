@@ -1061,5 +1061,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 125-sp_dyn_dm_page_builder_d_inv_post_processing-001.sql
+            path: 125-sp_dyn_dm_page_builder_d_inv_postprocessing-001.sql
             splitStatements: false
