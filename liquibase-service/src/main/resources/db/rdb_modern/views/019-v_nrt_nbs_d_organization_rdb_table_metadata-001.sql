@@ -1,6 +1,6 @@
 
 
-CREATE VIEW dbo.v_nrt_nbs_d_organization_rdb_table_metadata AS
+CREATE or ALTER VIEW dbo.v_nrt_nbs_d_organization_rdb_table_metadata AS
 SELECT DISTINCT RDB_COLUMN_NM, user_defined_column_nm, 
 case 
 	when part_type_cd = 'FldFupFacilityOfPHC' then 'FACILITY_FLD_FOLLOW_UP_KEY'

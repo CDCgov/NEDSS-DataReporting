@@ -1,6 +1,6 @@
 
 
-Create   view dbo.v_nrt_d_provider_rdb_table_metadata as 
+Create OR alter view dbo.v_nrt_d_provider_rdb_table_metadata as 
 SELECT DISTINCT RDB_COLUMN_NM, user_defined_column_nm, 
 case
 	when part_type_cd= 'CASupervisorOfPHC' then 'SUPRVSR_OF_CASE_ASSGNMENT_KEY'
