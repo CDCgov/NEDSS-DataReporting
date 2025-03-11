@@ -8,8 +8,6 @@ BEGIN
         DECLARE @proc_step_no float = 0;
         DECLARE @proc_step_name varchar(200) = '';
         DECLARE @batch_id bigint;
-        DECLARE @create_dttm datetime2(7) = current_timestamp;
-        DECLARE @update_dttm datetime2(7) = current_timestamp;
         DECLARE @dataflow_name varchar(200) = 'Treatment POST-Processing';
         DECLARE @package_name varchar(200) = 'sp_nrt_treatment_postprocessing';
 
@@ -18,8 +16,6 @@ BEGIN
         /* Initial logging entry */
         INSERT INTO [dbo].[job_flow_log]
         ( batch_id
-        , [create_dttm]
-        , [update_dttm]
         , [Dataflow_Name]
         , [package_Name]
         , [Status_Type]
@@ -28,8 +24,6 @@ BEGIN
         , [msg_description1]
         , [row_count])
         VALUES ( @batch_id
-               , @create_dttm
-               , @update_dttm
                , @dataflow_name
                , @package_name
                , 'START'
@@ -328,8 +322,6 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         ( batch_id
-        , [create_dttm]
-        , [update_dttm]
         , [Dataflow_Name]
         , [package_Name]
         , [Status_Type]
@@ -338,8 +330,6 @@ BEGIN
         , [row_count]
         , [msg_description1])
         VALUES ( @batch_id
-               , current_timestamp
-               , current_timestamp
                , @dataflow_name
                , @package_name
                , 'COMPLETE'
@@ -375,8 +365,6 @@ BEGIN
         /* Logging */
         INSERT INTO [dbo].[job_flow_log]
         ( batch_id
-        , [create_dttm]
-        , [update_dttm]
         , [Dataflow_Name]
         , [package_Name]
         , [Status_Type]
@@ -386,8 +374,6 @@ BEGIN
         , [msg_description1]
         , [Error_Description])
         VALUES ( @batch_id
-               , current_timestamp
-               , current_timestamp
                , @dataflow_name
                , @package_name
                , 'ERROR'
