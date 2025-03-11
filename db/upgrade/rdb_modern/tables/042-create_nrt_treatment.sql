@@ -9,6 +9,7 @@ CREATE TABLE dbo.nrt_treatment
     organization_uid               varchar(100)                                    NULL,
     provider_uid                   varchar(100)                                    NULL,
     patient_treatment_uid          varchar(100)                                    NULL,
+    morbidity_uid                  varchar(100)                                    NULL,
     treatment_name                 varchar(500)                                    NULL,
     treatment_oid                  varchar(100)                                    NULL,
     treatment_comments             varchar(500)                                    NULL,

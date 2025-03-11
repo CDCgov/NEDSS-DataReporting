@@ -52,10 +52,10 @@ BEGIN
         nq.question_identifier,
         cvg.code,
         cvg.code_short_desc_txt
-        FROM NBS_ODSE.dbo.NBS_question nq WITH (NOLOCK)
-        INNER JOIN NBS_SRTE.dbo.Codeset cd WITH (NOLOCK)
+        FROM NBS_ODSE.dbo.NBS_question nq with (nolock)
+        INNER JOIN NBS_SRTE.dbo.Codeset cd with (nolock)
         ON cd.code_set_group_id = nq.code_set_group_id
-        INNER JOIN NBS_SRTE.dbo.Code_value_general cvg WITH (NOLOCK)
+        INNER JOIN NBS_SRTE.dbo.Code_value_general cvg with (nolock)
         ON cvg.code_set_nm = cd.code_set_nm
         WHERE nq.question_identifier IN ('VAC101', 'VAC104', 'VAC106', 'VAC107', 'VAC147')
     )
@@ -215,9 +215,9 @@ BEGIN
            rdb_column_nm2
     INTO #CODED_TABLE_SNM
     FROM #CODED_TABLE coded
-             LEFT JOIN NBS_SRTE.DBO.CODESET_GROUP_METADATA metadata WITH (NOLOCK)
+             LEFT JOIN NBS_SRTE.DBO.CODESET_GROUP_METADATA metadata with (nolock)
                        ON metadata.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
-             LEFT JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL cvg WITH (NOLOCK)
+             LEFT JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL cvg with (nolock)
                        ON cvg.CODE_SET_NM = metadata.CODE_SET_NM
                            AND cvg.CODE = CODED.ANSWER_OTH
     WHERE ANSWER_OTH IS NOT NULL
@@ -259,9 +259,9 @@ BEGIN
            CODE_SHORT_DESC_TXT AS ANSWER_TXT1
     INTO #CODED_TABLE_NONSNM
     FROM #CODED_TABLE coded
-    LEFT JOIN nbs_srte.dbo.CODESET_GROUP_METADATA metadata WITH (NOLOCK)
+    LEFT JOIN nbs_srte.dbo.CODESET_GROUP_METADATA metadata with (nolock)
             ON metadata.CODE_SET_GROUP_ID = coded.CODE_SET_GROUP_ID
-    LEFT JOIN nbs_srte.dbo.CODE_VALUE_GENERAL cvg WITH (NOLOCK)
+    LEFT JOIN nbs_srte.dbo.CODE_VALUE_GENERAL cvg with (nolock)
             ON cvg.CODE_SET_NM = metadata.CODE_SET_NM
                 AND cvg.CODE = coded.ANSWER_TXT
     WHERE NBS_ANSWER_UID NOT IN (SELECT NBS_ANSWER_UID FROM #coded_table_snm);
@@ -365,9 +365,9 @@ BEGIN
         REPLACE(CODED.ANSWER_VALUE, ' ', '') + ' ' + REPLACE(CVG.CODE_SHORT_DESC_TXT, ' ', '') AS ANSWER_TXT
     INTO #CODED_TABLE_SNTEMP_TRANS
     FROM #CODED_TABLE_SNTEMP CODED
-    LEFT JOIN nbs_srte.dbo.CODESET_GROUP_METADATA metadata WITH (NOLOCK)
+    LEFT JOIN nbs_srte.dbo.CODESET_GROUP_METADATA metadata with (nolock)
             ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
-    LEFT JOIN nbs_srte.dbo.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
+    LEFT JOIN nbs_srte.dbo.CODE_VALUE_GENERAL CVG with (nolock)
             ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                 AND CVG.CODE = CODED.ANSWER_TXT_CODE;
 
@@ -501,10 +501,10 @@ BEGIN
     INTO #CODED_COUNTY_TABLE
     FROM #CODED_TABLE_SN_MERGED AS CODED
     LEFT JOIN
-        nbs_srte.dbo.CODESET_GROUP_METADATA AS METADATA WITH (NOLOCK)
+        nbs_srte.dbo.CODESET_GROUP_METADATA AS METADATA with (nolock)
         ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
     LEFT JOIN
-        nbs_srte.dbo.V_STATE_COUNTY_CODE_VALUE AS CVG WITH (NOLOCK)
+        nbs_srte.dbo.V_STATE_COUNTY_CODE_VALUE AS CVG with (nolock)
         ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
             AND CVG.CODE = CODED.ANSWER_TXT
     WHERE METADATA.CODE_SET_NM = 'COUNTY_CCD';
@@ -913,10 +913,10 @@ BEGIN
     INTO #NUMERIC_DATA_TRANS
     FROM #NUMERIC_DATA_MERGED AS CODED
              LEFT JOIN
-         nbs_srte.dbo.CODESET_GROUP_METADATA AS METADATA WITH (NOLOCK)
+         nbs_srte.dbo.CODESET_GROUP_METADATA AS METADATA with (nolock)
          ON METADATA.CODE_SET_GROUP_ID = CODED.UNIT_VALUE1
              LEFT JOIN
-         nbs_srte.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
+         nbs_srte.dbo.CODE_VALUE_GENERAL AS CVG with (nolock)
          ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
     WHERE CVG.CODE = CODED.ANSWER_CODED;
 
@@ -1082,7 +1082,7 @@ BEGIN
             LAST_CHG_USER_ID,
             ROW_NUMBER() OVER (PARTITION BY RDB_COLUMN_NM ORDER BY LAST_CHG_TIME DESC) AS rn
 
-        FROM NBS_ODSE.dbo.NBS_rdb_metadata WITH (NOLOCK)
+        FROM NBS_ODSE.dbo.NBS_rdb_metadata with (nolock)
         WHERE RDB_TABLE_NM = 'D_VACCINATION' and RDB_COLUMN_NM in (select RDB_COLUMN_NM from #UNIONED_DATA)
     )
     SELECT distinct TABLE_NAME,
@@ -1116,6 +1116,46 @@ BEGIN
     SET
         @PROC_STEP_NAME = 'SELECT FULL VACCINATION DATA';
 
+     with PROVIDER_INFO as (
+        select
+            src.VACCINATION_UID,
+            actent.ENTITY_UID as PROVIDER_UID
+        from #TMP_VACCINATION_INIT src
+        inner join NBS_ODSE.dbo.NBS_ACT_ENTITY actent with (nolock)
+        	ON actent.ACT_UID = src.VACCINATION_UID and TYPE_CD = 'PerformerOfVacc'
+        inner join NBS_ODSE.dbo.Person p with (nolock)
+        	ON p.PERSON_UID = actent.ENTITY_UID
+
+    )
+    , ORG_INFO as (
+        select
+            src.VACCINATION_UID,
+            actent.ENTITY_UID as ORGANIZATION_UID
+        from #TMP_VACCINATION_INIT src
+        inner join NBS_ODSE.dbo.NBS_ACT_ENTITY actent with (nolock)
+             ON actent.ACT_UID = src.VACCINATION_UID and TYPE_CD='PerformerOfVacc'
+        inner join NBS_ODSE.dbo.ORGANIZATION o with (nolock)
+        	ON o.ORGANIZATION_UID = actent.ENTITY_UID
+    )
+    , PAT_INFO as (
+        select
+            src.VACCINATION_UID,
+            actent.ENTITY_UID as PATIENT_UID
+        from #TMP_VACCINATION_INIT src
+        inner join NBS_ODSE.dbo.NBS_ACT_ENTITY actent with (nolock)
+             ON actent.ACT_UID = src.VACCINATION_UID and TYPE_CD='SubOfVacc'
+        inner join NBS_ODSE.dbo.Person p with (nolock)
+        	ON p.PERSON_UID = actent.ENTITY_UID
+    )
+     , CASE_INFO as (
+        select
+            src.VACCINATION_UID,
+            actrel.SOURCE_ACT_UID as PHC_UID
+        from #TMP_VACCINATION_INIT src
+        inner join NBS_ODSE.dbo.ACT_RELATIONSHIP actrel with (nolock)
+             ON actrel.SOURCE_ACT_UID = src.VACCINATION_UID
+        where TYPE_CD='1180'
+    )
     SELECT
 	    ix.ADD_TIME ,
 		ix.ADD_USER_ID,
@@ -1137,9 +1177,17 @@ BEGIN
 		ix.VACCINE_MANUFACTURER_NM ,
 		ix.VERSION_CTRL_NBR,
 		ix.ELECTRONIC_IND,
+		prov.PROVIDER_UID,
+		org.ORGANIZATION_UID,
+		cas.PHC_UID,
+		pat.PATIENT_UID,
 	    nesteddata.answers,
 	    nesteddata.rdb_cols
     FROM #TMP_VACCINATION_INIT ix
+    LEFT OUTER JOIN PROVIDER_INFO prov on prov.VACCINATION_UID = ix.VACCINATION_UID
+    LEFT OUTER JOIN ORG_INFO org on org.VACCINATION_UID = ix.VACCINATION_UID
+    LEFT OUTER JOIN PAT_INFO pat on pat.VACCINATION_UID = ix.VACCINATION_UID
+    LEFT OUTER JOIN CASE_INFO cas on cas.VACCINATION_UID = ix.VACCINATION_UID
     OUTER apply (
         SELECT * FROM
             (SELECT (SELECT ud.RDB_COLUMN_NM,
@@ -1189,27 +1237,35 @@ END TRY
 BEGIN CATCH
 
 
-				IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+    IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-				DECLARE @ErrorNumber INT = ERROR_NUMBER();
-				DECLARE @ErrorLine INT = ERROR_LINE();
-				DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-				DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-				DECLARE @ErrorState INT = ERROR_STATE();
+	-- Construct the error message string with all details:
+    DECLARE @FullErrorMessage VARCHAR(8000) =
+        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Message: ' + ERROR_MESSAGE();
+
+    INSERT INTO [dbo].[job_flow_log] ( batch_id
+                                     , [Dataflow_Name]
+                                     , [package_Name]
+                                     , [Status_Type]
+                                     , [step_number]
+                                     , [step_name]
+                                     , [Error_Description]
+                                     , [row_count])
+    VALUES ( @batch_id
+           , @Dataflow_Name
+           , @Package_Name
+           , 'ERROR'
+           , @Proc_Step_no
+           , @Proc_Step_name
+           , @FullErrorMessage
+           , 0);
 
 
-				INSERT INTO rdb.[dbo].[job_flow_log] (
-					batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name],
-					[Error_Description], [row_count]
-				)
-				VALUES (
-				   @batch_id ,'Vaccination_Record PRE-Processing Event', 'NBS_ODSE.sp_vaccination_record_event', 'ERROR' ,@Proc_Step_no, @PROC_STEP_NAME
-				   , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
-				   ,0
-				   );
-
-
-			return -1 ;
+	return -1 ;
 
 END CATCH
 

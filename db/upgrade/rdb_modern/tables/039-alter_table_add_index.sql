@@ -205,7 +205,10 @@ BEGIN
 CREATE INDEX idx_nrt_obs_coded_obs_uid_code ON dbo.nrt_observation_coded (observation_uid, ovc_code);
 END
 
-
+IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_inv_notf_notf_uid' AND object_id = OBJECT_ID('dbo.nrt_investigation_notification'))
+BEGIN
+CREATE INDEX idx_nrt_inv_notf_notf_uid ON dbo.nrt_investigation_notification (notification_uid);
+END
 
 
 

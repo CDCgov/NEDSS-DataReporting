@@ -262,6 +262,7 @@ public class TestUtils {
         contact.setRecordStatusCd("Active");
         contact.setRecordStatusTime("2024-02-06T08:00:00");
         contact.setSubjectEntityEpiLinkId("EPI456");
+        contact.setSubjectEntityUid(123L);
         contact.setVersionCtrlNbr(1L);
         contact.setContactExposureSiteUid(123L);
         contact.setProviderContactInvestigatorUid(1234L);
@@ -312,6 +313,7 @@ public class TestUtils {
         contactReporting.setRecordStatusCd("Active");
         contactReporting.setRecordStatusTime("2024-02-06T08:00:00");
         contactReporting.setSubjectEntityEpiLinkId("EPI456");
+        contactReporting.setSubjectEntityUid(123L);
         contactReporting.setVersionCtrlNbr(1L);
         contactReporting.setContactExposureSiteUid(123L);
         contactReporting.setProviderContactInvestigatorUid(1234L);

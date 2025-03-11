@@ -46,12 +46,13 @@ BEGIN
             par.subject_entity_uid AS organization_uid,
             par1.subject_entity_uid AS provider_uid,
             viewPatientKeys.treatment_uid AS patient_treatment_uid,
-            rx1.local_id,
-            rx1.add_time,
-            rx1.add_user_id,
-            rx1.last_chg_time,
-            rx1.last_chg_user_id,
-            rx1.version_ctrl_nbr
+            act2.target_act_uid AS morbidity_uid,
+            rx1.LOCAL_ID,
+            rx1.ADD_TIME,
+            rx1.ADD_USER_ID,
+            rx1.LAST_CHG_TIME,
+            rx1.LAST_CHG_USER_ID,
+            rx1.VERSION_CTRL_NBR
         INTO #TREATMENT_UIDS
         FROM NBS_ODSE.dbo.treatment AS rx1 WITH (NOLOCK)
                  INNER JOIN NBS_ODSE.dbo.Treatment_administered AS rx2 WITH (NOLOCK)
@@ -73,6 +74,11 @@ BEGIN
                                AND par1.act_class_cd = 'TRMT'
                  LEFT JOIN NBS_ODSE.dbo.uvw_treatment_patient_keys AS viewPatientKeys WITH (NOLOCK)
                            ON rx1.treatment_uid = viewPatientKeys.treatment_uid
+                 LEFT JOIN NBS_ODSE.dbo.act_relationship AS act2 WITH (NOLOCK)
+                           ON rx1.Treatment_uid = act2.source_act_uid
+                               AND act2.target_class_cd = 'OBS'
+                               AND act2.source_class_cd = 'TRMT'
+                               AND act2.type_cd = 'TreatmentToMorb'
         WHERE rx1.treatment_uid IN (
             SELECT value
             FROM STRING_SPLIT(@treatment_uids, ',')
@@ -110,27 +116,32 @@ BEGIN
             t.organization_uid,
             t.provider_uid,
             t.patient_treatment_uid,
-            rx1.cd_desc_txt AS treatment_name,
-            rx1.program_jurisdiction_oid AS treatment_oid,
-            REPLACE(REPLACE(rx1.txt, CHAR(13) + CHAR(10), ' '), CHAR(10), ' ') AS treatment_comments,
-            rx1.shared_ind AS treatment_shared_ind,
+            t.morbidity_uid,
+            rx1.cd_desc_txt AS Treatment_nm,
+            rx1.program_jurisdiction_oid AS Treatment_oid,
+            REPLACE(REPLACE(rx1.txt, CHAR(13) + CHAR(10), ' '), CHAR(10), ' ') AS Treatment_comments,
+            rx1.shared_ind AS Treatment_shared_ind,
             rx1.cd,
-            rx2.effective_from_time AS treatment_date,
-            rx2.cd AS treatment_drug,
-            rx2.cd_desc_txt AS treatment_drug_name,
-            rx2.dose_qty AS treatment_dosage_strength,
-            rx2.dose_qty_unit_cd AS treatment_dosage_strength_unit,
-            rx2.interval_cd AS treatment_frequency,
-            rx2.effective_duration_amt AS treatment_duration,
-            rx2.effective_duration_unit_cd AS treatment_duration_unit,
-            rx2.route_cd AS treatment_route,
-            t.local_id,
-            dbo.fn_get_record_status(rx1.record_status_cd) as record_status_cd,
-            t.add_time,
-            t.add_user_id,
-            t.last_chg_time,
-            t.last_chg_user_id,
-            t.version_ctrl_nbr
+            rx2.effective_from_time AS Treatment_dt,
+            rx2.cd AS Treatment_drug,
+            rx2.cd_desc_txt AS Treatment_drug_nm,
+            rx2.dose_qty AS Treatment_dosage_strength,
+            rx2.dose_qty_unit_cd AS Treatment_dosage_strength_unit,
+            rx2.interval_cd AS Treatment_frequency,
+            rx2.effective_duration_amt AS Treatment_duration,
+            rx2.effective_duration_unit_cd AS Treatment_duration_unit,
+            rx2.route_cd AS Treatment_route,
+            t.LOCAL_ID,
+            CASE
+                WHEN rx1.record_status_cd = '' THEN 'ACTIVE'
+                WHEN rx1.record_status_cd = 'LOG_DEL' THEN 'INACTIVE'
+                ELSE rx1.record_status_cd
+                END as record_status_cd,
+            t.ADD_TIME,
+            t.ADD_USER_ID,
+            t.LAST_CHG_TIME,
+            t.LAST_CHG_USER_ID,
+            t.VERSION_CTRL_NBR
         INTO #TREATMENT_DETAILS
         FROM #TREATMENT_UIDS t
                  INNER JOIN NBS_ODSE.dbo.treatment rx1 WITH (NOLOCK)
@@ -163,28 +174,29 @@ BEGIN
             t.public_health_case_uid,
             t.organization_uid,
             t.provider_uid,
+            t.morbidity_uid,
             t.patient_treatment_uid,
-            t.treatment_name,
-            t.treatment_oid,
-            t.treatment_comments,
-            t.treatment_shared_ind,
+            t.Treatment_nm,
+            t.Treatment_oid,
+            t.Treatment_comments,
+            t.Treatment_shared_ind,
             t.cd,
-            t.treatment_date,
-            t.treatment_drug,
-            t.treatment_drug_name,
-            t.treatment_dosage_strength,
-            t.treatment_dosage_strength_unit,
-            t.treatment_frequency,
-            t.treatment_duration,
-            t.treatment_duration_unit,
-            t.treatment_route,
-            t.local_id,
+            t.Treatment_dt,
+            t.Treatment_drug,
+            t.Treatment_drug_nm,
+            t.Treatment_dosage_strength,
+            t.Treatment_dosage_strength_unit,
+            t.Treatment_frequency,
+            t.Treatment_duration,
+            t.Treatment_duration_unit,
+            t.Treatment_route,
+            t.LOCAL_ID,
             t.record_status_cd,
-            t.add_time,
-            t.add_user_id,
-            t.last_chg_time,
-            t.last_chg_user_id,
-            t.version_ctrl_nbr
+            t.ADD_TIME,
+            t.ADD_USER_ID,
+            t.LAST_CHG_TIME,
+            t.LAST_CHG_USER_ID,
+            t.VERSION_CTRL_NBR
         FROM #TREATMENT_DETAILS t;
 
 

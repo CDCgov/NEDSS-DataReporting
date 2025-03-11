@@ -4,7 +4,7 @@ CREATE TABLE dbo.nrt_page_case_answer
     act_uid                bigint                                          NOT NULL,
     nbs_case_answer_uid    bigint                                          NOT NULL,
     nbs_ui_metadata_uid    bigint                                          NOT NULL,
-    nbs_rdb_metadata_uid   bigint                                          NOT NULL,
+    nbs_rdb_metadata_uid   bigint                                          NULL,
     nbs_question_uid       bigint                                          NOT NULL,
     rdb_table_nm           varchar(30)                                     NULL,
     rdb_column_nm          varchar(30)                                     NULL,
@@ -28,5 +28,8 @@ CREATE TABLE dbo.nrt_page_case_answer
     batch_id               bigint                                          NULL,
     refresh_datetime       datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime           datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+    datamart_column_nm     varchar(30)                                     NULL,
+    seq_nbr                int                                             NULL,
+    ldf_status_cd          varchar(20)                                     NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );

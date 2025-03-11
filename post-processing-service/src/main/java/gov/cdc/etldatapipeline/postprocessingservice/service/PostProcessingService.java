@@ -45,8 +45,17 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 @EnableScheduling
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
+
+    //cache to store ids from nrt topics that needs to be processed for loading dims and facts
+    //a map of nrt topic name and it's associated ids
     final Map<String, Queue<Long>> idCache = new ConcurrentHashMap<>();
+
+    //cache to store ids and additional information specific to those IDs like page case information
+    //a map of ids (phc_ids as of now) and a comma seperated string of information
     final Map<Long, String> idVals = new ConcurrentHashMap<>();
+
+    //cache to store ids that needs to be processed for datamarts
+    //a map of datamart names and the needed ids
     final Map<String, Set<Map<Long, Long>>> dmCache = new ConcurrentHashMap<>();
 
     private final PostProcRepository postProcRepository;
@@ -264,6 +273,8 @@ public class PostProcessingService {
                         break;
                     case VACCINATION:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
+                        processTopic(keyTopic, entity.getEntityName(), ids,
+                                postProcRepository::executeStoredProcForFVaccination, "sp_f_vaccination_postprocessing");
                         break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
@@ -389,6 +400,11 @@ public class PostProcessingService {
                         investigationRepository.executeStoredProcForHepatitisCaseDatamart(cases);
                         completeLog(HEPATITIS_CASE.getStoredProcedure());
                         break;
+                    case PERTUSSIS_CASE:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, PERTUSSIS_CASE.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForPertussisCaseDatamart(cases);
+                        completeLog(PERTUSSIS_CASE.getStoredProcedure());
+                        break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ",dmType);
                 }
@@ -410,21 +426,25 @@ public class PostProcessingService {
 
         int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length() + ctrString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
+        int totalLengthInvSummary =  invString.length() + notifString.length() + obsString.length();
 
         if (totalLengthEventMetric > 0 && eventMetricEnable) {
             postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
-        }
-        else {
+        } else {
             logger.info("No updates to EVENT_METRIC Datamart");
         }
 
         if (totalLengthHep100 > 0) {
             postProcRepository.executeStoredProcForHep100(invString, patString, provString, orgString);
-        }
-        else {
+        } else {
             logger.info("No updates to HEP100 Datamart");
         }
 
+        if(totalLengthInvSummary > 0) {
+            postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+        } else {
+            logger.info("No updates to INV_SUMMARY Datamart");
+        }
     }
 
     private String listToParameterString(List<Long> inputList) {

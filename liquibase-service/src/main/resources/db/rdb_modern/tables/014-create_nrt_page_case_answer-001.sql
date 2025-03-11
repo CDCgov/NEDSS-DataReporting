@@ -45,4 +45,29 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_page_case_answer' and xtyp
                     ADD batch_id bigint;
             END;
 
+--CNDE-2334
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'datamart_column_nm' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
+            BEGIN
+                ALTER TABLE dbo.nrt_page_case_answer
+                    ADD datamart_column_nm varchar(30) ;
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'seq_nbr' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
+            BEGIN
+                ALTER TABLE dbo.nrt_page_case_answer
+                    ADD seq_nbr int;
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'ldf_status_cd' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
+            BEGIN
+                ALTER TABLE dbo.nrt_page_case_answer
+                    ADD ldf_status_cd varchar(20);
+            END;  
+
+
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nbs_rdb_metadata_uid' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
+            BEGIN
+                ALTER TABLE dbo.nrt_page_case_answer ALTER COLUMN nbs_rdb_metadata_uid bigint NULL;
+            END;                        
+
     END;
