@@ -1056,27 +1056,50 @@ databaseChangeLog:
             path: 060-create-summary-report-case-001.sql
             splitStatements: false
   - changeSet:
+<<<<<<< HEAD
+      id: 149
+=======
       id: 152
+>>>>>>> main
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
+<<<<<<< HEAD
+            path: 061-create_d_tb_pam.sql
+            splitStatements: false
+  - changeSet:
+      id: 150
+=======
             path: 014-v_nrt_nbs_page-001.sql
             splitStatements: false
   - changeSet:
       id: 153
+>>>>>>> main
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
+<<<<<<< HEAD
+            path: 062-create_nrt_d_tb_pam_key.sql
+            splitStatements: false
+  - changeSet:
+      id: 151
+=======
             path: 015-v_nrt_nbs_investigation_rdb_table_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 154
+>>>>>>> main
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
+<<<<<<< HEAD
+            path: 047-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false
+  
+=======
             path: 016-v_nrt_nbs_d_case_mgmt_rdb_table_metadata-001.sql
             splitStatements: false
   - changeSet:
@@ -1160,27 +1183,4 @@ databaseChangeLog:
         - sqlFile:
             path: 047-sp_nrt_treatment_postprocessing-001.sql
             splitStatements: false
-  - changeSet:
-      id: 181
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 061-create_d_tb_pam.sql
-            splitStatements: false
-  - changeSet:
-      id: 182
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 062-create_nrt_d_tb_pam_key.sql
-            splitStatements: false
-  - changeSet:
-      id: 183
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 140-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false            
+>>>>>>> main
