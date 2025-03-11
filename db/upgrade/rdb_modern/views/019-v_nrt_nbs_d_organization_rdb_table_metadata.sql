@@ -1,0 +1,22 @@
+
+
+CREATE  OR ALTER VIEW dbo.v_nrt_nbs_d_organization_rdb_table_metadata AS
+SELECT DISTINCT RDB_COLUMN_NM, user_defined_column_nm, 
+case 
+	when part_type_cd = 'FldFupFacilityOfPHC' then 'FACILITY_FLD_FOLLOW_UP_KEY'
+	when part_type_cd = 'HospOfADT' then 'HOSPITAL_KEY'
+	when part_type_cd = 'OrgAsClinicOfPHC' then 'ORDERING_FACILITY_KEY'
+	when part_type_cd = 'OrgAsHospitalOfDelivery' then 'DELIVERING_HOSP_KEY'
+	when part_type_cd = 'OrgAsReporterOfPHC' then 'ORG_AS_REPORTER_KEY'
+end  part_type_cd,
+cast(substring(USER_DEFINED_COLUMN_NM,1,CHARINDEX('_UID',USER_DEFINED_COLUMN_NM))+'KEY' as varchar(2000)) as [Key],
+cast( substring(USER_DEFINED_COLUMN_NM,1,CHARINDEX('_UID',USER_DEFINED_COLUMN_NM))+'DETAIL'  as varchar(2000)) as Detail,
+cast( substring(USER_DEFINED_COLUMN_NM,1,CHARINDEX('_UID',USER_DEFINED_COLUMN_NM))+'QEC' as varchar(2000)) as QEC,
+cast( USER_DEFINED_COLUMN_NM as varchar(2000)) as [UID],INVESTIGATION_FORM_CD
+FROM NBS_ODSE..NBS_RDB_METADATA 
+INNER JOIN NBS_ODSE..NBS_UI_METADATA ON NBS_RDB_METADATA.NBS_UI_METADATA_UID =NBS_UI_METADATA.NBS_UI_METADATA_UID
+WHERE NBS_RDB_METADATA.USER_DEFINED_COLUMN_NM <> '' 
+and NBS_RDB_METADATA.USER_DEFINED_COLUMN_NM IS NOT NULL
+AND PART_TYPE_CD IS NOT NULL 
+AND RDB_TABLE_NM ='D_ORGANIZATION' 
+AND DATA_TYPE='PART';
