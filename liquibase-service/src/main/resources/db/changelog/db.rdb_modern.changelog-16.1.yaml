@@ -1056,10 +1056,74 @@ databaseChangeLog:
             path: 060-create-summary-report-case-001.sql
             splitStatements: false
   - changeSet:
+      id: 152
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 014-v_nrt_nbs_page-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 153
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 015-v_nrt_nbs_investigation_rdb_table_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 154
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 016-v_nrt_nbs_d_case_mgmt_rdb_table_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 155
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 017-v_nrt_d_inv_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 156
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 018-v_nrt_d_provider_rdb_table_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 157
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 019-v_nrt_nbs_d_organization_rdb_table_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 158
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 020-v_nrt_nbs_d_patient_rdb_table_metadata-001.sql
+            splitStatements: false
+  - changeSet:
       id: 162
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
             path: 120-sp_dyn_dm_provider_data_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 164
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 135-sp_dyn_dm_org_data_postprocessing-001.sql
             splitStatements: false
