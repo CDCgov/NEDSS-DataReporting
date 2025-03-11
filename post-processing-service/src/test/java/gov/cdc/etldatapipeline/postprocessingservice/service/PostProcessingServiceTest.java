@@ -30,7 +30,8 @@ import static org.mockito.Mockito.*;
 
 class PostProcessingServiceTest {
 
-    @InjectMocks @Spy
+    @InjectMocks
+    @Spy
     private PostProcessingService postProcessingServiceMock;
     @Mock
     private PostProcRepository postProcRepositoryMock;
@@ -145,10 +146,11 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDTBPAM(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(8, logs.size());
+        assertEquals(10, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -273,7 +275,8 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForMorbReport(expectedObsIdsString);
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_morbidity_report_postprocessing"));assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_morbidity_report_postprocessing"));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
 
     }
 
@@ -407,7 +410,6 @@ class PostProcessingServiceTest {
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
-
     @Test
     void testPostProcessVaccinationData() {
         String topic = "dummy_vaccination";
@@ -512,46 +514,47 @@ class PostProcessingServiceTest {
         assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(testCase.logSize, logs.size());
-        assertEquals(logs.getLast().getFormattedMessage(), "Stored proc execution completed: " + testCase.storedProcedure);
+        assertEquals(logs.getLast().getFormattedMessage(),
+                "Stored proc execution completed: " + testCase.storedProcedure);
     }
 
     static Stream<DatamartTestCase> datamartTestData() {
         return Stream.of(
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
-                    "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}",
-                    HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), 5,
-                    (repo, uid) -> verify(repo).executeStoredProcForHepDatamart(uid)),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                                "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}",
+                        HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), 5,
+                        (repo, uid) -> verify(repo).executeStoredProcForHepDatamart(uid)),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
-                    "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}",
-                    STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForStdHIVDatamart(uid)),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                                "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}",
+                        STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForStdHIVDatamart(uid)),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                    "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}",
-                    GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForGenericCaseDatamart(uid)),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}",
+                        GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForGenericCaseDatamart(uid)),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
-                    "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
-                    CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForCRSCaseDatamart(uid)),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
+                                "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
+                        CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForCRSCaseDatamart(uid)),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
-                    "\"datamart\":\"Rubella_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
-                    RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForRubellaCaseDatamart(uid)),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
+                                "\"datamart\":\"Rubella_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
+                        RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForRubellaCaseDatamart(uid)),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
-                    "\"datamart\":\"Measles_Case\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}",
-                    MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForMeaslesCaseDatamart(uid)),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
+                                "\"datamart\":\"Measles_Case\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}",
+                        MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForMeaslesCaseDatamart(uid)),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null," +
-                    "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
-                    CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null," +
+                                "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
+                        CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                                 "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
@@ -560,16 +563,15 @@ class PostProcessingServiceTest {
                         3,
                         (repo, uid) -> verify(repo).executeStoredProcForBmirdCaseDatamart(uid)),
                 new DatamartTestCase(
-                "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                        "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
                         HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), 3,
-                (repo, uid) -> verify(repo).executeStoredProcForHepatitisCaseDatamart(uid)),
+                        (repo, uid) -> verify(repo).executeStoredProcForHepatitisCaseDatamart(uid)),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid))
-        );
+                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)));
     }
 
     @Test
@@ -664,7 +666,8 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
         postProcessingServiceMock.processCachedIds();
 
-        verify(postProcRepositoryMock, never()).executeStoredProcForEventMetric(anyString(), anyString(), anyString(), anyString());
+        verify(postProcRepositoryMock, never()).executeStoredProcForEventMetric(anyString(), anyString(), anyString(),
+                anyString());
     }
 
     @Test
@@ -775,7 +778,6 @@ class PostProcessingServiceTest {
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
-
     @Test
     void testPostProcessPlaceMessage() {
         String topic = "dummy_place";
@@ -808,6 +810,7 @@ class PostProcessingServiceTest {
 
         verify(postProcRepositoryMock).executeStoredProcForDPlace("123,124");
     }
+
     @Test
     void testPostProcessNoPlaceUidException() {
         String placeKey = "{\"payload\":{}}";
@@ -889,8 +892,9 @@ class PostProcessingServiceTest {
         String orgKey = "{\"payload\":{}}";
         String topic = "dummy_organization";
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> postProcessingServiceMock.postProcessMessage(topic,
-                orgKey, orgKey));
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> postProcessingServiceMock.postProcessMessage(topic,
+                        orgKey, orgKey));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
@@ -942,7 +946,6 @@ class PostProcessingServiceTest {
         assertTrue(logs.getLast().getMessage().contains("No associated datamart processing logic found"));
     }
 
-
     @Test
     void testPostProcessUnknownTopic() {
         String topic = "dummy_topic";
@@ -985,7 +988,7 @@ class PostProcessingServiceTest {
         BiConsumer<InvestigationRepository, String> verificationStep;
 
         DatamartTestCase(String msg, String datamartEntityName, String storedProcedure,
-                         int logSize, BiConsumer<InvestigationRepository, String> verificationStep) {
+                int logSize, BiConsumer<InvestigationRepository, String> verificationStep) {
             this.msg = msg;
             this.datamartEntityName = datamartEntityName;
             this.storedProcedure = storedProcedure;

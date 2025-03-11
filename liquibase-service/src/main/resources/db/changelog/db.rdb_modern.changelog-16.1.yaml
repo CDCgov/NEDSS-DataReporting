@@ -1055,3 +1055,28 @@ databaseChangeLog:
         - sqlFile:
             path: 060-create-summary-report-case-001.sql
             splitStatements: false
+  - changeSet:
+      id: 149
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 061-create_d_tb_pam.sql
+            splitStatements: false
+  - changeSet:
+      id: 150
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 062-create_nrt_d_tb_pam_key.sql
+            splitStatements: false
+  - changeSet:
+      id: 151
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 047-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false
+  
