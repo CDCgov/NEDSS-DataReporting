@@ -1,4 +1,4 @@
-CREATE  view dbo.v_nrt_nbs_page as
+CREATE OR alter view dbo.v_nrt_nbs_page as
 SELECT  distinct page.FORM_CD, page.DATAMART_NM 
 --	into rdb.dbo.tmp_INIT
 	FROM NBS_ODSE..PAGE_COND_MAPPING pcm 
