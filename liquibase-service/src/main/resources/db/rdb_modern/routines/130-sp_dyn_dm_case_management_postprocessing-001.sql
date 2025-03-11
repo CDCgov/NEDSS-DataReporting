@@ -1,7 +1,7 @@
 
 
  
-CREATE or alter PROCEDURE [dbo].sp_dyn_dm_case_management_post_processing
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_case_management_postprocessing
             @batch_id BIGINT,
 			@DATAMART_NAME VARCHAR(100),
 			@phc_id_list nvarchar(max)
