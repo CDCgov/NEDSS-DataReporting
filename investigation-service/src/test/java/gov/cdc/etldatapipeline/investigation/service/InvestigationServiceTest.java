@@ -124,7 +124,6 @@ class InvestigationServiceTest {
         transformer.setRdbMetadataColumnsOutputTopicName("metadataColumns");
         transformer.setVaccinationOutputTopicName(vaccinationTopicOutput);
         transformer.setVaccinationAnswerOutputTopicName("VaccinationAnswerOutput");
-        investigationService.setTreatmentEnable(true);
     }
 
     @AfterEach
@@ -462,21 +461,6 @@ class InvestigationServiceTest {
         assertEquals(treatment.getTreatmentUid(), keyObject.getTreatmentUid());
 
         assertEquals(treatment, actualTreatment);
-    }
-
-    @Test
-    void testProcessTreatmentMessageWhenFeatureDisabled() {
-        Long treatmentUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}}}";
-
-        final Treatment treatment = constructTreatment(treatmentUid);
-        when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
-
-        investigationService.setTreatmentEnable(false);
-        // Create a ConsumerRecord object
-        ConsumerRecord<String, String> rec = getRecord(treatmentTopic, payload);
-        investigationService.processMessage(rec, consumer);
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test

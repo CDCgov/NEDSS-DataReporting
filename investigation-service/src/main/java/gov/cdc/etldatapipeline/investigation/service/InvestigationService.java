@@ -79,9 +79,6 @@ public class InvestigationService {
     @Value("${featureFlag.contact-record-enable}")
     public boolean contactRecordEnable;
 
-    @Value("${featureFlag.treatment-enable}")
-    public boolean treatmentEnable;
-
     private final InvestigationRepository investigationRepository;
     private final NotificationRepository notificationRepository;
     private final InterviewRepository interviewRepository;
@@ -143,7 +140,7 @@ public class InvestigationService {
             processContact(message);
         } else if (topic.equals(vaccinationTopic)) {
             processVaccination(message);
-        } else if (topic.equals(treatmentTopic) && treatmentEnable) {
+        } else if (topic.equals(treatmentTopic)) {
             processTreatment(message);
         }
         consumer.commitSync();
