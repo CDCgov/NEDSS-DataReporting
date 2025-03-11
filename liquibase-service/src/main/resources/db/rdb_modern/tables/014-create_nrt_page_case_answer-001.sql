@@ -62,6 +62,12 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_page_case_answer' and xtyp
             BEGIN
                 ALTER TABLE dbo.nrt_page_case_answer
                     ADD ldf_status_cd varchar(20);
+            END;  
+
+
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nbs_rdb_metadata_uid' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
+            BEGIN
+                ALTER TABLE dbo.nrt_page_case_answer ALTER COLUMN nbs_rdb_metadata_uid bigint NULL;
             END;                        
 
     END;
