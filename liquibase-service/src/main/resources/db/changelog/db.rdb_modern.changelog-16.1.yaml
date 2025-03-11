@@ -1061,5 +1061,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 115-sp_dyn_dm_invest_form_post_processing-001.sql
+            path: 115-sp_dyn_dm_invest_form_postprocessing-001.sql
             splitStatements: false

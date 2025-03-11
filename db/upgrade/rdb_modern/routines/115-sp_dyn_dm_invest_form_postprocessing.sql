@@ -1,6 +1,6 @@
 
 
-CREATE or alter PROCEDURE [dbo].sp_dyn_dm_invest_form_post_processing
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_invest_form_postprocessing
 -- call this after populating <>
 
             @batch_id BIGINT,
