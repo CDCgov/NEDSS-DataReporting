@@ -1104,6 +1104,14 @@ databaseChangeLog:
             path: 019-v_nrt_nbs_d_organization_rdb_table_metadata-001.sql
             splitStatements: false
   - changeSet:
+      id: 159
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 115-sp_dyn_dm_invest_form_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 158
       author: liquibase
       runOnChange: true
@@ -1143,5 +1151,3 @@ databaseChangeLog:
         - sqlFile:
             path: 135-sp_dyn_dm_org_data_postprocessing-001.sql
             splitStatements: false
-
-
