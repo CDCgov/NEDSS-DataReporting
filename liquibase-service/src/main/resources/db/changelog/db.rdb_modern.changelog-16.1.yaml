@@ -1151,3 +1151,12 @@ databaseChangeLog:
         - sqlFile:
             path: 135-sp_dyn_dm_org_data_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 180
+      author: liquibase
+      comment: "Starting numbering from 180 to accommodate the dynamic datamarts"
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 047-sp_nrt_treatment_postprocessing-001.sql
+            splitStatements: false
