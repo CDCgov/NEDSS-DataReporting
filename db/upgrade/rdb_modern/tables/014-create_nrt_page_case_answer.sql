@@ -4,7 +4,7 @@ CREATE TABLE dbo.nrt_page_case_answer
     act_uid                bigint                                          NOT NULL,
     nbs_case_answer_uid    bigint                                          NOT NULL,
     nbs_ui_metadata_uid    bigint                                          NOT NULL,
-    nbs_rdb_metadata_uid   bigint                                          NOT NULL,
+    nbs_rdb_metadata_uid   bigint                                          NULL,
     nbs_question_uid       bigint                                          NOT NULL,
     rdb_table_nm           varchar(30)                                     NULL,
     rdb_column_nm          varchar(30)                                     NULL,
