@@ -210,5 +210,10 @@ BEGIN
 CREATE INDEX idx_nrt_inv_notf_notf_uid ON dbo.nrt_investigation_notification (notification_uid);
 END
 
+IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_page_case_answer_act_uid' AND object_id = OBJECT_ID('dbo.nrt_page_case_answer'))
+BEGIN
+CREATE INDEX idx_nrt_page_case_answer_act_uid ON dbo.nrt_page_case_answer (act_uid);
+END
+
 
 
