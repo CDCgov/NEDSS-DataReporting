@@ -1,7 +1,5 @@
 package gov.cdc.etldatapipeline.postprocessingservice.service;
 
-import org.springframework.data.repository.query.Param;
-
 import lombok.Getter;
 
 @Getter
