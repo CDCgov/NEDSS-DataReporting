@@ -13,7 +13,7 @@ public class PageCaseAnswer {
     private @NonNull Long actUid;
     private @NonNull Long nbsCaseAnswerUid;
     private @NonNull Long nbsUiMetadataUid;
-    private @NonNull Long nbsRdbMetadataUid;
+    private Long nbsRdbMetadataUid;
     private @NonNull Long nbsQuestionUid;
 
     private String rdbTableNm;
