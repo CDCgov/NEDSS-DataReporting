@@ -70,10 +70,10 @@ BEGIN
                             ON c.CONDITION_KEY = src.CONDITION_KEY
                  LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
                                  ON cc.INVESTIGATION_KEY = I.INVESTIGATION_KEY
-                 JOIN nbs_srte.dbo.state_county_code_value sccv
-                      ON SRC.county_cd = sccv.code
-                 JOIN dbo.EVENT_METRIC em with (nolock)
-                      ON em.local_id = I.inv_local_id
+                 INNER JOIN dbo.nrt_srte_state_county_code_value sccv
+                            ON SRC.county_cd = sccv.code
+                 INNER JOIN dbo.EVENT_METRIC em with (nolock)
+                            ON em.local_id = I.inv_local_id
         WHERE I.CASE_UID IN (select value FROM STRING_SPLIT(@id_list, ','))
         ORDER BY I.inv_local_id asc;
 
@@ -220,5 +220,3 @@ BEGIN
 
     END CATCH
 END;
-
-
