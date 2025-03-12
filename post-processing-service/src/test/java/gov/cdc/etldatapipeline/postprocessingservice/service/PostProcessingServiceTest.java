@@ -30,8 +30,9 @@ import static org.mockito.Mockito.*;
 
 class PostProcessingServiceTest {
 
-    @InjectMocks @Spy
-    
+    @InjectMocks
+    @Spy
+
     private PostProcessingService postProcessingServiceMock;
     @Mock
     private PostProcRepository postProcRepositoryMock;
@@ -138,6 +139,10 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        boolean diseaseSiteEnable = true;
+
+        // DISEASE SITE ENABLED
+        postProcessingServiceMock.setDiseaseSiteEnable(diseaseSiteEnable);
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -147,10 +152,12 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDTBPAM(expectedPublicHealthCaseIdsString);
+        if (diseaseSiteEnable)
+            verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
+        assertEquals(12, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -505,7 +512,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessBmirdCase(){
+    void testPostProcessBmirdCase() {
         String topic = "dummy_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"\"}}";
@@ -513,7 +520,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessDatamart(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
-        String id  = "123";
+        String id = "123";
         verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
         verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
 
@@ -522,8 +529,8 @@ class PostProcessingServiceTest {
         assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
         assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
 
-
     }
+
     @ParameterizedTest
     @MethodSource("datamartTestData")
     void testPostProcessDatamart(DatamartTestCase testCase) {

@@ -79,15 +79,25 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
-    @RetryableTopic(attempts = "${spring.kafka.consumer.max-retry}", autoCreateTopics = "false", dltStrategy = DltStrategy.FAIL_ON_ERROR, retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
+    @Value("${featureFlag.disease-site-enable}")
+    private boolean diseaseSiteEnable;
+
+    @RetryableTopic(
+            attempts = "${spring.kafka.consumer.max-retry}",
+            autoCreateTopics = "false",
+            dltStrategy = DltStrategy.FAIL_ON_ERROR,
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
+            dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
             // retry topic name, such as topic-retry-1, topic-retry-2, etc
             topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
             // time to wait before attempting to retry
-            backoff = @Backoff(delay = 1000, multiplier = 2.0), exclude = {
+            backoff = @Backoff(delay = 1000, multiplier = 2.0),
+            exclude = {
                     SerializationException.class,
                     DeserializationException.class,
                     RuntimeException.class
-            })
+            }
+    )
     @KafkaListener(topics = {
             "${spring.kafka.topic.investigation}",
             "${spring.kafka.topic.organization}",
@@ -303,6 +313,11 @@ public class PostProcessingService {
 
         processTopic(keyTopic, D_TB_PAM, ids,
                 investigationRepository::executeStoredProcForDTBPAM);
+                
+        if(diseaseSiteEnable){
+            processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
+        }
+        
         return dmData;
     }
 

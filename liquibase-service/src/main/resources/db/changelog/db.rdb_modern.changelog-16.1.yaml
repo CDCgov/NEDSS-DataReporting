@@ -1182,7 +1182,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 062-create_nrt_d_tb_pam_key-001.sql
+            path: 075-create_d_disease_site_group-001.sql
             splitStatements: false
   - changeSet:
       id: 200
@@ -1190,7 +1190,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 063-create_d_tb_pam-001.sql
+            path: 080-create_d_disease_site-001.sql
             splitStatements: false
   - changeSet:
       id: 205
@@ -1198,5 +1198,45 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 145-sp_nrt_d_tb_pam_postprocessing-001.sql
+            path: 065-create_nrt_disease_site_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 210
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 070-create_nrt_disease_site_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 215
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 145-sp_nrt_d_disease_site_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 220
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 062-create_nrt_d_tb_pam_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 225
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 063-create_d_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 230
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 150-sp_nrt_d_tb_pam_postprocessing-001.sql
             splitStatements: false    
