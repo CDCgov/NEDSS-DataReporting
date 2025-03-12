@@ -77,6 +77,8 @@ class InvestigationDataProcessingTests {
 
     ProcessInvestigationDataUtil transformer;
 
+
+
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);

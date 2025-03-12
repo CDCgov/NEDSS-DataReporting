@@ -4,21 +4,7 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_d_tb_hiv_postprocessing]
 AS
 
 BEGIN
-	/*
-	* [Description]
-	* This procedure compute the Dimension D_TB_HIV based on the received investigation_case_answers
-	* 1- Extracting TB-HIV Data 
-	* 2- Join with Metadata
-	* 3- Translate Codes
-	* 4- Transform Data
-	* 5- Pivot for S_TB_HIV
-	* 6- Add columns and update
-	* 7- Assign D_TB_HIV_KEY
-	* 8- Apply additional logic
-	* 9- Insert into L_TB_HIV 
-	* 10- MERGE into D_TB_HIV
-	*/
-
+	
 	DECLARE @batch_id BIGINT;
     SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmss')) AS BIGINT);
     PRINT @batch_id;
@@ -69,11 +55,11 @@ BEGIN TRY
 			DROP TABLE #S_TB_HIV_SET;
 		
 		SELECT 
+			CAST(ACT_UID AS BIGINT) AS TB_PAM_UID,
 			CODE_SET_GROUP_ID, 
 			DATAMART_COLUMN_NM, 
-			ANSWER_TXT, 
-			CAST(ACT_UID AS BIGINT) AS TB_PAM_UID,
-			LAST_CHG_TIME
+			ANSWER_TXT,			
+			MAX(LAST_CHG_TIME) AS LAST_CHG_TIME
 		INTO #S_TB_HIV_SET
 		FROM [dbo].nrt_page_case_answer WITH (NOLOCK) 
 		WHERE 
@@ -82,7 +68,8 @@ BEGIN TRY
 			AND datamart_column_nm IS NOT NULL
 			AND datamart_column_nm <> 'N/A'
 			AND question_identifier IN ('TUB154', 'TUB155', 'TUB156')
-		GROUP BY ACT_UID, DATAMART_COLUMN_NM, CODE_SET_GROUP_ID, ANSWER_TXT, LAST_CHG_TIME;
+		GROUP BY 
+			ACT_UID, DATAMART_COLUMN_NM, CODE_SET_GROUP_ID, ANSWER_TXT;
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -160,9 +147,8 @@ BEGIN TRY
 		FROM #S_TB_HIV_CODED TB
 		LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
 			ON CVG.CODE_SET_NM = TB.CODE_SET_NM
-			AND CVG.CODE = TB.ANSWER_TXT
-		ORDER BY TB.TB_PAM_UID;
-
+			AND CVG.CODE = TB.ANSWER_TXT;
+		
 		SELECT @RowCount_no = @@ROWCOUNT;
 
 		IF
@@ -284,8 +270,7 @@ BEGIN TRY
 		SELECT TB_PAM_UID 
 		FROM [dbo].D_TB_HIV WITH (NOLOCK); 
 
-		-- delete from key table and insert new elements to get all new D_TB_HIV_KEY for new elements
-		DELETE FROM [dbo].[nrt_d_tb_hiv_key]; 
+		--insert new items to generate key D_TB_HIV_KEY
 		INSERT INTO [dbo].[nrt_d_tb_hiv_key] (TB_PAM_UID)
 		SELECT TB_PAM_UID		
 		FROM #L_TB_HIV_BASE_NEW;
@@ -367,12 +352,8 @@ BEGIN TRY
 			DROP TABLE #D_TB_HIV_N;
 
 		SELECT 
-			S.TB_PAM_UID, 
-			L.D_TB_HIV_KEY,     
-			S.LAST_CHG_TIME, 
-			S.HIV_STATE_PATIENT_NUM, 
-			S.HIV_STATUS, 
-			S.HIV_CITY_CNTY_PATIENT_NUM
+			L.D_TB_HIV_KEY,
+			S.*
 		INTO #D_TB_HIV_N
 		FROM #S_TB_HIV S
 		INNER JOIN #L_TB_HIV_N L
@@ -401,20 +382,20 @@ BEGIN TRY
 
 		-- D_TB_HIV_N
 		INSERT INTO [dbo].D_TB_HIV (
-			TB_PAM_UID, 
 			D_TB_HIV_KEY, 
-			LAST_CHG_TIME,
+			TB_PAM_UID,
 			HIV_STATE_PATIENT_NUM, 
 			HIV_STATUS, 
-			HIV_CITY_CNTY_PATIENT_NUM
+			HIV_CITY_CNTY_PATIENT_NUM,
+			LAST_CHG_TIME
 		)
 		SELECT 
-			TB_PAM_UID, 
-			D_TB_HIV_KEY,     
-			LAST_CHG_TIME, 
+			D_TB_HIV_KEY, 
+			TB_PAM_UID, 			    
 			HIV_STATE_PATIENT_NUM, 
 			HIV_STATUS, 
-			HIV_CITY_CNTY_PATIENT_NUM
+			HIV_CITY_CNTY_PATIENT_NUM,
+			LAST_CHG_TIME
 		FROM #D_TB_HIV_N;
 		
 
@@ -423,7 +404,7 @@ BEGIN TRY
 		IF
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
-            FROM  [dbo].D_TB_HIV WITH (NOLOCK) WHERE TB_PAM_UID IN (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+            FROM #D_TB_HIV_N;
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -445,11 +426,7 @@ BEGIN TRY
 
 		SELECT 
 			E.D_TB_HIV_KEY, 
-			S.TB_PAM_UID, 
-			S.LAST_CHG_TIME, 
-			S.HIV_STATE_PATIENT_NUM, 
-			S.HIV_STATUS, 
-			S.HIV_CITY_CNTY_PATIENT_NUM
+			S.*
 		INTO #D_TB_HIV_E
 		FROM #S_TB_HIV S
 		INNER JOIN #L_TB_HIV_E E
@@ -477,24 +454,21 @@ BEGIN TRY
             @PROC_STEP_NAME = ' UPDATE EXISTING DIMENSION ENTRIES IN TABLE D_TB_HIV';
 
 		-- 10. UPADTE into D_TB_HIV
-			UPDATE [dbo].D_TB_HIV
+			UPDATE D
 			SET 
-				HIV_STATE_PATIENT_NUM = S.HIV_STATE_PATIENT_NUM,
-				HIV_STATUS = S.HIV_STATUS,
-				HIV_CITY_CNTY_PATIENT_NUM = S.HIV_CITY_CNTY_PATIENT_NUM,
-				LAST_CHG_TIME = S.LAST_CHG_TIME
-			FROM  [dbo].D_TB_HIV D WITH (NOLOCK)
-			INNER JOIN #L_TB_HIV_E L on L.D_TB_HIV_KEY = D.D_TB_HIV_KEY
-			INNER JOIN #S_TB_HIV S ON S.TB_PAM_UID = L.TB_PAM_UID;
+				D.HIV_STATE_PATIENT_NUM = S.HIV_STATE_PATIENT_NUM,
+				D.HIV_STATUS = S.HIV_STATUS,
+				D.HIV_CITY_CNTY_PATIENT_NUM = S.HIV_CITY_CNTY_PATIENT_NUM,
+				D.LAST_CHG_TIME = S.LAST_CHG_TIME
+			FROM  [dbo].D_TB_HIV D 
+			INNER JOIN #D_TB_HIV_E S ON D.D_TB_HIV_KEY = S.D_TB_HIV_KEY AND D.TB_PAM_UID = S.TB_PAM_UID;
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
 		IF
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
-            FROM  [dbo].D_TB_HIV D WITH (NOLOCK)
-			INNER JOIN #L_TB_HIV_E L 
-				ON L.TB_PAM_UID = D.TB_PAM_UID; 
+            FROM  #D_TB_HIV_E; 
 			
 
 		INSERT INTO [dbo].[job_flow_log]

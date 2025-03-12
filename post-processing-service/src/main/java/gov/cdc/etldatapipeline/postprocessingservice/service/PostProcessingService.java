@@ -301,8 +301,16 @@ public class PostProcessingService {
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
 
+        processTopic(keyTopic, D_TB_PAM, ids,
+                investigationRepository::executeStoredProcForDTBPAM);
+                
         processTopic(keyTopic, D_TB_HIV, ids,
                 investigationRepository::executeStoredProcForDTBHIV);
+
+
+        processTopic(keyTopic, D_DISEASE_SITE, ids,
+                investigationRepository::executeStoredProcForDDiseaseSite);
+
         return dmData;
     }
 
@@ -400,6 +408,11 @@ public class PostProcessingService {
                         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, BMIRD_CASE.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForBmirdCaseDatamart(cases);
                         completeLog(BMIRD_CASE.getStoredProcedure());
+
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType,
+                                BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForBmirdStrepPneumoDatamart(cases);
+                        completeLog(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure());
                         break;
                     case HEPATITIS_CASE:
                         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, HEPATITIS_CASE.getStoredProcedure(),

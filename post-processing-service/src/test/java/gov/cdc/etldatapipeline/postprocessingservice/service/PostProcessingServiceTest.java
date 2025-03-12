@@ -32,6 +32,7 @@ class PostProcessingServiceTest {
 
     @InjectMocks
     @Spy
+
     private PostProcessingService postProcessingServiceMock;
     @Mock
     private PostProcRepository postProcRepositoryMock;
@@ -146,11 +147,13 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDTBPAM(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDTBHIV(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
+        assertEquals(12, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -212,7 +215,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(12, logs.size());
+        assertEquals(14, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -494,14 +497,35 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(6).contains(invTopic));
         assertTrue(topicLogList.get(7).contains(invTopic));
         assertTrue(topicLogList.get(8).contains(invTopic));
-        assertTrue(topicLogList.get(9).contains(ntfTopic));
-        assertTrue(topicLogList.get(10).contains(treatmentTopic));
-        assertTrue(topicLogList.get(11).contains(intTopic));
+        assertTrue(topicLogList.get(9).contains(invTopic));
+        assertTrue(topicLogList.get(10).contains(ntfTopic));
+        assertTrue(topicLogList.get(11).contains(treatmentTopic));
         assertTrue(topicLogList.get(12).contains(intTopic));
-        assertTrue(topicLogList.get(13).contains(cmTopic));
+        assertTrue(topicLogList.get(13).contains(intTopic));
         assertTrue(topicLogList.get(14).contains(cmTopic));
-        assertTrue(topicLogList.get(15).contains(ldfTopic));
-        assertTrue(topicLogList.get(16).contains(obsTopic));
+        assertTrue(topicLogList.get(15).contains(cmTopic));
+        assertTrue(topicLogList.get(16).contains(ldfTopic));
+        assertTrue(topicLogList.get(17).contains(obsTopic));
+    }
+
+    @Test
+    void testPostProcessBmirdCase() {
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(5, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
+
     }
 
     @ParameterizedTest
@@ -556,13 +580,6 @@ class PostProcessingServiceTest {
                                 "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
                         CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
                         (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
-                new DatamartTestCase(
-                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
-                        BMIRD_CASE.getEntityName(),
-                        BMIRD_CASE.getStoredProcedure(),
-                        3,
-                        (repo, uid) -> verify(repo).executeStoredProcForBmirdCaseDatamart(uid)),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
@@ -765,7 +782,6 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(userProfileTopic, userProfileKey2, userProfileKey2);
 
         assertTrue(postProcessingServiceMock.idCache.containsKey(userProfileTopic));
-
         postProcessingServiceMock.processCachedIds();
         verify(postProcRepositoryMock).executeStoredProcForUserProfile("123,124");
     }

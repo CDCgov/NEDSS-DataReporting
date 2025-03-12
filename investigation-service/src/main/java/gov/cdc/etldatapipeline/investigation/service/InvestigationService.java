@@ -6,6 +6,7 @@ import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
+import gov.cdc.etldatapipeline.investigation.repository.model.reporting.TreatmentReportingKey;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,12 @@ public class InvestigationService {
     @Value("${spring.kafka.input.topic-name-vac}")
     private String vaccinationTopic;
 
+    @Value("${spring.kafka.input.topic-name-tmt}")
+    private String treatmentTopic;
+
+    @Value("${spring.kafka.output.topic-name-treatment}")
+    private String treatmentOutputTopicName;
+
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String investigationTopicReporting;
 
@@ -77,6 +84,7 @@ public class InvestigationService {
     private final InterviewRepository interviewRepository;
     private final ContactRepository contactRepository;
     private final VaccinationRepository vaccinationRepository;
+    private final TreatmentRepository treatmentRepository;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessInvestigationDataUtil processDataUtil;
@@ -132,6 +140,8 @@ public class InvestigationService {
             processContact(message);
         } else if (topic.equals(vaccinationTopic)) {
             processVaccination(message);
+        } else if (topic.equals(treatmentTopic)) {
+            processTreatment(message);
         }
         consumer.commitSync();
     }
@@ -257,6 +267,36 @@ public class InvestigationService {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             throw new RuntimeException(errorMessage("Vaccination", vaccinationUid, e), e);
+        }
+    }
+
+    private void processTreatment(String value) {
+        String treatmentUid = "";
+        try {
+            treatmentUid = extractUid(value, "treatment_uid");
+
+            logger.info(topicDebugLog, "Treatment", treatmentUid, treatmentTopic);
+            Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
+            if(treatmentData.isPresent()) {
+                Treatment treatment = treatmentData.get();
+
+                // Using Treatment directly as the reporting object
+                TreatmentReportingKey treatmentReportingKey = new TreatmentReportingKey(treatment.getTreatmentUid());
+
+                String jsonKey = jsonGenerator.generateStringJson(treatmentReportingKey);
+                String jsonValue = jsonGenerator.generateStringJson(treatment);
+
+                kafkaTemplate.send(treatmentOutputTopicName, jsonKey, jsonValue)
+                        .whenComplete((res, e) -> logger.info("Treatment data (uid={}) sent to {}",
+                                treatment.getTreatmentUid(), treatmentOutputTopicName));
+
+            } else {
+                throw new EntityNotFoundException("Unable to find treatment with id: " + treatmentUid);
+            }
+        } catch (EntityNotFoundException ex) {
+            throw new NoDataException(ex.getMessage(), ex);
+        } catch (Exception e) {
+            throw new RuntimeException(errorMessage("Treatment", treatmentUid, e), e);
         }
     }
 

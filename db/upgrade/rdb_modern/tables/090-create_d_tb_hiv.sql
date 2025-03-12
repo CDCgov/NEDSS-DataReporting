@@ -1,12 +1,12 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'D_TB_HIV' and xtype = 'U')
 
 CREATE TABLE [dbo].[D_TB_HIV](
-	[TB_PAM_UID] [bigint] NOT NULL,
 	[D_TB_HIV_KEY] [bigint] NOT NULL,
-	[LAST_CHG_TIME] [datetime] NULL,
+	[TB_PAM_UID] [bigint] NOT NULL,		
 	[HIV_STATE_PATIENT_NUM] [varchar](50) NULL,
 	[HIV_STATUS] [varchar](50) NULL,
 	[HIV_CITY_CNTY_PATIENT_NUM] [varchar](50) NULL,
+	[LAST_CHG_TIME] [datetime] NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[D_TB_HIV_KEY] ASC
