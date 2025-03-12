@@ -152,7 +152,7 @@ BEGIN TRY
 		FROM #S_TB_PAM_CODED TB
 		LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
 			ON CVG.CODE_SET_NM = TB.CODE_SET_NM
-			AND CVG.CODE = TB.ANSWER_TXT
+			AND CVG.CODE = TB.ANSWER_TXT;
 	
 		SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -174,7 +174,6 @@ BEGIN TRY
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = ' TRANSFORM DATA';
-
 
 		/* First S_TB_PAM_SET_CVG Transformation (Originally a DATA step) */
 		IF OBJECT_ID('tempdb..#S_TB_PAM_SET_CVG_TEMP') IS NOT NULL
@@ -273,7 +272,6 @@ BEGIN TRY
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = ' PIVOT TO CREATE STAGING S_TB_PAM';
-
 
 
 		-- Step 1: Pivot S_TB_PAM_SET_CVG to S_TB_PAM1 (Replaces PROC TRANSPOSE)
@@ -1257,7 +1255,7 @@ BEGIN TRY
 		IF
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
-            FROM  [dbo].D_TB_PAM WHERE TB_PAM_UID IN (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+            FROM #D_TB_PAM_N;
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1477,16 +1475,12 @@ BEGIN TRY
 		FROM [dbo].D_TB_PAM D
 		INNER JOIN #D_TB_PAM_E S ON D.D_TB_PAM_KEY = S.D_TB_PAM_KEY  AND D.TB_PAM_UID = S.TB_PAM_UID
 
-
 		SELECT @RowCount_no = @@ROWCOUNT;
 
 		IF
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
-            FROM [dbo].D_TB_PAM D WITH (NOLOCK)
-			INNER JOIN #D_TB_PAM_E E 
-				ON E.TB_PAM_UID = D.TB_PAM_UID
-				AND E.D_TB_PAM_KEY = D.D_TB_PAM_KEY; 
+            FROM #D_TB_PAM_E; 
 			
 
 		INSERT INTO [dbo].[job_flow_log]
