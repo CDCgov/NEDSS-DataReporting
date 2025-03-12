@@ -247,7 +247,7 @@ BEGIN
                      case
                          when (phc.hospitalized_ind_cd is not null or phc.hospitalized_ind_cd != '') then (select *
                                                                                                            from dbo.fn_get_value_by_cd_codeset(phc.hospitalized_ind_cd, 'INV128'))
-                         end as                   hospitalized_ind,
+                         end as      hospitalized_ind,
                      phc.transmission_mode_cd,
                      case
                          when (phc.transmission_mode_cd is not null or phc.transmission_mode_cd != '') then (select *
@@ -378,12 +378,9 @@ BEGIN
                                                         act1.target_class_cd as root_source_class_cd,
                                                         act1.source_class_cd as branch_source_class_cd,
                                                         act1.type_cd         as branch_type_cd
-                                                 FROM dbo.act_id WITH (NOLOCK)
-                                                          join dbo.act_relationship act WITH (NOLOCK)
-                                                               on act_id.act_uid = act.target_act_uid
+                                                 FROM dbo.act_relationship act WITH (NOLOCK)
                                                           left join dbo.act_relationship act1 WITH (NOLOCK)
                                                                     on act.source_act_uid = act1.target_act_uid
-
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
                                         -- act_ids associated with public health case
@@ -438,7 +435,10 @@ BEGIN
                                                         question_group_seq_nbr,
                                                         data_type,
                                                         part_type_cd,
-                                                        last_chg_time
+                                                        last_chg_time,
+                                                        datamart_column_nm,
+                                                        seq_nbr,
+                                                        ldf_status_cd
                                                  FROM (SELECT *,
                                                               ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt
                                                                   order by
@@ -467,7 +467,11 @@ BEGIN
                                                                              nuim.mask,
                                                                              nuim.question_group_seq_nbr,
                                                                              nuim.data_type,
-                                                                             nuim.part_type_cd
+                                                                             nuim.part_type_cd,
+                                                                             --NEW COLUMNS
+                                                                            null as datamart_column_nm,
+                                                                            pa.seq_nbr,
+                                                                            nuim.ldf_status_cd
                                                              from nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
                                                                       inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
                                                                                  on
@@ -488,7 +492,50 @@ BEGIN
                                                                and nuim.investigation_form_cd = cc.investigation_form_cd
                                                                and pa.act_uid = phc.public_health_case_uid
                                                                 --and pa.last_chg_time>=phc.last_chg_time
-                                                            ) as answer_table) as answer_table
+                                                             union
+                                                                 SELECT distinct
+                                                                        pa.nbs_case_answer_uid,
+                                                                        pa.act_uid,
+                                                                        pa.record_status_cd,
+                                                                        pa.last_chg_time,
+                                                                        pa.answer_txt,
+                                                                        pa.answer_group_seq_nbr,
+                                                                        nuim.nbs_ui_metadata_uid,
+                                                                        nuim.code_set_group_id,
+                                                                        nuim.nbs_question_uid,
+                                                                        nuim.investigation_form_cd,
+                                                                        nuim.unit_value,
+                                                                        nuim.question_identifier,
+                                                                        nuim.data_location,
+                                                                        nuim.block_nm,
+                                                                        null as nbs_rdb_metadata_uid,
+                                                                        null as rdb_table_nm,
+                                                                        null as rdb_column_nm,
+                                                                        nuim.question_label,
+                                                                        nuim.other_value_ind_cd,
+                                                                        nuim.unit_type_cd,
+                                                                        nuim.mask,
+                                                                        nuim.question_group_seq_nbr,
+                                                                        nuim.data_type,
+                                                                        nuim.part_type_cd,
+                                                                        --NEW COLUMNS
+                                                                        pq.datamart_column_nm,
+                                                                        pa.seq_nbr,
+                                                                        nuim.ldf_status_cd
+                                                                from nbs_odse.dbo.nbs_question pq with (nolock)
+                                                                    join nbs_odse.dbo.nbs_case_answer pa with (nolock)
+                                                                        on pq.nbs_question_uid = pa.nbs_question_uid
+                                                                    left join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
+                                                                        on
+                                                                        pq.nbs_question_uid = nuim.nbs_question_uid
+                                                                    inner join nbs_srte.dbo.condition_code cc with (nolock)
+                                                                        on
+                                                                        cc.condition_cd = phc.cd
+                                                            where pq.datamart_column_nm is not null 
+                                                            and nuim.investigation_form_cd = cc.investigation_form_cd
+                                                            and nuim.investigation_form_cd = 'INV_FORM_RVCT'
+                                                            and pa.act_uid = phc.public_health_case_uid
+                                                    ) as answer_table) as answer_table
                                                  where rowid = 1
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_case_answer) AS investigation_case_answer,
                                         -- get associated case management
@@ -508,7 +555,7 @@ BEGIN
                                                         (select *
                                                          from fn_get_value_by_cvg(init_foll_up_notifiable, 'NOTIFIABLE'))              as init_foll_up_notifiable,
                                                         init_foll_up_clinic_code                                                       as init_fup_clinic_code,
-                                                        surv_assigned_date                                                             as surv_investigator_assgn_dt,
+                                                        surv_assigned_date                              as surv_investigator_assgn_dt,
                                                         surv_closed_date                                                               as surv_closed_dt,
                                                         surv_provider_contact                           as surv_provider_contact_cd,
                                                         (select *
@@ -523,7 +570,7 @@ BEGIN
                                                                                   'SURVEILLANCE_PATIENT_FOLLOWUP'))                    as surv_patient_foll_up_cd,
                                                         status_900                                                                     as adi_900_status_cd,
                                                         (select * from fn_get_value_by_cvg(status_900, 'STATUS_900'))                  as status_900,
-                                                        ehars_id                                                                       as adi_ehars_id,
+                                                        ehars_id           as adi_ehars_id,
                                                         subj_height                                                                    as adi_height,
                                                         subj_height                                                                    as adi_height_legacy_case,
                                                         subj_size_build                                                                as adi_size_build,
@@ -573,7 +620,7 @@ BEGIN
                                                         pat_intv_status_cd,
                                                         (select *
                                                          from fn_get_value_by_cvg(pat_intv_status_cd, 'PAT_INTVW_STATUS'))             as ca_patient_intv_status,
-                                                        case_closed_date                                                               as cc_closed_dt,
+                                                        case_closed_date                                 as cc_closed_dt,
                                                         (select *
                                                          from fn_get_value_by_cvg(initiating_agncy, 'OOJ_AGENCY_LOCAL'))               as initiating_agncy,
                                                         ooj_initg_agncy_recd_date,
@@ -629,11 +676,11 @@ BEGIN
                                                  FROM act_relationship act WITH (NOLOCK)
                                                           join notification notif WITH (NOLOCK)
                                                                on act.source_act_uid = notif.notification_uid
-                                                          join nbs_odse.dbo.participation part with (nolock)
-                                                               ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
-                                                          join nbs_odse.dbo.person per with (nolock)
-                                                               ON per.cd = 'PAT' AND per.person_uid = part.subject_entity_uid
-                                                          join nbs_odse.dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
+                                                          left join nbs_odse.dbo.participation part with (nolock)
+                                                                    ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
+                                                          left join nbs_odse.dbo.person per with (nolock)
+                                                                    ON per.cd = 'PAT' AND per.person_uid = part.subject_entity_uid
+                                                          left join nbs_odse.dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                    AND notif.cd not in
                                                        ('EXP_NOTF', 'SHARE_NOTF', 'EXP_NOTF_PHDC', 'SHARE_NOTF_PHDC')
@@ -714,7 +761,7 @@ BEGIN
                               MAX(CASE WHEN type_cd = 'ClosureInvestgrOfPHC' THEN entity_uid END)       closure_investgr_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'DispoFldFupInvestgrOfPHC' THEN entity_uid END)   dispo_fld_fupinvestgr_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'FldFupInvestgrOfPHC' THEN entity_uid END)        fld_fup_investgr_of_phc_uid,
-                              MAX(CASE WHEN type_cd = 'FldFupProvOfPHC' THEN entity_uid END)            fld_fup_prov_of_phc_uid,
+                              MAX(CASE WHEN type_cd = 'FldFupProvOfPHC' THEN entity_uid END)      fld_fup_prov_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'FldFupSupervisorOfPHC' THEN entity_uid END)      fld_fup_supervisor_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'InitFldFupInvestgrOfPHC' THEN entity_uid END)    init_fld_fup_investgr_of_phc_uid,
                               MAX(CASE WHEN type_cd = 'InitFupInvestgrOfPHC' THEN entity_uid END)       init_fup_investgr_of_phc_uid,

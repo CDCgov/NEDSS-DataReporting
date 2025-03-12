@@ -13,7 +13,7 @@ public class PageCaseAnswer {
     private @NonNull Long actUid;
     private @NonNull Long nbsCaseAnswerUid;
     private @NonNull Long nbsUiMetadataUid;
-    private @NonNull Long nbsRdbMetadataUid;
+    private Long nbsRdbMetadataUid;
     private @NonNull Long nbsQuestionUid;
 
     private String rdbTableNm;
@@ -31,9 +31,12 @@ public class PageCaseAnswer {
     private String dataType;
     private String questionGroupSeqNbr;
     private Long codeSetGroupId;
-    private String blockNm;
+    private String blockNm;  
     private String lastChgTime;
     private String recordStatusCd;
     private String partTypeCd;
     private Long batchId;
+    private String datamartColumnNm;
+    private Long seqNbr; 
+    private String ldfStatusCd;
 }
