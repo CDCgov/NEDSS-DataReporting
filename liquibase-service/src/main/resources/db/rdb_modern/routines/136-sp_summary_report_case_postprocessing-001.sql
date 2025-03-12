@@ -9,7 +9,7 @@ BEGIN
         DECLARE @Proc_Step_no FLOAT = 0;
         DECLARE @Proc_Step_Name VARCHAR(200) = '';
         DECLARE @batch_id bigint;
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
         DECLARE @Dataflow_Name VARCHAR(200) = 'SUMMARY_REPORT_CASE Post-Processing Event';
         DECLARE @Package_Name VARCHAR(200) = 'sp_summary_report_case_postprocessing';
 
@@ -20,12 +20,13 @@ BEGIN
         SELECT @ROWCOUNT_NO = 0;
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT],[Msg_Description1])
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT(@id_list, 500));
 
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'Generating #tmp_SumRptWork';
+
         ;
         WITH SumRptWork AS (SELECT nio.public_health_case_uid
                                  , nio.observation_id
@@ -35,9 +36,9 @@ BEGIN
                                  , ni.cd as condition_cd
                                  , no2.cd
                                  , no2.batch_id --For obs child table validation. Not needed for numeric.
-                                 , ni.jurisdiction_cd
-                                 , ni.jurisdiction_nm
-                                 , ni.imported_state_cd
+                                 , ni.rpt_cnty_cd
+                                 , sccv.parent_is_cd as state_cd
+                                 , sccv.code_desc_txt as county_name
                                  , ni.last_chg_time
                             FROM dbo.nrt_investigation ni
                                      INNER JOIN dbo.nrt_investigation_observation nio with (nolock)
@@ -45,11 +46,15 @@ BEGIN
                                                     AND isnull(ni.batch_id, 1) = isnull(nio.batch_id, 1)
                                      LEFT JOIN dbo.nrt_observation no2 with (nolock)
                                                ON no2.observation_uid = nio.branch_id
-                            WHERE ni.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','))),
+                                     LEFT JOIN dbo.nrt_srte_state_county_code_value sccv WITH (NOLOCK)
+                                               ON ni.rpt_cnty_cd = sccv.code
+                            WHERE ni.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','))
+                              AND nio.root_type_cd IN ('SummaryForm','SummaryNotification')
+        ),
              compileSumRptWork AS (SELECT sr.public_health_case_uid,
-                                          sr.jurisdiction_cd,
-                                          sr.jurisdiction_nm,
-                                          sr.imported_state_cd,
+                                          sr.rpt_cnty_cd,
+                                          sr.county_name,
+                                          sr.state_cd,
                                           sr.condition_cd,
                                           sr.last_chg_time,
                                           isnull(ROUND(ovn_numeric_value_1, 0), 0)                        AS SUM_RPT_CASE_COUNT,
@@ -73,9 +78,9 @@ BEGIN
                                                           AND sr.cd = 'SUM103')
         SELECT public_health_case_uid,
                max(last_chg_time)         AS LAST_CHG_TIME,
-               max(jurisdiction_cd)       AS COUNTY_CD,
-               max(jurisdiction_nm)       AS COUNTY_NAME,
-               max(imported_state_cd)     AS STATE_CD,
+               max(rpt_cnty_cd)       AS COUNTY_CD,
+               max(county_name)       AS COUNTY_NAME,
+               max(state_cd)     AS STATE_CD,
                max(SUM_RPT_CASE_COUNT)    AS SUM_RPT_CASE_COUNT,
                max(SUM_RPT_CASE_COMMENTS) AS SUM_RPT_CASE_COMMENTS,
                max(SUM_RPT_CASE_STATUS)   AS SUM_RPT_CASE_STATUS,
@@ -130,14 +135,15 @@ BEGIN
                tmp.SUM_RPT_CASE_COUNT,
                tmp.SUM_RPT_CASE_COMMENTS,
                tmp.SUM_RPT_CASE_STATUS,
-               dt1.DATE_KEY                         AS NOTIFICATION_SEND_DT_KEY,
+               ISNULL(dt1.DATE_KEY,1)          AS NOTIFICATION_SEND_DT_KEY,
                tmp.COUNTY_CD,
                tmp.COUNTY_NAME,
                tmp.STATE_CD,
                c.CONDITION_KEY                      AS CONDITION_KEY,
                1                                    AS LDF_GROUP_KEY,
                dt2.DATE_KEY                         AS LAST_UPDATE_DT_KEY,
-               ISNULL(skey.SUMMARY_CASE_SRC_KEY, 1) AS SUMMARY_CASE_SRC_KEY
+               ISNULL(skey.SUMMARY_CASE_SRC_KEY, 1) AS SUMMARY_CASE_SRC_KEY,
+               tmp.SUMMARY_CASE_SRC_TXT
         into #temp_SUMMARY_REPORT_CASE
         FROM #tmp_SumRptWork tmp
                  INNER JOIN dbo.INVESTIGATION i with (nolock) ON i.case_uid = tmp.public_health_case_uid
@@ -154,6 +160,48 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
         COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'UPDATE dbo.SUMMARY_CASE_GROUP';
+
+
+        UPDATE dbo.SUMMARY_CASE_GROUP
+        SET SUMMARY_CASE_SRC_TXT= tmp.SUMMARY_CASE_SRC_TXT
+        FROM #temp_SUMMARY_REPORT_CASE tmp
+                 INNER JOIN dbo.SUMMARY_CASE_GROUP scg
+                            ON scg.SUMMARY_CASE_SRC_KEY = tmp.SUMMARY_CASE_SRC_KEY
+        WHERE tmp.SUMMARY_CASE_SRC_KEY IS NOT NULL;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'INSERT INTO dbo.SUMMARY_CASE_GROUP';
+
+
+        INSERT INTO dbo.SUMMARY_CASE_GROUP
+        (SUMMARY_CASE_SRC_KEY, SUMMARY_CASE_SRC_TXT)
+        SELECT tmp.SUMMARY_CASE_SRC_TXT,
+               tmp.SUMMARY_CASE_SRC_KEY
+        FROM #temp_SUMMARY_REPORT_CASE tmp
+                 LEFT JOIN dbo.SUMMARY_CASE_GROUP scg on scg.SUMMARY_CASE_SRC_KEY = tmp.SUMMARY_CASE_SRC_KEY
+        WHERE tmp.SUMMARY_CASE_SRC_KEY <> 1
+          AND scg.SUMMARY_CASE_SRC_KEY IS NULL
+        ORDER BY tmp.SUMMARY_CASE_SRC_KEY;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        COMMIT TRANSACTION;
+
 
         BEGIN TRANSACTION;
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -225,47 +273,6 @@ BEGIN
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
         COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'UPDATE dbo.SUMMARY_CASE_GROUP';
-
-
-        UPDATE dbo.SUMMARY_CASE_GROUP
-        SET SUMMARY_CASE_SRC_TXT= tmp.SUMMARY_CASE_SRC_TXT
-        FROM #temp_SUMMARY_REPORT_CASE tmp
-                 INNER JOIN dbo.SUMMARY_CASE_GROUP scg
-                            ON scg.SUMMARY_CASE_SRC_KEY = tmp.SUMMARY_CASE_SRC_KEY
-        WHERE tmp.SUMMARY_CASE_SRC_KEY IS NOT NULL;
-
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'INSERT INTO dbo.SUMMARY_CASE_GROUP';
-
-
-        INSERT INTO dbo.SUMMARY_CASE_GROUP
-        (SUMMARY_CASE_SRC_KEY, SUMMARY_CASE_SRC_TXT)
-        SELECT tmp.SUMMARY_CASE_SRC_TXT,
-               tmp.SUMMARY_CASE_SRC_KEY
-        FROM #temp_SUMMARY_REPORT_CASE tmp
-                 LEFT JOIN dbo.SUMMARY_CASE_GROUP scg on scg.SUMMARY_CASE_SRC_KEY = tmp.SUMMARY_CASE_SRC_KEY
-        WHERE tmp.SUMMARY_CASE_SRC_KEY <> 1
-          AND scg.SUMMARY_CASE_SRC_KEY IS NULL
-        ORDER BY tmp.SUMMARY_CASE_SRC_KEY;
-
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-        COMMIT TRANSACTION;
-
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
@@ -323,4 +330,3 @@ BEGIN
 
     END CATCH
 END;
-
