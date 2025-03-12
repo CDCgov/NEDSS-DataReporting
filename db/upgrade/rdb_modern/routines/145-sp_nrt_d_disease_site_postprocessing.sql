@@ -10,8 +10,6 @@ BEGIN
             declare @proc_step_no float = 0;
             declare @proc_step_name varchar(200) = '';
             declare @batch_id bigint;
-            declare @create_dttm datetime2(7) = current_timestamp ;
-            declare @update_dttm datetime2(7) = current_timestamp ;
             declare @dataflow_name varchar(200) = 'DISEASE_SITE POST-Processing';
             declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_disease_site_postprocessing';
 
@@ -19,14 +17,10 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = 0;
 
-        BEGIN TRANSACTION
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @dataflow_name, @package_name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Msg_Description1])
+        VALUES (@BATCH_ID, @dataflow_name, @package_name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT (@phc_uids, 199));
                 
-        COMMIT TRANSACTION;
-
 --------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
@@ -119,46 +113,6 @@ BEGIN
         COMMIT TRANSACTION;
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'Delete old keys from nrt_disease_site_group_key';
-
-        DELETE FROM DBO.NRT_DISEASE_SITE_GROUP_KEY;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
-        
-        COMMIT TRANSACTION;
-
-
--------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'Delete old keys from nrt_disease_site_key ';
-
-        DELETE FROM DBO.NRT_DISEASE_SITE_KEY;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
-        
-        COMMIT TRANSACTION;
-
--------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
 
@@ -168,7 +122,10 @@ BEGIN
             @PROC_STEP_NAME = 'Insert keys to nrt_disease_site_group_key ';
 
         INSERT INTO  DBO.NRT_DISEASE_SITE_GROUP_KEY(TB_PAM_UID) 
-        SELECT DISTINCT TB_PAM_UID FROM #S_DISEASE_SITE;
+        SELECT DISEASE_SITE.TB_PAM_UID FROM (SELECT DISTINCT TB_PAM_UID FROM #S_DISEASE_SITE) DISEASE_SITE
+        LEFT JOIN DBO.NRT_DISEASE_SITE_GROUP_KEY DISEASE_SITE_GROUP_KEY  with (nolock)
+            ON DISEASE_SITE_GROUP_KEY.TB_PAM_UID = DISEASE_SITE.TB_PAM_UID
+        where DISEASE_SITE_GROUP_KEY.TB_PAM_UID is null;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -189,7 +146,11 @@ BEGIN
             @PROC_STEP_NAME = 'Insert keys to dbo.nrt_disease_site_key';
 
         INSERT INTO  DBO.NRT_DISEASE_SITE_KEY(TB_PAM_UID, NBS_CASE_ANSWER_UID) 
-        SELECT DISTINCT TB_PAM_UID, NBS_CASE_ANSWER_UID FROM #S_DISEASE_SITE;
+        SELECT DISEASE_SITE.TB_PAM_UID, DISEASE_SITE.NBS_CASE_ANSWER_UID FROM (SELECT DISTINCT TB_PAM_UID, NBS_CASE_ANSWER_UID FROM #S_DISEASE_SITE) DISEASE_SITE
+        LEFT JOIN DBO.NRT_DISEASE_SITE_KEY DISEASE_SITE_KEY  with (nolock)
+            ON DISEASE_SITE_KEY.TB_PAM_UID = DISEASE_SITE.TB_PAM_UID
+        where DISEASE_SITE_KEY.TB_PAM_UID is null;
+        
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -379,11 +340,12 @@ BEGIN
         SET 
         TB_PAM_UID = T.TB_PAM_UID,
         SEQ_NBR = T.SEQ_NBR,
-        LAST_CHG_TIME = T.SEQ_NBR,
-        VALUE = T.SEQ_NBR
+        LAST_CHG_TIME = T.LAST_CHG_TIME,
+        VALUE = T.VALUE
         FROM #TEMP_D_DISEASE_SITE T  with (nolock)
         INNER JOIN DBO.D_DISEASE_SITE D_DISEASE_SITE with (nolock)
             ON 	D_DISEASE_SITE.TB_PAM_UID= T.TB_PAM_UID
+            and D_DISEASE_SITE.D_DISEASE_SITE_KEY = T.D_DISEASE_SITE_KEY
         WHERE D_DISEASE_SITE.D_DISEASE_SITE_KEY IS NOT NULL;
 
          SELECT @RowCount_no = @@ROWCOUNT;
@@ -421,6 +383,7 @@ BEGIN
             FROM #TEMP_D_DISEASE_SITE T  with (nolock)
             LEFT JOIN DBO.D_DISEASE_SITE D_DISEASE_SITE with (nolock)
             ON 	D_DISEASE_SITE.TB_PAM_UID= T.TB_PAM_UID
+            and D_DISEASE_SITE.D_DISEASE_SITE_KEY = T.D_DISEASE_SITE_KEY
             WHERE D_DISEASE_SITE.TB_PAM_UID IS NULL;
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -433,8 +396,6 @@ BEGIN
         COMMIT TRANSACTION;          
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
-
         SET @Proc_Step_no = 999;
 
         SET @Proc_Step_Name = 'SP_COMPLETE';
@@ -443,8 +404,6 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'COMPLETE', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
-
-        COMMIT TRANSACTION;
     
 -------------------------------------------------------------------------------------------
     END TRY
@@ -456,11 +415,12 @@ BEGIN
                 ROLLBACK TRANSACTION;
             END;
 
-        DECLARE @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE @ErrorLine INT = ERROR_LINE();
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+		'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+		'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+		'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+		'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+		'Error Message: ' + ERROR_MESSAGE();
 
 
         INSERT INTO dbo.[job_flow_log] (
@@ -479,8 +439,8 @@ BEGIN
             ,@package_name
             ,'ERROR'
             ,@Proc_Step_no
-            ,'ERROR - '+ @Proc_Step_name
-            , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
+            , @Proc_Step_name
+            , @FullErrorMessage
             ,0
 		);
 
@@ -491,13 +451,3 @@ BEGIN
 END;
 
 ---------------------------------------------------END OF PROCEDURE---------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-

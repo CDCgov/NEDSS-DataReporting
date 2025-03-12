@@ -1161,28 +1161,7 @@ databaseChangeLog:
             path: 047-sp_nrt_treatment_postprocessing-001.sql
             splitStatements: false
 
-
-  - changeSet:
-      id: 185
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 065-create_nrt_disease_site_group_key-001.sql
-            splitStatements: false
-
-
-  - changeSet:
-      id: 190
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 070-create_nrt_disease_site_key-001.sql
-            splitStatements: false
-
-
-  - changeSet:
+    - changeSet:
       id: 195
       author: liquibase
       runOnChange: true
@@ -1204,6 +1183,25 @@ databaseChangeLog:
 
   - changeSet:
       id: 205
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 065-create_nrt_disease_site_group_key-001.sql
+            splitStatements: false
+
+
+  - changeSet:
+      id: 210
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 070-create_nrt_disease_site_key-001.sql
+            splitStatements: false
+
+  - changeSet:
+      id: 215
       author: liquibase
       runOnChange: true
       changes:

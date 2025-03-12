@@ -8,7 +8,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_disease_site_key' and 
         );
 
         declare @max bigint;
-        select @max=max(D_DISEASE_SITE_KEY)+1 from dbo.nrt_disease_site_key ;
+        select @max=max(D_DISEASE_SITE_KEY)+1 from dbo.d_disease_site ;
         select @max;
         if @max IS NULL   --check when max is returned as null
             SET @max = 2; -- default to 2
