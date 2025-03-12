@@ -102,7 +102,6 @@ public class PostProcessingService {
             "${spring.kafka.topic.case_management}",
             "${spring.kafka.topic.interview}",
             "${spring.kafka.topic.ldf_data}",
-            "${spring.kafka.topic.summary_report_case}",
             "${spring.kafka.topic.observation}",
             "${spring.kafka.topic.place}",
             "${spring.kafka.topic.auth_user}",
@@ -268,9 +267,6 @@ public class PostProcessingService {
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
                         break;
-                    case SUMMARY_REPORT_CASE:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForSummaryReportCase);
-                        break;
                     case OBSERVATION:
                         dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);
                         observationUids = ids;
@@ -307,6 +303,9 @@ public class PostProcessingService {
 
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
+
+        processTopic(keyTopic, SUMMARY_REPORT_CASE, ids,
+                investigationRepository::executeStoredProcForSummaryReportCase);
         return dmData;
     }
 
