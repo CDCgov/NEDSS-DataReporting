@@ -137,6 +137,10 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        boolean diseaseSiteEnable = true;
+
+        // DISEASE SITE ENABLED
+        postProcessingServiceMock.setDiseaseSiteEnable(diseaseSiteEnable);
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -144,11 +148,16 @@ class PostProcessingServiceTest {
         String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
+
+        if(diseaseSiteEnable)
+            verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
+        
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
+
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(8, logs.size());
+        assertEquals(10, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -994,3 +1003,4 @@ class PostProcessingServiceTest {
         }
     }
 }
+// TODO
