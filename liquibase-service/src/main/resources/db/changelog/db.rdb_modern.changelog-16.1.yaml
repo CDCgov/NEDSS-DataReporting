@@ -1176,3 +1176,43 @@ databaseChangeLog:
         - sqlFile:
             path: 140-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 195
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 075-create_d_disease_site_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 200
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 080-create_d_disease_site-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 205
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 065-create_nrt_disease_site_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 210
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 070-create_nrt_disease_site_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 215
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 145-sp_nrt_d_disease_site_postprocessing-001.sql
+            splitStatements: false
