@@ -19,10 +19,11 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = 0;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT],
+         [Msg_Description1])
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO,
+                LEFT(@id_list, 500));
 
-        BEGIN TRANSACTION;
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #temp_sr100';
 
@@ -37,13 +38,13 @@ BEGIN
                sccv.code_desc_txt        AS COUNTY_NAME,
                SRC.state_CD              AS STATE_CD,
                CASE
-                   WHEN LTRIM(RTRIM(scg.SUMMARY_CASE_SRC_TXT)) = '' THEN 'N/A'
+                   WHEN LTRIM(RTRIM(scg.SUMMARY_CASE_SRC_TXT)) = '' OR scg.SUMMARY_CASE_SRC_TXT IS NULL THEN 'N/A'
                    WHEN LEN(LTRIM(RTRIM(scg.SUMMARY_CASE_SRC_TXT))) > 1 THEN scg.SUMMARY_CASE_SRC_TXT
-                   ELSE NULL END         AS RPT_SOURCE,
+                   END         AS RPT_SOURCE,
                CASE
-                   WHEN LTRIM(RTRIM(cvg.code_desc)) = '' THEN 'N/A'
+                   WHEN LTRIM(RTRIM(cvg.code_desc)) = '' OR cvg.code_desc IS NULL THEN 'No Source Selected'
                    WHEN LEN(LTRIM(RTRIM(cvg.code_desc))) > 1 THEN cvg.code_desc
-                   ELSE NULL END         AS RPT_SOURCE_DESC,
+                   END         AS RPT_SOURCE_DESC,
                rd1.DATE_MM_DD_YYYY       AS DATE_REPORTED,
                rd1.CLNDR_MON_NAME        AS MONTH_REPORTED,
                rd.DATE_MM_DD_YYYY        AS NOTIF_CREATE_DATE,
@@ -54,19 +55,19 @@ BEGIN
                em.ADD_USER_NAME          AS ADD_USER_NAME
         INTO #temp_sr100
         FROM dbo.SUMMARY_REPORT_CASE SRC with (nolock)
-                 JOIN dbo.INVESTIGATION I with (nolock)
-                      ON src.investigatiON_key = I.investigatiON_key
+                 INNER JOIN dbo.INVESTIGATION I with (nolock)
+                            ON src.INVESTIGATION_KEY = I.INVESTIGATION_KEY
                  LEFT OUTER JOIN dbo.SUMMARY_CASE_GROUP SCG with (nolock)
                                  ON src.summary_case_src_key = scg.summary_case_src_key
-                 LEFT OUTER JOIN dbo.CODE_VAL_GENERAL CVG
+                 LEFT OUTER JOIN dbo.v_code_value_general CVG
                                  ON scg.SUMMARY_CASE_SRC_TXT = cvg.code_val
                                      and cvg.cd = 'SUM103'
                  LEFT OUTER JOIN dbo.RDB_DATE RD with (nolock)
                                  ON rd.date_key = src.NOTIFICATION_SEND_DT_KEY
                  LEFT OUTER JOIN dbo.RDB_DATE RD1 with (nolock)
                                  ON rd1.DATE_MM_DD_YYYY = I.EARLIEST_RPT_TO_STATE_DT
-                 JOIN dbo.CONDITION c with (nolock)
-                      ON c.CONDITION_KEY = src.CONDITION_KEY
+                 INNER JOIN dbo.v_condition_dim c with (nolock)
+                            ON c.CONDITION_KEY = src.CONDITION_KEY
                  LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
                                  ON cc.INVESTIGATION_KEY = I.INVESTIGATION_KEY
                  JOIN nbs_srte.dbo.state_county_code_value sccv
@@ -84,11 +85,11 @@ BEGIN
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
-        COMMIT TRANSACTION;
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'Update SR100';
+
 
         UPDATE dbo.SR100
         SET LOCAL_ID           = t.LOCAL_ID,
@@ -120,11 +121,12 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-
         COMMIT TRANSACTION;
+
         BEGIN TRANSACTION;
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'Insert into SR100';
+
 
         INSERT INTO dbo.SR100
         (LOCAL_ID,
