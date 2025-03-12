@@ -806,8 +806,7 @@ BEGIN TRY
 		SELECT TB_PAM_UID  
 		FROM [dbo].D_TB_PAM WITH (NOLOCK);
 
-		-- delete from key table and insert new elements to get all new D_TB_PAM_KEY for new elements
-		DELETE FROM [dbo].[nrt_d_tb_pam_key]; 
+		--insert new items to generate key D_TB_PAM_KEY
 		INSERT INTO [dbo].[nrt_d_tb_pam_key] (TB_PAM_UID)
 		SELECT TB_PAM_UID
 		FROM #L_TB_PAM_BASE_NEW;
@@ -816,7 +815,7 @@ BEGIN TRY
 		ADD D_TB_PAM_KEY INT;
 
 		UPDATE #L_TB_PAM_BASE_NEW 
-		SET D_TB_PAM_KEY = K.D_TB_PAM_key
+		SET D_TB_PAM_KEY = K.D_TB_PAM_KEY
 		FROM #L_TB_PAM_BASE_NEW N
 		INNER JOIN [dbo].[nrt_d_tb_pam_key] K
 		ON K.TB_PAM_UID = N.TB_PAM_UID;
