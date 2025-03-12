@@ -77,6 +77,9 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
+    @Value("${featureFlag.disease-site-enable}")
+    private boolean diseaseSiteEnable;
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
             autoCreateTopics = "false",
@@ -303,6 +306,11 @@ public class PostProcessingService {
 
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
+
+        if(diseaseSiteEnable){
+            processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
+        }
+        
         return dmData;
     }
 
@@ -394,6 +402,10 @@ public class PostProcessingService {
                         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, BMIRD_CASE.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForBmirdCaseDatamart(cases);
                         completeLog(BMIRD_CASE.getStoredProcedure());
+
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForBmirdStrepPneumoDatamart(cases);
+                        completeLog(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure());
                         break;
                     case HEPATITIS_CASE:
                         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, HEPATITIS_CASE.getStoredProcedure(), cases);
