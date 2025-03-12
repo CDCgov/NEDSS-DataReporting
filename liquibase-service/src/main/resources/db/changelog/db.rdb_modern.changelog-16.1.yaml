@@ -1188,7 +1188,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 075-create_d_disease_site_group.sql
+            path: 075-create_d_disease_site_group-001.sql
             splitStatements: false
 
 
@@ -1198,7 +1198,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 080-create_d_disease_site.sql
+            path: 080-create_d_disease_site-001.sql
             splitStatements: false
 
 
@@ -1208,5 +1208,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 145-sp_nrt_d_disease_site_postprocessing.sql
+            path: 145-sp_nrt_d_disease_site_postprocessing-001.sql
             splitStatements: false
