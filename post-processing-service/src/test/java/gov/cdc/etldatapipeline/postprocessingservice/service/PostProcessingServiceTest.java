@@ -139,10 +139,6 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        boolean diseaseSiteEnable = true;
-
-        // DISEASE SITE ENABLED
-        postProcessingServiceMock.setDiseaseSiteEnable(diseaseSiteEnable);
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -152,8 +148,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDTBPAM(expectedPublicHealthCaseIdsString);
-        if (diseaseSiteEnable)
-            verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
@@ -219,7 +214,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(12, logs.size());
+        assertEquals(14, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -501,14 +496,15 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(6).contains(invTopic));
         assertTrue(topicLogList.get(7).contains(invTopic));
         assertTrue(topicLogList.get(8).contains(invTopic));
-        assertTrue(topicLogList.get(9).contains(ntfTopic));
-        assertTrue(topicLogList.get(10).contains(treatmentTopic));
-        assertTrue(topicLogList.get(11).contains(intTopic));
+        assertTrue(topicLogList.get(9).contains(invTopic));
+        assertTrue(topicLogList.get(10).contains(ntfTopic));
+        assertTrue(topicLogList.get(11).contains(treatmentTopic));
         assertTrue(topicLogList.get(12).contains(intTopic));
-        assertTrue(topicLogList.get(13).contains(cmTopic));
+        assertTrue(topicLogList.get(13).contains(intTopic));
         assertTrue(topicLogList.get(14).contains(cmTopic));
-        assertTrue(topicLogList.get(15).contains(ldfTopic));
-        assertTrue(topicLogList.get(16).contains(obsTopic));
+        assertTrue(topicLogList.get(15).contains(cmTopic));
+        assertTrue(topicLogList.get(16).contains(ldfTopic));
+        assertTrue(topicLogList.get(17).contains(obsTopic));
     }
 
     @Test
