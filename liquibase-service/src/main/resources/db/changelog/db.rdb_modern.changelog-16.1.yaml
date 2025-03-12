@@ -1176,3 +1176,19 @@ databaseChangeLog:
         - sqlFile:
             path: 140-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 195
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 062-create_morbidity_report_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 200
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 145-sp_morbidity_report_datamart_postprocessing-001.sql
+            splitStatements: false
