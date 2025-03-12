@@ -1160,3 +1160,19 @@ databaseChangeLog:
         - sqlFile:
             path: 047-sp_nrt_treatment_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 185
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 061-create_nrt_summary_case_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 190
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 136-sp_summary_report_case_postprocessing-001.sql
+            splitStatements: false
