@@ -804,7 +804,7 @@ BEGIN TRY
 		FROM #S_TB_PAM
 		EXCEPT 
 		SELECT TB_PAM_UID  
-		FROM [dbo].D_TB_PAM;
+		FROM [dbo].D_TB_PAM WITH (NOLOCK);
 
 		-- delete from key table and insert new elements to get all new D_TB_PAM_KEY for new elements
 		DELETE FROM [dbo].[nrt_d_tb_pam_key]; 
@@ -1484,7 +1484,7 @@ BEGIN TRY
 		IF
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
-            FROM [dbo].D_TB_PAM  D
+            FROM [dbo].D_TB_PAM D WITH (NOLOCK)
 			INNER JOIN #D_TB_PAM_E E 
 				ON E.TB_PAM_UID = D.TB_PAM_UID
 				AND E.D_TB_PAM_KEY = D.D_TB_PAM_KEY; 

@@ -30,8 +30,8 @@ import static org.mockito.Mockito.*;
 
 class PostProcessingServiceTest {
 
-    @InjectMocks
-    @Spy
+    @InjectMocks @Spy
+    
     private PostProcessingService postProcessingServiceMock;
     @Mock
     private PostProcRepository postProcRepositoryMock;
@@ -504,6 +504,26 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(16).contains(obsTopic));
     }
 
+    @Test
+    void testPostProcessBmirdCase(){
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id  = "123";
+        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(5, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
+
+
+    }
     @ParameterizedTest
     @MethodSource("datamartTestData")
     void testPostProcessDatamart(DatamartTestCase testCase) {
@@ -556,13 +576,6 @@ class PostProcessingServiceTest {
                                 "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
                         CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
                         (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
-                new DatamartTestCase(
-                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
-                        BMIRD_CASE.getEntityName(),
-                        BMIRD_CASE.getStoredProcedure(),
-                        3,
-                        (repo, uid) -> verify(repo).executeStoredProcForBmirdCaseDatamart(uid)),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",

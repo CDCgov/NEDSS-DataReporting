@@ -1161,26 +1161,42 @@ databaseChangeLog:
             path: 047-sp_nrt_treatment_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 181
+      id: 185
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 061-create_d_tb_pam.sql
+            path: 061-create-bmird_strep_pneumo_datamart-001.sql
             splitStatements: false
   - changeSet:
-      id: 182
+      id: 190
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 062-create_nrt_d_tb_pam_key.sql
+            path: 140-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 183
+      id: 195
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 140-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false            
+            path: 062-create_nrt_d_tb_pam_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 200
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 063-create_d_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 205
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 145-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false    
