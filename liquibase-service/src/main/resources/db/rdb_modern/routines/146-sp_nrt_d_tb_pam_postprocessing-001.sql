@@ -74,12 +74,12 @@ BEGIN TRY
 		FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
 		INNER JOIN CTE_INVESTIGATION_BATCH_ID I on I.public_health_case_uid = A.ACT_UID AND (I.batch_id = A.batch_id OR A.batch_id IS NULL)
 		WHERE 
-			ldf_status_cd IS NULL 
-			AND nbs_question_uid IS NOT NULL
-			AND DATAMART_COLUMN_NM IS NOT NULL
-			AND DATAMART_COLUMN_NM <> 'N/A'
-			AND data_location = 'NBS_Case_Answer.answer_txt'
-			AND question_identifier  NOT IN (
+			A.ldf_status_cd IS NULL 
+			AND A.nbs_question_uid IS NOT NULL
+			AND A.DATAMART_COLUMN_NM IS NOT NULL
+			AND A.DATAMART_COLUMN_NM <> 'N/A'
+			AND A.data_location = 'NBS_Case_Answer.answer_txt'
+			AND A.question_identifier  NOT IN (
 			'TUB119', 'TUB129', 'TUB154', 'TUB155', 'TUB156', 'TUB167', 'TUB225', 'TUB228',
 			'TUB229', 'TUB230', 'TUB235', 'TUB237', 'TUB114'
 			)
