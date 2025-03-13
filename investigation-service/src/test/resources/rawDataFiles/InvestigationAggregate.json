@@ -1,0 +1,50 @@
+[
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215086,
+    "answer_txt": "8",
+    "datamart_column_nm": "TOTAL_COUNT_50_TO_64"
+  },
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215088,
+    "answer_txt": "21",
+    "datamart_column_nm": "HOSPITALIZED_COUNT_TOTAL"
+  },
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215090,
+    "answer_txt": "12",
+    "datamart_column_nm": "TOTAL_COUNT_TOTAL"
+  },
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215091,
+    "answer_txt": "3",
+    "datamart_column_nm": "TOTAL_COUNT_19_TO_24"
+  },
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215093,
+    "answer_txt": "11",
+    "datamart_column_nm": "HOSPITALIZED_COUNT_65_PLUS"
+  },
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215094,
+    "answer_txt": "5",
+    "datamart_column_nm": "NUM_HOSP_REPORTING"
+  },
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215098,
+    "answer_txt": "2",
+    "datamart_column_nm": "DIED_COUNT_65_PLUS"
+  },
+  {
+    "act_uid": 234567890,
+    "nbs_case_answer_uid": 215100,
+    "answer_txt": "Lab confirmed",
+    "datamart_column_nm": "SURVEILLANCE_METHOD"
+  }
+]

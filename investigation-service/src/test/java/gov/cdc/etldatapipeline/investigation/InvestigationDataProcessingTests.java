@@ -57,6 +57,7 @@ class InvestigationDataProcessingTests {
     private static final String OBSERVATION_TOPIC = "observationTopic";
     private static final String NOTIFICATIONS_TOPIC = "notificationsTopic";
     private static final String PAGE_CASE_ANSWER_TOPIC = "pageCaseAnswerTopic";
+    private static final String AGGREGATE_TOPIC = "aggregateTopic";
     private static final String CASE_MANAGEMENT_TOPIC = "caseManagementTopic";
     private static final String INTERVIEW_TOPIC = "interviewTopic";
     private static final String INTERVIEW_ANSWERS_TOPIC = "interviewAnswersTopic";
@@ -146,6 +147,7 @@ class InvestigationDataProcessingTests {
         investigation.setInvestigationObservationIds(INVALID_JSON);
         investigation.setInvestigationConfirmationMethod(INVALID_JSON);
         investigation.setInvestigationCaseAnswer(INVALID_JSON);
+        investigation.setInvestigationAggregate(INVALID_JSON);
         investigation.setInvestigationCaseCnt(INVALID_JSON);
 
         transformer.setInvestigationObservationOutputTopicName(OBSERVATION_TOPIC);
@@ -573,9 +575,7 @@ class InvestigationDataProcessingTests {
 
         investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
         investigation.setInvestigationCaseAnswer(readFileData(FILE_PREFIX + "InvestigationCaseAnswers.json"));
-        transformer.setInvestigationObservationOutputTopicName(NOTIFICATIONS_TOPIC);
         transformer.setPageCaseAnswerOutputTopicName(PAGE_CASE_ANSWER_TOPIC);
-        transformer.setInvestigationConfirmationOutputTopicName(CONFIRMATION_TOPIC);
 
         PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
         pageCaseAnswerKey.setActUid(INVESTIGATION_UID);
@@ -617,6 +617,43 @@ class InvestigationDataProcessingTests {
 
         assertEquals(4, answers.length);
         assertEquals(expected, answers[1]);
+    }
+
+    @Test
+    void testInvestigationAggregate() throws JsonProcessingException {
+        Investigation investigation = new Investigation();
+
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+        investigation.setInvestigationAggregate(readFileData(FILE_PREFIX + "InvestigationAggregate.json"));
+        transformer.setInvestigationAggregateOutputTopicName(AGGREGATE_TOPIC);
+
+        PageCaseAnswerKey expectedKey = new PageCaseAnswerKey();
+        expectedKey.setActUid(INVESTIGATION_UID);
+        expectedKey.setNbsCaseAnswerUid(215086L);
+
+        InvestigationAggregate expected = constructAggregate();
+        expected.setBatchId(BATCH_ID);
+
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(8)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+        assertEquals(AGGREGATE_TOPIC, topicCaptor.getValue());
+
+        var actual = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getAllValues().getFirst()).path("payload").toString(), InvestigationAggregate.class);
+        var actualKey = objectMapper.readValue(
+                objectMapper.readTree(keyCaptor.getAllValues().getFirst()).path("payload").toString(), PageCaseAnswerKey.class);
+
+        assertEquals(expectedKey, actualKey);
+        assertEquals(expected, actual);
+
+        JsonNode keyNode = objectMapper.readTree(keyCaptor.getValue()).path("schema").path("fields");
+        assertFalse(keyNode.get(0).path("optional").asBoolean());
+        assertTrue(keyNode.get(1).path("optional").asBoolean());
     }
 
     @Test
@@ -731,4 +768,12 @@ class InvestigationDataProcessingTests {
         return expected;
     }
 
+    private @NotNull InvestigationAggregate constructAggregate() {
+        InvestigationAggregate expected = new InvestigationAggregate();
+        expected.setActUid(INVESTIGATION_UID);
+        expected.setNbsCaseAnswerUid(215086L);
+        expected.setDatamartColumnNm("TOTAL_COUNT_50_TO_64");
+        expected.setAnswerTxt("8");
+        return expected;
+    }
 }
