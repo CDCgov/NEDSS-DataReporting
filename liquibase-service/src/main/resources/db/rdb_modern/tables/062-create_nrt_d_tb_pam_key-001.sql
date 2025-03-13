@@ -1,0 +1,10 @@
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_d_tb_pam_key' and xtype = 'U')
+
+CREATE TABLE [dbo].[nrt_d_tb_pam_key](
+	[D_TB_PAM_key] [bigint] IDENTITY(1,1) NOT NULL,
+	[TB_PAM_UID] [bigint] NULL,
+ CONSTRAINT [nrt_d_tb_pam_key_pk] PRIMARY KEY CLUSTERED 
+(
+	[D_TB_PAM_key] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]

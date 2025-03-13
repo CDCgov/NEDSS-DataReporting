@@ -1216,3 +1216,51 @@ databaseChangeLog:
         - sqlFile:
             path: 145-sp_nrt_d_disease_site_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 220
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 062-create_nrt_d_tb_pam_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 225
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 063-create_d_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 230
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false    
+  - changeSet:
+      id: 235
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 081-create_nrt_d_tb_hiv_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 240
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 082-create_d_tb_hiv-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 245
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 147-sp_nrt_d_tb_hiv_postprocessing-001.sql
+            splitStatements: false
