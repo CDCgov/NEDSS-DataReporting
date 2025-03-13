@@ -153,7 +153,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(12, logs.size());
+        assertEquals(14, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -215,7 +215,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(14, logs.size());
+        assertEquals(16, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -498,14 +498,15 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(7).contains(invTopic));
         assertTrue(topicLogList.get(8).contains(invTopic));
         assertTrue(topicLogList.get(9).contains(invTopic));
-        assertTrue(topicLogList.get(10).contains(ntfTopic));
-        assertTrue(topicLogList.get(11).contains(treatmentTopic));
-        assertTrue(topicLogList.get(12).contains(intTopic));
+        assertTrue(topicLogList.get(10).contains(invTopic));
+        assertTrue(topicLogList.get(11).contains(ntfTopic));
+        assertTrue(topicLogList.get(12).contains(treatmentTopic));
         assertTrue(topicLogList.get(13).contains(intTopic));
-        assertTrue(topicLogList.get(14).contains(cmTopic));
+        assertTrue(topicLogList.get(14).contains(intTopic));
         assertTrue(topicLogList.get(15).contains(cmTopic));
-        assertTrue(topicLogList.get(16).contains(ldfTopic));
-        assertTrue(topicLogList.get(17).contains(obsTopic));
+        assertTrue(topicLogList.get(16).contains(cmTopic));
+        assertTrue(topicLogList.get(17).contains(ldfTopic));
+        assertTrue(topicLogList.get(18).contains(obsTopic));
     }
 
     @Test
