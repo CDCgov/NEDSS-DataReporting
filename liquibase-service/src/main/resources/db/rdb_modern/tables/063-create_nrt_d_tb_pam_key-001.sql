@@ -15,3 +15,4 @@ BEGIN
 		set @max = 2
 		DBCC CHECKIDENT ('dbo.nrt_d_tb_pam_key', RESEED, @max);
 END
+

@@ -11,7 +11,8 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
-    DECLARE @datamart_nm VARCHAR(100) = 'D_TB_PAM';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'D_TB_PAM Post-Processing Event';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_d_tb_pam_postprocessing';
 
 
 BEGIN TRY
@@ -30,8 +31,8 @@ BEGIN TRY
                                      , [row_count]
                                      , [Msg_Description1])
         VALUES ( @batch_id
-               , @datamart_nm
-               , @datamart_nm
+               , @Dataflow_Name
+			   , @Package_Name
                , 'START'
                , @Proc_Step_no
                , @Proc_Step_Name
@@ -53,19 +54,27 @@ BEGIN TRY
 		IF OBJECT_ID('tempdb..#S_TB_PAM_SET') IS NOT NULL
 					DROP TABLE #S_TB_PAM_SET;
 
-		WITH CTE_S_TB_PAM_SET AS (				
+		WITH 
+		CTE_INVESTIGATION_BATCH_ID AS (
+			SELECT 
+				public_health_case_uid,
+				batch_id
+			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
+			INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
+		),
+		CTE_S_TB_PAM_SET AS (				
 		SELECT
-			CAST(ACT_UID AS BIGINT) AS TB_PAM_UID, 
-			CODE_SET_GROUP_ID, 
-			DATAMART_COLUMN_NM, 
-			ANSWER_TXT, 
-			RECORD_STATUS_CD, 
-			LAST_CHG_TIME,
-			ROW_NUMBER() OVER (PARTITION BY ACT_UID, CODE_SET_GROUP_ID, DATAMART_COLUMN_NM, RECORD_STATUS_CD  ORDER BY LAST_CHG_TIME DESC) AS rn		
-		FROM [dbo].nrt_page_case_answer WITH (NOLOCK) 
+			CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID, 
+			A.CODE_SET_GROUP_ID, 
+			A.DATAMART_COLUMN_NM, 
+			A.ANSWER_TXT, 
+			A.RECORD_STATUS_CD, 
+			A.LAST_CHG_TIME,
+			ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.CODE_SET_GROUP_ID, A.DATAMART_COLUMN_NM, A.RECORD_STATUS_CD  ORDER BY A.LAST_CHG_TIME DESC) AS rn		
+		FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
+		INNER JOIN CTE_INVESTIGATION_BATCH_ID I on I.public_health_case_uid = A.ACT_UID AND (I.batch_id = A.batch_id OR A.batch_id IS NULL)
 		WHERE 
-			ACT_UID IN (SELECT value FROM STRING_SPLIT(@phc_id_list, ','))
-			AND ldf_status_cd IS NULL 
+			ldf_status_cd IS NULL 
 			AND nbs_question_uid IS NOT NULL
 			AND DATAMART_COLUMN_NM IS NOT NULL
 			AND DATAMART_COLUMN_NM <> 'N/A'
@@ -95,7 +104,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;
 
@@ -133,7 +142,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;	
 
@@ -173,7 +182,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;	
 
@@ -272,7 +281,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;	
 
@@ -297,8 +306,7 @@ BEGIN TRY
 		PIVOT (
 			MAX(ANSWER_TXT) 
 			FOR DATAMART_COLUMN_NM IN (
-				-- List all possible DATAMART_COLUMN_NM values dynamically or explicitly
-				-- For brevity, including only a subset here; replace with full list from your data
+				-- List all possible DATAMART_COLUMN_NM explicitly
 				[CALC_DISEASE_SITE], [INIT_SUSCEPT_STREPTOMYCIN], [INIT_SUSCEPT_OTHER_2_IND], 
 				[INIT_SUSCEPT_RIFAMPIN], [FINAL_SUSCEPT_OTHER_QUINOLONES], [TST_RESULT], 
 				[NONINJECT_DRUG_USE_PAST_YEAR], [INIT_SUSCEPT_ISONIAZID], [INIT_SUSCEPT_RIFABUTIN], 
@@ -353,7 +361,6 @@ BEGIN TRY
 				[DISEASE_SITE], [TB_VERCRIT_CALC_IND] 
 			)
 		) AS PivotTable;
-
 
 
 		-- Step 2: Create S_TB_PAM_TEMP with transformations (Combines DATA S_TB_PAM2 and PROC SQL)
@@ -790,7 +797,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;	
 
@@ -816,7 +823,8 @@ BEGIN TRY
 
 		--insert new items to generate key D_TB_PAM_KEY
 		INSERT INTO [dbo].[nrt_d_tb_pam_key] (TB_PAM_UID)
-		SELECT TB_PAM_UID
+		SELECT 
+			TB_PAM_UID
 		FROM #L_TB_PAM_BASE_NEW;
 
 		ALTER TABLE #L_TB_PAM_BASE_NEW 
@@ -846,7 +854,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;	
 
@@ -878,7 +886,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;
 
@@ -910,7 +918,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;
 
@@ -1269,7 +1277,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 	
 	COMMIT TRANSACTION;
 
@@ -1302,7 +1310,7 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;
 
@@ -1495,9 +1503,18 @@ BEGIN TRY
 
 		INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 	
 	COMMIT TRANSACTION;
+
+	--LOG Step completed
+	SET @Proc_Step_no = 999;
+        SET @Proc_Step_Name = 'SP_COMPLETE';
+        SELECT @ROWCOUNT_NO = 0;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
 
 END TRY
 
@@ -1505,33 +1522,18 @@ BEGIN CATCH
 
 	IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-	DECLARE @ErrorNumber INT = ERROR_NUMBER();
-	DECLARE @ErrorLine INT = ERROR_LINE();
-	DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-	DECLARE @ErrorState INT = ERROR_STATE();
+	-- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
-	INSERT INTO dbo.[job_flow_log] (
-		batch_id
-		,[Dataflow_Name]
-		,[package_Name]
-		,[Status_Type]
-		,[step_number]
-		,[step_name]
-		,[Error_Description]
-		,[row_count]
-	)
-	VALUES (
-		@batch_id
-		,@datamart_nm
-		,@datamart_nm
-		,'ERROR'
-		,@Proc_Step_no
-		,'ERROR - '+ @Proc_Step_name
-		, 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
-		,0
-	);
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 
 	return -1 ;
 
