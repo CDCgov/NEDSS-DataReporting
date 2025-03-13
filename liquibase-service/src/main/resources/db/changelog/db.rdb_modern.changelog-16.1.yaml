@@ -1222,7 +1222,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 062-create_nrt_d_tb_pam_key-001.sql
+            path: 062-create_d_tb_pam-001.sql
             splitStatements: false
   - changeSet:
       id: 225
@@ -1230,7 +1230,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 063-create_d_tb_pam-001.sql
+            path: 063-create_nrt_d_tb_pam_key-001.sql
             splitStatements: false
   - changeSet:
       id: 230
