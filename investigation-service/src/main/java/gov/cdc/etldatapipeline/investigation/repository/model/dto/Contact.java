@@ -58,6 +58,9 @@ public class Contact {
     @Column(name="ctt_inv_assigned_dt")
     private String cttInvAssignedDt;
 
+    @Column(name="jurisdiction_cd")
+    private String jurisdictionCd;
+
     @Column(name="ctt_jurisdiction_nm")
     private String cttJurisdictionNm;
 

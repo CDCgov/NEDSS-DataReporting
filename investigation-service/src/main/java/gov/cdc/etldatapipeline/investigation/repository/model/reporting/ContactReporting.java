@@ -53,6 +53,7 @@ public class ContactReporting {
     private String localId;
     private Long namedDuringInterviewUid;
     private Long programJurisdictionOid;
+    private String jurisdictionCd;
     private String recordStatusCd;
     private String recordStatusTime;
     private String subjectEntityEpiLinkId;
