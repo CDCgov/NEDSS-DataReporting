@@ -34,6 +34,7 @@ enum Entity {
     HEPATITIS_CASE(0, "Hepatitis_Case", Constants.PHC_UID, "sp_hepatitis_case_datamart_postprocessing"),
     PERTUSSIS_CASE(0, "Pertussis_Case", Constants.PHC_UID, "sp_pertussis_case_datamart_postprocessing"),
     BMIRD_STREP_PNEUMO_DATAMART(0, "Bmird_Strep_Pneumo_Datamart", Constants.PHC_UID, "sp_bmird_strep_pneumo_datamart_postprocessing"),
+    SR100_DATAMART(0, "SR100_Datamart", Constants.PHC_UID, "sp_sr100_datamart_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;

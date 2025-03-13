@@ -310,7 +310,7 @@ public class PostProcessingService {
         if(diseaseSiteEnable){
             processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
         }
-        
+
         return dmData;
     }
 
@@ -417,6 +417,12 @@ public class PostProcessingService {
                         investigationRepository.executeStoredProcForPertussisCaseDatamart(cases);
                         completeLog(PERTUSSIS_CASE.getStoredProcedure());
                         break;
+                    case SR100_DATAMART:
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, SR100_DATAMART.getStoredProcedure(), cases);
+                        investigationRepository.executeStoredProcForSR100Datamart(cases);
+                        completeLog(SR100_DATAMART.getStoredProcedure());
+                        break;
+
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ",dmType);
                 }
