@@ -73,6 +73,9 @@ public class Contact {
     @Column(name="ctt_processing_decision")
     private String cttProcessingDecision;
 
+    @Column(name="prog_area_cd")
+    private String progAreaCd;
+
     @Column(name="ctt_program_area")
     private String cttProgramArea;
 
