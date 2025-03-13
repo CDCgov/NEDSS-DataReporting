@@ -12,7 +12,6 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT = 0;
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
-    DECLARE @ColumnAdd_sql NVARCHAR(MAX) = '';
 
   	DECLARE @Dataflow_Name VARCHAR(200) = 'MORBIDITY_REPORT_DATAMART Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_morbidity_report_datamart_postprocessing';
@@ -33,8 +32,8 @@ BEGIN TRY
 
     SELECT @ROWCOUNT_NO = 0;
     INSERT INTO [DBO].[JOB_FLOW_LOG]
-    (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-    VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+    (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [msg_description1])
+    VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT('OBS_ID List-' + @obs_uids, 500));
 
     /*
         Create temp table containing necessary codes
