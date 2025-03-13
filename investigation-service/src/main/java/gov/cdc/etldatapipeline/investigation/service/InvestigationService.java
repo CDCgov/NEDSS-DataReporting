@@ -119,7 +119,8 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-ntf}",
                     "${spring.kafka.input.topic-name-int}",
                     "${spring.kafka.input.topic-name-ctr}",
-                    "${spring.kafka.input.topic-name-vac}"
+                    "${spring.kafka.input.topic-name-vac}",
+                    "${spring.kafka.input.topic-name-tmt}"
             }
     )
     public void processMessage(ConsumerRecord<String, String> rec,
