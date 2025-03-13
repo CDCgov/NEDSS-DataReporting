@@ -1238,5 +1238,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 150-sp_nrt_d_tb_pam_postprocessing-001.sql
+            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
             splitStatements: false    
