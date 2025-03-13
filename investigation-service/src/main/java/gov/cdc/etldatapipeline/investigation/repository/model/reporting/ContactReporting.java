@@ -30,6 +30,7 @@ public class ContactReporting {
     private String cttNotes;
     private String cttPriority;
     private String cttProcessingDecision;
+    private String progAreaCd;
     private String cttProgramArea;
     private String cttRelationship;
     private String cttRiskInd;
