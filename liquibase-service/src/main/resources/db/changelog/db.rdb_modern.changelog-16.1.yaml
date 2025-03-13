@@ -1238,7 +1238,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 150-sp_nrt_d_tb_pam_postprocessing-001.sql
+            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
             splitStatements: false    
   - changeSet:
       id: 235
@@ -1246,7 +1246,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 085-create_nrt_d_tb_hiv_key-001.sql
+            path: 081-create_nrt_d_tb_hiv_key-001.sql
             splitStatements: false
   - changeSet:
       id: 240
@@ -1254,7 +1254,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 090-create_d_tb_hiv-001.sql
+            path: 082-create_d_tb_hiv-001.sql
             splitStatements: false
   - changeSet:
       id: 245
@@ -1262,5 +1262,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 155-sp_nrt_d_tb_hiv_postprocessing-001.sql
+            path: 147-sp_nrt_d_tb_hiv_postprocessing-001.sql
             splitStatements: false
