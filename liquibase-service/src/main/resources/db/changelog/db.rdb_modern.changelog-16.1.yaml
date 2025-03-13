@@ -1216,3 +1216,11 @@ databaseChangeLog:
         - sqlFile:
             path: 145-sp_nrt_d_disease_site_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 220
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 081-create_nrt_investigation_aggregate-001.sql
+            splitStatements: false
