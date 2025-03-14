@@ -156,6 +156,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
         verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDGT12REAS(expectedPublicHealthCaseIdsString);
 
 
 
