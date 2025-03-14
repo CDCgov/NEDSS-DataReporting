@@ -156,7 +156,7 @@ class PostProcessingServiceTest {
 
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(14, logs.size());
+        assertEquals(16, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -218,7 +218,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(16, logs.size());
+        assertEquals(18, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
