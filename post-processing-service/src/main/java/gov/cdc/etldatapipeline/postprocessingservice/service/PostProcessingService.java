@@ -77,9 +77,6 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
-    @Value("${featureFlag.disease-site-enable}")
-    private boolean diseaseSiteEnable;
-
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
             autoCreateTopics = "false",
@@ -307,9 +304,8 @@ public class PostProcessingService {
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
 
-        if(diseaseSiteEnable){
-            processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
-        }
+        processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
+        processTopic(keyTopic, D_ADDL_RISK, ids, investigationRepository::executeStoredProcForDAddlRisk);
         
         return dmData;
     }
