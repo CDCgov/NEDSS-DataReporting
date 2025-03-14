@@ -2,7 +2,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_d_tb_pam_key' and xtyp
 BEGIN
 	CREATE TABLE [dbo].[nrt_d_tb_pam_key](
 		[D_TB_PAM_KEY] [bigint] IDENTITY(1,1) NOT NULL,
-		[TB_PAM_UID] [bigint] NULL,
+		[TB_PAM_UID] [bigint] NOT NULL,
 	CONSTRAINT [nrt_d_tb_pam_key_pk] PRIMARY KEY CLUSTERED 
 	(
 		[D_TB_PAM_KEY] ASC
