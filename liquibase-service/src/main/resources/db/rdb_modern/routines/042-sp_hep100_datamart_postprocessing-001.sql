@@ -1018,18 +1018,12 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-
-        DECLARE
-            @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE
-            @ErrorLine INT = ERROR_LINE();
-        DECLARE
-            @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE
-            @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE
-            @ErrorState INT = ERROR_STATE();
-
+        DECLARE @FullErrorMessage NVARCHAR(4000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
                                          , [Dataflow_Name]
@@ -1045,7 +1039,7 @@ BEGIN
                , 'ERROR'
                , @Proc_Step_no
                , @Proc_Step_name
-               , LEFT(@ErrorMessage, 500)
+               , @FullErrorMessage
                , 0);
 
 
