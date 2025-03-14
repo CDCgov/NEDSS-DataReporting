@@ -1222,7 +1222,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 081-create_d_addl_risk_group-001.sql
+            path: 062-create_morbidity_report_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 225
@@ -1230,7 +1230,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 082-create_d_addl_risk-001.sql
+            path: 048-sp_morbidity_report_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 230
@@ -1238,7 +1238,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 083-create_nrt_addl_risk_group_key-001.sql
+            path: 081-create_d_addl_risk_group-001.sql
             splitStatements: false
   - changeSet:
       id: 235
@@ -1246,10 +1246,26 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 084-create_nrt_addl_risk_key-001.sql
+            path: 082-create_d_addl_risk-001.sql
             splitStatements: false
   - changeSet:
       id: 240
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 083-create_nrt_addl_risk_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 245
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 084-create_nrt_addl_risk_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 250
       author: liquibase
       runOnChange: true
       changes:
