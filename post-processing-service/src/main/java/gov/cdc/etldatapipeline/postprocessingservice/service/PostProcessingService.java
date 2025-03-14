@@ -317,6 +317,9 @@ public class PostProcessingService {
             processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
         }
 
+        processTopic(keyTopic, D_HC_PROV_TY_3, ids, 
+                investigationRepository::executeStoredProcForDHCPROVTY3);
+
         return dmData;
     }
 
