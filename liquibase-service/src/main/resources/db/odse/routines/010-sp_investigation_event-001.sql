@@ -545,35 +545,26 @@ BEGIN
                                                  from (select na.act_uid as act_uid,
                                                               na.nbs_case_answer_uid,
                                                               na.answer_txt,
+                                                              nq.code_set_group_id,
+                                                              nq.data_type,
                                                               ntm.datamart_column_nm
                                                        from dbo.NBS_case_answer na with (nolock )
                                                        join dbo.NBS_table_metadata ntm with (nolock)
                                                            on ntm.nbs_table_metadata_uid = na.nbs_table_metadata_uid
+                                                       join dbo.NBS_question nq with (nolock)
+                                                            on nq.nbs_question_uid = na.nbs_question_uid
                                                        WHERE na.nbs_table_metadata_uid is not null
                                                            and na.act_uid = phc.public_health_case_uid
                                                        union
                                                        select na.act_uid,
                                                               na.nbs_case_answer_uid,
                                                               na.answer_txt,
+                                                              nq.code_set_group_id,
+                                                              nq.data_type,
                                                               nq.datamart_column_nm
                                                        from dbo.NBS_case_answer na with (nolock )
                                                        join dbo.NBS_question nq with (nolock)
                                                            on nq.nbs_question_uid = na.nbs_question_uid
-                                                       WHERE na.nbs_table_metadata_uid is null
-                                                           and nq.code_set_group_id is null
-                                                           and na.act_uid = phc.public_health_case_uid
-                                                       union
-                                                       select na.act_uid,
-                                                              na.nbs_case_answer_uid,
-                                                              cvg.code_short_desc_txt as answer_txt,
-                                                              nq.datamart_column_nm
-                                                       from dbo.NBS_case_answer na with (nolock )
-                                                       join dbo.NBS_question nq with (nolock)
-                                                           on nq.nbs_question_uid = na.nbs_question_uid
-                                                       join nbs_srte.dbo.Codeset_Group_Metadata cgm with (nolock)
-                                                           on cgm.code_set_group_id = nq.code_set_group_id
-                                                       join nbs_srte.dbo.Code_value_general cvg with (nolock)
-                                                           on cvg.code_set_nm = cgm.code_set_nm and cvg.code = na.answer_txt
                                                        WHERE na.nbs_table_metadata_uid is null
                                                            and na.act_uid = phc.public_health_case_uid
                                                        ) as agg_rep
