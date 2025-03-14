@@ -30,6 +30,7 @@ public class ContactReporting {
     private String cttNotes;
     private String cttPriority;
     private String cttProcessingDecision;
+    private String progAreaCd;
     private String cttProgramArea;
     private String cttRelationship;
     private String cttRiskInd;
@@ -52,6 +53,7 @@ public class ContactReporting {
     private String localId;
     private Long namedDuringInterviewUid;
     private Long programJurisdictionOid;
+    private String jurisdictionCd;
     private String recordStatusCd;
     private String recordStatusTime;
     private String subjectEntityEpiLinkId;

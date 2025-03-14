@@ -1222,10 +1222,26 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 085-create_nrt_summary_case_group_key-001.sql
+            path: 062-create_morbidity_report_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 225
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 048-sp_morbidity_report_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 230
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 085-create_nrt_summary_case_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 235
       author: liquibase
       runOnChange: true
       changes:
