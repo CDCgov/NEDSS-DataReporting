@@ -313,13 +313,16 @@ public class PostProcessingService {
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
 
+        processTopic(keyTopic, SUMMARY_REPORT_CASE, ids,
+                investigationRepository::executeStoredProcForSummaryReportCase);
+
         processTopic(keyTopic, D_TB_PAM, ids,
                 investigationRepository::executeStoredProcForDTBPAM);
 
-        processTopic(keyTopic, D_DISEASE_SITE, ids,
+        processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);
-
-        return dmData; 
+        
+        return dmData;
     }
 
     private List<DatamartData> processObservation(Map<Long, String> idValsSnapshot, String keyTopic, Entity entity,
