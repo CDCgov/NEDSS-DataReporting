@@ -285,8 +285,7 @@ public class InvestigationService {
                 TreatmentReportingKey treatmentReportingKey = new TreatmentReportingKey(treatment.getTreatmentUid());
 
                 String jsonKey = jsonGenerator.generateStringJson(treatmentReportingKey);
-                String jsonValue = jsonGenerator.generateStringJson(treatment);
-
+                String jsonValue = jsonGenerator.generateStringJson(treatment,"treatment_uid");
                 kafkaTemplate.send(treatmentOutputTopicName, jsonKey, jsonValue)
                         .whenComplete((res, e) -> logger.info("Treatment data (uid={}) sent to {}",
                                 treatment.getTreatmentUid(), treatmentOutputTopicName));
