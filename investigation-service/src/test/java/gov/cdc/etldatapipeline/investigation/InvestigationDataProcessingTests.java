@@ -639,7 +639,7 @@ class InvestigationDataProcessingTests {
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
                 .untilAsserted(() ->
-                        verify(kafkaTemplate, times(8)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                        verify(kafkaTemplate, times(7)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
                 );
         assertEquals(AGGREGATE_TOPIC, topicCaptor.getValue());
 
@@ -772,8 +772,9 @@ class InvestigationDataProcessingTests {
         InvestigationAggregate expected = new InvestigationAggregate();
         expected.setActUid(INVESTIGATION_UID);
         expected.setNbsCaseAnswerUid(215086L);
-        expected.setDatamartColumnNm("TOTAL_COUNT_50_TO_64");
         expected.setAnswerTxt("8");
+        expected.setDataType("Numeric");
+        expected.setDatamartColumnNm("TOTAL_COUNT_50_TO_64");
         return expected;
     }
 }
