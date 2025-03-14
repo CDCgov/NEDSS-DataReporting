@@ -154,10 +154,12 @@ class PostProcessingServiceTest {
         
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
+
 
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
+        assertEquals(12, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -219,7 +221,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
+        assertEquals(12, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -500,14 +502,15 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(5).contains(invTopic));
         assertTrue(topicLogList.get(6).contains(invTopic));
         assertTrue(topicLogList.get(7).contains(invTopic));
-        assertTrue(topicLogList.get(8).contains(ntfTopic));
-        assertTrue(topicLogList.get(9).contains(treatmentTopic));
-        assertTrue(topicLogList.get(10).contains(intTopic));
+        assertTrue(topicLogList.get(8).contains(invTopic));
+        assertTrue(topicLogList.get(9).contains(ntfTopic));
+        assertTrue(topicLogList.get(10).contains(treatmentTopic));
         assertTrue(topicLogList.get(11).contains(intTopic));
-        assertTrue(topicLogList.get(12).contains(cmTopic));
+        assertTrue(topicLogList.get(12).contains(intTopic));
         assertTrue(topicLogList.get(13).contains(cmTopic));
-        assertTrue(topicLogList.get(14).contains(ldfTopic));
-        assertTrue(topicLogList.get(15).contains(obsTopic));
+        assertTrue(topicLogList.get(14).contains(cmTopic));
+        assertTrue(topicLogList.get(15).contains(ldfTopic));
+        assertTrue(topicLogList.get(16).contains(obsTopic));
     }
 
     @Test
@@ -870,7 +873,7 @@ class PostProcessingServiceTest {
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
-    @ParameterizedTest
+     @ParameterizedTest
     @CsvSource({
             "'{\"payload\":{\"public_health_case_uid\":123,\"rdb_table_name_list\":null}}'",
             "'{\"payload\":{\"patient_uid\":123}}'",

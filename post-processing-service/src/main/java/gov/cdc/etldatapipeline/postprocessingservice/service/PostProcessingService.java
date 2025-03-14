@@ -307,6 +307,9 @@ public class PostProcessingService {
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
 
+        processTopic(keyTopic, SUMMARY_REPORT_CASE, ids,
+                investigationRepository::executeStoredProcForSummaryReportCase);
+
         if(diseaseSiteEnable){
             processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
         }
