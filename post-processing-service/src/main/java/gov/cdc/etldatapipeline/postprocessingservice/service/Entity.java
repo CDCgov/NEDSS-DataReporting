@@ -24,6 +24,7 @@ enum Entity {
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),
     D_TB_PAM(0, "d_tb_pam", Constants.PHC_UID, "sp_nrt_d_tb_pam_postprocessing"),
     SUMMARY_REPORT_CASE(0, "summary_report_case", Constants.PHC_UID, "sp_summary_report_case_postprocessing"),
+    SR100_DATAMART(0, "SR100_Datamart", Constants.PHC_UID, "sp_sr100_datamart_postprocessing"),
     F_STD_PAGE_CASE(0, "fact std page case", Constants.PHC_UID, "sp_f_std_page_case_postprocessing"),
     HEPATITIS_DATAMART(0, "Hepatitis_Datamart", Constants.PHC_UID, "sp_hepatitis_datamart_postprocessing"),
     STD_HIV_DATAMART(0, "Std_Hiv_Datamart", Constants.PHC_UID, "sp_std_hiv_datamart_postprocessing"),

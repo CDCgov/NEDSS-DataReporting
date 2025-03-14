@@ -151,6 +151,8 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
         verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
+
 
 
         List<ILoggingEvent> logs = listAppender.list;
@@ -500,14 +502,15 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(8).contains(invTopic));
         assertTrue(topicLogList.get(9).contains(invTopic));
         assertTrue(topicLogList.get(10).contains(invTopic));
-        assertTrue(topicLogList.get(11).contains(ntfTopic));
-        assertTrue(topicLogList.get(12).contains(treatmentTopic));
-        assertTrue(topicLogList.get(13).contains(intTopic));
+        assertTrue(topicLogList.get(11).contains(invTopic));
+        assertTrue(topicLogList.get(12).contains(ntfTopic));
+        assertTrue(topicLogList.get(13).contains(treatmentTopic));
         assertTrue(topicLogList.get(14).contains(intTopic));
-        assertTrue(topicLogList.get(15).contains(cmTopic));
+        assertTrue(topicLogList.get(15).contains(intTopic));
         assertTrue(topicLogList.get(16).contains(cmTopic));
-        assertTrue(topicLogList.get(17).contains(ldfTopic));
-        assertTrue(topicLogList.get(18).contains(obsTopic));
+        assertTrue(topicLogList.get(17).contains(cmTopic));
+        assertTrue(topicLogList.get(18).contains(ldfTopic));
+        assertTrue(topicLogList.get(19).contains(obsTopic));
     }
 
     @Test
