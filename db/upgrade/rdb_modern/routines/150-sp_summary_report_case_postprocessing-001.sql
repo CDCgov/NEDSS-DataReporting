@@ -63,7 +63,7 @@ BEGIN
                                           nio.RPT_SENT_TIME                                               AS NOTIFICATION_SEND_DT,
                                           nio.notif_last_chg_time                                         AS NOTI_LAST_CHG_TIME,
                                           ovc.ovc_code                                                    AS SUMMARY_CASE_SRC_TXT,
-                                          ovc.observation_uid                                             AS ovc_observation_uid
+                                          ovc.observation_uid                AS ovc_observation_uid
                                    FROM SumRptWork sr
                                             LEFT JOIN dbo.nrt_observation_numeric ovn with (nolock)
                                                       on sr.branch_id = ovn.observation_uid AND sr.cd = 'SUM104'
@@ -187,8 +187,8 @@ BEGIN
 
         INSERT INTO dbo.SUMMARY_CASE_GROUP
         (SUMMARY_CASE_SRC_KEY, SUMMARY_CASE_SRC_TXT)
-        SELECT tmp.SUMMARY_CASE_SRC_TXT,
-               tmp.SUMMARY_CASE_SRC_KEY
+        SELECT tmp.SUMMARY_CASE_SRC_KEY,
+               tmp.SUMMARY_CASE_SRC_TXT
         FROM #temp_SUMMARY_REPORT_CASE tmp
                  LEFT JOIN dbo.SUMMARY_CASE_GROUP scg on scg.SUMMARY_CASE_SRC_KEY = tmp.SUMMARY_CASE_SRC_KEY
         WHERE tmp.SUMMARY_CASE_SRC_KEY <> 1
@@ -330,3 +330,4 @@ BEGIN
 
     END CATCH
 END;
+
