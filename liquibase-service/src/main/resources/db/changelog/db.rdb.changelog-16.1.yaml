@@ -10,39 +10,8 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
-      changes:
-        - sqlFile:
-            path: 001-create_data_sync_config-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 2
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 001-generate_data_for_data_sync_config-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 3
-      author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
             path: 002-alter_lab_test-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 4
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 003-alter_data_sync_config_drop_col-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 5
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 004-create_data_sync_config_log-001.sql
             splitStatements: false
