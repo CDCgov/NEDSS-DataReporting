@@ -16,7 +16,7 @@ BEGIN
     DECLARE
         @batch_id BIGINT;
     SET
-        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
+        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmssffff')) as bigint);
 
     -- used in the logging statements
     DECLARE 

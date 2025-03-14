@@ -13,7 +13,7 @@ BEGIN
     DECLARE
         @batch_id BIGINT;
     SET
-        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
+        @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
     -- condition for investigation_form_cd uses the LIKE operator for Rubella_Case, so % is included
     DECLARE
@@ -24,7 +24,7 @@ BEGIN
         @tgt_table_nm VARCHAR(50) = 'Rubella_Case';
 
     -- used in the logging statements
-    DECLARE 
+    DECLARE
         @datamart_nm VARCHAR(100) = 'RUBELLA_CASE_DATAMART';
 
     BEGIN TRY
@@ -116,7 +116,7 @@ BEGIN
                    coded_response as response
             INTO #OBS_CODED_Rubella_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -158,7 +158,7 @@ BEGIN
                    txt_response as response
             INTO #OBS_TXT_Rubella_Case
             from dbo.v_rdb_obs_mapping
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(col_nm)
@@ -198,7 +198,7 @@ BEGIN
                    date_response as response
             INTO #OBS_DATE_Rubella_Case
             from dbo.v_rdb_obs_mapping
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(col_nm)
@@ -229,7 +229,7 @@ BEGIN
 
             IF OBJECT_ID('#OBS_NUMERIC_Rubella_Case', 'U') IS NOT NULL
             drop table #OBS_NUMERIC_Rubella_Case;
-            
+
 
             select rom.public_health_case_uid,
                    rom.unique_cd        as cd,
@@ -244,7 +244,7 @@ BEGIN
                 END AS converted_column
             INTO #OBS_NUMERIC_Rubella_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -376,8 +376,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_CODED_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_CODED_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -395,8 +395,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_NUMERIC_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_NUMERIC_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -414,8 +414,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_TXT_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_TXT_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -433,8 +433,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_DATE_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_DATE_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -544,8 +544,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_CODED_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_CODED_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -563,8 +563,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_NUMERIC_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_NUMERIC_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -582,8 +582,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_TXT_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_TXT_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -601,8 +601,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_DATE_Rubella_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_DATE_Rubella_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -642,17 +642,13 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-
-        DECLARE
-            @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE
-            @ErrorLine INT = ERROR_LINE();
-        DECLARE
-            @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE
-            @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE
-            @ErrorState INT = ERROR_STATE();
+          -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
@@ -668,8 +664,8 @@ BEGIN
                , @datamart_nm
                , 'ERROR'
                , @Proc_Step_no
-               , 'ERROR - ' + @Proc_Step_name
-               , 'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
+               , @Proc_Step_name
+               , @FullErrorMessage
                , 0);
 
 

@@ -5,7 +5,7 @@ BEGIN
     BEGIN TRY
 
         DECLARE @batch_id BIGINT;
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         ( batch_id

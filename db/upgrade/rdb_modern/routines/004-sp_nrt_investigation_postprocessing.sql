@@ -24,7 +24,7 @@ BEGIN
         declare @dataflow_name varchar(200) = 'Investigation POST-Processing';
         declare @package_name varchar(200) = 'sp_nrt_investigation_postprocessing';
 
-        set @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+        set @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id
@@ -843,8 +843,6 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-
         -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
@@ -863,7 +861,9 @@ BEGIN
         ,[step_number]
         ,[step_name]
         ,[row_count]
-        ,[msg_description1])
+        ,[msg_description1]
+        ,[Error_Description])
+
         VALUES (@batch_id
                ,current_timestamp
                ,current_timestamp
@@ -871,9 +871,10 @@ BEGIN
                ,@package_name
                ,'ERROR'
                ,@Proc_Step_no
-               ,@FullErrorMessage
+               ,@proc_step_name
                ,0
-               ,LEFT(@id_list, 500));
+               ,LEFT(@id_list, 500)
+               ,@FullErrorMessage);
 
 
         return -1;

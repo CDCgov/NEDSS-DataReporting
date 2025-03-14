@@ -5,7 +5,7 @@ AS
 
 BEGIN
     DECLARE @batch_id BIGINT;
-    SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmss')) as bigint);
+    SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmssffff')) as bigint);
     PRINT @batch_id;
     DECLARE @RowCount_no int;
     DECLARE @Proc_Step_no float= 0;
