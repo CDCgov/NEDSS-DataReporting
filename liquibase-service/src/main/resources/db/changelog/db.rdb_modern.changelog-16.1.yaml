@@ -1232,3 +1232,27 @@ databaseChangeLog:
         - sqlFile:
             path: 048-sp_morbidity_report_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 230
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 063-create_d_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 235
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 064-create_nrt_d_tb_pam_key-001.sql
+            splitStatements: false            
+  - changeSet:
+      id: 240
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false    
