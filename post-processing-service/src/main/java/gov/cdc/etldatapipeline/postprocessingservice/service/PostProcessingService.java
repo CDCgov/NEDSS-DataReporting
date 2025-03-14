@@ -79,7 +79,12 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
-    @RetryableTopic(attempts = "${spring.kafka.consumer.max-retry}", autoCreateTopics = "false", dltStrategy = DltStrategy.FAIL_ON_ERROR, retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
+    @RetryableTopic(
+            attempts = "${spring.kafka.consumer.max-retry}", 
+            autoCreateTopics = "false", 
+            dltStrategy = DltStrategy.FAIL_ON_ERROR, 
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
+            dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
             // retry topic name, such as topic-retry-1, topic-retry-2, etc
             topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
             // time to wait before attempting to retry
@@ -132,7 +137,14 @@ public class PostProcessingService {
         }
     }
 
-    @RetryableTopic(attempts = "${spring.kafka.consumer.max-retry}", autoCreateTopics = "false", dltStrategy = DltStrategy.FAIL_ON_ERROR, retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}", topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE, backoff = @Backoff(delay = 1000, multiplier = 2.0), exclude = {
+    @RetryableTopic(
+        attempts = "${spring.kafka.consumer.max-retry}", 
+        autoCreateTopics = "false", 
+        dltStrategy = DltStrategy.FAIL_ON_ERROR, 
+        retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
+        dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}", 
+        topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE, 
+        backoff = @Backoff(delay = 1000, multiplier = 2.0), exclude = {
             SerializationException.class,
             DeserializationException.class,
             RuntimeException.class
@@ -307,7 +319,7 @@ public class PostProcessingService {
         processTopic(keyTopic, D_DISEASE_SITE, ids,
                 investigationRepository::executeStoredProcForDDiseaseSite);
 
-        return dmData;
+        return dmData; 
     }
 
     private List<DatamartData> processObservation(Map<Long, String> idValsSnapshot, String keyTopic, Entity entity,
