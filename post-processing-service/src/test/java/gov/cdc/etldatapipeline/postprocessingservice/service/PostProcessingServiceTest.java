@@ -155,11 +155,13 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
         verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
+
 
 
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(12, logs.size());
+        assertEquals(14, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -221,7 +223,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(12, logs.size());
+        assertEquals(14, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -503,14 +505,15 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(6).contains(invTopic));
         assertTrue(topicLogList.get(7).contains(invTopic));
         assertTrue(topicLogList.get(8).contains(invTopic));
-        assertTrue(topicLogList.get(9).contains(ntfTopic));
-        assertTrue(topicLogList.get(10).contains(treatmentTopic));
-        assertTrue(topicLogList.get(11).contains(intTopic));
+        assertTrue(topicLogList.get(9).contains(invTopic));
+        assertTrue(topicLogList.get(10).contains(ntfTopic));
+        assertTrue(topicLogList.get(11).contains(treatmentTopic));
         assertTrue(topicLogList.get(12).contains(intTopic));
-        assertTrue(topicLogList.get(13).contains(cmTopic));
+        assertTrue(topicLogList.get(13).contains(intTopic));
         assertTrue(topicLogList.get(14).contains(cmTopic));
-        assertTrue(topicLogList.get(15).contains(ldfTopic));
-        assertTrue(topicLogList.get(16).contains(obsTopic));
+        assertTrue(topicLogList.get(15).contains(cmTopic));
+        assertTrue(topicLogList.get(16).contains(ldfTopic));
+        assertTrue(topicLogList.get(17).contains(obsTopic));
     }
 
     @Test
@@ -593,12 +596,7 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)),
-                new DatamartTestCase(
-                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10190\"," +
-                                "\"datamart\":\"SR100_Datamart\",\"stored_procedure\":\"sp_sr100_datamart_postprocessing\"}}",
-                        SR100_DATAMART.getEntityName(), SR100_DATAMART.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForSR100Datamart(uid))
+                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid))
         );
     }
 
