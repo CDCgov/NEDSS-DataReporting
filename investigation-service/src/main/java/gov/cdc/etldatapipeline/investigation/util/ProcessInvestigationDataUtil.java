@@ -44,6 +44,9 @@ public class ProcessInvestigationDataUtil {
     @Value("${spring.kafka.output.topic-name-page-case-answer}")
     public String pageCaseAnswerOutputTopicName;
 
+    @Value("${spring.kafka.output.topic-name-aggregate}")
+    public String investigationAggregateOutputTopicName;
+
     @Value("${spring.kafka.output.topic-name-case-management}")
     public String investigationCaseManagementTopicName;
 
@@ -93,6 +96,7 @@ public class ProcessInvestigationDataUtil {
         transformObservationIds(investigation.getInvestigationObservationIds(), investigationTransformed);
         transformInvestigationConfirmationMethod(investigation.getInvestigationConfirmationMethod(), investigationTransformed);
         processInvestigationPageCaseAnswer(investigation.getInvestigationCaseAnswer(), investigationTransformed);
+        processInvestigationAggregate(investigation.getInvestigationAggregate(), investigationTransformed);
 
         return investigationTransformed;
     }
@@ -377,6 +381,32 @@ public class ProcessInvestigationDataUtil {
             logger.info(ex.getMessage(), "PageCaseAnswer");
         } catch (Exception e) {
             logger.error("Error processing investigation case answer JSON array from investigation data: {}", e.getMessage());
+        }
+    }
+
+    private void processInvestigationAggregate(String investigationAggregate, InvestigationTransformed investigationTransformed) {
+        try {
+            JsonNode investigationAggregateJsonArray = parseJsonArray(investigationAggregate);
+
+            Long actUid = investigationAggregateJsonArray.get(0).get("act_uid").asLong();
+
+            PageCaseAnswerKey pageCaseAnswerKey = new PageCaseAnswerKey();
+            pageCaseAnswerKey.setActUid(actUid);
+
+            for(JsonNode node : investigationAggregateJsonArray) {
+                InvestigationAggregate aggAnswer = objectMapper.treeToValue(node, InvestigationAggregate.class);
+                aggAnswer.setBatchId(investigationTransformed.getBatchId());
+
+                pageCaseAnswerKey.setNbsCaseAnswerUid(aggAnswer.getNbsCaseAnswerUid());
+                String jsonKey = jsonGenerator.generateStringJson(pageCaseAnswerKey);
+                String jsonValue = jsonGenerator.generateStringJson(aggAnswer);
+
+                kafkaTemplate.send(investigationAggregateOutputTopicName, jsonKey, jsonValue);
+            }
+        } catch (IllegalArgumentException ex) {
+            logger.info(ex.getMessage(), "InvestigationAggregate");
+        } catch (Exception e) {
+            logger.error("Error processing investigation aggregate JSON array from investigation data: {}", e.getMessage());
         }
     }
 

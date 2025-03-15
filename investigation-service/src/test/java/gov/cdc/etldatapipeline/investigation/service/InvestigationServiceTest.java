@@ -89,9 +89,6 @@ class InvestigationServiceTest {
     private final String vaccinationTopicOutput = "VaccinationOutput";
     private final String treatmentTopicOutput = "TreatmentOutput";
 
-
-
-
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
