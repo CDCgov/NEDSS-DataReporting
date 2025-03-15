@@ -1222,7 +1222,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 085-create_sr100-001.sql
+            path: 062-create_morbidity_report_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 225
@@ -1230,5 +1230,37 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 150-sp_sr100_datamart_postprocessing-001.sql
+            path: 048-sp_morbidity_report_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 230
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 085-create_nrt_summary_case_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 235
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 150-sp_summary_report_case_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 240
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 090-create_sr100-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 245
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 155-sp_sr100_datamart_postprocessing-001.sql
             splitStatements: false

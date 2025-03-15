@@ -214,35 +214,23 @@ IF EXISTS (SELECT 1
             END;
 
         IF EXISTS(SELECT 1 FROM sys.columns WHERE name = N'LAST_CHG_TIME' AND Object_ID = Object_ID(N'nrt_treatment'))
-            AND NOT EXISTS(SELECT 1
-                           FROM sys.columns
-                           WHERE name = N'last_chg_time'
-                             AND Object_ID = Object_ID(N'nrt_treatment'))
             BEGIN
-                EXEC sp_rename 'nrt_treatment.LAST_CHG_TIME', 'last_chg_time', 'COLUMN';
+                EXEC sp_rename 'nrt_treatment.LAST_CHG_TIME', 'last_change_time', 'COLUMN';
             END;
 
         IF EXISTS(SELECT 1
                   FROM sys.columns
                   WHERE name = N'LAST_CHG_USER_ID'
                     AND Object_ID = Object_ID(N'nrt_treatment'))
-            AND NOT EXISTS(SELECT 1
-                           FROM sys.columns
-                           WHERE name = N'last_chg_user_id'
-                             AND Object_ID = Object_ID(N'nrt_treatment'))
             BEGIN
-                EXEC sp_rename 'nrt_treatment.LAST_CHG_USER_ID', 'last_chg_user_id', 'COLUMN';
+                EXEC sp_rename 'nrt_treatment.LAST_CHG_USER_ID', 'last_change_user_id', 'COLUMN';
             END;
 
         IF EXISTS(SELECT 1
                   FROM sys.columns
                   WHERE name = N'VERSION_CTRL_NBR'
                     AND Object_ID = Object_ID(N'nrt_treatment'))
-            AND NOT EXISTS(SELECT 1
-                           FROM sys.columns
-                           WHERE name = N'version_ctrl_nbr'
-                             AND Object_ID = Object_ID(N'nrt_treatment'))
             BEGIN
-                EXEC sp_rename 'nrt_treatment.VERSION_CTRL_NBR', 'version_ctrl_nbr', 'COLUMN';
+                EXEC sp_rename 'nrt_treatment.VERSION_CTRL_NBR', 'version_control_number', 'COLUMN';
             END;
     END;
