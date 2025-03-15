@@ -12,9 +12,9 @@ import lombok.NonNull;
 public class InvestigationAggregate {
     private @NonNull Long actUid;
     private @NonNull Long nbsCaseAnswerUid;
+    private String answerTxt;
     private String dataType;
     private Long codeSetGroupId;
-    private String answerTxt;
     private String datamartColumnNm;
     private Long batchId;
 }
