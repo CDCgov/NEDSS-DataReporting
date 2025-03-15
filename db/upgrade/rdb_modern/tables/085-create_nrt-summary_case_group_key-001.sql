@@ -6,7 +6,7 @@ IF NOT EXISTS (SELECT 1
 
         CREATE TABLE dbo.nrt_summary_case_group_key
         (
-            SUMMARY_CASE_SRC_KEY   bigint IDENTITY (1,1) NOT NULL,
+            summary_case_src_key   bigint IDENTITY (1,1) NOT NULL,
             public_health_case_uid bigint                NULL,
             ovc_observation_uid    bigint                NULL
         );
