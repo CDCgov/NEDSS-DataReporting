@@ -385,4 +385,6 @@ public class Investigation {
     @Column(name = "org_as_reporter_uid")
     private Long orgAsReporterUid;
 
+    @Column(name = "rpt_cnty_cd")
+    private String rptCntyCd;
 }

@@ -1238,5 +1238,37 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
+            path: 085-create_nrt_summary_case_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 235
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 150-sp_summary_report_case_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 240
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 090-create_sr100-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 245
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 155-sp_sr100_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 250
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
             path: 081-create_nrt_investigation_aggregate-001.sql
             splitStatements: false
