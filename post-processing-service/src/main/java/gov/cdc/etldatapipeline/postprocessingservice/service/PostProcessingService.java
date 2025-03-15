@@ -307,10 +307,16 @@ public class PostProcessingService {
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
 
+        processTopic(keyTopic, SUMMARY_REPORT_CASE, ids,
+                investigationRepository::executeStoredProcForSummaryReportCase);
+
+        processTopic(keyTopic, SR100_DATAMART, ids,
+                investigationRepository::executeStoredProcForSR100Datamart);
+
         if(diseaseSiteEnable){
             processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
         }
-        
+
         return dmData;
     }
 
