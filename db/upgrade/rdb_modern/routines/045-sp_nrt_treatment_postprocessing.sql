@@ -11,7 +11,7 @@ BEGIN
         DECLARE @dataflow_name varchar(200) = 'Treatment POST-Processing';
         DECLARE @package_name varchar(200) = 'sp_nrt_treatment_postprocessing';
 
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
         /* Initial logging entry */
         INSERT INTO [dbo].[job_flow_log]

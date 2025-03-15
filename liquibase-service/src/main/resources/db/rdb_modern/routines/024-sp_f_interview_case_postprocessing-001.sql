@@ -13,7 +13,7 @@ BEGIN
     DECLARE
         @batch_id BIGINT;
     SET
-        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
+        @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
     BEGIN TRY
 
@@ -153,7 +153,7 @@ BEGIN
         INTO #F_INTERVIEW_CASE_N
         FROM #F_INTERVIEW_CASE_INIT
             WHERE D_INTERVIEW_KEY NOT IN (SELECT D_INTERVIEW_KEY FROM dbo.F_INTERVIEW_CASE);
-                
+
 
         if
             @debug = 'true'
@@ -177,7 +177,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'INSERT INTO dbo.F_INTERVIEW_CASE';
 
-        
+
         INSERT INTO dbo.F_INTERVIEW_CASE (
             D_INTERVIEW_KEY,
             PATIENT_KEY,
@@ -221,9 +221,9 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'UPDATE dbo.F_INTERVIEW_CASE';
 
-        
+
         UPDATE fic
-            SET 
+            SET
                 fic.PATIENT_KEY = ficu.PATIENT_KEY,
                 fic.IX_INTERVIEWER_KEY = ficu.IX_INTERVIEWER_KEY,
                 fic.INVESTIGATION_KEY = ficu.INVESTIGATION_KEY,
@@ -262,7 +262,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'F_INTERVIEW_CASE', 'F_INTERVIEW_CASE', 'COMPLETE', 999, 'COMPLETE', 0);
-        
+
 
     END TRY
     BEGIN CATCH
@@ -270,17 +270,14 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
+    -- Construct the error message string with all details:
+    DECLARE @FullErrorMessage VARCHAR(8000) =
+        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Message: ' + ERROR_MESSAGE();
 
-        DECLARE
-            @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE
-            @ErrorLine INT = ERROR_LINE();
-        DECLARE
-            @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE
-            @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE
-            @ErrorState INT = ERROR_STATE();
 
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
@@ -296,8 +293,8 @@ BEGIN
                , 'F_INTERVIEW_CASE'
                , 'ERROR'
                , @Proc_Step_no
-               , 'ERROR - ' + @Proc_Step_name
-               , 'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
+               , @Proc_Step_name
+               , @FullErrorMessage
                , 0);
 
 

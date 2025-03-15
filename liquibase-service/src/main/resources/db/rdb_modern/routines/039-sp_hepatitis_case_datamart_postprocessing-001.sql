@@ -13,7 +13,7 @@ BEGIN
     DECLARE
         @batch_id BIGINT;
     SET
-        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
+        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmssffff')) as bigint);
 
     -- condition for investigation_form_cd uses the LIKE operator for Hepatitis_Case, so % is included
     DECLARE
@@ -24,7 +24,7 @@ BEGIN
         @tgt_table_nm VARCHAR(50) = 'Hepatitis_Case';
 
     -- used in the logging statements
-    DECLARE 
+    DECLARE
         @datamart_nm VARCHAR(100) = 'HEPATITIS_CASE_DATAMART';
 
     -- used in conditions for temp table queries and the dynamic sql (multivalue specific, not needed for tables without multivalue selections)
@@ -82,7 +82,7 @@ BEGIN
                    coded_response as response
             INTO #OBS_CODED_Hepatitis_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -122,7 +122,7 @@ BEGIN
                    txt_response as response
             INTO #OBS_TXT_Hepatitis_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -162,7 +162,7 @@ BEGIN
                    date_response as response
             INTO #OBS_DATE_Hepatitis_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -207,7 +207,7 @@ BEGIN
                 END AS converted_column
             INTO #OBS_NUMERIC_Hepatitis_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -250,7 +250,7 @@ BEGIN
                    branch_id
             INTO #OBS_CODED_HEP_multi_value_field
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -291,7 +291,7 @@ BEGIN
                    branch_id
             INTO #OBS_TXT_HEP_multi_value_field
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -332,7 +332,7 @@ BEGIN
                    branch_id
             INTO #OBS_DATE_HEP_multi_value_field
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -378,7 +378,7 @@ BEGIN
                 END AS converted_column
             INTO #OBS_NUMERIC_HEP_multi_value_field
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -404,7 +404,7 @@ BEGIN
         /*
             The below step gets a total list of all multivalue observation data, then
             keeps as many rows as the highest number of values from each type of observation.
-            For example, if for a certain phc_uid CODED has 6, TXT has 3, and NUMERIC has 9 
+            For example, if for a certain phc_uid CODED has 6, TXT has 3, and NUMERIC has 9
             selections, this will mean HEP_multi_value_field needs 9 total records inserted
             for that phc. This is because selections will share the same lines.
 
@@ -443,7 +443,7 @@ BEGIN
                 FROM #OBS_NUMERIC_HEP_multi_value_field
                 WHERE public_health_case_uid IS NOT NULL
             ),
-            ordered_selection as 
+            ordered_selection as
             (SELECT public_health_case_uid,
                    branch_id,
                    ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ORDER BY branch_id) as row_num
@@ -452,7 +452,7 @@ BEGIN
             SELECT DISTINCT ids.public_health_case_uid,
                             ids.row_num
             INTO #HEP_MULTI_VAL_IDS
-            FROM ordered_selection ids 
+            FROM ordered_selection ids
             LEFT JOIN dbo.nrt_hepatitis_case_group_key hcgk
                 ON ids.public_health_case_uid = hcgk.public_health_case_uid;
 
@@ -485,7 +485,7 @@ BEGIN
             drop table #OLD_GRP_KEYS;
 
 
-            SELECT HEP_MULTI_VAL_GRP_KEY 
+            SELECT HEP_MULTI_VAL_GRP_KEY
             INTO #OLD_GRP_KEYS
             FROM dbo.nrt_hepatitis_case_group_key
             where public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ','));
@@ -583,7 +583,7 @@ BEGIN
                 public_health_case_uid,
                 selection_number
             )
-            SELECT 
+            SELECT
             hepgrp.HEP_MULTI_VAL_GRP_KEY,
             ids.public_health_case_uid,
             ids.row_num AS selection_number
@@ -803,8 +803,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_CODED_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_CODED_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -822,8 +822,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_NUMERIC_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_NUMERIC_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -841,8 +841,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_TXT_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_TXT_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -860,8 +860,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_DATE_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_DATE_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -971,8 +971,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_CODED_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_CODED_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -990,8 +990,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_NUMERIC_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_NUMERIC_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -1009,8 +1009,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_TXT_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_TXT_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -1028,8 +1028,8 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_DATE_Hepatitis_Case 
-                WHERE public_health_case_uid IS NOT NULL 
+                #OBS_DATE_Hepatitis_Case
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -1092,7 +1092,7 @@ BEGIN
                             '')
             FROM (SELECT DISTINCT col_nm FROM #OBS_DATE_HEP_multi_value_field) AS cols;
 
-        
+
             SELECT @obsnum_insert_columns = COALESCE(
                 STRING_AGG(CAST(converted_column AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY col_nm), '')
             FROM (SELECT DISTINCT col_nm, converted_column FROM #OBS_NUMERIC_HEP_multi_value_field) AS cols;
@@ -1102,7 +1102,7 @@ BEGIN
         /*
             When the observation values are pivoted to get column names,
             a row number is assigned and used to join back onto
-            nrt_hepatitis_case_multi_val_key to insert the new data.        
+            nrt_hepatitis_case_multi_val_key to insert the new data.
         */
         SET @Insert_sql = '
         INSERT INTO dbo. ' + @multival_tgt_table_nm + ' (
@@ -1135,22 +1135,22 @@ BEGIN
             + CASE
                   WHEN @obsdate_columns != '' THEN ',' + @obsdate_columns
                   ELSE '' END +
-            ' FROM dbo.nrt_hepatitis_case_multi_val_key src 
-            
+            ' FROM dbo.nrt_hepatitis_case_multi_val_key src
+
              '
             + CASE
                       WHEN @obscoded_columns != '' THEN
                           ' LEFT JOIN (
-                          SELECT public_health_case_uid, row_num, ' + @obscoded_columns + ' 
+                          SELECT public_health_case_uid, row_num, ' + @obscoded_columns + '
         FROM (
             SELECT
                 public_health_case_uid,
                 col_nm,
                 ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ORDER BY branch_id) AS row_num,
-                response 
-            FROM 
-                 #OBS_CODED_HEP_multi_value_field 
-                WHERE public_health_case_uid IS NOT NULL 
+                response
+            FROM
+                 #OBS_CODED_HEP_multi_value_field
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -1161,16 +1161,16 @@ BEGIN
                               + CASE
                                     WHEN @obsnum_columns != '' THEN
                                         ' LEFT JOIN (
-                                        SELECT public_health_case_uid, row_num, ' + @obsnum_columns + ' 
+                                        SELECT public_health_case_uid, row_num, ' + @obsnum_columns + '
         FROM (
             SELECT
                 public_health_case_uid,
                 col_nm,
                 ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ORDER BY branch_id) AS row_num,
-                response 
-            FROM 
-                 #OBS_NUMERIC_HEP_multi_value_field 
-                WHERE public_health_case_uid IS NOT NULL 
+                response
+            FROM
+                 #OBS_NUMERIC_HEP_multi_value_field
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -1181,16 +1181,16 @@ BEGIN
                 + CASE
                       WHEN @obstxt_columns != '' THEN
                           ' LEFT JOIN (
-                          SELECT public_health_case_uid, row_num, ' + @obstxt_columns + ' 
+                          SELECT public_health_case_uid, row_num, ' + @obstxt_columns + '
         FROM (
             SELECT
                 public_health_case_uid,
                 col_nm,
                 ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ORDER BY branch_id) AS row_num,
-                response 
-            FROM 
-                 #OBS_TXT_HEP_multi_value_field 
-                WHERE public_health_case_uid IS NOT NULL 
+                response
+            FROM
+                 #OBS_TXT_HEP_multi_value_field
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -1201,16 +1201,16 @@ BEGIN
                 + CASE
                       WHEN @obsdate_columns != '' THEN
                           ' LEFT JOIN (
-                          SELECT public_health_case_uid, row_num, ' + @obsdate_columns + ' 
+                          SELECT public_health_case_uid, row_num, ' + @obsdate_columns + '
         FROM (
             SELECT
                 public_health_case_uid,
                 col_nm,
                 ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ORDER BY branch_id) AS row_num,
-                response 
-            FROM 
-                 #OBS_DATE_HEP_multi_value_field 
-                WHERE public_health_case_uid IS NOT NULL 
+                response
+            FROM
+                 #OBS_DATE_HEP_multi_value_field
+                WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
             MAX(response)
@@ -1249,7 +1249,7 @@ BEGIN
 
 
             DELETE FROM dbo.HEP_MULTI_VALUE_FIELD
-            WHERE HEP_MULTI_VAL_GRP_KEY in 
+            WHERE HEP_MULTI_VAL_GRP_KEY in
             (SELECT HEP_MULTI_VAL_GRP_KEY FROM #OLD_GRP_KEYS);
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -1269,7 +1269,7 @@ BEGIN
 
 
             DELETE FROM dbo.HEP_MULTI_VALUE_FIELD_GROUP
-            WHERE HEP_MULTI_VAL_GRP_KEY in 
+            WHERE HEP_MULTI_VAL_GRP_KEY in
             (SELECT HEP_MULTI_VAL_GRP_KEY FROM #OLD_GRP_KEYS);
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -1294,17 +1294,13 @@ BEGIN
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 
-        DECLARE
-            @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE
-            @ErrorLine INT = ERROR_LINE();
-        DECLARE
-            @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE
-            @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE
-            @ErrorState INT = ERROR_STATE();
-
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
                                          , [Dataflow_Name]
@@ -1320,7 +1316,7 @@ BEGIN
                , 'ERROR'
                , @Proc_Step_no
                , @Proc_Step_name
-               , LEFT(@ErrorMessage, 500)
+               , @FullErrorMessage
                , 0);
 
 

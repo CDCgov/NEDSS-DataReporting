@@ -25,7 +25,7 @@ BEGIN
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
         DECLARE @batch_id bigint;
-        SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmss')) AS bigint);
+        SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
 
         if
 	        @debug = 'true'
@@ -534,4 +534,3 @@ BEGIN
 END
 
     ;
-

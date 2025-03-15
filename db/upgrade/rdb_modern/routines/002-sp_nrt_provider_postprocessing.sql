@@ -14,7 +14,7 @@ BEGIN
         declare @dataflow_name varchar(200) = 'Provider POST-Processing';
         declare @package_name varchar(200) = 'sp_nrt_provider_postprocessing';
 
-        set @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
+        set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         INSERT INTO [dbo].[job_flow_log]
         (     batch_id
@@ -310,9 +310,14 @@ BEGIN
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
-        /* Logging */
         INSERT INTO [dbo].[job_flow_log]
         (     batch_id
         ,[create_dttm]
@@ -323,7 +328,8 @@ BEGIN
         ,[step_number]
         ,[step_name]
         ,[row_count]
-        ,[msg_description1])
+        ,[msg_description1]
+        ,[Error_Description])
         VALUES
             (
               @batch_id
@@ -333,12 +339,13 @@ BEGIN
             , @package_name
             , 'ERROR'
             , @Proc_Step_no
-            , 'Step -' + CAST (@Proc_Step_no AS VARCHAR (3))+' -' + CAST (@ErrorMessage AS VARCHAR (500))
+            , @proc_step_name
             , 0
             , LEFT (@id_list, 500)
+            , @FullErrorMessage
             );
 
-        return @ErrorMessage;
+        return @FullErrorMessage;
 
     END CATCH
 

@@ -13,7 +13,7 @@ BEGIN
     DECLARE
         @batch_id BIGINT;
     SET
-        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
+        @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
     /*
         add top level variables for form code and RDB table name
@@ -27,7 +27,7 @@ BEGIN
         @tgt_table_nm VARCHAR(50) = 'CRS_Case';
 
     -- used in the logging statements
-    DECLARE 
+    DECLARE
         @datamart_nm VARCHAR(100) = 'CRS_CASE_DATAMART';
 
     BEGIN TRY
@@ -136,10 +136,10 @@ BEGIN
                    response
             INTO #OBS_CODED_CRS_Case
             from processed_coded rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
-                AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm) 
+                AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
             WHERE RDB_TABLE = @tgt_table_nm and db_field = 'code'
               and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
@@ -176,7 +176,7 @@ BEGIN
                    txt_response as response
             INTO #OBS_TXT_CRS_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -216,14 +216,14 @@ BEGIN
                    date_response as response
             INTO #OBS_DATE_CRS_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
             WHERE RDB_TABLE = @tgt_table_nm and db_field = 'from_time'
               and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
             --AND unique_cd != 'CRS013'
-            
+
             /*
                 AND unique_cd != 'CRS013'
 
@@ -269,7 +269,7 @@ BEGIN
                 END AS converted_column
             INTO #OBS_NUMERIC_CRS_Case
             from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN 
+            LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
@@ -281,7 +281,7 @@ BEGIN
             /*
                 or unique_cd = 'CRS013'
 
-                
+
                 This condition was in temporarily, as CRS013 was improperly labeled as a date value. It caused an error if it is used in the date table.
                 As of the completion of ticket CNDE-2107, this value has been fixed in DTS1's NBS_SRTE.dbo.imrdbmapping
             */
@@ -314,7 +314,7 @@ BEGIN
             VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
                     @RowCount_no);
 
-        
+
         BEGIN TRANSACTION
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -409,7 +409,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_CODED_CRS_Case 
+                #OBS_CODED_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -428,7 +428,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_NUMERIC_CRS_Case 
+                #OBS_NUMERIC_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -447,7 +447,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_TXT_CRS_Case 
+                #OBS_TXT_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -466,7 +466,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_DATE_CRS_Case 
+                #OBS_DATE_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -575,7 +575,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_CODED_CRS_Case 
+                #OBS_CODED_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -594,7 +594,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_NUMERIC_CRS_Case 
+                #OBS_NUMERIC_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -613,7 +613,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_TXT_CRS_Case 
+                #OBS_TXT_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -632,7 +632,7 @@ BEGIN
                 col_nm,
                 response
             FROM
-                #OBS_DATE_CRS_Case 
+                #OBS_DATE_CRS_Case
             WHERE public_health_case_uid IS NOT NULL
         ) AS SourceData
         PIVOT (
@@ -673,17 +673,13 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-
-        DECLARE
-            @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE
-            @ErrorLine INT = ERROR_LINE();
-        DECLARE
-            @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE
-            @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE
-            @ErrorState INT = ERROR_STATE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
@@ -699,8 +695,8 @@ BEGIN
                , @datamart_nm
                , 'ERROR'
                , @Proc_Step_no
-               , 'ERROR - ' + @Proc_Step_name
-               , 'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
+               , @Proc_Step_name
+               , @FullErrorMessage
                , 0);
 
 
