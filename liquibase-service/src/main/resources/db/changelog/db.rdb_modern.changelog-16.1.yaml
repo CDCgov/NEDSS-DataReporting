@@ -1264,3 +1264,11 @@ databaseChangeLog:
         - sqlFile:
             path: 155-sp_sr100_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 250
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 081-create_nrt_investigation_aggregate-001.sql
+            splitStatements: false

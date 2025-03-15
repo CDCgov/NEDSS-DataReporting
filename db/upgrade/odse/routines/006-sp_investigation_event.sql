@@ -155,6 +155,7 @@ BEGIN
                results.organization_participations,
                results.investigation_confirmation_method,
                results.investigation_case_answer,
+               results.investigation_aggregate,
                results.investigation_case_management,
                results.investigation_notifications,
                results.investigation_case_count,
@@ -308,6 +309,7 @@ BEGIN
                      nesteddata.organization_participations,
                      nesteddata.investigation_confirmation_method,
                      nesteddata.investigation_case_answer,
+                     nesteddata.investigation_aggregate,
                      nesteddata.investigation_case_management,
                      nesteddata.investigation_notifications,
                      nesteddata.investigation_case_count
@@ -540,6 +542,36 @@ BEGIN
                                                             ) as answer_table) as answer_table
                                                  where rowid = 1
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_case_answer) AS investigation_case_answer,
+                                        -- get aggregate case answers
+                                        (SELECT (select *
+                                                 from (select na.act_uid as act_uid,
+                                                              na.nbs_case_answer_uid,
+                                                              na.answer_txt,
+                                                              nq.code_set_group_id,
+                                                              nq.data_type,
+                                                              ntm.datamart_column_nm
+                                                       from dbo.NBS_case_answer na with (nolock )
+                                                       join dbo.NBS_table_metadata ntm with (nolock)
+                                                           on ntm.nbs_table_metadata_uid = na.nbs_table_metadata_uid
+                                                       join dbo.NBS_question nq with (nolock)
+                                                            on nq.nbs_question_uid = na.nbs_question_uid
+                                                       WHERE na.nbs_table_metadata_uid is not null
+                                                           and na.act_uid = phc.public_health_case_uid
+                                                       union
+                                                       select na.act_uid,
+                                                              na.nbs_case_answer_uid,
+                                                              na.answer_txt,
+                                                              nq.code_set_group_id,
+                                                              nq.data_type,
+                                                              nq.datamart_column_nm
+                                                       from dbo.NBS_case_answer na with (nolock )
+                                                       join dbo.NBS_question nq with (nolock)
+                                                           on nq.nbs_question_uid = na.nbs_question_uid
+                                                       WHERE na.nbs_table_metadata_uid is null
+                                                           and na.act_uid = phc.public_health_case_uid
+                                                       ) as agg_rep
+                                                 WHERE phc.case_type_cd = 'A' /* Aggregate Report */
+                                                 FOR json path,INCLUDE_NULL_VALUES) as investigation_aggregate) as investigation_aggregate,
                                         -- get associated case management
                                         (SELECT (select cm.case_management_uid,
                                                         cm.public_health_case_uid,
