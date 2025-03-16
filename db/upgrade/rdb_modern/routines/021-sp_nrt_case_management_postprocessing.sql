@@ -474,7 +474,7 @@ BEGIN
                ,LEFT(@id_list, 500)
             ,@FullErrorMessage);
 
-        return @ErrorMessage;
+        return @FullErrorMessage;
 
     END CATCH
 

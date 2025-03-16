@@ -63,7 +63,13 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Message: ' + ERROR_MESSAGE();
+
         INSERT INTO [rdb_modern].[dbo].[job_flow_log] ( batch_id
                                                       , [Dataflow_Name]
                                                       , [package_Name]
@@ -83,9 +89,9 @@ BEGIN
                , 'Auth_user PRE-Processing Event'
                , 0
                , LEFT(@user_id_list, 199)
-                ,@ErrorMessage
+                ,@FullErrorMessage
             );
-        return @ErrorMessage;
+        return @FullErrorMessage;
 
     END CATCH
 

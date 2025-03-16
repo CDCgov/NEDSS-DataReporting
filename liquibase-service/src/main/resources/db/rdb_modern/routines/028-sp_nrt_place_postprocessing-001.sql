@@ -661,7 +661,7 @@ BEGIN
                , @FullErrorMessage);
 
 
-        return @ErrorMessage;
+        return @FullErrorMessage;
 
     END CATCH
 

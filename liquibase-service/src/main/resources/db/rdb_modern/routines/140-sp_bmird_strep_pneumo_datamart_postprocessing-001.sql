@@ -1,4 +1,4 @@
-CREATE   PROCEDURE [dbo].[sp_bmird_strep_pneumo_datamart_postprocessing]
+CREATE or ALTER  PROCEDURE [dbo].[sp_bmird_strep_pneumo_datamart_postprocessing]
     @phc_uids nvarchar(max),
     @debug bit = 'false'
 AS
