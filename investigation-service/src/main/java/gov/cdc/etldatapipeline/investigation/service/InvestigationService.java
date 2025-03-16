@@ -119,7 +119,8 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-ntf}",
                     "${spring.kafka.input.topic-name-int}",
                     "${spring.kafka.input.topic-name-ctr}",
-                    "${spring.kafka.input.topic-name-vac}"
+                    "${spring.kafka.input.topic-name-vac}",
+                    "${spring.kafka.input.topic-name-tmt}"
             }
     )
     public void processMessage(ConsumerRecord<String, String> rec,
@@ -284,8 +285,7 @@ public class InvestigationService {
                 TreatmentReportingKey treatmentReportingKey = new TreatmentReportingKey(treatment.getTreatmentUid());
 
                 String jsonKey = jsonGenerator.generateStringJson(treatmentReportingKey);
-                String jsonValue = jsonGenerator.generateStringJson(treatment);
-
+                String jsonValue = jsonGenerator.generateStringJson(treatment,"treatment_uid");
                 kafkaTemplate.send(treatmentOutputTopicName, jsonKey, jsonValue)
                         .whenComplete((res, e) -> logger.info("Treatment data (uid={}) sent to {}",
                                 treatment.getTreatmentUid(), treatmentOutputTopicName));

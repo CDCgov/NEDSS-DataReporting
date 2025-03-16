@@ -89,4 +89,7 @@ public class Treatment {
 
     @Column(name = "version_ctrl_nbr")
     private String versionControlNumber;
+
+    @Column(name = "morbidity_uid")
+    private String morbidityUid;
 }

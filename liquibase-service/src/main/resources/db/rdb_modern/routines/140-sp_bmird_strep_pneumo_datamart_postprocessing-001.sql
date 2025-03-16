@@ -9,7 +9,7 @@ BEGIN
         DECLARE @Proc_Step_no FLOAT = 0;
         DECLARE @Proc_Step_Name VARCHAR(200) = '';
         DECLARE @batch_id bigint;
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
         DECLARE @Dataflow_Name VARCHAR(200) = 'BMIRD_STREP_PNEUMO Post-Processing Event';
         DECLARE @Package_Name VARCHAR(200) = 'sp_bmird_strep_pneumo_datamart_postprocessing';
 
@@ -142,9 +142,9 @@ BEGIN
             END as PATIENT_ADDRESS
             into #BMIRD_PATIENT1
             from #INVKEYS BC
-            left join dbo.D_PATIENT as P with (nolock)
+            left join dbo.D_PATIENT as P with (nolock) 
                 on BC.PATIENT_KEY = P.PATIENT_key
-            left join dbo.CONDITION as C with (nolock)
+            left join dbo.CONDITION as C with (nolock) 
                 on C.CONDITION_KEY = BC.CONDITION_KEY
                 AND P.PATIENT_KEY <> 1
             ;
@@ -189,9 +189,9 @@ BEGIN
             from #BMIRD_PATIENT1 as bpa
             left join dbo.v_nrt_inv_keys_attrs_mapping as inv
             	on bpa.investigation_key = inv.investigation_key
-            left join dbo.INVESTIGATION i with (nolock)
+            left join dbo.INVESTIGATION i with (nolock) 
                 on i.INVESTIGATION_KEY  = bpa.INVESTIGATION_KEY and i.INVESTIGATION_KEY <> 1
-            left join dbo.EVENT_METRIC em with (nolock)
+            left join dbo.EVENT_METRIC em with (nolock) 
                 on em.event_uid = i.CASE_UID
             left outer join dbo.D_ORGANIZATION o with (nolock)
                 on inv.ADT_HSPTL_KEY = o.ORGANIZATION_KEY and o.ORGANIZATION_KEY <> 1
@@ -300,7 +300,7 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
                     1 as SORT_ORDER
             into #ANTIMICRO1A
             FROM #BMIRD_PATIENT1 bc
-            INNER JOIN dbo.ANTIMICROBIAL a with (nolock)
+            INNER JOIN dbo.ANTIMICROBIAL a with (nolock) 
                 ON bc.ANTIMICROBIAL_GRP_KEY = a.ANTIMICROBIAL_GRP_KEY
             WHERE a.ANTIMICROBIAL_GRP_KEY <> 1 AND a.ANTIMICROBIAL_AGENT_TESTED_IND = 'PENICILLIN'
             ORDER BY INVESTIGATION_KEY, SORT_ORDER;
@@ -546,7 +546,7 @@ Step 5: Merge the tables so that both <= 8 and > 8 results are included
                 a.UNDERLYING_CONDITION_NM as UNDERLYING_CONDITION_
             into #BMD127
             FROM #BMIRD_PATIENT1 bc
-            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
+            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock) 
                 on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
             WHERE a.UNDERLYING_CONDITION_NM IS NOT NULL
             ORDER BY bc.INVESTIGATION_KEY, a.UNDERLYING_CONDITION_NM;
@@ -653,7 +653,7 @@ Step 4: Merge the new table with the BMIRD_ANTIMICRO table
                 a.NON_STERILE_SITE AS NON_STERILE_SITE_
             into #DM_BMD125
             FROM #BMIRD_PATIENT1 bc
-            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
+            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock) 
                 on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
             WHERE A.NON_STERILE_SITE IS NOT NULL
             ORDER BY bc.INVESTIGATION_KEY, a.NON_STERILE_SITE;
@@ -664,7 +664,7 @@ Step 4: Merge the new table with the BMIRD_ANTIMICRO table
                 a.STREP_PNEUMO_1_CULTURE_SITES AS ADD_CULTURE_1_SITE_
             into #DM_BMD142
             FROM #BMIRD_PATIENT1 bc
-            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
+            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock) 
                 on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
             WHERE A.STREP_PNEUMO_1_CULTURE_SITES IS NOT NULL
             ORDER BY bc.INVESTIGATION_KEY, 	a.STREP_PNEUMO_1_CULTURE_SITES;
@@ -674,7 +674,7 @@ Step 4: Merge the new table with the BMIRD_ANTIMICRO table
                 a.STREP_PNEUMO_2_CULTURE_SITES  AS ADD_CULTURE_2_SITE_
             into #DM_BMD144
             FROM #BMIRD_PATIENT1 bc
-            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
+            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock) 
                 on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
             WHERE A.STREP_PNEUMO_2_CULTURE_SITES IS NOT NULL
             ORDER BY bc.INVESTIGATION_KEY, 	a.STREP_PNEUMO_2_CULTURE_SITES;
@@ -791,7 +791,7 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
                     distinct bc.INVESTIGATION_KEY,
                     a.TYPES_OF_INFECTIONS AS TYPES_OF_INFECTIONS_
                 from #BMIRD_PATIENT1 bc
-                INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
+                INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock) 
                     on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
             )
             SELECT
@@ -874,7 +874,16 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
             SELECT
                 INVESTIGATION_KEY,
                 STRING_AGG(TYPES_OF_INFECTIONS_, ',') WITHIN GROUP (ORDER BY TYPES_OF_INFECTIONS_ DESC)
-                AS TYPE_INFECTION_OTHERS_CONCAT
+                AS TYPE_INFECTION_OTHERS_CONCAT,
+                'No' as TYPE_INFECTION_BACTEREMIA,
+                'No' as TYPE_INFECTION_PNEUMONIA,
+                'No' as TYPE_INFECTION_MENINGITIS,
+                'No' as TYPE_INFECTION_EMPYEMA,
+                'No' as TYPE_INFECTION_CELLULITIS,
+                'No' as TYPE_INFECTION_PERITONITIS,
+                'No' as TYPE_INFECTION_PERICARDITIS,
+                'No' as TYPE_INFECTION_PUERPERAL_SEP,
+                'No' as TYPE_INFECTION_SEP_ARTHRITIS
             into #TYPE_INFECTION_INFO_OTHERS
             FROM #DM_BMD118
             WHERE _mark_ = 0
@@ -948,7 +957,7 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
                     distinct bc.INVESTIGATION_KEY,
                     a.STERILE_SITE AS STERILE_SITE_
                 FROM #BMIRD_PATIENT1 bc
-                INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
+                INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock) 
                     ON bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
             )
             SELECT
@@ -1022,7 +1031,13 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
             SELECT
                 INVESTIGATION_KEY,
                 STRING_AGG(STERILE_SITE_, ',') WITHIN GROUP (ORDER BY STERILE_SITE_ DESC)
-                AS STERILE_SITE_OTHERS_CONCAT
+                AS STERILE_SITE_OTHERS_CONCAT,
+                'No' as STERILE_SITE_BLOOD,
+				'No' as STERILE_SITE_CEREBRAL_SF,
+				'No' as STERILE_SITE_PLEURAL_FLUID,
+				'No' as STERILE_SITE_PERITONEAL_FLUID,
+				'No' as STERILE_SITE_PERICARDIAL_FLUID,
+				'No' as STERILE_SITE_JOINT_FLUID
             into #STEP_STERILE_SITE_INFO_OTHERS
             FROM #DM_BMD122
             WHERE _mark_ = 0
@@ -1511,7 +1526,7 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
                 ,src.CULTURE_SEROTYPE
                 ,src.OTHSEROTYPE
             FROM #BMIRD_ANTIMICRO_6 src
-            LEFT JOIN dbo.BMIRD_STREP_PNEUMO_DATAMART tgt
+            LEFT JOIN dbo.BMIRD_STREP_PNEUMO_DATAMART tgt 
                 on src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY
             WHERE tgt.INVESTIGATION_KEY IS NULL;
 

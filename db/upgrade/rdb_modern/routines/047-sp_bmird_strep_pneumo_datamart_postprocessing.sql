@@ -9,7 +9,7 @@ BEGIN
         DECLARE @Proc_Step_no FLOAT = 0;
         DECLARE @Proc_Step_Name VARCHAR(200) = '';
         DECLARE @batch_id bigint;
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
         DECLARE @Dataflow_Name VARCHAR(200) = 'BMIRD_STREP_PNEUMO Post-Processing Event';
         DECLARE @Package_Name VARCHAR(200) = 'sp_bmird_strep_pneumo_datamart_postprocessing';
 
@@ -874,7 +874,16 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
             SELECT
                 INVESTIGATION_KEY,
                 STRING_AGG(TYPES_OF_INFECTIONS_, ',') WITHIN GROUP (ORDER BY TYPES_OF_INFECTIONS_ DESC)
-                AS TYPE_INFECTION_OTHERS_CONCAT
+                AS TYPE_INFECTION_OTHERS_CONCAT,
+                'No' as TYPE_INFECTION_BACTEREMIA,
+                'No' as TYPE_INFECTION_PNEUMONIA,
+                'No' as TYPE_INFECTION_MENINGITIS,
+                'No' as TYPE_INFECTION_EMPYEMA,
+                'No' as TYPE_INFECTION_CELLULITIS,
+                'No' as TYPE_INFECTION_PERITONITIS,
+                'No' as TYPE_INFECTION_PERICARDITIS,
+                'No' as TYPE_INFECTION_PUERPERAL_SEP,
+                'No' as TYPE_INFECTION_SEP_ARTHRITIS
             into #TYPE_INFECTION_INFO_OTHERS
             FROM #DM_BMD118
             WHERE _mark_ = 0
@@ -1022,7 +1031,13 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
             SELECT
                 INVESTIGATION_KEY,
                 STRING_AGG(STERILE_SITE_, ',') WITHIN GROUP (ORDER BY STERILE_SITE_ DESC)
-                AS STERILE_SITE_OTHERS_CONCAT
+                AS STERILE_SITE_OTHERS_CONCAT,
+                'No' as STERILE_SITE_BLOOD,
+				'No' as STERILE_SITE_CEREBRAL_SF,
+				'No' as STERILE_SITE_PLEURAL_FLUID,
+				'No' as STERILE_SITE_PERITONEAL_FLUID,
+				'No' as STERILE_SITE_PERICARDIAL_FLUID,
+				'No' as STERILE_SITE_JOINT_FLUID
             into #STEP_STERILE_SITE_INFO_OTHERS
             FROM #DM_BMD122
             WHERE _mark_ = 0
