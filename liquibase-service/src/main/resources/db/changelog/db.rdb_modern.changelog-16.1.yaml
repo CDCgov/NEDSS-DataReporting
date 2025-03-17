@@ -1287,4 +1287,28 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false                
+            splitStatements: false   
+  - changeSet:
+      id: 265
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 095-create_d_tb_hiv-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 270
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 100-create_nrt_d_tb_hiv_key-001.sql
+            splitStatements: false            
+  - changeSet:
+      id: 275
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 160-sp_nrt_d_tb_hiv_postprocessing-001.sql
+            splitStatements: false  
