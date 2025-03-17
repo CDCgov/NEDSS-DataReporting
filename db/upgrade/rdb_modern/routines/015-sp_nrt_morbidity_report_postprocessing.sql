@@ -118,19 +118,6 @@ BEGIN
                  inner join dbo.nrt_observation_txt obstxt on obs.observation_uid = obstxt.observation_uid
         where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1);
 
-        --
---        select obstxt.*
---        into #tmp_nrt_observation_txt
---        from (
---                 select *
---                 from dbo.nrt_observation_txt
---                 where observation_uid in (select value from STRING_SPLIT(@pMorbidityIdList, ',') )
---             ) obstxt
---                 left outer join dbo.nrt_observation obs
---                 on obs.observation_uid = obstxt.observation_uid
---        where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
---       ;
---
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_nrt_observation_txt;
 
@@ -156,18 +143,6 @@ BEGIN
                  inner join dbo.nrt_observation_coded obscoded on obs.observation_uid = obscoded.observation_uid
         where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1);
 
-        --
---        select obscoded.*
---        into #tmp_nrt_observation_coded
---        from (
---                 select *
---                 from dbo.nrt_observation_coded
---                 where observation_uid in (select value from STRING_SPLIT(@pMorbidityIdList, ',') )
---             ) obscoded
---                 left outer join dbo.nrt_observation obs
---                 on obs.observation_uid = obscoded.observation_uid
---        where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1)
---        ;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_nrt_observation_coded;
 
@@ -190,22 +165,11 @@ BEGIN
         into #tmp_nrt_investigation_observation
         from #morb_obs_reference obsref
                  left join dbo.nrt_investigation_observation invobs on obsref.observation_uid = invobs.observation_id
-            --on isnull(invobs.batch_id,1) = isnull(obsref.batch_id,1)
                  left outer join dbo.nrt_investigation inv
                                  on inv.public_health_case_uid = invobs.public_health_case_uid
         where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1);
 
-        --        select invobs.*
---        into #tmp_nrt_investigation_observation
---        from (
---                 select *
---                 from dbo.NRT_INVESTIGATION_OBSERVATION
---                 where observation_id in (select value from STRING_SPLIT(@pMorbidityIdList, ',') )
---             ) invobs
---                 left outer join dbo.NRT_INVESTIGATION inv
---                 on inv.public_health_case_uid = invobs.public_health_case_uid
---        where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
---        ;
+
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_nrt_investigation_observation;
 
@@ -361,7 +325,8 @@ BEGIN
         --Get MorbFrmQ associated to observation using cd in nrt_observation.
         SELECT mr.morb_rpt_uid,
                no2.cd,
-               no2.observation_uid
+               no2.observation_uid,
+               no2.batch_id
         into #tmp_MorbFrmQ
         FROM #tmp_morb_root					AS mr
                  inner join #nrt_morbidity_observation o ON mr.morb_rpt_uid = o.observation_uid
@@ -394,7 +359,8 @@ BEGIN
         INTO #tmp_MorbFrmQCoded
         FROM #tmp_MorbFrmQ					AS oq
                  INNER JOIN #tmp_nrt_observation_coded AS ob
-                            ON oq.observation_uid = ob.observation_uid;
+                            ON oq.observation_uid = ob.observation_uid
+                                AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
 
         if @debug = 'true' SELECT 'DEBUG: tmp_MorbFrmQCoded', * FROM #tmp_MorbFrmQCoded;
 
@@ -419,7 +385,8 @@ BEGIN
         INTO #tmp_MorbFrmQDate
         FROM	#tmp_MorbFrmQ					AS oq
                     INNER JOIN  dbo.nrt_observation_date AS ob ON
-            oq.observation_uid = ob.observation_uid;
+            oq.observation_uid = ob.observation_uid
+        ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -441,7 +408,8 @@ BEGIN
                   REPLACE(REPLACE(ob.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')	as VALUE_TXT
         INTO #tmp_MorbFrmQTxt
         FROM #tmp_MorbFrmQ					AS oq
-                 INNER JOIN #tmp_nrt_observation_txt AS ob ON oq.observation_uid = ob.observation_uid;
+                 INNER JOIN #tmp_nrt_observation_txt AS ob ON oq.observation_uid = ob.observation_uid
+            AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -718,7 +686,7 @@ BEGIN
                Cast( NULL AS VARCHAR(50)) AS HOSPITALIZED_IND,
                Cast( NULL AS VARCHAR(50)) AS DIE_FROM_ILLNESS_IND,
                Cast( NULL AS VARCHAR(50)) AS DAYCARE_IND,
-               Cast( NULL AS VARCHAR(50)) AS FOOD_HANDLER_IND,
+        Cast( NULL AS VARCHAR(50)) AS FOOD_HANDLER_IND,
                Cast( NULL AS VARCHAR(50)) AS PREGNANT_IND,
                Cast( NULL AS VARCHAR(50)) AS HEALTHCARE_ORG_ASSOCIATE_IND,
                Cast( NULL AS VARCHAR(50)) AS SUSPECT_FOOD_WTRBORNE_ILLNESS,
