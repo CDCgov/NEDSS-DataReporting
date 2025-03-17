@@ -1327,3 +1327,42 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_addl_risk_postprocessing-001.sql
+  - changeSet:
+      id: 355
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 098-create_d_out_of_cntry_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 360
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 099-create_d_out_of_cntry-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 365
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 100-create_nrt_d_out_of_cntry_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 370
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 101-create_nrt_d_out_of_cntry_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 375
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 175-sp_nrt_d_out_of_cntry_postprocessing-001.sql

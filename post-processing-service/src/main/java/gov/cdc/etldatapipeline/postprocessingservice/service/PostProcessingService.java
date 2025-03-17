@@ -327,6 +327,9 @@ public class PostProcessingService {
 
         processTopic(keyTopic, D_ADDL_RISK, ids,
                 investigationRepository::executeStoredProcForDAddlRisk);
+        
+        processTopic(keyTopic, D_OUT_OF_CNTRY, ids,
+                investigationRepository::executeStoredProcForDOutOfCntry);        
 
         return dmData;
     }
