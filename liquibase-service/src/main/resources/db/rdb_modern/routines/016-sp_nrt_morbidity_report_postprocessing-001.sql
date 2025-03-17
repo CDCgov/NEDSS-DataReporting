@@ -19,7 +19,7 @@ BEGIN
      */
 
     DECLARE @batch_id BIGINT;
-    SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmss')) AS BIGINT);
+    SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmssffff')) AS BIGINT);
     DECLARE @RowCount_no INT ;
     DECLARE @Proc_Step_no FLOAT = 0 ;
     DECLARE @Proc_Step_Name VARCHAR(200) = '' ;

@@ -94,3 +94,4 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
             @Param("organizationUids") String organizationUids,
             @Param("publicHealthCaseUids") String publicHealthCaseUids);
 }
+   

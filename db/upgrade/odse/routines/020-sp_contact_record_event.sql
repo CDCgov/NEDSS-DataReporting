@@ -18,7 +18,7 @@ BEGIN
 
     DECLARE @batch_id BIGINT;
 
-    SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+    SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
     if
             @debug = 'true'
