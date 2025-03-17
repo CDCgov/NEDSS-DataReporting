@@ -49,7 +49,7 @@ BEGIN
                 @PROC_STEP_NAME = 'GENERATING #S_D_GT_12_REAS_TRANSLATED';
 
             IF OBJECT_ID('#S_D_GT_12_REAS_TRANSLATED', 'U') IS NOT NULL
-            drop table #S_D_GT_12_REAS_TRANSLATED;
+                DROP TABLE #S_D_GT_12_REAS_TRANSLATED;
             
             SELECT 
                 CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
@@ -106,10 +106,8 @@ BEGIN
             SELECT 
                 *, 
                 CASE 
-                    WHEN CODE_SET_GROUP_ID IS NULL OR CODE_SET_GROUP_ID = '' 
-                    THEN ANSWER_TXT 
-                    WHEN CODE_SET_GROUP_ID<>'' THEN  CODE_SHORT_DESC_TXT 
-                    ELSE ANSWER_TXT
+                    WHEN CODE_SET_GROUP_ID IS NULL OR CODE_SET_GROUP_ID = '' THEN ANSWER_TXT
+                    ELSE CODE_SHORT_DESC_TXT
                 END AS VALUE
             INTO #S_D_GT_12_REAS
             FROM #S_D_GT_12_REAS_TRANSLATED WITH (NOLOCK);
@@ -198,7 +196,7 @@ BEGIN
                 @PROC_STEP_NAME = 'GENERATING #D_TB_PAM_TEMP';
 
             IF OBJECT_ID('#D_TB_PAM_TEMP', 'U') IS NOT NULL
-            drop table #D_TB_PAM_TEMP;
+                DROP TABLE #D_TB_PAM_TEMP;
             
 
             SELECT DISTINCT D_TB_PAM.TB_PAM_UID
@@ -238,7 +236,6 @@ BEGIN
 
             SELECT 
                 D_TB_PAM.TB_PAM_UID,
-                --GK.TB_PAM_UID AS D_ADDL_RISK_UID, --fdkjsfdsf
                 GK.D_GT_12_REAS_GROUP_KEY
             INTO #L_D_GT_12_REAS_GROUP
             FROM #D_TB_PAM_TEMP D_TB_PAM
@@ -268,14 +265,12 @@ BEGIN
                 @PROC_STEP_NAME = 'GENERATING #L_D_GT_12_REAS';
 
             IF OBJECT_ID('#L_D_GT_12_REAS', 'U') IS NOT NULL
-            drop table #L_D_GT_12_REAS;
+                DROP TABLE #L_D_GT_12_REAS;
 
             SELECT L.TB_PAM_UID,  
                 K.NBS_CASE_ANSWER_UID, 
                 COALESCE(L.D_GT_12_REAS_GROUP_KEY, 1) AS D_GT_12_REAS_GROUP_KEY,
                 COALESCE(K.D_GT_12_REAS_KEY, 1) AS D_GT_12_REAS_KEY
-                --CASE WHEN L.D_GT_12_REAS_GROUP_KEY IS NULL THEN 1 ELSE L.D_GT_12_REAS_GROUP_KEY END AS D_GT_12_REAS_GROUP_KEY,
-                --CASE WHEN K.D_GT_12_REAS_KEY IS NULL THEN 1 ELSE  K.D_GT_12_REAS_KEY END AS D_GT_12_REAS_KEY
             INTO #L_D_GT_12_REAS
             FROM #L_D_GT_12_REAS_GROUP L 
             LEFT OUTER JOIN [dbo].nrt_d_gt_12_reas_key K  WITH (NOLOCK)
@@ -306,17 +301,17 @@ BEGIN
             IF OBJECT_ID('#TEMP_D_GT_12_REAS', 'U') IS NOT NULL
                 DROP TABLE #TEMP_D_GT_12_REAS;
 
-            SELECT LAR.TB_PAM_UID,
-                LAR.D_GT_12_REAS_KEY, 
+            SELECT L.TB_PAM_UID,
+                L.D_GT_12_REAS_KEY, 
                 S.SEQ_NBR,
-                LAR.D_GT_12_REAS_GROUP_KEY,
+                L.D_GT_12_REAS_GROUP_KEY,
                 S.LAST_CHG_TIME,
                 S.VALUE
             INTO #TEMP_D_GT_12_REAS
-            FROM #L_D_GT_12_REAS LAR  
+            FROM #L_D_GT_12_REAS L  
             LEFT OUTER JOIN #S_D_GT_12_REAS S
-                ON 	S.TB_PAM_UID=LAR.TB_PAM_UID
-                AND S.NBS_CASE_ANSWER_UID= LAR.NBS_CASE_ANSWER_UID;
+                ON 	S.TB_PAM_UID=L.TB_PAM_UID
+                AND S.NBS_CASE_ANSWER_UID= L.NBS_CASE_ANSWER_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
                 
