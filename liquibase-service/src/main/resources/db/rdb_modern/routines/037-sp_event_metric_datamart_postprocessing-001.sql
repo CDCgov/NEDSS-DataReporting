@@ -16,7 +16,7 @@ BEGIN
     DECLARE
 @batch_id BIGINT;
     SET
-@batch_id = cast((format(getdate(), 'yyyyMMddHHmmss')) as bigint);
+@batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
     -- used in the logging statements
     DECLARE
@@ -1064,36 +1064,31 @@ BEGIN CATCH
 
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
+    -- Construct the error message string with all details:
+    DECLARE @FullErrorMessage VARCHAR(8000) =
+        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Message: ' + ERROR_MESSAGE();
 
-        DECLARE
-@ErrorNumber INT = ERROR_NUMBER();
-        DECLARE
-@ErrorLine INT = ERROR_LINE();
-        DECLARE
-@ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE
-@ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE
-@ErrorState INT = ERROR_STATE();
-
-
-INSERT INTO [dbo].[job_flow_log]
-( batch_id
-    , [Dataflow_Name]
-    , [package_Name]
-    , [Status_Type]
-    , [step_number]
-    , [step_name]
-    , [Error_Description]
-    , [row_count])
-VALUES ( @batch_id
-        , @datamart_nm
-        , @datamart_nm
-        , 'ERROR'
-        , @Proc_Step_no
-        , 'ERROR - ' + @Proc_Step_name
-        , 'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
-        , 0);
+    INSERT INTO [dbo].[job_flow_log]
+    ( batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [Error_Description]
+        , [row_count])
+    VALUES ( @batch_id
+            , @datamart_nm
+            , @datamart_nm
+            , 'ERROR'
+            , @Proc_Step_no
+            , @Proc_Step_name
+            , @FullErrorMessage
+            , 0);
 
 
 return -1;
