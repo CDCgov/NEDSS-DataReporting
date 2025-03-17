@@ -1,4 +1,4 @@
-CREATE OR PROCEDURE [dbo].[sp_d_morbidity_report_postprocessing]
+CREATE OR ALTER PROCEDURE [dbo].[sp_d_morbidity_report_postprocessing]
 (@pMorbidityIdList nvarchar(max)
 , @debug bit = 'false')
 
