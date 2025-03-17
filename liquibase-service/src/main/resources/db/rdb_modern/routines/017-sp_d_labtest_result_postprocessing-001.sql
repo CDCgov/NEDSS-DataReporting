@@ -21,7 +21,7 @@ BEGIN
      */
 
     DECLARE @batch_id bigint;
-    SET @batch_id = CAST((format(GETDATE(), 'yyMMddHHmmss')) AS bigint);
+    SET @batch_id = CAST((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
     DECLARE @RowCount_no INT ;
     DECLARE @Proc_Step_no FLOAT = 0 ;
     DECLARE @Proc_Step_Name VARCHAR(200) = '' ;

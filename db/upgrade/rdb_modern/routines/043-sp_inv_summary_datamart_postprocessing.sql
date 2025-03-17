@@ -11,7 +11,7 @@ BEGIN
         DECLARE @Proc_Step_no FLOAT = 0;
         DECLARE @Proc_Step_Name VARCHAR(200) = '';
         DECLARE @batch_id bigint;
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
         DECLARE @Dataflow_Name VARCHAR(200) = 'INV_SUMM_DATAMART Post-Processing Event';
         DECLARE @Package_Name VARCHAR(200) = 'sp_inv_summary_datamart_postprocessing';
 
