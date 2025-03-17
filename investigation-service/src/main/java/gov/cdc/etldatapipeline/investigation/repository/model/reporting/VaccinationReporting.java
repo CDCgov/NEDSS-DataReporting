@@ -21,6 +21,10 @@ public class VaccinationReporting {
     private String localId;
     private String recordStatusCd;
     private String recordStatusTime;
+    private String statusTime;
+    private String progAreaCd;
+    private String jurisdictionCd;
+    private Long programJurisdictionOid;
     private String vaccineAdministeredDate;
     private Integer vaccineDoseNbr;
     private String vaccinationAdministeredNm;
