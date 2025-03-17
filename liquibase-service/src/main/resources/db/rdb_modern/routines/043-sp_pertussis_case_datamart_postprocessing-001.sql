@@ -5,7 +5,7 @@ AS
 
 BEGIN
     DECLARE @batch_id BIGINT;
-    SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmss')) as bigint);
+    SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmssffff')) as bigint);
     PRINT @batch_id;
     DECLARE @RowCount_no int;
     DECLARE @Proc_Step_no float= 0;
@@ -1711,14 +1711,22 @@ BEGIN
             BEGIN
                 ROLLBACK TRANSACTION;
             END;
-        DECLARE @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE @ErrorLine INT = ERROR_LINE();
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
+        DECLARE @FullErrorMessage NVARCHAR(4000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
-        VALUES( @Batch_id, @datamart_nm, @datamart_nm, 'ERROR', @Proc_Step_no, 'ERROR - '+@Proc_Step_name, 'Step -'+CAST(@Proc_Step_no AS varchar(3))+' -'+CAST(@ErrorMessage AS varchar(500)), 0 );
+        VALUES( @Batch_id
+          , @datamart_nm
+          , @datamart_nm
+          , 'ERROR'
+          , @Proc_Step_no
+          , @Proc_Step_name
+          , @FullErrorMessage
+          , 0 );
         RETURN -1;
 
     END CATCH;

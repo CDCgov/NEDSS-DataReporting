@@ -12,7 +12,7 @@ BEGIN
 
     BEGIN TRY
         DECLARE @batch_id BIGINT;
-        SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmss')) AS BIGINT);
+        SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmssffff')) AS BIGINT);
 
         -- Initial log entry
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]

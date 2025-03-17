@@ -1384,14 +1384,23 @@ ON #CODED_TABLE_REPT
             END;
 
 
-        DECLARE @ErrorNumber int= ERROR_NUMBER();
-        DECLARE @ErrorLine int= ERROR_LINE();
-        DECLARE @ErrorMessage nvarchar(4000)= ERROR_MESSAGE();
-        DECLARE @ErrorSeverity int= ERROR_SEVERITY();
-        DECLARE @ErrorState int= ERROR_STATE();
+		-- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'D_INVESTIGATION_REPEAT', 'ERROR', @Proc_Step_no, 'ERROR - ' + @Proc_Step_name, 'Step -' + CAST(@Proc_Step_no AS varchar(3)) + ' -' + CAST(@ErrorMessage AS varchar(500)), 0 );
+        VALUES( @Batch_id
+          , 'INVESTIGATION_REPEAT'
+          , 'D_INVESTIGATION_REPEAT'
+          , 'ERROR'
+          , @Proc_Step_no
+          , @Proc_Step_name
+          , @FullErrorMessage
+          , 0 );
 
         RETURN -1;
     END CATCH;
