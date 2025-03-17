@@ -1327,3 +1327,42 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_addl_risk_postprocessing-001.sql
+  - changeSet:
+      id: 305
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 091-create_d_gt_12_reas_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 310
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 092-create_nrt_d_gt_12_reas-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 315
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 093-create_d_gt_12_reas_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 320
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 094-create_nrt_d_gt_12_reas_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 325
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 165-sp_nrt_d_gt_12_reas_postprocessing-001.sql
