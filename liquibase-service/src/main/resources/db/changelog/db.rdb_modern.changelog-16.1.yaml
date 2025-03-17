@@ -1264,3 +1264,27 @@ databaseChangeLog:
         - sqlFile:
             path: 155-sp_sr100_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 250
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 063-create_d_tb_pam-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 255
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 064-create_nrt_d_tb_pam_key-001.sql
+            splitStatements: false            
+  - changeSet:
+      id: 260
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false                

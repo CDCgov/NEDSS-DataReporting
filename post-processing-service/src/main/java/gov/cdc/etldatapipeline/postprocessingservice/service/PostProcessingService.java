@@ -46,16 +46,18 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
 
-    //cache to store ids from nrt topics that needs to be processed for loading dims and facts
-    //a map of nrt topic name and it's associated ids
+    // cache to store ids from nrt topics that needs to be processed for loading
+    // dims and facts
+    // a map of nrt topic name and it's associated ids
     final Map<String, Queue<Long>> idCache = new ConcurrentHashMap<>();
 
-    //cache to store ids and additional information specific to those IDs like page case information
-    //a map of ids (phc_ids as of now) and a comma seperated string of information
+    // cache to store ids and additional information specific to those IDs like page
+    // case information
+    // a map of ids (phc_ids as of now) and a comma seperated string of information
     final Map<Long, String> idVals = new ConcurrentHashMap<>();
 
-    //cache to store ids that needs to be processed for datamarts
-    //a map of datamart names and the needed ids
+    // cache to store ids that needs to be processed for datamarts
+    // a map of datamart names and the needed ids
     final Map<String, Set<Map<Long, Long>>> dmCache = new ConcurrentHashMap<>();
 
     private final PostProcRepository postProcRepository;
@@ -77,25 +79,20 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
-    @Value("${featureFlag.disease-site-enable}")
-    private boolean diseaseSiteEnable;
-
     @RetryableTopic(
-            attempts = "${spring.kafka.consumer.max-retry}",
-            autoCreateTopics = "false",
-            dltStrategy = DltStrategy.FAIL_ON_ERROR,
-            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
+            attempts = "${spring.kafka.consumer.max-retry}", 
+            autoCreateTopics = "false", 
+            dltStrategy = DltStrategy.FAIL_ON_ERROR, 
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
             dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
             // retry topic name, such as topic-retry-1, topic-retry-2, etc
             topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
             // time to wait before attempting to retry
-            backoff = @Backoff(delay = 1000, multiplier = 2.0),
-            exclude = {
+            backoff = @Backoff(delay = 1000, multiplier = 2.0), exclude = {
                     SerializationException.class,
                     DeserializationException.class,
                     RuntimeException.class
-            }
-    )
+            })
     @KafkaListener(topics = {
             "${spring.kafka.topic.investigation}",
             "${spring.kafka.topic.organization}",
@@ -130,7 +127,8 @@ public class PostProcessingService {
 
             Entity entity = getEntityByTopic(topic);
             if (Objects.isNull(keyNode.get(PAYLOAD).get(entity.getUidName()))) {
-                throw new NoSuchElementException("The '" + entity.getUidName() + "' value is missing in the '" + topic + "' message payload.");
+                throw new NoSuchElementException(
+                        "The '" + entity.getUidName() + "' value is missing in the '" + topic + "' message payload.");
             }
             return keyNode.get(PAYLOAD).get(entity.getUidName()).asLong();
         } catch (Exception e) {
@@ -140,20 +138,18 @@ public class PostProcessingService {
     }
 
     @RetryableTopic(
-            attempts = "${spring.kafka.consumer.max-retry}",
-            autoCreateTopics = "false",
-            dltStrategy = DltStrategy.FAIL_ON_ERROR,
-            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
-            dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
-            topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
-            backoff = @Backoff(delay = 1000, multiplier = 2.0),
-            exclude = {
-                    SerializationException.class,
-                    DeserializationException.class,
-                    RuntimeException.class
-            }
-    )
-    @KafkaListener(topics = {"${spring.kafka.topic.datamart}"})
+        attempts = "${spring.kafka.consumer.max-retry}", 
+        autoCreateTopics = "false", 
+        dltStrategy = DltStrategy.FAIL_ON_ERROR, 
+        retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
+        dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}", 
+        topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE, 
+        backoff = @Backoff(delay = 1000, multiplier = 2.0), exclude = {
+            SerializationException.class,
+            DeserializationException.class,
+            RuntimeException.class
+    })
+    @KafkaListener(topics = { "${spring.kafka.topic.datamart}" })
     public void postProcessDatamart(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Payload String payload) {
@@ -167,7 +163,9 @@ public class PostProcessingService {
                 return;
             }
             if (Objects.isNull(dmData.getPublicHealthCaseUid()) || Objects.isNull(dmData.getPatientUid())) {
-                logger.info("For payload: {} DataMart Public Health Case/Patient Id is null. Skipping further processing", payloadNode);
+                logger.info(
+                        "For payload: {} DataMart Public Health Case/Patient Id is null. Skipping further processing",
+                        payloadNode);
                 return;
             }
             if (Objects.isNull(dmData.getDatamart())) {
@@ -194,7 +192,8 @@ public class PostProcessingService {
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
             idCache.clear();
 
-            idValsSnapshot = idVals.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            idValsSnapshot = idVals.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             idVals.clear();
         }
 
@@ -245,7 +244,8 @@ public class PostProcessingService {
                     case CONTACT:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
                         processTopic(keyTopic, entity.getEntityName(), ids,
-                                postProcRepository::executeStoredProcForFContactRecordCase, "sp_f_contact_record_case_postprocessing");
+                                postProcRepository::executeStoredProcForFContactRecordCase,
+                                "sp_f_contact_record_case_postprocessing");
                         contactRecordUids = ids;
                         break;
                     case NOTIFICATION:
@@ -258,14 +258,17 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment);
                         break;
                     case CASE_MANAGEMENT:
-                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
+                        processTopic(keyTopic, entity, ids,
+                                investigationRepository::executeStoredProcForCaseManagement);
                         processTopic(keyTopic, entity.getEntityName(), ids,
-                                investigationRepository::executeStoredProcForFStdPageCase, "sp_f_std_page_case_postprocessing");
+                                investigationRepository::executeStoredProcForFStdPageCase,
+                                "sp_f_std_page_case_postprocessing");
                         break;
                     case INTERVIEW:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview);
                         processTopic(keyTopic, entity.getEntityName(), ids,
-                                postProcRepository::executeStoredProcForFInterviewCase, "sp_f_interview_case_postprocessing");
+                                postProcRepository::executeStoredProcForFInterviewCase,
+                                "sp_f_interview_case_postprocessing");
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
@@ -277,7 +280,8 @@ public class PostProcessingService {
                     case VACCINATION:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
                         processTopic(keyTopic, entity.getEntityName(), ids,
-                                postProcRepository::executeStoredProcForFVaccination, "sp_f_vaccination_postprocessing");
+                                postProcRepository::executeStoredProcForFVaccination,
+                                "sp_f_vaccination_postprocessing");
                         break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
@@ -286,19 +290,21 @@ public class PostProcessingService {
             }
             datamartProcessor.process(dmData);
 
-            processMultiIDDatamart(investigationUids, patientUids, providerUids, organizationUids, observationUids, notificationUids, contactRecordUids);
+            processMultiIDDatamart(investigationUids, patientUids, providerUids, organizationUids, observationUids,
+                    notificationUids, contactRecordUids);
         } else {
             logger.info("No ids to process from the topics.");
         }
     }
 
-    private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids, Map<Long, String> idValsSnapshot) {
+    private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids,
+            Map<Long, String> idValsSnapshot) {
         List<DatamartData> dmData;
         dmData = processTopic(keyTopic, entity, ids,
                 investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
-        ids.stream().filter(idValsSnapshot::containsKey).forEach(id ->
-                processTopic(keyTopic, CASE_ANSWERS, id, idValsSnapshot.get(id),
+        ids.stream().filter(idValsSnapshot::containsKey)
+                .forEach(id -> processTopic(keyTopic, CASE_ANSWERS, id, idValsSnapshot.get(id),
                         investigationRepository::executeStoredProcForPageBuilder));
 
         processTopic(keyTopic, F_PAGE_CASE, ids,
@@ -313,14 +319,17 @@ public class PostProcessingService {
         processTopic(keyTopic, SR100_DATAMART, ids,
                 investigationRepository::executeStoredProcForSR100Datamart);
 
-        if(diseaseSiteEnable){
-            processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
-        }
+        processTopic(keyTopic, D_TB_PAM, ids,
+                investigationRepository::executeStoredProcForDTBPAM);
+                
+        processTopic(keyTopic, D_DISEASE_SITE, ids, 
+                investigationRepository::executeStoredProcForDDiseaseSite);
 
         return dmData;
     }
 
-    private List<DatamartData> processObservation(Map<Long, String> idValsSnapshot, String keyTopic, Entity entity, List<DatamartData> dmData) {
+    private List<DatamartData> processObservation(Map<Long, String> idValsSnapshot, String keyTopic, Entity entity,
+            List<DatamartData> dmData) {
         final List<Long> morbIds;
         final List<Long> labIds;
         synchronized (cacheLock) {
@@ -363,19 +372,23 @@ public class PostProcessingService {
                 String cases = dmSet.stream()
                         .flatMap(m -> m.keySet().stream().map(String::valueOf)).collect(Collectors.joining(","));
 
-                //make sure the entity names for datamart enum values follows the same naming as the enum itself
+                // make sure the entity names for datamart enum values follows the same naming
+                // as the enum itself
                 switch (Entity.valueOf(dmType.toUpperCase())) {
                     case HEPATITIS_DATAMART:
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), cases);
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, CASE_LAB_DATAMART.getEntityName(),
+                                CASE_LAB_DATAMART.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForCaseLabDatamart(cases);
                         completeLog(CASE_LAB_DATAMART.getStoredProcedure());
 
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, HEPATITIS_DATAMART.getStoredProcedure(), cases);
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, HEPATITIS_DATAMART.getStoredProcedure(),
+                                cases);
                         investigationRepository.executeStoredProcForHepDatamart(cases);
                         completeLog(HEPATITIS_DATAMART.getStoredProcedure());
                         break;
                     case STD_HIV_DATAMART:
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, STD_HIV_DATAMART.getStoredProcedure(), cases);
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, STD_HIV_DATAMART.getStoredProcedure(),
+                                cases);
                         investigationRepository.executeStoredProcForStdHIVDatamart(cases);
                         completeLog(STD_HIV_DATAMART.getStoredProcedure());
                         break;
@@ -400,7 +413,8 @@ public class PostProcessingService {
                         completeLog(MEASLES_CASE.getStoredProcedure());
                         break;
                     case CASE_LAB_DATAMART:
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, CASE_LAB_DATAMART.getStoredProcedure(), cases);
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, CASE_LAB_DATAMART.getStoredProcedure(),
+                                cases);
                         investigationRepository.executeStoredProcForCaseLabDatamart(cases);
                         completeLog(CASE_LAB_DATAMART.getStoredProcedure());
                         break;
@@ -409,22 +423,25 @@ public class PostProcessingService {
                         investigationRepository.executeStoredProcForBmirdCaseDatamart(cases);
                         completeLog(BMIRD_CASE.getStoredProcedure());
 
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(), cases);
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType,
+                                BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(), cases);
                         investigationRepository.executeStoredProcForBmirdStrepPneumoDatamart(cases);
                         completeLog(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure());
                         break;
                     case HEPATITIS_CASE:
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, HEPATITIS_CASE.getStoredProcedure(), cases);
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, HEPATITIS_CASE.getStoredProcedure(),
+                                cases);
                         investigationRepository.executeStoredProcForHepatitisCaseDatamart(cases);
                         completeLog(HEPATITIS_CASE.getStoredProcedure());
                         break;
                     case PERTUSSIS_CASE:
-                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, PERTUSSIS_CASE.getStoredProcedure(), cases);
+                        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmType, PERTUSSIS_CASE.getStoredProcedure(),
+                                cases);
                         investigationRepository.executeStoredProcForPertussisCaseDatamart(cases);
                         completeLog(PERTUSSIS_CASE.getStoredProcedure());
                         break;
                     default:
-                        logger.info("No associated datamart processing logic found for the key: {} ",dmType);
+                        logger.info("No associated datamart processing logic found for the key: {} ", dmType);
                 }
             } else {
                 logger.info("No data to process from the datamart topics.");
@@ -432,8 +449,9 @@ public class PostProcessingService {
         }
     }
 
-    private void processMultiIDDatamart(List<Long> investigationUids, List<Long> patientUids, List<Long> providerUids, List<Long> organizationUids, List<Long> observationUids, List<Long> notificationUids, List<Long> contactRecordUids)
-    {
+    private void processMultiIDDatamart(List<Long> investigationUids, List<Long> patientUids, List<Long> providerUids,
+            List<Long> organizationUids, List<Long> observationUids, List<Long> notificationUids,
+            List<Long> contactRecordUids) {
         String invString = listToParameterString(investigationUids);
         String patString = listToParameterString(patientUids);
         String provString = listToParameterString(providerUids);
@@ -442,9 +460,10 @@ public class PostProcessingService {
         String notifString = listToParameterString(notificationUids);
         String ctrString = listToParameterString(contactRecordUids);
 
-        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length() + ctrString.length();
+        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
+                + ctrString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
-        int totalLengthInvSummary =  invString.length() + notifString.length() + obsString.length();
+        int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
 
         if (totalLengthEventMetric > 0 && eventMetricEnable) {
             postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
@@ -458,7 +477,7 @@ public class PostProcessingService {
             logger.info("No updates to HEP100 Datamart");
         }
 
-        if(totalLengthInvSummary > 0) {
+        if (totalLengthInvSummary > 0) {
             postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
@@ -484,7 +503,8 @@ public class PostProcessingService {
                 }
             } else if (topic.endsWith(OBSERVATION.getEntityName())) {
                 String domainCd = objectMapper.readTree(payload).get(PAYLOAD).path("obs_domain_cd_st_1").asText();
-                String ctrlCd = Optional.ofNullable(objectMapper.readTree(payload).get(PAYLOAD).get("ctrl_cd_display_form"))
+                String ctrlCd = Optional
+                        .ofNullable(objectMapper.readTree(payload).get(PAYLOAD).get("ctrl_cd_display_form"))
                         .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
 
                 if (MORB_REPORT.equals(ctrlCd)) {
@@ -492,7 +512,8 @@ public class PostProcessingService {
                         return ctrlCd;
                     }
                 } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null) &&
-                        assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result", "Order_rslt")) {
+                        assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result",
+                                "Order_rslt")) {
                     return LAB_REPORT;
                 }
             }
@@ -502,13 +523,15 @@ public class PostProcessingService {
         return null;
     }
 
-    private boolean assertMatches(String value, String... vals ) {
+    private boolean assertMatches(String value, String... vals) {
         return Arrays.asList(vals).contains(value);
     }
 
     /**
      * Gets the Entity by using the string passed to this function
-     * E.g: if dummy_contact_record is passed, it will return the entity CONTACT_RECORD
+     * E.g: if dummy_contact_record is passed, it will return the entity
+     * CONTACT_RECORD
+     * 
      * @param topic Incoming Kafka topic
      * @return Entity
      */
@@ -524,26 +547,28 @@ public class PostProcessingService {
         processTopic(keyTopic, entity.getEntityName(), ids, repositoryMethod, entity.getStoredProcedure());
     }
 
-    private void processTopic(String keyTopic, String name, List<Long> ids, Consumer<String> repositoryMethod, String spName) {
+    private void processTopic(String keyTopic, String name, List<Long> ids, Consumer<String> repositoryMethod,
+            String spName) {
         String idsString = prepareAndLog(keyTopic, ids, name, spName);
         repositoryMethod.accept(idsString);
         completeLog(spName);
     }
 
     private <T> List<T> processTopic(String keyTopic, Entity entity, List<Long> ids,
-                                     Function<String, List<T>> repositoryMethod) {
+            Function<String, List<T>> repositoryMethod) {
         return processTopic(keyTopic, entity.getEntityName(), ids, repositoryMethod, entity.getStoredProcedure());
     }
 
     private <T> List<T> processTopic(String keyTopic, String name, List<Long> ids,
-                                     Function<String, List<T>> repositoryMethod, String spName) {
+            Function<String, List<T>> repositoryMethod, String spName) {
         String idsString = prepareAndLog(keyTopic, ids, name, spName);
         List<T> result = repositoryMethod.apply(idsString);
         completeLog(spName);
         return result;
     }
 
-    private void processTopic(String keyTopic, Entity entity, Long id, String vals, BiConsumer<Long, String> repositoryMethod) {
+    private void processTopic(String keyTopic, Entity entity, Long id, String vals,
+            BiConsumer<Long, String> repositoryMethod) {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", name, keyTopic,

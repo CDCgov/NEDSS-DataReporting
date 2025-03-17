@@ -12,7 +12,8 @@ import java.util.List;
 @Repository
 public interface InvestigationRepository extends JpaRepository<DatamartData, Long> {
     @Query(value = "EXEC sp_nrt_investigation_postprocessing :publicHealthCaseUids", nativeQuery = true)
-    List<DatamartData> executeStoredProcForPublicHealthCaseIds(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    List<DatamartData> executeStoredProcForPublicHealthCaseIds(
+            @Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Query(value = "EXEC sp_nrt_notification_postprocessing :notificationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForNotificationIds(@Param("notificationUids") String notificationUids);
@@ -74,4 +75,7 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_sr100_datamart_postprocessing")
     void executeStoredProcForSR100Datamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
+    @Procedure("sp_nrt_d_tb_pam_postprocessing")
+    void executeStoredProcForDTBPAM(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
 }
