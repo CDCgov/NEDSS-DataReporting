@@ -1287,4 +1287,43 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false                
+            splitStatements: false  
+  - changeSet:
+      id: 265
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 081-create_d_addl_risk_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 270
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 082-create_d_addl_risk-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 275
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 083-create_nrt_addl_risk_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 280
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 084-create_nrt_addl_risk_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 285
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 146-sp_nrt_d_addl_risk_postprocessing-001.sql
