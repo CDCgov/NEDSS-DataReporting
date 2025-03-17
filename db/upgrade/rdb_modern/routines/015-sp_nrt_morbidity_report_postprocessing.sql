@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_d_morbidity_report_postprocessing]
+CREATE OR PROCEDURE [dbo].[sp_d_morbidity_report_postprocessing]
 (@pMorbidityIdList nvarchar(max)
 , @debug bit = 'false')
 
@@ -28,7 +28,6 @@ BEGIN
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_morbidity_report_postprocessing';
 
     if @debug = 'true' print @batch_id;
-
 
 
     BEGIN TRY
@@ -140,7 +139,7 @@ BEGIN
         select obscoded.*
         into #tmp_nrt_observation_coded
         from #morb_obs_reference obs
-                 inner join dbo.nrt_observation_coded obscoded on obs.observation_uid = obscoded.observation_uid
+                 inner join dbo.nrt_observation_coded obscoded  WITH (NOLOCK) on obs.observation_uid = obscoded.observation_uid
         where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1);
 
 
@@ -164,7 +163,7 @@ BEGIN
         select invobs.*
         into #tmp_nrt_investigation_observation
         from #morb_obs_reference obsref
-                 left join dbo.nrt_investigation_observation invobs on obsref.observation_uid = invobs.observation_id
+                 left join dbo.nrt_investigation_observation invobs  WITH (NOLOCK) on obsref.observation_uid = invobs.observation_id
                  left outer join dbo.nrt_investigation inv
                                  on inv.public_health_case_uid = invobs.public_health_case_uid
         where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1);
@@ -255,8 +254,8 @@ BEGIN
                   obs.PROCESSING_DECISION_CD ,
                   substring(cvg.Code_short_desc_txt,1,25)
         FROM #nrt_morbidity_observation AS updated_lab
-                 INNER JOIN dbo.nrt_observation obs ON updated_lab.observation_uid = obs.observation_uid
-                 LEFT OUTER JOIN NBS_SRTE.dbo.Code_value_general cvg ON cvg.code_set_nm = 'STD_NBS_PROCESSING_DECISION_ALL'
+                 INNER JOIN dbo.nrt_observation obs  WITH (NOLOCK) ON updated_lab.observation_uid = obs.observation_uid
+                 LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg ON cvg.code_set_nm = 'STD_NBS_PROCESSING_DECISION_ALL'
             AND cvg.code = obs.PROCESSING_DECISION_CD
         WHERE obs.obs_domain_cd_st_1 = 'Order'
           AND obs.CTRL_CD_DISPLAY_FORM  = 'MorbReport';
@@ -277,7 +276,7 @@ BEGIN
         UPDATE tmp_val
         SET tmp_val.morb_rpt_key = mr.morb_rpt_key
         FROM #tmp_morb_root tmp_val
-                 INNER JOIN Morbidity_Report mr ON mr.morb_rpt_uid = tmp_val.morb_rpt_uid;
+                 INNER JOIN dbo.Morbidity_Report mr ON mr.morb_rpt_uid = tmp_val.morb_rpt_uid;
 
 
         CREATE TABLE #tmp_id_assignment(
@@ -358,7 +357,7 @@ BEGIN
                   ob.ovc_code AS [code]
         INTO #tmp_MorbFrmQCoded
         FROM #tmp_MorbFrmQ					AS oq
-                 INNER JOIN #tmp_nrt_observation_coded AS ob
+                 INNER JOIN #tmp_nrt_observation_coded AS ob  WITH (NOLOCK)
                             ON oq.observation_uid = ob.observation_uid
                                 AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
 
@@ -384,7 +383,7 @@ BEGIN
                   ob.ovd_FROM_date AS [FROM_time]
         INTO #tmp_MorbFrmQDate
         FROM	#tmp_MorbFrmQ					AS oq
-                    INNER JOIN  dbo.nrt_observation_date AS ob ON
+                    INNER JOIN  dbo.nrt_observation_date AS ob  WITH (NOLOCK) ON
             oq.observation_uid = ob.observation_uid
         ;
 
@@ -408,7 +407,7 @@ BEGIN
                   REPLACE(REPLACE(ob.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')	as VALUE_TXT
         INTO #tmp_MorbFrmQTxt
         FROM #tmp_MorbFrmQ					AS oq
-                 INNER JOIN #tmp_nrt_observation_txt AS ob ON oq.observation_uid = ob.observation_uid
+                 INNER JOIN #tmp_nrt_observation_txt AS ob  WITH (NOLOCK) ON oq.observation_uid = ob.observation_uid
             AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
 
 
@@ -856,7 +855,7 @@ BEGIN
       	UPDATE tmp_val
         SET tmp_val.user_comment_key = mruc.user_comment_key
 	    FROM '+@tmp_morb_Rpt_User_Comment+' tmp_val
-	    INNER JOIN MORB_RPT_USER_COMMENT mruc ON mruc.morb_rpt_uid = tmp_val.morb_rpt_uid;'
+	    INNER JOIN dbo.MORB_RPT_USER_COMMENT mruc ON mruc.morb_rpt_uid = tmp_val.morb_rpt_uid;'
 
         IF @debug = 'true' print @sql;
         EXEC sp_executesql @sql;
@@ -878,7 +877,7 @@ BEGIN
 	     INSERT INTO '+@tmp_id_assignment+'
 	        SELECT rslt.morb_rpt_uid
 	        FROM '+@tmp_morb_Rpt_User_Comment+' rslt
-	        LEFT JOIN MORB_RPT_USER_COMMENT mru ON mru.morb_rpt_uid = rslt.morb_rpt_uid
+	        LEFT JOIN dbo.MORB_RPT_USER_COMMENT mru  WITH (NOLOCK) ON mru.morb_rpt_uid = rslt.morb_rpt_uid
 	        WHERE mru.morb_rpt_uid IS NULL;'
 
         IF @debug = 'true' print @sql;
@@ -887,7 +886,7 @@ BEGIN
         SET @sql = N'
 	    UPDATE tmp_val
         SET tmp_val.user_comment_key =
-        user_comment_key_id + COALESCE((SELECT MAX(user_comment_key) FROM MORB_RPT_USER_COMMENT),1)
+        user_comment_key_id + COALESCE((SELECT MAX(user_comment_key) FROM dbo.MORB_RPT_USER_COMMENT),1)
 	    FROM '+@tmp_morb_Rpt_User_Comment+' tmp_val
 	    LEFT JOIN '+@tmp_id_assignment+' id ON tmp_val.morb_rpt_uid = id.morb_rpt_uid
 	  WHERE tmp_val.user_comment_key IS NULL;'
@@ -956,34 +955,34 @@ BEGIN
         INTO '+@tmp_MORBIDITY_REPORT_Event_Final+'
         FROM '+@tmp_Morbidity_Report+' rpt
                  inner join #morb_obs_reference n ON rpt.morb_rpt_uid = n.observation_uid
-                 left join dbo.d_patient AS pat ON n.patient_id = pat.patient_uid
-                 left join dbo.v_condition_dim AS con ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
-     			 left join dbo.d_Organization AS org1 ON org1.Organization_uid = n.health_care_id
+                 left join dbo.d_patient AS pat WITH (NOLOCK) ON n.patient_id = pat.patient_uid
+                 left join dbo.v_condition_dim AS con WITH (NOLOCK) ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
+     			 left join dbo.d_Organization AS org1 WITH (NOLOCK) ON org1.Organization_uid = n.health_care_id
             /*HSPTL_DISCHARGE_DT_KEY*/
-                 left join dbo.rdb_date	as dt3	on rpt.temp_hsptl_discharge_dt_key = dt3.date_mm_dd_yyyy
+                 left join dbo.rdb_date	as dt3	WITH (NOLOCK) on rpt.temp_hsptl_discharge_dt_key = dt3.date_mm_dd_yyyy
             /*	HSPTL_KEY*/
-                 left join dbo.d_Organization AS org2 ON n.morb_hosp_id = org2.Organization_uid
+                 left join dbo.d_Organization AS org2 WITH (NOLOCK) ON n.morb_hosp_id = org2.Organization_uid
             /*ILLNESS_ONSET_DT_KEY*/
-                 left join dbo.rdb_date	as dt4 ON rpt.temp_illness_onset_dt_key = dt4.date_mm_dd_yyyy
+                 left join dbo.rdb_date	as dt4 WITH (NOLOCK) ON rpt.temp_illness_onset_dt_key = dt4.date_mm_dd_yyyy
             /* INVESTIGATION_KEY  */
                  left join (select distinct public_health_case_uid, observation_id
                  			from
                  			#tmp_nrt_investigation_observation
                  			) ninv ON rpt.morb_rpt_uid = ninv.observation_id
-                 left join dbo.Investigation inv ON ninv.public_health_case_uid = inv.case_uid
+                 left join dbo.Investigation inv WITH (NOLOCK) ON ninv.public_health_case_uid = inv.case_uid
             /*MORB_RPT_CREATE_DT_KEY*/
-                 left join dbo.rdb_date AS dt5 ON CAST(CONVERT(VARCHAR,rpt.morb_RPT_Created_DT,102) AS DATETIME)  = dt5.DATE_MM_DD_YYYY
+                 left join dbo.rdb_date AS dt5 WITH (NOLOCK) ON CAST(CONVERT(VARCHAR,rpt.morb_RPT_Created_DT,102) AS DATETIME)  = dt5.DATE_MM_DD_YYYY
             /*MORB_RPT_DT_KEY*/
-                 left join dbo.rdb_date	as dt6 ON rpt.morb_report_date = dt6.DATE_MM_DD_YYYY
+                 left join dbo.rdb_date	as dt6 WITH (NOLOCK) ON rpt.morb_report_date = dt6.DATE_MM_DD_YYYY
  /*MORB_RPT_SRC_ORG_KEY */
-                 left join dbo.d_Organization AS org3 ON n.morb_hosp_reporter_id = org3.Organization_uid
+                 left join dbo.d_Organization AS org3 WITH (NOLOCK) ON n.morb_hosp_reporter_id = org3.Organization_uid
             /*PHYSICIAN_KEY*/
-                 left join dbo.d_provider AS phy ON n.morb_physician_id = phy.provider_uid
+                 left join dbo.d_provider AS phy WITH (NOLOCK) ON n.morb_physician_id = phy.provider_uid
             /*	REPORTER_KEY           */
             --morb_reporter_id
-                 left join dbo.d_provider AS per1 ON n.morb_reporter_id = per1.provider_uid
+                 left join dbo.d_provider AS per1 WITH (NOLOCK) ON n.morb_reporter_id = per1.provider_uid
             /*Ldf group key*/
-                 left join dbo.ldf_group AS ldf_g ON rpt.morb_rpt_uid = ldf_g.business_object_uid;'
+                 left join dbo.ldf_group AS ldf_g WITH (NOLOCK) ON rpt.morb_rpt_uid = ldf_g.business_object_uid;'
 
         IF @debug = 'true' print @sql;
         EXEC sp_executesql @sql;
