@@ -13,7 +13,7 @@ BEGIN
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
         DECLARE @batch_id bigint;
-        SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmss')) AS bigint);
+        SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
 
         select distinct
         [user].user_id                  as [user],
@@ -71,11 +71,12 @@ BEGIN
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 
-        DECLARE @ErrorNumber INT = ERROR_NUMBER();
-        DECLARE @ErrorLine INT = ERROR_LINE();
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Message: ' + ERROR_MESSAGE();
 
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log] ( batch_id
@@ -93,12 +94,12 @@ BEGIN
                , 'ERROR'
                , @Proc_Step_no
                , @Proc_Step_name
-               , @ErrorMessage
+               , @FullErrorMessage
                , 0
                , LEFT(@user_ids, 199)
             );
 
-        return @ErrorMessage;
+        return @FullErrorMessage;
 
     END CATCH
 
