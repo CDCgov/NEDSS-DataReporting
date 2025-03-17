@@ -39,6 +39,18 @@ public class Vaccination {
     @Column(name="record_status_time")
     private String recordStatusTime;
 
+    @Column(name="status_time")
+    private String statusTime;
+
+    @Column(name="prog_area_cd")
+    private String progAreaCd;
+
+    @Column(name="jurisdiction_cd")
+    private String jurisdictionCd;
+
+    @Column(name="program_jurisdiction_oid")
+    private Long programJurisdictionOid;
+
     @Column(name="vaccine_administered_date")
     private String vaccineAdministeredDate;
 
