@@ -1365,7 +1365,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 092-create_nrt_d_gt_12_reas-001.sql
+            path: 092-create_d_gt_12_reas-001.sql
             splitStatements: false
   - changeSet:
       id: 315
@@ -1373,7 +1373,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 093-create_d_gt_12_reas_group_key-001.sql
+            path: 093-create_nrt_d_gt_12_reas_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 320
