@@ -1327,3 +1327,27 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_addl_risk_postprocessing-001.sql
+  - changeSet:
+      id: 290
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 086-create_d_tb_hiv-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 295
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 087-create_nrt_d_tb_hiv_key-001.sql
+            splitStatements: false            
+  - changeSet:
+      id: 300
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 160-sp_nrt_d_tb_hiv_postprocessing-001.sql
+            splitStatements: false  
