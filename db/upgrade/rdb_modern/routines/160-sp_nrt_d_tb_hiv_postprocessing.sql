@@ -72,7 +72,8 @@ BEGIN TRY
 			A.LAST_CHG_TIME, 
 			ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.CODE_SET_GROUP_ID, A.DATAMART_COLUMN_NM  ORDER BY A.LAST_CHG_TIME DESC) AS rn
 		FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
-		INNER JOIN CTE_INVESTIGATION_BATCH_ID I on I.public_health_case_uid = A.ACT_UID AND (I.batch_id = A.batch_id OR A.batch_id IS NULL)
+		INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
+		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
 		WHERE 
 			investigation_form_cd = @inv_form_cd
 			AND datamart_column_nm IS NOT NULL
