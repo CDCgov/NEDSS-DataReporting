@@ -1,4 +1,4 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'NRT_D_OUT_OF_CNTRY_GROUP_KEY' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_d_out_of_cntry_group_key' and xtype = 'U')
 BEGIN
 	CREATE TABLE [dbo].[nrt_d_out_of_cntry_group_key](
 		[D_OUT_OF_CNTRY_GROUP_KEY] [bigint] IDENTITY(1,1) NOT NULL,
@@ -8,10 +8,6 @@ BEGIN
 		[D_OUT_OF_CNTRY_GROUP_KEY] ASC
 	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 	) ON [PRIMARY];
-	declare @max bigint;
-	select @max=MAX(D_OUT_OF_CNTRY_GROUP_KEY) + 1 FROM [dbo].[D_OUT_OF_CNTRY_GROUP] WITH (NOLOCK);
-	select @max;
-	if @max IS NULL --check when max is returned as null
-		set @max = 2
-		DBCC CHECKIDENT ('dbo.NRT_D_OUT_OF_CNTRY_GROUP_KEY', RESEED, @max);
+	DECLARE @max bigint = (SELECT ISNULL(MAX(D_OUT_OF_CNTRY_GROUP_KEY)+1, 2) FROM dbo.D_OUT_OF_CNTRY_GROUP);
+	DBCC CHECKIDENT ('dbo.nrt_d_out_of_cntry_group_key', RESEED, @max);	
 END
