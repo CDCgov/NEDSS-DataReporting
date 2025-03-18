@@ -803,7 +803,7 @@ SELECT'Vaccination',
 	NULL,
 	RTRIM(Ltrim(up1.last_nm))+', '+ RTRIM(Ltrim(up1.first_nm))as ADD_USER_NAME,
 	RTRIM(Ltrim(up2.last_nm))+', '+ RTRIM(Ltrim(up2.first_nm))as LAST_CHG_USER_NAME                             
-FROM  dbo.nrt_vaccination i
+FROM  dbo.nrt_vaccination i with (nolock)
 LEFT OUTER JOIN dbo.nrt_srte_program_area_code  as p  with (nolock) ON  i.prog_area_cd = p.prog_area_cd
 LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code  as j  with (nolock) ON  i.jurisdiction_cd = j.code
 LEFT OUTER JOIN dbo.nrt_srte_code_value_general as c  with (nolock) ON  i.record_status_cd = c.code AND c.code_set_nm='REC_STAT'
