@@ -1279,15 +1279,15 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 064-create_nrt_d_tb_pam_key-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 260
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false  
+            path: 147-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false
   - changeSet:
       id: 265
       author: liquibase
@@ -1343,7 +1343,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 087-create_nrt_d_tb_hiv_key-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 300
       author: liquibase
@@ -1351,14 +1351,54 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 160-sp_nrt_d_tb_hiv_postprocessing-001.sql
-            splitStatements: false  
+            splitStatements: false
+  - changeSet:
+      id: 305
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 088-create_nrt_investigation_aggregate-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 310
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 091-create_aggregate_report_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 315
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 320
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 092-create_d_gt_12_reas_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 325
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 093-create_d_gt_12_reas-001.sql
+            splitStatements: false
   - changeSet:
       id: 330
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 095-create_d_hc_prov_ty_3_group-001.sql
+            path: 094-create_nrt_d_gt_12_reas_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 335
@@ -1366,7 +1406,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 096-create_d_hc_prov_ty_3-001.sql
+            path: 095-create_nrt_d_gt_12_reas_key-001.sql
             splitStatements: false
   - changeSet:
       id: 340
@@ -1374,7 +1414,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 097-create_nrt_d_hc_prov_ty_3_group_key-001.sql
+            path: 165-sp_nrt_d_gt_12_reas_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 345
@@ -1382,10 +1422,34 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 098-create_nrt_d_hc_prov_ty_3_key-001.sql
+            path: 096-create_d_hc_prov_ty_3_group-001.sql
             splitStatements: false
   - changeSet:
       id: 350
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 097-create_d_hc_prov_ty_3-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 355
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 098-create_nrt_d_hc_prov_ty_3_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 360
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 099-create_nrt_d_hc_prov_ty_3_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 365
       author: liquibase
       runOnChange: true
       changes:

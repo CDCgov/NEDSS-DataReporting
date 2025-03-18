@@ -323,13 +323,17 @@ public class PostProcessingService {
                 investigationRepository::executeStoredProcForDTBPAM);
 
         processTopic(keyTopic, D_TB_HIV, ids,
-                investigationRepository::executeStoredProcForDTBHIV);
+                investigationRepository::executeStoredProcForDTbHiv);
                 
         processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);
 
         processTopic(keyTopic, D_ADDL_RISK, ids,
                 investigationRepository::executeStoredProcForDAddlRisk);
+
+        processTopic(keyTopic, D_GT_12_REAS, ids,
+                investigationRepository::executeStoredProcForDGt12Reas);    
+        
 
         processTopic(keyTopic, D_HC_PROV_TY_3, ids, 
                 investigationRepository::executeStoredProcForDHcProvTy3);
