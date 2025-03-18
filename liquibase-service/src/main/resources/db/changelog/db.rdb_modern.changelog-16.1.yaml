@@ -1232,3 +1232,43 @@ databaseChangeLog:
         - sqlFile:
             path: 048-sp_morbidity_report_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 395
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 104-create_d_smr_exam_ty_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 400
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 105-create_d_smr_exam_ty-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 405
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 106-create_nrt_d_smr_exam_ty_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 410
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 107-create_nrt_d_smr_exam_ty_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 215
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 180-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
+            splitStatements: false
