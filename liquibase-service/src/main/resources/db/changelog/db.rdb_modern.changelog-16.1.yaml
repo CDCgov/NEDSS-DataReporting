@@ -1357,7 +1357,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 081-create_nrt_investigation_aggregate-001.sql
+            path: 088-create_nrt_investigation_aggregate-001.sql
             splitStatements: false
   - changeSet:
       id: 310
