@@ -133,7 +133,8 @@ BEGIN
                nrt.cd,
                nrt.investigation_form_cd,
                nrt.investigator_assigned_datetime as INV_ASSIGNED_DT_LEGACY,
-               nrt.patient_id
+               nrt.patient_id,
+               nrt.batch_id
         into #temp_inv_table
         from dbo.nrt_investigation nrt
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
@@ -658,16 +659,14 @@ BEGIN
         SET @proc_step_name = 'Update CONFIRMATION_METHOD';
         SET @proc_step_no = 3;
 
+
         /*Temp Confirmation Method Table*/
         ;WITH tempCM AS (
             select
                 nrtc.*
             from dbo.nrt_investigation_confirmation nrtc with(nolock)
-                     left outer join dbo.nrt_investigation inv with(nolock)
-                                     on nrtc.public_health_case_uid = inv.public_health_case_uid
-                     INNER JOIN (
-                SELECT value FROM STRING_SPLIT(@id_list, ',')
-            ) nu ON nrtc.public_health_case_uid = nu.value
+                     inner join #temp_inv_table inv with(nolock)
+                                on nrtc.public_health_case_uid = inv.CASE_UID
             where isnull(nrtc.batch_id,1) = isnull(inv.batch_id,1)
         )
          select distinct tempCM.PUBLIC_HEALTH_CASE_UID,
@@ -680,7 +679,7 @@ BEGIN
          from dbo.investigation i with (nolock)
                   left join tempCM on i.case_uid = tempCM.public_health_case_uid
                   left join dbo.confirmation_method cm with (nolock) on cm.confirmation_method_cd = tempCM.confirmation_method_cd
-         where i.case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));;
+         where i.case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #temp_cm_table;
