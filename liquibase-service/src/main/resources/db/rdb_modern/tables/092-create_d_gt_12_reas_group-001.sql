@@ -1,4 +1,4 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'd_gt_12_reas_group' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'D_GT_12_REAS_GROUP' and xtype = 'U')
 BEGIN
 	CREATE TABLE [dbo].[D_GT_12_REAS_GROUP](
 		[D_GT_12_REAS_GROUP_KEY] [bigint] NOT NULL,
