@@ -87,7 +87,6 @@ BEGIN
                                           nh.last_notification_submitted_by,
                                           nh.notification_date
                                       FROM
-
                                           dbo.act_relationship act WITH (NOLOCK)
                                               join dbo.public_health_case phc WITH (NOLOCK) on act.target_act_uid = phc.public_health_case_uid
                                               left join dbo.participation part with (nolock) ON part.type_cd='SubjOfPHC' AND part.act_uid=act.target_act_uid
