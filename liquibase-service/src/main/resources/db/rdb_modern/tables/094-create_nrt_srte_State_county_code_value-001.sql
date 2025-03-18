@@ -1,5 +1,4 @@
-IF
-NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Codeset_Group_Metadata' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Codeset_Group_Metadata' and xtype = 'U')
 BEGIN
 CREATE TABLE dbo.nrt_srte_State_county_code_value
 (

@@ -1,5 +1,4 @@
-IF
-NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' and xtype = 'U')
 CREATE TABLE dbo.nrt_srte_Condition_code
 (
     condition_cd                  varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,

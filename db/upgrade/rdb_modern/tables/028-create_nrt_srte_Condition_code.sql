@@ -1,5 +1,4 @@
-IF
-NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' and xtype = 'U')
 CREATE TABLE dbo.nrt_srte_Condition_code
 (
     condition_cd                  varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
@@ -41,7 +40,7 @@ CREATE TABLE dbo.nrt_srte_Condition_code
 );
 
 CREATE
-UNIQUE
-NONCLUSTERED INDEX UQ__Condition_code__276EDEB3 ON dbo.nrt_srte_Condition_code (  nbs_uid ASC  )
-	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 90   ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
-	 ON [PRIMARY ] ;
+    UNIQUE
+    NONCLUSTERED INDEX UQ__Condition_code__276EDEB3 ON dbo.nrt_srte_Condition_code (  nbs_uid ASC  )
+    WITH (  PAD_INDEX = OFF ,FILLFACTOR = 90   ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
+    ON [PRIMARY ] ;

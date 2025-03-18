@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'nrt_srte_TotalIDM'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_TotalIDM' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.nrt_srte_TotalIDM
         (
