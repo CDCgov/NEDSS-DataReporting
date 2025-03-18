@@ -1279,7 +1279,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 064-create_nrt_d_tb_pam_key-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 260
       author: liquibase
@@ -1287,7 +1287,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 265
       author: liquibase
@@ -1333,10 +1333,42 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 091-create_aggregate_report_datamart-001.sql
+            path: 086-create_d_tb_hiv-001.sql
             splitStatements: false
   - changeSet:
       id: 295
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 087-create_nrt_d_tb_hiv_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 300
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 160-sp_nrt_d_tb_hiv_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 305
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 081-create_nrt_investigation_aggregate-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 310
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 091-create_aggregate_report_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 315
       author: liquibase
       runOnChange: true
       changes:
