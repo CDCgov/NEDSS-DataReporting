@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.sp_event_metric_datamart_postprocessing @phc_uids nvarchar(max),
+CREATE OR ALTER PROCEDURE dbo.sp_event_metric_datamart_postprocessing_copy @phc_uids nvarchar(max),
     @obs_uids nvarchar(max),
     @notif_uids nvarchar(max),
     @ct_uids nvarchar(max),
@@ -190,7 +190,7 @@ SELECT N.EVENT_TYPE,
        N.last_chg_user_name
 INTO #TMP_NOT_PROG
 FROM #TMP_NOTIFICATION N
-         LEFT OUTER JOIN [NBS_SRTE].dbo.program_area_code p
+         LEFT OUTER JOIN dbo.nrt_srte_program_area_code p
 with (nolock)
 ON N.prog_area_cd = p.prog_area_cd;
 
@@ -242,7 +242,7 @@ SELECT N.EVENT_TYPE,
        N.last_chg_user_name
 INTO #TMP_NOT_PROG_JURI
 FROM #TMP_NOT_PROG N
-         LEFT OUTER JOIN [NBS_SRTE].dbo.jurisdiction_code as J
+         LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code as J
 with (nolock)
 ON N.jurisdiction_cd = J.code;
 
@@ -295,7 +295,7 @@ SELECT N.EVENT_TYPE,
        N.last_chg_user_name
 INTO #TMP_NOT_PROG_JURI_CVG
 FROM #TMP_NOT_PROG_JURI N
-         LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general as C
+         LEFT OUTER JOIN dbo.nrt_srte_code_value_general as C
 with (nolock)
 on N.record_status_cd = C.code
     and c.code_set_nm = 'REC_STAT';
@@ -420,20 +420,20 @@ SELECT NULL                AS EVENT_TYPE,
        o.ctrl_cd_display_form
 INTO #TMP_EVENT_OBS
 FROM dbo.nrt_observation o
-         LEFT OUTER JOIN [NBS_SRTE].dbo.program_area_code as p
+         LEFT OUTER JOIN dbo.nrt_srte_program_area_code as p
 with (nolock)
 ON o.prog_area_cd = p.prog_area_cd
-    LEFT OUTER JOIN [NBS_SRTE].dbo.jurisdiction_code as j
+    LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code as j
 with (nolock)
 ON o.jurisdiction_cd = j.code
-    LEFT OUTER JOIN [NBS_SRTE].dbo.condition_code as q
+    LEFT OUTER JOIN dbo.nrt_srte_condition_code as q
 with (nolock)
 ON o.cd = q.condition_cd
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general as c
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general as c
 with (nolock)
 ON o.record_status_cd = c.code AND
     c.code_set_nm = 'REC_STAT'
-    left outer join [NBS_SRTE].dbo.code_value_general as cvgst
+    left outer join dbo.nrt_srte_code_value_general as cvgst
 with (nolock)
 ON o.status_cd = cvgst.code
     and cvgst.code_set_nm = 'ACT_OBJ_ST'
@@ -653,21 +653,21 @@ SELECT 'PHCInvForm'                                                             
        phc.last_chg_user_name
 FROM dbo.nrt_investigation phc
          LEFT OUTER JOIN dbo.nrt_patient pat ON pat.patient_uid = phc.patient_id
-         LEFT OUTER JOIN [NBS_SRTE].dbo.program_area_code p
+         LEFT OUTER JOIN dbo.nrt_srte_program_area_code p
 with (nolock)
 ON phc.prog_area_cd = p.prog_area_cd
-    LEFT OUTER JOIN [NBS_SRTE].dbo.jurisdiction_code j
+    LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code j
 with (nolock)
 ON phc.jurisdiction_cd = j.code
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general c
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general c
 with (nolock)
 ON phc.raw_record_status_cd = c.code AND
     c.code_set_nm = 'REC_STAT'
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general d
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general d
 with (nolock)
 ON phc.case_class_cd = d.code AND
     d.code_set_nm = 'PHC_CLASS'
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general e
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general e
 with (nolock)
 ON phc.investigation_status_cd = e.code AND
     e.code_set_nm = 'PHC_IN_STS'
@@ -731,13 +731,13 @@ SELECT 'CONTACT',
 FROM dbo.nrt_contact ct
          LEFT JOIN dbo.nrt_patient pat
                    ON ct.subject_entity_uid = pat.patient_uid
-         INNER JOIN [NBS_SRTE].dbo.PROGRAM_AREA_CODE AS P
+         INNER JOIN dbo.nrt_srte_PROGRAM_AREA_CODE AS P
 with (nolock)
 ON ct.PROG_AREA_CD = P.PROG_AREA_CD
-    INNER JOIN [NBS_SRTE].dbo.JURISDICTION_CODE AS J
+    INNER JOIN dbo.nrt_srte_JURISDICTION_CODE AS J
 with (nolock)
 ON ct.JURISDICTION_CD = J.CODE
-    INNER JOIN [NBS_SRTE].dbo.CODE_VALUE_GENERAL C
+    INNER JOIN dbo.nrt_srte_CODE_VALUE_GENERAL C
 with (nolock)
 ON ct.RECORD_STATUS_CD = C.CODE AND C.CODE_SET_NM = 'REC_STAT'
     LEFT OUTER JOIN dbo.nrt_auth_user AS UP1
