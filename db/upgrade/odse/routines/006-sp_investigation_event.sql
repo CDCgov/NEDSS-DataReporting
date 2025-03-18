@@ -5,7 +5,7 @@ BEGIN
     BEGIN TRY
 
         DECLARE @batch_id BIGINT;
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         ( batch_id
@@ -155,6 +155,7 @@ BEGIN
                results.organization_participations,
                results.investigation_confirmation_method,
                results.investigation_case_answer,
+               results.investigation_aggregate,
                results.investigation_case_management,
                results.investigation_notifications,
                results.investigation_case_count,
@@ -308,6 +309,7 @@ BEGIN
                      nesteddata.organization_participations,
                      nesteddata.investigation_confirmation_method,
                      nesteddata.investigation_case_answer,
+                     nesteddata.investigation_aggregate,
                      nesteddata.investigation_case_management,
                      nesteddata.investigation_notifications,
                      nesteddata.investigation_case_count
@@ -540,6 +542,36 @@ BEGIN
                                                             ) as answer_table) as answer_table
                                                  where rowid = 1
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_case_answer) AS investigation_case_answer,
+                                        -- get aggregate case answers
+                                        (SELECT (select *
+                                                 from (select na.act_uid as act_uid,
+                                                              na.nbs_case_answer_uid,
+                                                              na.answer_txt,
+                                                              nq.code_set_group_id,
+                                                              nq.data_type,
+                                                              ntm.datamart_column_nm
+                                                       from dbo.NBS_case_answer na with (nolock )
+                                                       join dbo.NBS_table_metadata ntm with (nolock)
+                                                           on ntm.nbs_table_metadata_uid = na.nbs_table_metadata_uid
+                                                       join dbo.NBS_question nq with (nolock)
+                                                            on nq.nbs_question_uid = na.nbs_question_uid
+                                                       WHERE na.nbs_table_metadata_uid is not null
+                                                           and na.act_uid = phc.public_health_case_uid
+                                                       union
+                                                       select na.act_uid,
+                                                              na.nbs_case_answer_uid,
+                                                              na.answer_txt,
+                                                              nq.code_set_group_id,
+                                                              nq.data_type,
+                                                              nq.datamart_column_nm
+                                                       from dbo.NBS_case_answer na with (nolock )
+                                                       join dbo.NBS_question nq with (nolock)
+                                                           on nq.nbs_question_uid = na.nbs_question_uid
+                                                       WHERE na.nbs_table_metadata_uid is null
+                                                           and na.act_uid = phc.public_health_case_uid
+                                                       ) as agg_rep
+                                                 WHERE phc.case_type_cd = 'A' /* Aggregate Report */
+                                                 FOR json path,INCLUDE_NULL_VALUES) as investigation_aggregate) as investigation_aggregate,
                                         -- get associated case management
                                         (SELECT (select cm.case_management_uid,
                                                         cm.public_health_case_uid,
@@ -807,7 +839,14 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+                        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
+
         INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
@@ -827,9 +866,9 @@ BEGIN
                , 'Investigation PRE-Processing Event'
                , 0
                , LEFT(@phc_id_list, 199)
-               , @ErrorMessage
+               , @FullErrorMessage
                );
-        return @ErrorMessage;
+        return @FullErrorMessage;
 
     END CATCH
 

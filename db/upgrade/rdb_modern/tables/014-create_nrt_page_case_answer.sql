@@ -25,11 +25,11 @@ CREATE TABLE dbo.nrt_page_case_answer
     last_chg_time          datetime                                        NULL,
     part_type_cd           varchar(30)                                     NULL,
     record_status_cd       varchar(20)                                     NOT NULL,
-    batch_id               bigint                                          NULL,
-    refresh_datetime       datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
-    max_datetime           datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     datamart_column_nm     varchar(30)                                     NULL,
     seq_nbr                int                                             NULL,
     ldf_status_cd          varchar(20)                                     NULL,
+    batch_id               bigint                                          NULL,
+    refresh_datetime       datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
+    max_datetime           datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );

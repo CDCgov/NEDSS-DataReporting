@@ -12,7 +12,8 @@ import java.util.List;
 @Repository
 public interface InvestigationRepository extends JpaRepository<DatamartData, Long> {
     @Query(value = "EXEC sp_nrt_investigation_postprocessing :publicHealthCaseUids", nativeQuery = true)
-    List<DatamartData> executeStoredProcForPublicHealthCaseIds(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    List<DatamartData> executeStoredProcForPublicHealthCaseIds(
+            @Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Query(value = "EXEC sp_nrt_notification_postprocessing :notificationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForNotificationIds(@Param("notificationUids") String notificationUids);
@@ -62,9 +63,6 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_pertussis_case_datamart_postprocessing")
     void executeStoredProcForPertussisCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_disease_site_postprocessing")
-    void executeStoredProcForDDiseaseSite(@Param("publicHealthCaseUids") String publicHealthCaseUids);
-
     @Procedure("sp_bmird_strep_pneumo_datamart_postprocessing")
     void executeStoredProcForBmirdStrepPneumoDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
@@ -74,4 +72,16 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_sr100_datamart_postprocessing")
     void executeStoredProcForSR100Datamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
+    @Procedure("sp_nrt_d_tb_pam_postprocessing")
+    void executeStoredProcForDTBPAM(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_disease_site_postprocessing")
+    void executeStoredProcForDDiseaseSite(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_addl_risk_postprocessing")
+    void executeStoredProcForDAddlRisk(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_tb_hiv_postprocessing")
+    void executeStoredProcForDTBHIV(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
 }
