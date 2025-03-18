@@ -507,7 +507,7 @@ class PostProcessingServiceTest {
         verify(postProcRepositoryMock).executeStoredProcForFVaccination(expectedIntIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
+        assertEquals(9, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(VACCINATION.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -746,20 +746,23 @@ class PostProcessingServiceTest {
         String observationKey = "{\"payload\":{\"observation_uid\":130}}";
         String observationMsg = "{\"payload\":{\"observation_uid\":130, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"MorbReport\"}}";
         String contactKey = "{\"payload\":{\"contact_uid\":123}}";
+        String vaccinationKey = "{\"payload\":{\"vaccination_uid\":999}}";
 
         String invTopic = "dummy_investigation";
         String ntfTopic = "dummy_notification";
         String obsTopic = "dummy_observation";
         String crTopic = "dummy_contact";
+        String vaxTopic = "dummy_vaccination";
 
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey2, investigationKey2);
         postProcessingServiceMock.postProcessMessage(ntfTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationMsg);
         postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
+        postProcessingServiceMock.postProcessMessage(vaxTopic, vaccinationKey, vaccinationKey);
         postProcessingServiceMock.processCachedIds();
 
-        verify(postProcRepositoryMock).executeStoredProcForEventMetric("126,235", "130", "127", "123");
+        verify(postProcRepositoryMock).executeStoredProcForEventMetric("126,235", "130", "127", "123", "999");
     }
 
     @Test
@@ -772,7 +775,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processCachedIds();
 
         verify(postProcRepositoryMock, never()).executeStoredProcForEventMetric(anyString(), anyString(), anyString(),
-                anyString());
+                anyString(), anyString());
     }
 
     @Test

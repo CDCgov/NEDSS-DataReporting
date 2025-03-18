@@ -237,6 +237,7 @@ public class PostProcessingService {
             List<Long> observationUids = new ArrayList<>();
             List<Long> notificationUids = new ArrayList<>();
             List<Long> contactRecordUids = new ArrayList<>();
+            List<Long> vaccinationUids = new ArrayList<>();
 
             for (Entry<String, List<Long>> entry : sortedEntries) {
                 String keyTopic = entry.getKey();
@@ -309,6 +310,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity.getEntityName(), ids,
                                 postProcRepository::executeStoredProcForFVaccination,
                                 "sp_f_vaccination_postprocessing");
+                        vaccinationUids = ids;
                         break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
@@ -319,7 +321,7 @@ public class PostProcessingService {
             datamartProcessor.process(dmData);
 
             processMultiIDDatamart(investigationUids, patientUids, providerUids, organizationUids, observationUids,
-                    notificationUids, contactRecordUids);
+                    notificationUids, contactRecordUids, vaccinationUids);
         } else {
             logger.info("No ids to process from the topics.");
         }
@@ -507,7 +509,7 @@ public class PostProcessingService {
 
     private void processMultiIDDatamart(List<Long> investigationUids, List<Long> patientUids, List<Long> providerUids,
             List<Long> organizationUids, List<Long> observationUids, List<Long> notificationUids,
-            List<Long> contactRecordUids) {
+            List<Long> contactRecordUids, List<Long> vaccinationUids) {
         String invString = listToParameterString(investigationUids);
         String patString = listToParameterString(patientUids);
         String provString = listToParameterString(providerUids);
@@ -515,16 +517,17 @@ public class PostProcessingService {
         String obsString = listToParameterString(observationUids);
         String notifString = listToParameterString(notificationUids);
         String ctrString = listToParameterString(contactRecordUids);
+        String vaxString = listToParameterString(vaccinationUids);
 
         int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
-                + ctrString.length();
+                + ctrString.length() + vaxString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
         int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
         int totalLengthMorbReportDM = obsString.length() + patString.length() + provString.length() + orgString.length() + invString.length();
 
 
         if (totalLengthEventMetric > 0 && eventMetricEnable) {
-            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
+            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString, vaxString);
         } else {
             logger.info("No updates to EVENT_METRIC Datamart");
         }

@@ -582,6 +582,54 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 030-create_nrt_srte_Code_value_general-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 092-create_nrt_srte_Anatomic_site_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 093-create_nrt_srte_City_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 094-create_nrt_srte_Codeset_Group_Metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.4
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 095-create_nrt_srte_State_county_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.5
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 096-create_nrt_srte_Country_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.6
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 097-create_nrt_srte_jurisdiction_code-001.sql
             splitStatements: false            
   - changeSet:
       id: 90
