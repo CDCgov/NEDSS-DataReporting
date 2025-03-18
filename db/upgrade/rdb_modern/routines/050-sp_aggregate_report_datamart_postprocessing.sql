@@ -92,7 +92,7 @@ BEGIN
                 inv.mmwr_year,
                 inv.mmwr_week
             FROM dbo.nrt_investigation inv
-            WHERE inv.public_health_case_uid IN (select value FROM STRING_SPLIT(@id_list, ','))
+            WHERE inv.public_health_case_uid IN (select value FROM STRING_SPLIT(@id_list, ',')) AND inv.case_type_cd='A'
         ),
         aggEvent AS (
             SELECT

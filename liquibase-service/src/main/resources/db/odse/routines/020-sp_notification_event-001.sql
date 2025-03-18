@@ -89,9 +89,9 @@ BEGIN
                                       FROM
                                           dbo.act_relationship act WITH (NOLOCK)
                                               join dbo.public_health_case phc WITH (NOLOCK) on act.target_act_uid = phc.public_health_case_uid
-                                              join dbo.participation part with (nolock) ON part.type_cd='SubjOfPHC' AND part.act_uid=act.target_act_uid
-                                              join dbo.person per with (nolock) ON per.cd='PAT' AND per.person_uid = part.subject_entity_uid
-                                              join dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
+                                              left join dbo.participation part with (nolock) ON part.type_cd='SubjOfPHC' AND part.act_uid=act.target_act_uid
+                                              left join dbo.person per with (nolock) ON per.cd='PAT' AND per.person_uid = part.subject_entity_uid
+                                              left join dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
                                       WHERE
                                           act.source_act_uid = notif.notification_uid
                                         AND notif.cd not in ('EXP_NOTF', 'SHARE_NOTF', 'EXP_NOTF_PHDC','SHARE_NOTF_PHDC')
@@ -133,16 +133,16 @@ BEGIN
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-            -- Construct the error message string with all details:
-    DECLARE @FullErrorMessage VARCHAR(8000) =
-        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
-        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Message: ' + ERROR_MESSAGE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
-INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
         (      batch_id
         , [Dataflow_Name]
         , [package_Name]
