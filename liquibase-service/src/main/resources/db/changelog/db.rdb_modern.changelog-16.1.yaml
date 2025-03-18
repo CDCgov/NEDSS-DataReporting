@@ -1279,7 +1279,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 064-create_nrt_d_tb_pam_key-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 260
       author: liquibase
@@ -1287,7 +1287,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 265
       author: liquibase
@@ -1342,7 +1342,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 087-create_nrt_d_tb_hiv_key-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 300
       author: liquibase
@@ -1357,7 +1357,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 091-create_nrt_srte_Anatomic_site_code-001.sql
+            path: 081-create_nrt_investigation_aggregate-001.sql
             splitStatements: false
   - changeSet:
       id: 310
@@ -1365,7 +1365,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 092-create_nrt_srte_City_code_value-001.sql
+            path: 091-create_nrt_srte_Anatomic_site_code-001.sql
             splitStatements: false
   - changeSet:
       id: 315
@@ -1373,7 +1373,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 093-create_nrt_srte_Codeset_Group_Metadata-001.sql
+            path: 092-create_nrt_srte_City_code_value-001.sql
             splitStatements: false
   - changeSet:
       id: 320
@@ -1381,10 +1381,18 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 094-create_nrt_srte_State_county_code_value-001.sql
+            path: 093-create_nrt_srte_Codeset_Group_Metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 325
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 094-create_nrt_srte_State_county_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 330
       author: liquibase
       runOnChange: true
       changes:
