@@ -1382,7 +1382,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 092-create_d_gt_12_reas_group-001.sql
+            path: 092-create_nrt_srte_Anatomic_site_code-001.sql
             splitStatements: false
   - changeSet:
       id: 325
@@ -1390,7 +1390,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 093-create_d_gt_12_reas-001.sql
+            path: 093-create_nrt_srte_City_code_value-001.sql
             splitStatements: false
   - changeSet:
       id: 330
@@ -1398,7 +1398,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 094-create_nrt_d_gt_12_reas_group_key-001.sql
+            path: 094-create_nrt_srte_Codeset_Group_Metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 335
@@ -1406,7 +1406,47 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 095-create_nrt_d_gt_12_reas_key-001.sql
+            path: 095-create_nrt_srte_State_county_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 340
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 096-create_nrt_srte_Country_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 320
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 097-create_d_gt_12_reas_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 325
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 098-create_d_gt_12_reas-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 330
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 099-create_nrt_d_gt_12_reas_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 335
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 100-create_nrt_d_gt_12_reas_key-001.sql
             splitStatements: false
   - changeSet:
       id: 340
