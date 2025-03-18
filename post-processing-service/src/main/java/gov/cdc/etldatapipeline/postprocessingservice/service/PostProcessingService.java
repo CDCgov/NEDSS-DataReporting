@@ -332,7 +332,7 @@ public class PostProcessingService {
                 investigationRepository::executeStoredProcForDAddlRisk);
 
         processTopic(keyTopic, D_HC_PROV_TY_3, ids, 
-                investigationRepository::executeStoredProcForDHCPROVTY3);
+                investigationRepository::executeStoredProcForDHcProvTy3);
 
         return dmData;
     }

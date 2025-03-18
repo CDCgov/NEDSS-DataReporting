@@ -151,7 +151,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForDTBHIV(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDAddlRisk(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock).executeStoredProcForDHCPROVTY3(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDHcProvTy3(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);        
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
