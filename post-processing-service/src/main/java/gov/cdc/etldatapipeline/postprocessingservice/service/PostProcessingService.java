@@ -97,6 +97,12 @@ public class PostProcessingService {
     @Value("${featureFlag.inv-summary-dm-enable}")
     private boolean invSummaryDmEnable;
 
+    @Value("${featureFlag.summary-report-enable}")
+    private boolean summaryReportEnable;
+
+    @Value("${featureFlag.aggregate-report-enable}")
+    private boolean aggregateReportEnable;
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
             autoCreateTopics = "false", 
@@ -343,14 +349,18 @@ public class PostProcessingService {
             sumCache.clear();
         }
 
-        processTopic(investigationTopic, SUMMARY_REPORT_CASE, sumUids,
-                investigationRepository::executeStoredProcForSummaryReportCase);
+        if (summaryReportEnable) {
+            processTopic(investigationTopic, SUMMARY_REPORT_CASE, sumUids,
+                    investigationRepository::executeStoredProcForSummaryReportCase);
 
-        processTopic(investigationTopic, SR100_DATAMART, sumUids,
-                investigationRepository::executeStoredProcForSR100Datamart);
+            processTopic(investigationTopic, SR100_DATAMART, sumUids,
+                    investigationRepository::executeStoredProcForSR100Datamart);
+        }
 
-        processTopic(investigationTopic, AGGREGATE_REPORT_DATAMART, aggUids,
-                investigationRepository::executeStoredProcForAggregateReport);
+        if (aggregateReportEnable) {
+            processTopic(investigationTopic, AGGREGATE_REPORT_DATAMART, aggUids,
+                    investigationRepository::executeStoredProcForAggregateReport);
+        }
     }
 
     private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids,
