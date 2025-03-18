@@ -1,6 +1,6 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_jurisdiction_code' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Jurisdiction_code' and xtype = 'U')
 BEGIN
-    CREATE TABLE dbo.nrt_srte_jurisdiction_code(
+    CREATE TABLE dbo.nrt_srte_Jurisdiction_code(
         code                                varchar(20) NOT NULL,
         type_cd                             varchar(20) NOT NULL,
         assigning_authority_cd              varchar(199) NULL,
@@ -28,7 +28,7 @@ BEGIN
     )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
 
-    ALTER TABLE dbo.nrt_srte_jurisdiction_code ADD  DEFAULT ('Y') FOR is_modifiable_ind
+    ALTER TABLE dbo.nrt_srte_Jurisdiction_code ADD  DEFAULT ('Y') FOR is_modifiable_ind
 
     ALTER TABLE dbo.nrt_srte_jurisdiction_code ADD  DEFAULT ('A') FOR status_cd
 
