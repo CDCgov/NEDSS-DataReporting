@@ -1,4 +1,4 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'd_out_of_cntry_group' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'D_OUT_OF_CNTRY_GROUP' and xtype = 'U')
 BEGIN
 	CREATE TABLE [dbo].[D_OUT_OF_CNTRY_GROUP](
 		[D_OUT_OF_CNTRY_GROUP_KEY] [bigint] NOT NULL,

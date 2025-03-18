@@ -1,4 +1,4 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'd_out_of_cntry' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'D_OUT_OF_CNTRY' and xtype = 'U')
 BEGIN
 	CREATE TABLE [dbo].[D_OUT_OF_CNTRY](
 		[TB_PAM_UID] [bigint] NOT NULL,

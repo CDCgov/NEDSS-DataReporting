@@ -323,7 +323,7 @@ public class PostProcessingService {
                 investigationRepository::executeStoredProcForDTBPAM);
 
         processTopic(keyTopic, D_TB_HIV, ids,
-                investigationRepository::executeStoredProcForDTBHIV);
+                investigationRepository::executeStoredProcForDTbHiv);
                 
         processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);

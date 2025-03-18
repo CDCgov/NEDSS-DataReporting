@@ -1353,39 +1353,39 @@ databaseChangeLog:
             path: 160-sp_nrt_d_tb_hiv_postprocessing-001.sql
             splitStatements: false  
   - changeSet:
-      id: 355
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 098-create_d_out_of_cntry_group-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 360
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 099-create_d_out_of_cntry-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 365
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 100-create_nrt_d_out_of_cntry_group_key-001.sql
-            splitStatements: false
-  - changeSet:
       id: 370
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 101-create_nrt_d_out_of_cntry_key-001.sql
+            path: 100-create_d_out_of_cntry_group-001.sql
             splitStatements: false
   - changeSet:
       id: 375
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 101-create_d_out_of_cntry-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 380
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 102-create_nrt_d_out_of_cntry_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 385
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 103-create_nrt_d_out_of_cntry_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 390
       author: liquibase
       runOnChange: true
       changes:
