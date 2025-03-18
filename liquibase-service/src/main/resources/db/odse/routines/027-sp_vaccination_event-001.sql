@@ -16,7 +16,7 @@ BEGIN
 
     DECLARE @batch_id BIGINT;
 
-    SET @batch_id = cast((format(getdate(), 'yyMMddHHmmss')) as bigint);
+    SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
     if
         @debug = 'true'
@@ -76,6 +76,10 @@ BEGIN
 		I.VERSION_CTRL_NBR ,
 		I.ELECTRONIC_IND,
 		I.MATERIAL_CD,
+        I.STATUS_TIME,
+        I.PROG_AREA_CD,
+        I.JURISDICTION_CD,
+        I.PROGRAM_JURISDICTION_OID,
 		COALESCE(cvg1.code_short_desc_txt, '') AS VACCINATION_ADMINISTERED_NM,
 		I.TARGET_SITE_CD,
 	    COALESCE(cvg2.code_short_desc_txt, '') AS VACCINATION_ANATOMICAL_SITE,
@@ -1177,6 +1181,10 @@ BEGIN
 		ix.VACCINE_MANUFACTURER_NM ,
 		ix.VERSION_CTRL_NBR,
 		ix.ELECTRONIC_IND,
+        ix.STATUS_TIME,
+        ix.PROG_AREA_CD,
+        ix.JURISDICTION_CD,
+        ix.PROGRAM_JURISDICTION_OID,
 		prov.PROVIDER_UID,
 		org.ORGANIZATION_UID,
 		cas.PHC_UID,

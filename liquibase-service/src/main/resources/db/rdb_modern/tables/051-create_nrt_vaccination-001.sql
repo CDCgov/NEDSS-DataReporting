@@ -30,3 +30,47 @@ CREATE TABLE dbo.nrt_vaccination
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
 
+IF EXISTS (SELECT 1
+           FROM sysobjects
+           WHERE name = 'nrt_vaccination'
+             and xtype = 'U')
+    BEGIN
+        IF NOT EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'status_time'
+                        AND Object_ID = Object_ID(N'nrt_vaccination'))
+            BEGIN
+                ALTER TABLE dbo.nrt_vaccination
+                    ADD status_time datetime;
+            END;
+
+        IF NOT EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'prog_area_cd'
+                        AND Object_ID = Object_ID(N'nrt_vaccination'))
+            BEGIN
+                ALTER TABLE dbo.nrt_vaccination
+                    ADD prog_area_cd varchar(20);
+            END;
+
+        IF NOT EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'jurisdiction_cd'
+                        AND Object_ID = Object_ID(N'nrt_vaccination'))
+            BEGIN
+                ALTER TABLE dbo.nrt_vaccination
+                    ADD jurisdiction_cd varchar(20);
+            END;
+
+        IF NOT EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'program_jurisdiction_oid'
+                        AND Object_ID = Object_ID(N'nrt_vaccination'))
+            BEGIN
+                ALTER TABLE dbo.nrt_vaccination
+                    ADD program_jurisdiction_oid bigint;
+            END;
+        
+    END;
+
+

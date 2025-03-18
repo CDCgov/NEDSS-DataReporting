@@ -322,6 +322,9 @@ public class Investigation {
     @Column(name = "investigation_case_answer")
     private String investigationCaseAnswer;
 
+    @Column(name = "investigation_aggregate")
+    private String investigationAggregate;
+
     @Column(name = "investigation_case_management")
     private String investigationCaseManagement;
 
@@ -385,4 +388,6 @@ public class Investigation {
     @Column(name = "org_as_reporter_uid")
     private Long orgAsReporterUid;
 
+    @Column(name = "rpt_cnty_cd")
+    private String rptCntyCd;
 }

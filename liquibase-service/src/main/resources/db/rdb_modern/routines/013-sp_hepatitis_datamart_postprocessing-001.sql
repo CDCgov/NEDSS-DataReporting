@@ -22,7 +22,7 @@ BEGIN
 
 
         DECLARE @batch_id BIGINT;
-        SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmss')) as bigint);
+        SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
         PRINT @batch_id;
 
 
@@ -90,12 +90,11 @@ BEGIN
                  INNER JOIN	 #TMP_CONDITION T WITH(NOLOCK) ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY  ------(my table condition)
                  INNER JOIN	 dbo.D_PATIENT WITH(NOLOCK)		 ON F_PAGE_CASE.PATIENT_KEY = D_PATIENT.PATIENT_KEY
                  INNER JOIN	 dbo.INVESTIGATION WITH(NOLOCK)		 ON INVESTIGATION.INVESTIGATION_KEY = F_PAGE_CASE.INVESTIGATION_KEY
-                 LEFT JOIN	 dbo.HEPATITIS_DATAMART hd WITH(NOLOCK) ON F_PAGE_CASE.INVESTIGATION_KEY = hd.INVESTIGATION_KEY
-        WHERE   (hd.INVESTIGATION_KEY IS NULL
-            OR  (INVESTIGATION.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','))))
+        WHERE  INVESTIGATION.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','))
           AND INVESTIGATION.RECORD_STATUS_CD = 'ACTIVE'
         ORDER BY F_PAGE_CASE.INVESTIGATION_KEY
-        OPTION (MAXDOP 1); -- tentative fix
+        ;
+
 
 
        IF @debug ='true' SELECT * FROM #TMP_F_PAGE_CASE;
@@ -2910,18 +2909,16 @@ BEGIN
 
             END;
 
-        DECLARE @ErrorNumber int= ERROR_NUMBER();
-
-        DECLARE @ErrorLine int= ERROR_LINE();
-
-        DECLARE @ErrorMessage nvarchar(max)= ERROR_MESSAGE();
-
-        DECLARE @ErrorSeverity int= ERROR_SEVERITY();
-
-        DECLARE @ErrorState int= ERROR_STATE();
+         -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
-        VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no,  @Proc_Step_name,  CAST(@ErrorMessage AS varchar(500)),0
+        VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no,  @Proc_Step_name,  @FullErrorMessage,0
         );
 
         RETURN -1;

@@ -293,5 +293,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
                 ALTER TABLE dbo.nrt_investigation
                     ADD batch_id bigint;
             END;
-
+--CNDE-2142
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'rpt_cnty_cd' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_investigation
+                    ADD rpt_cnty_cd varchar(20);
+            END;
     END;
