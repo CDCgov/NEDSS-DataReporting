@@ -1327,6 +1327,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_addl_risk_postprocessing-001.sql
+            splitStatements: false
   - changeSet:
       id: 290
       author: liquibase
@@ -1374,3 +1375,4 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
+            splitStatements: false
