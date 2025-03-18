@@ -152,10 +152,28 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDAddlRisk(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        verify(investigationRepositoryMock, never()).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock, never()).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
+
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(16, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
+        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
+    void testPostProcessSummaryMessage() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"S\"}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
-
-
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(20, logs.size());
@@ -164,9 +182,26 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessAggregateMessage() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"A\"}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedPublicHealthCaseIdsString = "123";
+        verify(investigationRepositoryMock).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(18, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
+        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
     void testPostProcessNotificationMessage() {
         String topic = "dummy_notification";
-        String key = "{\"payload\":{\"notification_uid\":123}}";
+        String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123}}";
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -176,6 +211,26 @@ class PostProcessingServiceTest {
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(6, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(NOTIFICATION.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
+    void testPostProcessSummaryNotificationMessage() {
+        String topic = "dummy_notification";
+        String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123,\"act_type_cd\":\"SummaryNotification\"}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedPublicHealthCaseIdsString = "122";
+        String expectedNotificationIdsString = "123";
+        verify(investigationRepositoryMock).executeStoredProcForNotificationIds(expectedNotificationIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(12, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(NOTIFICATION.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -220,7 +275,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(22, logs.size());
+        assertEquals(18, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -505,16 +560,18 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(9).contains(invTopic));
         assertTrue(topicLogList.get(10).contains(invTopic));
         assertTrue(topicLogList.get(11).contains(invTopic));
-        assertTrue(topicLogList.get(12).contains(invTopic));
-        assertTrue(topicLogList.get(13).contains(invTopic));
-        assertTrue(topicLogList.get(14).contains(ntfTopic));
-        assertTrue(topicLogList.get(15).contains(treatmentTopic));
-        assertTrue(topicLogList.get(16).contains(intTopic));
-        assertTrue(topicLogList.get(17).contains(intTopic));
-        assertTrue(topicLogList.get(18).contains(cmTopic));
-        assertTrue(topicLogList.get(19).contains(cmTopic));
-        assertTrue(topicLogList.get(20).contains(ldfTopic));
-        assertTrue(topicLogList.get(21).contains(obsTopic));
+        assertTrue(topicLogList.get(12).contains(ntfTopic));
+        assertTrue(topicLogList.get(13).contains(treatmentTopic));
+        assertTrue(topicLogList.get(14).contains(intTopic));
+        assertTrue(topicLogList.get(15).contains(intTopic));
+        assertTrue(topicLogList.get(16).contains(cmTopic));
+        assertTrue(topicLogList.get(17).contains(cmTopic));
+        assertTrue(topicLogList.get(18).contains(ldfTopic));
+        assertTrue(topicLogList.get(19).contains(obsTopic));
+        assertTrue(topicLogList.get(20).contains(contactTopic));
+        assertTrue(topicLogList.get(21).contains(contactTopic));
+        assertTrue(topicLogList.get(22).contains(vacTopic));
+        assertTrue(topicLogList.get(23).contains(vacTopic));
     }
 
     @Test
