@@ -1376,3 +1376,43 @@ databaseChangeLog:
         - sqlFile:
             path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 320
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 092-create_nrt_srte_Anatomic_site_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 325
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 093-create_nrt_srte_City_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 330
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 094-create_nrt_srte_Codeset_Group_Metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 335
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 095-create_nrt_srte_State_county_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 340
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 096-create_nrt_srte_Country_code-001.sql
+            splitStatements: false
