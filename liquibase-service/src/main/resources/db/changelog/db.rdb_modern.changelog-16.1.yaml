@@ -1374,3 +1374,4 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
+            splitStatements: false
