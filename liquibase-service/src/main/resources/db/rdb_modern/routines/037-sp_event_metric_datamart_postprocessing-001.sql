@@ -1,7 +1,8 @@
-CREATE OR ALTER PROCEDURE dbo.sp_event_metric_datamart_postprocessing_copy @phc_uids nvarchar(max),
+CREATE OR ALTER PROCEDURE dbo.sp_event_metric_datamart_postprocessing @phc_uids nvarchar(max),
     @obs_uids nvarchar(max),
     @notif_uids nvarchar(max),
     @ct_uids nvarchar(max),
+    @vax_uids nvarchar(max),
     @debug bit = 'false'
     as
 
@@ -673,7 +674,7 @@ ON phc.investigation_status_cd = e.code AND
     e.code_set_nm = 'PHC_IN_STS'
 WHERE phc.public_health_case_uid in (SELECT value
     FROM STRING_SPLIT(@phc_uids
-    , ','));;
+    , ','));
 
 
 SELECT @RowCount_no = @@ROWCOUNT;
@@ -761,10 +762,70 @@ COMMIT TRANSACTION;
 
 END;
 
-/*
-    TO DO: Add vaccination data once intervention has been moved to NRT.
-    (Leave this comment in until completed)
-*/
+        IF
+@vax_uids != ''
+BEGIN
+BEGIN
+TRANSACTION;
+
+                SET
+@Proc_Step_name = 'Inserting Vaccinations into #TMP_EVENT_METRIC';
+                SET
+@PROC_STEP_NO = @PROC_STEP_NO + 1;
+
+
+INSERT INTO #TMP_EVENT_METRIC
+SELECT'Vaccination',
+	i.vaccination_uid,
+	i.local_id,
+	pat.local_id as Local_Patient_ID,
+	NULL as Condition_cd,  
+	NULL as Condition_desc_txt,
+	i.prog_area_cd,
+	p.prog_area_desc_txt,
+	i.program_jurisdiction_oid,
+	i.jurisdiction_cd,
+	j.code_desc_txt as Jurisdiction_DESC_TXT,
+	i.record_status_cd,
+	c.CODE_DESC_TXT as record_status_desc_txt,
+	i.record_status_time,	
+	i.electronic_ind,
+	NULL as status_cd,
+	NULL as status_desc_txt,
+	i.status_time,
+	i.add_time,
+	i.add_user_id,
+	i.last_chg_time,
+	i.last_chg_user_id,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	RTRIM(Ltrim(up1.last_nm))+', '+ RTRIM(Ltrim(up1.first_nm))as ADD_USER_NAME,
+	RTRIM(Ltrim(up2.last_nm))+', '+ RTRIM(Ltrim(up2.first_nm))as LAST_CHG_USER_NAME                             
+FROM  dbo.nrt_vaccination i
+LEFT OUTER JOIN dbo.nrt_srte_program_area_code  as p  with (nolock) ON  i.prog_area_cd = p.prog_area_cd
+LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code  as j  with (nolock) ON  i.jurisdiction_cd = j.code
+LEFT OUTER JOIN dbo.nrt_srte_code_value_general as c  with (nolock) ON  i.record_status_cd = c.code AND c.code_set_nm='REC_STAT'
+INNER JOIN  dbo.nrt_patient pat with (nolock) ON pat.patient_uid = i.patient_uid											
+LEFT outer join dbo.nrt_auth_user as up1 with (nolock) ON i.add_user_id = up1.nedss_entry_id											
+LEFT outer join dbo.nrt_auth_user as up2 with (nolock) ON i.last_chg_user_id = up2.nedss_entry_id
+WHERE i.vaccination_uid in (SELECT value
+    FROM STRING_SPLIT(@vax_uids
+    , ','));
+
+
+
+SELECT @RowCount_no = @@ROWCOUNT;
+
+INSERT INTO [dbo].[job_flow_log]
+(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+COMMIT TRANSACTION;
+
+END;
+
 
 BEGIN
 TRANSACTION;

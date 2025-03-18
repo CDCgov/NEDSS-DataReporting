@@ -2,6 +2,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_event_metric_datamart_postprocessing @phc_uids 
     @obs_uids nvarchar(max),
     @notif_uids nvarchar(max),
     @ct_uids nvarchar(max),
+    @vax_uids nvarchar(max),
     @debug bit = 'false'
     as
 
@@ -190,7 +191,7 @@ SELECT N.EVENT_TYPE,
        N.last_chg_user_name
 INTO #TMP_NOT_PROG
 FROM #TMP_NOTIFICATION N
-         LEFT OUTER JOIN [NBS_SRTE].dbo.program_area_code p
+         LEFT OUTER JOIN dbo.nrt_srte_program_area_code p
 with (nolock)
 ON N.prog_area_cd = p.prog_area_cd;
 
@@ -242,7 +243,7 @@ SELECT N.EVENT_TYPE,
        N.last_chg_user_name
 INTO #TMP_NOT_PROG_JURI
 FROM #TMP_NOT_PROG N
-         LEFT OUTER JOIN [NBS_SRTE].dbo.jurisdiction_code as J
+         LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code as J
 with (nolock)
 ON N.jurisdiction_cd = J.code;
 
@@ -295,7 +296,7 @@ SELECT N.EVENT_TYPE,
        N.last_chg_user_name
 INTO #TMP_NOT_PROG_JURI_CVG
 FROM #TMP_NOT_PROG_JURI N
-         LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general as C
+         LEFT OUTER JOIN dbo.nrt_srte_code_value_general as C
 with (nolock)
 on N.record_status_cd = C.code
     and c.code_set_nm = 'REC_STAT';
@@ -420,20 +421,20 @@ SELECT NULL                AS EVENT_TYPE,
        o.ctrl_cd_display_form
 INTO #TMP_EVENT_OBS
 FROM dbo.nrt_observation o
-         LEFT OUTER JOIN [NBS_SRTE].dbo.program_area_code as p
+         LEFT OUTER JOIN dbo.nrt_srte_program_area_code as p
 with (nolock)
 ON o.prog_area_cd = p.prog_area_cd
-    LEFT OUTER JOIN [NBS_SRTE].dbo.jurisdiction_code as j
+    LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code as j
 with (nolock)
 ON o.jurisdiction_cd = j.code
-    LEFT OUTER JOIN [NBS_SRTE].dbo.condition_code as q
+    LEFT OUTER JOIN dbo.nrt_srte_condition_code as q
 with (nolock)
 ON o.cd = q.condition_cd
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general as c
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general as c
 with (nolock)
 ON o.record_status_cd = c.code AND
     c.code_set_nm = 'REC_STAT'
-    left outer join [NBS_SRTE].dbo.code_value_general as cvgst
+    left outer join dbo.nrt_srte_code_value_general as cvgst
 with (nolock)
 ON o.status_cd = cvgst.code
     and cvgst.code_set_nm = 'ACT_OBJ_ST'
@@ -653,27 +654,27 @@ SELECT 'PHCInvForm'                                                             
        phc.last_chg_user_name
 FROM dbo.nrt_investigation phc
          LEFT OUTER JOIN dbo.nrt_patient pat ON pat.patient_uid = phc.patient_id
-         LEFT OUTER JOIN [NBS_SRTE].dbo.program_area_code p
+         LEFT OUTER JOIN dbo.nrt_srte_program_area_code p
 with (nolock)
 ON phc.prog_area_cd = p.prog_area_cd
-    LEFT OUTER JOIN [NBS_SRTE].dbo.jurisdiction_code j
+    LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code j
 with (nolock)
 ON phc.jurisdiction_cd = j.code
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general c
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general c
 with (nolock)
 ON phc.raw_record_status_cd = c.code AND
     c.code_set_nm = 'REC_STAT'
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general d
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general d
 with (nolock)
 ON phc.case_class_cd = d.code AND
     d.code_set_nm = 'PHC_CLASS'
-    LEFT OUTER JOIN [NBS_SRTE].dbo.code_value_general e
+    LEFT OUTER JOIN dbo.nrt_srte_code_value_general e
 with (nolock)
 ON phc.investigation_status_cd = e.code AND
     e.code_set_nm = 'PHC_IN_STS'
 WHERE phc.public_health_case_uid in (SELECT value
     FROM STRING_SPLIT(@phc_uids
-    , ','));;
+    , ','));
 
 
 SELECT @RowCount_no = @@ROWCOUNT;
@@ -731,13 +732,13 @@ SELECT 'CONTACT',
 FROM dbo.nrt_contact ct
          LEFT JOIN dbo.nrt_patient pat
                    ON ct.subject_entity_uid = pat.patient_uid
-         INNER JOIN [NBS_SRTE].dbo.PROGRAM_AREA_CODE AS P
+         INNER JOIN dbo.nrt_srte_PROGRAM_AREA_CODE AS P
 with (nolock)
 ON ct.PROG_AREA_CD = P.PROG_AREA_CD
-    INNER JOIN [NBS_SRTE].dbo.JURISDICTION_CODE AS J
+    INNER JOIN dbo.nrt_srte_JURISDICTION_CODE AS J
 with (nolock)
 ON ct.JURISDICTION_CD = J.CODE
-    INNER JOIN [NBS_SRTE].dbo.CODE_VALUE_GENERAL C
+    INNER JOIN dbo.nrt_srte_CODE_VALUE_GENERAL C
 with (nolock)
 ON ct.RECORD_STATUS_CD = C.CODE AND C.CODE_SET_NM = 'REC_STAT'
     LEFT OUTER JOIN dbo.nrt_auth_user AS UP1
@@ -761,10 +762,70 @@ COMMIT TRANSACTION;
 
 END;
 
-/*
-    TO DO: Add vaccination data once intervention has been moved to NRT.
-    (Leave this comment in until completed)
-*/
+        IF
+@vax_uids != ''
+BEGIN
+BEGIN
+TRANSACTION;
+
+                SET
+@Proc_Step_name = 'Inserting Vaccinations into #TMP_EVENT_METRIC';
+                SET
+@PROC_STEP_NO = @PROC_STEP_NO + 1;
+
+
+INSERT INTO #TMP_EVENT_METRIC
+SELECT'Vaccination',
+	i.vaccination_uid,
+	i.local_id,
+	pat.local_id as Local_Patient_ID,
+	NULL as Condition_cd,  
+	NULL as Condition_desc_txt,
+	i.prog_area_cd,
+	p.prog_area_desc_txt,
+	i.program_jurisdiction_oid,
+	i.jurisdiction_cd,
+	j.code_desc_txt as Jurisdiction_DESC_TXT,
+	i.record_status_cd,
+	c.CODE_DESC_TXT as record_status_desc_txt,
+	i.record_status_time,	
+	i.electronic_ind,
+	NULL as status_cd,
+	NULL as status_desc_txt,
+	i.status_time,
+	i.add_time,
+	i.add_user_id,
+	i.last_chg_time,
+	i.last_chg_user_id,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	RTRIM(Ltrim(up1.last_nm))+', '+ RTRIM(Ltrim(up1.first_nm))as ADD_USER_NAME,
+	RTRIM(Ltrim(up2.last_nm))+', '+ RTRIM(Ltrim(up2.first_nm))as LAST_CHG_USER_NAME                             
+FROM  dbo.nrt_vaccination i
+LEFT OUTER JOIN dbo.nrt_srte_program_area_code  as p  with (nolock) ON  i.prog_area_cd = p.prog_area_cd
+LEFT OUTER JOIN dbo.nrt_srte_jurisdiction_code  as j  with (nolock) ON  i.jurisdiction_cd = j.code
+LEFT OUTER JOIN dbo.nrt_srte_code_value_general as c  with (nolock) ON  i.record_status_cd = c.code AND c.code_set_nm='REC_STAT'
+INNER JOIN  dbo.nrt_patient pat with (nolock) ON pat.patient_uid = i.patient_uid											
+LEFT outer join dbo.nrt_auth_user as up1 with (nolock) ON i.add_user_id = up1.nedss_entry_id											
+LEFT outer join dbo.nrt_auth_user as up2 with (nolock) ON i.last_chg_user_id = up2.nedss_entry_id
+WHERE i.vaccination_uid in (SELECT value
+    FROM STRING_SPLIT(@vax_uids
+    , ','));
+
+
+
+SELECT @RowCount_no = @@ROWCOUNT;
+
+INSERT INTO [dbo].[job_flow_log]
+(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+COMMIT TRANSACTION;
+
+END;
+
 
 BEGIN
 TRANSACTION;
