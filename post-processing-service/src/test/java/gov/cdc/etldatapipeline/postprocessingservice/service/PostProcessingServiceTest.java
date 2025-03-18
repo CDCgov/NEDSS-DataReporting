@@ -174,6 +174,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"S\"}}";
 
+        postProcessingServiceMock.setSummaryReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -192,6 +193,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"A\"}}";
 
+        postProcessingServiceMock.setAggregateReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -210,7 +212,6 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123}}";
 
         postProcessingServiceMock.setInvSummaryDmEnable(true);
-
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -229,6 +230,9 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123,\"act_type_cd\":\"SummaryNotification\"}}";
 
         postProcessingServiceMock.setInvSummaryDmEnable(true);
+        postProcessingServiceMock.setSummaryReportEnable(true);
+        postProcessingServiceMock.setAggregateReportEnable(true);
+
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -274,6 +278,9 @@ class PostProcessingServiceTest {
         Long expectedPublicHealthCaseId = 123L;
         String expectedRdbTableNames = "D_INV_CLINICAL,D_INV_ADMINISTRATIVE";
 
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
+        postProcessingServiceMock.setMorbReportDmEnable(true);
+
         postProcessingServiceMock.postProcessMessage(topic, key, msg);
         assertTrue(postProcessingServiceMock.idVals.containsKey(expectedPublicHealthCaseId));
         assertTrue(postProcessingServiceMock.idVals.containsValue(expectedRdbTableNames));
@@ -284,7 +291,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(18, logs.size());
+        assertEquals(16, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
