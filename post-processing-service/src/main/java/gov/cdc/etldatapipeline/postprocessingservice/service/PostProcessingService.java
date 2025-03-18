@@ -321,6 +321,9 @@ public class PostProcessingService {
 
         processTopic(keyTopic, D_TB_PAM, ids,
                 investigationRepository::executeStoredProcForDTBPAM);
+
+        processTopic(keyTopic, D_TB_HIV, ids,
+                investigationRepository::executeStoredProcForDTBHIV);
                 
         processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);
@@ -470,6 +473,8 @@ public class PostProcessingService {
                 + ctrString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
         int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
+        int totalLengthMorbReportDM = obsString.length() + patString.length() + provString.length() + orgString.length() + invString.length();
+
 
         if (totalLengthEventMetric > 0 && eventMetricEnable) {
             postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
@@ -487,6 +492,12 @@ public class PostProcessingService {
             postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
+        }
+
+        if(totalLengthMorbReportDM > 0) {
+            postProcRepository.executeStoredProcForMorbidityReportDatamart(obsString, patString, provString, orgString, invString);
+        } else {
+            logger.info("No updates to MORBIDITY_REPORT_DATAMART");
         }
     }
 
