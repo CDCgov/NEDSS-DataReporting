@@ -92,6 +92,8 @@ class PostProcessingServiceTest {
         String topic = "dummy_patient";
         String key = "{\"payload\":{\"patient_uid\":123}}";
 
+        postProcessingServiceMock.setMorbReportDmEnable(true);
+
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -108,6 +110,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_provider";
         String key = "{\"payload\":{\"provider_uid\":123}}";
 
+        postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -123,6 +126,8 @@ class PostProcessingServiceTest {
     void testPostProcessOrganizationMessage() {
         String topic = "dummy_organization";
         String key = "{\"payload\":{\"organization_uid\":123}}";
+
+        postProcessingServiceMock.setMorbReportDmEnable(true);
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -140,6 +145,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
 
+        postProcessingServiceMock.setTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -155,10 +161,8 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
 
-
-
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(20, logs.size());
+        assertEquals(22, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -167,6 +171,8 @@ class PostProcessingServiceTest {
     void testPostProcessNotificationMessage() {
         String topic = "dummy_notification";
         String key = "{\"payload\":{\"notification_uid\":123}}";
+
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -271,6 +277,9 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"observation_uid\":123}}";
         String msg = "{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"MorbReport\"}}";
 
+        postProcessingServiceMock.setMorbReportDmEnable(true);
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
+
         postProcessingServiceMock.postProcessMessage(topic, key, msg);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
@@ -301,6 +310,9 @@ class PostProcessingServiceTest {
     void testPostProcessObservationLab(String payload) {
         String topic = "dummy_observation";
         String key = "{\"payload\":{\"observation_uid\":123}}";
+
+        postProcessingServiceMock.setMorbReportDmEnable(true);
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
 
         postProcessingServiceMock.postProcessMessage(topic, key, payload);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
@@ -333,6 +345,9 @@ class PostProcessingServiceTest {
     void testPostProcessObservationNoReport(String payload) {
         String topic = "dummy_observation";
         String key = "{\"payload\":{\"observation_uid\":123}}";
+
+        postProcessingServiceMock.setMorbReportDmEnable(true);
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
 
         postProcessingServiceMock.postProcessMessage(topic, key, payload);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
@@ -472,6 +487,9 @@ class PostProcessingServiceTest {
         String treatmentTopic = "dummy_treatment";
         String vacTopic = "dummy_vaccination";
 
+        postProcessingServiceMock.setMorbReportDmEnable(true);
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
+        postProcessingServiceMock.setTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
         postProcessingServiceMock.postProcessMessage(patientTopic, patientKey, patientKey);
@@ -745,6 +763,7 @@ class PostProcessingServiceTest {
         String notTopic = "dummy_notification";
         String obsTopic = "dummy_observation";
 
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);
@@ -794,6 +813,7 @@ class PostProcessingServiceTest {
         String orgTopic = "dummy_organization";
         String obsTopic = "dummy_observation";
 
+        postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey2, investigationKey2);
         postProcessingServiceMock.postProcessMessage(patTopic, patientKey, patientKey);
