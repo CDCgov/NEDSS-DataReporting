@@ -88,6 +88,15 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
+    @Value("${featureFlag.d-tb-hiv-enable}")
+    private boolean tbHivEnable;
+
+    @Value("${featureFlag.morb-report-dm-enable}")
+    private boolean morbReportDmEnable;
+
+    @Value("${featureFlag.inv-summary-dm-enable}")
+    private boolean invSummaryDmEnable;
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
             autoCreateTopics = "false", 
@@ -361,8 +370,10 @@ public class PostProcessingService {
         processTopic(keyTopic, D_TB_PAM, ids,
                 investigationRepository::executeStoredProcForDTBPAM);
 
-        processTopic(keyTopic, D_TB_HIV, ids,
-                investigationRepository::executeStoredProcForDTBHIV);
+        if (tbHivEnable) {
+            processTopic(keyTopic, D_TB_HIV, ids,
+                    investigationRepository::executeStoredProcForDTBHIV);
+        }
                 
         processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);
@@ -524,13 +535,13 @@ public class PostProcessingService {
             logger.info("No updates to HEP100 Datamart");
         }
 
-        if (totalLengthInvSummary > 0) {
+        if (totalLengthInvSummary > 0 && invSummaryDmEnable) {
             postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
         }
 
-        if(totalLengthMorbReportDM > 0) {
+        if(totalLengthMorbReportDM > 0 && morbReportDmEnable) {
             postProcRepository.executeStoredProcForMorbidityReportDatamart(obsString, patString, provString, orgString, invString);
         } else {
             logger.info("No updates to MORBIDITY_REPORT_DATAMART");

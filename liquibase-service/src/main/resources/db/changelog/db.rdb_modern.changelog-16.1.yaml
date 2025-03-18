@@ -1416,3 +1416,11 @@ databaseChangeLog:
         - sqlFile:
             path: 096-create_nrt_srte_Country_code-001.sql
             splitStatements: false
+  - changeSet:
+      id: 345
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 097-create_nrt_srte_jurisdiction_code-001.sql
+            splitStatements: false
