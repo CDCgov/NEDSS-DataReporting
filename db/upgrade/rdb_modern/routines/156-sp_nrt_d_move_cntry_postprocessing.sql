@@ -13,7 +13,7 @@ BEGIN
             declare @dataflow_name varchar(200) = 'MOVE_CNTRY POST-Processing';
             declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_move_cntry_postprocessing';
 
-        set @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
+        set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
 
@@ -21,6 +21,35 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Msg_Description1])
         VALUES (@BATCH_ID, @dataflow_name, @package_name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT (@phc_uids, 199));
                 
+--------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #PHC_LIST TABLE';
+
+        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        drop table #S_PHC_LIST;
+
+        SELECT value
+        INTO  #S_PHC_LIST
+        FROM STRING_SPLIT(@phc_uids, ',')
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #S_PHC_LIST;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;
+
 --------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
@@ -53,9 +82,8 @@ BEGIN
         LEFT JOIN DBO.nrt_srte_CODE_VALUE_GENERAL CVG  with (nolock)
             ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
             AND CVG.CODE = TB.ANSWER_TXT
-        INNER JOIN (
-             SELECT value FROM STRING_SPLIT(@phc_uids, ',')
-        ) nu ON TB.ACT_UID = nu.value
+        INNER JOIN #S_PHC_LIST nu with (nolock)
+        ON TB.ACT_UID = nu.value
         WHERE TB.DATAMART_COLUMN_NM <> 'n/a'
         and isnull(tb.batch_id, 1) = isnull(inv.batch_id, 1)
         AND QUESTION_IDENTIFIER = 'TUB230';
@@ -74,8 +102,7 @@ BEGIN
         
         COMMIT TRANSACTION;
 
----------------------------------------------------------------------------------------------------------------------        
-
+---------------------------------------------------------------------------------------------------------------------  
 
         BEGIN TRANSACTION
 
@@ -108,6 +135,156 @@ BEGIN
         
         COMMIT TRANSACTION;
 -------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #TEMP_D_MOVE_CNTRY_DEL';
+
+        IF OBJECT_ID('#TEMP_D_MOVE_CNTRY_DEL', 'U') IS NOT NULL
+        drop table #TEMP_D_MOVE_CNTRY_DEL;
+
+        SELECT MOVE_CNTRY.TB_PAM_UID, 
+        MOVE_CNTRY.D_MOVE_CNTRY_KEY,
+        MOVE_CNTRY.D_MOVE_CNTRY_GROUP_KEY
+        INTO #TEMP_D_MOVE_CNTRY_DEL
+        FROM DBO.D_MOVE_CNTRY MOVE_CNTRY with (nolock)
+        LEFT JOIN DBO.NRT_MOVE_CNTRY_KEY MOVE_CNTRY_KEY with (nolock)
+            ON MOVE_CNTRY.TB_PAM_UID = MOVE_CNTRY_KEY.TB_PAM_UID AND
+            MOVE_CNTRY.D_MOVE_CNTRY_KEY = MOVE_CNTRY_KEY.D_MOVE_CNTRY_KEY
+        LEFT JOIN #S_MOVE_CNTRY S with (nolock)
+        ON S.TB_PAM_UID = MOVE_CNTRY_KEY.TB_PAM_UID AND
+            S.NBS_CASE_ANSWER_UID = MOVE_CNTRY_KEY.NBS_CASE_ANSWER_UID
+        WHERE MOVE_CNTRY.TB_PAM_UID IN (SELECT value FROM #S_PHC_LIST) AND
+        S.NBS_CASE_ANSWER_UID IS NULL;
+
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #TEMP_D_MOVE_CNTRY_DEL;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;    
+
+---------------------------------------------------------------------------------------------------------------------     
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'Deleting from NRT_MOVE_CNTRY_KEY key';
+
+        DELETE T FROM DBO.NRT_MOVE_CNTRY_KEY T
+        join #TEMP_D_MOVE_CNTRY_DEL S with (nolock)
+        ON S.TB_PAM_UID =T.TB_PAM_UID AND
+        S.D_MOVE_CNTRY_KEY = T.D_MOVE_CNTRY_KEY
+
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #TEMP_D_MOVE_CNTRY_DEL;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;    
+
+---------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'Deleting from NRT_MOVE_CNTRY_GROUP_KEY';
+
+        DELETE T FROM DBO.NRT_MOVE_CNTRY_GROUP_KEY T
+        join #TEMP_D_MOVE_CNTRY_DEL S with (nolock)
+        ON S.TB_PAM_UID =T.TB_PAM_UID AND
+        S.D_MOVE_CNTRY_GROUP_KEY = T.D_MOVE_CNTRY_GROUP_KEY
+
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #TEMP_D_MOVE_CNTRY_DEL;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;    
+
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_CNTRY';
+
+
+        DELETE T FROM DBO.D_MOVE_CNTRY T
+        join #TEMP_D_MOVE_CNTRY_DEL S with (nolock)
+        ON S.TB_PAM_UID =T.TB_PAM_UID AND
+        S.D_MOVE_CNTRY_KEY = T.D_MOVE_CNTRY_KEY
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;   
+
+---------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_CNTRY_GROUP';
+
+
+        DELETE T FROM DBO.D_MOVE_CNTRY_GROUP T
+        left join (select distinct D_MOVE_CNTRY_GROUP_KEY from dbo.d_move_cntry) DBO
+            ON DBO.D_MOVE_CNTRY_GROUP_KEY = T.D_MOVE_CNTRY_GROUP_KEY
+        WHERE DBO.D_MOVE_CNTRY_GROUP_KEY is null;
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;   
+
+---------------------------------------------------------------------------------------------------------------------
 
 
         BEGIN TRANSACTION
@@ -145,8 +322,8 @@ BEGIN
         SELECT MOVE_CNTRY.TB_PAM_UID, MOVE_CNTRY.NBS_CASE_ANSWER_UID FROM (SELECT DISTINCT TB_PAM_UID, NBS_CASE_ANSWER_UID FROM #S_MOVE_CNTRY) MOVE_CNTRY
         LEFT JOIN DBO.NRT_MOVE_CNTRY_KEY MOVE_CNTRY_KEY  with (nolock)
             ON MOVE_CNTRY_KEY.TB_PAM_UID = MOVE_CNTRY.TB_PAM_UID
-            AND MOVE_CNTRY_KEY.NBS_CASE_ANSWER_UID = MOVE_CNTRY.NBS_CASE_ANSWER_UID
-        where MOVE_CNTRY_KEY.TB_PAM_UID is null;
+            and MOVE_CNTRY_KEY.NBS_CASE_ANSWER_UID = MOVE_CNTRY.NBS_CASE_ANSWER_UID 
+        where (MOVE_CNTRY_KEY.TB_PAM_UID is null and MOVE_CNTRY_KEY.NBS_CASE_ANSWER_UID is null);
         
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -173,7 +350,7 @@ BEGIN
 
         SELECT DISTINCT D_TB_PAM.TB_PAM_UID
             INTO #D_TB_PAM_TEMP
-            FROM   (SELECT DISTINCT TB_PAM_UID FROM DBO.D_TB_PAM WHERE TB_PAM_UID IN (SELECT VALUE FROM STRING_SPLIT(@phc_uids, ','))) D_TB_PAM
+            FROM   (SELECT DISTINCT TB_PAM_UID FROM DBO.D_TB_PAM WHERE TB_PAM_UID IN (SELECT VALUE FROM #S_PHC_LIST)) D_TB_PAM
             LEFT JOIN #S_MOVE_CNTRY MOVE_CNTRY  with (nolock)
                 ON MOVE_CNTRY.TB_PAM_UID = D_TB_PAM.TB_PAM_UID;
 
@@ -235,14 +412,14 @@ BEGIN
         IF OBJECT_ID('#L_MOVE_CNTRY', 'U') IS NOT NULL
         drop table #L_MOVE_CNTRY;
 
-        SELECT MOVE_CNTRY_GROUP.TB_PAM_UID,  
-                NRT_MOVE_CNTRY_KEY.NBS_CASE_ANSWER_UID, 
-                CASE WHEN MOVE_CNTRY_GROUP.D_MOVE_CNTRY_GROUP_KEY IS NULL THEN 1 ELSE MOVE_CNTRY_GROUP.D_MOVE_CNTRY_GROUP_KEY END AS D_MOVE_CNTRY_GROUP_KEY,
-                CASE WHEN NRT_MOVE_CNTRY_KEY.D_MOVE_CNTRY_KEY IS NULL THEN 1 ELSE  NRT_MOVE_CNTRY_KEY.D_MOVE_CNTRY_KEY END AS D_MOVE_CNTRY_KEY
+        SELECT L.TB_PAM_UID,  
+                K.NBS_CASE_ANSWER_UID, 
+                CASE WHEN L.D_MOVE_CNTRY_GROUP_KEY IS NULL THEN 1 ELSE L.D_MOVE_CNTRY_GROUP_KEY END AS D_MOVE_CNTRY_GROUP_KEY,
+                CASE WHEN K.D_MOVE_CNTRY_KEY IS NULL THEN 1 ELSE  K.D_MOVE_CNTRY_KEY END AS D_MOVE_CNTRY_KEY
         INTO #L_MOVE_CNTRY
-        FROM   #L_MOVE_CNTRY_GROUP MOVE_CNTRY_GROUP  with (nolock)
-        LEFT OUTER JOIN DBO.NRT_MOVE_CNTRY_KEY NRT_MOVE_CNTRY_KEY  with (nolock)
-            ON NRT_MOVE_CNTRY_KEY.TB_PAM_UID=MOVE_CNTRY_GROUP.TB_PAM_UID;
+        FROM   #L_MOVE_CNTRY_GROUP L  with (nolock)
+        LEFT OUTER JOIN DBO.NRT_MOVE_CNTRY_KEY K  with (nolock)
+            ON K.TB_PAM_UID=L.TB_PAM_UID;
 
         if
         @debug = 'true'
@@ -296,14 +473,13 @@ BEGIN
         
         COMMIT TRANSACTION;    
 
--------------------------------------------------------------------------------------------
-        
+-------------------------------------------------------------------------------------------       
         BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'Insert records to  D_MOVE_CNTRY_GROUP';
+            @PROC_STEP_NAME = 'Insert records to  d_move_cntry_group';
 
         INSERT INTO DBO.D_MOVE_CNTRY_GROUP
             ([D_MOVE_CNTRY_GROUP_KEY])
@@ -311,9 +487,9 @@ BEGIN
                DISTINCT
                 T.D_MOVE_CNTRY_GROUP_KEY
             FROM #TEMP_D_MOVE_CNTRY T  with (nolock)
-            LEFT JOIN DBO.D_MOVE_CNTRY_GROUP D with (nolock)
-            ON 	D.D_MOVE_CNTRY_GROUP_KEY= T.D_MOVE_CNTRY_GROUP_KEY
-            WHERE D.D_MOVE_CNTRY_GROUP_KEY IS NULL;
+            LEFT JOIN DBO.D_MOVE_CNTRY_GROUP DG with (nolock)
+            ON 	DG.D_MOVE_CNTRY_GROUP_KEY= T.D_MOVE_CNTRY_GROUP_KEY
+            WHERE DG.D_MOVE_CNTRY_GROUP_KEY IS NULL;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -331,7 +507,7 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'Update D_MOVE_CNTRY';
+            @PROC_STEP_NAME = 'Update d_move_cntry';
 
         UPDATE DBO.D_MOVE_CNTRY
         SET 
@@ -361,7 +537,7 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'Insert records to  D_MOVE_CNTRY';
+            @PROC_STEP_NAME = 'Insert records to  d_move_cntry';
 
         INSERT INTO DBO.D_MOVE_CNTRY
             ([TB_PAM_UID]
@@ -391,7 +567,7 @@ BEGIN
                 @RowCount_no);
         
         COMMIT TRANSACTION;          
--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
 
