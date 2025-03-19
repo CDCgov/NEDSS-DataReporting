@@ -70,7 +70,7 @@ BEGIN TRY
 			A.ANSWER_TXT, 
 			A.RECORD_STATUS_CD, 
 			A.LAST_CHG_TIME,
-			ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.CODE_SET_GROUP_ID, A.DATAMART_COLUMN_NM, A.RECORD_STATUS_CD  ORDER BY A.LAST_CHG_TIME DESC) AS rn		
+			ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.DATAMART_COLUMN_NM ORDER BY A.LAST_CHG_TIME DESC) AS rn		
 		FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
 		INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
 		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
@@ -799,6 +799,99 @@ BEGIN TRY
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;	
+
+
+	BEGIN TRANSACTION
+
+		SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' UPDATE CALC_DISEASE_SITE IN S_TB_PAM_N';
+
+		IF OBJECT_ID('tempdb..#S_PAM_DISEASE_SITE') IS NOT NULL
+			DROP TABLE #S_PAM_DISEASE_SITE;
+
+		;WITH 
+		CTE_INVESTIGATION_BATCH_ID AS (
+				SELECT 
+					public_health_case_uid,
+					batch_id
+				FROM [dbo].nrt_investigation I WITH (NOLOCK) 
+				INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
+			),
+		CTE_DISEASE_SITE_SET AS (
+			SELECT  
+				CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID,
+				A.DATAMART_COLUMN_NM, 
+				A.ANSWER_TXT, 
+				CVG.CODE_SHORT_DESC_TXT,
+				A.LAST_CHG_TIME,
+				ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.DATAMART_COLUMN_NM ORDER BY A.LAST_CHG_TIME DESC) AS rn
+			FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
+			INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
+				ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
+			LEFT JOIN [dbo].nrt_srte_codeset_group_metadata METADATA WITH (NOLOCK)
+				ON METADATA.CODE_SET_GROUP_ID = A.CODE_SET_GROUP_ID
+			LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
+				ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
+				AND CVG.CODE = A.ANSWER_TXT
+			WHERE 
+				A.DATAMART_COLUMN_NM <> 'n/a'
+				AND A.question_identifier = 'TUB119'
+		),
+		CTE_DISEASE_SITE AS (
+			SELECT 
+				TB_PAM_UID, 
+				COALESCE(NULLIF(CODE_SHORT_DESC_TXT, ''), ANSWER_TXT) AS VALUE
+			FROM CTE_DISEASE_SITE_SET
+			WHERE rn = 1
+		),
+		-- Step 2: Categorizing Disease Sites
+		CTE_DISEASE_SITE_A AS (
+			SELECT TB_PAM_UID, VALUE AS VALUE1 FROM CTE_DISEASE_SITE WHERE VALUE = 'Pulmonary'
+		),
+		CTE_DISEASE_SITE_B AS (
+			SELECT TB_PAM_UID, VALUE AS VALUE2 FROM CTE_DISEASE_SITE WHERE VALUE = 'Site not Stated'
+		),
+		CTE_DISEASE_SITE_C AS (
+			SELECT TB_PAM_UID, VALUE AS VALUE3 FROM CTE_DISEASE_SITE WHERE VALUE NOT IN ('Pulmonary', 'Site not Stated')
+		)
+
+		SELECT 
+			S.TB_PAM_UID,
+			CASE 
+				WHEN A.VALUE1 = 'Pulmonary' AND COALESCE(B.VALUE2, '') = '' AND COALESCE(C.VALUE3, '') = '' THEN 'Pulmonary'
+				WHEN COALESCE(A.VALUE1, '') = '' AND COALESCE(B.VALUE2, '') = '' AND COALESCE(C.VALUE3, '') <> '' THEN 'Extra Pulmonary'
+				WHEN COALESCE(A.VALUE1, '') = '' AND COALESCE(B.VALUE2, '') <> '' AND COALESCE(C.VALUE3, '') <> '' THEN 'Extra Pulmonary'
+				WHEN A.VALUE1 = 'Pulmonary' AND COALESCE(B.VALUE2, '') <> '' THEN 'Both'
+				WHEN A.VALUE1 = 'Pulmonary' AND COALESCE(C.VALUE3, '') <> '' THEN 'Both'
+				ELSE 'Unknown'
+			END AS CALC_DISEASE_SITE
+		INTO #S_PAM_DISEASE_SITE
+		FROM #S_TB_PAM S
+		LEFT JOIN CTE_DISEASE_SITE_A A ON S.TB_PAM_UID = A.TB_PAM_UID
+		LEFT JOIN CTE_DISEASE_SITE_B B ON S.TB_PAM_UID = B.TB_PAM_UID
+		LEFT JOIN CTE_DISEASE_SITE_C C ON S.TB_PAM_UID = C.TB_PAM_UID;
+
+		UPDATE S
+			SET CALC_DISEASE_SITE = DS.CALC_DISEASE_SITE
+		FROM #S_TB_PAM S
+		INNER JOIN #S_PAM_DISEASE_SITE DS 
+		ON DS.TB_PAM_UID = S.TB_PAM_UID
+
+		SELECT @RowCount_no = @@ROWCOUNT;
+
+		IF
+            @debug = 'true'
+            SELECT @Proc_Step_Name AS step, *
+            FROM #S_PAM_DISEASE_SITE 
+
+		INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	COMMIT transaction;
 
 	BEGIN TRANSACTION
 
