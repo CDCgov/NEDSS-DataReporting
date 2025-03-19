@@ -266,6 +266,32 @@ BEGIN
 
 ---------------------------------------------------------------------------------------------------------------------
 
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_ADDL_RISK_GROUP';
+
+
+        DELETE T FROM DBO.D_ADDL_RISK_GROUP T
+        left join (select distinct D_ADDL_RISK_GROUP_KEY from dbo.D_ADDL_RISK) DBO
+            ON DBO.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY
+        WHERE DBO.D_ADDL_RISK_GROUP_KEY is null;
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;   
+
+---------------------------------------------------------------------------------------------------------------------
+
+
 
         BEGIN TRANSACTION
 
