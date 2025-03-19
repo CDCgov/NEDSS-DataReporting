@@ -43,6 +43,35 @@ BEGIN
 
         BEGIN TRANSACTION
 
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #D_GT_12_REAS_PHC_LIST TABLE';
+
+        IF OBJECT_ID('#D_GT_12_REAS_PHC_LIST', 'U') IS NOT NULL
+            drop table #D_GT_12_REAS_PHC_LIST;
+
+        SELECT value
+        INTO  #D_GT_12_REAS_PHC_LIST
+        FROM STRING_SPLIT(@phc_id_list, ',')
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        IF
+            @debug = 'true'
+            SELECT @Proc_Step_Name AS step, *
+            FROM #D_GT_12_REAS_PHC_LIST;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION;
+        
+--------------------------------------------------------------------------------------------------------
+        
+        BEGIN TRANSACTION
+
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -126,6 +155,127 @@ BEGIN
         COMMIT TRANSACTION;
 -------------------------------------------------------------------------------------------
 
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING #TEMP_D_GT_12_REAS_DEL';
+
+            IF OBJECT_ID('#TEMP_D_GT_12_REAS_DEL', 'U') IS NOT NULL
+            drop table #TEMP_D_GT_12_REAS_DEL;
+
+            SELECT 
+                D.TB_PAM_UID, 
+                D.D_GT_12_REAS_KEY,
+                D.D_GT_12_REAS_GROUP_KEY
+            INTO #TEMP_D_GT_12_REAS_DEL
+            FROM [dbo].D_GT_12_REAS D WITH (NOLOCK)
+            LEFT JOIN [dbo].nrt_d_gt_12_reas_key K WITH (NOLOCK)
+                ON D.TB_PAM_UID = K.TB_PAM_UID AND
+                D.D_GT_12_REAS_KEY = K.D_GT_12_REAS_KEY
+            LEFT JOIN #S_D_GT_12_REAS S 
+            ON S.TB_PAM_UID = K.TB_PAM_UID AND
+                S.NBS_CASE_ANSWER_UID = K.NBS_CASE_ANSWER_UID
+            WHERE D.TB_PAM_UID IN (SELECT value FROM #D_GT_12_REAS_PHC_LIST) 
+            AND S.NBS_CASE_ANSWER_UID IS NULL;
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #TEMP_D_GT_12_REAS_DEL;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION;   
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_d_gt_12_reas_key';
+
+            DELETE K 
+            FROM [dbo].nrt_d_gt_12_reas_key K
+            INNER JOIN #TEMP_D_GT_12_REAS_DEL T with (nolock)
+                ON T.TB_PAM_UID = K.TB_PAM_UID 
+                AND T.D_GT_12_REAS_KEY = K.D_GT_12_REAS_KEY
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #TEMP_D_GT_12_REAS_DEL;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION;
+
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_d_gt_12_reas_group_key';
+
+            DELETE GK 
+            FROM [dbo].nrt_d_gt_12_reas_group_key GK
+            INNER JOIN #TEMP_D_GT_12_REAS_DEL T 
+                ON T.TB_PAM_UID = GK.TB_PAM_UID 
+                AND T.D_GT_12_REAS_GROUP_KEY = GK.D_GT_12_REAS_GROUP_KEY
+
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #TEMP_D_GT_12_REAS_DEL;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION; 
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.D_GT_12_REAS';
+
+            DELETE D 
+            FROM [dbo].D_GT_12_REAS D
+            INNER join #TEMP_D_GT_12_REAS_DEL T with (nolock)
+                ON T.TB_PAM_UID =D.TB_PAM_UID 
+                AND T.D_GT_12_REAS_KEY = D.D_GT_12_REAS_KEY
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION; 
+
+-------------------------------------------------------------------------------------------
+
 
         BEGIN TRANSACTION
 
@@ -134,7 +284,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'INSERT KEYS TO dbo.nrt_d_gt_12_reas_group_key ';
 
-            INSERT INTO [dbo].nrt_d_gt_12_reas_group_key(TB_PAM_UID) 
+            INSERT INTO [dbo].nrt_d_gt_12_reas_group_key (TB_PAM_UID) 
             SELECT S.TB_PAM_UID FROM (SELECT DISTINCT TB_PAM_UID FROM #S_D_GT_12_REAS) S
             LEFT JOIN [dbo].nrt_d_gt_12_reas_group_key GK  WITH (NOLOCK)
                 ON GK.TB_PAM_UID = S.TB_PAM_UID
@@ -203,10 +353,10 @@ BEGIN
                 INTO #D_TB_PAM_TEMP
                 FROM (
                     SELECT DISTINCT TB_PAM_UID 
-                    FROM DBO.D_TB_PAM 
-                    WHERE TB_PAM_UID IN (SELECT VALUE FROM STRING_SPLIT(@phc_id_list, ','))
+                    FROM [dbo].D_TB_PAM WITH (NOLOCK)
+                    WHERE TB_PAM_UID IN (SELECT VALUE FROM #D_GT_12_REAS_PHC_LIST)
                 ) D_TB_PAM
-                LEFT JOIN #S_D_GT_12_REAS S with (nolock)
+                LEFT JOIN #S_D_GT_12_REAS S
                     ON S.TB_PAM_UID = D_TB_PAM.TB_PAM_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -267,7 +417,8 @@ BEGIN
             IF OBJECT_ID('#L_D_GT_12_REAS', 'U') IS NOT NULL
                 DROP TABLE #L_D_GT_12_REAS;
 
-            SELECT L.TB_PAM_UID,  
+            SELECT 
+                L.TB_PAM_UID,  
                 K.NBS_CASE_ANSWER_UID, 
                 COALESCE(L.D_GT_12_REAS_GROUP_KEY, 1) AS D_GT_12_REAS_GROUP_KEY,
                 COALESCE(K.D_GT_12_REAS_KEY, 1) AS D_GT_12_REAS_KEY
