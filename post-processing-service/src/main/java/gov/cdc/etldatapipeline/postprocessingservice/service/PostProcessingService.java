@@ -46,13 +46,15 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
 
-    // cache to store ids from nrt topics that needs to be processed for loading
-    // dims and facts
-    // a map of nrt topic name and it's associated ids
+    // cache to store ids from nrt topics that needs to be processed for loading dims and facts
+    // a map of nrt topic name and its associated ids
     final Map<String, Queue<Long>> idCache = new ConcurrentHashMap<>();
 
-    // cache to store ids and additional information specific to those IDs like page
-    // case information
+    // cache to store PHC ids from for specific case types to run summary and aggregate reports
+    // a map of case type (sum/agg) and its associated ids
+    final Map<String, Queue<Long>> sumCache = new ConcurrentHashMap<>();
+
+    // cache to store ids and additional information specific to those IDs like page case information
     // a map of ids (phc_ids as of now) and a comma seperated string of information
     final Map<Long, String> idVals = new ConcurrentHashMap<>();
 
@@ -73,11 +75,33 @@ public class PostProcessingService {
     static final String LAB_REPORT = "LabReport";
     static final String LAB_REPORT_MORB = "LabReportMorb";
 
+    static final String CASE_TYPE_SUM = "Summary";
+    static final String CASE_TYPE_AGG = "Aggregate";
+    static final String ACT_TYPE_SUM = "SummaryNotification";
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
 
+    @Value("${spring.kafka.topic.investigation}")
+    private String investigationTopic;
+
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
+
+    @Value("${featureFlag.d-tb-hiv-enable}")
+    private boolean tbHivEnable;
+
+    @Value("${featureFlag.morb-report-dm-enable}")
+    private boolean morbReportDmEnable;
+
+    @Value("${featureFlag.inv-summary-dm-enable}")
+    private boolean invSummaryDmEnable;
+
+    @Value("${featureFlag.summary-report-enable}")
+    private boolean summaryReportEnable;
+
+    @Value("${featureFlag.aggregate-report-enable}")
+    private boolean aggregateReportEnable;
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
@@ -116,7 +140,7 @@ public class PostProcessingService {
 
         Long id = extractIdFromMessage(topic, key);
         idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-        Optional<String> val = Optional.ofNullable(extractValFromMessage(topic, payload));
+        Optional<String> val = Optional.ofNullable(extractValFromMessage(id, topic, payload));
         val.ifPresent(v -> idVals.put(id, v));
     }
 
@@ -134,6 +158,15 @@ public class PostProcessingService {
         } catch (Exception e) {
             String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
             throw new RuntimeException(msg, e);
+        }
+    }
+
+    private void extractSummaryCase(Long uid, String caseType) {
+        if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
+            sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
+        }
+        if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
+            sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
         }
     }
 
@@ -210,6 +243,7 @@ public class PostProcessingService {
             List<Long> observationUids = new ArrayList<>();
             List<Long> notificationUids = new ArrayList<>();
             List<Long> contactRecordUids = new ArrayList<>();
+            List<Long> vaccinationUids = new ArrayList<>();
 
             for (Entry<String, List<Long>> entry : sortedEntries) {
                 String keyTopic = entry.getKey();
@@ -282,18 +316,50 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity.getEntityName(), ids,
                                 postProcRepository::executeStoredProcForFVaccination,
                                 "sp_f_vaccination_postprocessing");
+                        vaccinationUids = ids;
                         break;
                     default:
                         logger.warn("Unknown topic: {} cannot be processed", keyTopic);
                         break;
                 }
             }
+            processSummaryCases();
             datamartProcessor.process(dmData);
 
             processMultiIDDatamart(investigationUids, patientUids, providerUids, organizationUids, observationUids,
-                    notificationUids, contactRecordUids);
+                    notificationUids, contactRecordUids, vaccinationUids);
         } else {
             logger.info("No ids to process from the topics.");
+        }
+    }
+
+    private void processSummaryCases() {
+
+        // Making cache snapshot preventing out-of-sequence ids processing
+        final Set<Long> sumUids;
+        final Set<Long> aggUids;
+
+        synchronized (cacheLock) {
+            sumUids = Optional.ofNullable(sumCache.get(CASE_TYPE_SUM))
+                    .map(HashSet::new)
+                    .orElse(new HashSet<>());
+            aggUids = Optional.ofNullable(sumCache.get(CASE_TYPE_AGG))
+                    .map(HashSet::new)
+                    .orElse(new HashSet<>());
+            sumCache.clear();
+        }
+
+        if (summaryReportEnable) {
+            processTopic(investigationTopic, SUMMARY_REPORT_CASE, sumUids,
+                    investigationRepository::executeStoredProcForSummaryReportCase);
+
+            processTopic(investigationTopic, SR100_DATAMART, sumUids,
+                    investigationRepository::executeStoredProcForSR100Datamart);
+        }
+
+        if (aggregateReportEnable) {
+            processTopic(investigationTopic, AGGREGATE_REPORT_DATAMART, aggUids,
+                    investigationRepository::executeStoredProcForAggregateReport);
         }
     }
 
@@ -313,17 +379,13 @@ public class PostProcessingService {
         processTopic(keyTopic, CASE_COUNT, ids,
                 investigationRepository::executeStoredProcForCaseCount);
 
-        processTopic(keyTopic, SUMMARY_REPORT_CASE, ids,
-                investigationRepository::executeStoredProcForSummaryReportCase);
-
-        processTopic(keyTopic, SR100_DATAMART, ids,
-                investigationRepository::executeStoredProcForSR100Datamart);
-
         processTopic(keyTopic, D_TB_PAM, ids,
                 investigationRepository::executeStoredProcForDTBPAM);
 
-        processTopic(keyTopic, D_TB_HIV, ids,
+        if (tbHivEnable) {
+            processTopic(keyTopic, D_TB_HIV, ids,
                 investigationRepository::executeStoredProcForDTbHiv);
+        }
                 
         processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);
@@ -461,7 +523,7 @@ public class PostProcessingService {
 
     private void processMultiIDDatamart(List<Long> investigationUids, List<Long> patientUids, List<Long> providerUids,
             List<Long> organizationUids, List<Long> observationUids, List<Long> notificationUids,
-            List<Long> contactRecordUids) {
+            List<Long> contactRecordUids, List<Long> vaccinationUids) {
         String invString = listToParameterString(investigationUids);
         String patString = listToParameterString(patientUids);
         String provString = listToParameterString(providerUids);
@@ -469,16 +531,17 @@ public class PostProcessingService {
         String obsString = listToParameterString(observationUids);
         String notifString = listToParameterString(notificationUids);
         String ctrString = listToParameterString(contactRecordUids);
+        String vaxString = listToParameterString(vaccinationUids);
 
         int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
-                + ctrString.length();
+                + ctrString.length() + vaxString.length();
         int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
         int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
         int totalLengthMorbReportDM = obsString.length() + patString.length() + provString.length() + orgString.length() + invString.length();
 
 
         if (totalLengthEventMetric > 0 && eventMetricEnable) {
-            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString);
+            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString, vaxString);
         } else {
             logger.info("No updates to EVENT_METRIC Datamart");
         }
@@ -489,13 +552,13 @@ public class PostProcessingService {
             logger.info("No updates to HEP100 Datamart");
         }
 
-        if (totalLengthInvSummary > 0) {
+        if (totalLengthInvSummary > 0 && invSummaryDmEnable) {
             postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
         }
 
-        if(totalLengthMorbReportDM > 0) {
+        if(totalLengthMorbReportDM > 0 && morbReportDmEnable) {
             postProcRepository.executeStoredProcForMorbidityReportDatamart(obsString, patString, provString, orgString, invString);
         } else {
             logger.info("No updates to MORBIDITY_REPORT_DATAMART");
@@ -512,17 +575,24 @@ public class PostProcessingService {
         processDatamartIds();
     }
 
-    private String extractValFromMessage(String topic, String payload) {
+    private String extractValFromMessage(Long uid, String topic, String payload) {
         try {
+            JsonNode payloadNode = objectMapper.readTree(payload).get(PAYLOAD);
             if (topic.endsWith(INVESTIGATION.getEntityName())) {
-                JsonNode tblNode = objectMapper.readTree(payload).get(PAYLOAD).path("rdb_table_name_list");
+                extractSummaryCase(uid, payloadNode.path("case_type_cd").asText());
+
+                JsonNode tblNode = payloadNode.path("rdb_table_name_list");
                 if (!tblNode.isMissingNode() && !tblNode.isNull()) {
                     return tblNode.asText();
                 }
+            } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
+                String actTypeCd = payloadNode.path("act_type_cd").asText();
+                Long phcUid = payloadNode.get("public_health_case_uid").asLong();
+                extractSummaryCase(phcUid, actTypeCd);
             } else if (topic.endsWith(OBSERVATION.getEntityName())) {
-                String domainCd = objectMapper.readTree(payload).get(PAYLOAD).path("obs_domain_cd_st_1").asText();
+                String domainCd = payloadNode.path("obs_domain_cd_st_1").asText();
                 String ctrlCd = Optional
-                        .ofNullable(objectMapper.readTree(payload).get(PAYLOAD).get("ctrl_cd_display_form"))
+                        .ofNullable(payloadNode.get("ctrl_cd_display_form"))
                         .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
 
                 if (MORB_REPORT.equals(ctrlCd)) {
@@ -561,23 +631,25 @@ public class PostProcessingService {
                 .orElse(UNKNOWN);
     }
 
-    private void processTopic(String keyTopic, Entity entity, List<Long> ids, Consumer<String> repositoryMethod) {
+    private void processTopic(String keyTopic, Entity entity, Collection<Long> ids, Consumer<String> repositoryMethod) {
         processTopic(keyTopic, entity.getEntityName(), ids, repositoryMethod, entity.getStoredProcedure());
     }
 
-    private void processTopic(String keyTopic, String name, List<Long> ids, Consumer<String> repositoryMethod,
+    private void processTopic(String keyTopic, String name, Collection<Long> ids, Consumer<String> repositoryMethod,
             String spName) {
-        String idsString = prepareAndLog(keyTopic, ids, name, spName);
-        repositoryMethod.accept(idsString);
-        completeLog(spName);
+        if (!ids.isEmpty()) {
+            String idsString = prepareAndLog(keyTopic, ids, name, spName);
+            repositoryMethod.accept(idsString);
+            completeLog(spName);
+        }
     }
 
-    private <T> List<T> processTopic(String keyTopic, Entity entity, List<Long> ids,
+    private <T> List<T> processTopic(String keyTopic, Entity entity, Collection<Long> ids,
             Function<String, List<T>> repositoryMethod) {
         return processTopic(keyTopic, entity.getEntityName(), ids, repositoryMethod, entity.getStoredProcedure());
     }
 
-    private <T> List<T> processTopic(String keyTopic, String name, List<Long> ids,
+    private <T> List<T> processTopic(String keyTopic, String name, Collection<Long> ids,
             Function<String, List<T>> repositoryMethod, String spName) {
         String idsString = prepareAndLog(keyTopic, ids, name, spName);
         List<T> result = repositoryMethod.apply(idsString);
@@ -595,7 +667,7 @@ public class PostProcessingService {
         completeLog(entity.getStoredProcedure());
     }
 
-    private String prepareAndLog(String keyTopic, List<Long> ids, String name, String spName) {
+    private String prepareAndLog(String keyTopic, Collection<Long> ids, String name, String spName) {
         String idsString = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}'", name, keyTopic,
