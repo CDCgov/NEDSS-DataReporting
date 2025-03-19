@@ -276,6 +276,31 @@ BEGIN
 
 -------------------------------------------------------------------------------------------
 
+        BEGIN TRANSACTION
+ 
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.D_GT_12_REAS_GROUP';
+    
+    
+            DELETE G 
+            FROM [dbo].D_GT_12_REAS_GROUP G
+            LEFT JOIN (SELECT DISTINCT D_GT_12_REAS_GROUP_KEY FROM [dbo].D_GT_12_REAS) D
+                ON D.D_GT_12_REAS_GROUP_KEY = G.D_GT_12_REAS_GROUP_KEY
+            WHERE D.D_GT_12_REAS_GROUP_KEY is null;
+    
+    
+            SELECT @RowCount_no = @@ROWCOUNT;
+    
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        
+        COMMIT TRANSACTION; 
+
+-------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
 
