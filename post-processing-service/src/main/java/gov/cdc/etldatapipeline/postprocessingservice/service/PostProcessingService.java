@@ -380,7 +380,7 @@ public class PostProcessingService {
                 investigationRepository::executeStoredProcForCaseCount);
 
         processTopic(keyTopic, D_TB_PAM, ids,
-                investigationRepository::executeStoredProcForDTBPAM);
+                investigationRepository::executeStoredProcForDTbPam);
 
         if (tbHivEnable) {
             processTopic(keyTopic, D_TB_HIV, ids,

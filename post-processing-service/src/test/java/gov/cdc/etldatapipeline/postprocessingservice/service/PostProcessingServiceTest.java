@@ -151,7 +151,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock).executeStoredProcForDTBPAM(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDTbPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDTbHiv(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDAddlRisk(expectedPublicHealthCaseIdsString);
