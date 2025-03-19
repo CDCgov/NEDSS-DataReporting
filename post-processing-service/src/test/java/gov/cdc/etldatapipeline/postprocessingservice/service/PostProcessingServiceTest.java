@@ -619,7 +619,6 @@ class PostProcessingServiceTest {
         assertEquals(5, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
         assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
-
     }
 
     @ParameterizedTest
