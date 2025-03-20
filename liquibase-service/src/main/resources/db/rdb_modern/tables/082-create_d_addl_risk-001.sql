@@ -1,4 +1,3 @@
---CNDE-2345 Foreign key constraints will be added after the completion of TB Datamart migration.*/
 IF NOT EXISTS (SELECT 1
                FROM sysobjects
                WHERE name = 'D_ADDL_RISK'
@@ -19,3 +18,18 @@ BEGIN
 		)  
 	);
 END;
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'D_ADDL_RISK' and xtype = 'U')
+BEGIN
+	IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'F' AND  parent_object_id = OBJECT_ID ('dbo.D_ADDL_RISK'))
+	BEGIN
+		ALTER TABLE dbo.D_ADDL_RISK ADD CONSTRAINT FK_D_ADDL_RISK_D_ADDL_RISK_GROUP FOREIGN KEY 
+		(
+			D_ADDL_RISK_GROUP_KEY
+		) REFERENCES dbo.D_ADDL_RISK_GROUP (
+			D_ADDL_RISK_GROUP_KEY
+		);
+	END
+END;
+
+

@@ -72,8 +72,8 @@ BEGIN
                nrt.rpt_src_cd_desc             as RPT_SRC_CD_DESC,
                nrt.rpt_to_county_time          as EARLIEST_RPT_TO_CNTY_DT,
                nrt.rpt_to_state_time           as EARLIEST_RPT_TO_STATE_DT,
-               nrt.mmwr_week                   as CASE_RPT_MMWR_WK,
-               nrt.mmwr_year                   as CASE_RPT_MMWR_YR,
+               NULLIF(nrt.mmwr_week,'')                   as CASE_RPT_MMWR_WK,
+               NULLIF(nrt.mmwr_year,'')                   as CASE_RPT_MMWR_YR,
                nrt.disease_imported_ind        as DISEASE_IMPORTED_IND,
                NULLIF(nrt.imported_from_country,'')        as IMPORT_FRM_CNTRY,
                NULLIF(nrt.imported_from_state,'')          as IMPORT_FRM_STATE,
@@ -82,7 +82,7 @@ BEGIN
                nrt.earliest_rpt_to_cdc_dt      as EARLIEST_RPT_TO_CDC_DT,
                NULLIF(nrt.rpt_source_cd,'')               as RPT_SRC_CD,
                NULLIF(nrt.imported_country_cd,'')          as IMPORT_FRM_CNTRY_CD,
-               NULLIF(nrt.imported_state_cd,'')            as IMPORT_FRM_STATE_CD,
+               NULLIF(nrt.imported_state_cd,'')  as IMPORT_FRM_STATE_CD,
                NULLIF(nrt.imported_county_cd,'')           as IMPORT_FRM_CNTY_CD,
                NULLIF(nrt.import_frm_city_cd,'')           as IMPORT_FRM_CITY_CD,
                nrt.diagnosis_time              as DIAGNOSIS_DT,
@@ -133,7 +133,8 @@ BEGIN
                nrt.cd,
                nrt.investigation_form_cd,
                nrt.investigator_assigned_datetime as INV_ASSIGNED_DT_LEGACY,
-               nrt.patient_id
+               nrt.patient_id,
+               nrt.batch_id
         into #temp_inv_table
         from dbo.nrt_investigation nrt
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
@@ -186,13 +187,13 @@ BEGIN
                 SELECT nio.public_health_case_uid, nio.observation_id, nio.branch_id, nio.branch_type_cd
                 INTO #temp_inv_obs
                 FROM #temp_inv_table t
-                LEFT JOIN (
+                         LEFT JOIN (
                     select invobs.*
                     from dbo.NRT_INVESTIGATION_OBSERVATION invobs
-                    left outer join dbo.NRT_INVESTIGATION inv
-                    on inv.public_health_case_uid = invobs.public_health_case_uid
+                             left outer join dbo.NRT_INVESTIGATION inv
+                                             on inv.public_health_case_uid = invobs.public_health_case_uid
                     where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
-                    and invobs.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
+                      and invobs.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
                 ) nio on nio.public_health_case_uid = t.case_uid
                 WHERE nio.branch_type_cd = 'InvFrmQ';
 
@@ -658,26 +659,30 @@ BEGIN
         SET @proc_step_name = 'Update CONFIRMATION_METHOD';
         SET @proc_step_no = 3;
 
-        /*Temp Confirmation Method Table*/
-        select distinct nrt.PUBLIC_HEALTH_CASE_UID,
-                        i.INVESTIGATION_KEY,
-                        nrt.CONFIRMATION_METHOD_CD,
-                        nrt.CONFIRMATION_METHOD_DESC_TXT,
-                        nrt.CONFIRMATION_METHOD_TIME as CONFIRMATION_DT,
-                        cm.CONFIRMATION_METHOD_KEY
-        into #temp_cm_table
-        from (
-            select nrtc.*
-            from dbo.NRT_INVESTIGATION_CONFIRMATION nrtc with(nolock)
-            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
-            on nrtc.public_health_case_uid = inv.public_health_case_uid
-            where isnull(nrtc.batch_id,1) = isnull(inv.batch_id,1)
-            and nrtc.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','))
-        ) nrt
-        left join dbo.confirmation_method cm with (nolock) on cm.confirmation_method_cd = nrt.confirmation_method_cd
-        left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid;
 
-        if @debug = 'true' select * from #temp_cm_table;
+        /*Temp Confirmation Method Table*/
+        ;WITH tempCM AS (
+            select
+                nrtc.*
+            from dbo.nrt_investigation_confirmation nrtc with(nolock)
+                     inner join #temp_inv_table inv with(nolock)
+                                on nrtc.public_health_case_uid = inv.CASE_UID
+            where isnull(nrtc.batch_id,1) = isnull(inv.batch_id,1)
+        )
+         select distinct tempCM.PUBLIC_HEALTH_CASE_UID,
+                         i.INVESTIGATION_KEY,
+                         tempCM.CONFIRMATION_METHOD_CD,
+                         tempCM.CONFIRMATION_METHOD_DESC_TXT,
+                         tempCM.CONFIRMATION_METHOD_TIME as CONFIRMATION_DT,
+                         cm.CONFIRMATION_METHOD_KEY
+         into #temp_cm_table
+         from dbo.investigation i with (nolock)
+                  left join tempCM on i.case_uid = tempCM.public_health_case_uid
+                  left join dbo.confirmation_method cm with (nolock) on cm.confirmation_method_cd = tempCM.confirmation_method_cd
+         where i.case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
+
+
+        if @debug = 'true' select @Proc_Step_Name as step, * from #temp_cm_table;
 
         -- if confirmation_method_key for the cd exists get the key or insert a new row to rdb.confirmation_method
 
@@ -719,12 +724,12 @@ BEGIN
         insert into dbo.nrt_confirmation_method_key(confirmation_method_cd)
         select distinct cmt.confirmation_method_cd
         from #temp_cm_table cmt
-        where cmt.CONFIRMATION_METHOD_KEY is null
+        where cmt.CONFIRMATION_METHOD_KEY is null and cmt.confirmation_method_cd is not null
           and not exists (select confirmation_method_cd
                           from dbo.confirmation_method cd
                           where cd.confirmation_method_cd = cmt.confirmation_method_cd);
 
-        /* Insert confirmation_method */
+--        /* Insert confirmation_method */
         insert into dbo.confirmation_method(CONFIRMATION_METHOD_KEY,CONFIRMATION_METHOD_CD,CONFIRMATION_METHOD_DESC)
         select distinct cmk.D_CONFIRMATION_METHOD_KEY, cmt.confirmation_method_cd, cmt.CONFIRMATION_METHOD_DESC_TXT
         from #temp_cm_table cmt
@@ -733,6 +738,9 @@ BEGIN
           and not exists (select confirmation_method_cd
                           from dbo.confirmation_method cd
                           where cd.confirmation_method_cd = cmt.confirmation_method_cd);
+
+        if @debug = 'true' select @Proc_Step_Name as step, * from #temp_cm_table;
+
 
         /* Logging */
         set @rowcount = @@rowcount
@@ -764,7 +772,7 @@ BEGIN
               )
 
         insert into dbo.CONFIRMATION_METHOD_GROUP ([INVESTIGATION_KEY],[CONFIRMATION_METHOD_KEY],[CONFIRMATION_DT])
-        select cmt.INVESTIGATION_KEY, cm.CONFIRMATION_METHOD_KEY, cmt.CONFIRMATION_DT
+        select cmt.INVESTIGATION_KEY, coalesce(cm.CONFIRMATION_METHOD_KEY,1), cmt.CONFIRMATION_DT
         from #temp_cm_table cmt
                  left outer join dbo.confirmation_method cm with (nolock) on cmt.confirmation_method_cd = cm.confirmation_method_cd
 

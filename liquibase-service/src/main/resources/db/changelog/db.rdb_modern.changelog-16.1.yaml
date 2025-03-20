@@ -582,6 +582,54 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 030-create_nrt_srte_Code_value_general-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 092-create_nrt_srte_Anatomic_site_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 093-create_nrt_srte_City_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 094-create_nrt_srte_Codeset_Group_Metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.4
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 095-create_nrt_srte_State_county_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.5
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 096-create_nrt_srte_Country_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.6
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 097-create_nrt_srte_jurisdiction_code-001.sql
             splitStatements: false            
   - changeSet:
       id: 90
@@ -800,6 +848,30 @@ databaseChangeLog:
             path: 036-sp_d_contact_record_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 116.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 051-create_nrt_vaccination-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 116.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 052-create_nrt_vaccination_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 116.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 053-create_nrt_vaccination_answer-001.sql
+            splitStatements: false
+  - changeSet:
       id: 117
       author: liquibase
       runOnChange: true
@@ -950,30 +1022,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 043-sp_pertussis_case_datamart_postprocessing-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 136
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 051-create_nrt_vaccination-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 137
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 052-create_nrt_vaccination_key-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 138
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 053-create_nrt_vaccination_answer-001.sql
             splitStatements: false
   - changeSet:
       id: 139
@@ -1286,7 +1334,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
+            path: 147-sp_nrt_d_tb_pam_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 265
@@ -1377,43 +1425,42 @@ databaseChangeLog:
             path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 395
+      id: 525
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 104-create_d_smr_exam_ty_group-001.sql
+            path: 153-create_d_smr_exam_ty_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 400
+      id: 530
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 105-create_d_smr_exam_ty-001.sql
+            path: 154-create_d_smr_exam_ty-001.sql
             splitStatements: false
   - changeSet:
-      id: 405
+      id: 535
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 106-create_nrt_d_smr_exam_ty_group_key-001.sql
+            path: 155-create_nrt_d_smr_exam_ty_group_key-001.sql
             splitStatements: false
   - changeSet:
-      id: 410
+      id: 540
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 107-create_nrt_d_smr_exam_ty_key-001.sql
+            path: 156-create_nrt_d_smr_exam_ty_key-001.sql
             splitStatements: false
   - changeSet:
-      id: 215
+      id: 545
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 180-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
+            path: 200-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
             splitStatements: false
-
