@@ -103,6 +103,9 @@ public class PostProcessingService {
     @Value("${featureFlag.aggregate-report-enable}")
     private boolean aggregateReportEnable;
 
+    @Value("${featureFlag.d-gt-12-reas-enable}")
+    private boolean tdGt12ReasEnable;
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
             autoCreateTopics = "false", 
@@ -393,9 +396,10 @@ public class PostProcessingService {
         processTopic(keyTopic, D_ADDL_RISK, ids,
                 investigationRepository::executeStoredProcForDAddlRisk);
 
-        processTopic(keyTopic, D_GT_12_REAS, ids,
+        if (tdGt12ReasEnable) {                
+            processTopic(keyTopic, D_GT_12_REAS, ids,
                 investigationRepository::executeStoredProcForDGt12Reas);    
-        
+        }
 
         return dmData;
     }
