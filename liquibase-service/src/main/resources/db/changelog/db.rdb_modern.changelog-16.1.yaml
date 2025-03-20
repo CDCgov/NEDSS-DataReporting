@@ -582,6 +582,54 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 030-create_nrt_srte_Code_value_general-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 092-create_nrt_srte_Anatomic_site_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 093-create_nrt_srte_City_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 094-create_nrt_srte_Codeset_Group_Metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.4
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 095-create_nrt_srte_State_county_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.5
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 096-create_nrt_srte_Country_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 89.6
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 097-create_nrt_srte_jurisdiction_code-001.sql
             splitStatements: false            
   - changeSet:
       id: 90
@@ -800,6 +848,30 @@ databaseChangeLog:
             path: 036-sp_d_contact_record_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 116.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 051-create_nrt_vaccination-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 116.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 052-create_nrt_vaccination_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 116.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 053-create_nrt_vaccination_answer-001.sql
+            splitStatements: false
+  - changeSet:
       id: 117
       author: liquibase
       runOnChange: true
@@ -950,30 +1022,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 043-sp_pertussis_case_datamart_postprocessing-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 136
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 051-create_nrt_vaccination-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 137
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 052-create_nrt_vaccination_key-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 138
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 053-create_nrt_vaccination_answer-001.sql
             splitStatements: false
   - changeSet:
       id: 139
@@ -1279,15 +1327,15 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 064-create_nrt_d_tb_pam_key-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 260
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 146-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false  
+            path: 147-sp_nrt_d_tb_pam_postprocessing-001.sql
+            splitStatements: false
   - changeSet:
       id: 265
       author: liquibase
@@ -1343,7 +1391,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 087-create_nrt_d_tb_hiv_key-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 300
       author: liquibase
@@ -1351,45 +1399,71 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 160-sp_nrt_d_tb_hiv_postprocessing-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
-      id: 370
+      id: 305
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 100-create_d_out_of_cntry_group-001.sql
+            path: 088-create_nrt_investigation_aggregate-001.sql
             splitStatements: false
   - changeSet:
-      id: 375
+      id: 310
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 101-create_d_out_of_cntry-001.sql
+            path: 091-create_aggregate_report_datamart-001.sql
             splitStatements: false
   - changeSet:
-      id: 380
+      id: 315
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 102-create_nrt_d_out_of_cntry_group_key-001.sql
+            path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 385
+      id: 475
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 103-create_nrt_d_out_of_cntry_key-001.sql
+            path: 137-create_d_out_of_cntry_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 390
+      id: 480
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 175-sp_nrt_d_out_of_cntry_postprocessing-001.sql
+            path: 138-create_d_out_of_cntry-001.sql
             splitStatements: false
+  - changeSet:
+      id: 485
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 139-create_nrt_d_out_of_cntry_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 490
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 140-create_nrt_d_out_of_cntry_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 495
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 190-sp_nrt_d_out_of_cntry_postprocessing-001.sql
+            splitStatements: false
+
+
 

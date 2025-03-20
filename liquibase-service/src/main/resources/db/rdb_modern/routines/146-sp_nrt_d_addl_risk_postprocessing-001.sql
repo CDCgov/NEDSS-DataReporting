@@ -13,7 +13,7 @@ BEGIN
             declare @dataflow_name varchar(200) = 'ADDL_RISK POST-Processing';
             declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_addl_risk_postprocessing';
 
-        set @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
+        set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
 

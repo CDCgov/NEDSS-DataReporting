@@ -1,8 +1,8 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_d_out_of_cntry_postprocessing]    
+CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_d_out_of_cntry_postprocessing] 
     @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
-BEGIN    
+BEGIN
 
     DECLARE @batch_id BIGINT;
     SET @batch_id = cast((format(getdate(),'yyyyMMddHHmmss')) AS BIGINT);
@@ -43,6 +43,35 @@ BEGIN
 
         BEGIN TRANSACTION
 
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #D_OUT_OF_CNTRY_PHC_LIST TABLE';
+
+        IF OBJECT_ID('#D_OUT_OF_CNTRY_PHC_LIST', 'U') IS NOT NULL
+            drop table #D_OUT_OF_CNTRY_PHC_LIST;
+
+        SELECT value
+        INTO  #D_OUT_OF_CNTRY_PHC_LIST
+        FROM STRING_SPLIT(@phc_id_list, ',')
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        IF
+            @debug = 'true'
+            SELECT @Proc_Step_Name AS step, *
+            FROM #D_OUT_OF_CNTRY_PHC_LIST;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION;
+        
+--------------------------------------------------------------------------------------------------------
+        
+        BEGIN TRANSACTION
+
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -74,7 +103,7 @@ BEGIN
             INNER JOIN ( SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON TB.ACT_UID = nu.value
             WHERE TB.DATAMART_COLUMN_NM <> 'n/a'
             AND ISNULL(tb.batch_id, 1) = ISNULL(inv.batch_id, 1)
-            AND QUESTION_IDENTIFIER = 'TUB114';
+            AND QUESTION_IDENTIFIER = 'TUB235';
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -105,7 +134,10 @@ BEGIN
 
             SELECT 
                 *, 
-                CODE_SHORT_DESC_TXT AS VALUE
+                CASE 
+                    WHEN CODE_SET_GROUP_ID IS NULL OR CODE_SET_GROUP_ID = '' THEN ANSWER_TXT
+                    ELSE CODE_SHORT_DESC_TXT
+                END AS VALUE
             INTO #S_D_OUT_OF_CNTRY
             FROM #S_D_OUT_OF_CNTRY_TRANSLATED WITH (NOLOCK);
 
@@ -123,6 +155,152 @@ BEGIN
         COMMIT TRANSACTION;
 -------------------------------------------------------------------------------------------
 
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING #TEMP_D_OUT_OF_CNTRY_DEL';
+
+            IF OBJECT_ID('#TEMP_D_OUT_OF_CNTRY_DEL', 'U') IS NOT NULL
+            drop table #TEMP_D_OUT_OF_CNTRY_DEL;
+
+            SELECT 
+                D.TB_PAM_UID, 
+                D.D_OUT_OF_CNTRY_KEY,
+                D.D_OUT_OF_CNTRY_GROUP_KEY
+            INTO #TEMP_D_OUT_OF_CNTRY_DEL
+            FROM [dbo].D_OUT_OF_CNTRY D WITH (NOLOCK)
+            LEFT JOIN [dbo].nrt_d_out_of_cntry_key K WITH (NOLOCK)
+                ON D.TB_PAM_UID = K.TB_PAM_UID AND
+                D.D_OUT_OF_CNTRY_KEY = K.D_OUT_OF_CNTRY_KEY
+            LEFT JOIN #S_D_OUT_OF_CNTRY S 
+            ON S.TB_PAM_UID = K.TB_PAM_UID AND
+                S.NBS_CASE_ANSWER_UID = K.NBS_CASE_ANSWER_UID
+            WHERE D.TB_PAM_UID IN (SELECT value FROM #D_OUT_OF_CNTRY_PHC_LIST) 
+            AND S.NBS_CASE_ANSWER_UID IS NULL;
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #TEMP_D_OUT_OF_CNTRY_DEL;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION;   
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_d_out_of_cntry_key';
+
+            DELETE K 
+            FROM [dbo].nrt_d_out_of_cntry_key K
+            INNER JOIN #TEMP_D_OUT_OF_CNTRY_DEL T with (nolock)
+                ON T.TB_PAM_UID = K.TB_PAM_UID 
+                AND T.D_OUT_OF_CNTRY_KEY = K.D_OUT_OF_CNTRY_KEY
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #TEMP_D_OUT_OF_CNTRY_DEL;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION;
+
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_d_out_of_cntry_group_key';
+
+            DELETE GK 
+            FROM [dbo].nrt_d_out_of_cntry_group_key GK
+            INNER JOIN #TEMP_D_OUT_OF_CNTRY_DEL T 
+                ON T.TB_PAM_UID = GK.TB_PAM_UID 
+                AND T.D_OUT_OF_CNTRY_GROUP_KEY = GK.D_OUT_OF_CNTRY_GROUP_KEY
+
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #TEMP_D_OUT_OF_CNTRY_DEL;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION; 
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.D_OUT_OF_CNTRY';
+
+            DELETE D 
+            FROM [dbo].D_OUT_OF_CNTRY D
+            INNER join #TEMP_D_OUT_OF_CNTRY_DEL T with (nolock)
+                ON T.TB_PAM_UID =D.TB_PAM_UID 
+                AND T.D_OUT_OF_CNTRY_KEY = D.D_OUT_OF_CNTRY_KEY
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION; 
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+ 
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.D_OUT_OF_CNTRY_GROUP';
+    
+    
+            DELETE G 
+            FROM [dbo].D_OUT_OF_CNTRY_GROUP G
+            LEFT JOIN (SELECT DISTINCT D_OUT_OF_CNTRY_GROUP_KEY FROM [dbo].D_OUT_OF_CNTRY) D
+                ON D.D_OUT_OF_CNTRY_GROUP_KEY = G.D_OUT_OF_CNTRY_GROUP_KEY
+            WHERE D.D_OUT_OF_CNTRY_GROUP_KEY is null;
+    
+    
+            SELECT @RowCount_no = @@ROWCOUNT;
+    
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        
+        COMMIT TRANSACTION; 
+
+-------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
 
@@ -131,7 +309,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'INSERT KEYS TO dbo.nrt_d_out_of_cntry_group_key ';
 
-            INSERT INTO [dbo].nrt_d_out_of_cntry_group_key(TB_PAM_UID) 
+            INSERT INTO [dbo].nrt_d_out_of_cntry_group_key (TB_PAM_UID) 
             SELECT S.TB_PAM_UID FROM (SELECT DISTINCT TB_PAM_UID FROM #S_D_OUT_OF_CNTRY) S
             LEFT JOIN [dbo].nrt_d_out_of_cntry_group_key GK  WITH (NOLOCK)
                 ON GK.TB_PAM_UID = S.TB_PAM_UID
@@ -200,10 +378,10 @@ BEGIN
                 INTO #D_TB_PAM_TEMP
                 FROM (
                     SELECT DISTINCT TB_PAM_UID 
-                    FROM DBO.D_TB_PAM 
-                    WHERE TB_PAM_UID IN (SELECT VALUE FROM STRING_SPLIT(@phc_id_list, ','))
+                    FROM [dbo].D_TB_PAM WITH (NOLOCK)
+                    WHERE TB_PAM_UID IN (SELECT VALUE FROM #D_OUT_OF_CNTRY_PHC_LIST)
                 ) D_TB_PAM
-                LEFT JOIN #S_D_OUT_OF_CNTRY S with (nolock)
+                LEFT JOIN #S_D_OUT_OF_CNTRY S
                     ON S.TB_PAM_UID = D_TB_PAM.TB_PAM_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -264,7 +442,8 @@ BEGIN
             IF OBJECT_ID('#L_D_OUT_OF_CNTRY', 'U') IS NOT NULL
                 DROP TABLE #L_D_OUT_OF_CNTRY;
 
-            SELECT L.TB_PAM_UID,  
+            SELECT 
+                L.TB_PAM_UID,  
                 K.NBS_CASE_ANSWER_UID, 
                 COALESCE(L.D_OUT_OF_CNTRY_GROUP_KEY, 1) AS D_OUT_OF_CNTRY_GROUP_KEY,
                 COALESCE(K.D_OUT_OF_CNTRY_KEY, 1) AS D_OUT_OF_CNTRY_KEY
@@ -355,7 +534,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'UPDATED_OUT_OF_CNTRY';
+                @PROC_STEP_NAME = 'UPDATE D_OUT_OF_CNTRY';
 
             UPDATE [dbo].D_OUT_OF_CNTRY
             SET 
@@ -384,7 +563,7 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'INSERT RECORDS TOD_OUT_OF_CNTRY';
+            @PROC_STEP_NAME = 'INSERT RECORDS TO  D_OUT_OF_CNTRY';
 
         INSERT INTO [dbo].D_OUT_OF_CNTRY
             ([TB_PAM_UID]

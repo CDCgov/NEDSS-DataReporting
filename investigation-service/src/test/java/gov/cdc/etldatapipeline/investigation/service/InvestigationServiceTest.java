@@ -89,9 +89,6 @@ class InvestigationServiceTest {
     private final String vaccinationTopicOutput = "VaccinationOutput";
     private final String treatmentTopicOutput = "TreatmentOutput";
 
-
-
-
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
@@ -102,6 +99,7 @@ class InvestigationServiceTest {
         investigationService.setPhcDatamartEnable(true);
         investigationService.setBmirdCaseEnable(true);
         investigationService.setContactRecordEnable(true);
+        investigationService.setTreatmentEnable(true);
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
@@ -461,6 +459,19 @@ class InvestigationServiceTest {
         assertEquals(treatment.getTreatmentUid(), keyObject.getTreatmentUid());
 
         assertEquals(treatment, actualTreatment);
+    }
+
+    @Test
+    void testProcessTreatmentWhenFeatureDisabled() {
+        Long treatmentUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}}}";
+
+        final Treatment treatment = constructTreatment(treatmentUid);
+        when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
+
+        investigationService.setTreatmentEnable(false);
+        investigationService.processMessage(getRecord(treatmentTopic, payload), consumer);
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test

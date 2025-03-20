@@ -26,7 +26,6 @@ COPY liquibase-service/src/main/resources/db/rdb_modern/tables /liquibase/change
 COPY liquibase-service/src/main/resources/db/rdb_modern/views /liquibase/changelog
 #rdb
 COPY liquibase-service/src/main/resources/db/rdb /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/rdb/routines /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/rdb/tables /liquibase/changelog
 # data_ingest
 COPY liquibase-service/src/main/resources/db/data_ingest /liquibase/changelog

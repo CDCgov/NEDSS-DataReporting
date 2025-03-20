@@ -1,4 +1,3 @@
---CNDE-2346 Foreign key constraints will be added after the completion of TB Datamart migration.*/
 IF NOT EXISTS (SELECT 1
                FROM sysobjects
                WHERE name = 'D_DISEASE_SITE'
@@ -16,6 +15,12 @@ BEGIN
 		(
 			D_DISEASE_SITE_KEY,
 			TB_PAM_UID
+		),
+		CONSTRAINT FK_D_DISEASE_SITE_D_DISEASE_SITE_GROUP FOREIGN KEY 
+		(
+			D_DISEASE_SITE_GROUP_KEY
+		) REFERENCES DBO.D_DISEASE_SITE_GROUP (
+			D_DISEASE_SITE_GROUP_KEY
 		)  
 	);
 END;
