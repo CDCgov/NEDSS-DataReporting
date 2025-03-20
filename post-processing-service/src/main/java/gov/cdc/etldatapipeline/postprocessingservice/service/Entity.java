@@ -22,6 +22,7 @@ enum Entity {
     CASE_ANSWERS(0, "case answers", Constants.PHC_UID, "sp_page_builder_postprocessing"),
     D_DISEASE_SITE(0, "disease site", Constants.PHC_UID, "sp_nrt_d_disease_site_postprocessing"),
     D_ADDL_RISK(0, "addl risk", Constants.PHC_UID, "sp_nrt_d_addl_risk_postprocessing"),
+    D_MOVE_CNTY(0, "move cnty", Constants.PHC_UID, "sp_nrt_d_move_cnty_postprocessing"),
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),
     D_TB_PAM(0, "d_tb_pam", Constants.PHC_UID, "sp_nrt_d_tb_pam_postprocessing"),
     SUMMARY_REPORT_CASE(0, "Summary_Report_Case", Constants.PHC_UID, "sp_summary_report_case_postprocessing"),
