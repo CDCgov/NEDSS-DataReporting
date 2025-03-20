@@ -143,7 +143,6 @@ class PostProcessingServiceTest {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
 
-        postProcessingServiceMock.setTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -554,7 +553,7 @@ class PostProcessingServiceTest {
 
         postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.setInvSummaryDmEnable(true);
-        postProcessingServiceMock.setTbHivEnable(true);
+        
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
         postProcessingServiceMock.postProcessMessage(patientTopic, patientKey, patientKey);
