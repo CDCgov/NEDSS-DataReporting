@@ -176,10 +176,9 @@ BEGIN
         SET @proc_step_no = 3;
 
         /* D_Organization Insert Operation */
-        -- delete from the key table to generate new keys for the resulting new data to be inserted
+
         begin try
 
-            delete from dbo.nrt_organization_key ;
             insert into dbo.nrt_organization_key(organization_uid)
             select organization_uid from #temp_org_table where organization_key is null order by organization_uid;
 
