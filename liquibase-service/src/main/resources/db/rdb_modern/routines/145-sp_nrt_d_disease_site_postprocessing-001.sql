@@ -13,7 +13,7 @@ BEGIN
             declare @dataflow_name varchar(200) = 'DISEASE_SITE POST-Processing';
             declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_disease_site_postprocessing';
 
-        set @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
+        set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
 
@@ -53,11 +53,12 @@ BEGIN
         LEFT JOIN DBO.nrt_srte_CODE_VALUE_GENERAL CVG  with (nolock)
             ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
             AND CVG.CODE = TB.ANSWER_TXT
+        INNER JOIN (
+             SELECT value FROM STRING_SPLIT(@phc_uids, ',')
+        ) nu ON TB.ACT_UID = nu.value
         WHERE TB.DATAMART_COLUMN_NM <> 'n/a'
         and isnull(tb.batch_id, 1) = isnull(inv.batch_id, 1)
-        AND QUESTION_IDENTIFIER = 'TUB119'
-        and TB.ACT_UID in (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-        option (MAXDOP 1);
+        AND QUESTION_IDENTIFIER = 'TUB119';
 
         if
         @debug = 'true'
