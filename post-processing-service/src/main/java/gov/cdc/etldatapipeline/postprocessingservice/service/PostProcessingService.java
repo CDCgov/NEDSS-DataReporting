@@ -88,9 +88,6 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
-    @Value("${featureFlag.d-tb-hiv-enable}")
-    private boolean tbHivEnable;
-
     @Value("${featureFlag.morb-report-dm-enable}")
     private boolean morbReportDmEnable;
 
@@ -102,9 +99,6 @@ public class PostProcessingService {
 
     @Value("${featureFlag.aggregate-report-enable}")
     private boolean aggregateReportEnable;
-
-    @Value("${featureFlag.d-gt-12-reas-enable}")
-    private boolean tdGt12ReasEnable;
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
@@ -385,10 +379,8 @@ public class PostProcessingService {
         processTopic(keyTopic, D_TB_PAM, ids,
                 investigationRepository::executeStoredProcForDTbPam);
 
-        if (tbHivEnable) {
-            processTopic(keyTopic, D_TB_HIV, ids,
+        processTopic(keyTopic, D_TB_HIV, ids,
                 investigationRepository::executeStoredProcForDTbHiv);
-        }
                 
         processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);
@@ -396,10 +388,8 @@ public class PostProcessingService {
         processTopic(keyTopic, D_ADDL_RISK, ids,
                 investigationRepository::executeStoredProcForDAddlRisk);
 
-        if (tdGt12ReasEnable) {                
-            processTopic(keyTopic, D_GT_12_REAS, ids,
+        processTopic(keyTopic, D_GT_12_REAS, ids,
                 investigationRepository::executeStoredProcForDGt12Reas);    
-        }
 
         return dmData;
     }

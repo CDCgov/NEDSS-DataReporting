@@ -143,8 +143,6 @@ class PostProcessingServiceTest {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
 
-        postProcessingServiceMock.setTbHivEnable(true);
-        postProcessingServiceMock.setTdGt12ReasEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -183,7 +181,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(20, logs.size());
+        assertEquals(24, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -201,7 +199,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(18, logs.size());
+        assertEquals(22, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -291,7 +289,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(16, logs.size());
+        assertEquals(20, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -554,8 +552,6 @@ class PostProcessingServiceTest {
 
         postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.setInvSummaryDmEnable(true);
-        postProcessingServiceMock.setTbHivEnable(true);
-        postProcessingServiceMock.setTdGt12ReasEnable(true);
         
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
