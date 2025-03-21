@@ -187,8 +187,7 @@ BEGIN
         SET @proc_step_no = 4;
 
         /* Notification Insert Operation */
-        -- delete from the key table to generate new keys for the resulting new data to be inserted
-        -- delete from dbo.nrt_notification_key;
+        
         insert into dbo.nrt_notification_key(notification_uid)
         select notification_uid from #temp_ntf_table where notification_key is null order by notification_uid;
 
