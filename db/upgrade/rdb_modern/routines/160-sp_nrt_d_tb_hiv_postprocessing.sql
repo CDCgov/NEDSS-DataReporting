@@ -14,8 +14,6 @@ BEGIN
 	DECLARE @Dataflow_Name VARCHAR(200) = 'D_TB_HIV Post-Processing Event';
 	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_d_tb_hiv_postprocessing';
 
-    DECLARE @inv_form_cd VARCHAR(100) = 'INV_FORM_RVCT';
-
 
 BEGIN TRY
 
@@ -62,6 +60,7 @@ BEGIN TRY
 				batch_id
 			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
 			INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
+			WHERE I.investigation_form_cd='INV_FORM_RVCT'
 		)
 		SELECT 
 			CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID,
@@ -74,10 +73,9 @@ BEGIN TRY
 		INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
 		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
 		WHERE 
-			investigation_form_cd = @inv_form_cd
-			AND datamart_column_nm IS NOT NULL
-			AND datamart_column_nm <> 'N/A'
-			AND question_identifier IN ('TUB154', 'TUB155', 'TUB156')
+			A.datamart_column_nm IS NOT NULL
+			AND A.datamart_column_nm <> 'N/A'
+			AND A.question_identifier IN ('TUB154', 'TUB155', 'TUB156')
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
