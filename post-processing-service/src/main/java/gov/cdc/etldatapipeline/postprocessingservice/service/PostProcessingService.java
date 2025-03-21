@@ -379,6 +379,7 @@ public class PostProcessingService {
         processTopic(keyTopic, D_GT_12_REAS, ids, investigationRepository::executeStoredProcForDGt12Reas);    
         processTopic(keyTopic, D_MOVE_CNTRY, ids, investigationRepository::executeStoredProcForDMoveCntry);
         processTopic(keyTopic, D_MOVE_CNTY, ids, investigationRepository::executeStoredProcForDMoveCnty);
+        processTopic(keyTopic, D_MOVE_STATE, ids, investigationRepository::executeStoredProcForDMoveState);
         processTopic(keyTopic, D_HC_PROV_TY_3, ids, investigationRepository::executeStoredProcForDHcProvTy3);
         return dmData;
     }
