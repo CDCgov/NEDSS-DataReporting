@@ -371,21 +371,13 @@ public class PostProcessingService {
                         investigationRepository::executeStoredProcForPageBuilder));
 
         processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
-
         processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
-
         processTopic(keyTopic, D_TB_PAM, ids, investigationRepository::executeStoredProcForDTbPam);
-
-        processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);
-                
+        processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);                
         processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
-
-        processTopic(keyTopic, D_ADDL_RISK, ids, investigationRepository::executeStoredProcForDAddlRisk);
-        
+        processTopic(keyTopic, D_ADDL_RISK, ids, investigationRepository::executeStoredProcForDAddlRisk);        
         processTopic(keyTopic, D_GT_12_REAS, ids, investigationRepository::executeStoredProcForDGt12Reas); 
-
         processTopic(keyTopic, D_OUT_OF_CNTRY, ids, investigationRepository::executeStoredProcForDOutOfCntry);        
-
         return dmData;
     }
 
