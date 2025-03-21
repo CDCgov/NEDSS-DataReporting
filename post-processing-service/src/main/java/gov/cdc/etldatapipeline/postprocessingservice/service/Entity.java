@@ -25,6 +25,7 @@ enum Entity {
     D_MOVE_CNTRY(0, "move cntry", Constants.PHC_UID, "sp_nrt_d_move_cntry_postprocessing"),
     D_MOVE_CNTY(0, "move cnty", Constants.PHC_UID, "sp_nrt_d_move_cnty_postprocessing"),
     D_MOVE_STATE(0, "move state", Constants.PHC_UID, "sp_nrt_d_move_state_postprocessing"),
+    D_MOVED_WHERE(0, "moved where", Constants.PHC_UID, "sp_nrt_d_moved_where_postprocessing"),
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),
     D_TB_PAM(0, "d_tb_pam", Constants.PHC_UID, "sp_nrt_d_tb_pam_postprocessing"),
     SUMMARY_REPORT_CASE(0, "Summary_Report_Case", Constants.PHC_UID, "sp_summary_report_case_postprocessing"),
