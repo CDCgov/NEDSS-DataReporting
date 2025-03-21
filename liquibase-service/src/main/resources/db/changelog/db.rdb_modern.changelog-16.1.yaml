@@ -1624,3 +1624,43 @@ databaseChangeLog:
         - sqlFile:
             path: 190-sp_nrt_d_out_of_cntry_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 525
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 153-create_d_smr_exam_ty_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 530
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 154-create_d_smr_exam_ty-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 535
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 155-create_nrt_d_smr_exam_ty_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 540
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 156-create_nrt_d_smr_exam_ty_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 545
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 200-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
+            splitStatements: false
