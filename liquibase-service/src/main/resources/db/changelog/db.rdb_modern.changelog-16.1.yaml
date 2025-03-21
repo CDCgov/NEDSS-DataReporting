@@ -1504,3 +1504,43 @@ databaseChangeLog:
         - sqlFile:
             path: 156-sp_nrt_d_move_cntry_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 425
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 113-create_d_move_cnty_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 430
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 114-create_d_move_cnty-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 435
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 115-create_nrt_move_cnty_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 440
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 116-create_nrt_move_cnty_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 445
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 175-sp_nrt_d_move_cnty_postprocessing-001.sql
+            splitStatements: false
