@@ -1424,3 +1424,43 @@ databaseChangeLog:
         - sqlFile:
             path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 375
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 105-create_d_gt_12_reas_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 380
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 106-create_d_gt_12_reas-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 385
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 107-create_nrt_d_gt_12_reas_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 390
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 108-create_nrt_d_gt_12_reas_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 395
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 170-sp_nrt_d_gt_12_reas_postprocessing-001.sql
+            splitStatements: false

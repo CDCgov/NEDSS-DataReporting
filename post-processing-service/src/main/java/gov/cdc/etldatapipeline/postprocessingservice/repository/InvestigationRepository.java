@@ -76,7 +76,7 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     void executeStoredProcForAggregateReport(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_d_tb_pam_postprocessing")
-    void executeStoredProcForDTBPAM(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    void executeStoredProcForDTbPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_d_disease_site_postprocessing")
     void executeStoredProcForDDiseaseSite(@Param("publicHealthCaseUids") String publicHealthCaseUids);
@@ -85,6 +85,9 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     void executeStoredProcForDAddlRisk(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_d_tb_hiv_postprocessing")
-    void executeStoredProcForDTBHIV(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    void executeStoredProcForDTbHiv(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     
+    @Procedure("sp_nrt_d_gt_12_reas_postprocessing")
+    void executeStoredProcForDGt12Reas(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
 }

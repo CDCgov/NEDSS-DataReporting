@@ -88,9 +88,6 @@ public class PostProcessingService {
     @Value("${featureFlag.event-metric-enable}")
     private boolean eventMetricEnable;
 
-    @Value("${featureFlag.d-tb-hiv-enable}")
-    private boolean tbHivEnable;
-
     @Value("${featureFlag.morb-report-dm-enable}")
     private boolean morbReportDmEnable;
 
@@ -380,18 +377,19 @@ public class PostProcessingService {
                 investigationRepository::executeStoredProcForCaseCount);
 
         processTopic(keyTopic, D_TB_PAM, ids,
-                investigationRepository::executeStoredProcForDTBPAM);
+                investigationRepository::executeStoredProcForDTbPam);
 
-        if (tbHivEnable) {
-            processTopic(keyTopic, D_TB_HIV, ids,
-                    investigationRepository::executeStoredProcForDTBHIV);
-        }
+        processTopic(keyTopic, D_TB_HIV, ids,
+                investigationRepository::executeStoredProcForDTbHiv);
                 
         processTopic(keyTopic, D_DISEASE_SITE, ids, 
                 investigationRepository::executeStoredProcForDDiseaseSite);
 
         processTopic(keyTopic, D_ADDL_RISK, ids,
                 investigationRepository::executeStoredProcForDAddlRisk);
+
+        processTopic(keyTopic, D_GT_12_REAS, ids,
+                investigationRepository::executeStoredProcForDGt12Reas);    
 
         return dmData;
     }
