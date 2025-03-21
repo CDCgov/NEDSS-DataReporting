@@ -232,6 +232,10 @@ public class PostProcessingService {
                     .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
 
             List<DatamartData> dmData = new ArrayList<>();
+
+            // Isolated temporary map to accumulate entity ID collections by entity type.
+            // After processing, it is merged into dmCache for multi-ID datamarts invocation.
+            // Isolation prevents conflicts from concurrent modifications by the datamart processing thread.
             Map<String, Queue<Long>> newDmMulti = new ConcurrentHashMap<>();
 
             for (Entry<String, List<Long>> entry : sortedEntries) {
@@ -307,12 +311,12 @@ public class PostProcessingService {
                         break;
                 }
             }
-            // process METRIC_EVENT datamart since multiple other datamarts depend on it
+            // process METRIC_EVENT datamart since multiple datamarts depend on it
             processMetricEventDatamart(newDmMulti);
             processSummaryCases();
             datamartProcessor.process(dmData);
 
-            // update datamart cache with latest uids for multi ID datamarts
+            // merge entity IDs collections from temporary map into main datamart cache
             synchronized (cacheLock) {
                 Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTIID, k -> new ConcurrentHashMap<>());
                 newDmMulti.forEach((key, queue) ->
@@ -417,6 +421,8 @@ public class PostProcessingService {
         for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 String dmType = entry.getKey();
+
+                // skip multi ID processing here, it should after this processing
                 if (MULTIID.equals(dmType)) {
                     continue;
                 }
