@@ -71,11 +71,7 @@ BEGIN
             on nrt_pca.act_uid = inv.public_health_case_uid
             where isnull(nrt_pca.batch_id, 1) = isnull(inv.batch_id, 1)
             and nrt_pca.act_uid = @phc_id
-            and nrt_pca.last_chg_time = (
-            select max(last_chg_time)
-            from dbo.nrt_page_case_answer
-            where act_uid = @phc_id
-        );
+           ;
         COMMIT TRANSACTION;
 
 

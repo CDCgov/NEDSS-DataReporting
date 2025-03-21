@@ -22,6 +22,7 @@ enum Entity {
     CASE_ANSWERS(0, "case answers", Constants.PHC_UID, "sp_page_builder_postprocessing"),
     D_DISEASE_SITE(0, "disease site", Constants.PHC_UID, "sp_nrt_d_disease_site_postprocessing"),
     D_ADDL_RISK(0, "addl risk", Constants.PHC_UID, "sp_nrt_d_addl_risk_postprocessing"),
+    D_MOVE_CNTRY(0, "move cntry", Constants.PHC_UID, "sp_nrt_d_move_cntry_postprocessing"),
     D_MOVE_CNTY(0, "move cnty", Constants.PHC_UID, "sp_nrt_d_move_cnty_postprocessing"),
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),
     D_TB_PAM(0, "d_tb_pam", Constants.PHC_UID, "sp_nrt_d_tb_pam_postprocessing"),
@@ -41,6 +42,7 @@ enum Entity {
     PERTUSSIS_CASE(0, "Pertussis_Case", Constants.PHC_UID, "sp_pertussis_case_datamart_postprocessing"),
     BMIRD_STREP_PNEUMO_DATAMART(0, "Bmird_Strep_Pneumo_Datamart", Constants.PHC_UID, "sp_bmird_strep_pneumo_datamart_postprocessing"),
     D_TB_HIV(0, "d_tb_hiv", Constants.PHC_UID, "sp_nrt_d_tb_hiv_postprocessing"),
+    D_GT_12_REAS(0, "d_gt_12_reas", Constants.PHC_UID, "sp_nrt_d_gt_12_reas_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;

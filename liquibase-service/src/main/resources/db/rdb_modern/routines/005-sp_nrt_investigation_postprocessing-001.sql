@@ -477,8 +477,6 @@ BEGIN
         SET @proc_step_name = 'Insert into INVESTIGATION Dimension';
         SET @proc_step_no = 3;
 
-        -- delete from the key table to generate new keys for the resulting new data to be inserted
-        delete from dbo.nrt_investigation_key;
         insert into dbo.nrt_investigation_key(case_uid)
         select case_uid
         from #temp_inv_table
@@ -717,9 +715,6 @@ BEGIN
 
         SET @proc_step_name = 'Insert into CONFIRMATION_METHOD';
         SET @proc_step_no = 4;
-
-        -- generate new CONFIRMATION_METHOD_KEY for the corresponding cd
-        delete from dbo.nrt_confirmation_method_key;
 
         insert into dbo.nrt_confirmation_method_key(confirmation_method_cd)
         select distinct cmt.confirmation_method_cd
