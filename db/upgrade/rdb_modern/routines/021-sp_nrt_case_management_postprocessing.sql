@@ -240,8 +240,6 @@ BEGIN
         SET @proc_step_name = 'Insert into D_CASE_MANAGEMENT';
         SET @proc_step_no = 3;
 
-        -- delete from the key table to generate new keys for the resulting new data to be inserted
-        DELETE FROM dbo.nrt_case_management_key;
         INSERT INTO dbo.nrt_case_management_key(public_health_case_uid)
         SELECT public_health_case_uid
         FROM #temp_cm_table

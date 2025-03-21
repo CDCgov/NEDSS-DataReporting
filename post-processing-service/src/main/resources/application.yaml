@@ -39,7 +39,6 @@ spring:
       javax.persistence.query.timeout: -1
 featureFlag:
   event-metric-enable: ${FF_EVENT_METRIC_ENABLE:false}
-  d-tb-hiv-enable: ${FF_D_TB_HIV_ENABLE:false}
   morb-report-dm-enable: ${FF_MORB_REPORT_DM_ENABLE:false}
   inv-summary-dm-enable: ${FF_INV_SUMMARY_DM_ENABLE:false}
   summary-report-enable: ${FF_SUMMARY_REPORT_ENABLE:false}
