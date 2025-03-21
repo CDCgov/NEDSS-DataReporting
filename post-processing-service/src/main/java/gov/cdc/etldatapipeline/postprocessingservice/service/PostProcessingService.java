@@ -373,28 +373,13 @@ public class PostProcessingService {
                 .forEach(id -> processTopic(keyTopic, CASE_ANSWERS, id, idValsSnapshot.get(id),
                         investigationRepository::executeStoredProcForPageBuilder));
 
-        processTopic(keyTopic, F_PAGE_CASE, ids,
-                investigationRepository::executeStoredProcForFPageCase);
-
-        processTopic(keyTopic, CASE_COUNT, ids,
-                investigationRepository::executeStoredProcForCaseCount);
-
-        processTopic(keyTopic, D_TB_PAM, ids,
-                investigationRepository::executeStoredProcForDTBPAM);
-
-        if (tbHivEnable) {
-            processTopic(keyTopic, D_TB_HIV, ids,
-                investigationRepository::executeStoredProcForDTbHiv);
-        }
-                
-        processTopic(keyTopic, D_DISEASE_SITE, ids, 
-                investigationRepository::executeStoredProcForDDiseaseSite);
-
-        processTopic(keyTopic, D_ADDL_RISK, ids,
-                investigationRepository::executeStoredProcForDAddlRisk);
-
-        processTopic(keyTopic, D_SMR_EXAM_TY, ids,
-                investigationRepository::executeStoredProcForDSmrExamTy);        
+        processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
+        processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
+        processTopic(keyTopic, D_TB_PAM, ids, investigationRepository::executeStoredProcForDTBPAM);
+        processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);
+        processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
+        processTopic(keyTopic, D_ADDL_RISK, ids,investigationRepository::executeStoredProcForDAddlRisk);
+        processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);        
 
         return dmData;
     }
