@@ -61,16 +61,16 @@ BEGIN TRY
 				batch_id
 			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
 			INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
-		),
-		CTE_S_TB_PAM_SET AS (				
+		)
+		
 		SELECT
 			CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID, 
 			A.CODE_SET_GROUP_ID, 
 			A.DATAMART_COLUMN_NM, 
 			A.ANSWER_TXT, 
 			A.RECORD_STATUS_CD, 
-			A.LAST_CHG_TIME,
-			ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.DATAMART_COLUMN_NM ORDER BY A.LAST_CHG_TIME DESC) AS rn		
+			A.LAST_CHG_TIME
+		INTO #S_TB_PAM_SET
 		FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
 		INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
 		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
@@ -84,17 +84,6 @@ BEGIN TRY
 			'TUB119', 'TUB129', 'TUB154', 'TUB155', 'TUB156', 'TUB167', 'TUB225', 'TUB228',
 			'TUB229', 'TUB230', 'TUB235', 'TUB237', 'TUB114'
 			)
-        )
-		SELECT
-			TB_PAM_UID, 
-			CODE_SET_GROUP_ID, 
-			DATAMART_COLUMN_NM, 
-			ANSWER_TXT, 
-			RECORD_STATUS_CD, 
-			LAST_CHG_TIME
-		INTO #S_TB_PAM_SET
-		FROM CTE_S_TB_PAM_SET
-		WHERE rn = 1;
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 

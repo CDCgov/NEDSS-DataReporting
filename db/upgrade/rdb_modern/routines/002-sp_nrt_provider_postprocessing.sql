@@ -160,8 +160,7 @@ BEGIN
 
         /* D_Provider Insert Operation */
 
-        -- delete from the key table to generate new keys for the resulting new data to be inserted
-        delete from dbo.nrt_provider_key;
+
         insert into dbo.nrt_provider_key(provider_uid)
         select provider_uid
         from #temp_prv_table
@@ -309,6 +308,7 @@ BEGIN
     BEGIN CATCH
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+
 
         -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
