@@ -294,8 +294,6 @@ BEGIN
         -- declare @max_key bigint;
         -- select  @max_key = max(patient_key) from dbo.d_patient;
 
-        -- delete from the key table to generate new keys for the resulting new data to be inserted
-        delete from dbo.nrt_patient_key ;
         insert into dbo.nrt_patient_key(patient_uid)
         select patient_uid from #temp_patient_table where patient_key is null order by patient_uid;
 
@@ -527,7 +525,6 @@ BEGIN
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
 
         -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
@@ -565,7 +562,7 @@ BEGIN
             ,@FullErrorMessage
             );
 
-        return @FullErrorMessage;
+        return -1;
 
     END CATCH
 

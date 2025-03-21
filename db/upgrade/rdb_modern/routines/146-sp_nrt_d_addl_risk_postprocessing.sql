@@ -13,7 +13,7 @@ BEGIN
             declare @dataflow_name varchar(200) = 'ADDL_RISK POST-Processing';
             declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_addl_risk_postprocessing';
 
-        set @batch_id = cast((format(getdate(),'yyMMddHHmmss')) as bigint);
+        set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
 
@@ -24,14 +24,43 @@ BEGIN
 --------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #PHC_LIST TABLE';
+
+        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        drop table #S_PHC_LIST;
+
+        SELECT value
+        INTO  #S_PHC_LIST
+        FROM STRING_SPLIT(@phc_uids, ',')
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #S_PHC_LIST;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;
+
+--------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'GENERATING #S_ADDL_RISK_TRANSLATED';
+            @PROC_STEP_NAME = 'GENERATING #S_ADDL_RISK_CD_TRANSLATED';
 
-        IF OBJECT_ID('#S_ADDL_RISK_TRANSLATED', 'U') IS NOT NULL
-        drop table #S_ADDL_RISK_TRANSLATED;
+        IF OBJECT_ID('#S_ADDL_RISK_CD_TRANSLATED', 'U') IS NOT NULL
+        drop table #S_ADDL_RISK_CD_TRANSLATED;
         
         SELECT 
             CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
@@ -44,7 +73,7 @@ BEGIN
             METADATA.CODE_SET_NM,
             CVG.CODE, 
             CVG.CODE_SHORT_DESC_TXT AS CODE_SHORT_DESC_TXT
-        INTO #S_ADDL_RISK_TRANSLATED 
+        INTO #S_ADDL_RISK_CD_TRANSLATED 
         FROM DBO.NRT_PAGE_CASE_ANSWER TB with (nolock)
         left join dbo.NRT_INVESTIGATION inv with(nolock)
             on TB.act_uid = inv.public_health_case_uid
@@ -53,9 +82,8 @@ BEGIN
         LEFT JOIN DBO.nrt_srte_CODE_VALUE_GENERAL CVG  with (nolock)
             ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
             AND CVG.CODE = TB.ANSWER_TXT
-        INNER JOIN (
-             SELECT value FROM STRING_SPLIT(@phc_uids, ',')
-        ) nu ON TB.ACT_UID = nu.value
+        INNER JOIN #S_PHC_LIST nu with (nolock)
+        ON TB.ACT_UID = nu.value
         WHERE TB.DATAMART_COLUMN_NM <> 'n/a'
         and isnull(tb.batch_id, 1) = isnull(inv.batch_id, 1)
         AND QUESTION_IDENTIFIER = 'TUB167';
@@ -63,7 +91,7 @@ BEGIN
         if
         @debug = 'true'
         select @Proc_Step_Name as step, *
-        from #S_ADDL_RISK_TRANSLATED;
+        from #S_ADDL_RISK_CD_TRANSLATED;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -74,8 +102,7 @@ BEGIN
         
         COMMIT TRANSACTION;
 
----------------------------------------------------------------------------------------------------------------------        
-
+---------------------------------------------------------------------------------------------------------------------  
 
         BEGIN TRANSACTION
 
@@ -97,7 +124,7 @@ BEGIN
                 ELSE ANSWER_TXT
             END AS VALUE
         INTO #S_ADDL_RISK
-        FROM #S_ADDL_RISK_TRANSLATED with (nolock);
+        FROM #S_ADDL_RISK_CD_TRANSLATED with (nolock);
 
         if
         @debug = 'true'
@@ -113,6 +140,157 @@ BEGIN
         
         COMMIT TRANSACTION;
 -------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #TEMP_D_ADDL_RISK_DEL';
+
+        IF OBJECT_ID('#TEMP_D_ADDL_RISK_DEL', 'U') IS NOT NULL
+        drop table #TEMP_D_ADDL_RISK_DEL;
+
+        SELECT ADDL_RISK.TB_PAM_UID, 
+        ADDL_RISK.D_ADDL_RISK_KEY,
+        ADDL_RISK.D_ADDL_RISK_GROUP_KEY
+        INTO #TEMP_D_ADDL_RISK_DEL
+        FROM DBO.D_ADDL_RISK ADDL_RISK with (nolock)
+        LEFT JOIN DBO.NRT_ADDL_RISK_KEY ADDL_RISK_KEY with (nolock)
+            ON ADDL_RISK.TB_PAM_UID = ADDL_RISK_KEY.TB_PAM_UID AND
+            ADDL_RISK.D_ADDL_RISK_KEY = ADDL_RISK_KEY.D_ADDL_RISK_KEY
+        LEFT JOIN #S_ADDL_RISK S with (nolock)
+        ON S.TB_PAM_UID = ADDL_RISK_KEY.TB_PAM_UID AND
+            S.NBS_CASE_ANSWER_UID = ADDL_RISK_KEY.NBS_CASE_ANSWER_UID
+        WHERE ADDL_RISK.TB_PAM_UID IN (SELECT value FROM #S_PHC_LIST) AND
+        S.NBS_CASE_ANSWER_UID IS NULL;
+
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #TEMP_D_ADDL_RISK_DEL;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;    
+
+---------------------------------------------------------------------------------------------------------------------     
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'Deleting from NRT_ADDL_RISK_KEY key';
+
+        DELETE T FROM DBO.NRT_ADDL_RISK_KEY T
+        join #TEMP_D_ADDL_RISK_DEL S with (nolock)
+        ON S.TB_PAM_UID =T.TB_PAM_UID AND
+        S.D_ADDL_RISK_KEY = T.D_ADDL_RISK_KEY
+
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #TEMP_D_ADDL_RISK_DEL;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;    
+
+---------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'Deleting from NRT_ADDL_RISK_GROUP_KEY';
+
+        DELETE T FROM DBO.NRT_ADDL_RISK_GROUP_KEY T
+        join #TEMP_D_ADDL_RISK_DEL S with (nolock)
+        ON S.TB_PAM_UID =T.TB_PAM_UID AND
+        S.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY
+
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #TEMP_D_ADDL_RISK_DEL;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;    
+
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_ADDL_RISK';
+
+
+        DELETE T FROM DBO.D_ADDL_RISK T
+        join #TEMP_D_ADDL_RISK_DEL S with (nolock)
+        ON S.TB_PAM_UID =T.TB_PAM_UID AND
+        S.D_ADDL_RISK_KEY = T.D_ADDL_RISK_KEY
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;   
+
+---------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_ADDL_RISK_GROUP';
+
+
+        DELETE T FROM DBO.D_ADDL_RISK_GROUP T
+        left join (select distinct D_ADDL_RISK_GROUP_KEY from dbo.D_ADDL_RISK) DBO
+            ON DBO.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY
+        WHERE DBO.D_ADDL_RISK_GROUP_KEY is null;
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;   
+
+---------------------------------------------------------------------------------------------------------------------
+
 
 
         BEGIN TRANSACTION
@@ -150,8 +328,8 @@ BEGIN
         SELECT ADDL_RISK.TB_PAM_UID, ADDL_RISK.NBS_CASE_ANSWER_UID FROM (SELECT DISTINCT TB_PAM_UID, NBS_CASE_ANSWER_UID FROM #S_ADDL_RISK) ADDL_RISK
         LEFT JOIN DBO.NRT_ADDL_RISK_KEY ADDL_RISK_KEY  with (nolock)
             ON ADDL_RISK_KEY.TB_PAM_UID = ADDL_RISK.TB_PAM_UID
-            AND ADDL_RISK_KEY.NBS_CASE_ANSWER_UID = ADDL_RISK.NBS_CASE_ANSWER_UID
-        where ADDL_RISK_KEY.TB_PAM_UID is null;
+            and ADDL_RISK_KEY.NBS_CASE_ANSWER_UID = ADDL_RISK.NBS_CASE_ANSWER_UID 
+        where (ADDL_RISK_KEY.TB_PAM_UID is null and ADDL_RISK_KEY.NBS_CASE_ANSWER_UID is null);
         
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -178,7 +356,7 @@ BEGIN
 
         SELECT DISTINCT D_TB_PAM.TB_PAM_UID
             INTO #D_TB_PAM_TEMP
-            FROM   (SELECT DISTINCT TB_PAM_UID FROM DBO.D_TB_PAM WHERE TB_PAM_UID IN (SELECT VALUE FROM STRING_SPLIT(@phc_uids, ','))) D_TB_PAM
+            FROM   (SELECT DISTINCT TB_PAM_UID FROM DBO.D_TB_PAM WHERE TB_PAM_UID IN (SELECT VALUE FROM #S_PHC_LIST)) D_TB_PAM
             LEFT JOIN #S_ADDL_RISK ADDL_RISK  with (nolock)
                 ON ADDL_RISK.TB_PAM_UID = D_TB_PAM.TB_PAM_UID;
 
@@ -240,14 +418,14 @@ BEGIN
         IF OBJECT_ID('#L_ADDL_RISK', 'U') IS NOT NULL
         drop table #L_ADDL_RISK;
 
-        SELECT LARG.TB_PAM_UID,  
-                NRT_ADDL_RISK_KEY.NBS_CASE_ANSWER_UID, 
-                CASE WHEN LARG.D_ADDL_RISK_GROUP_KEY IS NULL THEN 1 ELSE LARG.D_ADDL_RISK_GROUP_KEY END AS D_ADDL_RISK_GROUP_KEY,
-                CASE WHEN NRT_ADDL_RISK_KEY.D_ADDL_RISK_KEY IS NULL THEN 1 ELSE  NRT_ADDL_RISK_KEY.D_ADDL_RISK_KEY END AS D_ADDL_RISK_KEY
+        SELECT L.TB_PAM_UID,  
+                K.NBS_CASE_ANSWER_UID, 
+                CASE WHEN L.D_ADDL_RISK_GROUP_KEY IS NULL THEN 1 ELSE L.D_ADDL_RISK_GROUP_KEY END AS D_ADDL_RISK_GROUP_KEY,
+                CASE WHEN K.D_ADDL_RISK_KEY IS NULL THEN 1 ELSE  K.D_ADDL_RISK_KEY END AS D_ADDL_RISK_KEY
         INTO #L_ADDL_RISK
-        FROM   #L_ADDL_RISK_GROUP LARG  with (nolock)
-        LEFT OUTER JOIN DBO.NRT_ADDL_RISK_KEY NRT_ADDL_RISK_KEY  with (nolock)
-            ON NRT_ADDL_RISK_KEY.TB_PAM_UID=LARG.TB_PAM_UID;
+        FROM   #L_ADDL_RISK_GROUP L  with (nolock)
+        LEFT OUTER JOIN DBO.NRT_ADDL_RISK_KEY K  with (nolock)
+            ON K.TB_PAM_UID=L.TB_PAM_UID;
 
         if
         @debug = 'true'
@@ -275,17 +453,17 @@ BEGIN
         IF OBJECT_ID('#TEMP_D_ADDL_RISK', 'U') IS NOT NULL
         drop table #TEMP_D_ADDL_RISK;
 
-        SELECT LAR.TB_PAM_UID,
-        LAR.D_ADDL_RISK_KEY,
-        SAR.SEQ_NBR,
-        LAR.D_ADDL_RISK_GROUP_KEY,
-        SAR.LAST_CHG_TIME,
-        SAR.VALUE
+        SELECT L.TB_PAM_UID,
+        L.D_ADDL_RISK_KEY,
+        S.SEQ_NBR,
+        L.D_ADDL_RISK_GROUP_KEY,
+        S.LAST_CHG_TIME,
+        S.VALUE
         INTO #TEMP_D_ADDL_RISK
-        FROM   #L_ADDL_RISK LAR  with (nolock)
-        LEFT OUTER JOIN #S_ADDL_RISK SAR  with (nolock)
-            ON 	SAR.TB_PAM_UID=LAR.TB_PAM_UID
-            AND SAR.NBS_CASE_ANSWER_UID= LAR.NBS_CASE_ANSWER_UID;
+        FROM   #L_ADDL_RISK L  with (nolock)
+        LEFT OUTER JOIN #S_ADDL_RISK S  with (nolock)
+            ON 	S.TB_PAM_UID=L.TB_PAM_UID
+            AND S.NBS_CASE_ANSWER_UID= L.NBS_CASE_ANSWER_UID;
 
         if
         @debug = 'true'
@@ -301,14 +479,13 @@ BEGIN
         
         COMMIT TRANSACTION;    
 
--------------------------------------------------------------------------------------------
-        
+-------------------------------------------------------------------------------------------       
         BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'Insert records to  D_ADDL_RISK_GROUP';
+            @PROC_STEP_NAME = 'Insert records to  d_addl_risk_group';
 
         INSERT INTO DBO.D_ADDL_RISK_GROUP
             ([D_ADDL_RISK_GROUP_KEY])
@@ -316,9 +493,9 @@ BEGIN
                DISTINCT
                 T.D_ADDL_RISK_GROUP_KEY
             FROM #TEMP_D_ADDL_RISK T  with (nolock)
-            LEFT JOIN DBO.D_ADDL_RISK_GROUP DSG with (nolock)
-            ON 	DSG.D_ADDL_RISK_GROUP_KEY= T.D_ADDL_RISK_GROUP_KEY
-            WHERE DSG.D_ADDL_RISK_GROUP_KEY IS NULL;
+            LEFT JOIN DBO.D_ADDL_RISK_GROUP DG with (nolock)
+            ON 	DG.D_ADDL_RISK_GROUP_KEY= T.D_ADDL_RISK_GROUP_KEY
+            WHERE DG.D_ADDL_RISK_GROUP_KEY IS NULL;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -336,7 +513,7 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'Update D_ADDL_RISK';
+            @PROC_STEP_NAME = 'Update d_addl_risk';
 
         UPDATE DBO.D_ADDL_RISK
         SET 
@@ -366,7 +543,7 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'Insert records to  D_ADDL_RISK';
+            @PROC_STEP_NAME = 'Insert records to  d_addl_risk';
 
         INSERT INTO DBO.D_ADDL_RISK
             ([TB_PAM_UID]
@@ -396,7 +573,7 @@ BEGIN
                 @RowCount_no);
         
         COMMIT TRANSACTION;          
--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
 
