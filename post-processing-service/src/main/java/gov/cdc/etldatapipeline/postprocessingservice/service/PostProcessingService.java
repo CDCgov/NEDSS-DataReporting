@@ -380,6 +380,7 @@ public class PostProcessingService {
         processTopic(keyTopic, D_MOVE_CNTRY, ids, investigationRepository::executeStoredProcForDMoveCntry);
         processTopic(keyTopic, D_MOVE_CNTY, ids, investigationRepository::executeStoredProcForDMoveCnty);
         processTopic(keyTopic, D_HC_PROV_TY_3, ids, investigationRepository::executeStoredProcForDHcProvTy3);
+        processTopic(keyTopic, D_OUT_OF_CNTRY, ids, investigationRepository::executeStoredProcForDOutOfCntry);
         return dmData;
     }
 
