@@ -43,6 +43,7 @@ enum Entity {
     BMIRD_STREP_PNEUMO_DATAMART(0, "Bmird_Strep_Pneumo_Datamart", Constants.PHC_UID, "sp_bmird_strep_pneumo_datamart_postprocessing"),
     D_TB_HIV(0, "d_tb_hiv", Constants.PHC_UID, "sp_nrt_d_tb_hiv_postprocessing"),
     D_GT_12_REAS(0, "d_gt_12_reas", Constants.PHC_UID, "sp_nrt_d_gt_12_reas_postprocessing"),
+    D_HC_PROV_TY_3(0, "d_hc_prov_ty_3", Constants.PHC_UID, "sp_d_hc_prov_ty_3_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;
