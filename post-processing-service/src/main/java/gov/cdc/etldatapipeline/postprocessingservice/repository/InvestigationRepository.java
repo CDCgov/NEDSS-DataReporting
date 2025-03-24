@@ -92,15 +92,25 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
 
     @Procedure("sp_nrt_d_move_cnty_postprocessing")
     void executeStoredProcForDMoveCnty(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_move_state_postprocessing")
+    void executeStoredProcForDMoveState(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     
     @Procedure("sp_nrt_d_out_of_cntry_postprocessing")
     void executeStoredProcForDOutOfCntry(@Param("publicHealthCaseUids") String publicHealthCaseUids);    
    
-     @Procedure("sp_nrt_d_gt_12_reas_postprocessing")
-    void executeStoredProcForDGt12Reas(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Procedure("sp_nrt_d_moved_where_postprocessing")
+    void executeStoredProcForDMovedWhere(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     
+    @Procedure("sp_nrt_d_gt_12_reas_postprocessing")
+    void executeStoredProcForDGt12Reas(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_d_hc_prov_ty_3_postprocessing")
     void executeStoredProcForDHcProvTy3(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
+    @Procedure("sp_nrt_d_smr_exam_ty_postprocessing")
+    void executeStoredProcForDSmrExamTy(@Param("publicHealthCaseUids") String publicHealthCaseUids);    
+    
+
 
 }

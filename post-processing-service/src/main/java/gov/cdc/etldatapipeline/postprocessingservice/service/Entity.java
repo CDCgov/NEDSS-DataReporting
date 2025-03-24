@@ -24,6 +24,8 @@ enum Entity {
     D_ADDL_RISK(0, "addl risk", Constants.PHC_UID, "sp_nrt_d_addl_risk_postprocessing"),
     D_MOVE_CNTRY(0, "move cntry", Constants.PHC_UID, "sp_nrt_d_move_cntry_postprocessing"),
     D_MOVE_CNTY(0, "move cnty", Constants.PHC_UID, "sp_nrt_d_move_cnty_postprocessing"),
+    D_MOVE_STATE(0, "move state", Constants.PHC_UID, "sp_nrt_d_move_state_postprocessing"),
+    D_MOVED_WHERE(0, "moved where", Constants.PHC_UID, "sp_nrt_d_moved_where_postprocessing"),
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),
     D_TB_PAM(0, "d_tb_pam", Constants.PHC_UID, "sp_nrt_d_tb_pam_postprocessing"),
     SUMMARY_REPORT_CASE(0, "Summary_Report_Case", Constants.PHC_UID, "sp_summary_report_case_postprocessing"),
@@ -45,6 +47,7 @@ enum Entity {
     D_GT_12_REAS(0, "d_gt_12_reas", Constants.PHC_UID, "sp_nrt_d_gt_12_reas_postprocessing"),
     D_HC_PROV_TY_3(0, "d_hc_prov_ty_3", Constants.PHC_UID, "sp_d_hc_prov_ty_3_postprocessing"),
     D_OUT_OF_CNTRY(0, "d_out_of_cntry", Constants.PHC_UID, "sp_nrt_d_out_of_cntry_postprocessing"),
+    D_SMR_EXAM_TY(0, "d_smr_exam_ty", Constants.PHC_UID, "sp_nrt_d_smr_exam_ty_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;

@@ -10,7 +10,7 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
-	DECLARE @Dataflow_Name VARCHAR(200) = 'D_OUT_OF_CNTRY Post-Processing Event';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'D_OUT_OF_CNTRY POST-Processing';
 	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_d_out_of_cntry_postprocessing';
 
     BEGIN TRY
