@@ -442,7 +442,8 @@ BEGIN
                                                         last_chg_time,
                                                         datamart_column_nm,
                                                         seq_nbr,
-                                                        ldf_status_cd
+                                                        ldf_status_cd,
+                                                        nbs_ui_component_uid
                                                  FROM (SELECT *,
                                                               ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt
                                                                   order by
@@ -475,7 +476,8 @@ BEGIN
                                                                              --NEW COLUMNS
                                                                              null as datamart_column_nm,
                                                                              pa.seq_nbr,
-                                                                             nuim.ldf_status_cd
+                                                                             nuim.ldf_status_cd,
+                                                                             nuim.nbs_ui_component_uid
                                                              from nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
                                                                       inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
                                                                                  on
@@ -525,7 +527,8 @@ BEGIN
                                                                  --NEW COLUMNS
                                                                  pq.datamart_column_nm,
                                                                  pa.seq_nbr,
-                                                                 nuim.ldf_status_cd
+                                                                 nuim.ldf_status_cd,
+                                                                 nuim.nbs_ui_component_uid
                                                              from nbs_odse.dbo.nbs_question pq with (nolock)
                                                                       join nbs_odse.dbo.nbs_case_answer pa with (nolock)
                                                                            on pq.nbs_question_uid = pa.nbs_question_uid
@@ -537,7 +540,7 @@ BEGIN
                                                                                      cc.condition_cd = phc.cd
                                                              where pq.datamart_column_nm is not null
                                                                and nuim.investigation_form_cd = cc.investigation_form_cd
-                                                               and nuim.investigation_form_cd = 'INV_FORM_RVCT'
+                                                               and nuim.investigation_form_cd in ('INV_FORM_RVCT','INV_FORM_VAR')
                                                                and pa.act_uid = phc.public_health_case_uid
                                                             ) as answer_table) as answer_table
                                                  where rowid = 1

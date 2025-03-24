@@ -39,4 +39,5 @@ public class PageCaseAnswer {
     private String datamartColumnNm;
     private Long seqNbr; 
     private String ldfStatusCd;
+    private Long nbsUiComponentUid;
 }

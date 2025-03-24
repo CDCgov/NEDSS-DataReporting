@@ -765,6 +765,7 @@ class InvestigationDataProcessingTests {
         expected.setDatamartColumnNm("CASE_VERIFICATION");
         expected.setSeqNbr(0L);
         expected.setLdfStatusCd(null);
+        expected.setNbsUiComponentUid(1007L);
         return expected;
     }
 
