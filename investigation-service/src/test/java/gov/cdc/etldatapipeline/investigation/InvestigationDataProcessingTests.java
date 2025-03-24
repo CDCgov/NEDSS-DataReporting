@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
-import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -30,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.etldatapipeline.investigation.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class InvestigationDataProcessingTests {
@@ -765,6 +766,7 @@ class InvestigationDataProcessingTests {
         expected.setDatamartColumnNm("CASE_VERIFICATION");
         expected.setSeqNbr(0L);
         expected.setLdfStatusCd(null);
+        expected.setNbsUiComponentUid(1007L);
         return expected;
     }
 
