@@ -28,6 +28,7 @@ CREATE TABLE dbo.nrt_page_case_answer
     datamart_column_nm     varchar(30)                                     NULL,
     seq_nbr                int                                             NULL,
     ldf_status_cd          varchar(20)                                     NULL,
+    nbs_ui_component_uid   bigint                                          NULL,
     batch_id               bigint                                          NULL,
     refresh_datetime       datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime           datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
