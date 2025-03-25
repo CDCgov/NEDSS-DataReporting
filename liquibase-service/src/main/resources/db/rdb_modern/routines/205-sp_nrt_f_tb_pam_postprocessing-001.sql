@@ -62,7 +62,7 @@ BEGIN
             MAX(I.physician_id) AS PHYSICIAN_UID
         INTO #F_S_TB_PAM
         FROM [dbo].nrt_investigation I WITH (NOLOCK) 
-        INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = I.public_health_case_uid
+        INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = I.public_health_case_uid
         WHERE 
             I.investigation_form_cd='INV_FORM_RVCT'
             AND I.patient_id IS NOT NULL
@@ -100,7 +100,7 @@ BEGIN
                 f.PERSON_UID,
                 d.PATIENT_KEY AS patient_key,
                 f.PROVIDER_UID
-            INTO #PAT_keystore  -- Temporary table
+            INTO #PAT_keystore  
             FROM [dbo].D_PATIENT d WITH (NOLOCK) 
             INNER JOIN #F_S_TB_PAM f
                 ON f.PERSON_UID = d.PATIENT_UID;  
@@ -137,12 +137,12 @@ BEGIN
                 k.PATIENT_KEY,
                 k.PROVIDER_UID,
                 COALESCE(p.PROVIDER_KEY, 1) AS PROVIDER_KEY
-            INTO #PAT_prov_keystore  -- Temporary table
+            INTO #PAT_prov_keystore  
             FROM #PAT_keystore k
             LEFT JOIN [dbo].D_PROVIDER p WITH (NOLOCK) 
                 ON k.PROVIDER_UID = p.PROVIDER_UID;
 
-            CREATE NONCLUSTERED INDEX IX_PAT_prov_keystore_TB_PAM_UID ON #PAT_prov_keystore (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_PAT_prov_keystore_TB_PAM_UID ON #PAT_prov_keystore (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -170,10 +170,10 @@ BEGIN
 
             -- Create temporary tables for distinct group keys
             SELECT DISTINCT D_MOVE_STATE_GROUP_KEY, TB_PAM_UID
-            INTO #D_MOVE_STATE  -- Temporary table
+            INTO #D_MOVE_STATE  
             FROM [dbo].D_MOVE_STATE WITH (NOLOCK); 
 
-            CREATE NONCLUSTERED INDEX IX_D_MOVE_STATE_TB_PAM_UID ON #D_MOVE_STATE (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_MOVE_STATE_TB_PAM_UID ON #D_MOVE_STATE (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -200,11 +200,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_HC_PROV_TY_3') IS NOT NULL
                 DROP TABLE #D_HC_PROV_TY_3;
 
-            SELECT DISTINCT D_HC_PROV_TY_3_GROUP_KEY, TB_PAM_UID
-            INTO #D_HC_PROV_TY_3  -- Temporary table
-            FROM [dbo].D_HC_PROV_TY_3 WITH (NOLOCK);
+            SELECT DISTINCT D.D_HC_PROV_TY_3_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_HC_PROV_TY_3  
+            FROM [dbo].D_HC_PROV_TY_3 D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_HC_PROV_TY_3_TB_PAM_UID ON #D_HC_PROV_TY_3 (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_HC_PROV_TY_3_TB_PAM_UID ON #D_HC_PROV_TY_3 (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -232,11 +233,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_DISEASE_SITE') IS NOT NULL
                 DROP TABLE #D_DISEASE_SITE;
 
-            SELECT DISTINCT D_DISEASE_SITE_GROUP_KEY, TB_PAM_UID
-            INTO #D_DISEASE_SITE  -- Temporary table
-            FROM [dbo].D_DISEASE_SITE WITH (NOLOCK);
+            SELECT DISTINCT D.D_DISEASE_SITE_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_DISEASE_SITE  
+            FROM [dbo].D_DISEASE_SITE D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_DISEASE_SITE_TB_PAM_UID ON #D_DISEASE_SITE (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_DISEASE_SITE_TB_PAM_UID ON #D_DISEASE_SITE (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -263,11 +265,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_ADDL_RISK') IS NOT NULL
                 DROP TABLE #D_ADDL_RISK;
 
-            SELECT DISTINCT D_ADDL_RISK_GROUP_KEY, TB_PAM_UID
-            INTO #D_ADDL_RISK  -- Temporary table
-            FROM [dbo].D_ADDL_RISK WITH (NOLOCK);
+            SELECT DISTINCT D.D_ADDL_RISK_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_ADDL_RISK  
+            FROM [dbo].D_ADDL_RISK D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_ADDL_RISK_TB_PAM_UID ON #D_ADDL_RISK (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_ADDL_RISK_TB_PAM_UID ON #D_ADDL_RISK (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -295,11 +298,12 @@ BEGIN
            IF OBJECT_ID('tempdb..#D_MOVE_CNTY') IS NOT NULL
                 DROP TABLE #D_MOVE_CNTY;
 
-            SELECT DISTINCT D_MOVE_CNTY_GROUP_KEY, TB_PAM_UID
-            INTO #D_MOVE_CNTY  -- Temporary table
-            FROM [dbo].D_MOVE_CNTY WITH (NOLOCK);
+            SELECT DISTINCT D.D_MOVE_CNTY_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_MOVE_CNTY  
+            FROM [dbo].D_MOVE_CNTY D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_MOVE_CNTY_TB_PAM_UID ON #D_MOVE_CNTY (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_MOVE_CNTY_TB_PAM_UID ON #D_MOVE_CNTY (TB_PAM_UID);
     
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -327,11 +331,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_GT_12_REAS') IS NOT NULL
                 DROP TABLE #D_GT_12_REAS;
 
-            SELECT DISTINCT D_GT_12_REAS_GROUP_KEY, TB_PAM_UID
-            INTO #D_GT_12_REAS  -- Temporary table
-            FROM [dbo].D_GT_12_REAS WITH (NOLOCK);
+            SELECT DISTINCT D.D_GT_12_REAS_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_GT_12_REAS  
+            FROM [dbo].D_GT_12_REAS D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_GT_12_REAS_TB_PAM_UID ON #D_GT_12_REAS (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_GT_12_REAS_TB_PAM_UID ON #D_GT_12_REAS (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -358,11 +363,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_MOVE_CNTRY') IS NOT NULL
                 DROP TABLE #D_MOVE_CNTRY;
 
-            SELECT DISTINCT D_MOVE_CNTRY_GROUP_KEY, TB_PAM_UID
-            INTO #D_MOVE_CNTRY  -- Temporary table
-            FROM [dbo].D_MOVE_CNTRY WITH (NOLOCK);
+            SELECT DISTINCT D.D_MOVE_CNTRY_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_MOVE_CNTRY  
+            FROM [dbo].D_MOVE_CNTRY D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_MOVE_CNTRY_TB_PAM_UID ON #D_MOVE_CNTRY (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_MOVE_CNTRY_TB_PAM_UID ON #D_MOVE_CNTRY (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -389,11 +395,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_MOVED_WHERE') IS NOT NULL
                 DROP TABLE #D_MOVED_WHERE;
 
-            SELECT DISTINCT D_MOVED_WHERE_GROUP_KEY, TB_PAM_UID
-            INTO #D_MOVED_WHERE  -- Temporary table
-            FROM [dbo].D_MOVED_WHERE WITH (NOLOCK);
+            SELECT DISTINCT D.D_MOVED_WHERE_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_MOVED_WHERE  
+            FROM [dbo].D_MOVED_WHERE D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_MOVED_WHERE_TB_PAM_UID ON #D_MOVED_WHERE (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_MOVED_WHERE_TB_PAM_UID ON #D_MOVED_WHERE (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -420,11 +427,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_SMR_EXAM_TY') IS NOT NULL
                 DROP TABLE #D_SMR_EXAM_TY;
 
-            SELECT DISTINCT D_SMR_EXAM_TY_GROUP_KEY, TB_PAM_UID
-            INTO #D_SMR_EXAM_TY  -- Temporary table
-            FROM [dbo].D_SMR_EXAM_TY WITH (NOLOCK);
+            SELECT DISTINCT D.D_SMR_EXAM_TY_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_SMR_EXAM_TY  
+            FROM [dbo].D_SMR_EXAM_TY D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_SMR_EXAM_TY_TB_PAM_UID ON #D_SMR_EXAM_TY (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_SMR_EXAM_TY_TB_PAM_UID ON #D_SMR_EXAM_TY (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -451,11 +459,12 @@ BEGIN
             IF OBJECT_ID('tempdb..#D_OUT_OF_CNTRY') IS NOT NULL
                 DROP TABLE #D_OUT_OF_CNTRY;
 
-            SELECT DISTINCT D_OUT_OF_CNTRY_GROUP_KEY, TB_PAM_UID
-            INTO #D_OUT_OF_CNTRY  -- Temporary table
-            FROM [dbo].D_OUT_OF_CNTRY WITH (NOLOCK);
+            SELECT DISTINCT D.D_OUT_OF_CNTRY_GROUP_KEY, D.TB_PAM_UID
+            INTO #D_OUT_OF_CNTRY  
+            FROM [dbo].D_OUT_OF_CNTRY D WITH (NOLOCK)
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
 
-            CREATE NONCLUSTERED INDEX IX_D_OUT_OF_CNTRY_TB_PAM_UID ON #D_OUT_OF_CNTRY (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_D_OUT_OF_CNTRY_TB_PAM_UID ON #D_OUT_OF_CNTRY (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
             
@@ -486,13 +495,13 @@ BEGIN
             SELECT 
                 f.TB_PAM_UID,
                 f.HOSPITAL_UID,
-                o.ORGANIZATION_KEY AS hospital_key
-            INTO #HOSPITAL_UID_keystore  -- Temporary table
+                COALESCE(o.ORGANIZATION_KEY, 1) AS HOSPITAL_KEY
+            INTO #HOSPITAL_UID_keystore  
             FROM #F_S_TB_PAM f
             LEFT OUTER JOIN [dbo].D_ORGANIZATION o WITH (NOLOCK)
                 ON f.HOSPITAL_UID = o.ORGANIZATION_UID;
 
-            CREATE NONCLUSTERED INDEX IX_HOSPITAL_UID_keystore_TB_PAM_UID ON #HOSPITAL_UID_keystore (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_HOSPITAL_UID_keystore_TB_PAM_UID ON #HOSPITAL_UID_keystore (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
                 
@@ -523,13 +532,13 @@ BEGIN
             SELECT 
                 f.TB_PAM_UID,
                 f.ORG_AS_REPORTER_UID,
-                o.ORGANIZATION_KEY AS org_as_reporter_key
-            INTO #ORG_AS_REPORTER_UID_keystore  -- Temporary table
+                COALESCE(o.ORGANIZATION_KEY, 1) AS ORG_AS_REPORTER_KEY
+            INTO #ORG_AS_REPORTER_UID_keystore  
             FROM #F_S_TB_PAM f
             LEFT OUTER JOIN [dbo].D_ORGANIZATION o WITH (NOLOCK)
                 ON f.ORG_AS_REPORTER_UID = o.ORGANIZATION_UID;
 
-            CREATE NONCLUSTERED INDEX IX_ORG_AS_REPORTER_UID_keystore_TB_PAM_UID ON #ORG_AS_REPORTER_UID_keystore (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_ORG_AS_REPORTER_UID_keystore_TB_PAM_UID ON #ORG_AS_REPORTER_UID_keystore (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -560,13 +569,13 @@ BEGIN
             SELECT 
                 f.TB_PAM_UID,
                 f.PERSON_AS_REPORTER_UID,
-                p.PROVIDER_KEY AS person_as_reporter_key
-            INTO #PERSON_AS_REPORTER_keystore  -- Temporary table
+                COALESCE(p.PROVIDER_KEY, 1) AS PERSON_AS_REPORTER_KEY
+            INTO #PERSON_AS_REPORTER_keystore  
             FROM #F_S_TB_PAM f
             LEFT OUTER JOIN [dbo].D_PROVIDER p
                 ON f.PERSON_AS_REPORTER_UID = p.PROVIDER_UID;
 
-            CREATE NONCLUSTERED INDEX IX_PERSON_AS_REPORTER_keystore_TB_PAM_UID ON #PERSON_AS_REPORTER_keystore (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_PERSON_AS_REPORTER_keystore_TB_PAM_UID ON #PERSON_AS_REPORTER_keystore (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -597,13 +606,13 @@ BEGIN
             SELECT 
                 f.TB_PAM_UID,
                 f.PHYSICIAN_UID,
-                p.PROVIDER_KEY AS PHYSICIAN_KEY
-            INTO #PHYSICIAN_keystore  -- Temporary table
+                COALESCE(p.PROVIDER_KEY, 1) AS PHYSICIAN_KEY
+            INTO #PHYSICIAN_keystore  
             FROM #F_S_TB_PAM f
             LEFT OUTER JOIN [dbo].D_PROVIDER p
                 ON f.PHYSICIAN_UID = p.PROVIDER_UID;
 
-            CREATE NONCLUSTERED INDEX IX_PHYSICIAN_keystore_TB_PAM_UID ON #PHYSICIAN_keystore (TB_PAM_UID);
+            --CREATE NONCLUSTERED INDEX IX_PHYSICIAN_keystore_TB_PAM_UID ON #PHYSICIAN_keystore (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -617,116 +626,6 @@ BEGIN
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
         COMMIT TRANSACTION;       
-
-
-
--------------------------------------------------------------------------------------------
-
-BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATE NULLs in #HOSPITAL_UID_keystore';
-
-            UPDATE #HOSPITAL_UID_keystore
-            SET hospital_key = 1
-            WHERE hospital_key IS NULL;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF
-                @debug = 'true'
-                SELECT @Proc_Step_Name AS step, *
-                FROM #HOSPITAL_UID_keystore;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-        COMMIT TRANSACTION;       
-
-
--------------------------------------------------------------------------------------------
-
-BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATE NULLs in #ORG_AS_REPORTER_UID_keystore';
-
-            UPDATE #ORG_AS_REPORTER_UID_keystore
-            SET org_as_reporter_key = 1
-            WHERE org_as_reporter_key IS NULL;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF
-                @debug = 'true'
-                SELECT @Proc_Step_Name AS step, *
-                FROM #ORG_AS_REPORTER_UID_keystore;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-        COMMIT TRANSACTION;       
-
-
--------------------------------------------------------------------------------------------
-
-BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATE NULLs in #PERSON_AS_REPORTER_keystore';
-
-            UPDATE #PERSON_AS_REPORTER_keystore
-            SET person_as_reporter_key = 1
-            WHERE person_as_reporter_key IS NULL;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF
-                @debug = 'true'
-                SELECT @Proc_Step_Name AS step, *
-                FROM #PERSON_AS_REPORTER_keystore;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-        COMMIT TRANSACTION;       
-
-
--------------------------------------------------------------------------------------------
-
-BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATE NULLs in #PHYSICIAN_keystore';
-
-            UPDATE #PHYSICIAN_keystore
-            SET PHYSICIAN_KEY = 1
-            WHERE PHYSICIAN_KEY IS NULL;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF
-                @debug = 'true'
-                SELECT @Proc_Step_Name AS step, *
-                FROM #PHYSICIAN_keystore;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-        COMMIT TRANSACTION;       
-
 
 -------------------------------------------------------------------------------------------
 
@@ -745,12 +644,12 @@ BEGIN TRANSACTION
             INTO #F_TB_PAM_D
             FROM [dbo].F_TB_PAM F 
             INNER JOIN [dbo].D_TB_PAM D WITH (NOLOCK) ON D.D_TB_PAM_KEY = F.D_TB_PAM_KEY 
-            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID
+            INNER JOIN #F_S_TB_PAM S ON S.TB_PAM_UID = D.TB_PAM_UID
 
             DELETE F
             FROM [dbo].F_TB_PAM F 
             INNER JOIN [dbo].D_TB_PAM D WITH (NOLOCK) ON D.D_TB_PAM_KEY = F.D_TB_PAM_KEY 
-            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID
+            INNER JOIN #F_S_TB_PAM S ON S.TB_PAM_UID = D.TB_PAM_UID
         
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -825,8 +724,8 @@ BEGIN TRANSACTION
                 ON k.TB_PAM_UID = tb.TB_PAM_UID 
             INNER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
                 ON tb.TB_PAM_UID = inv.CASE_UID
-            INNER JOIN [dbo].EVENT_METRIC em WITH (NOLOCK)
-                ON tb.TB_PAM_UID = em.EVENT_UID
+            INNER JOIN [dbo].nrt_investigation i WITH (NOLOCK)
+                ON tb.TB_PAM_UID = i.public_health_case_uid
             INNER JOIN #HOSPITAL_UID_keystore hk 
                 ON k.TB_PAM_UID = hk.TB_PAM_UID
             INNER JOIN #ORG_AS_REPORTER_UID_keystore ork 
@@ -836,9 +735,9 @@ BEGIN TRANSACTION
             INNER JOIN #PHYSICIAN_keystore pk 
                 ON k.TB_PAM_UID = pk.TB_PAM_UID
             LEFT OUTER JOIN [dbo].RDB_DATE d1 WITH (NOLOCK) 
-                ON CONVERT(DATE, d1.DATE_MM_DD_YYYY) = CONVERT(DATE, em.ADD_TIME)
+                ON CONVERT(DATE, d1.DATE_MM_DD_YYYY) = CONVERT(DATE, i.ADD_TIME)
             LEFT OUTER JOIN [dbo].RDB_DATE d2 WITH (NOLOCK) 
-                ON CONVERT(DATE, d2.DATE_MM_DD_YYYY) = CONVERT(DATE, em.LAST_CHG_TIME);
+                ON CONVERT(DATE, d2.DATE_MM_DD_YYYY) = CONVERT(DATE, i.LAST_CHG_TIME);
                 
             INSERT INTO F_TB_PAM (
                 PERSON_KEY,
