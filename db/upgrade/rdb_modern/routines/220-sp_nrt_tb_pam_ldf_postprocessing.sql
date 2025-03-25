@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_f_tb_pam_postprocessing] 
+CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_tb_pam_ldf_postprocessing] 
     @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
@@ -68,7 +68,7 @@ BEGIN
             I.ADD_TIME,
             I.LAST_CHG_USER_ID,
             A.LAST_CHG_TIME
-        INTO #LDF_BASE  -- Temporary table
+        INTO #LDF_BASE  
         FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
 		INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
 		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
@@ -106,7 +106,7 @@ BEGIN
             ;WITH LDF_BASE_CODED AS (
                 SELECT 
                     tb.*,
-                    METADATA.CODE_SET_GROUP_ID,
+                    --METADATA.CODE_SET_GROUP_ID,
                     METADATA.CODE_SET_NM,
                     CODESET.CLASS_CD
                 FROM #LDF_BASE tb
@@ -129,13 +129,12 @@ BEGIN
                 cvg.CODE_SHORT_DESC_TXT,
                 tb.CODE_SET_NM,
                 tb.CLASS_CD
-            INTO #LDF_BASE_CODED_TRANSLATED  -- Temporary table
+            INTO #LDF_BASE_CODED_TRANSLATED  
             FROM LDF_BASE_CODED tb
             LEFT JOIN [dbo].nrt_srte_Code_value_general cvg WITH (NOLOCK) 
                 ON cvg.CODE_SET_NM = tb.CODE_SET_NM
                 AND cvg.CODE = tb.ANSWER_TXT
-                AND tb.CLASS_CD = 'code_value_general'
-            --ORDER BY tb.TB_PAM_UID, tb.ANSWER_TXT; 
+                AND tb.CLASS_CD = 'code_value_general';
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -176,13 +175,12 @@ BEGIN
                 cvc.CODE_SHORT_DESC_TXT,
                 tb.CODE_SET_NM,
                 tb.CLASS_CD
-            INTO #LDF_BASE_CLINICAL_TRANSLATED  -- Temporary table
+            INTO #LDF_BASE_CLINICAL_TRANSLATED  
             FROM #LDF_BASE_CODED_TRANSLATED tb
             LEFT JOIN [dbo].nrt_srte_Code_value_clinical cvc WITH (NOLOCK)
                 ON cvc.CODE_SET_NM = tb.CODE_SET_NM
                 AND cvc.CODE = tb.ANSWER_TXT
-                AND tb.CLASS_CD = 'code_value_clinical'
-            --ORDER BY tb.TB_PAM_UID, tb.ANSWER_TXT;
+                AND tb.CLASS_CD = 'code_value_clinical';
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -221,13 +219,12 @@ BEGIN
                 vsc.CODE_SHORT_DESC_TXT,
                 tb.CODE_SET_NM,
                 tb.CLASS_CD
-            INTO #LDF_BASE_STATE_TRANSLATED  -- Temporary table
+            INTO #LDF_BASE_STATE_TRANSLATED  
             FROM #LDF_BASE_CLINICAL_TRANSLATED tb
             LEFT OUTER JOIN [dbo].v_nrt_srte_state_code vsc WITH (NOLOCK)
                 ON vsc.CODE_SET_NM = tb.CODE_SET_NM
                 AND vsc.STATE_CD = tb.ANSWER_TXT
-                AND tb.CLASS_CD IN ('STATE_CCD', 'V_state_code')
-            --ORDER BY tb.TB_PAM_UID, tb.ANSWER_TXT;
+                AND tb.CLASS_CD IN ('STATE_CCD', 'V_state_code');
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -267,13 +264,12 @@ BEGIN
                 cc.CODE_SHORT_DESC_TXT,
                 tb.CODE_SET_NM,
                 tb.CLASS_CD
-            INTO #LDF_BASE_COUNTRY_TRANSLATED  -- Temporary table
+            INTO #LDF_BASE_COUNTRY_TRANSLATED  
             FROM #LDF_BASE_STATE_TRANSLATED tb
             LEFT JOIN [dbo].nrt_srte_Country_code cc WITH (NOLOCK)
                 ON cc.CODE_SET_NM = tb.CODE_SET_NM
                 AND cc.CODE = tb.ANSWER_TXT
-                AND tb.CLASS_CD IN ('COUNTRY_CODE')
-            --ORDER BY tb.TB_PAM_UID, tb.ANSWER_TXT;
+                AND tb.CLASS_CD IN ('COUNTRY_CODE');
 
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -331,7 +327,7 @@ BEGIN
                 CODE_SHORT_DESC_TXT,
                 CODE_SET_NM,
                 CLASS_CD
-            INTO #LDF_BASE_COUNTRY_CONCAT  -- Temporary table
+            INTO #LDF_BASE_COUNTRY_CONCAT  
             FROM Concatenated;
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -357,17 +353,17 @@ BEGIN
                 @PROC_STEP_NAME = 'GENERATING #LDF_TRANSLATED';
 
             IF OBJECT_ID('tempdb..#LDF_TRANSLATED') IS NOT NULL
-                DROP TABLE #D_ADDL_RISK;
+                DROP TABLE #LDF_TRANSLATED;
 
             SELECT    
                 inv.INVESTIGATION_KEY,             
                 tb.TB_PAM_UID,
                 tb.ADD_TIME                
-            INTO #LDF_TRANSLATED  -- Temporary table
+            INTO #LDF_TRANSLATED  
             FROM #LDF_BASE_COUNTRY_CONCAT tb
             LEFT OUTER JOIN [dbo].INVESTIGATION inv
                 ON tb.TB_PAM_UID = inv.CASE_UID
-            GROUP BY TB_PAM_UID, ADD_TIME;
+            GROUP BY inv.INVESTIGATION_KEY, tb.TB_PAM_UID, tb.ADD_TIME;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
