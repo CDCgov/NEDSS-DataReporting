@@ -15,7 +15,9 @@ BEGIN
 		DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
 		DECLARE @batch_start_time datetime = null ;
 		DECLARE @batch_end_time datetime = null ;
-		DECLARE @nbs_page_form_cd varchar(200)=''
+		DECLARE @nbs_page_form_cd varchar(200)='';
+	    DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
+	    DECLARE @Package_Name varchar(200)='DynDM_INVEST_FORM_PROC '+@DATAMART_NAME;
 
 	SET @Proc_Step_no = 1;
 	SET @Proc_Step_Name = 'SP_Start';
@@ -35,8 +37,8 @@ BEGIN
 		   VALUES
            (
 		   @batch_id
-           ,'DYNAMIC_DATAMART'
-           ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME
+           ,@Dataflow_Name
+           ,@Package_Name
 		   ,'START'
 		   ,@Proc_Step_no
 		   ,@Proc_Step_Name
@@ -52,7 +54,7 @@ BEGIN
 
 
 
-  --DROP TABLE DBO.dbo.tmp_DynDm_SUMM_DATAMART;
+  --DROP TABLE #tmp_DynDm_SUMM_DATAMART;
 
 
 /*Creates a summ_datamart with patient key, investigation key and disease group code*/
@@ -64,7 +66,7 @@ BEGIN
 SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM=@DATAMART_NAME)
 
   SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
-    into dbo.tmp_DynDm_SUMM_DATAMART
+    into #tmp_DynDm_SUMM_DATAMART
      FROM dbo.INV_SUMM_DATAMART isd with ( nolock)
        INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
        INNER JOIN dbo.nrt_investigation_key nrt_inv_key with (nolock) ON isd.investigation_key = nrt_inv_key.d_investigation_key
@@ -77,7 +79,7 @@ SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_N
 
 
  INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 
 
@@ -132,7 +134,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 
 
  INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 
 
@@ -142,7 +144,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
     BEGIN TRANSACTION;
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Case_Management_Metadata';
+	SET @Proc_Step_Name = 'GENERATING  #tmp_DynDm_Case_Management_Metadata';
 
 
 	--DX  select * from #tmp_DynDm_Investigation_Data;
@@ -189,7 +191,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 
 
  INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 
 
@@ -273,7 +275,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 
 
  INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 
 
@@ -295,7 +297,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 
  SELECT  DISTINCT INIT.FORM_CD, INIT.DATAMART_NM, NBS_RDB_METADATA.RDB_TABLE_NM, NBS_RDB_METADATA.RDB_COLUMN_NM,NBS_RDB_METADATA.USER_DEFINED_COLUMN_NM
 	into #tmp_DynDm_PAT_METADATA
-	FROM dbo.TMP_INIT INIT
+	FROM #TMP_INIT INIT
 	  INNER JOIN NBS_ODSE..NBS_UI_METADATA  with ( nolock) ON NBS_UI_METADATA.INVESTIGATION_FORM_CD = INIT.FORM_CD
       INNER JOIN NBS_ODSE..NBS_RDB_METADATA  with ( nolock) ON NBS_UI_METADATA.NBS_UI_METADATA_UID = NBS_RDB_METADATA.NBS_UI_METADATA_UID
    WHERE RDB_TABLE_NM='D_PATIENT'
@@ -328,7 +330,7 @@ FROM  #tmp_DynDm_PAT_METADATA;
 
 
  INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 
 
@@ -340,14 +342,14 @@ FROM  #tmp_DynDm_PAT_METADATA;
 	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Patient_Data';
 
 
-     IF OBJECT_ID('dbo.tmp_DynDm_Patient_Data', 'U') IS NOT NULL
- 				drop table dbo.tmp_DynDm_Patient_Data;
+     IF OBJECT_ID('#tmp_DynDm_Patient_Data', 'U') IS NOT NULL
+ 				drop table #tmp_DynDm_Patient_Data;
 
 	/*
-	SET @SQL = ' SELECT  '+@listStr +' , tmp_DynDm_SUMM_DATAMART.INVESTIGATION_KEY ' +
-	           ' into dbo.tmp_DynDm_Patient_Data ' +
+	SET @SQL = ' SELECT  '+@listStr +' , #tmp_DynDm_SUMM_DATAMART.INVESTIGATION_KEY ' +
+	           ' into #tmp_DynDm_Patient_Data ' +
 	           ' FROM dbo.D_PATIENT  with ( nolock) ' +
-               '    INNER JOIN #tmp_DynDm_SUMM_DATAMART ON 	D_PATIENT.PATIENT_KEY = tmp_DynDm_SUMM_DATAMART.PATIENT_KEY '
+               '    INNER JOIN #tmp_DynDm_SUMM_DATAMART ON 	D_PATIENT.PATIENT_KEY = #tmp_DynDm_SUMM_DATAMART.PATIENT_KEY '
 	  ;
 --select 'PATIENT DATA',@SQL;
 
@@ -355,7 +357,7 @@ FROM  #tmp_DynDm_PAT_METADATA;
 
 */
 	 SELECT  pat_meta.rdb_column_nm_list , isd.INVESTIGATION_KEY
-	            into dbo.tmp_DynDm_Patient_Data
+	            into #tmp_DynDm_Patient_Data
 	            FROM dbo.D_PATIENT pat with ( nolock)
                    INNER JOIN #tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY
       	           inner join dbo.v_nrt_nbs_d_patient_rdb_table_metadata pat_meta on isd.DISEASE_GRP_CD =  pat_meta.INVESTIGATION_FORM_CD
@@ -364,13 +366,13 @@ FROM  #tmp_DynDm_PAT_METADATA;
 	  ;
 
 	    if @debug = 'true'
-      select * from dbo.tmp_DynDm_Patient_Data;
+      select * from #tmp_DynDm_Patient_Data;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 
  INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 
 
@@ -399,8 +401,8 @@ FROM  #tmp_DynDm_PAT_METADATA;
 						   VALUES
 						   (
 						   @batch_id,
-						   'DYNAMIC_DATAMART'
-						   ,'DBO.DynDM_INVEST_FORM_PROC '+@DATAMART_NAME
+						   @Dataflow_Name
+						   ,@Package_Name
 						   ,'COMPLETE'
 						   ,@Proc_Step_no
 						   ,@Proc_Step_name
@@ -418,34 +420,30 @@ FROM  #tmp_DynDm_PAT_METADATA;
 
 
 
-	DECLARE @ErrorNumber INT = ERROR_NUMBER();
-    DECLARE @ErrorLine INT = ERROR_LINE();
-    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-    DECLARE @ErrorState INT = ERROR_STATE();
+	-- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
-
-    INSERT INTO dbo.job_flow_log (
-		    batch_id
-		   ,[Dataflow_Name]
-		   ,[package_Name]
-		    ,[Status_Type]
-           ,[step_number]
-           ,[step_name]
-           ,[Error_Description]
-		   ,[row_count]
-           )
-		   VALUES
-           (
-           @batch_id
-           ,'DYNAMIC_DATAMART'
-           ,'DBO.DynDM_INVEST_FORM_PROC' +@DATAMART_NAME
-		   ,'ERROR'
-		   ,@Proc_Step_no
-		   ,'ERROR - '+ @Proc_Step_name
-           , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
-           ,0
-		   );
+        INSERT INTO [dbo].[job_flow_log] ( batch_id
+                                         , [Dataflow_Name]
+                                         , [package_Name]
+                                         , [Status_Type]
+                                         , [step_number]
+                                         , [step_name]
+                                         , [Error_Description]
+                                         , [row_count])
+        VALUES ( @batch_id
+               , @Dataflow_Name
+               , @Package_Name
+               , 'ERROR'
+               , @Proc_Step_no
+               , @Proc_Step_name
+               , @FullErrorMessage
+               , 0);
 
 
       return -1 ;

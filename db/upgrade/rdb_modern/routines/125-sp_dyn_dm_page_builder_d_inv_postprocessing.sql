@@ -20,7 +20,9 @@ BEGIN
 		DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
 		DECLARE @batch_start_time datetime = null ;
 		DECLARE @batch_end_time datetime = null ;
-		DECLARE @nbs_page_form_cd varchar(200)=''
+		DECLARE @nbs_page_form_cd varchar(200)='';
+		DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
+	    DECLARE @Package_Name varchar(200)='DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM;
 
 
 
@@ -31,7 +33,7 @@ BEGIN
 	SET @Proc_Step_Name = 'SP_Start';
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
     COMMIT TRANSACTION;
 
@@ -96,7 +98,7 @@ BEGIN
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -127,7 +129,7 @@ BEGIN
 
 
 		 INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-		 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+		 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -153,7 +155,7 @@ BEGIN
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 	 COMMIT TRANSACTION;
@@ -186,7 +188,7 @@ BEGIN
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 	 COMMIT TRANSACTION;
@@ -213,7 +215,7 @@ BEGIN
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -262,7 +264,7 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
  COMMIT TRANSACTION;
@@ -296,7 +298,7 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 	 COMMIT TRANSACTION;
@@ -332,7 +334,7 @@ if (len(@D_INV_CASE_OTH_list) <  1 or @D_INV_CASE_OTH_list is null )
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
  COMMIT TRANSACTION;
@@ -372,7 +374,7 @@ if (len(@D_INV_CASE_OTH_list) <  1 or @D_INV_CASE_OTH_list is null )
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 	 COMMIT TRANSACTION;
@@ -406,7 +408,7 @@ if (len(@D_INV_CASE_OTH_list) <  1 or @D_INV_CASE_OTH_list is null )
 
 
 		 INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-		 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+		 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -441,7 +443,7 @@ if (len(@D_INV_CASE_OTH_list) <  1 or @D_INV_CASE_OTH_list is null )
 
 
  INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 	 COMMIT TRANSACTION;
@@ -488,14 +490,14 @@ DECLARE @TableName VARCHAR(200) = '#tmp_DynDM_'+@RDB_TABLE_NM
 IF OBJECT_ID(@TableName) IS NOT NULL
     EXEC ('DROP Table ' + @TableName)
 	;
-
-
-		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('dbo.tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_dissesgrp')
-		CREATE NONCLUSTERED INDEX  idx_tmp_summart_dissesgrp ON [dbo].[tmp_DynDm_SUMM_DATAMART] ([DISEASE_GRP_CD]);
-
-
-		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('dbo.tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_invkey')
-		CREATE CLUSTERED INDEX idx_tmp_summart_invkey ON [dbo].[tmp_DynDM_SUMM_DATAMART]( [INVESTIGATION_KEY] ASC);
+--
+--
+--		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('dbo.#tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_dissesgrp')
+--		CREATE NONCLUSTERED INDEX  idx_tmp_summart_dissesgrp ON [dbo].[#tmp_DynDm_SUMM_DATAMART] ([DISEASE_GRP_CD]);
+--
+--
+--		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('dbo.#tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_invkey')
+--		CREATE CLUSTERED INDEX idx_tmp_summart_invkey ON [dbo].[#tmp_DynDM_SUMM_DATAMART]( [INVESTIGATION_KEY] ASC);
 
 
 
@@ -537,15 +539,23 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 		   END;
 
 
+	  	SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
+	    into #tmp_DynDm_SUMM_DATAMART
+	     FROM dbo.INV_SUMM_DATAMART isd with ( nolock)
+	       INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
+	       INNER JOIN dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.investigation_key
+	     and  I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+
+
 		if  object_id('dbo.'+@RDB_TABLE_NM) is not null
 		  Begin
 
-			 SET @SQL = '   SELECT distinct  '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
+			 SET @SQL = '   SELECT distinct  '+@listStr + ' tmp.INVESTIGATION_KEY ' +
 						'    into #tmp_DynDM_'+@RDB_TABLE_NM +
-						'    FROM dbo.tmp_DynDM_SUMM_DATAMART  with (nolock)'+
-						'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
+						'    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)'+
+						'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
 						'		INNER JOIN  dbo.'+@RDB_TABLE_NM+'  with (nolock) ON	'+@FACT_CASE+'.'+@DIM_KEY+'  = '+@RDB_TABLE_NM+'.'+@DIM_KEY +
-						'	  WHERE tmp_DynDm_SUMM_DATAMART.DISEASE_GRP_CD = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM='''+@DATAMART_NAME+''' )'
+						'	  WHERE tmp.DISEASE_GRP_CD = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM='''+@DATAMART_NAME+''' )'
 						;
 
 			-- select 1,@SQL;
@@ -555,9 +565,9 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 		else
 		  Begin
 
-		SET @SQL = '   SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
+		SET @SQL = '  SELECT  distinct '+@listStr + ' #tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
 						'    into #tmp_DynDM_'+@RDB_TABLE_NM +
-						'    FROM dbo.tmp_DynDM_SUMM_DATAMART with (nolock) '
+						'    FROM dbo.#tmp_DynDM_SUMM_DATAMART with (nolock) '
 						;
 
 			 -- select 2,@SQL;
@@ -572,7 +582,7 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 		 INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-		 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+		 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 		 COMMIT TRANSACTION;
@@ -584,7 +594,7 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 			SET @Proc_Step_Name = 'SP_COMPLETE';
 
 		 INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-		 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM ,'COMPLETE' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+		 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'COMPLETE' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -601,21 +611,32 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 							BEGIN
 								ROLLBACK;
 							END;
-							DECLARE @ErrorNumber int= ERROR_NUMBER();
-							DECLARE @ErrorLine int= ERROR_LINE();
-							DECLARE @ErrorMessage nvarchar(4000)= ERROR_MESSAGE();
-							DECLARE @ErrorSeverity int= ERROR_SEVERITY();
-							DECLARE @ErrorState int= ERROR_STATE();
-							INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
-							VALUES( @Batch_id, 'DYNAMIC_DATAMART', 'DBO.sp_DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+'-'+@RDB_TABLE_NM, 'ERROR', @Proc_Step_no, 'ERROR - '+@Proc_Step_name, 'Step -'+CAST(@Proc_Step_no AS varchar(3))+' -'+CAST(@ErrorMessage AS nvarchar(max)), 0 );
-							print @ErrorMessage
-							print @ErrorLine
-							print @ErrorNumber
-							if @ErrorState = -1
-								rollback;
-							if @ErrorState = 1 and @@TRANCOUNT = 1
-								rollback;
-							-- raiserror('Error Message: %d:', 16, 1, @ErrorMessage);
+
+							-- Construct the error message string with all details:
+					        DECLARE @FullErrorMessage VARCHAR(8000) =
+					            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+					            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+					            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+					            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+					            'Error Message: ' + ERROR_MESSAGE();
+
+					        INSERT INTO [dbo].[job_flow_log] ( batch_id
+					                                         , [Dataflow_Name]
+					                                         , [package_Name]
+					                                         , [Status_Type]
+					                                         , [step_number]
+					                                         , [step_name]
+					                                         , [Error_Description]
+					                                         , [row_count])
+					        VALUES ( @batch_id
+					               , @Dataflow_Name
+					               , @Package_Name
+					               , 'ERROR'
+					               , @Proc_Step_no
+					               , @Proc_Step_name
+					               , @FullErrorMessage
+					               , 0);
+
 							RETURN -1;
 				END CATCH;
 	END;

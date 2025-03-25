@@ -85,7 +85,7 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 				SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
  INSERT INTO dbo.[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME  ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'RDB.DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME  ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -103,10 +103,17 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
   IF OBJECT_ID('#tmp_DynDm_Case_Management_Data', 'U') IS NOT NULL
  				drop table #tmp_DynDm_Case_Management_Data;
 
+  	SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
+    into #tmp_DynDm_SUMM_DATAMART
+     FROM dbo.INV_SUMM_DATAMART isd with ( nolock)
+       INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
+       INNER JOIN dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.investigation_key
+     and  I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+
 
 	SELECT  isd.INVESTIGATION_KEY ,rdb_column_nm_list
 		INTO #tmp_DynDM_CASE_MANAGEMENT_DATA
-		FROM dbo.tmp_DynDM_SUMM_DATAMART isd
+		FROM #tmp_DynDM_SUMM_DATAMART isd
 		join dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata case_mgmt_meta on  case_mgmt_meta.INVESTIGATION_FORM_CD = isd.DISEASE_GRP_CD
 			and case_mgmt_meta.datamart_nm = @DATAMART_NAME and isd.DISEASE_GRP_CD = @nbs_page_form_cd
 			and case_mgmt_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd
@@ -119,7 +126,7 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
  INSERT INTO dbo.[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME  ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'RDB.DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME  ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -145,7 +152,7 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 						   (
 						   @batch_id,
 						   'DYNAMIC_DATAMART'
-						   ,'DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME
+						   ,'RDB.DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME
 						   ,'COMPLETE'
 						   ,@Proc_Step_no
 						   ,@Proc_Step_name
@@ -184,7 +191,7 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
            (
            @batch_id
            ,'DYNAMIC_DATAMART'
-           ,'DBO.DynDM_Manage_Case_Management'
+           ,'RDB.DBO.DynDM_Manage_Case_Management'
 		   ,'ERROR'
 		   ,@Proc_Step_no
 		   ,'ERROR - '+ @Proc_Step_name
@@ -198,5 +205,5 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 	END CATCH
 
 END
-
 ;
+

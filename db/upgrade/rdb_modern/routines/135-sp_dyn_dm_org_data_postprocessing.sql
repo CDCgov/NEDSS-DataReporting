@@ -2,7 +2,7 @@ CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_org_data_postprocessing
 
             @batch_id BIGINT,
 			@DATAMART_NAME VARCHAR(100),
-			@Org_id_list nvarchar(max)
+			@phc_id_list nvarchar(max)
 
 	AS
 BEGIN
@@ -16,6 +16,9 @@ BEGIN
 		DECLARE @batch_start_time datetime = null ;
 		DECLARE @batch_end_time datetime = null ;
 		DECLARE @nbs_page_form_cd  varchar(200)= '';
+		DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
+	    DECLARE @Package_Name varchar(200)='DynDm_OrgData_sp '+@DATAMART_NAME;
+
 
 	SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM=@DATAMART_NAME)
 
@@ -40,8 +43,8 @@ BEGIN
 		   VALUES
            (
 		   @batch_id
-           ,'DYNAMIC_DATAMART'
-           ,'DBO.DynDm_OrgData_sp ' + @DATAMART_NAME
+           ,@Dataflow_Name
+           ,@Package_Name
 		   ,'START'
 		   ,@Proc_Step_no
 		   ,@Proc_Step_Name
@@ -91,7 +94,7 @@ BEGIN
 SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
   INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 
 
@@ -116,7 +119,7 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
  INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -130,17 +133,26 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 
 
-     IF OBJECT_ID('#tmp_DynDm_Organization', 'U') IS NOT NULL
- 				drop table #tmp_DynDm_Organization;
+     IF OBJECT_ID('dbo.tmp_DynDm_Organization', 'U') IS NOT NULL
+ 				drop table dbo.tmp_DynDm_Organization;
 
 
---CREATE TABLE dbo.tmp_DynDm_Organization
+--CREATE TABLE #tmp_DynDm_Organization
 --(INVESTIGATION_KEY bigint);
+
+     SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
+	    into #tmp_DynDm_SUMM_DATAMART
+	     FROM dbo.INV_SUMM_DATAMART isd with ( nolock)
+	       INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
+	       INNER JOIN dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.investigation_key
+	     and  I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+
+
 
 select distinct investigation_key,
 cast(null as bigint) as ORGANIZATION_UID
-into #tmp_DynDm_Organization
- FROM dbo.tmp_DynDm_SUMM_DATAMART
+into dbo.tmp_DynDm_Organization
+ FROM #tmp_DynDm_SUMM_DATAMART
  -- pass the org_Id_List  param
 ;
 
@@ -150,7 +162,7 @@ into #tmp_DynDm_Organization
 SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -168,7 +180,7 @@ INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Statu
 
 
 
- --DX select PART_TYPE_CD,*  from dbo.tmp_DynDm_Organization_METADATA;
+ --DX select PART_TYPE_CD,*  from #tmp_DynDm_Organization_METADATA;
 
 
 
@@ -195,12 +207,12 @@ BEGIN
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_OrgPart_Table_temp';
 
-					 IF OBJECT_ID('dbo.tmp_DynDm_OrgPart_Table_temp', 'U') IS NOT NULL
- 								drop table dbo.tmp_DynDm_OrgPart_Table_temp;
+					 IF OBJECT_ID('tempdb..#tmp_DynDm_OrgPart_Table_temp', 'U') IS NOT NULL
+ 								drop table #tmp_DynDm_OrgPart_Table_temp;
 
 
 
-				CREATE TABLE [dbo].[tmp_DynDm_OrgPart_Table_temp](
+				CREATE TABLE #tmp_DynDm_OrgPart_Table_temp (
 					[ORGANIZATION_KEY] [bigint] NULL,
 					[ORGANIZATION_QUICK_CODE] [varchar](50) NULL,
 					[ORGANIZATION_NAME] [varchar](50) NULL,
@@ -222,7 +234,7 @@ BEGIN
 				)
 				;
 				-- if @FACT_CASE = ""
-						SET @SQL = ' insert into dbo.tmp_DynDm_OrgPart_Table_temp '
+						SET @SQL = ' insert into #tmp_DynDm_OrgPart_Table_temp '
 						   + ' ([ORGANIZATION_KEY] '
 						   + ', [ORGANIZATION_QUICK_CODE] '
 						   + ', [ORGANIZATION_NAME] '
@@ -260,11 +272,56 @@ BEGIN
 						'   coalesce( ltrim(rtrim(ORGANIZATION_CITY))+'', '','''')+coalesce( ltrim(rtrim(ORGANIZATION_STATE))+'' '','''')+coalesce( ltrim(rtrim(ORGANIZATION_ZIP)),'''') '  +
 						' , null ,'+
 						' s_d.INVESTIGATION_KEY AS INVESTIGATION_KEY '+
-						' FROM dbo.tmp_DynDm_SUMM_DATAMART s_d '+
+						' FROM #tmp_DynDm_SUMM_DATAMART s_d '+
 						' INNER JOIN dbo.'+@FACT_CASE+ '   ON s_d.INVESTIGATION_KEY =  '+@FACT_CASE+ '.INVESTIGATION_KEY '+
 						' LEFT JOIN dbo.D_ORGANIZATION  d_o ON '+@FACT_CASE+'.'+@PART_TYPE_CD+' = d_o.ORGANIZATION_KEY  '+
-								' where d_o.organization_uid  IN (SELECT value FROM STRING_SPLIT(' + @org_id_list +','+ ','+'))' +
 						 '; '
+
+--
+--						SET @SQL = ' insert into #tmp_DynDm_OrgPart_Table_temp '
+--						   + ' ([ORGANIZATION_KEY] '
+--						   + ', [ORGANIZATION_QUICK_CODE] '
+--						   + ', [ORGANIZATION_NAME] '
+--						   + ', [ORGANIZATION_LOCAL_ID] '
+--						   + ', [ORGANIZATION_UID] '
+--						   + ', [ORGANIZATION_STREET_ADDRESS_1] '
+--						   + ', [ORGANIZATION_STREET_ADDRESS_2] '
+--						   + ', [ORGANIZATION_CITY] '
+--						   + ', [ORGANIZATION_STATE] '
+--						   + ', [ORGANIZATION_ZIP] '
+--						   + ', [ORGANIZATION_COUNTY] '
+--						   + ', [ORGANIZATION_PHONE_WORK] '
+--						   + ', [ORGANIZATION_PHONE_EXT_WORK] '
+--						   + ', [PART_TYPE_CD] '
+--						   + ', [PART_TYPE_CD_NM] '
+--						   + ', [CITY_STATE_ZIP] '
+--						   + ', [DETAIL] '
+--						   + ', [INVESTIGATION_KEY] )'
+--						+ ' SELECT  distinct '+
+--						' (d_o.ORGANIZATION_KEY)   ,  '+
+--						' d_o.ORGANIZATION_QUICK_CODE ,  '+
+--						' d_o.ORGANIZATION_NAME ,  '+
+--						' d_o.ORGANIZATION_LOCAL_ID ,  '+
+--						' d_o.ORGANIZATION_UID ,  '+
+--						' d_o.ORGANIZATION_STREET_ADDRESS_1 ,  '+
+--						' d_o.ORGANIZATION_STREET_ADDRESS_2 ,  '+
+--						' d_o.ORGANIZATION_CITY ,  '+
+--						' d_o.ORGANIZATION_STATE ,  '+
+--						' d_o.ORGANIZATION_ZIP ,  '+
+--						' d_o.ORGANIZATION_COUNTY ,  '+
+--						' d_o.ORGANIZATION_PHONE_WORK ,  '+
+--						' d_o.ORGANIZATION_PHONE_EXT_WORK ,  '+
+--						   @PART_TYPE_CD +', '+
+--						''''+   @PART_TYPE_CD +''', '+
+--						'   coalesce( ltrim(rtrim(ORGANIZATION_CITY))+'', '','''')+coalesce( ltrim(rtrim(ORGANIZATION_STATE))+'' '','''')+coalesce( ltrim(rtrim(ORGANIZATION_ZIP)),'''') '  +
+--						' , null ,'+
+--						' s_d.INVESTIGATION_KEY AS INVESTIGATION_KEY '+
+--						' FROM #tmp_DynDm_SUMM_DATAMART s_d '+
+--						' INNER JOIN dbo.'+@FACT_CASE+ '   ON s_d.INVESTIGATION_KEY =  '+@FACT_CASE+ '.INVESTIGATION_KEY '+
+--						' LEFT JOIN dbo.D_ORGANIZATION  d_o ON '+@FACT_CASE+'.'+@PART_TYPE_CD+' = d_o.ORGANIZATION_KEY  '+
+--								' --where d_o.organization_uid  IN (SELECT value FROM STRING_SPLIT(' + @org_id_list +','+ ','+'))' +
+--						 '; '
+
 
 						-- select 'INSERT',@PART_TYPE_CD ,@USER_DEFINED_COLUMN_NM,@DETAIL ,@QEC ,@UID, @SQL;
 
@@ -276,7 +333,7 @@ BEGIN
 								SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
   						  	 INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-								 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME ,'START' ,@Proc_Step_no ,@Proc_Step_Name   + '-'+@PART_TYPE_CD  , @ROWCOUNT_NO );
+								 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name   + '-'+@PART_TYPE_CD  , @ROWCOUNT_NO );
 
 
 
@@ -292,29 +349,29 @@ BEGIN
 
 
 
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET DETAIL ='<b></b>' + LTRIM(RTRIM(coalesce(ORGANIZATION_LOCAL_ID,''))) where LTRIM(RTRIM(ORGANIZATION_LOCAL_ID)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET DETAIL ='<b></b>' + LTRIM(RTRIM(coalesce(ORGANIZATION_LOCAL_ID,''))) where LTRIM(RTRIM(ORGANIZATION_LOCAL_ID)) is not null ;
 
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL = DETAIL  + '<br>'  +   (ORGANIZATION_NAME)  where LTRIM(RTRIM(ORGANIZATION_NAME)) is not null ;
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_1))  where LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_1)) is not null ;
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_2))  where LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_2)) is not null ;
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(CITY_STATE_ZIP))  where LTRIM(RTRIM(CITY_STATE_ZIP)) is not null ;
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_COUNTY))  where LTRIM(RTRIM(ORGANIZATION_COUNTY)) is not null ;
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_PHONE_WORK))  where LTRIM(RTRIM(ORGANIZATION_PHONE_WORK)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL = DETAIL  + '<br>'  +   (ORGANIZATION_NAME)  where LTRIM(RTRIM(ORGANIZATION_NAME)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_1))  where LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_1)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_2))  where LTRIM(RTRIM(ORGANIZATION_STREET_ADDRESS_2)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(CITY_STATE_ZIP))  where LTRIM(RTRIM(CITY_STATE_ZIP)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_COUNTY))  where LTRIM(RTRIM(ORGANIZATION_COUNTY)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL=  DETAIL  + '<br>'  +  LTRIM(RTRIM(ORGANIZATION_PHONE_WORK))  where LTRIM(RTRIM(ORGANIZATION_PHONE_WORK)) is not null ;
 
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL= DETAIL +  ', ext. '  +  LTRIM(  RTRIM(ORGANIZATION_PHONE_EXT_WORK))
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL= DETAIL +  ', ext. '  +  LTRIM(  RTRIM(ORGANIZATION_PHONE_EXT_WORK))
 								where  LTRIM(RTRIM(ORGANIZATION_PHONE_WORK)) is not null  and LTRIM(RTRIM(ORGANIZATION_PHONE_EXT_WORK)) is not null ;
 
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL= DETAIL +  '<br> ext. '  +  LTRIM(  RTRIM(ORGANIZATION_PHONE_EXT_WORK))
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL= DETAIL +  '<br> ext. '  +  LTRIM(  RTRIM(ORGANIZATION_PHONE_EXT_WORK))
 								where  LTRIM(RTRIM(ORGANIZATION_PHONE_WORK)) is  null  and LTRIM(RTRIM(ORGANIZATION_PHONE_EXT_WORK)) is not null ;
 
-								update dbo.tmp_DynDm_OrgPart_Table_temp SET  DETAIL= DETAIL +  '<br> '  where   LTRIM(RTRIM(DETAIL)) is not null ;
+								update #tmp_DynDm_OrgPart_Table_temp SET  DETAIL= DETAIL +  '<br> '  where   LTRIM(RTRIM(DETAIL)) is not null ;
 
 
 
 								SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
   						  	 INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-								 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name +'-'+ @PART_TYPE_CD  , @ROWCOUNT_NO );
+								 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name +'-'+ @PART_TYPE_CD  , @ROWCOUNT_NO );
 
 
 
@@ -331,7 +388,7 @@ BEGIN
 
 
 
-							SET @SQL =  'alter table dbo.tmp_DynDm_OrgPart_Table_temp add  ' +  @DETAIL  + ' [varchar](2000) , ' +  @USER_DEFINED_COLUMN_NM+ ' bigint , '  +  @QEC+ ' [varchar](50) , ' +  @UID+ ' bigint ; '
+							SET @SQL =  'alter table #tmp_DynDm_OrgPart_Table_temp add  ' +  @DETAIL  + ' [varchar](2000) , ' +  @USER_DEFINED_COLUMN_NM+ ' bigint , '  +  @QEC+ ' [varchar](50) , ' +  @UID+ ' bigint ; '
 
   					   -- select 'ALTER', @PART_TYPE_CD, @SQL;
 
@@ -350,7 +407,7 @@ BEGIN
 								SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
   						  	 INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-								 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME   ,'START' ,@Proc_Step_no ,@Proc_Step_Name + ' - '+@PART_TYPE_CD  , @ROWCOUNT_NO  );
+								 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name + ' - '+@PART_TYPE_CD  , @ROWCOUNT_NO  );
 
 
 
@@ -377,12 +434,12 @@ BEGIN
 									  +  @QEC+ ' = ORGANIZATION_QUICK_CODE , '
 									  +  @UID+ ' = orgtemp.ORGANIZATION_UID '
 									  +  ' FROM dbo.tmp_DynDm_Organization  tDO '
-									  +  ' INNER JOIN dbo.tmp_DynDm_OrgPart_Table_temp orgtemp  ON  tDO.investigation_key = orgtemp.investigation_key '
+									  +  ' INNER JOIN #tmp_DynDm_OrgPart_Table_temp orgtemp  ON  tDO.investigation_key = orgtemp.investigation_key '
 									  + ' ; '
 
   					   -- select 'UPDATE', @PART_TYPE_CD, @SQL;
 
-						--select 'tmp_DynDm_OrgPart_Table_temp',* from tmp_DynDm_OrgPart_Table_temp;
+						--select '#tmp_DynDm_OrgPart_Table_temp',* from #tmp_DynDm_OrgPart_Table_temp;
 
 							EXEC(@SQL);
 
@@ -390,7 +447,7 @@ BEGIN
 								SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
   						  	 INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-								 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name +'-'+ @PART_TYPE_CD  , @ROWCOUNT_NO );
+								 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name +'-'+ @PART_TYPE_CD  , @ROWCOUNT_NO );
 
 
 
@@ -418,7 +475,7 @@ DEALLOCATE db_cursor_org
 								SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
   						  	 INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
-								 VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'DBO.DynDm_OrgData_sp '+@DATAMART_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name  , @ROWCOUNT_NO );
+								 VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name  , @ROWCOUNT_NO );
 
 
 
@@ -440,16 +497,32 @@ COMMIT TRANSACTION;
 						BEGIN
 							ROLLBACK TRANSACTION;
 						END;
-						DECLARE @ErrorNumber int= ERROR_NUMBER();
-						DECLARE @ErrorLine int= ERROR_LINE();
-						DECLARE @ErrorMessage nvarchar(4000)= ERROR_MESSAGE();
-						DECLARE @ErrorSeverity int= ERROR_SEVERITY();
-						DECLARE @ErrorState int= ERROR_STATE();
 
-                        select @ErrorMessage;
+    					-- Construct the error message string with all details:
+				        DECLARE @FullErrorMessage VARCHAR(8000) =
+				            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+				            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+				            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+				            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+				            'Error Message: ' + ERROR_MESSAGE();
 
-						INSERT INTO dbo.job_flow_log( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
-						VALUES( @Batch_id, 'DYNAMIC_DATAMART', 'DBO.DynDm_OrgData_sp', 'ERROR', @Proc_Step_no, 'ERROR - '+@Proc_Step_name, 'Step -'+CAST(@Proc_Step_no AS varchar(3))+' -'+CAST(@ErrorMessage AS varchar(500)), 0 );
+				        INSERT INTO [dbo].[job_flow_log] ( batch_id
+				                                         , [Dataflow_Name]
+				                                         , [package_Name]
+				                                         , [Status_Type]
+				                                         , [step_number]
+				                                         , [step_name]
+				                                         , [Error_Description]
+				                                         , [row_count])
+				        VALUES ( @batch_id
+				               , @Dataflow_Name
+				               , @Package_Name
+				               , 'ERROR'
+				               , @Proc_Step_no
+				               , @Proc_Step_name
+				               , @FullErrorMessage
+				               , 0);
+
 						RETURN -1;
 	        END CATCH;
 END;
