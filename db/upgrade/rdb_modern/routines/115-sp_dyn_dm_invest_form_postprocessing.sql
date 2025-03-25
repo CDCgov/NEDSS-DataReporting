@@ -257,7 +257,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 	into #tmp_DynDm_INV_SUMM_DATAMART
 	FROM dbo.INV_SUMM_DATAMART with ( nolock)
 	INNER JOIN #tmp_DynDm_Investigation_Data d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY
-	inner join dbo.nrt_investigation_key nrt_inv on nrt_inv.d_investigation_key =  d.INVESTIGATION_KEY
+	inner join dbo.investigation nrt_inv on nrt_inv.d_investigation_key =  d.INVESTIGATION_KEY
 	and  nrt_inv.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
 	;
