@@ -695,8 +695,8 @@ BEGIN
                 d2.date_key AS LAST_CHG_DATE_KEY,
                 inv.INVESTIGATION_KEY,
                 hk.HOSPITAL_KEY,
-                ork.ORG_AS_REPORTER_key,
-                prk.PERSON_AS_REPORTER_key,
+                ork.ORG_AS_REPORTER_KEY,
+                prk.PERSON_AS_REPORTER_KEY,
                 pk.PHYSICIAN_KEY
             INTO #F_TB_PAM_I    
             FROM #PAT_prov_keystore k 
