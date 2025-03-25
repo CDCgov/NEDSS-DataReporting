@@ -55,7 +55,8 @@
     "part_type_cd": null,
     "datamart_column_nm": "CASE_VERIFICATION",
     "seq_nbr": 0,
-    "ldf_status_cd": null
+    "ldf_status_cd": null,
+    "nbs_ui_component_uid": 1007
   },
   {
     "nbs_case_answer_uid": 1236,
