@@ -10,11 +10,7 @@ BEGIN
         /*
          * tmp_DynDm_INVESTIGATION_REPEAT_DATE
          * tmp_DynDm_REPEAT_BLOCK_DATE_ALL
-         *
          * */
-
-
-        --DECLARE  @batch_id BIGINT = 999;  DECLARE @DATAMART_NAME  VARCHAR(100) = 'HIV_PERI';
 
 
         DECLARE @RowCount_no INT;
@@ -78,12 +74,6 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_Metadata';
 
-
-        --  DECLARE  @batch_id BIGINT = 999;  DECLARE  @DATAMART_NAME VARCHAR(100) = 'HIV_PERI'; DECLARE @Proc_Step_no FLOAT = 0 ;	DECLARE @Proc_Step_Name VARCHAR(200) = '' ;	DECLARE @RowCount_no INT ;
-
---CREATE TABLE METADATA AS
-
-        --user defined columns
 
         IF OBJECT_ID('#tmp_DynDM_Metadata', 'U') IS NOT NULL
             drop table #tmp_DynDM_Metadata;
@@ -212,26 +202,6 @@ BEGIN
                 return;
 
             end;
-
-
-        /*
-        PROC SORT DATA=METADATA ; BY RDB_COLUMN_NM;RUN;
-        PROC TRANSPOSE DATA=METADATA OUT=METADATA_OUT;
-            VAR USER_DEFINED_COLUMN_NM_1 USER_DEFINED_COLUMN_NM_2 USER_DEFINED_COLUMN_NM_3 USER_DEFINED_COLUMN_NM_4
-        USER_DEFINED_COLUMN_NM_5;
-        COPY  BLOCK_NM;
-            BY RDB_COLUMN_NM;
-        RUN;
-        */
-
-
-/*
-
-rdb_column_nm, block_nm, var1 ( _NAME), Value_var1 ( col1)
-
-
-
-*/
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -454,49 +424,17 @@ rdb_column_nm, block_nm, var1 ( _NAME), Value_var1 ( col1)
         DECLARE @USER_DEFINED_COLUMN_NAME NVARCHAR(4000);
         DECLARE @RDB_COLUMN_NAME NVARCHAR(4000);
 
-        DECLARE db_cursor CURSOR FOR
-            SELECT DATAMART_NM, RDB_COLUMN_NM, USER_DEFINED_COLUMN_NM
-            FROM #tmp_DynDM_D_INV_REPEAT_METADATA with (nolock)
-            ORDER BY RDB_COLUMN_NM;
+        SELECT @RDB_COLUMN_NAME_LIST = @RDB_COLUMN_NAME_LIST +
+                                       QUOTENAME(RDB_COLUMN_NM) + ' AS ' +  QUOTENAME(USER_DEFINED_COLUMN_NM) + ', ',
+               @RDB_COLUMN_LIST = @RDB_COLUMN_LIST + QUOTENAME(RDB_COLUMN_NM) + ' ',
+               @RDB_COLUMN_COMMA_LIST = @RDB_COLUMN_COMMA_LIST + QUOTENAME(RDB_COLUMN_NM)+','
+        FROM #tmp_DynDM_D_INV_REPEAT_METADATA with (nolock)
+        WHERE DATAMART_NM IS NOT NULL
+        ORDER BY RDB_COLUMN_NM;
 
-        OPEN db_cursor;
-        FETCH NEXT FROM db_cursor INTO @DATAMART_NM, @RDB_COLUMN_NM, @USER_DEFINED_COLUMN_NM;
-
-        WHILE @@FETCH_STATUS = 0
-            BEGIN
-                -- Check conditions and build column lists
-                IF @DATAMART_NM IS NOT NULL
-                    BEGIN
-                        SET @USER_DEFINED_COLUMN_NAME =
-                                QUOTENAME(@RDB_COLUMN_NM) + ' AS ' + QUOTENAME(@USER_DEFINED_COLUMN_NM);
-                        SET @RDB_COLUMN_NAME = QUOTENAME(@RDB_COLUMN_NM);
-
-                        IF LEN(@USER_DEFINED_COLUMN_NAME) > 0
-                            SET @RDB_COLUMN_NAME_LIST = @USER_DEFINED_COLUMN_NAME + ', ' + @RDB_COLUMN_NAME_LIST;
-
-                        IF LEN(@RDB_COLUMN_NAME) > 0
-                            BEGIN
-                                SET @RDB_COLUMN_LIST = @RDB_COLUMN_NAME + ' ' + @RDB_COLUMN_LIST;
-                                SET @RDB_COLUMN_COMMA_LIST = @RDB_COLUMN_NAME + ', ' + @RDB_COLUMN_COMMA_LIST;
-                            END
-                    END
-
-
-                --  Select @DATAMART_NM, @RDB_COLUMN_NM, @USER_DEFINED_COLUMN_NM,@RDB_COLUMN_COMMA_LIST;
-
-
-                FETCH NEXT FROM db_cursor INTO @DATAMART_NM, @RDB_COLUMN_NM, @USER_DEFINED_COLUMN_NM;
-            END
-
-        ---- Insert the results into the temporary table
-        --INSERT INTO #DYNINVLISTING (RDB_COLUMN_NAME_LIST, RDB_COLUMN_LIST, RDB_COLUMN_COMMA_LIST)
-        --VALUES (@RDB_COLUMN_NAME_LIST, @RDB_COLUMN_LIST, @RDB_COLUMN_COMMA_LIST);
-
-        -- Clean up
-        CLOSE db_cursor;
-        DEALLOCATE db_cursor;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_D_INV_REPEAT_METADATA;
+
         PRINT @RDB_COLUMN_LIST;
         PRINT @RDB_COLUMN_COMMA_LIST;
         PRINT @RDB_COLUMN_NAME_LIST;
@@ -582,7 +520,6 @@ rdb_column_nm, block_nm, var1 ( _NAME), Value_var1 ( col1)
 
         if object_id('dbo.D_INVESTIGATION_REPEAT') is not null
             Begin
-                PRINT 'D_INVESTIGATION_REPEAT cursor'
                 SET @SQL = '   SELECT ' + @D_REPEAT_COMMA_NAME +
                            ' ANSWER_GROUP_SEQ_NBR, D_INVESTIGATION_REPEAT.D_INVESTIGATION_REPEAT_KEY, tmp.INVESTIGATION_KEY, D_INVESTIGATION_REPEAT.BLOCK_NM ' +
                            '    into dbo.tmp_DynDM_REPEAT_BLOCK' +
@@ -723,34 +660,7 @@ rdb_column_nm, block_nm, var1 ( _NAME), Value_var1 ( col1)
         ORDER BY RDB_COLUMN_NM, BLOCK_NM;
 
 
-        --        SELECT BLOCK_NM,
---               RDB_COLUMN_NM
---        into #tmp_DynDM_BLOCK_DATA
---        FROM NBS_ODSE..NBS_RDB_METADATA with (nolock)
---                 INNER JOIN NBS_ODSE..NBS_UI_METADATA with (nolock)
---                            ON NBS_RDB_METADATA.NBS_UI_METADATA_UID = NBS_UI_METADATA.NBS_UI_METADATA_UID
---        WHERE RDB_TABLE_NM = 'D_INVESTIGATION_REPEAT'
---          AND NBS_UI_METADATA.INVESTIGATION_FORM_CD =
---              (SELECT FORM_CD FROM dbo.NBS_PAGE WHERE DATAMART_NM = @DATAMART_NAME)
---          AND PART_TYPE_CD IS NULL
---          AND QUESTION_GROUP_SEQ_NBR IS NOT NULL
---          AND NBS_RDB_METADATA.USER_DEFINED_COLUMN_NM != ''
---          and NBS_RDB_METADATA.USER_DEFINED_COLUMN_NM IS NOT NULL
---          AND NBS_RDB_METADATA.BLOCK_PIVOT_NBR IS NOT NULL
---          and data_type in ('DATETIME', 'DATE', 'Date', 'Date/Time')
---          and code_set_group_id is null
---        ORDER BY RDB_COLUMN_NM, BLOCK_NM;
---        ;
---
-
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_BLOCK_DATA;
-
-
-        --DX select 'tmp_DynDM_BLOCK_DATA',* from #tmp_DynDM_BLOCK_DATA;
-
-
-        --DX select 'tmp_DynDM_REPEAT_BLOCK_OUT_VARCHAR',* from dbo.tmp_DynDM_REPEAT_BLOCK_OUT_VARCHAR;
-        --DX select 'tmp_DynDM_BLOCK_DATA',* from #tmp_DynDM_BLOCK_DATA;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -1263,8 +1173,6 @@ rdb_column_nm, block_nm, var1 ( _NAME), Value_var1 ( col1)
             [INVESTIGATION_KEY] [bigint] NULL
         ) ;
 
-
-        --select 'tmp_DynDM_REPEAT_BLOCK_DATE_ALL',* from dbo.tmp_DynDM_REPEAT_BLOCK_DATE_ALL;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from dbo.tmp_DynDM_REPEAT_BLOCK_DATE_ALL;
 
