@@ -1758,18 +1758,10 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 022-v_nrt_nbs_d_case_mgmt_rdb_table_metadata-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 560
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
             path: 023-v_nrt_d_inv_repeat_blockdata-001.sql
             splitStatements: false
   - changeSet:
-      id: 565
+      id: 560
       author: liquibase
       runOnChange: true
       changes:
