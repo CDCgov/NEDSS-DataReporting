@@ -40,26 +40,16 @@ BEGIN
                                          , [Status_Type]
                                          , [step_number]
                                          , [step_name]
-                                         , [row_count])
+                                         , [row_count]
+                                         , [Msg_Description1])
         VALUES ( @batch_id
                , @dataflow_name
                , @package_name
                , 'START'
                , @Proc_Step_no
                , @Proc_Step_Name
-               , 0);
-
-
-        IF OBJECT_ID('#tmp_DynDM_Metadata', 'U') IS NOT NULL
-            drop table #tmp_DynDM_Metadata;
-
-
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_ALL', 'U') IS NOT NULL
-            drop table #tmp_DynDM_REPEAT_ALL;
-
-
-        IF OBJECT_ID('#tmp_DynDM_BLOCK_DATA', 'U') IS NOT NULL
-            drop table #tmp_DynDM_BLOCK_DATA;
+               , 0
+               , LEFT(@id_list, 500))
 
 
         SET @temp_sql = '
@@ -74,17 +64,8 @@ BEGIN
         exec sp_executesql @temp_sql;
 
 
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-            drop table #tmp_DynDM_REPEAT_BLOCK_OUT_BASE;
-
-
-
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_Metadata';
-
-
-        IF OBJECT_ID('#tmp_DynDM_Metadata', 'U') IS NOT NULL
-            drop table #tmp_DynDM_Metadata;
 
 
         SELECT distinct DATAMART_NM
@@ -122,7 +103,7 @@ BEGIN
 
 
         DECLARE @countmeta int = 0;
-        SELECT TOP 2 @countmeta = count(*) from #tmp_DynDM_Metadata with (nolock);
+        SELECT TOP 2 @countmeta = count(*) from #tmp_DynDM_Metadata ;
 
         IF @countmeta < 1
             BEGIN
@@ -218,10 +199,6 @@ BEGIN
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_METADATA_OUT';
 
 
-        IF OBJECT_ID('#tmp_DynDM_METADATA_OUT', 'U') IS NOT NULL
-            drop table #tmp_DynDM_METADATA_OUT;
-
-
         select rdb_column_nm, block_nm, variable as '_NAME_', value as 'COL1'
         into #tmp_DynDM_METADATA_OUT
         from (select rdb_column_nm,
@@ -231,7 +208,7 @@ BEGIN
                      USER_DEFINED_COLUMN_NM_3,
                      USER_DEFINED_COLUMN_NM_4,
                      USER_DEFINED_COLUMN_NM_5
-              from #tmp_DynDM_METADATA with (nolock)) as t
+              from #tmp_DynDM_METADATA ) as t
                  unpivot (
                  value for variable in ( USER_DEFINED_COLUMN_NM_1 ,USER_DEFINED_COLUMN_NM_2 ,USER_DEFINED_COLUMN_NM_3,USER_DEFINED_COLUMN_NM_4,USER_DEFINED_COLUMN_NM_5)
                  ) as unpvt;
@@ -261,14 +238,10 @@ BEGIN
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_METADATA_OUT1';
 
 
-        IF OBJECT_ID('#tmp_DynDM_METADATA_OUT1', 'U') IS NOT NULL
-            drop table #tmp_DynDM_METADATA_OUT1;
-
-
         --CREATE TABLE METADATA_OUT1 AS
         SELECT *
         into #tmp_DynDM_METADATA_OUT1
-        FROM #tmp_DynDM_METADATA_OUT with (nolock)
+        FROM #tmp_DynDM_METADATA_OUT
         WHERE BLOCK_NM IS NOT NULL;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_METADATA_OUT1;
@@ -283,16 +256,12 @@ BEGIN
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_METADATA_OUT_final';
 
 
-        IF OBJECT_ID('#tmp_DynDM_METADATA_OUT_final', 'U') IS NOT NULL
-            drop table #tmp_DynDM_METADATA_OUT_final;
-
-
         SELECT DISTINCT mo.*
                       , mo1.BLOCK_NM                                     AS BLOCK_NM1
                       , CAST(SUBSTRING(mo.COL1, LEN(mo.COL1), 1) AS INT) AS ANSWER_GROUP_SEQ_NBR
         into #tmp_DynDM_METADATA_OUT_final
-        FROM #tmp_DynDM_METADATA_OUT mo with (nolock)
-                 INNER JOIN #tmp_DynDM_METADATA_OUT1 mo1 with (nolock) ON mo1.RDB_COLUMN_NM = mo.RDB_COLUMN_NM;
+        FROM #tmp_DynDM_METADATA_OUT mo
+                 INNER JOIN #tmp_DynDM_METADATA_OUT1 mo1  ON mo1.RDB_COLUMN_NM = mo.RDB_COLUMN_NM;
 
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_METADATA_OUT_final;
@@ -311,13 +280,13 @@ BEGIN
         FROM dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata case_meta
         where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
 
+        select @COUNTSTD = count(*) from #tmp_DynDm_Case_Management_Metadata;
 
-        if @debug = 'true' select @COUNTSTD = count(*) from #tmp_DynDm_Case_Management_Metadata;
+        if @debug = 'true' PRINT @COUNTSTD;
 
 
         declare @FACT_CASE varchar(40) = '';
 
-        --Note: Single set of investigations to a datamart are the expected input.
         if @countstd > 1
             begin
                 set @FACT_CASE = 'F_STD_PAGE_CASE';
@@ -341,14 +310,9 @@ BEGIN
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_D_INV_REPEAT_METADATA';
 
 
-        IF OBJECT_ID('#tmp_DynDM_D_INV_REPEAT_METADATA', 'U') IS NOT NULL
-            drop table #tmp_DynDM_D_INV_REPEAT_METADATA;
-
-
-        --	CREATE TABLE D_INV_REPEAT_METADATA AS
         SELECT DISTINCT DATAMART_NM, RDB_COLUMN_NM, USER_DEFINED_COLUMN_NM, BLOCK_PIVOT_NBR
         into #tmp_DynDM_D_INV_REPEAT_METADATA
-        FROM #tmp_DynDM_Metadata with (nolock);
+        FROM #tmp_DynDM_Metadata ;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_D_INV_REPEAT_METADATA;
 
@@ -379,12 +343,13 @@ BEGIN
                                        QUOTENAME(RDB_COLUMN_NM) + ' AS ' +  QUOTENAME(USER_DEFINED_COLUMN_NM) + ', ',
                @RDB_COLUMN_LIST = @RDB_COLUMN_LIST + QUOTENAME(RDB_COLUMN_NM) + ' ',
                @RDB_COLUMN_COMMA_LIST = @RDB_COLUMN_COMMA_LIST + QUOTENAME(RDB_COLUMN_NM)+','
-        FROM #tmp_DynDM_D_INV_REPEAT_METADATA with (nolock)
+        FROM #tmp_DynDM_D_INV_REPEAT_METADATA
         WHERE DATAMART_NM IS NOT NULL
         ORDER BY RDB_COLUMN_NM;
 
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_D_INV_REPEAT_METADATA;
+
         --		 if @debug = 'true'
 --		 BEGIN
 --	        PRINT @RDB_COLUMN_LIST;
@@ -445,8 +410,8 @@ BEGIN
 
         SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
         into #tmp_DynDm_SUMM_DATAMART
-        FROM dbo.INV_SUMM_DATAMART isd with (nolock)
-                 INNER JOIN dbo.v_condition_dim c with (nolock)
+        FROM dbo.INV_SUMM_DATAMART isd  with (nolock)
+                 INNER JOIN dbo.v_condition_dim c
                             ON isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
                  INNER JOIN dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.INVESTIGATION_KEY
             and I.case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
@@ -460,16 +425,16 @@ BEGIN
                 SET @SQL = '   SELECT ' + @D_REPEAT_COMMA_NAME +
                            ' ANSWER_GROUP_SEQ_NBR, D_INVESTIGATION_REPEAT.D_INVESTIGATION_REPEAT_KEY, tmp.INVESTIGATION_KEY, D_INVESTIGATION_REPEAT.BLOCK_NM ' +
                            '    into '+ @tmp_DynDM_REPEAT_BLOCK +
-                           '    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)' +
+                           '    FROM #tmp_DynDM_SUMM_DATAMART tmp ' +
                            '		INNER JOIN  dbo.' + @FACT_CASE +
-                           '   with (nolock)  ON tmp.INVESTIGATION_KEY  = ' + @FACT_CASE +
+                           '     ON tmp.INVESTIGATION_KEY  = ' + @FACT_CASE +
                            '.INVESTIGATION_KEY ' +
-                           '		INNER JOIN  dbo.D_INVESTIGATION_REPEAT' + '  with (nolock) ON	' + @FACT_CASE +
+                           '		INNER JOIN  dbo.D_INVESTIGATION_REPEAT' + '   ON	' + @FACT_CASE +
                            '.' + 'D_INVESTIGATION_REPEAT_KEY  = D_INVESTIGATION_REPEAT.D_INVESTIGATION_REPEAT_KEY ' +
                            '	  WHERE D_INVESTIGATION_REPEAT.D_INVESTIGATION_REPEAT_KEY>1 ';
 
                 -- select 1,@SQL;
-                PRINT @SQL;
+                --PRINT @SQL;
                 EXEC (@SQL);
             end
         else
@@ -484,13 +449,13 @@ BEGIN
                 EXEC (@SQL);
             end;
 
-        if @debug = 'true'
-            BEGIN
-                SET @temp_sql = '
-		        SELECT ''tmp_DynDM_REPEAT_BLOCK'',* FROM '+@tmp_DynDM_REPEAT_BLOCK;
-                exec sp_executesql @temp_sql;
-            END
-
+        --         if @debug = 'true'
+--         BEGIN
+--         	SET @temp_sql = '
+--		        SELECT ''tmp_DynDM_REPEAT_BLOCK'',* FROM '+@tmp_DynDM_REPEAT_BLOCK;
+--        	exec sp_executesql @temp_sql;
+--         END
+--
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
@@ -501,9 +466,6 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT';
 
-
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_BLOCK_OUT', 'U') IS NOT NULL
-            drop table #tmp_DynDM_REPEAT_BLOCK_OUT;
 
         CREATE TABLE #tmp_DynDM_REPEAT_BLOCK_OUT
         (
@@ -524,7 +486,7 @@ BEGIN
 					select INVESTIGATION_KEY ,BLOCK_NM as BLOCK_NM_BLOCK_OUT ,ANSWER_GROUP_SEQ_NBR,variable as RDB_COLUMN_NM_BLOCK_OUT,value as dateColumn '
                     + ' from ( '
                     + ' select INVESTIGATION_KEY ,BLOCK_NM ,ANSWER_GROUP_SEQ_NBR,  ' + @D_REPEAT_COMMA_NAME1
-                    + ' from  '+@tmp_DynDM_REPEAT_BLOCK+'  with (nolock)'
+                    + ' from  '+@tmp_DynDM_REPEAT_BLOCK+'  '
                     + ' ) as t '
                     + ' unpivot ( '
                     + ' value for variable in ( ' + @D_REPEAT_COMMA_NAME1 + ') '
@@ -532,7 +494,7 @@ BEGIN
 
 
         exec sp_executesql @temp_sql;
-        print(@temp_sql)
+        --  print(@temp_sql)
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_REPEAT_BLOCK_OUT;
 
@@ -544,10 +506,6 @@ BEGIN
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_BLOCK_DATA';
-
-
-        IF OBJECT_ID('#tmp_DynDM_BLOCK_DATA', 'U') IS NOT NULL
-            drop table #tmp_DynDM_BLOCK_DATA;
 
         SELECT RDB_COLUMN_NM
              , BLOCK_NM
@@ -574,18 +532,14 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
 
 
-
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT_BASE';
-
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-            drop table #tmp_DynDM_REPEAT_BLOCK_OUT_BASE;
 
 
         SELECT DISTINCT *
         into #tmp_DynDM_REPEAT_BLOCK_OUT_BASE
         FROM #tmp_DynDM_REPEAT_BLOCK_OUT rbo
-                 INNER JOIN #tmp_DynDM_BLOCK_DATA bd with (nolock) ON rbo.BLOCK_NM_BLOCK_OUT = bd.BLOCK_NM
+                 INNER JOIN #tmp_DynDM_BLOCK_DATA bd  ON rbo.BLOCK_NM_BLOCK_OUT = bd.BLOCK_NM
             AND UPPER(rbo.RDB_COLUMN_NM_BLOCK_OUT) = UPPER(bd.RDB_COLUMN_NM);
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_REPEAT_BLOCK_OUT_BASE;
@@ -617,7 +571,7 @@ BEGIN
                ANSWER_GROUP_SEQ_NBR,
                cast(STUFF(
                        (select(SELECT rtrim('' ~'' + coalesce('' '' + rtrim(ltrim(dateColumn)), ''.''))
-                               FROM #tmp_DynDM_REPEAT_BLOCK_OUT_BASE with (nolock)
+                               FROM #tmp_DynDM_REPEAT_BLOCK_OUT_BASE
                                where INVESTIGATION_KEY = a.INVESTIGATION_KEY
                                  AND RDB_COLUMN_NM_BLOCK_OUT = a.RDB_COLUMN_NM_BLOCK_OUT
                                  AND BLOCK_NM_BLOCK_OUT = a.BLOCK_NM_BLOCK_OUT
@@ -626,7 +580,7 @@ BEGIN
                                         ANSWER_GROUP_SEQ_NBR
                                FOR XML PATH (''''),TYPE).value(''.'', ''varchar(8000)''))
                    , 1, 1, '''') as varchar(8000)) AS ANSWER_DESC21
-        FROM #tmp_DynDM_REPEAT_BLOCK_OUT_BASE  AS a with (nolock)
+        FROM #tmp_DynDM_REPEAT_BLOCK_OUT_BASE  AS a
         group BY INVESTIGATION_KEY, RDB_COLUMN_NM_BLOCK_OUT, BLOCK_NM_BLOCK_OUT, ANSWER_GROUP_SEQ_NBR';
         exec sp_executesql @temp_sql;
 
@@ -652,7 +606,7 @@ BEGIN
         --Notes: Replace tmp_DynDM_METADATA_OUT1 with tmp_DynDM_METADATA_OUT1_2 to address compilation error.
         select RDB_COLUMN_NM, _NAME_, COL1, BLOCK_NM, ANSWER_GROUP_SEQ_NBR
         into #tmp_DynDM_METADATA_OUT1_2
-        FROM #tmp_DynDM_METADATA_OUT_final with (nolock);
+        FROM #tmp_DynDM_METADATA_OUT_final ;
 
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_METADATA_OUT1_2;
@@ -666,14 +620,11 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_METADATA_MERGED_INIT';
 
-        IF OBJECT_ID('#tmp_DynDM_METADATA_MERGED_INIT', 'U') IS NOT NULL
-            drop table #tmp_DynDM_METADATA_MERGED_INIT;
-
 
         SELECT distinct dmo.*, drbob.dateColumn, drbob.investigation_key
         into #tmp_DynDM_METADATA_MERGED_INIT
-        FROM #tmp_DynDM_METADATA_OUT1_2 dmo with (nolock)
-                 LEFT OUTER JOIN #tmp_DynDM_REPEAT_BLOCK_OUT_BASE drbob with (nolock) ON
+        FROM #tmp_DynDM_METADATA_OUT1_2 dmo
+                 LEFT OUTER JOIN #tmp_DynDM_REPEAT_BLOCK_OUT_BASE drbob  ON
             UPPER(dmo.RDB_COLUMN_NM) = UPPER(drbob.RDB_COLUMN_NM)
                 AND dmo.ANSWER_GROUP_SEQ_NBR = drbob.ANSWER_GROUP_SEQ_NBR
                 AND dmo.BLOCK_NM = drbob.BLOCK_NM;
@@ -704,7 +655,7 @@ BEGIN
         FROM
             (
                 SELECT [COL1]
-                FROM #tmp_DynDM_METADATA_MERGED_INIT AS p with (nolock)
+                FROM #tmp_DynDM_METADATA_MERGED_INIT AS p
                 GROUP BY [COL1]
             ) AS x;
 
@@ -715,12 +666,12 @@ BEGIN
                    ' into '+@tmp_DynDm_INVESTIGATION_REPEAT_DATE +
                    ' FROM (
     SELECT [INVESTIGATION_KEY], [dateColumn] , [COL1]
-      FROM #tmp_DynDM_METADATA_MERGED_INIT  with (nolock)
+      FROM #tmp_DynDM_METADATA_MERGED_INIT
                        group by [INVESTIGATION_KEY], [dateColumn] , [COL1]
                            ) AS j PIVOT (max(dateColumn) FOR [COL1] in
                           (' + STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ')) AS p;';
 
-        print @sql;
+        -- print @sql;
         EXEC (@sql);
 
         SET @temp_sql = '
@@ -748,12 +699,9 @@ BEGIN
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_ALL';
 
 
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_ALL', 'U') IS NOT NULL
-            drop table #tmp_DynDM_REPEAT_ALL;
-
         SELECT DISTINCT RDB_COLUMN_NM, USER_DEFINED_COLUMN_NM + '_ALL' as USER_DEFINED_COLUMN_NM_ALL
         into #tmp_DynDM_REPEAT_ALL
-        FROM #tmp_DynDM_D_INV_REPEAT_METADATA with (nolock);
+        FROM #tmp_DynDM_D_INV_REPEAT_METADATA ;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -816,10 +764,6 @@ BEGIN
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max';
 
 
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max', 'U') IS NOT NULL
-            drop table #tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max;
-
-
         select 'tmp_DynDM_REPEAT_BLOCK_OUT_BASE_1' as tb,
                INVESTIGATION_KEY,
                BLOCK_NM_BLOCK_OUT,
@@ -835,9 +779,6 @@ BEGIN
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max_1';
-
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max_1', 'U') IS NOT NULL
-            drop table #tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max_1;
 
 
         select 'tmp_DynDM_REPEAT_BLOCK_OUT_BASE_1'  as tb,
@@ -893,8 +834,8 @@ BEGIN
 
         SELECT rba.*, ra.USER_DEFINED_COLUMN_NM_ALL
         into #tmp_DynDM_REPEAT_BLOCK_METADATA_OUT
-        FROM #tmp_DynDM_REPEAT_ALL ra with (nolock)
-                 LEFT OUTER JOIN #tmp_DynDM_REPEAT_BLOCK_OUT_ALL rba with (nolock)
+        FROM #tmp_DynDM_REPEAT_ALL ra
+                 LEFT OUTER JOIN #tmp_DynDM_REPEAT_BLOCK_OUT_ALL rba
                                  ON UPPER(ra.RDB_COLUMN_NM) = UPPER(rba.RDB_COLUMN_NM_BLOCK_OUT);
 
 
@@ -914,7 +855,7 @@ BEGIN
             [INVESTIGATION_KEY], [USER_DEFINED_COLUMN_NM_ALL],
             STUFF(
                     (SELECT  ' ~ ' + coalesce([ANSWER_DESC21],'.')
-                     FROM #tmp_DynDM_REPEAT_BLOCK_METADATA_OUT with (nolock)
+                     FROM #tmp_DynDM_REPEAT_BLOCK_METADATA_OUT
                      WHERE [INVESTIGATION_KEY] = a.[INVESTIGATION_KEY] AND [USER_DEFINED_COLUMN_NM_ALL] = a.[USER_DEFINED_COLUMN_NM_ALL]
                      order by [INVESTIGATION_KEY], [USER_DEFINED_COLUMN_NM_ALL],answer_group_seq_nbr
                      FOR XML PATH (''))
@@ -958,7 +899,7 @@ BEGIN
                    ' into '+@tmp_DynDM_REPEAT_BLOCK_DATE_ALL +
                    ' FROM (
                    SELECT [INVESTIGATION_KEY], [ANSWER_DESC21] , [USER_DEFINED_COLUMN_NM_ALL]
-                    FROM #tmp_DynDM_REPEAT_BLOCK_METADATA_OUT_FINAL with (nolock)
+                    FROM #tmp_DynDM_REPEAT_BLOCK_METADATA_OUT_FINAL
                        group by [INVESTIGATION_KEY], [ANSWER_DESC21] , [USER_DEFINED_COLUMN_NM_ALL]
                            ) AS j PIVOT (max(ANSWER_DESC21) FOR [USER_DEFINED_COLUMN_NM_ALL] in
                         ('+STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '')+')) AS p;';
@@ -983,9 +924,8 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK';
+        SET @Proc_Step_Name = 'Drop tmp_DynDM_REPEAT_BLOCK';
 
 
         SET @temp_sql = '
@@ -994,7 +934,6 @@ BEGIN
         exec sp_executesql @temp_sql;
 
 
-        COMMIT TRANSACTION;
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
@@ -1060,4 +999,3 @@ BEGIN
 
     END CATCH
 END;
-
