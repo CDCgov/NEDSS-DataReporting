@@ -18,30 +18,24 @@ BEGIN
 
         SET @Proc_Step_Name = 'SP_Start';
 
-        BEGIN TRANSACTION
+        INSERT INTO dbo.job_flow_log ( batch_id
+                                    , [Dataflow_Name]
+                                    , [package_Name]
+                                    , [Status_Type]
+                                    , [step_number]
+                                    , [step_name]
+                                    , [row_count]
+                                    , [Msg_Description1])
+        VALUES ( @batch_id
+            , @Dataflow_Name
+            , @Package_Name
+            , 'START'
+            , @Proc_Step_no
+            , @Proc_Step_Name
+            , 0
+            , LEFT('ID List-' + @phc_id_list, 500));
 
-            INSERT INTO dbo.job_flow_log ( batch_id
-                                        , [Dataflow_Name]
-                                        , [package_Name]
-                                        , [Status_Type]
-                                        , [step_number]
-                                        , [step_name]
-                                        , [row_count]
-                                        , [Msg_Description1])
-            VALUES ( @batch_id
-                , @Dataflow_Name
-                , @Package_Name
-                , 'START'
-                , @Proc_Step_no
-                , @Proc_Step_Name
-                , 0
-                , LEFT('ID List-' + @phc_id_list, 500));
-
-        COMMIT TRANSACTION;
-                
 --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -88,12 +82,8 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-        
 --------------------------------------------------------------------------------------------------------
         
-        BEGIN TRANSACTION
-
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -147,12 +137,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 ---------------------------------------------------------------------------------------------------------------------        
-
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -193,10 +178,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -237,11 +219,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;   
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -283,12 +261,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -341,11 +314,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -376,8 +345,6 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
-
 -------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
