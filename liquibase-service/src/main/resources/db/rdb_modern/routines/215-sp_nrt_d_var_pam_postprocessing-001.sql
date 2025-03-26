@@ -21,7 +21,6 @@ BEGIN
 
     
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -41,11 +40,8 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
-        
-        COMMIT TRANSACTION;
-    
+            
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -69,7 +65,7 @@ BEGIN
             CVG.CODE_SHORT_DESC_TXT AS CODE_SHORT_DESC_TXT
         INTO #S_VAR_PAM_SET_TRANSLATED
         FROM [dbo].nrt_investigation I  with (nolock)
-        INNER JOIN #S_PHC_LIST PHC_LIST  with (nolock)
+        INNER JOIN #S_PHC_LIST PHC_LIST
             on I.public_health_case_UID = PHC_LIST.value
         LEFT JOIN dbo.nrt_page_case_answer NCA  with (nolock)
             on NCA.act_uid = I.public_health_case_UID
@@ -107,10 +103,8 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;
 
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -154,10 +148,8 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;
     
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -187,7 +179,7 @@ BEGIN
             VAR.CODE,
             CVG.CODE_DESC_TXT
         INTO #S_VAR_PAM_SET_CVG2
-        FROM #S_VAR_PAM_SET_CVG VAR with (nolock)
+        FROM #S_VAR_PAM_SET_CVG VAR
         LEFT JOIN dbo.NRT_SRTE_COUNTRY_CODE CVG with (nolock)
             ON CVG.CODE = VAR.ANSWER_TXT
             AND VAR.CODE_SET_NM = 'PSL_CNTRY';
@@ -205,10 +197,8 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;
     
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -238,11 +228,8 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
-        
-        COMMIT TRANSACTION;
-    
+            
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -318,10 +305,8 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;
     
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -462,8 +447,8 @@ BEGIN
             TRY_CAST(REPLACE(S1.FEVER_TEMPERATURE, ',', '') AS DECIMAL(20,0)) AS FEVER_TEMPERATURE,
             CT.LAST_CHG_TIME
         INTO #S_VAR_PAM
-        FROM #S_VAR_PAM1 S1 with (nolock)
-        INNER JOIN #S_PAM_CHG_TIME CT with (nolock)
+        FROM #S_VAR_PAM1 S1
+        INNER JOIN #S_PAM_CHG_TIME CT
             ON S1.VAR_PAM_UID = CT.VAR_PAM_UID
         WHERE S1.VAR_PAM_UID IS NOT NULL;
         
@@ -479,9 +464,7 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
-        
-        COMMIT TRANSACTION;
-    
+            
 
 --------------------------------------------------------------------------------------------------------
     BEGIN TRANSACTION
@@ -511,7 +494,6 @@ BEGIN
     
 
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -526,7 +508,7 @@ BEGIN
             N.D_VAR_PAM_KEY
         INTO #L_VAR_PAM
         FROM DBO.NRT_VAR_PAM_KEY N with (nolock)
-        INNER JOIN #S_VAR_PAM S with (nolock)
+        INNER JOIN #S_VAR_PAM S
             ON 	N.VAR_PAM_UID= S.VAR_PAM_UID;
        
 
@@ -536,9 +518,7 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
-        
-        COMMIT TRANSACTION;
-    
+            
 --------------------------------------------------------------------------------------------------------
 
     BEGIN TRANSACTION
@@ -676,7 +656,7 @@ BEGIN
             IGM_TEST_RESULT_VALUE = L.IGM_TEST_RESULT_VALUE,
             LAST_CHG_TIME  = L.LAST_CHG_TIME,
             COMPLICATIONS_OTHER_SPECIFY = L.COMPLICATIONS_OTHER_SPECIFY
-        FROM #L_VAR_PAM L  with (nolock)
+        FROM #L_VAR_PAM L
         inner join DBO.D_VAR_PAM D with (nolock)
             ON D.D_VAR_PAM_KEY = L.D_VAR_PAM_KEY
         WHERE D.D_VAR_PAM_KEY IS not null;
@@ -745,7 +725,7 @@ BEGIN
             L.VARICELLA_NO_VACCINE_OTHER, L.IGG_TEST_ACUTE_VALUE, L.TRANSMISSION_SETTING_OTHER, L.IMMUNOCOMPROMISED_CONDITION, L.LAB_TESTING_OTHER_RESULT_VALUE, L.VACCINE_LOT_3, L.MEDICATION_NAME_OTHER,
             L.PREVIOUS_DIAGNOSIS_BY_OTHER, L.RASH_LOCATION_OTHER, L.IGG_TEST_CONVALESCENT_VALUE, L.IGM_TEST_TYPE_OTHER, L.PCR_TEST_RESULT_OTHER, L.VACCINE_LOT_2, L.IGM_TEST_RESULT_VALUE,
             L.LAST_CHG_TIME , L.COMPLICATIONS_OTHER_SPECIFY
-        FROM #L_VAR_PAM L  with (nolock)
+        FROM #L_VAR_PAM L
         LEFT join DBO.D_VAR_PAM D with (nolock)
             ON D.D_VAR_PAM_KEY = L.D_VAR_PAM_KEY
         WHERE D.D_VAR_PAM_KEY IS null;
