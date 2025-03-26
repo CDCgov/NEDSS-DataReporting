@@ -1032,15 +1032,7 @@ databaseChangeLog:
             path: 044-sp_d_vaccination_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 140
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 054-create_f_var_pam-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 195
+      id: 139.01
       author: liquibase
       runOnChange: true
       changes:
@@ -1048,7 +1040,7 @@ databaseChangeLog:
             path: 075-create_d_disease_site_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 250
+      id: 139.02
       author: liquibase
       runOnChange: true
       changes:
@@ -1056,7 +1048,7 @@ databaseChangeLog:
             path: 063-create_d_tb_pam-001.sql
             splitStatements: false
   - changeSet:
-      id: 265
+      id: 139.03
       author: liquibase
       runOnChange: true
       changes:
@@ -1064,7 +1056,7 @@ databaseChangeLog:
             path: 081-create_d_addl_risk_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 350
+      id: 139.04
       author: liquibase
       runOnChange: true
       changes:
@@ -1072,7 +1064,7 @@ databaseChangeLog:
             path: 098-create_d_move_cntry_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 375
+      id: 139.05
       author: liquibase
       runOnChange: true
       changes:
@@ -1080,7 +1072,7 @@ databaseChangeLog:
             path: 105-create_d_gt_12_reas_group-001.sql
             splitStatements: false   
   - changeSet:
-      id: 400
+      id: 139.06
       author: liquibase
       runOnChange: true
       changes:
@@ -1088,7 +1080,7 @@ databaseChangeLog:
             path: 113-create_d_move_cnty_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 425
+      id: 139.07
       author: liquibase
       runOnChange: true
       changes:
@@ -1096,7 +1088,7 @@ databaseChangeLog:
             path: 121-create_d_hc_prov_ty_3_group-001.sql
             splitStatements: false  
   - changeSet:
-      id: 450
+      id: 139.08
       author: liquibase
       runOnChange: true
       changes:
@@ -1104,7 +1096,7 @@ databaseChangeLog:
             path: 129-create_d_move_state_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 475
+      id: 139.09
       author: liquibase
       runOnChange: true
       changes:
@@ -1112,7 +1104,7 @@ databaseChangeLog:
             path: 137-create_d_out_of_cntry_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 500
+      id: 139.10
       author: liquibase
       runOnChange: true
       changes:
@@ -1120,12 +1112,20 @@ databaseChangeLog:
             path: 145-create_d_moved_where_group-001.sql
             splitStatements: false
   - changeSet:
-      id: 525
+      id: 139.11
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
             path: 153-create_d_smr_exam_ty_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 140
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 054-create_f_var_pam-001.sql
             splitStatements: false
   - changeSet:
       id: 141

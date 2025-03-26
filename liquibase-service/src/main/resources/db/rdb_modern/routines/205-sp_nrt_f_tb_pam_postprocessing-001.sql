@@ -41,8 +41,6 @@ BEGIN
                 
 --------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
-
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -80,12 +78,8 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-        
 --------------------------------------------------------------------------------------------------------
         
-        BEGIN TRANSACTION
-
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -115,13 +109,8 @@ BEGIN
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-        COMMIT TRANSACTION;
 
 ---------------------------------------------------------------------------------------------------------------------        
-
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -155,10 +144,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -169,10 +155,11 @@ BEGIN
                 DROP TABLE #D_MOVE_STATE;
 
             -- Create temporary tables for distinct group keys
-            SELECT DISTINCT D_MOVE_STATE_GROUP_KEY, TB_PAM_UID
+            SELECT DISTINCT D.D_MOVE_STATE_GROUP_KEY, D.TB_PAM_UID
             INTO #D_MOVE_STATE  
-            FROM [dbo].D_MOVE_STATE WITH (NOLOCK); 
-
+            FROM [dbo].D_MOVE_STATE D WITH (NOLOCK)
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
+            
             --CREATE NONCLUSTERED INDEX IX_D_MOVE_STATE_TB_PAM_UID ON #D_MOVE_STATE (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -186,11 +173,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;   
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -203,8 +186,8 @@ BEGIN
             SELECT DISTINCT D.D_HC_PROV_TY_3_GROUP_KEY, D.TB_PAM_UID
             INTO #D_HC_PROV_TY_3  
             FROM [dbo].D_HC_PROV_TY_3 D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
-
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
+            
             --CREATE NONCLUSTERED INDEX IX_D_HC_PROV_TY_3_TB_PAM_UID ON #D_HC_PROV_TY_3 (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -218,12 +201,8 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -236,8 +215,8 @@ BEGIN
             SELECT DISTINCT D.D_DISEASE_SITE_GROUP_KEY, D.TB_PAM_UID
             INTO #D_DISEASE_SITE  
             FROM [dbo].D_DISEASE_SITE D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
-
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
+            
             --CREATE NONCLUSTERED INDEX IX_D_DISEASE_SITE_TB_PAM_UID ON #D_DISEASE_SITE (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -251,11 +230,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -268,8 +243,8 @@ BEGIN
             SELECT DISTINCT D.D_ADDL_RISK_GROUP_KEY, D.TB_PAM_UID
             INTO #D_ADDL_RISK  
             FROM [dbo].D_ADDL_RISK D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
-
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
+            
             --CREATE NONCLUSTERED INDEX IX_D_ADDL_RISK_TB_PAM_UID ON #D_ADDL_RISK (TB_PAM_UID);
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -283,12 +258,8 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
-
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
- 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -301,7 +272,7 @@ BEGIN
             SELECT DISTINCT D.D_MOVE_CNTY_GROUP_KEY, D.TB_PAM_UID
             INTO #D_MOVE_CNTY  
             FROM [dbo].D_MOVE_CNTY D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
 
             --CREATE NONCLUSTERED INDEX IX_D_MOVE_CNTY_TB_PAM_UID ON #D_MOVE_CNTY (TB_PAM_UID);
     
@@ -317,11 +288,7 @@ BEGIN
             VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                     @RowCount_no);
         
-        COMMIT TRANSACTION; 
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -334,7 +301,7 @@ BEGIN
             SELECT DISTINCT D.D_GT_12_REAS_GROUP_KEY, D.TB_PAM_UID
             INTO #D_GT_12_REAS  
             FROM [dbo].D_GT_12_REAS D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
 
             --CREATE NONCLUSTERED INDEX IX_D_GT_12_REAS_TB_PAM_UID ON #D_GT_12_REAS (TB_PAM_UID);
 
@@ -349,11 +316,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -366,7 +329,7 @@ BEGIN
             SELECT DISTINCT D.D_MOVE_CNTRY_GROUP_KEY, D.TB_PAM_UID
             INTO #D_MOVE_CNTRY  
             FROM [dbo].D_MOVE_CNTRY D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
 
             --CREATE NONCLUSTERED INDEX IX_D_MOVE_CNTRY_TB_PAM_UID ON #D_MOVE_CNTRY (TB_PAM_UID);
 
@@ -381,11 +344,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -398,7 +357,7 @@ BEGIN
             SELECT DISTINCT D.D_MOVED_WHERE_GROUP_KEY, D.TB_PAM_UID
             INTO #D_MOVED_WHERE  
             FROM [dbo].D_MOVED_WHERE D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
 
             --CREATE NONCLUSTERED INDEX IX_D_MOVED_WHERE_TB_PAM_UID ON #D_MOVED_WHERE (TB_PAM_UID);
 
@@ -413,11 +372,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -430,7 +385,7 @@ BEGIN
             SELECT DISTINCT D.D_SMR_EXAM_TY_GROUP_KEY, D.TB_PAM_UID
             INTO #D_SMR_EXAM_TY  
             FROM [dbo].D_SMR_EXAM_TY D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
 
             --CREATE NONCLUSTERED INDEX IX_D_SMR_EXAM_TY_TB_PAM_UID ON #D_SMR_EXAM_TY (TB_PAM_UID);
 
@@ -445,11 +400,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;               
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -462,7 +413,7 @@ BEGIN
             SELECT DISTINCT D.D_OUT_OF_CNTRY_GROUP_KEY, D.TB_PAM_UID
             INTO #D_OUT_OF_CNTRY  
             FROM [dbo].D_OUT_OF_CNTRY D WITH (NOLOCK)
-            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = D.TB_PAM_UID;
+            INNER JOIN #F_S_TB_PAM S on S.TB_PAM_UID = D.TB_PAM_UID;
 
             --CREATE NONCLUSTERED INDEX IX_D_OUT_OF_CNTRY_TB_PAM_UID ON #D_OUT_OF_CNTRY (TB_PAM_UID);
 
@@ -477,11 +428,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;           
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -514,12 +461,8 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;    
-
 -------------------------------------------------------------------------------------------
         
-        BEGIN TRANSACTION
-
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -551,11 +494,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;          
-    
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -588,11 +527,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;       
-
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -625,16 +560,12 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;       
-
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'DELETE INCOMING RECORDS FROM F_TB_PAM';
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETE INCOMING RECORDS FROM F_TB_PAM';
 
             IF OBJECT_ID('tempdb..#F_TB_PAM_D') IS NOT NULL
                 DROP TABLE #F_TB_PAM_D;
@@ -663,7 +594,6 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;          
 -------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
@@ -739,7 +669,7 @@ BEGIN
             LEFT OUTER JOIN [dbo].RDB_DATE d2 WITH (NOLOCK) 
                 ON CONVERT(DATE, d2.DATE_MM_DD_YYYY) = CONVERT(DATE, i.LAST_CHG_TIME);
                 
-            INSERT INTO F_TB_PAM (
+            INSERT INTO [dbo].F_TB_PAM (
                 PERSON_KEY,
                 D_TB_PAM_KEY,
                 PROVIDER_KEY,
