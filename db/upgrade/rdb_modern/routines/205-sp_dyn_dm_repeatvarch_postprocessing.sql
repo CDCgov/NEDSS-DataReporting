@@ -12,6 +12,7 @@ BEGIN TRY
 	DECLARE @RowCount_no INT ;
 	DECLARE @Proc_Step_no FLOAT = 0 ;
 	DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
+	--DECLARE @DATAMART_NAME VARCHAR = 'GENERIC_V2';
 	DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART' ;
 	DECLARE @package_Name VARCHAR(100) = 'sp_dyn_dm_repeatvarch_postprocessing: '+ @DATAMART_NAME;
 
@@ -23,7 +24,7 @@ BEGIN TRY
     DECLARE @tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL varchar(500) = '[dbo].tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar);
 
     --temporary table used only in this proc
-    DECLARE @tmp_DynDm_REPEAT_BLOCK varchar(500) = '[dbo].tmp_DynDm_REPEAT_BLOCK_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar);
+	DECLARE @tmp_DynDm_REPEAT_BLOCK varchar(500) = '[dbo].tmp_DynDm_REPEAT_BLOCK_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar);
 
 	DECLARE @ddl_sql_invreptvarchar nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR [bigint] NULL)';
 	DECLARE @ddl_sql_reptblkvarchar nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_REPEAT_BLOCK_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY_REPEAT_BLOCK_VARCHAR_ALL [bigint] NULL)';
@@ -468,7 +469,7 @@ and copying the values that were for the corresponding user_defined_column_nm fo
  	if object_id( @tmp_DynDm_REPEAT_BLOCK) is not null
  	begin
  	    declare @dsql nvarchar(500) = 'drop table '+ @tmp_DynDm_REPEAT_BLOCK;
- 		print @dsql;
+ 		--print @dsql;
  		exec sp_executesql @dsql;
  	end
 
@@ -518,8 +519,8 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 
 
 
-    SET @sql = N' select  INVESTIGATION_KEY, BLOCK_NM BLOCK_NM_REPEAT_BLOCK_OUT, ANSWER_GROUP_SEQ_NBR ANSWER_GROUP_SEQ_NBR_REPEAT_BLOCK_OUT,variable as RDB_COLUMN_NM_REPEAT_BLOCK_OUT,value as COL1 '+
-        ' into #tmp_DynDm_REPEAT_BLOCK_OUT'+
+    SET @sql = ' insert into #tmp_DynDm_REPEAT_BLOCK_OUT ' +
+        ' select  INVESTIGATION_KEY, BLOCK_NM as BLOCK_NM_REPEAT_BLOCK_OUT, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_REPEAT_BLOCK_OUT,variable as RDB_COLUMN_NM_REPEAT_BLOCK_OUT,value as COL1 '+
         ' from ( '+
         ' select INVESTIGATION_KEY, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, '+ @RDB_COLUMN_COMMA_LIST +
         ' from  dbo.tmp_DynDm_REPEAT_BLOCK_' + @DATAMART_NAME + cast(@batch_id as varchar) +
@@ -536,7 +537,6 @@ and copying the values that were for the corresponding user_defined_column_nm fo
     if @debug = 'true'
     	select 'tmp_DynDm_REPEAT_BLOCK_OUT',* from #tmp_DynDm_REPEAT_BLOCK_OUT
 
-	print 'completed tmp_DynDm_REPEAT_BLOCK_OUT';
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
  	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -565,7 +565,6 @@ and copying the values that were for the corresponding user_defined_column_nm fo
         RDB_COLUMN_NM,
         BLOCK_NM;
 
-print 'completed tmp_DynDm_BLOCK_DATA_UNIT';
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -589,7 +588,6 @@ print 'completed tmp_DynDm_BLOCK_DATA_UNIT';
         RDB_COLUMN_NM,
         BLOCK_NM;
 
-print 'completed tmp_DynDm_BLOCK_DATA_OTH';
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -612,7 +610,6 @@ print 'completed tmp_DynDm_BLOCK_DATA_OTH';
     FROM
     	#tmp_DynDm_BLOCK_DATA_OTH;
 
-print 'completed #tmp_DynDm_BLOCK_DATA';
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -636,7 +633,6 @@ print 'completed #tmp_DynDm_BLOCK_DATA';
 	    ;
 
 
-print 'completed #tmp_DynDm_REPEAT_BLOCK_OUT_BASE';
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -683,7 +679,6 @@ print 'completed #tmp_DynDm_REPEAT_BLOCK_OUT_BASE';
     	ANSWER_DESC21 = substring(ANSWER_DESC21,3, len(ANSWER_DESC21))
     where 1=1;
 
-print 'completed ##tmp_DynDm_REPEAT_BLOCK_OUT_ALL';
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -713,7 +708,6 @@ print 'completed ##tmp_DynDm_REPEAT_BLOCK_OUT_ALL';
 
     exec tempdb.sys.sp_rename N'#tmp_DynDm_REPEAT_BLOCK_OUT_BASE.COL1', N'DATA_VALUE', N'COLUMN';
 
-print 'completed ###tmp_DynDm_METADATA_OUT2';
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -743,7 +737,6 @@ print 'completed ###tmp_DynDm_METADATA_OUT2';
 	if @debug = 'true'
 		select 'tmp_DynDm_METADATA_MERGED_INIT',* from #tmp_DynDm_METADATA_MERGED_INIT;
 
-print 'completed ####tmp_DynDm_METADATA_MERGED_INIT';
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -752,7 +745,7 @@ print 'completed ####tmp_DynDm_METADATA_MERGED_INIT';
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-
+    begin transaction;
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR';
 
@@ -789,12 +782,12 @@ print 'completed ####tmp_DynDm_METADATA_MERGED_INIT';
 		        group by [INVESTIGATION_KEY], [DATA_VALUE] , [COL1]
 		            ) AS j PIVOT (max(DATA_VALUE) FOR [COL1] in
 		            ('+STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '')+')) AS p;';
-		    print @sql;
+		    if @debug='true'
+		        select '@tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR', @sql;
 		    EXEC sp_executesql @sql;
     	end
 
-
-print 'completed tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_';
+    commit transaction;
 
 --    if @debug = 'true'
 --        begin
@@ -848,7 +841,6 @@ print 'completed #tmp_DynDm_INVESTIGATION_REPEAT_ALL';
 	LEFT OUTER JOIN #tmp_DynDm_REPEAT_BLOCK_OUT_ALL rboa ON
 		UPPER(ra.RDB_COLUMN_NM) = UPPER(rboa.RDB_COLUMN_NM_REPEAT_BLOCK_OUT);
 
-print 'completed #tmp_DynDm_REPEAT_BLOCK_METADATA_OUT';
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -859,7 +851,7 @@ print 'completed #tmp_DynDm_REPEAT_BLOCK_METADATA_OUT';
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-
+    begin transaction;
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL
 
@@ -890,16 +882,16 @@ print 'completed #tmp_DynDm_REPEAT_BLOCK_METADATA_OUT';
 			        group by [INVESTIGATION_KEY], [ANSWER_DESC21] , [USER_DEFINED_COLUMN_NM_ALL]
 			            ) AS j PIVOT (max(ANSWER_DESC21) FOR [USER_DEFINED_COLUMN_NM_ALL] in
 			            ('+STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '')+')) AS p;';
-		    print @sql;
+		    if @debug='true'
+		        select '@tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL', @sql;
 		    exec sp_executesql @sql;
 	    end
 
     if @debug = 'true'
-        begin
 	    exec('select * from '+@tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL);
-   		end
 
-print 'completed '+@tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL;
+    commit transaction;
+
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -912,14 +904,13 @@ print 'completed '+@tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL;
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = 'GENERATING  COLUMN_CHANGE';
 
-   declare @altersql nvarchar(500) = '';
-   set @altersql = 'exec sp_rename '+ @tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR +'.INVESTIGATION_KEY, INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR, COLUMN';
-   exec (@altersql);
-   set @altersql = 'exec sp_rename '+ @tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL +'.INVESTIGATION_KEY, INVESTIGATION_KEY_REPEAT_BLOCK_VARCHAR_ALL, COLUMN';
-   exec (@altersql);
+--    declare @altersql nvarchar(500) = '';
+--    set @altersql = 'exec sp_rename '+ @tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR +'.INVESTIGATION_KEY, INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR, COLUMN';
+--    exec (@altersql);
+--    set @altersql = 'exec sp_rename '+ @tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL +'.INVESTIGATION_KEY, INVESTIGATION_KEY_REPEAT_BLOCK_VARCHAR_ALL, COLUMN';
+--    exec (@altersql);
 
 
-    print 'completed '
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = 'SP_COMPLETE';
