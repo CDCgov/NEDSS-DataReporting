@@ -1758,7 +1758,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 023-v_nrt_d_inv_repeat_blockdata-001.sql
+            path: 022-v_nrt_d_inv_repeat_blockdata-001.sql
             splitStatements: false
   - changeSet:
       id: 560
@@ -1767,4 +1767,20 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 565
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 023-v_nrt_d_inv_repeat_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 570
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 210-sp_dyn_dm_repeatdate_postprocessing-001.sql
             splitStatements: false

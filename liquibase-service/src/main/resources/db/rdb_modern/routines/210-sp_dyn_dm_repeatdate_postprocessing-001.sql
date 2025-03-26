@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_repeatdatedata_postprocessing
+CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_repeatdate_postprocessing
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100),
     @id_list nvarchar(max),
