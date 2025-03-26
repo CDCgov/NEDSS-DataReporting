@@ -119,7 +119,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 
 
  SELECT  rdb_column_nm_list , isd.INVESTIGATION_KEY
-	        into #tmp_DynDm_Investigation_Data
+	        into dbo.tmp_DynDm_Investigation_Data
 	        FROM dbo.INVESTIGATION inv with ( nolock)
 	           INNER JOIN #tmp_DynDm_SUMM_DATAMART isd ON	isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
 	           inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on isd.DISEASE_GRP_CD =  inv_meta.INVESTIGATION_FORM_CD
@@ -257,7 +257,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 	into #tmp_DynDm_INV_SUMM_DATAMART
 	FROM dbo.INV_SUMM_DATAMART with ( nolock)
 	INNER JOIN #tmp_DynDm_Investigation_Data d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY
-	inner join dbo.investigation nrt_inv on nrt_inv.d_investigation_key =  d.INVESTIGATION_KEY
+	inner join dbo.investigation nrt_inv with ( nolock ) on nrt_inv.investigation_key =  d.INVESTIGATION_KEY
 	and  nrt_inv.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
 	;
@@ -342,7 +342,7 @@ FROM  #tmp_DynDm_PAT_METADATA;
 	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Patient_Data';
 
 
-     IF OBJECT_ID('#tmp_DynDm_Patient_Data', 'U') IS NOT NULL
+     IF OBJECT_ID('dbo.tmp_DynDm_Patient_Data', 'U') IS NOT NULL
  				drop table #tmp_DynDm_Patient_Data;
 
 	/*
