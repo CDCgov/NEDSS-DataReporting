@@ -1768,3 +1768,11 @@ databaseChangeLog:
         - sqlFile:
             path: 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 565
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 210-sp_dyn_dm_main_postprocessing-001.sql
+            splitStatements: false
