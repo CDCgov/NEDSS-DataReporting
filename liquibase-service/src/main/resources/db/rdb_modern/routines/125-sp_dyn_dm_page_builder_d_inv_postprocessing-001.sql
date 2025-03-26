@@ -492,11 +492,11 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 	;
 --
 --
---		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('dbo.#tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_dissesgrp')
+--		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('#tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_dissesgrp')
 --		CREATE NONCLUSTERED INDEX  idx_tmp_summart_dissesgrp ON [dbo].[#tmp_DynDm_SUMM_DATAMART] ([DISEASE_GRP_CD]);
 --
 --
---		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('dbo.#tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_invkey')
+--		IF  NOT EXISTS(SELECT * FROM sys.indexes WHERE object_id = object_id('#tmp_DynDM_SUMM_DATAMART') AND NAME ='idx_tmp_summart_invkey')
 --		CREATE CLUSTERED INDEX idx_tmp_summart_invkey ON [dbo].[#tmp_DynDM_SUMM_DATAMART]( [INVESTIGATION_KEY] ASC);
 
 
@@ -565,9 +565,9 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 		else
 		  Begin
 
-		SET @SQL = '  SELECT  distinct '+@listStr + ' #tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
+		SET @SQL = '  SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
 						'    into #tmp_DynDM_'+@RDB_TABLE_NM +
-						'    FROM dbo.#tmp_DynDM_SUMM_DATAMART with (nolock) '
+						'    FROM #tmp_DynDM_SUMM_DATAMART with (nolock) '
 						;
 
 			 -- select 2,@SQL;
