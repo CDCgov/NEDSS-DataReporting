@@ -69,7 +69,7 @@ SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_N
     into #tmp_DynDm_SUMM_DATAMART
      FROM dbo.INV_SUMM_DATAMART isd with ( nolock)
        INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
-       INNER JOIN dbo.nrt_investigation_key nrt_inv_key with (nolock) ON isd.investigation_key = nrt_inv_key.d_investigation_key
+       INNER JOIN dbo.INVESTIGATION nrt_inv_key with (nolock) ON isd.investigation_key = nrt_inv_key.investigation_key
     -- and  nrt_inv_key.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
 	   if @debug = 'true'
