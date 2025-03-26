@@ -10,7 +10,7 @@ BEGIN
             declare @proc_step_name varchar(200) = '';
             declare @batch_id bigint;
             declare @dataflow_name varchar(200) = 'd_var_pam POST-Processing';
-            declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_d_var_pam_postprocessing';
+            declare @package_name varchar(200) = 'sp_nrt_d_var_pam_postprocessing';
                 set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
