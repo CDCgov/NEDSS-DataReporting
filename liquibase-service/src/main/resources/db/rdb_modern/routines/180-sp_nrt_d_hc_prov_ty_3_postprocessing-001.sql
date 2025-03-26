@@ -10,7 +10,7 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
-	DECLARE @Dataflow_Name VARCHAR(200) = 'D_HC_PROV_TY_3 Post-Processing Event';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'D_HC_PROV_TY_3 POST-Processing';
 	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_d_hc_prov_ty_3_postprocessing';
 
     BEGIN TRY
