@@ -1,4 +1,3 @@
-/*CNDE-2152: Stopgap for INV_SUMM_DATAMART Requirements. Foreign key constraints will be added after the completion of TB Datamart migration.*/
 IF NOT EXISTS (SELECT 1
                FROM sysobjects
                WHERE name = 'F_TB_PAM'
