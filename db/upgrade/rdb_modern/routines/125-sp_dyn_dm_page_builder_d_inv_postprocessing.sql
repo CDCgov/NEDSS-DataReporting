@@ -551,7 +551,7 @@ IF OBJECT_ID(@TableName) IS NOT NULL
 		  Begin
 
 			 SET @SQL = '   SELECT distinct  '+@listStr + ' tmp.INVESTIGATION_KEY ' +
-						'    into #tmp_DynDM_'+@RDB_TABLE_NM +
+						'    into dbo.tmp_DynDM_'+@RDB_TABLE_NM +
 						'    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)'+
 						'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
 						'		INNER JOIN  dbo.'+@RDB_TABLE_NM+'  with (nolock) ON	'+@FACT_CASE+'.'+@DIM_KEY+'  = '+@RDB_TABLE_NM+'.'+@DIM_KEY +
