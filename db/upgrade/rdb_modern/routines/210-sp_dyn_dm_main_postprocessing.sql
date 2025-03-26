@@ -10,12 +10,37 @@ BEGIN
     DECLARE @DATAMART_TABLE_NAME varchar(100);
     DECLARE @batch_id BIGINT;
     DECLARE @DATAFLOW_NAME VARCHAR(100) = 'Main Dynamic Datamart POST-Processing';
-    DECLARE @PACKAGE_NAME VARCHAR(100) = 'RDB_MODERN.sp_dyn_dm_main_postprocessing';
+    DECLARE @PACKAGE_NAME VARCHAR(100) = 'sp_dyn_dm_main_postprocessing';
 
     -- Input validation
     IF @datamart_name IS NULL OR LEN(LTRIM(RTRIM(@datamart_name))) = 0
         BEGIN
+            -- Log the validation error to job_flow_log
+            INSERT INTO [dbo].[job_flow_log] (
+                batch_id,
+                [Dataflow_Name],
+                [package_Name],
+                [Status_Type],
+                [step_number],
+                [step_name],
+                [row_count],
+                [Msg_Description1],
+                [Error_Description]
+            )
+            VALUES (
+                       @batch_id,
+                       @DATAFLOW_NAME,
+                       @PACKAGE_NAME,
+                       'ERROR',
+                       0,
+                       'Input Validation',
+                       0,
+                       'Missing required parameter',
+                       'Parameter @datamart_name is required'
+                   );
+
             RAISERROR('Parameter @datamart_name is required', 16, 1);
+
             RETURN -1;
         END
 
