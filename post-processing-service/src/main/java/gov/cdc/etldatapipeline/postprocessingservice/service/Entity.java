@@ -51,7 +51,7 @@ enum Entity {
     D_SMR_EXAM_TY(0, "d_smr_exam_ty", Constants.PHC_UID, "sp_nrt_d_smr_exam_ty_postprocessing"),
     F_TB_PAM(0, "f_tb_pam", Constants.PHC_UID, "sp_f_tb_pam_postprocessing"),    
     TB_PAM_LDF(0, "tb_pam_ldf", Constants.PHC_UID, "sp_nrt_tb_pam_ldf_postprocessing"),
-    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
+    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
 
     private final int priority;
     private final String entityName;
