@@ -1120,6 +1120,14 @@ databaseChangeLog:
             path: 153-create_d_smr_exam_ty_group-001.sql
             splitStatements: false
   - changeSet:
+      id: 139.12
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 165-create_d_var_pam-001.sql
+            splitStatements: false
+  - changeSet:
       id: 140
       author: liquibase
       runOnChange: true
@@ -1774,5 +1782,21 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 205-sp_nrt_f_tb_pam_postprocessing-001.sql
+            path: 206-sp_f_tb_pam_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 570
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 166-create_nrt_var_pam_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 575
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 215-sp_nrt_d_var_pam_postprocessing-001.sql
+            splitStatements: false              

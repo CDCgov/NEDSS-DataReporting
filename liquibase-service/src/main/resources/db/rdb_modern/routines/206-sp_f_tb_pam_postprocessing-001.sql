@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_f_tb_pam_postprocessing] 
+CREATE OR ALTER PROCEDURE [dbo].[sp_f_tb_pam_postprocessing] 
     @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
@@ -11,33 +11,30 @@ BEGIN
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
 	DECLARE @Dataflow_Name VARCHAR(200) = 'F_TB_PAM POST-Processing';
-	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_f_tb_pam_postprocessing';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_f_tb_pam_postprocessing';
 
     BEGIN TRY
         
 
         SET @Proc_Step_Name = 'SP_Start';
 
-        BEGIN TRANSACTION
+        INSERT INTO dbo.job_flow_log ( batch_id
+                                    , [Dataflow_Name]
+                                    , [package_Name]
+                                    , [Status_Type]
+                                    , [step_number]
+                                    , [step_name]
+                                    , [row_count]
+                                    , [Msg_Description1])
+        VALUES ( @batch_id
+            , @Dataflow_Name
+            , @Package_Name
+            , 'START'
+            , @Proc_Step_no
+            , @Proc_Step_Name
+            , 0
+            , LEFT('ID List-' + @phc_id_list, 500));
 
-            INSERT INTO dbo.job_flow_log ( batch_id
-                                        , [Dataflow_Name]
-                                        , [package_Name]
-                                        , [Status_Type]
-                                        , [step_number]
-                                        , [step_name]
-                                        , [row_count]
-                                        , [Msg_Description1])
-            VALUES ( @batch_id
-                , @Dataflow_Name
-                , @Package_Name
-                , 'START'
-                , @Proc_Step_no
-                , @Proc_Step_Name
-                , 0
-                , LEFT('ID List-' + @phc_id_list, 500));
-
-        COMMIT TRANSACTION;
                 
 --------------------------------------------------------------------------------------------------------
 
