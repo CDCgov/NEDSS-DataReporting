@@ -1745,12 +1745,28 @@ databaseChangeLog:
             path: 200-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 575
+      id: 550
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 021-v_nrt_srte_state_code-001.sql
+            path: 021-v_nrt_nbs_repeatvarch_rdb_table_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 555
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 023-v_nrt_d_inv_repeat_blockdata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 560
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 580
@@ -1758,10 +1774,18 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 171-create_tb_pam_ldf.sql
+            path: 021-v_nrt_srte_state_code-001.sql
             splitStatements: false
   - changeSet:
       id: 585
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 171-create_tb_pam_ldf.sql
+            splitStatements: false
+  - changeSet:
+      id: 590
       author: liquibase
       runOnChange: true
       changes:
