@@ -13,7 +13,8 @@ BEGIN
 		DECLARE @batch_start_time datetime = null ;
 		DECLARE @batch_end_time datetime = null ;
 		DECLARE @nbs_page_form_cd varchar(200)=''
-
+		DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
+	    DECLARE @Package_Name varchar(200)='DynDM_Manage_Case_Management '+@DATAMART_NAME;
 
 
 	SET @Proc_Step_no = 1;
@@ -36,7 +37,7 @@ BEGIN
 		   VALUES
            (
 		   @batch_id
-           ,'DYNAMIC_DATAMART'
+           ,@Dataflow_Name
            ,'DBO.DynDM_Manage_Case_Management ' + @DATAMART_NAME
 		   ,'START'
 		   ,@Proc_Step_no
@@ -85,7 +86,7 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 				SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
  INSERT INTO dbo.[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'RDB.DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME  ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -126,7 +127,7 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
  INSERT INTO dbo.[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- VALUES ( @batch_id ,'DYNAMIC_DATAMART' ,'RDB.DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME  ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
+ VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no , @Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
@@ -151,8 +152,8 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 						   VALUES
 						   (
 						   @batch_id,
-						   'DYNAMIC_DATAMART'
-						   ,'RDB.DBO.DynDM_Manage_Case_Management '+@DATAMART_NAME
+						   @Dataflow_Name
+						   ,@Package_Name
 						   ,'COMPLETE'
 						   ,@Proc_Step_no
 						   ,@Proc_Step_name
@@ -170,34 +171,30 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 
 
 
-	DECLARE @ErrorNumber INT = ERROR_NUMBER();
-    DECLARE @ErrorLine INT = ERROR_LINE();
-    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-    DECLARE @ErrorState INT = ERROR_STATE();
+	-- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
-
-    INSERT INTO dbo.[job_flow_log] (
-		    batch_id
-		   ,[Dataflow_Name]
-		   ,[package_Name]
-		    ,[Status_Type]
-           ,[step_number]
-           ,[step_name]
-           ,[Error_Description]
-		   ,[row_count]
-           )
-		   VALUES
-           (
-           @batch_id
-           ,'DYNAMIC_DATAMART'
-           ,'RDB.DBO.DynDM_Manage_Case_Management'
-		   ,'ERROR'
-		   ,@Proc_Step_no
-		   ,'ERROR - '+ @Proc_Step_name
-           , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(@ErrorMessage AS VARCHAR(500))
-           ,0
-		   );
+        INSERT INTO [dbo].[job_flow_log] ( batch_id
+                                         , [Dataflow_Name]
+                                         , [package_Name]
+                                         , [Status_Type]
+                                         , [step_number]
+                                         , [step_name]
+                                         , [Error_Description]
+                                         , [row_count])
+        VALUES ( @batch_id
+               , @Dataflow_Name
+               , @Package_Name
+               , 'ERROR'
+               , @Proc_Step_no
+               , @Proc_Step_name
+               , @FullErrorMessage
+               , 0);
 
 
       return -1 ;
