@@ -343,7 +343,7 @@ FROM  #tmp_DynDm_PAT_METADATA;
 
 
      IF OBJECT_ID('dbo.tmp_DynDm_Patient_Data', 'U') IS NOT NULL
- 				drop table #tmp_DynDm_Patient_Data;
+ 				drop table dbo.tmp_DynDm_Patient_Data;
 
 	/*
 	SET @SQL = ' SELECT  '+@listStr +' , #tmp_DynDm_SUMM_DATAMART.INVESTIGATION_KEY ' +
@@ -357,7 +357,7 @@ FROM  #tmp_DynDm_PAT_METADATA;
 
 */
 	 SELECT  pat_meta.rdb_column_nm_list , isd.INVESTIGATION_KEY
-	            into #tmp_DynDm_Patient_Data
+	            into dbo.tmp_DynDm_Patient_Data
 	            FROM dbo.D_PATIENT pat with ( nolock)
                    INNER JOIN #tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY
       	           inner join dbo.v_nrt_nbs_d_patient_rdb_table_metadata pat_meta on isd.DISEASE_GRP_CD =  pat_meta.INVESTIGATION_FORM_CD
@@ -366,7 +366,7 @@ FROM  #tmp_DynDm_PAT_METADATA;
 	  ;
 
 	    if @debug = 'true'
-      select * from #tmp_DynDm_Patient_Data;
+      select * from dbo.tmp_DynDm_Patient_Data;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
