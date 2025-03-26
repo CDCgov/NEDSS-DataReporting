@@ -38,7 +38,7 @@ BEGIN
            (
 		   @batch_id
            ,@Dataflow_Name
-           ,'DBO.DynDM_Manage_Case_Management ' + @DATAMART_NAME
+           ,@Package_Name
 		   ,'START'
 		   ,@Proc_Step_no
 		   ,@Proc_Step_Name
