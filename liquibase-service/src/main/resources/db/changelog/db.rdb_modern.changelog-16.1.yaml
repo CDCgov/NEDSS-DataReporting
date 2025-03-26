@@ -1032,6 +1032,14 @@ databaseChangeLog:
             path: 044-sp_d_vaccination_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 139.12
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 165-create_d_var_pam-001.sql
+            splitStatements: false
+  - changeSet:
       id: 139.14
       author: liquibase
       runOnChange: true
@@ -1777,6 +1785,22 @@ databaseChangeLog:
             path: 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 565
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 166-create_nrt_var_pam_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 570
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 215-sp_nrt_d_var_pam_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 620
       author: liquibase
       runOnChange: true
@@ -1808,3 +1832,4 @@ databaseChangeLog:
         - sqlFile:
             path: 230-sp_nrt_d_pcr_source_postprocessing-001.sql
             splitStatements: false
+                

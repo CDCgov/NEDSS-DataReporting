@@ -163,6 +163,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForDHcProvTy3(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDOutOfCntry(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDSmrExamTy(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDVarPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDPcrSource(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
         verify(investigationRepositoryMock, never()).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
@@ -170,7 +171,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(34, logs.size());
+        assertEquals(36, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -189,7 +190,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(38, logs.size());
+        assertEquals(40, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -207,7 +208,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(36, logs.size());
+        assertEquals(38, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -292,7 +293,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(36, logs.size());
+        assertEquals(38, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -571,19 +572,19 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(3).contains(userProfileTopic));
         assertTrue(topicLogList.get(4).contains(placeTopic));
         assertTrue(topicLogList.get(5).contains(invTopic));
-        assertTrue(topicLogList.get(20).contains(invTopic));
-        assertTrue(topicLogList.get(21).contains(ntfTopic));
-        assertTrue(topicLogList.get(22).contains(treatmentTopic));
-        assertTrue(topicLogList.get(23).contains(intTopic));
+        assertTrue(topicLogList.get(21).contains(invTopic));
+        assertTrue(topicLogList.get(22).contains(ntfTopic));
+        assertTrue(topicLogList.get(23).contains(treatmentTopic));
         assertTrue(topicLogList.get(24).contains(intTopic));
-        assertTrue(topicLogList.get(25).contains(cmTopic));
+        assertTrue(topicLogList.get(25).contains(intTopic));
         assertTrue(topicLogList.get(26).contains(cmTopic));
-        assertTrue(topicLogList.get(27).contains(ldfTopic));
-        assertTrue(topicLogList.get(28).contains(obsTopic));
-        assertTrue(topicLogList.get(29).contains(contactTopic));
+        assertTrue(topicLogList.get(27).contains(cmTopic));
+        assertTrue(topicLogList.get(28).contains(ldfTopic));
+        assertTrue(topicLogList.get(29).contains(obsTopic));
         assertTrue(topicLogList.get(30).contains(contactTopic));
-        assertTrue(topicLogList.get(31).contains(vacTopic));
+        assertTrue(topicLogList.get(31).contains(contactTopic));
         assertTrue(topicLogList.get(32).contains(vacTopic));
+        assertTrue(topicLogList.get(33).contains(vacTopic));
     }
 
     @Test
