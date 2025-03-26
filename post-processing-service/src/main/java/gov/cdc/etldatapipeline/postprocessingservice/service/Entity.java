@@ -48,6 +48,7 @@ enum Entity {
     D_HC_PROV_TY_3(0, "d_hc_prov_ty_3", Constants.PHC_UID, "sp_d_hc_prov_ty_3_postprocessing"),
     D_OUT_OF_CNTRY(0, "d_out_of_cntry", Constants.PHC_UID, "sp_nrt_d_out_of_cntry_postprocessing"),
     D_SMR_EXAM_TY(0, "d_smr_exam_ty", Constants.PHC_UID, "sp_nrt_d_smr_exam_ty_postprocessing"),
+    D_PCR_SOURCE(0, "d_pcr_source", Constants.PHC_UID, "sp_nrt_d_pcr_source_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;
