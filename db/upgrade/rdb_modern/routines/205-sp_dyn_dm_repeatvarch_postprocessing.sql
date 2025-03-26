@@ -901,8 +901,8 @@ print 'completed #tmp_DynDm_INVESTIGATION_REPEAT_ALL';
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  COLUMN_CHANGE';
+-- 	SET @Proc_Step_no = @Proc_Step_no + 1;
+-- 	SET @Proc_Step_Name = 'GENERATING  COLUMN_CHANGE';
 
 --    declare @altersql nvarchar(500) = '';
 --    set @altersql = 'exec sp_rename '+ @tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR +'.INVESTIGATION_KEY, INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR, COLUMN';
