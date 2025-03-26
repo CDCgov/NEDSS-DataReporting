@@ -1816,3 +1816,35 @@ databaseChangeLog:
         - sqlFile:
             path: 210-sp_dyn_dm_repeatdate_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 580
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 021-v_nrt_srte_state_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 585
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 171-create_tb_pam_ldf.sql
+            splitStatements: false
+  - changeSet:
+      id: 585.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 172-create_nrt_srte_code_value_clinical-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 590
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
+            splitStatements: false
