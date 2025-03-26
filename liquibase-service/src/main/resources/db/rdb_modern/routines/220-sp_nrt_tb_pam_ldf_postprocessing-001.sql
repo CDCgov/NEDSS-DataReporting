@@ -330,7 +330,7 @@ BEGIN
                 tb.ADD_TIME                
             INTO #LDF_TRANSLATED  
             FROM #LDF_BASE_COUNTRY_CONCAT tb
-            LEFT OUTER JOIN [dbo].INVESTIGATION inv
+            LEFT OUTER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
                 ON tb.TB_PAM_UID = inv.CASE_UID
             GROUP BY inv.INVESTIGATION_KEY, tb.TB_PAM_UID, tb.ADD_TIME;
 

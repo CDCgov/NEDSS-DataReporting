@@ -1785,6 +1785,14 @@ databaseChangeLog:
             path: 171-create_tb_pam_ldf.sql
             splitStatements: false
   - changeSet:
+      id: 585.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 172-create_nrt_srte_code_value_clinical-001.sql
+            splitStatements: false
+  - changeSet:
       id: 590
       author: liquibase
       runOnChange: true
