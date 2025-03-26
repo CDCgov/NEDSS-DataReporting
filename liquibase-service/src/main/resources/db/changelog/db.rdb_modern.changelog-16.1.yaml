@@ -1750,5 +1750,29 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
+            path: 021-v_nrt_nbs_repeatvarch_rdb_table_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 555
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 023-v_nrt_d_inv_repeat_blockdata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 560
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 565
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
             path: 205-sp_nrt_f_tb_pam_postprocessing-001.sql
             splitStatements: false
