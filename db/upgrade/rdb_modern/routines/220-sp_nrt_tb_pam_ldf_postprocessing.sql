@@ -47,7 +47,6 @@ BEGIN
 				public_health_case_uid,
 				batch_id,
 				add_user_id,
-				add_time,
 				last_chg_user_id
 			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
 			INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
@@ -59,7 +58,7 @@ BEGIN
             CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID,
             I.ADD_USER_ID,
             A.CODE_SET_GROUP_ID,
-            I.ADD_TIME,
+            A.NCA_ADD_TIME,
             I.LAST_CHG_USER_ID,
             A.LAST_CHG_TIME
         INTO #LDF_BASE  
@@ -68,7 +67,7 @@ BEGIN
 		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
         WHERE 
             A.LDF_STATUS_CD IN ('LDF_UPDATE', 'LDF_CREATE', 'LDF_PROCESSED')
-            AND A.RECORD_STATUS_CD IN ('Active', 'Inactive');
+            AND A.NUIM_RECORD_STATUS_CD IN ('Active', 'Inactive');
         
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -112,7 +111,7 @@ BEGIN
                 COALESCE(cvg.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.ADD_TIME,
+                tb.NCA_ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 cvg.CODE,
@@ -153,7 +152,7 @@ BEGIN
                 COALESCE(cvc.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.ADD_TIME,
+                tb.NCA_ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 tb.CODE,
@@ -194,7 +193,7 @@ BEGIN
                 COALESCE(vsc.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.ADD_TIME,
+                tb.NCA_ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 tb.CODE,
@@ -235,7 +234,7 @@ BEGIN
                 COALESCE(cc.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.ADD_TIME,
+                tb.NCA_ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 tb.CODE,
@@ -278,7 +277,7 @@ BEGIN
                     DATAMART_COLUMN_NM,
                     STRING_AGG(ANSWER_TXT, ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT) AS concatenated_answer_txt,
                     MAX(ADD_USER_ID) AS ADD_USER_ID,
-                    MAX(ADD_TIME) AS ADD_TIME,
+                    MAX(NCA_ADD_TIME) AS NCA_ADD_TIME,
                     MAX(LAST_CHG_USER_ID) AS LAST_CHG_USER_ID,
                     MAX(LAST_CHG_TIME) AS LAST_CHG_TIME,
                     MAX(CODE) AS CODE,
@@ -293,7 +292,7 @@ BEGIN
                 DATAMART_COLUMN_NM,
                 CASE WHEN LEN(concatenated_answer_txt) > 0 THEN concatenated_answer_txt ELSE NULL END AS ANSWER_TXT,
                 ADD_USER_ID,
-                ADD_TIME,
+                NCA_ADD_TIME,
                 LAST_CHG_USER_ID,
                 LAST_CHG_TIME,
                 CODE,
@@ -327,12 +326,14 @@ BEGIN
             SELECT    
                 inv.INVESTIGATION_KEY,             
                 tb.TB_PAM_UID,
-                tb.ADD_TIME                
+                tb.NCA_ADD_TIME                
             INTO #LDF_TRANSLATED  
             FROM #LDF_BASE_COUNTRY_CONCAT tb
             LEFT OUTER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
                 ON tb.TB_PAM_UID = inv.CASE_UID
-            GROUP BY inv.INVESTIGATION_KEY, tb.TB_PAM_UID, tb.ADD_TIME;
+            GROUP BY inv.INVESTIGATION_KEY, tb.TB_PAM_UID, tb.NCA_ADD_TIME;
+
+            --missing the pivot
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -390,7 +391,7 @@ BEGIN
             SELECT 
                 INVESTIGATION_KEY,
                 TB_PAM_UID,
-                ADD_TIME
+                NCA_ADD_TIME
             FROM #LDF_TRANSLATED
 
             SELECT @RowCount_no = @@ROWCOUNT;
