@@ -1128,6 +1128,14 @@ databaseChangeLog:
             path: 165-create_d_var_pam-001.sql
             splitStatements: false
   - changeSet:
+      id: 139.14
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 183-create_d_pcr_source_group-001.sql
+            splitStatements: false
+  - changeSet:
       id: 140
       author: liquibase
       runOnChange: true
@@ -1833,6 +1841,14 @@ databaseChangeLog:
             path: 171-create_tb_pam_ldf-001.sql
             splitStatements: false
   - changeSet:
+      id: 586
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 590
       author: liquibase
       runOnChange: true
@@ -1846,13 +1862,37 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
+            path: 225-sp_dyn_dm_main_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 595
+      id: 620
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 225-sp_dyn_dm_main_postprocessing-001.sql
+            path: 184-create_d_pcr_source-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 625
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 184-create_nrt_d_pcr_source_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 630
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 185-create_nrt_d_pcr_source_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 635
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 230-sp_nrt_d_pcr_source_postprocessing-001.sql
             splitStatements: false
