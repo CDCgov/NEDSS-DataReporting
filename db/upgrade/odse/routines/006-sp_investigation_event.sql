@@ -443,7 +443,9 @@ BEGIN
                                                         datamart_column_nm,
                                                         seq_nbr,
                                                         ldf_status_cd,
-                                                        nbs_ui_component_uid
+                                                        nbs_ui_component_uid,
+                                                        nca_add_time,
+                                                        nuim_record_status_cd
                                                  FROM (SELECT *,
                                                               ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt
                                                                   order by
@@ -477,7 +479,9 @@ BEGIN
                                                                              null as datamart_column_nm,
                                                                              pa.seq_nbr,
                                                                              nuim.ldf_status_cd,
-                                                                             nuim.nbs_ui_component_uid
+                                                                             nuim.nbs_ui_component_uid,
+                                                                             pa.add_time as nca_add_time,
+                                                                             nuim.record_status_cd as nuim_record_status_cd
                                                              from nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
                                                                       inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
                                                                                  on
@@ -528,7 +532,9 @@ BEGIN
                                                                  pq.datamart_column_nm,
                                                                  pa.seq_nbr,
                                                                  nuim.ldf_status_cd,
-                                                                 nuim.nbs_ui_component_uid
+                                                                 nuim.nbs_ui_component_uid,
+                                                                 pa.add_time as nca_add_time,
+                                                                 nuim.record_status_cd as nuim_record_status_cd
                                                              from nbs_odse.dbo.nbs_question pq with (nolock)
                                                                       join nbs_odse.dbo.nbs_case_answer pa with (nolock)
                                                                            on pq.nbs_question_uid = pa.nbs_question_uid
