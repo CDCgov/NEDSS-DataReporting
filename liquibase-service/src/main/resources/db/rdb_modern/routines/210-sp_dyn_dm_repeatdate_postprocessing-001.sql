@@ -1,7 +1,7 @@
 CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_repeatdate_postprocessing
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100),
-    @id_list nvarchar(max),
+    @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
 BEGIN
@@ -49,7 +49,7 @@ BEGIN
                , @Proc_Step_no
                , @Proc_Step_Name
                , 0
-               , LEFT(@id_list, 500))
+               , LEFT(@phc_id_list, 500))
 
 
         SET @temp_sql = '
@@ -414,7 +414,7 @@ BEGIN
                  INNER JOIN dbo.v_condition_dim c
                             ON isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
                  INNER JOIN dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.INVESTIGATION_KEY
-            and I.case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
+            and I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDm_SUMM_DATAMART;
@@ -991,7 +991,7 @@ BEGIN
                , @Proc_Step_no
                , @proc_step_name
                , 0
-               , LEFT(@id_list, 500)
+               , LEFT(@phc_id_list, 500)
                , @FullErrorMessage);
 
 

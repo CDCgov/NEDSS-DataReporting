@@ -1848,3 +1848,11 @@ databaseChangeLog:
         - sqlFile:
             path: 220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 595
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 225-sp_dyn_dm_main_postprocessing-001.sql
+            splitStatements: false
