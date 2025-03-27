@@ -4,12 +4,13 @@ CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
     @debug BIT = 'false'
 AS
 BEGIN
+    BEGIN TRY
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT = 0;
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
     DECLARE @DATAMART_TABLE_NAME varchar(100);
     DECLARE @batch_id BIGINT;
-    DECLARE @DATAFLOW_NAME VARCHAR(100) = 'Main Dynamic Datamart POST-Processing';
+    DECLARE @DATAFLOW_NAME VARCHAR(100) = 'Dynamic Datamart POST-Processing';
     DECLARE @PACKAGE_NAME VARCHAR(100) = 'sp_dyn_dm_main_postprocessing';
 
     -- Input validation
@@ -104,12 +105,11 @@ BEGIN
 
 
     -- Clear any temporary tables.
--- not migrated DynDM_CLEAR_sp yet. TODO as of now.
-   /* BEGIN TRANSACTION;
+    BEGIN TRANSACTION;
     EXEC [dbo].DynDM_CLEAR_sp;
     COMMIT TRANSACTION;
 
-    IF @debug = 'true' PRINT 'Step completed: DynDM_CLEAR_sp';*/
+    IF @debug = 'true' PRINT 'Step completed: DynDM_CLEAR_sp';
 
     -- Process form and case management data
     BEGIN TRANSACTION;
@@ -435,21 +435,6 @@ BEGIN
 
     IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_VACCINATION';
 
-
-    -- D_INV_STD dimension
-    BEGIN TRANSACTION;
-    EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
-         @batch_id = @batch_id,
-         @datamart_name = @datamart_name,
-         @RDB_TABLE_NM = 'D_INV_STD',
-         @TABLE_NM   = 'D_INV_STD',
-         @DIM_KEY = 'D_INV_STD_KEY',
-         @phc_id_list = @phc_id_list;
-    COMMIT TRANSACTION;
-
-    IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_STD';
-
-
     -- Process organization data
     BEGIN TRANSACTION;
     EXEC [dbo].sp_dyn_dm_org_data_postprocessing
@@ -658,7 +643,8 @@ IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
            );
     COMMIT TRANSACTION;
 
-
+    END TRY
+    BEGIN CATCH
     IF @@TRANCOUNT > 0
         BEGIN
             ROLLBACK TRANSACTION;
@@ -708,6 +694,6 @@ IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
           );
 
     RETURN -1;
-
+    END CATCH
 
 END;
