@@ -10,7 +10,7 @@ BEGIN
         DECLARE @Proc_Step_Name VARCHAR(200) = '';
         DECLARE @DATAMART_TABLE_NAME varchar(100);
         DECLARE @batch_id BIGINT;
-        DECLARE @DATAFLOW_NAME VARCHAR(100) = 'Dynamic Datamart POST-Processing';
+        DECLARE @DATAFLOW_NAME VARCHAR(100) = 'DYNAMIC_DATAMART POST-PROCESSING';
         DECLARE @PACKAGE_NAME VARCHAR(100) = 'sp_dyn_dm_main_postprocessing';
 
         -- Input validation
