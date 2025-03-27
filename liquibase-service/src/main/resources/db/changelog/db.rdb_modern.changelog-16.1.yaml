@@ -1841,6 +1841,14 @@ databaseChangeLog:
             path: 171-create_tb_pam_ldf-001.sql
             splitStatements: false
   - changeSet:
+      id: 586
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 590
       author: liquibase
       runOnChange: true
@@ -1854,7 +1862,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
+            path: 225-sp_dyn_dm_main_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 620
