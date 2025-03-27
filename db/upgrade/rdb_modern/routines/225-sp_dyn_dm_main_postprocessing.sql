@@ -49,8 +49,7 @@ BEGIN
     SET @DATAMART_TABLE_NAME = 'DM_INV_' + LTRIM(RTRIM(@datamart_name));
 
     -- Generate batch_id for logging
-    SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmss')) AS BIGINT);
-
+    SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
     BEGIN TRANSACTION;
     INSERT INTO [dbo].[job_flow_log] (
