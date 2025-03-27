@@ -52,7 +52,7 @@ enum Entity {
     F_TB_PAM(0, "f_tb_pam", Constants.PHC_UID, "sp_f_tb_pam_postprocessing"),    
     TB_PAM_LDF(0, "tb_pam_ldf", Constants.PHC_UID, "sp_nrt_tb_pam_ldf_postprocessing"),
     D_PCR_SOURCE(0, "d_pcr_source", Constants.PHC_UID, "sp_nrt_d_pcr_source_postprocessing"),
-    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
+    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
 
     private final int priority;
     private final String entityName;
