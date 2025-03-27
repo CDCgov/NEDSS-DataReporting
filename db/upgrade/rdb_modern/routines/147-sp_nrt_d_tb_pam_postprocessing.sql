@@ -11,7 +11,7 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
-	DECLARE @Dataflow_Name VARCHAR(200) = 'D_TB_PAM Post-Processing Event';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'D_TB_PAM POST-Processing';
 	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_d_tb_pam_postprocessing';
 
 
@@ -61,16 +61,17 @@ BEGIN TRY
 				batch_id
 			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
 			INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
-		),
-		CTE_S_TB_PAM_SET AS (				
+			WHERE I.investigation_form_cd='INV_FORM_RVCT'
+		)
+		
 		SELECT
 			CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID, 
 			A.CODE_SET_GROUP_ID, 
 			A.DATAMART_COLUMN_NM, 
 			A.ANSWER_TXT, 
 			A.RECORD_STATUS_CD, 
-			A.LAST_CHG_TIME,
-			ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.DATAMART_COLUMN_NM ORDER BY A.LAST_CHG_TIME DESC) AS rn		
+			A.LAST_CHG_TIME
+		INTO #S_TB_PAM_SET
 		FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
 		INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
 		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
@@ -84,17 +85,6 @@ BEGIN TRY
 			'TUB119', 'TUB129', 'TUB154', 'TUB155', 'TUB156', 'TUB167', 'TUB225', 'TUB228',
 			'TUB229', 'TUB230', 'TUB235', 'TUB237', 'TUB114'
 			)
-        )
-		SELECT
-			TB_PAM_UID, 
-			CODE_SET_GROUP_ID, 
-			DATAMART_COLUMN_NM, 
-			ANSWER_TXT, 
-			RECORD_STATUS_CD, 
-			LAST_CHG_TIME
-		INTO #S_TB_PAM_SET
-		FROM CTE_S_TB_PAM_SET
-		WHERE rn = 1;
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -825,8 +815,7 @@ BEGIN TRY
 				A.DATAMART_COLUMN_NM, 
 				A.ANSWER_TXT, 
 				CVG.CODE_SHORT_DESC_TXT,
-				A.LAST_CHG_TIME,
-				ROW_NUMBER() OVER (PARTITION BY A.ACT_UID, A.DATAMART_COLUMN_NM ORDER BY A.LAST_CHG_TIME DESC) AS rn
+				A.LAST_CHG_TIME
 			FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
 			INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
 				ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
@@ -842,9 +831,8 @@ BEGIN TRY
 		CTE_DISEASE_SITE AS (
 			SELECT 
 				TB_PAM_UID, 
-				COALESCE(NULLIF(CODE_SHORT_DESC_TXT, ''), ANSWER_TXT) AS VALUE
+				COALESCE(CODE_SHORT_DESC_TXT, ANSWER_TXT) AS VALUE
 			FROM CTE_DISEASE_SITE_SET
-			WHERE rn = 1
 		),
 		-- Step 2: Categorizing Disease Sites
 		CTE_DISEASE_SITE_A AS (
@@ -860,11 +848,11 @@ BEGIN TRY
 		SELECT 
 			S.TB_PAM_UID,
 			CASE 
-				WHEN A.VALUE1 = 'Pulmonary' AND COALESCE(B.VALUE2, '') = '' AND COALESCE(C.VALUE3, '') = '' THEN 'Pulmonary'
-				WHEN COALESCE(A.VALUE1, '') = '' AND COALESCE(B.VALUE2, '') = '' AND COALESCE(C.VALUE3, '') <> '' THEN 'Extra Pulmonary'
-				WHEN COALESCE(A.VALUE1, '') = '' AND COALESCE(B.VALUE2, '') <> '' AND COALESCE(C.VALUE3, '') <> '' THEN 'Extra Pulmonary'
-				WHEN A.VALUE1 = 'Pulmonary' AND COALESCE(B.VALUE2, '') <> '' THEN 'Both'
-				WHEN A.VALUE1 = 'Pulmonary' AND COALESCE(C.VALUE3, '') <> '' THEN 'Both'
+				WHEN A.VALUE1 = 'Pulmonary' AND B.VALUE2 IS NULL AND C.VALUE3 IS NULL THEN 'Pulmonary'
+				WHEN A.VALUE1 IS NULL AND B.VALUE2 IS NULL AND C.VALUE3 IS NOT NULL THEN 'Extra Pulmonary'
+				WHEN A.VALUE1 IS NULL AND B.VALUE2 IS NOT NULL AND C.VALUE3 IS NOT NULL THEN 'Extra Pulmonary'
+				WHEN A.VALUE1 = 'Pulmonary' AND B.VALUE2 IS NOT NULL THEN 'Both'
+				WHEN A.VALUE1 = 'Pulmonary' AND C.VALUE3 IS NOT NULL THEN 'Both'
 				ELSE 'Unknown'
 			END AS CALC_DISEASE_SITE
 		INTO #S_PAM_DISEASE_SITE

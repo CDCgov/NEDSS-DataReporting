@@ -76,7 +76,7 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     void executeStoredProcForAggregateReport(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_d_tb_pam_postprocessing")
-    void executeStoredProcForDTBPAM(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    void executeStoredProcForDTbPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_d_disease_site_postprocessing")
     void executeStoredProcForDDiseaseSite(@Param("publicHealthCaseUids") String publicHealthCaseUids);
@@ -85,6 +85,38 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     void executeStoredProcForDAddlRisk(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_nrt_d_tb_hiv_postprocessing")
-    void executeStoredProcForDTBHIV(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    void executeStoredProcForDTbHiv(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_move_cntry_postprocessing")
+    void executeStoredProcForDMoveCntry(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_move_cnty_postprocessing")
+    void executeStoredProcForDMoveCnty(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_move_state_postprocessing")
+    void executeStoredProcForDMoveState(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     
+    @Procedure("sp_nrt_d_out_of_cntry_postprocessing")
+    void executeStoredProcForDOutOfCntry(@Param("publicHealthCaseUids") String publicHealthCaseUids);    
+   
+    @Procedure("sp_nrt_d_moved_where_postprocessing")
+    void executeStoredProcForDMovedWhere(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
+    @Procedure("sp_nrt_d_gt_12_reas_postprocessing")
+    void executeStoredProcForDGt12Reas(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_d_hc_prov_ty_3_postprocessing")
+    void executeStoredProcForDHcProvTy3(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
+    @Procedure("sp_nrt_d_smr_exam_ty_postprocessing")
+    void executeStoredProcForDSmrExamTy(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
+    
+    @Procedure("sp_f_tb_pam_postprocessing")
+    void executeStoredProcForFTbPam(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
+    
+    @Procedure("sp_nrt_tb_pam_ldf_postprocessing")
+    void executeStoredProcForTbPamLdf(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
+    
+    @Procedure("sp_nrt_d_var_pam_postprocessing")
+    void executeStoredProcForDVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
 }
