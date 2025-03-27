@@ -766,6 +766,8 @@ class InvestigationDataProcessingTests {
         expected.setSeqNbr(0L);
         expected.setLdfStatusCd(null);
         expected.setNbsUiComponentUid(1007L);
+        expected.setNcaAddTime("2025-03-24T15:54:58.623");
+        expected.setNuimRecordStatusCd("Active");
         return expected;
     }
 
