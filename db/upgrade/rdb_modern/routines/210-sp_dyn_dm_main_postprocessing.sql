@@ -105,11 +105,11 @@ BEGIN
 
     -- Clear any temporary tables.
 -- not migrated DynDM_CLEAR_sp yet. TODO as of now.
-    BEGIN TRANSACTION;
+   /* BEGIN TRANSACTION;
     EXEC [dbo].DynDM_CLEAR_sp;
     COMMIT TRANSACTION;
 
-    IF @debug = 'true' PRINT 'Step completed: DynDM_CLEAR_sp';
+    IF @debug = 'true' PRINT 'Step completed: DynDM_CLEAR_sp';*/
 
     -- Process form and case management data
     BEGIN TRANSACTION;
@@ -473,7 +473,7 @@ BEGIN
 
 
     -- Clean up temporary metadata tables before repeating data processing
-    BEGIN TRANSACTION;
+   /* BEGIN TRANSACTION;
     IF OBJECT_ID('dbo.tmp_DynDm_METADATA', 'U') IS NOT NULL
         DROP TABLE dbo.tmp_DynDm_METADATA;
 
@@ -491,21 +491,20 @@ BEGIN
 
     IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
         DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
-    COMMIT TRANSACTION;
+    COMMIT TRANSACTION;*/
 
     -- Process repeating varchar data
--- commenting as its not migrated yet.
-    /*BEGIN TRANSACTION;
-    EXEC dbo.DynDM_REPEATVARCHARDATA_sp
+    BEGIN TRANSACTION;
+    EXEC dbo.sp_dyn_dm_repeatvarch_postprocessing
      @batch_id = @batch_id,
     @datamart_name = @datamart_name,
     @phc_id_list = @phc_id_list;
     COMMIT TRANSACTION;
 
-   IF @debug = 'true' PRINT 'Step completed: DynDM_REPEATVARCHARDATA_sp';*/
+   IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatvarch_postprocessing';
 
     -- Additional cleanup before date data processing
-    BEGIN TRANSACTION;
+  /*  BEGIN TRANSACTION;
     IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT', 'U') IS NOT NULL
         DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT;
 
@@ -535,21 +534,21 @@ BEGIN
 
     IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
         DROP TABLE dbo.tmp_DynDm_Metadata;
-    COMMIT TRANSACTION;
+    COMMIT TRANSACTION;*/
 
     -- Process repeating date data
-/* BEGIN TRANSACTION;
- EXEC dbo.DynDM_REPEATDATEDATA_sp
+ BEGIN TRANSACTION;
+ EXEC dbo.sp_dyn_dm_repeatdate_postprocessing
   @batch_id = @batch_id,
  @datamart_name = @datamart_name,
  @phc_id_list = @phc_id_list;
  COMMIT TRANSACTION;
 
-IF @debug = 'true' PRINT 'Step completed: DynDM_REPEATDATEDATA_sp';*/
+IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
 
 
     -- Additional cleanup before numeric data processing
-    BEGIN TRANSACTION;
+ /*   BEGIN TRANSACTION;
     IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
         DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
 
@@ -567,7 +566,7 @@ IF @debug = 'true' PRINT 'Step completed: DynDM_REPEATDATEDATA_sp';*/
 
     IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
         DROP TABLE dbo.tmp_DynDm_Metadata;
-    COMMIT TRANSACTION;
+    COMMIT TRANSACTION; */
 
     -- Process repeating numeric data
     /*BEGIN TRANSACTION;

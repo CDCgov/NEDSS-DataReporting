@@ -105,11 +105,11 @@ BEGIN
 
     -- Clear any temporary tables.
 -- not migrated DynDM_CLEAR_sp yet. TODO as of now.
-    BEGIN TRANSACTION;
-    EXEC [dbo].DynDM_CLEAR_sp;
-    COMMIT TRANSACTION;
+    /* BEGIN TRANSACTION;
+     EXEC [dbo].DynDM_CLEAR_sp;
+     COMMIT TRANSACTION;
 
-    IF @debug = 'true' PRINT 'Step completed: DynDM_CLEAR_sp';
+     IF @debug = 'true' PRINT 'Step completed: DynDM_CLEAR_sp';*/
 
     -- Process form and case management data
     BEGIN TRANSACTION;
@@ -473,101 +473,100 @@ BEGIN
 
 
     -- Clean up temporary metadata tables before repeating data processing
-    BEGIN TRANSACTION;
-    IF OBJECT_ID('dbo.tmp_DynDm_METADATA', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_METADATA;
+    /* BEGIN TRANSACTION;
+     IF OBJECT_ID('dbo.tmp_DynDm_METADATA', 'U') IS NOT NULL
+         DROP TABLE dbo.tmp_DynDm_METADATA;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
+     IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
+         DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
+     IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
+         DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
+     IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
+         DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_METADATA_OUT_final', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_METADATA_OUT_final;
+     IF OBJECT_ID('dbo.tmp_DynDm_METADATA_OUT_final', 'U') IS NOT NULL
+         DROP TABLE dbo.tmp_DynDm_METADATA_OUT_final;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
-    COMMIT TRANSACTION;
+     IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
+         DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
+     COMMIT TRANSACTION;*/
 
     -- Process repeating varchar data
--- commenting as its not migrated yet.
-    /*BEGIN TRANSACTION;
-    EXEC dbo.DynDM_REPEATVARCHARDATA_sp
-     @batch_id = @batch_id,
-    @datamart_name = @datamart_name,
-    @phc_id_list = @phc_id_list;
+    BEGIN TRANSACTION;
+    EXEC dbo.sp_dyn_dm_repeatvarch_postprocessing
+         @batch_id = @batch_id,
+         @datamart_name = @datamart_name,
+         @phc_id_list = @phc_id_list;
     COMMIT TRANSACTION;
 
-   IF @debug = 'true' PRINT 'Step completed: DynDM_REPEATVARCHARDATA_sp';*/
+    IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatvarch_postprocessing';
 
     -- Additional cleanup before date data processing
-    BEGIN TRANSACTION;
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT;
+    /*  BEGIN TRANSACTION;
+      IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT;
+      IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_ALL', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_ALL;
+      IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_ALL', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_REPEAT_ALL;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_BLOCK_DATA', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_BLOCK_DATA;
+      IF OBJECT_ID('dbo.tmp_DynDm_BLOCK_DATA', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_BLOCK_DATA;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
+      IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE;
+      IF OBJECT_ID('dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
+      IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
+      IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
+      IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_Metadata;
-    COMMIT TRANSACTION;
+      IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
+          DROP TABLE dbo.tmp_DynDm_Metadata;
+      COMMIT TRANSACTION;*/
 
     -- Process repeating date data
-/* BEGIN TRANSACTION;
- EXEC dbo.DynDM_REPEATDATEDATA_sp
-  @batch_id = @batch_id,
- @datamart_name = @datamart_name,
- @phc_id_list = @phc_id_list;
- COMMIT TRANSACTION;
+    BEGIN TRANSACTION;
+    EXEC dbo.sp_dyn_dm_repeatdate_postprocessing
+         @batch_id = @batch_id,
+         @datamart_name = @datamart_name,
+         @phc_id_list = @phc_id_list;
+    COMMIT TRANSACTION;
 
-IF @debug = 'true' PRINT 'Step completed: DynDM_REPEATDATEDATA_sp';*/
+    IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
 
 
     -- Additional cleanup before numeric data processing
-    BEGIN TRANSACTION;
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
+    /*   BEGIN TRANSACTION;
+       IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
+           DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
+       IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
+           DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
+       IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
+           DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_METADATA_OUT_final', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_METADATA_OUT_final;
+       IF OBJECT_ID('dbo.tmp_DynDm_METADATA_OUT_final', 'U') IS NOT NULL
+           DROP TABLE dbo.tmp_DynDm_METADATA_OUT_final;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
+       IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
+           DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
 
-    IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
-        DROP TABLE dbo.tmp_DynDm_Metadata;
-    COMMIT TRANSACTION;
+       IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
+           DROP TABLE dbo.tmp_DynDm_Metadata;
+       COMMIT TRANSACTION; */
 
     -- Process repeating numeric data
     /*BEGIN TRANSACTION;
