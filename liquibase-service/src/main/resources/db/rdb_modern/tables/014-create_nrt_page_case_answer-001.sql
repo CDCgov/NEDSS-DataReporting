@@ -70,6 +70,19 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_page_case_answer' and xtyp
                     ADD nbs_ui_component_uid bigint;
             END;  
 
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nca_add_time' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
+            BEGIN
+                ALTER TABLE dbo.nrt_page_case_answer
+                    ADD nca_add_time datetime;
+            END;  
+
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nuim_record_status_cd' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
+            BEGIN
+                ALTER TABLE dbo.nrt_page_case_answer
+                    ADD nuim_record_status_cd varchar(20);
+            END;      
+
 
         IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nbs_rdb_metadata_uid' AND Object_ID = Object_ID(N'nrt_page_case_answer'))
             BEGIN

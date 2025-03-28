@@ -56,7 +56,9 @@
     "datamart_column_nm": "CASE_VERIFICATION",
     "seq_nbr": 0,
     "ldf_status_cd": null,
-    "nbs_ui_component_uid": 1007
+    "nbs_ui_component_uid": 1007,
+    "nca_add_time": "2025-03-24T15:54:58.623",
+    "nuim_record_status_cd": "Active"
   },
   {
     "nbs_case_answer_uid": 1236,
