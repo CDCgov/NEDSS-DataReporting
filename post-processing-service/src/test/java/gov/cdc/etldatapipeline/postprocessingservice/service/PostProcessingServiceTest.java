@@ -204,6 +204,7 @@ class PostProcessingServiceTest {
         String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForDVarPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDPcrSource(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForFvarPam(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(40, logs.size());
