@@ -98,8 +98,8 @@ public class PostProcessingService {
     @Value("${featureFlag.aggregate-report-enable}")
     private boolean aggregateReportEnable;
 
-    @Value("${featureFlag.tb-report-enable}")
-    private boolean tbReportEnable;
+    @Value("${featureFlag.d-tb-hiv-enable}")
+    private boolean dTbHivEnable;
 
 
     @RetryableTopic(
@@ -373,7 +373,7 @@ public class PostProcessingService {
         processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
         processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
 
-        if(tbReportEnable) {
+        if(dTbHivEnable) {
             processTopic(keyTopic, D_TB_PAM, ids, investigationRepository::executeStoredProcForDTbPam);
             processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);
             processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);

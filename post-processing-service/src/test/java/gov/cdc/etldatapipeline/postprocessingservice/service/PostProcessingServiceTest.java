@@ -109,7 +109,7 @@ class PostProcessingServiceTest {
     void testPostProcessProviderMessage() {
         String topic = "dummy_provider";
         String key = "{\"payload\":{\"provider_uid\":123}}";
-        postProcessingServiceMock.setTbReportEnable(true);
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -143,7 +143,7 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        postProcessingServiceMock.setTbReportEnable(true);
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -167,7 +167,7 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationTBMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        postProcessingServiceMock.setTbReportEnable(true);
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -198,7 +198,7 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationVARMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        postProcessingServiceMock.setTbReportEnable(true);
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -220,7 +220,7 @@ class PostProcessingServiceTest {
     void testPostProcessSummaryMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"S\"}}";
-        postProcessingServiceMock.setTbReportEnable(true);
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.setSummaryReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -239,7 +239,7 @@ class PostProcessingServiceTest {
     void testPostProcessAggregateMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"A\"}}";
-        postProcessingServiceMock.setTbReportEnable(true);
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.setAggregateReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -322,7 +322,7 @@ class PostProcessingServiceTest {
 
         Long expectedPublicHealthCaseId = 123L;
         String expectedRdbTableNames = "D_INV_CLINICAL,D_INV_ADMINISTRATIVE";
-        postProcessingServiceMock.setTbReportEnable(true);
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, msg);
         assertTrue(postProcessingServiceMock.idVals.containsKey(expectedPublicHealthCaseId));
         assertTrue(postProcessingServiceMock.idVals.containsValue(expectedRdbTableNames));
