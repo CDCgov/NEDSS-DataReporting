@@ -151,6 +151,27 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        verify(investigationRepositoryMock, never()).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock, never()).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(40, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
+        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+
+    @Test
+    void testPostProcessInvestigationTBMessage() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForDTbPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDTbHiv(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
@@ -165,18 +186,34 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForDSmrExamTy(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFTbPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForTbPamLdf(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock).executeStoredProcForDVarPam(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock).executeStoredProcForDRashLocGen(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
-        verify(investigationRepositoryMock, never()).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock, never()).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(40, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
+
+    @Test
+    void testPostProcessInvestigationVARMessage() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedPublicHealthCaseIdsString = "123";
+        verify(investigationRepositoryMock).executeStoredProcForDVarPam(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDRashLocGen(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDPcrSource(expectedPublicHealthCaseIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(40, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
+        assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+
+
 
     @Test
     void testPostProcessSummaryMessage() {
@@ -574,7 +611,7 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(3).contains(userProfileTopic));
         assertTrue(topicLogList.get(4).contains(placeTopic));
         assertTrue(topicLogList.get(5).contains(invTopic));
-        assertTrue(topicLogList.get(22).contains(invTopic));
+        assertTrue(topicLogList.get(23).contains(invTopic));
         assertTrue(topicLogList.get(24).contains(ntfTopic));
         assertTrue(topicLogList.get(25).contains(treatmentTopic));
         assertTrue(topicLogList.get(26).contains(intTopic));
@@ -586,7 +623,7 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(32).contains(contactTopic));
         assertTrue(topicLogList.get(33).contains(contactTopic));
         assertTrue(topicLogList.get(34).contains(vacTopic));
-        assertTrue(topicLogList.get(35).contains(vacTopic));
+        assertTrue(topicLogList.get(35).contains(vacTopic));        
     }
 
     @Test

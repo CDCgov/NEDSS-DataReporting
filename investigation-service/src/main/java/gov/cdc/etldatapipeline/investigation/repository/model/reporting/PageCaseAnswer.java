@@ -40,4 +40,6 @@ public class PageCaseAnswer {
     private Long seqNbr; 
     private String ldfStatusCd;
     private Long nbsUiComponentUid;
+    private String ncaAddTime;
+    private String nuimRecordStatusCd;
 }
