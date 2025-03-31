@@ -109,7 +109,7 @@ class PostProcessingServiceTest {
     void testPostProcessProviderMessage() {
         String topic = "dummy_provider";
         String key = "{\"payload\":{\"provider_uid\":123}}";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -143,7 +143,7 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -167,11 +167,12 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationTBMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPublicHealthCaseIdsString = "123";
+
         verify(investigationRepositoryMock).executeStoredProcForDTbPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDTbHiv(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDDiseaseSite(expectedPublicHealthCaseIdsString);
@@ -197,9 +198,10 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationVARMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
+
 
         String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForDVarPam(expectedPublicHealthCaseIdsString);
@@ -219,7 +221,7 @@ class PostProcessingServiceTest {
     void testPostProcessSummaryMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"S\"}}";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.setSummaryReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -238,7 +240,7 @@ class PostProcessingServiceTest {
     void testPostProcessAggregateMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"A\"}}";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.setAggregateReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -321,7 +323,7 @@ class PostProcessingServiceTest {
 
         Long expectedPublicHealthCaseId = 123L;
         String expectedRdbTableNames = "D_INV_CLINICAL,D_INV_ADMINISTRATIVE";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, msg);
         assertTrue(postProcessingServiceMock.idVals.containsKey(expectedPublicHealthCaseId));
         assertTrue(postProcessingServiceMock.idVals.containsValue(expectedRdbTableNames));
@@ -611,19 +613,23 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(3).contains(userProfileTopic));
         assertTrue(topicLogList.get(4).contains(placeTopic));
         assertTrue(topicLogList.get(5).contains(invTopic));
-        assertTrue(topicLogList.get(23).contains(invTopic));
-        assertTrue(topicLogList.get(25).contains(ntfTopic));
-        assertTrue(topicLogList.get(26).contains(treatmentTopic));
-        assertTrue(topicLogList.get(27).contains(intTopic));
-        assertTrue(topicLogList.get(28).contains(intTopic));
-        assertTrue(topicLogList.get(29).contains(cmTopic));
-        assertTrue(topicLogList.get(30).contains(cmTopic));
-        assertTrue(topicLogList.get(31).contains(ldfTopic));
-        assertTrue(topicLogList.get(32).contains(obsTopic));
-        assertTrue(topicLogList.get(33).contains(contactTopic));
-        assertTrue(topicLogList.get(34).contains(contactTopic));
-        assertTrue(topicLogList.get(35).contains(vacTopic));
-        assertTrue(topicLogList.get(36).contains(vacTopic));        
+        assertTrue(topicLogList.get(6).contains(invTopic));
+        assertTrue(topicLogList.get(7).contains(invTopic));
+        assertTrue(topicLogList.get(8).contains(invTopic));
+        assertTrue(topicLogList.get(9).contains(invTopic));
+        assertTrue(topicLogList.get(10).contains(invTopic));
+        assertTrue(topicLogList.get(11).contains(ntfTopic));
+        assertTrue(topicLogList.get(12).contains(treatmentTopic));
+        assertTrue(topicLogList.get(13).contains(intTopic));
+        assertTrue(topicLogList.get(14).contains(intTopic));
+        assertTrue(topicLogList.get(15).contains(cmTopic));
+        assertTrue(topicLogList.get(16).contains(cmTopic));
+        assertTrue(topicLogList.get(17).contains(ldfTopic));
+        assertTrue(topicLogList.get(18).contains(obsTopic));
+        assertTrue(topicLogList.get(19).contains(contactTopic));
+        assertTrue(topicLogList.get(20).contains(contactTopic));
+        assertTrue(topicLogList.get(21).contains(vacTopic));
+        assertTrue(topicLogList.get(22).contains(vacTopic));
     }
 
     @Test
