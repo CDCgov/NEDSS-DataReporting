@@ -157,7 +157,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(42, logs.size());
+        assertEquals(44, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -189,7 +189,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForTbPamLdf(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(42, logs.size());
+        assertEquals(44, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -205,11 +205,12 @@ class PostProcessingServiceTest {
 
         String expectedPublicHealthCaseIdsString = "123";
         verify(investigationRepositoryMock).executeStoredProcForDVarPam(expectedPublicHealthCaseIdsString);
+        verify(investigationRepositoryMock).executeStoredProcForDRashLocGen(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDPcrSource(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFVarPam(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(42, logs.size());
+        assertEquals(44, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -231,7 +232,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(46, logs.size());
+        assertEquals(48, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -249,7 +250,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(44, logs.size());
+        assertEquals(46, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -334,7 +335,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(44, logs.size());
+        assertEquals(46, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 

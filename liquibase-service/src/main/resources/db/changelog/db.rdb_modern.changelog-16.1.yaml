@@ -1128,6 +1128,14 @@ databaseChangeLog:
             path: 165-create_d_var_pam-001.sql
             splitStatements: false
   - changeSet:
+      id: 139.13
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 175-create_d_rash_loc_gen_group-001.sql
+            splitStatements: false             
+  - changeSet:
       id: 139.14
       author: liquibase
       runOnChange: true
@@ -1863,6 +1871,38 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 225-sp_dyn_dm_main_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 600
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 176-create_d_rash_loc_gen-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 605
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 177-create_nrt_rash_loc_gen_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 610
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 178-create_nrt_rash_loc_gen_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 615
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 225_sp_nrt_d_rash_loc_gen_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 620
