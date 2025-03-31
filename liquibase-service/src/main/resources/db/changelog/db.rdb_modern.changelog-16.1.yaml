@@ -1936,3 +1936,19 @@ databaseChangeLog:
         - sqlFile:
             path: 230-sp_nrt_d_pcr_source_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 640
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 190-create_var_pam_ldf-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 645
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 235-sp_nrt_var_pam_ldf_postprocessing-001.sql
+            splitStatements: false
