@@ -1872,7 +1872,7 @@ databaseChangeLog:
         - sqlFile:
             path: 225-sp_dyn_dm_main_postprocessing-001.sql
             splitStatements: false
-    - changeSet:
+  - changeSet:
       id: 600
       author: liquibase
       runOnChange: true

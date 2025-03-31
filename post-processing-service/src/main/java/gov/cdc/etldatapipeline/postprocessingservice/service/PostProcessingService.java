@@ -377,6 +377,7 @@ public class PostProcessingService {
         processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
 
         if(dTbHivEnable) {
+            //TB
             processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);
             processTopic(keyTopic, D_GT_12_REAS, ids, investigationRepository::executeStoredProcForDGt12Reas);
             processTopic(keyTopic, D_MOVE_CNTRY, ids, investigationRepository::executeStoredProcForDMoveCntry);
@@ -388,6 +389,8 @@ public class PostProcessingService {
             processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
             processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
             processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
+            
+            //VAR
             processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
             processTopic(keyTopic, D_RASH_LOC_GEN, ids, investigationRepository::executeStoredProcForDRashLocGen);
             processTopic(keyTopic, D_PCR_SOURCE, ids, investigationRepository::executeStoredProcForDPcrSource);

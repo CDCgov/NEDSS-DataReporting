@@ -71,28 +71,28 @@ BEGIN
                 DROP TABLE #S_D_PCR_SOURCE_TRANSLATED;
             
             SELECT 
-                CAST(TB.ACT_UID AS BIGINT) AS VAR_PAM_UID,
-                TB.SEQ_NBR, 
-                TB.DATAMART_COLUMN_NM, 
-                TB.NBS_CASE_ANSWER_UID, 
-                TB.ANSWER_TXT, 
-                TB.CODE_SET_GROUP_ID, 
-                TB.LAST_CHG_TIME,
+                CAST(VAR.ACT_UID AS BIGINT) AS VAR_PAM_UID,
+                VAR.SEQ_NBR, 
+                VAR.DATAMART_COLUMN_NM, 
+                VAR.NBS_CASE_ANSWER_UID, 
+                VAR.ANSWER_TXT, 
+                VAR.CODE_SET_GROUP_ID, 
+                VAR.LAST_CHG_TIME,
                 METADATA.CODE_SET_NM,
                 CVG.CODE, 
                 CVG.CODE_SHORT_DESC_TXT
             INTO #S_D_PCR_SOURCE_TRANSLATED 
-            FROM [dbo].nrt_page_case_answer TB WITH (NOLOCK)
+            FROM [dbo].nrt_page_case_answer VAR WITH (NOLOCK)
             LEFT JOIN [dbo].nrt_investigation inv WITH(NOLOCK) 
-                ON TB.act_uid = inv.public_health_case_uid
+                ON VAR.act_uid = inv.public_health_case_uid
             LEFT JOIN [dbo].nrt_srte_Codeset_Group_Metadata METADATA WITH (NOLOCK)
-                ON METADATA.CODE_SET_GROUP_ID = TB.CODE_SET_GROUP_ID
+                ON METADATA.CODE_SET_GROUP_ID = VAR.CODE_SET_GROUP_ID
             LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
                 ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
-                AND CVG.CODE = TB.ANSWER_TXT
-            INNER JOIN ( SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON TB.ACT_UID = nu.value
-            WHERE TB.DATAMART_COLUMN_NM <> 'n/a'
-            AND ISNULL(tb.batch_id, 1) = ISNULL(inv.batch_id, 1)
+                AND CVG.CODE = VAR.ANSWER_TXT
+            INNER JOIN ( SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON VAR.ACT_UID = nu.value
+            WHERE VAR.DATAMART_COLUMN_NM <> 'n/a'
+            AND ISNULL(VAR.batch_id, 1) = ISNULL(inv.batch_id, 1)
             AND QUESTION_IDENTIFIER = 'VAR176';
 
             SELECT @RowCount_no = @@ROWCOUNT;
