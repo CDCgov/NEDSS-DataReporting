@@ -19,6 +19,11 @@ BEGIN
 	    DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
 	    DECLARE @Package_Name varchar(200)='DynDM_INVEST_FORM_PROC '+@DATAMART_NAME;
 
+	    DECLARE @tmp_DynDm_PATIENT_DATA varchar(200) = 'dbo.tmp_DynDm_Patient_Data_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
+	    DECLARE @tmp_DynDm_INVESTIGATION_DATA varchar(200) = 'dbo.tmp_DynDm_Investigation_Data_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
+
+        DECLARE @temp_sql nvarchar(max);
+
 	SET @Proc_Step_no = 1;
 	SET @Proc_Step_Name = 'SP_Start';
 
@@ -110,24 +115,26 @@ FROM dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta
 where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 
 */
-  IF OBJECT_ID('dbo.tmp_DynDm_Investigation_Data', 'U') IS NOT NULL
- 				drop table dbo.tmp_DynDm_Investigation_Data;
 
+	SET @temp_sql = '
+        IF OBJECT_ID('''+@tmp_DynDm_INVESTIGATION_DATA+''', ''U'') IS NOT NULL
+            drop table '+@tmp_DynDm_INVESTIGATION_DATA;
+    exec sp_executesql @temp_sql;
 
 
   --  declare @SQL varchar(MAX);
 
-
- SELECT  rdb_column_nm_list , isd.INVESTIGATION_KEY
-	        into dbo.tmp_DynDm_Investigation_Data
+	SET @temp_sql = '
+ 		SELECT  rdb_column_nm_list , isd.INVESTIGATION_KEY
+	        into '+@tmp_DynDm_INVESTIGATION_DATA+'
 	        FROM dbo.INVESTIGATION inv with ( nolock)
 	           INNER JOIN #tmp_DynDm_SUMM_DATAMART isd ON	isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
 	           inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on isd.DISEASE_GRP_CD =  inv_meta.INVESTIGATION_FORM_CD
-	           and inv_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd and isd.DISEASE_GRP_CD = @nbs_page_form_cd
-         ;
+	           and inv_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd and isd.DISEASE_GRP_CD = @nbs_page_form_cd';
+	exec sp_executesql @temp_sql;
 
   if @debug = 'true'
- select * from #tmp_DynDm_Investigation_Data;
+ 	select * from #tmp_DynDm_Investigation_Data;
 
 
 				SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -230,7 +237,7 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
      IF OBJECT_ID('#tmp_DynDm_INV_SUMM_DATAMART', 'U') IS NOT NULL
  				drop table #tmp_DynDm_INV_SUMM_DATAMART;
 
-
+	SET @temp_sql = '
 	 SELECT INV_SUMM_DATAMART.PROGRAM_JURISDICTION_OID,
 			INV_SUMM_DATAMART.INVESTIGATION_KEY,
 			INV_SUMM_DATAMART.PATIENT_KEY,
@@ -256,11 +263,12 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 			INV_SUMM_DATAMART.JURISDICTION_NM
 	into #tmp_DynDm_INV_SUMM_DATAMART
 	FROM dbo.INV_SUMM_DATAMART with ( nolock)
-	INNER JOIN dbo.tmp_DynDm_Investigation_Data d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY
+	INNER JOIN '+@tmp_DynDm_INVESTIGATION_DATA+' d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY
 	inner join dbo.investigation nrt_inv with ( nolock ) on nrt_inv.investigation_key =  d.INVESTIGATION_KEY
-	and  nrt_inv.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+	and  nrt_inv.case_uid in (SELECT value FROM STRING_SPLIT('''+@phc_id_list+''', '',''));';
 
-	;
+	exec sp_executesql @temp_sql;
+
 	  if @debug = 'true'
             select * from #tmp_DynDm_INV_SUMM_DATAMART;
 
@@ -342,8 +350,10 @@ FROM  #tmp_DynDm_PAT_METADATA;
 	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Patient_Data';
 
 
-     IF OBJECT_ID('dbo.tmp_DynDm_Patient_Data', 'U') IS NOT NULL
- 				drop table dbo.tmp_DynDm_Patient_Data;
+	SET @temp_sql = '
+     IF OBJECT_ID('''+@tmp_DynDm_PATIENT_DATA+''', ''U'') IS NOT NULL
+ 				drop table '+@tmp_DynDm_PATIENT_DATA;
+	 exec sp_executesql @temp_sql;
 
 	/*
 	SET @SQL = ' SELECT  '+@listStr +' , #tmp_DynDm_SUMM_DATAMART.INVESTIGATION_KEY ' +
@@ -356,17 +366,20 @@ FROM  #tmp_DynDm_PAT_METADATA;
 	   EXEC (@SQL);
 
 */
+	SET @temp_sql = '
 	 SELECT  pat_meta.rdb_column_nm_list , isd.INVESTIGATION_KEY
-	            into dbo.tmp_DynDm_Patient_Data
+	            into '+@tmp_DynDm_PATIENT_DATA+'
 	            FROM dbo.D_PATIENT pat with ( nolock)
                    INNER JOIN #tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY
       	           inner join dbo.v_nrt_nbs_d_patient_rdb_table_metadata pat_meta on isd.DISEASE_GRP_CD =  pat_meta.INVESTIGATION_FORM_CD
-		           and pat_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd and isd.DISEASE_GRP_CD = @nbs_page_form_cd
+		           and pat_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd and isd.DISEASE_GRP_CD = @nbs_page_form_cd';
+	exec sp_executesql @temp_sql;
 
-	  ;
 
 	    if @debug = 'true'
-      select * from dbo.tmp_DynDm_Patient_Data;
+		    SET @temp_sql = '
+	      	select * from'+ @tmp_DynDm_PATIENT_DATA;
+		    exec sp_executesql @temp_sql;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -378,7 +391,7 @@ FROM  #tmp_DynDm_PAT_METADATA;
 
 
 
---DX select * from dbo.tmp_DynDm_Patient_Data ;
+--DX select * from @tmp_DynDm_PATIENT_DATA ;
 
 
 --%mend INVEST_FORM_PROC;

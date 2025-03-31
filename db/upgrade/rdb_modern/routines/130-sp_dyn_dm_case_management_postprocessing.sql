@@ -16,6 +16,7 @@ BEGIN
 		DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
 	    DECLARE @Package_Name varchar(200)='DynDM_Manage_Case_Management '+@DATAMART_NAME;
 
+	    DECLARE @tmp_DynDm_CASE_MANAGEMENT_METADATA varchar(200) = 'dbo.tmp_DynDm_Case_Management_Metadata_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 
 	SET @Proc_Step_no = 1;
 	SET @Proc_Step_Name = 'SP_Start';
@@ -62,14 +63,14 @@ BEGIN
 
 --DECLARE @DATAMART_NAME varchar(100) = 'CONG_SYPHILIS';
 
---DX select * from  dbo.tmp_DynDm_Case_Management_Metadata;
+--DX select * from @tmp_DynDm_CASE_MANAGEMENT_METADATA;
 
 
 
  DECLARE @listStr VARCHAR(MAX) = null;
 /*
 SELECT @listStr = COALESCE(@listStr+',' ,'') +  RDB_COLUMN_NM  + ' '+ coalesce(USER_DEFINED_COLUMN_NM,'')
-FROM  dbo.tmp_DynDm_Case_Management_Metadata with (nolock);
+FROM @tmp_DynDm_CASE_MANAGEMENT_METADATA with (nolock);
 */
 SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata where datamart_nm = @DATAMART_NAME;
 
