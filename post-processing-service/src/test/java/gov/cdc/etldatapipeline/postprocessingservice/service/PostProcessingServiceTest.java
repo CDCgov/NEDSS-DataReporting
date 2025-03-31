@@ -216,8 +216,6 @@ class PostProcessingServiceTest {
     }
 
 
-
-
     @Test
     void testPostProcessSummaryMessage() {
         String topic = "dummy_investigation";
