@@ -1896,3 +1896,11 @@ databaseChangeLog:
         - sqlFile:
             path: 230-sp_nrt_d_pcr_source_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 640
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 235-sp_dyn_dm_repeatnumbericdata_postprocessing-001.sql
+            splitStatements: false
