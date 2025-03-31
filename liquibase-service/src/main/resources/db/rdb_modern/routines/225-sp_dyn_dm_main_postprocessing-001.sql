@@ -10,7 +10,7 @@ BEGIN
         DECLARE @Proc_Step_Name VARCHAR(200) = '';
         DECLARE @DATAMART_TABLE_NAME varchar(100);
         DECLARE @batch_id BIGINT;
-        DECLARE @DATAFLOW_NAME VARCHAR(100) = 'DYNAMIC_DATAMART POST-PROCESSING';
+        DECLARE @DATAFLOW_NAME VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing';
         DECLARE @PACKAGE_NAME VARCHAR(100) = 'sp_dyn_dm_main_postprocessing';
 
         -- Input validation
@@ -51,7 +51,6 @@ BEGIN
         -- Generate batch_id for logging
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        BEGIN TRANSACTION;
         INSERT INTO [dbo].[job_flow_log] (
             batch_id,
             [Dataflow_Name],
@@ -72,12 +71,10 @@ BEGIN
                    0,
                    LEFT(@phc_id_list, 500)
                );
-        COMMIT TRANSACTION;
 
         -- Log start of processing for this datamart
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'STARTING DYNAMIC DATAMART ' + @datamart_name;
+        SET @Proc_Step_Name = ' STARTING DYNAMIC DATAMART ' + @datamart_name;
 
         INSERT INTO [dbo].[job_flow_log] (
             batch_id,
@@ -99,7 +96,6 @@ BEGIN
                    0,
                    LEFT('DataMart: ' + @datamart_name, 199)
                );
-        COMMIT TRANSACTION;
 
 
 
@@ -116,7 +112,6 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list;
-
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';
@@ -563,12 +558,94 @@ BEGIN
        IF @debug = 'true' PRINT 'Step completed: DynDM_REPEATNUMERICDATA_sp';*/
 
 
-        -- Set up key relationships
-        /*BEGIN TRANSACTION;
-        EXEC dbo.DynDM_AlterKey_sp
-         @batch_id = @batch_id,
-        @datamart_name = @datamart_name;
-        COMMIT TRANSACTION;
+        /**
+        Building temporary table to find any column collisions between all the temporary tables
+         */
+        SET @Proc_Step_no = @Proc_Step_no + 1;
+        SET @Proc_Step_Name = ' Building #tmp_DynDm_fixcols:' + @datamart_name;
+
+        select
+            table_name,
+            column_name,
+            cast( null as varchar(max)) as dsql,
+            RANK() OVER (PARTITION BY column_name
+                order by
+                    table_name) as Rank_no
+        into
+            #tmp_DynDm_fixcols
+        from
+            INFORMATION_SCHEMA.COLUMNS
+        where
+            lower(column_name) in (
+                SELECT
+                    lower(COLUMN_NAME)
+                FROM
+                    INFORMATION_SCHEMA.COLUMNS
+                WHERE
+                    ( lower(table_name) like lower('tmp_DynDm_D_INV_%'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_%_REPEAT_%'+cast(@batch_id as varchar))
+                            or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+cast(@batch_id as varchar))
+                            or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+cast(@batch_id as varchar))
+                            or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+cast(@batch_id as varchar))
+                    )
+                    and COLUMN_NAME not in (
+                     'DATAMART_NM',
+                    'OTHER_VALUE_IND_CD',
+                    'RDB_COLUMN_NM',
+                    'RDB_TABLE_NM',
+                    'USER_DEFINED_COLUMN_NM'
+                )
+                group BY
+                    Column_Name
+                having
+                    count(*) > 1
+            )
+        and (
+            lower(table_name) like lower('tmp_DynDm_D_INV_%'+cast(@batch_id as varchar))
+            or lower(table_name) like lower('tmp_DynDm_%_REPEAT_%'+cast(@batch_id as varchar))
+            or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+cast(@batch_id as varchar))
+            or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+cast(@batch_id as varchar))
+            or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+cast(@batch_id as varchar))
+        )
+        ;
+
+        update #tmp_DynDm_fixcols
+        set dsql = 'exec sp_rename ''rdb.dbo.'+table_name+'.'+column_name+''', '''+column_name+ cast(Rank_no as varchar)+''',''COLUMN'' ;'
+        where rank_no <> 1
+
+        IF @debug = 'true'
+            select '#tmp_DynDm_fixcols',* from #tmp_DynDm_fixcols;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+        /**
+        Building temporary table to find any column collisions between all the temporary tables
+         */
+        SET @Proc_Step_no = @Proc_Step_no + 1;
+        SET @Proc_Step_Name = ' Renaming columns on the temporary tables for collisions: ' + @datamart_name;
+
+        DECLARE @Sql NVARCHAR(MAX);
+
+        DECLARE c CURSOR LOCAL FAST_FORWARD FOR
+            SELECT  dsql
+            FROM  #tmp_DynDm_fixcols
+            where rank_no <> 1
+        ;
+
+        OPEN c
+            FETCH NEXT FROM c INTO @Sql
+
+            WHILE (@@FETCH_STATUS = 0)
+            BEGIN
+                EXEC sp_executesql @Sql;
+                FETCH NEXT FROM c INTO @Sql
+            END
+
+        CLOSE c
+        DEALLOCATE c;
 
         IF @debug = 'true' PRINT 'Step completed: DynDM_AlterKey_sp';
 
