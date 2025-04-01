@@ -21,7 +21,6 @@ BEGIN
 
     
 --------------------------------------------------------------------------------------------------------
-    BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -40,9 +39,7 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
-        
-        COMMIT TRANSACTION;
-    
+            
 --------------------------------------------------------------------------------------------------------
         
         SET
@@ -50,8 +47,6 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #LDF_BASE TABLE';
           
-        
-        
         IF OBJECT_ID('#LDF_BASE', 'U') IS NOT NULL
             drop table #LDF_BASE;
         
@@ -312,6 +307,7 @@ BEGIN
         IF OBJECT_ID('#MISSED_COLS', 'U') IS NOT NULL
             drop table #MISSED_COLS;
 
+        -- All columns in the LDFs are varchar
         select distinct DATAMART_COLUMN_NM as col_nm, 'varchar' as col_data_type, 
                 null as col_NUMERIC_PRECISION, 
                 null as col_NUMERIC_SCALE, 
@@ -402,13 +398,11 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'GENERATING obscoded_columns';
-          
-        
+            @PROC_STEP_NAME = 'GENERATING ordered_columns';
 
-        DECLARE @obscoded_columns NVARCHAR(MAX) = '';
+        DECLARE @ordered_columns NVARCHAR(MAX) = '';
         
-        SELECT @obscoded_columns = COALESCE(STRING_AGG(CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION), '')
+        SELECT @ordered_columns = COALESCE(STRING_AGG(CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION), '')
             FROM (SELECT DISTINCT COLUMN_NAME, ORDINAL_POSITION FROM #COL_LIST) AS cols;
         
 
@@ -419,86 +413,6 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
             
---------------------------------------------------------------------------------------------------------
- 
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'GENERATING ##LDF_TRANSLATED TABLE';
-          
-        
-        DECLARE @ldf_translated NVARCHAR(MAX);
-
-        IF OBJECT_ID('tempdb..##LDF_TRANSLATED', 'U') IS NOT NULL
-            drop table ##LDF_TRANSLATED;
-        
-
-        set @ldf_translated = 'SELECT *
-        INTO ##LDF_TRANSLATED
-        FROM (
-            SELECT VAR_PAM_UID, ADD_TIME, ANSWER_TXT, DATAMART_COLUMN_NM from
-            #LDF_BASE_TRANSLATED
-            ) AS SourceTable
-        PIVOT (
-            MAX(ANSWER_TXT)
-            FOR DATAMART_COLUMN_NM IN (
-            ' + 
-            @obscoded_columns
-            +'
-            )
-        ) AS PivotTable';
-
-        exec sp_executesql @ldf_translated;
-
-        if
-        @debug = 'true'
-        select @Proc_Step_Name as step, *
-        from ##LDF_TRANSLATED;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
-        
-    
---------------------------------------------------------------------------------------------------------
- 
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'GENERATING #LDF_BASE TABLE';
-          
-        
-        IF OBJECT_ID('#LDF_BASE3', 'U') IS NOT NULL
-            drop table #LDF_BASE3;
-        
-
-        SELECT INV.INVESTIGATION_KEY, D_VAR_PAM.VAR_PAM_UID as D_VAR_PAM_UID, LDF_T.*
-        INTO #LDF_BASE3
-        FROM DBO.D_VAR_PAM D_VAR_PAM with (nolock)
-        LEFT JOIN ##LDF_TRANSLATED LDF_T ON
-            D_VAR_PAM.VAR_PAM_UID = LDF_T.VAR_PAM_UID
-        LEFT JOIN DBO.INVESTIGATION INV with (nolock) ON
-            D_VAR_PAM.VAR_PAM_UID = INV.case_uid
-        WHERE D_VAR_PAM.VAR_PAM_UID IN (SELECT VALUE FROM #S_PHC_LIST);
-
-        if
-        @debug = 'true'
-        select @Proc_Step_Name as step, *
-        from #LDF_BASE3;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
-        
-
 --------------------------------------------------------------------------------------------------------
     
     BEGIN TRANSACTION
@@ -515,13 +429,35 @@ BEGIN
         SET
         ADD_TIME = tgt.ADD_TIME'
         + CASE
-            WHEN @obscoded_columns != '' THEN ',' + (SELECT STRING_AGG( CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)) + ' = src.' + CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)),',')
+            WHEN @ordered_columns != '' THEN ',' + (SELECT STRING_AGG( CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)) + ' = src.' + CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)),',')
                     FROM (SELECT DISTINCT COLUMN_NAME FROM #COL_LIST) as cols)
             ELSE ''
         END
         + '
         FROM
-        #LDF_BASE3 src
+        (
+        SELECT INV.INVESTIGATION_KEY, D_VAR_PAM.VAR_PAM_UID as D_VAR_PAM_UID, LDF_T.*
+        FROM DBO.D_VAR_PAM D_VAR_PAM with (nolock)
+        INNER JOIN #S_PHC_LIST S_PHC_LIST
+            ON S_PHC_LIST.VALUE = D_VAR_PAM.VAR_PAM_UID
+        LEFT JOIN (
+            SELECT *
+            FROM (
+                SELECT VAR_PAM_UID, ADD_TIME, ANSWER_TXT, DATAMART_COLUMN_NM from
+                #LDF_BASE_TRANSLATED
+                ) AS SourceTable
+            PIVOT (
+                MAX(ANSWER_TXT)
+                FOR DATAMART_COLUMN_NM IN (
+                ' + 
+                @ordered_columns
+                +'
+                )
+            ) AS PivotTable
+        ) LDF_T ON
+            D_VAR_PAM.VAR_PAM_UID = LDF_T.VAR_PAM_UID
+        LEFT JOIN DBO.INVESTIGATION INV with (nolock) ON
+            D_VAR_PAM.VAR_PAM_UID = INV.case_uid ) src
         INNER JOIN dbo.VAR_PAM_LDF tgt  with (nolock)
             on src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY and
             src.D_VAR_PAM_UID = tgt.VAR_PAM_UID';
@@ -538,8 +474,8 @@ BEGIN
         
         COMMIT TRANSACTION;
     
-    
 --------------------------------------------------------------------------------------------------------
+    
     BEGIN TRANSACTION
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -552,7 +488,7 @@ BEGIN
         SET @Insert_sql = 
         'INSERT INTO dbo.VAR_PAM_LDF([INVESTIGATION_KEY], [VAR_PAM_UID], [add_time] '+ 
             CASE
-                WHEN @obscoded_columns != '' THEN ',' + @obscoded_columns
+                WHEN @ordered_columns != '' THEN ',' + @ordered_columns
                 ELSE ''
             END
         + ' )
@@ -561,13 +497,35 @@ BEGIN
         t.D_VAR_PAM_UID as VAR_PAM_UID,
         t.add_time'+
         + CASE
-                WHEN @obscoded_columns != '' THEN ',' + @obscoded_columns
+                WHEN @ordered_columns != '' THEN ',' + @ordered_columns
                 ELSE ''
             END
         +
         '
         FROM
-        #LDF_BASE3 t
+        (
+        SELECT INV.INVESTIGATION_KEY, D_VAR_PAM.VAR_PAM_UID as D_VAR_PAM_UID, LDF_T.*
+        FROM DBO.D_VAR_PAM D_VAR_PAM with (nolock)
+        INNER JOIN #S_PHC_LIST S_PHC_LIST
+            ON S_PHC_LIST.VALUE = D_VAR_PAM.VAR_PAM_UID
+        LEFT JOIN (
+            SELECT *
+            FROM (
+                SELECT VAR_PAM_UID, ADD_TIME, ANSWER_TXT, DATAMART_COLUMN_NM from
+                #LDF_BASE_TRANSLATED
+                ) AS SourceTable
+            PIVOT (
+                MAX(ANSWER_TXT)
+                FOR DATAMART_COLUMN_NM IN (
+                ' + 
+                @ordered_columns
+                +'
+                )
+            ) AS PivotTable
+        ) LDF_T ON
+            D_VAR_PAM.VAR_PAM_UID = LDF_T.VAR_PAM_UID
+        LEFT JOIN DBO.INVESTIGATION INV with (nolock) ON
+            D_VAR_PAM.VAR_PAM_UID = INV.case_uid ) t
         LEFT JOIN (select INVESTIGATION_KEY, VAR_PAM_UID from dbo.VAR_PAM_LDF with (nolock)) tgt
         on t.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY and
         t.D_VAR_PAM_UID = tgt.VAR_PAM_UID
@@ -592,7 +550,6 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
-    
 
 --------------------------------------------------------------------------------------------------------
    
