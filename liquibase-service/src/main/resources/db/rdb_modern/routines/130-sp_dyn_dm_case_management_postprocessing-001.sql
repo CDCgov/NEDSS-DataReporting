@@ -122,8 +122,8 @@ SELECT rdb_column_nm_list FROM  dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata whe
 		INTO '+ @tmp_DynDm_CASE_MANAGEMENT_DATA +'
         FROM #tmp_DynDM_SUMM_DATAMART isd
 		join dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata case_mgmt_meta on  case_mgmt_meta.INVESTIGATION_FORM_CD = isd.DISEASE_GRP_CD
-			and case_mgmt_meta.datamart_nm = '''+@DATAMART_NAME+''' and isd.DISEASE_GRP_CD = @nbs_page_form_cd
-			and case_mgmt_meta.INVESTIGATION_FORM_CD = '+@nbs_page_form_cd +'
+			and case_mgmt_meta.datamart_nm = '''+@DATAMART_NAME+''' and isd.DISEASE_GRP_CD = '''+@nbs_page_form_cd +'''
+			and case_mgmt_meta.INVESTIGATION_FORM_CD = '''+@nbs_page_form_cd +'''
 		INNER JOIN dbo.Investigation nrt_inv_key with (nolock) ON isd.investigation_key = nrt_inv_key.investigation_key
 		and nrt_inv_key.case_uid in (SELECT value FROM STRING_SPLIT('''+@phc_id_list+''', '',''))
 		LEFT JOIN  dbo.D_CASE_MANAGEMENT case_mgmt ON isd.INVESTIGATION_KEY = case_mgmt.INVESTIGATION_KEY
