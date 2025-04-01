@@ -440,6 +440,54 @@ databaseChangeLog:
             path: 022-create_nrt_interview_answer-001.sql
             splitStatements: false
   - changeSet:
+      id: 70.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 025-create_nrt_srte_totalidm-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 026-create_nrt_srte_IMRDBMapping-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 027-create_nrt_srte_Program_area_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.4
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 028-create_nrt_srte_Condition_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.5
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 029-create_nrt_srte_Codeset-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.6
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 030-create_nrt_srte_Code_value_general-001.sql
+            splitStatements: false
+  - changeSet:
       id: 71
       author: liquibase
       runOnChange: true
@@ -534,54 +582,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 026-sp_std_hiv_datamart_postprocessing-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 84
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 025-create_nrt_srte_totalidm-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 85
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 026-create_nrt_srte_IMRDBMapping-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 86
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 027-create_nrt_srte_Program_area_code-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 87
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 028-create_nrt_srte_Condition_code-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 88
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 029-create_nrt_srte_Codeset-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 89
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 030-create_nrt_srte_Code_value_general-001.sql
             splitStatements: false
   - changeSet:
       id: 89.1
@@ -1127,6 +1127,14 @@ databaseChangeLog:
         - sqlFile:
             path: 165-create_d_var_pam-001.sql
             splitStatements: false
+  - changeSet:
+      id: 139.13
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 175-create_d_rash_loc_gen_group-001.sql
+            splitStatements: false             
   - changeSet:
       id: 139.14
       author: liquibase
@@ -1865,6 +1873,38 @@ databaseChangeLog:
             path: 225-sp_dyn_dm_main_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 600
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 176-create_d_rash_loc_gen-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 605
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 177-create_nrt_rash_loc_gen_group_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 610
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 178-create_nrt_rash_loc_gen_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 615
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 225_sp_nrt_d_rash_loc_gen_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 620
       author: liquibase
       runOnChange: true
@@ -1895,20 +1935,4 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 230-sp_nrt_d_pcr_source_postprocessing-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 640
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 024-v_nrt_nbs_repeatnumeric_rdb_table_metadata-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 645
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 235-sp_dyn_dm_repeatnumeric_postprocessing-001.sql
             splitStatements: false
