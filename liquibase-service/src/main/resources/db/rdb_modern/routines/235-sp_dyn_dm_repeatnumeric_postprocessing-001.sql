@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_repeatnumericdata_postprocessing
+CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_repeatnumeric_postprocessing
 
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100),
@@ -15,7 +15,7 @@ BEGIN
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
         --DECLARE @DATAMART_NAME VARCHAR = 'GENERIC_V2';
         DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST PROCESSING' ;
-        DECLARE @package_Name VARCHAR(100) = 'sp_dyn_dm_repeatnumericdata_postprocessing: '+ @DATAMART_NAME;
+        DECLARE @package_Name VARCHAR(100) = 'sp_dyn_dm_repeatnumeric_postprocessing: '+ @DATAMART_NAME;
 
         DECLARE @nbs_page_form_cd varchar(200)='';
         SET @nbs_page_form_cd = (SELECT top 1 FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM=@DATAMART_NAME) -- check multiple data name.
@@ -65,8 +65,6 @@ BEGIN
         into #tmp_DynDm_METADATA_INIT
         FROM dbo.V_NRT_NBS_REPEATNUMERIC_RDB_TABLE_METADATA meta
         WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd
-          AND (code_set_group_id < 0
-            OR data_type in ( 'Numeric','NUMERIC') )
         ORDER BY RDB_COLUMN_NM;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -89,10 +87,7 @@ BEGIN
         FROM dbo.V_NRT_NBS_REPEATNUMERIC_RDB_TABLE_METADATA meta
         WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd
           AND UNIT_TYPE_CD='CODED'
-          AND DATA_TYPE IN ('Numeric','NUMERIC')
-          AND CODE_SET_GROUP_ID IS NULL
-          AND MASK IS NOT NULL
-        ;
+          AND MASK IS NOT NULL;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )

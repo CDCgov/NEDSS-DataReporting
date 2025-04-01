@@ -1910,5 +1910,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 235-sp_dyn_dm_repeatnumericdata_postprocessing-001.sql
+            path: 235-sp_dyn_dm_repeatnumeric_postprocessing-001.sql
             splitStatements: false

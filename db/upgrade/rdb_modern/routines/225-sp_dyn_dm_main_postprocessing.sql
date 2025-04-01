@@ -553,14 +553,14 @@ IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
     COMMIT TRANSACTION; */
 
     -- Process repeating numeric data
-    /*BEGIN TRANSACTION;
-    EXEC dbo.DynDM_REPEATNUMERICDATA_sp
+    BEGIN TRANSACTION;
+    EXEC dbo.sp_dyn_dm_repeatnumeric_postprocessing
      @batch_id = @batch_id,
-    @datamart_name = @datamart_name
-   -- @phc_id_list = @phc_id_list;
+     @datamart_name = @datamart_name,
+     @phc_id_list = @phc_id_list;
     COMMIT TRANSACTION;
 
-   IF @debug = 'true' PRINT 'Step completed: DynDM_REPEATNUMERICDATA_sp';*/
+   IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatnumeric_postprocessing';
 
 
     -- Set up key relationships
