@@ -58,7 +58,7 @@ BEGIN
             CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID,
             I.ADD_USER_ID,
             A.CODE_SET_GROUP_ID,
-            A.NCA_ADD_TIME,
+            A.NCA_ADD_TIME AS ADD_TIME,
             I.LAST_CHG_USER_ID,
             A.LAST_CHG_TIME
         INTO #LDF_BASE  
@@ -94,8 +94,14 @@ BEGIN
             -- LDF_BASE_CODED
             ;WITH LDF_BASE_CODED AS (
                 SELECT 
-                    tb.*,
-                    --METADATA.CODE_SET_GROUP_ID,
+                    tb.DATAMART_COLUMN_NM,
+                    tb.ANSWER_TXT,
+                    tb.TB_PAM_UID,
+                    tb.ADD_USER_ID,
+                    tb.CODE_SET_GROUP_ID,
+                    tb.ADD_TIME,
+                    tb.LAST_CHG_USER_ID,
+                    tb.LAST_CHG_TIME,
                     METADATA.CODE_SET_NM,
                     CODESET.CLASS_CD
                 FROM #LDF_BASE tb
@@ -111,7 +117,7 @@ BEGIN
                 COALESCE(cvg.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.NCA_ADD_TIME,
+                tb.ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 cvg.CODE,
@@ -152,7 +158,7 @@ BEGIN
                 COALESCE(cvc.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.NCA_ADD_TIME,
+                tb.ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 tb.CODE,
@@ -193,7 +199,7 @@ BEGIN
                 COALESCE(vsc.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.NCA_ADD_TIME,
+                tb.ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 tb.CODE,
@@ -234,7 +240,7 @@ BEGIN
                 COALESCE(cc.CODE_SHORT_DESC_TXT, tb.ANSWER_TXT) AS ANSWER_TXT,
                 tb.TB_PAM_UID,
                 tb.ADD_USER_ID,
-                tb.NCA_ADD_TIME,
+                tb.ADD_TIME,
                 tb.LAST_CHG_USER_ID,
                 tb.LAST_CHG_TIME,
                 tb.CODE,
@@ -277,7 +283,7 @@ BEGIN
                     DATAMART_COLUMN_NM,
                     STRING_AGG(ANSWER_TXT, ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT) AS concatenated_answer_txt,
                     MAX(ADD_USER_ID) AS ADD_USER_ID,
-                    MAX(NCA_ADD_TIME) AS NCA_ADD_TIME,
+                    MAX(ADD_TIME) AS ADD_TIME,
                     MAX(LAST_CHG_USER_ID) AS LAST_CHG_USER_ID,
                     MAX(LAST_CHG_TIME) AS LAST_CHG_TIME,
                     MAX(CODE) AS CODE,
@@ -292,7 +298,7 @@ BEGIN
                 DATAMART_COLUMN_NM,
                 CASE WHEN LEN(concatenated_answer_txt) > 0 THEN concatenated_answer_txt ELSE NULL END AS ANSWER_TXT,
                 ADD_USER_ID,
-                NCA_ADD_TIME,
+                ADD_TIME,
                 LAST_CHG_USER_ID,
                 LAST_CHG_TIME,
                 CODE,
@@ -318,22 +324,160 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
+                @PROC_STEP_NAME = 'GENERATING #MISSED_COLS';
+
+            IF OBJECT_ID('tempdb..#MISSED_COLS') IS NOT NULL
+                DROP TABLE #MISSED_COLS;
+
+            SELECT DISTINCT 
+                DATAMART_COLUMN_NM AS col_nm, 
+                'varchar' AS col_data_type, 
+                NULL AS col_NUMERIC_PRECISION, 
+                NULL AS col_NUMERIC_SCALE, 
+                2000 AS col_CHARACTER_MAXIMUM_LENGTH
+            INTO #MISSED_COLS
+            FROM #LDF_BASE_COUNTRY_CONCAT l
+            LEFT JOIN INFORMATION_SCHEMA.COLUMNS ic
+            ON upper(datamart_column_nm) = upper(ic.COLUMN_NAME) AND
+                upper(ic.table_name) = 'TB_PAM_LDF'
+            WHERE ic.COLUMN_NAME IS NULL;
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #MISSED_COLS;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+-------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING TABLE WITH NEW COLUMNS';
+
+            
+            DECLARE @AlterQuery NVARCHAR(MAX);
+
+            set @AlterQuery = 'ALTER TABLE dbo.TB_PAM_LDF ADD ' + (select STRING_AGG( col_nm + ' ' +  col_data_type +
+            CASE
+                WHEN col_data_type IN ('decimal', 'numeric') THEN '(' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + ',' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + ')'
+                WHEN col_data_type = 'varchar' THEN '(' +
+                    CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN 'MAX' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END
+                + ')'
+                ELSE ''
+            END, ', ') from #MISSED_COLS);
+
+            exec sp_executesql @AlterQuery;
+            
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        
+        COMMIT TRANSACTION;
+
+-------------------------------------------------------------------------------------------
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING #COL_LIST';
+
+            IF OBJECT_ID('tempdb..#COL_LIST') IS NOT NULL
+                DROP TABLE #COL_LIST;
+
+            SELECT DISTINCT ic.COLUMN_NAME, ORDINAL_POSITION
+            INTO #COL_LIST
+            FROM INFORMATION_SCHEMA.COLUMNS ic 
+            WHERE ic.table_name = 'TB_PAM_LDF'
+            AND UPPER(ic.COLUMN_NAME) NOT IN ('INVESTIGATION_KEY', 'TB_PAM_UID', 'ADD_TIME'); --IGNORING FIRST THREE DEFAULT COLUMNS;
+
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #COL_LIST;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+
+-------------------------------------------------------------------------------------------
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING OBSCODED_COLUMNS';
+
+            DECLARE @obscoded_columns NVARCHAR(MAX) = '';
+        
+            SELECT @obscoded_columns = COALESCE(STRING_AGG(CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION), '')
+            FROM (SELECT DISTINCT COLUMN_NAME, ORDINAL_POSITION FROM #COL_LIST) AS cols;
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+-------------------------------------------------------------------------------------------
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
                 @PROC_STEP_NAME = 'GENERATING #LDF_TRANSLATED';
+
+            DECLARE @ldf_translated NVARCHAR(MAX);    
 
             IF OBJECT_ID('tempdb..#LDF_TRANSLATED') IS NOT NULL
                 DROP TABLE #LDF_TRANSLATED;
 
-            SELECT    
-                inv.INVESTIGATION_KEY,             
-                tb.TB_PAM_UID,
-                tb.NCA_ADD_TIME                
-            INTO #LDF_TRANSLATED  
-            FROM #LDF_BASE_COUNTRY_CONCAT tb
-            LEFT OUTER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
-                ON tb.TB_PAM_UID = inv.CASE_UID
-            GROUP BY inv.INVESTIGATION_KEY, tb.TB_PAM_UID, tb.NCA_ADD_TIME;
+            IF @obscoded_columns != ''
+            BEGIN
+                SET @ldf_translated = 'SELECT *
+                INTO #LDF_TRANSLATED
+                FROM (
+                    SELECT 
+                        TB_PAM_UID, 
+                        ADD_TIME, 
+                        ANSWER_TXT, 
+                        DATAMART_COLUMN_NM 
+                    FROM #LDF_BASE_COUNTRY_CONCAT
+                    ) AS SourceTable
+                PIVOT (
+                    MAX(ANSWER_TXT)
+                    FOR DATAMART_COLUMN_NM IN (
+                    ' + 
+                    @obscoded_columns
+                    +'
+                    )
+                ) AS PivotTable';
 
-            --missing the pivot
+                EXEC sp_executesql @ldf_translated;
+            END
+            ELSE
+            BEGIN
+                SELECT 
+                    TB_PAM_UID, 
+                    ADD_TIME
+                INTO #LDF_TRANSLATED
+                FROM #LDF_BASE_COUNTRY_CONCAT
+            END;
+            
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -383,16 +527,40 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'INSERT INCOMING RECORDS TO TB_PAM_LDF';
 
-            INSERT INTO [dbo].TB_PAM_LDF (
-                INVESTIGATION_KEY,
-                TB_PAM_UID,
-                ADD_TIME
-            )
-            SELECT 
-                INVESTIGATION_KEY,
-                TB_PAM_UID,
-                NCA_ADD_TIME
-            FROM #LDF_TRANSLATED
+            DECLARE @Insert_sql NVARCHAR(MAX) = '';
+            DECLARE @tb_obscoded_columns NVARCHAR(MAX) = '';
+
+            SET @tb_obscoded_columns = (
+                SELECT ISNULL(
+                    STRING_AGG('tb.' + TRIM(value), ','),
+                    ''
+                )
+                FROM STRING_SPLIT(ISNULL(@obscoded_columns, ''), ',')
+                WHERE TRIM(value) != ''
+            );
+
+            SET @Insert_sql = 
+            'INSERT INTO dbo.TB_PAM_LDF([INVESTIGATION_KEY], [TB_PAM_UID], [add_time] '+ 
+                CASE
+                    WHEN @obscoded_columns != '' THEN ',' + @obscoded_columns
+                    ELSE ''
+                END
+            + ' )
+            SELECT
+                inv.INVESTIGATION_KEY,
+                tb.TB_PAM_UID,
+                tb.add_time'+
+            + CASE
+                    WHEN @obscoded_columns != '' THEN ',' + @tb_obscoded_columns
+                    ELSE ''
+                END
+            +
+            '
+            FROM
+            #LDF_TRANSLATED tb
+            LEFT JOIN [dbo].investigation inv WITH(nolock)
+                ON tb.TB_APM_UID = inv.CASE_UID
+            ';
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
