@@ -776,7 +776,7 @@ BEGIN
         FROM
             #tmp_DynDm_D_INV_REPEAT_METADATA;
 
-        print 'completed #tmp_DynDm_INVESTIGATION_REPEAT_ALL';
+        if @debug = 'true' print 'completed #tmp_DynDm_INVESTIGATION_REPEAT_ALL';
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )

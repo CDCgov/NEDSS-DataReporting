@@ -21,5 +21,5 @@ FROM
 WHERE
     rdb_meta.USER_DEFINED_COLUMN_NM <> '' AND rdb_meta.USER_DEFINED_COLUMN_NM IS NOT NULL
   AND rdb_meta.RDB_TABLE_NM = 'D_INVESTIGATION_REPEAT'
-  AND (code_set_group_id < 0 OR data_type in ('Numeric','NUMERIC'))
+  AND (code_set_group_id < 0 OR code_set_group_id IS NULL OR data_type in ('Numeric','NUMERIC'))
 ;
