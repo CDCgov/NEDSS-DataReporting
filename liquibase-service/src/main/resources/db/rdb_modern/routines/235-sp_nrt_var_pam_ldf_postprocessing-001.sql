@@ -307,7 +307,7 @@ BEGIN
         IF OBJECT_ID('#MISSED_COLS', 'U') IS NOT NULL
             drop table #MISSED_COLS;
 
-        -- All columns in the LDFs are varchar
+        -- All DATAMART_COLUMN_NM in the LDFs are varchar as only data type observed for LDF is the same as its source NBS_case_answer.answer_txt (varchar) 
         select distinct DATAMART_COLUMN_NM as col_nm, 'varchar' as col_data_type, 
                 null as col_NUMERIC_PRECISION, 
                 null as col_NUMERIC_SCALE, 
