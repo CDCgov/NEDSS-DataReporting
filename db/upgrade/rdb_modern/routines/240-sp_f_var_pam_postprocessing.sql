@@ -126,27 +126,16 @@ BEGIN
             IF OBJECT_ID('tempdb..#PAT_VAR_PROV_keystore') IS NOT NULL
                 DROP TABLE #PAT_VAR_PROV_keystore;
 
-            ;WITH CTE_PAT_VAR_keystore AS (
-                SELECT 
-                    f.VAR_PAM_UID,
-                    f.PERSON_UID,
-                    p.PATIENT_KEY,
-                    f.PROVIDER_UID,
-                    f.PHYSICIAN_UID
-                FROM [dbo].D_PATIENT p WITH (NOLOCK) 
-                JOIN #F_S_VAR_PAM f
-                ON f.PERSON_UID = p.PATIENT_UID
-            ),
-            CTE_PAT_VAR_prov1_keystore AS (
+            ;WITH CTE_PAT_VAR_PROV1_keystore AS (
                 SELECT 
                     v.VAR_PAM_UID,
                     v.PERSON_UID,
                     v.PATIENT_KEY,
                     v.PHYSICIAN_UID,
                     v.PROVIDER_UID,
-                    p.PROVIDER_KEY AS PROVIDER_KEY
-                FROM [dbo].D_PROVIDER p WITH (NOLOCK) 
-                JOIN CTE_PAT_VAR_keystore v
+                    COALESCE(p.PROVIDER_KEY, 1) AS PROVIDER_KEY
+                FROM #PAT_VAR_keystore v
+                LEFT JOIN [dbo].D_PROVIDER p WITH (NOLOCK) 
                 ON v.PROVIDER_UID = p.PROVIDER_uid
             ),
             CTE_PAT_VAR_PROV2_keystore_raw AS (
@@ -156,9 +145,9 @@ BEGIN
                     b.PATIENT_KEY,
                     b.PROVIDER_UID,
                     b.PROVIDER_KEY,
-                    p.PROVIDER_key AS PHYSICIAN_KEY
-                FROM [dbo].D_PROVIDER p WITH (NOLOCK) 
-                JOIN CTE_PAT_VAR_PROV1_keystore b
+                    COALESCE(p.PROVIDER_key, 1) AS PHYSICIAN_KEY
+                FROM  CTE_PAT_VAR_PROV1_keystore b
+                LEFT JOIN [dbo].D_PROVIDER p WITH (NOLOCK)
                 ON b.PHYSICIAN_UID = p.PROVIDER_uid
             ),
             CTE_PAT_VAR_PROV2_keystore AS (
