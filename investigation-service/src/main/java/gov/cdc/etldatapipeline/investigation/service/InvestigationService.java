@@ -325,9 +325,12 @@ public class InvestigationService {
         reportingModel.setInvestigationCount(investigationTransformed.getInvestigationCount());
         reportingModel.setInvestigatorAssignedDatetime(investigationTransformed.getInvestigatorAssignedDatetime());
 
-        // only set hospitalUid from participation if it has not already been set from the event payload
+        // Set hospitalUid from participation if it has not already been set from the event payload
         Optional.ofNullable(reportingModel.getHospitalUid()).ifPresentOrElse(
                 uid -> {}, () -> reportingModel.setHospitalUid(investigationTransformed.getHospitalUid()));
+        // Set PerAsReporterOfPHC from participation if it has not already been set from the event payload
+        Optional.ofNullable(reportingModel.getPersonAsReporterUid()).ifPresentOrElse(
+                uid -> {}, () -> reportingModel.setPersonAsReporterUid(investigationTransformed.getPersonAsReporterUid()));
         reportingModel.setDaycareFacUid(investigationTransformed.getDaycareFacUid());
         reportingModel.setChronicCareFacUid(investigationTransformed.getChronicCareFacUid());
 
