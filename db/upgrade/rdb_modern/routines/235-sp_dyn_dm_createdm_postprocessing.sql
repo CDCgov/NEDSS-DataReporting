@@ -22,43 +22,6 @@ BEGIN
 
         DECLARE @tmp_DynDm_INCOMING_DATA varchar(200) = 'dbo.tmp_DynDm_INCOMING_DATA_'+@datamart_suffix;
 
-        DECLARE @excluded_columns NVARCHAR(3000) = '''INVESTIGATION_KEY_D_INV_ADMINISTRATIVE'',  
-                                                    ''INVESTIGATION_KEY_D_INV_CLINICAL'',  
-                                                    ''INVESTIGATION_KEY_D_INV_COMPLICATION'',  
-                                                    ''INVESTIGATION_KEY_D_INV_CONTACT'',  
-                                                    ''INVESTIGATION_KEY_D_INV_DEATH'',  
-                                                    ''INVESTIGATION_KEY_D_INV_EPIDEMIOLOGY'',  
-                                                    ''INVESTIGATION_KEY_D_INV_HIV'',  
-                                                    ''INVESTIGATION_KEY_D_INV_PATIENT_OBS'',  
-                                                    ''INVESTIGATION_KEY_D_INV_ISOLATE_TRACKING'',  
-                                                    ''INVESTIGATION_KEY_D_INV_LAB_FINDING'',  
-                                                    ''INVESTIGATION_KEY_D_INV_MEDICAL_HISTORY'',  
-                                                    ''INVESTIGATION_KEY_D_INV_MOTHER'',  
-                                                    ''INVESTIGATION_KEY_D_INV_OTHER'',  
-                                                    ''INVESTIGATION_KEY_D_INV_PREGNANCY_BIRTH'',  
-                                                    ''INVESTIGATION_KEY_D_INV_RESIDENCY'',  
-                                                    ''INVESTIGATION_KEY_D_INV_RISK_FACTOR'',  
-                                                    ''INVESTIGATION_KEY_D_INV_SOCIAL_HISTORY'',  
-                                                    ''INVESTIGATION_KEY_D_INV_SYMPTOM'',  
-                                                    ''INVESTIGATION_KEY_D_INV_TREATMENT'',  
-                                                    ''INVESTIGATION_KEY_D_INV_TRAVEL'',  
-                                                    ''INVESTIGATION_KEY_D_INV_UNDER_CONDITION'',  
-                                                    ''INVESTIGATION_KEY_D_INV_VACCINATION'',  
-                                                    ''INVESTIGATION_KEY_D_INV_STD'',  
-                                                    ''INVESTIGATION_KEY_ORGANIZATION'',  
-                                                    ''INVESTIGATION_KEY_PROVIDER'',  
-                                                    ''ORGANIZATION_UID'',  
-                                                    ''PROVIDER_UID'',  
-                                                    ''INVESTIGATION_KEY_CASE_MANAGEMENT_DATA'',  
-                                                    ''INVESTIGATION_KEY_INVESTIGATION_DATA'',  
-                                                    ''INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR'',  
-                                                    ''INVESTIGATION_KEY_PATIENT_DATA'',  
-                                                    ''INVESTIGATION_KEY_REPEAT_BLOCK_DATE_ALL'',  
-                                                    ''INVESTIGATION_KEY_REPEAT_BLOCK_NUMERIC_ALL'',  
-                                                    ''INVESTIGATION_KEY_REPEAT_BLOCK_VARCHAR_ALL'',  
-                                                    ''INVESTIGATION_KEY_REPEAT_DATE'',  
-                                                    ''INVESTIGATION_KEY_REPEAT_NUMERIC'',  
-                                                    ''PATIENT_LOCAL_ID_PATIENT_DATA''';
 
     DECLARE @tgt_table_nm NVARCHAR(200) = 'DM_INV_' + @DATAMART_NAME;
 
@@ -72,47 +35,96 @@ BEGIN
 		        IF OBJECT_ID('''+@tmp_DynDm_INCOMING_DATA+''', ''U'') IS NOT NULL
 		            drop table '+@tmp_DynDm_INCOMING_DATA;
         exec sp_executesql @temp_sql;
+        
+        DECLARE @JoinColumn NVARCHAR(100) = 'INVESTIGATION_KEY';
+        DECLARE @select_cols NVARCHAR(MAX);
 
+        WITH ColumnNames AS (
+            SELECT 
+                COLUMN_NAME, 
+                TABLE_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME IN ('tmp_DynDm_Investigation_Data_' + @datamart_suffix 
+            , 'tmp_DynDm_Patient_Data_' + @datamart_suffix
+            , 'tmp_DynDm_Case_Management_Data_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_Administrative_' + @datamart_suffix
+            , 'dbo.tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix
+            , 'dbo.tmp_DynDm_D_INV_COMPLICATION_' + @datamart_suffix
+            , 'dbo.tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_DEATH_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_EPIDEMIOLOGY_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_HIV_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_PATIENT_OBS_' +@datamart_suffix
+            , 'tmp_DynDm_D_INV_ISOLATE_TRACKING_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_LAB_FINDING_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_LAB_FINDING_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_MEDICAL_HISTORY_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_MOTHER_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_OTHER_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_PREGNANCY_BIRTH_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_RESIDENCY_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_RISK_FACTOR_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_SOCIAL_HISTORY_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_SYMPTOM_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_TREATMENT_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_TRAVEL_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_UNDER_CONDITION_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_VACCINATION_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_STD_' + @datamart_suffix
+            , 'tmp_DynDm_Organization_' + @datamart_suffix
+            , 'tmp_DynDm_PROVIDER_' + @datamart_suffix
+            , 'tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_' + @datamart_suffix
+            , 'tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL_' + @datamart_suffix
+            , 'tmp_DynDm_INVESTIGATION_REPEAT_DATE_' + @datamart_suffix
+            , 'tmp_DynDm_REPEAT_BLOCK_DATE_ALL_' + @datamart_suffix
+            , 'tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC_' + @datamart_suffix
+            , 'tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix
+            )
+            AND COLUMN_NAME <> @JoinColumn  -- Exclude Join Column
+        )
+        SELECT @select_cols = STRING_AGG(QUOTENAME(TABLE_NAME) + '.' + QUOTENAME(COLUMN_NAME), ', ')
+        FROM ColumnNames;
 
                 SET @temp_sql = 
 
-        'SELECT * 
+        'SELECT disumdt.*, 
+        ' + @select_cols + ' 
 into ' + @tmp_DynDm_INCOMING_DATA + ' 
 FROM dbo.tmp_DynDm_INV_SUMM_DATAMART_' + @datamart_suffix + ' disumdt 
-LEFT JOIN dbo.tmp_DynDm_Investigation_Data_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_Investigation_Data_' + @datamart_suffix + '.INVESTIGATION_KEY_INVESTIGATION_DATA =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_Patient_Data_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_Patient_Data_' + @datamart_suffix + '.INVESTIGATION_KEY_PATIENT_DATA =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_Case_Management_Data_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_Case_Management_Data_' + @datamart_suffix + '.INVESTIGATION_KEY_CASE_MANAGEMENT_DATA =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_Administrative_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_Administrative_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_ADMINISTRATIVE =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_CLINICAL =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_COMPLICATION_' + @datamart_suffix + ' with (nolock) ON  tmp_DynDm_D_INV_COMPLICATION_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_COMPLICATION =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_CONTACT =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_DEATH_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_DEATH_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_DEATH =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_EPIDEMIOLOGY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_EPIDEMIOLOGY_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_EPIDEMIOLOGY =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_HIV_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_HIV_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_HIV =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_PATIENT_OBS_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_PATIENT_OBS_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_PATIENT_OBS =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_ISOLATE_TRACKING_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_ISOLATE_TRACKING_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_ISOLATE_TRACKING =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_LAB_FINDING_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_LAB_FINDING_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_LAB_FINDING =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_MEDICAL_HISTORY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_MEDICAL_HISTORY_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_MEDICAL_HISTORY =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_MOTHER_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_MOTHER_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_MOTHER =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_OTHER_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_OTHER_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_OTHER =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_PREGNANCY_BIRTH_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_PREGNANCY_BIRTH_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_PREGNANCY_BIRTH =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_RESIDENCY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_RESIDENCY_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_RESIDENCY =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_RISK_FACTOR_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_RISK_FACTOR_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_RISK_FACTOR =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_SOCIAL_HISTORY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_SOCIAL_HISTORY_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_SOCIAL_HISTORY =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_SYMPTOM_' + @datamart_suffix + '  ON tmp_DynDm_D_INV_SYMPTOM_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_SYMPTOM =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_TREATMENT_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_TREATMENT_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_TREATMENT =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_TRAVEL_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_TRAVEL_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_TRAVEL =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_UNDER_CONDITION_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_UNDER_CONDITION_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_UNDER_CONDITION =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_VACCINATION_' + @datamart_suffix + ' with (nolock)  ON  tmp_DynDm_D_INV_VACCINATION_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_VACCINATION =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_D_INV_STD_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_STD_' + @datamart_suffix + '.INVESTIGATION_KEY_D_INV_STD =disumdt.INVESTIGATION_KEY 
-LEFT JOIN dbo.tmp_DynDm_Organization_' + @datamart_suffix + ' with (nolock)  ON  tmp_DynDm_Organization_' + @datamart_suffix + '.INVESTIGATION_KEY_ORGANIZATION =disumdt.INVESTIGATION_KEY  
-LEFT JOIN dbo.tmp_DynDm_PROVIDER_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_PROVIDER_' + @datamart_suffix + '.INVESTIGATION_KEY_PROVIDER =disumdt.INVESTIGATION_KEY
-LEFT JOIN dbo.tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_' + @datamart_suffix + '  irv  with (nolock) ON irv.INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR = disumdt.INVESTIGATION_KEY
-LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL_' + @datamart_suffix + '  rbva  with (nolock)  ON rbva.INVESTIGATION_KEY_REPEAT_BLOCK_VARCHAR_ALL =irv.INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR
-LEFT JOIN dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE_' + @datamart_suffix + '   ird  with (nolock) ON ird.INVESTIGATION_KEY_REPEAT_DATE =irv.INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR
-LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_DATE_ALL_' + @datamart_suffix + '  rda   with (nolock)     ON rda.INVESTIGATION_KEY_REPEAT_BLOCK_DATE_ALL =irv.INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR
-LEFT JOIN dbo.tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC_' + @datamart_suffix + '  rn  with (nolock) ON rn.INVESTIGATION_KEY_REPEAT_NUMERIC =irv.INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR
-LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '  rna   with (nolock)  ON rna.INVESTIGATION_KEY_REPEAT_BLOCK_NUMERIC_ALL =irv.INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR
+LEFT JOIN dbo.tmp_DynDm_Investigation_Data_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_Investigation_Data_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_Patient_Data_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_Patient_Data_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_Case_Management_Data_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_Case_Management_Data_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_Administrative_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_Administrative_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_COMPLICATION_' + @datamart_suffix + ' with (nolock) ON  tmp_DynDm_D_INV_COMPLICATION_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_DEATH_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_DEATH_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_EPIDEMIOLOGY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_EPIDEMIOLOGY_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_HIV_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_HIV_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_PATIENT_OBS_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_PATIENT_OBS_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_ISOLATE_TRACKING_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_ISOLATE_TRACKING_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_LAB_FINDING_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_LAB_FINDING_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_MEDICAL_HISTORY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_MEDICAL_HISTORY_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_MOTHER_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_MOTHER_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_OTHER_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_OTHER_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_PREGNANCY_BIRTH_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_PREGNANCY_BIRTH_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_RESIDENCY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_RESIDENCY_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_RISK_FACTOR_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_RISK_FACTOR_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_SOCIAL_HISTORY_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_SOCIAL_HISTORY_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_SYMPTOM_' + @datamart_suffix + '  ON tmp_DynDm_D_INV_SYMPTOM_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_TREATMENT_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_TREATMENT_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_TRAVEL_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_TRAVEL_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_UNDER_CONDITION_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_UNDER_CONDITION_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_VACCINATION_' + @datamart_suffix + ' with (nolock)  ON  tmp_DynDm_D_INV_VACCINATION_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_D_INV_STD_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_D_INV_STD_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY 
+LEFT JOIN dbo.tmp_DynDm_Organization_' + @datamart_suffix + ' with (nolock)  ON  tmp_DynDm_Organization_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY  
+LEFT JOIN dbo.tmp_DynDm_PROVIDER_' + @datamart_suffix + ' with (nolock) ON tmp_DynDm_PROVIDER_' + @datamart_suffix + '.INVESTIGATION_KEY =disumdt.INVESTIGATION_KEY
+LEFT JOIN dbo.tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_' + @datamart_suffix + '  irv  with (nolock) ON irv.INVESTIGATION_KEY = disumdt.INVESTIGATION_KEY
+LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL_' + @datamart_suffix + '  rbva  with (nolock)  ON rbva.INVESTIGATION_KEY =irv.INVESTIGATION_KEY
+LEFT JOIN dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE_' + @datamart_suffix + '   ird  with (nolock) ON ird.INVESTIGATION_KEY =irv.INVESTIGATION_KEY
+LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_DATE_ALL_' + @datamart_suffix + '  rda   with (nolock)     ON rda.INVESTIGATION_KEY =irv.INVESTIGATION_KEY
+LEFT JOIN dbo.tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC_' + @datamart_suffix + '  rn  with (nolock) ON rn.INVESTIGATION_KEY =irv.INVESTIGATION_KEY
+LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '  rna   with (nolock)  ON rna.INVESTIGATION_KEY =irv.INVESTIGATION_KEY
 ';
         if @debug = 'true'
         select @Proc_Step_Name, @temp_sql;
@@ -158,63 +170,6 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '  rna  
             COMMIT TRANSACTION;
 
 
-            BEGIN TRANSACTION
-
-                SET @Proc_Step_no = @Proc_Step_no + 1;
-                SET @Proc_Step_Name = 'DROPPING UNNECESSARY COLUMNS FROM ' + @tgt_table_nm;
-
-                    
-                SET @temp_sql = '    alter  table dbo.'+ @tgt_table_nm +' ' +
-                    '  drop column ' +
-                    -- ' INVESTIGATION_KEY_INVESTIGATION_DATA , ' + 
-                    -- ' INVESTIGATION_KEY_PATIENT_DATA , ' + 
-                    -- ' INVESTIGATION_KEY_CASE_MANAGEMENT_DATA , ' + 
-                    ' INVESTIGATION_KEY_D_INV_ADMINISTRATIVE , ' + 
-                    ' INVESTIGATION_KEY_D_INV_CLINICAL , ' + 
-                    ' INVESTIGATION_KEY_D_INV_COMPLICATION , ' + 
-                    ' INVESTIGATION_KEY_D_INV_CONTACT , ' + 
-                    ' INVESTIGATION_KEY_D_INV_DEATH , ' + 
-                    ' INVESTIGATION_KEY_D_INV_EPIDEMIOLOGY , ' + 
-                    ' INVESTIGATION_KEY_D_INV_HIV , ' + 
-                    ' INVESTIGATION_KEY_D_INV_PATIENT_OBS , ' + 
-                    ' INVESTIGATION_KEY_D_INV_ISOLATE_TRACKING , ' + 
-                    ' INVESTIGATION_KEY_D_INV_LAB_FINDING , ' + 
-                    ' INVESTIGATION_KEY_D_INV_MEDICAL_HISTORY , ' + 
-                    ' INVESTIGATION_KEY_D_INV_MOTHER , ' + 
-                    ' INVESTIGATION_KEY_D_INV_OTHER , ' + 
-                    ' INVESTIGATION_KEY_D_INV_PREGNANCY_BIRTH , ' + 
-                    ' INVESTIGATION_KEY_D_INV_RESIDENCY , ' + 
-                    ' INVESTIGATION_KEY_D_INV_RISK_FACTOR , ' + 
-                    ' INVESTIGATION_KEY_D_INV_SOCIAL_HISTORY , ' + 
-                    ' INVESTIGATION_KEY_D_INV_SYMPTOM , ' + 
-                    ' INVESTIGATION_KEY_D_INV_TREATMENT , ' + 
-                    ' INVESTIGATION_KEY_D_INV_TRAVEL , ' + 
-                    ' INVESTIGATION_KEY_D_INV_UNDER_CONDITION , ' + 
-                    ' INVESTIGATION_KEY_D_INV_VACCINATION , ' + 
-                    ' INVESTIGATION_KEY_D_INV_STD , ' + 
-                    ' INVESTIGATION_KEY_ORGANIZATION , ' + 
-                    ' INVESTIGATION_KEY_PROVIDER , ' +
-                    ' ORGANIZATION_UID , ' +
-                    ' PROVIDER_UID , ' +
-                    ' INVESTIGATION_KEY_CASE_MANAGEMENT_DATA , ' +
-                    ' INVESTIGATION_KEY_INVESTIGATION_DATA , ' +
-                    ' INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR , ' +
-                    ' INVESTIGATION_KEY_PATIENT_DATA , ' +
-                    ' INVESTIGATION_KEY_REPEAT_BLOCK_DATE_ALL , ' +
-                    ' INVESTIGATION_KEY_REPEAT_BLOCK_NUMERIC_ALL , ' +
-                    ' INVESTIGATION_KEY_REPEAT_BLOCK_VARCHAR_ALL , ' +
-                    ' INVESTIGATION_KEY_REPEAT_DATE , ' +
-                    ' INVESTIGATION_KEY_REPEAT_NUMERIC , ' +
-                    'PATIENT_LOCAL_ID_PATIENT_DATA ;'
-
-                if @debug = 'true'
-                select @Proc_Step_Name, @temp_sql;
-
-                exec sp_executesql @temp_sql;
-
-
-            COMMIT TRANSACTION;
-
         END;
         ELSE
         BEGIN
@@ -239,9 +194,6 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '  rna  
             AND column_name NOT IN (SELECT COLUMN_NAME  
             FROM INFORMATION_SCHEMA.columns 
             where table_name = '''+ @tgt_table_nm +''' and TABLE_SCHEMA = ''dbo'')  
-            AND column_name NOT IN (' 
-            + @excluded_columns +  
-            ') 
                 ) snt) 
                 select @altercolsOUT = STRING_AGG( col_nm + '' '' +  col_data_type + 
                     CASE 
