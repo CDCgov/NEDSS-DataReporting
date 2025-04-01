@@ -130,11 +130,13 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 	        FROM dbo.INVESTIGATION inv with ( nolock)
 	           INNER JOIN #tmp_DynDm_SUMM_DATAMART isd ON	isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
 	           inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on isd.DISEASE_GRP_CD =  inv_meta.INVESTIGATION_FORM_CD
-	           and inv_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd and isd.DISEASE_GRP_CD = @nbs_page_form_cd';
+	           and inv_meta.INVESTIGATION_FORM_CD = '''+@nbs_page_form_cd +''' and isd.DISEASE_GRP_CD = '''+@nbs_page_form_cd +'''';
 	exec sp_executesql @temp_sql;
 
-  if @debug = 'true'
- 	select * from #tmp_DynDm_Investigation_Data;
+	if @debug = 'true'
+		SET @temp_sql = '
+	 	select * from '+ @tmp_DynDm_INVESTIGATION_DATA;
+		exec sp_executesql @temp_sql;
 
 
 				SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -232,12 +234,36 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 
 --CREATE TABLE INV_SUMM_DATAMART AS
 
-
-
      IF OBJECT_ID('#tmp_DynDm_INV_SUMM_DATAMART', 'U') IS NOT NULL
  				drop table #tmp_DynDm_INV_SUMM_DATAMART;
 
+	CREATE TABLE #tmp_DynDm_INV_SUMM_DATAMART
+     (PROGRAM_JURISDICTION_OID numeric(20,0) NULL,
+     INVESTIGATION_KEY bigint NOT NULL,
+     PATIENT_KEY bigint NULL,
+     PATIENT_LOCAL_ID varchar(50) NULL,
+     INVESTIGATION_CREATE_DATE datetime NULL,
+     INVESTIGATION_CREATED_BY varchar(50) NULL,
+     INVESTIGATION_LAST_UPDTD_DATE datetime NULL,
+     INVESTIGATION_LAST_UPDTD_BY varchar(50) NULL,
+     EVENT_DATE datetime NULL,
+     EVENT_DATE_TYPE varchar(100) NULL,
+     LABORATORY_INFORMATION varchar(4000) NULL,
+     EARLIEST_SPECIMEN_COLLECT_DATE datetime NULL,
+     NOTIFICATION_STATUS varchar(50) NULL,
+     CONFIRMATION_METHOD varchar(4000) NULL,
+     CONFIRMATION_DT datetime NULL,
+     DISEASE_CD varchar(50) NULL,
+     DISEASE varchar(100) NULL,
+     NOTIFICATION_LAST_UPDATED_DATE datetime NULL,
+     NOTIFICATION_LOCAL_ID varchar(50) NULL,
+     PROGRAM_AREA varchar(50) NULL,
+     PATIENT_COUNTY_CODE varchar(50) NULL,
+     JURISDICTION_NM varchar(100) NULL
+     )
+
 	SET @temp_sql = '
+	INSERT INTO #tmp_DynDm_INV_SUMM_DATAMART
 	 SELECT INV_SUMM_DATAMART.PROGRAM_JURISDICTION_OID,
 			INV_SUMM_DATAMART.INVESTIGATION_KEY,
 			INV_SUMM_DATAMART.PATIENT_KEY,
@@ -261,7 +287,6 @@ where  inv_meta.INVESTIGATION_FORM_CD=@nbs_page_form_cd;
 			--INV_SUMM_DATAMART.INVESTIGATION_LAST_UPDTD_BY,
 			INV_SUMM_DATAMART.PATIENT_COUNTY_CODE,
 			INV_SUMM_DATAMART.JURISDICTION_NM
-	into #tmp_DynDm_INV_SUMM_DATAMART
 	FROM dbo.INV_SUMM_DATAMART with ( nolock)
 	INNER JOIN '+@tmp_DynDm_INVESTIGATION_DATA+' d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY
 	inner join dbo.investigation nrt_inv with ( nolock ) on nrt_inv.investigation_key =  d.INVESTIGATION_KEY
@@ -372,13 +397,13 @@ FROM  #tmp_DynDm_PAT_METADATA;
 	            FROM dbo.D_PATIENT pat with ( nolock)
                    INNER JOIN #tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY
       	           inner join dbo.v_nrt_nbs_d_patient_rdb_table_metadata pat_meta on isd.DISEASE_GRP_CD =  pat_meta.INVESTIGATION_FORM_CD
-		           and pat_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd and isd.DISEASE_GRP_CD = @nbs_page_form_cd';
+		           and pat_meta.INVESTIGATION_FORM_CD = '''+@nbs_page_form_cd +''' and isd.DISEASE_GRP_CD = '''+@nbs_page_form_cd +'''';
 	exec sp_executesql @temp_sql;
 
 
 	    if @debug = 'true'
 		    SET @temp_sql = '
-	      	select * from'+ @tmp_DynDm_PATIENT_DATA;
+	      	select * from '+ @tmp_DynDm_PATIENT_DATA;
 		    exec sp_executesql @temp_sql;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
