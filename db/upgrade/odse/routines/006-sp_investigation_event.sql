@@ -511,7 +511,7 @@ BEGIN
                                                                  pa.answer_txt,
                                                                  pa.answer_group_seq_nbr,
                                                                  nuim.nbs_ui_metadata_uid,
-                                                                 nuim.code_set_group_id,
+                                                                 pq.code_set_group_id,
                                                                  nuim.nbs_question_uid,
                                                                  nuim.investigation_form_cd,
                                                                  nuim.unit_value,

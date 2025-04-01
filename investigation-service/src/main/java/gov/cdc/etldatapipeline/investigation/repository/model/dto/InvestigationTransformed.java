@@ -21,6 +21,7 @@ public class InvestigationTransformed {
     private Long caseCount;
     private String investigatorAssignedDatetime;
     private Long batchId;
+    private Long personAsReporterUid;
 
     public InvestigationTransformed(Long publicHealthCaseUid, Long batchId) {
         this.publicHealthCaseUid = publicHealthCaseUid;
