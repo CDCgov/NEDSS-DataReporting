@@ -666,21 +666,6 @@ BEGIN
         VALUES ( @batch_id ,@Dataflow_Name ,@package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-
-        SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = ' GENERATING tmp_DynDm_METADATA_OUT2';
-
-        select
-            RDB_COLUMN_NM,
-            _NAME_,
-            COL1,
-            BLOCK_NM,
-            ANSWER_GROUP_SEQ_NBR
-        into
-            #tmp_DynDm_METADATA_OUT2
-        FROM
-            #tmp_DynDm_METADATA_OUT_final;
-
         alter table #tmp_DynDm_REPEAT_BLOCK_OUT_BASE
             drop column block_nm, rdb_column_nm;
 
