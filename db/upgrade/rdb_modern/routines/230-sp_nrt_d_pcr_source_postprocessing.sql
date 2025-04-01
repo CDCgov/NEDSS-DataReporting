@@ -325,7 +325,9 @@ BEGIN
             LEFT JOIN [dbo].nrt_d_pcr_source_key K WITH (NOLOCK)
                 ON K.VAR_PAM_UID = S.VAR_PAM_UID
                 AND K.NBS_CASE_ANSWER_UID = S.NBS_CASE_ANSWER_UID
-            WHERE K.VAR_PAM_UID is null;
+            WHERE 
+                K.VAR_PAM_UID is null 
+                AND K.NBS_CASE_ANSWER_UID is null;
             
 
             SELECT @RowCount_no = @@ROWCOUNT;

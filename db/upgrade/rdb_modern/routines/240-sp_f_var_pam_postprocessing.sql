@@ -159,7 +159,7 @@ BEGIN
                     p.PROVIDER_key AS PHYSICIAN_KEY
                 FROM [dbo].D_PROVIDER p WITH (NOLOCK) 
                 JOIN CTE_PAT_VAR_PROV1_keystore b
-                ON b.PHYSICIAN_UID = a.PROVIDER_uid
+                ON b.PHYSICIAN_UID = p.PROVIDER_uid
             ),
             CTE_PAT_VAR_PROV2_keystore AS (
                 SELECT 
@@ -205,7 +205,7 @@ BEGIN
                 DROP TABLE #D_RASH_LOC_GEN;
 
             -- Create temporary tables for distinct group keys
-            SELECT DISTINCT D_RASH_LOC_GEN_GROUP_KEY, VAR_PAM_UID 
+            SELECT DISTINCT D.D_RASH_LOC_GEN_GROUP_KEY, D.VAR_PAM_UID 
             INTO #D_RASH_LOC_GEN
             FROM [dbo].D_RASH_LOC_GEN D WITH (NOLOCK)
             INNER JOIN #F_S_VAR_PAM S ON S.VAR_PAM_UID = D.VAR_PAM_UID;
@@ -232,7 +232,7 @@ BEGIN
                 DROP TABLE #D_PCR_SOURCE;
 
             -- Create temporary tables for distinct group keys
-            SELECT DISTINCT D_PCR_SOURCE_GROUP_KEY, VAR_PAM_UID 
+            SELECT DISTINCT D.D_PCR_SOURCE_GROUP_KEY, D.VAR_PAM_UID 
             INTO #D_PCR_SOURCE
             FROM [dbo].D_PCR_SOURCE D WITH (NOLOCK)
             INNER JOIN #F_S_VAR_PAM S ON S.VAR_PAM_UID = D.VAR_PAM_UID;
@@ -403,7 +403,7 @@ BEGIN
                     ro.ORG_AS_REPORTER_KEY,
                     h.HOSPITAL_KEY,
                     v.D_VAR_PAM_KEY,
-                    i.INVESTIGATION_KEY,
+                    inv.INVESTIGATION_KEY,
                     d1.date_key as ADD_DATE_KEY, 
                     d2.date_key as LAST_CHG_DATE_KEY
                 INTO #F_VAR_PAM_I
@@ -412,7 +412,7 @@ BEGIN
                     ON r.VAR_PAM_UID = k.VAR_PAM_UID 
                 JOIN #D_PCR_SOURCE p 
                     ON k.VAR_PAM_UID = p.VAR_PAM_UID 
-                JOIN nbs_rdb.D_VAR_PAM v 
+                JOIN [dbo].D_VAR_PAM v WITH (NOLOCK)
                     ON k.VAR_PAM_UID = v.VAR_PAM_UID 
                 JOIN #HOSPITAL_UID_keystore h 
                     ON k.VAR_PAM_UID = h.VAR_PAM_UID 
@@ -420,14 +420,14 @@ BEGIN
                     ON k.VAR_PAM_UID = ro.VAR_PAM_UID 
                 JOIN #PERSON_AS_REPORTER_keystore pr 
                     ON k.VAR_PAM_UID = pr.VAR_PAM_UID 
-                JOIN NBS_RDB.INVESTIGATION i 
-                    ON i.CASE_UID = v.VAR_PAM_UID 
+                JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
+                    ON inv.CASE_UID = v.VAR_PAM_UID 
                 INNER JOIN [dbo].nrt_investigation i WITH (NOLOCK)
-                    ON tb.VAR_PAM_UID = i.public_health_case_uid
+                    ON v.VAR_PAM_UID = i.public_health_case_uid
                 LEFT JOIN [dbo].RDB_DATE d1 WITH (NOLOCK)   
-                    ON CONVERT(date, d1.DATE_MM_DD_YYYY) = CONVERT(date, em.ADD_TIME)
+                    ON CONVERT(date, d1.DATE_MM_DD_YYYY) = CONVERT(date, i.ADD_TIME)
                 LEFT JOIN [dbo].RDB_DATE d2 WITH (NOLOCK)
-                    ON CONVERT(date, d2.DATE_MM_DD_YYYY) = CONVERT(date, em.LAST_CHG_TIME);
+                    ON CONVERT(date, d2.DATE_MM_DD_YYYY) = CONVERT(date, i.LAST_CHG_TIME);
 
                 INSERT INTO [dbo].F_VAR_PAM (
                     PERSON_KEY,
