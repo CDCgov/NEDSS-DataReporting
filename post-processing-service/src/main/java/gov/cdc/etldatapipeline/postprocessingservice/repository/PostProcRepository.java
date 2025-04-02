@@ -96,7 +96,7 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
             @Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_dyn_dm_main_postprocessing")
-    void executeDynDmProcedure(
+    void executeStoredProcForDynDatamart(
             @Param("datamart") String datamart,
             @Param("publicHealthCaseUids") String publicHealthCaseUids);
 }

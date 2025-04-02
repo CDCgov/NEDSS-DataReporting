@@ -556,7 +556,7 @@ public class PostProcessingService {
             dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
             for(DatamartData dmData : dmDataList){
                 // change this into an async call instead later
-                postProcRepository.executeDynDmProcedure(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
+                postProcRepository.executeStoredProcForDynDatamart(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
             }
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");

@@ -891,6 +891,36 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessDynMarts() {
+
+        String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
+//        String notificationKey = "{\"payload\":{\"notification_uid\":127}}";
+//        String observationKey = "{\"payload\":{\"observation_uid\":130}}";
+
+        String invTopic = "dummy_investigation";
+//        String notTopic = "dummy_notification";
+//        String obsTopic = "dummy_observation";
+
+        postProcessingServiceMock.setInvSummaryDmEnable(true);
+        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
+//        postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
+//        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);
+
+        List<DatamartData> masterData = new ArrayList<>();
+        DatamartData datamartData = new DatamartData();
+        datamartData.setDatamart("GENERIC_V2");
+        datamartData.setPublicHealthCaseUid(126L);
+        masterData.add(datamartData);
+        when(postProcRepositoryMock.executeStoredProcForInvSummaryDatamart("126", "", "")).thenReturn(masterData);
+
+        postProcessingServiceMock.processCachedIds();
+        postProcessingServiceMock.processDatamartIds();
+
+
+        verify(postProcRepositoryMock).executeStoredProcForInvSummaryDatamart("126","","");
+        verify(postProcRepositoryMock).executeStoredProcForDynDatamart("GENERIC_V2", "126");
+    }
+    @Test
     void testPostProcessMorbidityReportDatamart() {
 
         String investigationKey1 = "{\"payload\":{\"public_health_case_uid\":126}}";
