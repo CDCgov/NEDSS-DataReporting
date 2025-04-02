@@ -410,13 +410,11 @@ BEGIN
                 JOIN #PERSON_AS_REPORTER_keystore pr 
                     ON k.VAR_PAM_UID = pr.VAR_PAM_UID 
                 JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
-                    ON inv.CASE_UID = v.VAR_PAM_UID 
-                INNER JOIN [dbo].nrt_investigation i WITH (NOLOCK)
-                    ON v.VAR_PAM_UID = i.public_health_case_uid
+                    ON inv.CASE_UID = v.VAR_PAM_UID                 
                 LEFT JOIN [dbo].RDB_DATE d1 WITH (NOLOCK)   
-                    ON CONVERT(date, d1.DATE_MM_DD_YYYY) = CONVERT(date, i.ADD_TIME)
+                    ON CONVERT(date, d1.DATE_MM_DD_YYYY) = CONVERT(date, inv.ADD_TIME)
                 LEFT JOIN [dbo].RDB_DATE d2 WITH (NOLOCK)
-                    ON CONVERT(date, d2.DATE_MM_DD_YYYY) = CONVERT(date, i.LAST_CHG_TIME);
+                    ON CONVERT(date, d2.DATE_MM_DD_YYYY) = CONVERT(date, inv.LAST_CHG_TIME);
 
                 INSERT INTO [dbo].F_VAR_PAM (
                     PERSON_KEY,
