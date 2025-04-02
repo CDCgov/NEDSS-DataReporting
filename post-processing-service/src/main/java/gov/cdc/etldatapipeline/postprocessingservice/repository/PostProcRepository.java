@@ -77,7 +77,7 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_d_vaccination_postprocessing")
     void executeStoredProcForDVaccination(@Param("vaccinationUids") String vaccinationUids);
 
-    @Query(value = "exec sp_inv_summary_datamart_postprocessing :publicHealthCaseUids, notificationUids, observationUids", nativeQuery = true)
+    @Query(value = "exec sp_inv_summary_datamart_postprocessing :publicHealthCaseUids, :notificationUids, :observationUids", nativeQuery = true)
     List<DatamartData>  executeStoredProcForInvSummaryDatamart(
             @Param("publicHealthCaseUids") String publicHealthCaseUids,
             @Param("notificationUids") String notificationUids,

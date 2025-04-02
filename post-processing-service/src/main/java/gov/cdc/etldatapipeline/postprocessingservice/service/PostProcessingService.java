@@ -554,9 +554,13 @@ public class PostProcessingService {
         if (totalLengthInvSummary > 0 && invSummaryDmEnable) {
             List<DatamartData> dmDataList; //reusing the same DTO class for Dynamic Marts
             dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+            if(dmDataList == null || dmDataList.isEmpty()) {
+                logger.info("No updates to Dynamic Datamarts");
+            }
             for(DatamartData dmData : dmDataList){
                 // change this into an async call instead later
                 postProcRepository.executeStoredProcForDynDatamart(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
+                logger.info("Updates to Dynamic Datamart: %s",dmData.getDatamart());
             }
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
