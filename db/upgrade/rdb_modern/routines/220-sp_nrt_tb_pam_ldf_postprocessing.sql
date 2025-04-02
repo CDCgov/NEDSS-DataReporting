@@ -439,17 +439,17 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING #LDF_TRANSLATED';
+                @PROC_STEP_NAME = 'GENERATING ##LDF_TRANSLATED_TB_PAM_LDF';
 
             DECLARE @ldf_translated NVARCHAR(MAX);    
 
-            IF OBJECT_ID('tempdb..#LDF_TRANSLATED') IS NOT NULL
-                DROP TABLE #LDF_TRANSLATED;
+            IF OBJECT_ID('##LDF_TRANSLATED_TB_PAM_LDF') IS NOT NULL
+                DROP TABLE ##LDF_TRANSLATED_TB_PAM_LDF;
 
             IF @obscoded_columns != ''
             BEGIN
                 SET @ldf_translated = 'SELECT *
-                INTO #LDF_TRANSLATED
+                INTO ##LDF_TRANSLATED_TB_PAM_LDF
                 FROM (
                     SELECT 
                         TB_PAM_UID, 
@@ -460,11 +460,7 @@ BEGIN
                     ) AS SourceTable
                 PIVOT (
                     MAX(ANSWER_TXT)
-                    FOR DATAMART_COLUMN_NM IN (
-                    ' + 
-                    @obscoded_columns
-                    +'
-                    )
+                    FOR DATAMART_COLUMN_NM IN (' + @obscoded_columns + ')
                 ) AS PivotTable';
 
                 EXEC sp_executesql @ldf_translated;
@@ -474,7 +470,7 @@ BEGIN
                 SELECT 
                     TB_PAM_UID, 
                     ADD_TIME
-                INTO #LDF_TRANSLATED
+                INTO ##LDF_TRANSLATED_TB_PAM_LDF
                 FROM #LDF_BASE_COUNTRY_CONCAT
             END;
             
@@ -484,7 +480,7 @@ BEGIN
             IF
                 @debug = 'true'
                 SELECT @Proc_Step_Name AS step, *
-                FROM #LDF_TRANSLATED;
+                FROM ##LDF_TRANSLATED_TB_PAM_LDF;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -501,7 +497,7 @@ BEGIN
 
             DELETE D
             FROM [dbo].TB_PAM_LDF D
-            INNER JOIN #LDF_TRANSLATED T
+            INNER JOIN ##LDF_TRANSLATED_TB_PAM_LDF T
                 ON T.TB_PAM_UID = D.TB_PAM_UID
     
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -509,7 +505,7 @@ BEGIN
             IF
                 @debug = 'true'
                 SELECT @Proc_Step_Name AS step, *
-                FROM #LDF_TRANSLATED;
+                FROM ##LDF_TRANSLATED_TB_PAM_LDF;
     
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -557,7 +553,7 @@ BEGIN
             +
             '
             FROM
-            #LDF_TRANSLATED tb
+            ##LDF_TRANSLATED_TB_PAM_LDF tb
             LEFT JOIN [dbo].investigation inv WITH(nolock)
                 ON tb.TB_APM_UID = inv.CASE_UID
             ';
@@ -567,7 +563,11 @@ BEGIN
             IF
                 @debug = 'true'
                 SELECT @Proc_Step_Name AS step, *
-                FROM #LDF_TRANSLATED;
+                FROM ##LDF_TRANSLATED_TB_PAM_LDF;
+
+            -- Force drop global temp table
+            IF OBJECT_ID('##LDF_TRANSLATED_TB_PAM_LDF') IS NOT NULL
+                DROP TABLE ##LDF_TRANSLATED_TB_PAM_LDF;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
