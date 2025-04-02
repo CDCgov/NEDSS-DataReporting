@@ -496,14 +496,6 @@ databaseChangeLog:
             path: 187-create_nrt_srte_State_code-001.sql
             splitStatements: false
   - changeSet:
-      id: 70.7
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 187-create_nrt_srte_State_code-001.sql
-            splitStatements: false
-  - changeSet:
       id: 71
       author: liquibase
       runOnChange: true
