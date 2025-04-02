@@ -63,13 +63,12 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
             [batch_table_column_width] [int] NULL,
             [coinfection_ind_cd] [char](1) NULL,
             [block_nm] [varchar](30) NULL,
-            CONSTRAINT [PK_NBS_UI_Metadata] PRIMARY KEY CLUSTERED
-            (
+            CONSTRAINT [PK_NBS_UI_Metadata] PRIMARY KEY CLUSTERED (
                 [nbs_ui_metadata_uid] ASC
             ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
         ) ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04052021_02] ON [dbo].[NBS_ui_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_GRP_SEQ_NBR] ON [dbo].[NBS_ui_metadata] (
             [question_group_seq_nbr] ASC
         )
         INCLUDE (
@@ -80,7 +79,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04052021_04] ON [dbo].[NBS_ui_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_GRP_SEQ_NBR_DT] ON [dbo].[NBS_ui_metadata] (
             [question_group_seq_nbr] ASC,
             [data_type] ASC
         )
@@ -91,7 +90,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04072021_05] ON [dbo].[NBS_ui_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_DT] ON [dbo].[NBS_ui_metadata] (
             [data_type] ASC
         )
         INCLUDE (
@@ -103,7 +102,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04072021_06] ON [dbo].[NBS_ui_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_INV_FRM_CD] ON [dbo].[NBS_ui_metadata] (
             [investigation_form_cd] ASC,
             [data_type] ASC
         )
@@ -115,7 +114,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04092021_02] ON [dbo].[NBS_ui_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_GRP_SEQ_NBR_BLK] ON [dbo].[NBS_ui_metadata] (
             [question_group_seq_nbr] ASC
         )
         INCLUDE (
@@ -127,7 +126,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04092021_03] ON [dbo].[NBS_ui_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_GRP_SEQ_NBR_OTH] ON [dbo].[NBS_ui_metadata] (
             [data_type] ASC,
             [question_group_seq_nbr] ASC
         )
@@ -139,7 +138,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04092021_05] ON [dbo].[NBS_ui_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_GRP_SEQ_NBR_UNIT] ON [dbo].[NBS_ui_metadata] (
             [question_group_seq_nbr] ASC
         )
         INCLUDE (
@@ -154,4 +153,3 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_ui_metadata' 
         ON [PRIMARY];
 
    END;
-

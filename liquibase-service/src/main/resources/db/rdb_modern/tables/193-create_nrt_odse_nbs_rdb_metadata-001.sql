@@ -19,7 +19,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_rdb_metadata'
             ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
         ) ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04052021_01] ON [dbo].[NBS_rdb_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_RDB_TBL_NM] ON [dbo].[NBS_rdb_metadata] (
             [rdb_table_nm] ASC
         )
         INCLUDE (
@@ -28,7 +28,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_rdb_metadata'
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04072021_07] ON [dbo].[NBS_rdb_metadata] (
+        CREATE NONCLUSTERED INDEX [RDB_PERF_UID_RDB_TBL_NM] ON [dbo].[NBS_rdb_metadata] (
             [nbs_ui_metadata_uid] ASC,
             [rdb_table_nm] ASC
         )
@@ -37,7 +37,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_rdb_metadata'
         ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
         ON [PRIMARY];
 
-        CREATE NONCLUSTERED INDEX [RDB_PERF_04092021_04] ON [dbo].[NBS_rdb_metadata](
+        CREATE NONCLUSTERED INDEX [RDB_PERF_UID] ON [dbo].[NBS_rdb_metadata](
             [nbs_ui_metadata_uid] ASC
         )
         INCLUDE (

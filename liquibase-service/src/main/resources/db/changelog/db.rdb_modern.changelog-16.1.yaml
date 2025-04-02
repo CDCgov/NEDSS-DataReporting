@@ -1968,6 +1968,7 @@ databaseChangeLog:
         - sqlFile:
             path: 240-sp_f_var_pam_postprocessing-001.sql
             splitStatements: false
+
   - changeSet:
       id: 660
       author: liquibase
@@ -1976,6 +1977,7 @@ databaseChangeLog:
         - sqlFile:
             path: 245-sp_dyn_dm_createdm_postprocessing-001.sql
             splitStatements: false
+
   - changeSet:
       id: 665
       author: liquibase
