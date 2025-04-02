@@ -13,7 +13,7 @@ BEGIN TRY
 	DECLARE @Proc_Step_no FLOAT = 0 ;
 	DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
 	--DECLARE @DATAMART_NAME VARCHAR = 'GENERIC_V2';
-	DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART' ;
+	DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing' ;
 	DECLARE @package_Name VARCHAR(100) = 'sp_dyn_dm_repeatvarch_postprocessing: '+ @DATAMART_NAME;
 
     DECLARE @nbs_page_form_cd varchar(200)='';
@@ -40,7 +40,7 @@ BEGIN TRY
 --------------------------------------------------------------------------------------------------------------------------------------------
 
   	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_METADATA_INIT';
+	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_INIT';
 
 
  	SELECT  distinct
@@ -63,7 +63,7 @@ BEGIN TRY
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_METADATA_UNIT';
+	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_UNIT';
 
 
  	SELECT  distinct
@@ -88,7 +88,7 @@ BEGIN TRY
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_METADATA';
+	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA';
 
 	select [DATAMART_NM]
 		,[BLOCK_PIVOT_NBR]
@@ -183,7 +183,8 @@ BEGIN TRY
 	where  BLOCK_PIVOT_NBR = 4  ;
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-
+if @debug='true'
+	select 'tmp_DynDm_METADATA',* from #tmp_DynDm_METADATA;
 /*now we have extra columns, user_defined_column_nm_1, user_defined_column_nm_2, etc.*/
 /*A new metadata_out is created, on the left column we have the new user_defined_column_nm1, user_defined_column_nm2,
 and copying the values that were for the corresponding user_defined_column_nm for each of them*/
@@ -238,10 +239,12 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
 	VALUES ( @batch_id ,@Dataflow_Name ,@package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
+if @debug='true'
+	select 'tmp_DynDm_METADATA_OUT_TMP',* from #tmp_DynDm_METADATA_OUT_TMP;
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_METADATA_OUT1';
+	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_OUT1';
 
 	SELECT
 		*
@@ -257,6 +260,8 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
 	VALUES ( @batch_id ,@Dataflow_Name ,@package_Name,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
+if @debug='true'
+	select 'tmp_DynDm_METADATA_OUT1',* from #tmp_DynDm_METADATA_OUT1;
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -288,10 +293,12 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
 	VALUES ( @batch_id ,@Dataflow_Name , @package_Name, 'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
+if @debug='true'
+	select 'tmp_DynDm_METADATA_OUT_final',* from #tmp_DynDm_METADATA_OUT_final;
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Case_Management_Metadata';
+	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_Case_Management_Metadata';
 
     declare @countSTD int = 0;
 
@@ -318,7 +325,7 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  Selecting Fact table';
+	SET @Proc_Step_Name = ' GENERATING  Selecting Fact table';
 
 	select  @countSTD = count(*)    from #tmp_DynDm_Case_Management_Metadata;
   	declare @FACT_CASE varchar(40) = '';
@@ -345,7 +352,7 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_D_INV_REPEAT_METADATA';
+	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_D_INV_REPEAT_METADATA';
 
 
     SELECT
@@ -440,7 +447,7 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_SUMM_DATAMART'
+	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_SUMM_DATAMART'
 
     SELECT
         isd.PATIENT_KEY AS PATIENT_KEY,
@@ -456,13 +463,14 @@ and copying the values that were for the corresponding user_defined_column_nm fo
  	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
-
+if @debug= 'true'
+	select 'tmp_DynDm_SUMM_DATAMART',* from #tmp_DynDm_SUMM_DATAMART;
 --------------------------------------------------------------------------------------------------------------------------------------------
 --  building tmp_DynDm_REPEAT_BLOCK
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = 'GENERATING  ' + @tmp_DynDm_REPEAT_BLOCK;;
+	SET @Proc_Step_Name = ' GENERATING  ' + @tmp_DynDm_REPEAT_BLOCK;;
 
  	declare @sql nvarchar(MAX);
 
@@ -523,14 +531,15 @@ and copying the values that were for the corresponding user_defined_column_nm fo
         ' select  INVESTIGATION_KEY, BLOCK_NM as BLOCK_NM_REPEAT_BLOCK_OUT, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_REPEAT_BLOCK_OUT,variable as RDB_COLUMN_NM_REPEAT_BLOCK_OUT,value as COL1 '+
         ' from ( '+
         ' select INVESTIGATION_KEY, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, '+ @RDB_COLUMN_COMMA_LIST +
-        ' from  dbo.tmp_DynDm_REPEAT_BLOCK_' + @DATAMART_NAME + cast(@batch_id as varchar) +
+        ' from  '+@tmp_DynDm_REPEAT_BLOCK+
         ' ) as t '+
         ' unpivot ( '+
         ' value for variable in ( '+@RDB_COLUMN_COMMA_LIST+ ') '+
         ' ) as unpvt '
     ;
 
-    select 'tmp_DynDm_REPEAT_BLOCK_OUT',@sql;
+    if @debug='true'
+    	select 'tmp_DynDm_REPEAT_BLOCK_OUT',@sql;
 
     EXEC sp_executesql @sql;
 
@@ -684,24 +693,11 @@ and copying the values that were for the corresponding user_defined_column_nm fo
     INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
     VALUES ( @batch_id ,@Dataflow_Name ,@package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
-
+if @debug = 'true'
+	select 'tmp_DynDm_REPEAT_BLOCK_OUT_ALL',* from #tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_OUT2';
-
-
-	select
-		RDB_COLUMN_NM,
-		_NAME_,
-		COL1,
-		BLOCK_NM,
-		ANSWER_GROUP_SEQ_NBR
-	into
-		#tmp_DynDm_METADATA_OUT2
-	FROM
-		#tmp_DynDm_METADATA_OUT_final;
 
     alter table #tmp_DynDm_REPEAT_BLOCK_OUT_BASE
     drop column block_nm, rdb_column_nm;
@@ -789,10 +785,8 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 
     commit transaction;
 
---    if @debug = 'true'
---        begin
---	    exec('select  * from @tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR');
---    	end;
+   if @debug = 'true'
+	    exec('select  * from '+@tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR);
 
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;

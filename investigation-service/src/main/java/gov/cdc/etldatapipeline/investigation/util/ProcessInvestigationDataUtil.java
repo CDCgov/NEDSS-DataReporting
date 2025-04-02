@@ -168,6 +168,9 @@ public class ProcessInvestigationDataUtil {
                 if (typeCode.equals("SubjOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PAT")) {
                     investigationTransformed.setPatientId(entityId);
                 }
+                if (typeCode.equals("PerAsReporterOfPHC") && subjectClassCode.equals("PSN") && personCode.equals("PRV")) {
+                    investigationTransformed.setPersonAsReporterUid(entityId);
+                }
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "PersonParticipations");
