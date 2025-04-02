@@ -394,7 +394,8 @@ public class PostProcessingService {
             processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
             processTopic(keyTopic, D_RASH_LOC_GEN, ids, investigationRepository::executeStoredProcForDRashLocGen);
             processTopic(keyTopic, D_PCR_SOURCE, ids, investigationRepository::executeStoredProcForDPcrSource);
-        }
+            processTopic(keyTopic, F_VAR_PAM, ids, investigationRepository::executeStoredProcForFVarPam);
+        }   
          
         return dmData;
     }
