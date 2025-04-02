@@ -389,7 +389,7 @@ public class PostProcessingService {
             processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
             processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
             processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
-            
+
             //VAR
             processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
             processTopic(keyTopic, D_RASH_LOC_GEN, ids, investigationRepository::executeStoredProcForDRashLocGen);
@@ -552,7 +552,12 @@ public class PostProcessingService {
         }
 
         if (totalLengthInvSummary > 0 && invSummaryDmEnable) {
-            postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+            List<DatamartData> dmDataList; //reusing the same DTO class for Dynamic Marts
+            dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+            for(DatamartData dmData : dmDataList){
+                // change this into an async call instead later
+                postProcRepository.executeDynDmProcedure(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
+            }
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
         }
@@ -620,7 +625,7 @@ public class PostProcessingService {
      * Gets the Entity by using the string passed to this function
      * E.g: if dummy_contact_record is passed, it will return the entity
      * CONTACT_RECORD
-     * 
+     *
      * @param topic Incoming Kafka topic
      * @return Entity
      */

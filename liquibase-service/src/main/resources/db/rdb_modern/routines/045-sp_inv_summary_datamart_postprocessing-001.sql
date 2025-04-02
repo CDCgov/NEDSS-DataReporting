@@ -1435,6 +1435,17 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        select
+            distinct inv.CASE_UID as public_health_case_uid,
+            inv_meta.DATAMART_NM as datamart,
+            c.CONDITION_CD as condition_cd
+        from
+        dbo.INVESTIGATION inv  with ( nolock)
+        inner join dbo.INV_SUMM_DATAMART isd with ( nolock) on isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
+        INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD
+        inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on c.DISEASE_GRP_CD =  inv_meta.FORM_CD
+        where inv.CASE_UID in (SELECT value FROM STRING_SPLIT(@phc_uids, ','));
+
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
