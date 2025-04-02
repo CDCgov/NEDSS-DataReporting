@@ -124,7 +124,7 @@ BEGIN
                     ELSE CODE_SHORT_DESC_TXT
                 END AS VALUE
             INTO #S_D_PCR_SOURCE
-            FROM #S_D_PCR_SOURCE_TRANSLATED WITH (NOLOCK);
+            FROM #S_D_PCR_SOURCE_TRANSLATED;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -325,7 +325,9 @@ BEGIN
             LEFT JOIN [dbo].nrt_d_pcr_source_key K WITH (NOLOCK)
                 ON K.VAR_PAM_UID = S.VAR_PAM_UID
                 AND K.NBS_CASE_ANSWER_UID = S.NBS_CASE_ANSWER_UID
-            WHERE K.VAR_PAM_UID is null;
+            WHERE 
+                K.VAR_PAM_UID is null 
+                AND K.NBS_CASE_ANSWER_UID is null;
             
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -543,7 +545,7 @@ BEGIN
                 T.D_PCR_SOURCE_GROUP_KEY,
                 T.LAST_CHG_TIME,
                 T.VALUE
-            FROM #TEMP_D_PCR_SOURCE T  WITH (NOLOCK)
+            FROM #TEMP_D_PCR_SOURCE T  
             LEFT JOIN [dbo].D_PCR_SOURCE D WITH (NOLOCK)
             ON 	D.VAR_PAM_UID= T.VAR_PAM_UID
             AND D.D_PCR_SOURCE_KEY = T.D_PCR_SOURCE_KEY
