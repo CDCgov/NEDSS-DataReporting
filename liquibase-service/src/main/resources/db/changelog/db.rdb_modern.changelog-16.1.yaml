@@ -1968,3 +1968,19 @@ databaseChangeLog:
         - sqlFile:
             path: 245-sp_dyn_dm_createdm_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 685
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 193-create_tb_hiv_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 690
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 265-sp_tb_hiv_datamart_postprocessing-001.sql
+            splitStatements: false
