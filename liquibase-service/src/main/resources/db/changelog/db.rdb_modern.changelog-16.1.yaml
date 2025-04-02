@@ -1976,3 +1976,35 @@ databaseChangeLog:
         - sqlFile:
             path: 245-sp_dyn_dm_createdm_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 665
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 190-create_nrt_odse_page_cond_mapping-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 666
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 191-create_nrt_odse_nbs_page-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 668
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 192-create_nrt_odse_nbs_ui_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 670
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 193-create_nrt_odse_nbs_rdb_metadata-001.sql
+            splitStatements: false
