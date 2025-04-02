@@ -82,7 +82,7 @@ BEGIN TRY
 			AND A.DATAMART_COLUMN_NM <> 'N/A'
 			AND A.data_location = 'NBS_Case_Answer.answer_txt'
 			AND A.question_identifier  NOT IN (
-			'TUB119', 'TUB129', 'TUB167', 'TUB225', 'TUB228',
+			'TUB119', 'TUB129', 'TUB154', 'TUB155', 'TUB156', 'TUB167', 'TUB225', 'TUB228',
 			'TUB229', 'TUB230', 'TUB235', 'TUB237', 'TUB114'
 			)
 
