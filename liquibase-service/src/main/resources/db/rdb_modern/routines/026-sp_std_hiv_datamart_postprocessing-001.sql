@@ -509,7 +509,7 @@ BEGIN
         FROM [dbo].[STD_HIV_DATAMART] shd
                  INNER JOIN dbo.F_STD_PAGE_CASE PC ON  shd.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
                  INNER JOIN #tmp_investigation INV ON INV.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
-                 LEFT JOIN dbo.CONDITION COND ON COND.CONDITION_KEY = PC.CONDITION_KEY
+                 LEFT JOIN dbo.v_condition_dim COND ON COND.CONDITION_KEY = PC.CONDITION_KEY
                  LEFT JOIN (SELECT DISTINCT INVESTIGATION_KEY, CONFIRMATION_DT         -- CAN HAVE MULTIPLE METHODS BUT THE DATE IS ALWAYS THE SAME
                             FROM dbo.CONFIRMATION_METHOD_GROUP) AS CONF ON CONF.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
                  LEFT JOIN dbo.D_CASE_MANAGEMENT CM ON CM.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
@@ -1169,7 +1169,7 @@ BEGIN
 
              FROM dbo.F_STD_PAGE_CASE PC
                       INNER JOIN #tmp_investigation INV ON INV.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
-                      LEFT JOIN dbo.CONDITION COND ON COND.CONDITION_KEY = PC.CONDITION_KEY
+                      LEFT JOIN dbo.v_condition_dim COND ON COND.CONDITION_KEY = PC.CONDITION_KEY
                       LEFT JOIN (SELECT DISTINCT INVESTIGATION_KEY, CONFIRMATION_DT         -- CAN HAVE MULTIPLE METHODS BUT THE DATE IS ALWAYS THE SAME
                                  FROM dbo.CONFIRMATION_METHOD_GROUP) AS CONF ON CONF.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
                       LEFT JOIN dbo.D_CASE_MANAGEMENT CM ON CM.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
@@ -1294,23 +1294,23 @@ BEGIN
             BEGIN
                 ROLLBACK TRANSACTION;
             END;
-    -- Construct the error message string with all details:
-    DECLARE @FullErrorMessage VARCHAR(8000) =
-        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
-        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Message: ' + ERROR_MESSAGE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
         VALUES( @Batch_id
-          , 'STD_HIV_DATAMART'
-          , 'STD_HIV_DATAMART'
-          , 'ERROR'
-          , @Proc_Step_no
-          , @Proc_Step_name
-          , @FullErrorMessage
-          , 0 );
+              , 'STD_HIV_DATAMART'
+              , 'STD_HIV_DATAMART'
+              , 'ERROR'
+              , @Proc_Step_no
+              , @Proc_Step_name
+              , @FullErrorMessage
+              , 0 );
         RETURN -1;
 
     END CATCH;

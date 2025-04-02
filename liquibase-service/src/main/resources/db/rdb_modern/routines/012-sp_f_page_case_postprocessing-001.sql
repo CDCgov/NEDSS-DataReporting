@@ -61,7 +61,7 @@ BEGIN
           AND INVESTIGATION_FORM_CD  NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
                                               'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
                                               'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
-        AND CASE_MANAGEMENT_UID is null;
+          AND CASE_MANAGEMENT_UID is null;
 
         if @debug  = 'true' select * from #PHC_UIDS;
 
@@ -174,7 +174,7 @@ BEGIN
                  LEFT OUTER JOIN dbo.D_PROVIDER PHYSICIAN ON 	FSIV.PHYSICIAN_UID= PHYSICIAN.PROVIDER_UID
                  LEFT OUTER JOIN dbo.INVESTIGATION  INVESTIGATION ON 	FSIV.PAGE_CASE_UID= INVESTIGATION.CASE_UID
                  LEFT OUTER JOIN #PHC_CASE_UIDS_ALL  CASE_UID ON 	FSIV.PAGE_CASE_UID= CASE_UID.PAGE_CASE_UID
-                 LEFT OUTER JOIN dbo.CONDITION CONDITION ON 	CASE_UID.CD= CONDITION.CONDITION_CD
+                 LEFT OUTER JOIN dbo.v_condition_dim CONDITION ON 	CASE_UID.CD= CONDITION.CONDITION_CD
                  LEFT JOIN dbo.GEOCODING_LOCATION AS LOC ON LOC.ENTITY_UID = PATIENT.PATIENT_UID
         ;
 
@@ -225,8 +225,8 @@ BEGIN
         select cte.*
         into #DIMENSION_KEYS_PAGECASEID
         from LOOKUPCTE cte
-         INNER JOIN #ENTITY_KEYSTORE_INC keystore --joining with this table in advance to reduce the rows
-                    ON cte.PAGE_CASE_UID = keystore.PAGE_CASE_UID
+                 INNER JOIN #ENTITY_KEYSTORE_INC keystore --joining with this table in advance to reduce the rows
+                            ON cte.PAGE_CASE_UID = keystore.PAGE_CASE_UID
         ;
 
         if @debug  = 'true' select * from #DIMENSION_KEYS_PAGECASEID where page_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','));
@@ -449,7 +449,7 @@ BEGIN
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-         -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +

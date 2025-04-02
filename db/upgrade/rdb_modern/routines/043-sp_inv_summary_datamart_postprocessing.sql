@@ -581,7 +581,7 @@ BEGIN
         into #TMP_PATIENT_INFO
         FROM #TMP_PATIENT_LOCATION_KEYS keys
                  INNER JOIN dbo.CASE_COUNT CC ON keys.investigation_key = CC.investigation_key
-                 INNER JOIN dbo.CONDITION C ON C.CONDITION_KEY = CC.CONDITION_KEY;
+                 INNER JOIN dbo.v_condition_dim C ON C.CONDITION_KEY = CC.CONDITION_KEY;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_PATIENT_INFO;
 

@@ -152,6 +152,30 @@ databaseChangeLog:
             path: 001-fn_get_record_status-001.sql
             splitStatements: false
   - changeSet:
+      id: 20.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 028-create_nrt_srte_Condition_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 027-create_nrt_srte_Program_area_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 011-v_condition_dim-001.sql
+            splitStatements: false
+  - changeSet:
       id: 21
       author: liquibase
       runOnChange: true
@@ -461,26 +485,10 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 027-create_nrt_srte_Program_area_code-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 70.4
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 028-create_nrt_srte_Condition_code-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 70.5
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
             path: 029-create_nrt_srte_Codeset-001.sql
             splitStatements: false
   - changeSet:
-      id: 70.6
+      id: 70.4
       author: liquibase
       runOnChange: true
       changes:
@@ -678,14 +686,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 010-v_code_value_general-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 96
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 011-v_condition_dim-001.sql
             splitStatements: false
   - changeSet:
       id: 97

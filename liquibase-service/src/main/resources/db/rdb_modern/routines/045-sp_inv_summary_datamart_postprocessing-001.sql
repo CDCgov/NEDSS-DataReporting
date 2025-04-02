@@ -581,7 +581,7 @@ BEGIN
         into #TMP_PATIENT_INFO
         FROM #TMP_PATIENT_LOCATION_KEYS keys
                  INNER JOIN dbo.CASE_COUNT CC ON keys.investigation_key = CC.investigation_key
-                 INNER JOIN dbo.CONDITION C ON C.CONDITION_KEY = CC.CONDITION_KEY;
+                 INNER JOIN dbo.v_condition_dim C ON C.CONDITION_KEY = CC.CONDITION_KEY;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_PATIENT_INFO;
 
@@ -1273,11 +1273,11 @@ BEGIN
                       , PUBLIC_HEALTH_CASE_UID
         INTO #TEMP_MIN_MAX_NOTIFICATION
         FROM dbo.nrt_investigation_notification n WITH (NOLOCK)
-        LEFT JOIN (
+                 LEFT JOIN (
             SELECT value FROM STRING_SPLIT(@notif_uids, ',')
         ) nu ON n.notification_uid = nu.value
-        LEFT JOIN
-            #TMP_CASE_LAB_DATAMART_MODIFIED_output pc ON n.PUBLIC_HEALTH_CASE_UID = pc.CASE_UID
+                 LEFT JOIN
+             #TMP_CASE_LAB_DATAMART_MODIFIED_output pc ON n.PUBLIC_HEALTH_CASE_UID = pc.CASE_UID
         WHERE nu.value is not null or pc.CASE_UID is not null;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TEMP_MIN_MAX_NOTIFICATION;
