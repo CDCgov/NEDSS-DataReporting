@@ -256,14 +256,6 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_PCR_SOURCE_GROUP';
     
-            -- ensure entry D_PCR_SOURCE_GROUP_KEY = 1 exists
-            INSERT INTO  [dbo].D_PCR_SOURCE_GROUP (D_PCR_SOURCE_GROUP_KEY)
-            SELECT 1
-            WHERE NOT EXISTS (
-                SELECT 1 FROM  [dbo].D_PCR_SOURCE_GROUP
-                WHERE D_PCR_SOURCE_GROUP_KEY = 1
-            );
-
             -- update F_VAR_PAM table
             UPDATE F
                 SET F.D_PCR_SOURCE_GROUP_KEY = 1

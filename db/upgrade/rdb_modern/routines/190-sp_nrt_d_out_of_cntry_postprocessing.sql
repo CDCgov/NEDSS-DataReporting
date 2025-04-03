@@ -277,14 +277,6 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_OUT_OF_CNTRY_GROUP';
     
-            -- ensure entry D_OUT_OF_CNTRY_GROUP_KEY = 1 exists
-            INSERT INTO  [dbo].D_OUT_OF_CNTRY_GROUP (D_OUT_OF_CNTRY_GROUP_KEY)
-            SELECT 1
-            WHERE NOT EXISTS (
-                SELECT 1 FROM  [dbo].D_OUT_OF_CNTRY_GROUP
-                WHERE D_OUT_OF_CNTRY_GROUP_KEY = 1
-            );
-
             -- update F_TB_PAM table
             UPDATE F
                 SET F.D_OUT_OF_CNTRY_GROUP_KEY = 1

@@ -268,14 +268,6 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_STATE_GROUP';
 
-        -- ensure entry D_MOVE_STATE_GROUP_KEY = 1 exists
-        INSERT INTO  DBO.D_MOVE_STATE_GROUP (D_MOVE_STATE_GROUP_KEY)
-        SELECT 1
-        WHERE NOT EXISTS (
-            SELECT 1 FROM  DBO.D_MOVE_STATE_GROUP
-            WHERE D_MOVE_STATE_GROUP_KEY = 1
-        );
-
         -- update F_TB_PAM table
         UPDATE F
             SET F.D_MOVE_STATE_GROUP_KEY = 1

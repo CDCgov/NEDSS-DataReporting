@@ -249,14 +249,6 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_RASH_LOC_GEN_GROUP';
 
-        -- ensure entry D_RASH_LOC_GEN_GROUP_KEY = 1 exists
-        INSERT INTO  DBO.D_RASH_LOC_GEN_GROUP (D_RASH_LOC_GEN_GROUP_KEY)
-        SELECT 1
-        WHERE NOT EXISTS (
-            SELECT 1 FROM  DBO.D_RASH_LOC_GEN_GROUP
-            WHERE D_RASH_LOC_GEN_GROUP_KEY = 1
-        );
-
         -- update F_VAR_PAM table
         UPDATE F
             SET F.D_RASH_LOC_GEN_GROUP_KEY = 1

@@ -277,14 +277,6 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_GT_12_REAS_GROUP';
     
-            -- ensure entry D_GT_12_REAS_GROUP_KEY = 1 exists
-            INSERT INTO  [dbo].D_GT_12_REAS_GROUP (D_GT_12_REAS_GROUP_KEY)
-            SELECT 1
-            WHERE NOT EXISTS (
-                SELECT 1 FROM  [dbo].D_GT_12_REAS_GROUP
-                WHERE D_GT_12_REAS_GROUP_KEY = 1
-            );
-
             -- update F_TB_PAM table
             UPDATE F
                 SET F.D_GT_12_REAS_GROUP_KEY = 1
