@@ -31,7 +31,7 @@ BEGIN TRY
 -------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_SUMM_DATAMART';
+	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_SUMM_DATAMART';
 
 	SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM=@DATAMART_NAME)
 
@@ -127,10 +127,7 @@ BEGIN TRY
 	FROM 
 		dbo.INV_SUMM_DATAMART with ( nolock)
 	INNER JOIN 
-		'+@tmp_DynDm_INVESTIGATION_DATA+' d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY
-	INNER JOIN 
-		dbo.INVESTIGATION nrt_inv with ( nolock ) on nrt_inv.investigation_key =  d.INVESTIGATION_KEY
-	and  nrt_inv.case_uid in (SELECT value FROM STRING_SPLIT('''+@phc_id_list+''', '',''));';
+		'+@tmp_DynDm_INVESTIGATION_DATA+' d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY';
 
 	exec sp_executesql @temp_sql;
 
@@ -145,7 +142,7 @@ BEGIN TRY
 -------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_Patient_Data';
+	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_PATIENT_DATA;
 
 
     IF OBJECT_ID(@tmp_DynDm_PATIENT_DATA, 'U') IS NOT NULL
@@ -160,8 +157,7 @@ BEGIN TRY
 		INNER JOIN 
 			#tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY
 		INNER JOIN 
-			dbo.V_NRT_NBS_D_PATIENT_RDB_TABLE_METADATA pat_meta on isd.DISEASE_GRP_CD =  pat_meta.INVESTIGATION_FORM_CD
-			and pat_meta.INVESTIGATION_FORM_CD = '''+@nbs_page_form_cd +''' and isd.DISEASE_GRP_CD = '''+@nbs_page_form_cd +'''';
+			dbo.V_NRT_NBS_D_PATIENT_RDB_TABLE_METADATA pat_meta on isd.DISEASE_GRP_CD =  pat_meta.INVESTIGATION_FORM_CD';
 	
 	exec sp_executesql @temp_sql;
 

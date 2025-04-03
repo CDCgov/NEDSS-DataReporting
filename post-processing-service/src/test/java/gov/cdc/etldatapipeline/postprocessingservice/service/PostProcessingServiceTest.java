@@ -934,6 +934,7 @@ class PostProcessingServiceTest {
         String obsTopic = "dummy_observation";
 
         postProcessingServiceMock.setInvSummaryDmEnable(true);
+        postProcessingServiceMock.setDynDmEnable(true);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);

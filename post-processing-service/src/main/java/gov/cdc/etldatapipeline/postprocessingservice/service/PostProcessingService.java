@@ -101,6 +101,9 @@ public class PostProcessingService {
     @Value("${featureFlag.d-tb-hiv-enable}")
     private boolean dTbHivEnable;
 
+    @Value("${featureFlag.dyn-dm-enable}")
+    private boolean dynDmEnable;
+
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
@@ -292,7 +295,7 @@ public class PostProcessingService {
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processCachedIds() {
 
-        // Making cache snapshot preventing out-of-sequence ids processing;
+        // Making cache snapshot preventing out-of-sequence ids processing
         // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
         final Map<String, List<Long>> idCacheSnapshot;
         final Map<Long, String> idValsSnapshot;
@@ -646,14 +649,16 @@ public class PostProcessingService {
         if (totalLengthInvSummary > 0 && invSummaryDmEnable) {
             List<DatamartData> dmDataList; //reusing the same DTO class for Dynamic Marts
             dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
-            if(dmDataList == null || dmDataList.isEmpty()) {
+
+            if(!dmDataList.isEmpty() && dynDmEnable) {
+                for(DatamartData dmData : dmDataList){
+                    postProcRepository.executeStoredProcForDynDatamart(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
+                    logger.info("Updates to Dynamic Datamart: {} ",dmData.getDatamart());
+                }
+            } else {
                 logger.info("No updates to Dynamic Datamarts");
             }
-            for(DatamartData dmData : dmDataList){
-                // change this into an async call instead later
-                postProcRepository.executeStoredProcForDynDatamart(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
-                logger.info("Updates to Dynamic Datamart: %s",dmData.getDatamart());
-            }
+
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
         }

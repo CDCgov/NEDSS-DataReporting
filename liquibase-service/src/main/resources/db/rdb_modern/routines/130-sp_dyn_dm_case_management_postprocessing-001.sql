@@ -56,25 +56,45 @@ BEGIN
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_CASE_MANAGEMENT_DATA;
 
+    DECLARE @listStr VARCHAR(MAX) = null;
+
+    SELECT @listStr = COALESCE(@listStr+',' ,'') +  RDB_COLUMN_NM  + ' '+ coalesce(USER_DEFINED_COLUMN_NM,'')
+    FROM  dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA with (nolock) where INVESTIGATION_FORM_CD = @nbs_page_form_cd;
 
 	IF OBJECT_ID(@tmp_DynDm_CASE_MANAGEMENT_DATA, 'U') IS NOT NULL
  		exec ('drop table '+@tmp_DynDm_CASE_MANAGEMENT_DATA);
 
-  	SET @temp_sql = '
-		SELECT  
-			isd.INVESTIGATION_KEY ,rdb_column_nm_list
-		INTO 
-			'+ @tmp_DynDm_CASE_MANAGEMENT_DATA +'
-        FROM 
-			#tmp_DynDM_SUMM_DATAMART isd
-		INNER JOIN 
-			dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA case_mgmt_meta on  case_mgmt_meta.INVESTIGATION_FORM_CD = isd.DISEASE_GRP_CD
-		INNER JOIN 
-			dbo.INVESTIGATION nrt_inv_key with (nolock) ON isd.investigation_key = nrt_inv_key.investigation_key	
-		LEFT JOIN  
-			dbo.D_CASE_MANAGEMENT case_mgmt ON isd.INVESTIGATION_KEY = case_mgmt.INVESTIGATION_KEY
-		WHERE  case_mgmt.INVESTIGATION_KEY>1' ;
-		
+    if len(@listStr) > 1
+  	begin
+        SET @temp_sql = '
+            SELECT
+                isd.INVESTIGATION_KEY ,rdb_column_nm_list
+            INTO
+                '+ @tmp_DynDm_CASE_MANAGEMENT_DATA +'
+            FROM
+                #tmp_DynDM_SUMM_DATAMART isd
+            INNER JOIN
+                dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA case_mgmt_meta on  case_mgmt_meta.INVESTIGATION_FORM_CD = isd.DISEASE_GRP_CD
+            LEFT JOIN
+                dbo.D_CASE_MANAGEMENT case_mgmt ON isd.INVESTIGATION_KEY = case_mgmt.INVESTIGATION_KEY
+            WHERE  case_mgmt.INVESTIGATION_KEY>1' ;
+	end
+	else
+	begin
+    SET @temp_sql = '
+            SELECT
+                isd.INVESTIGATION_KEY
+            INTO
+                '+ @tmp_DynDm_CASE_MANAGEMENT_DATA +'
+            FROM
+                #tmp_DynDM_SUMM_DATAMART isd
+            INNER JOIN
+                dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA case_mgmt_meta on  case_mgmt_meta.INVESTIGATION_FORM_CD = isd.DISEASE_GRP_CD
+            LEFT JOIN
+                dbo.D_CASE_MANAGEMENT case_mgmt ON isd.INVESTIGATION_KEY = case_mgmt.INVESTIGATION_KEY
+            WHERE  case_mgmt.INVESTIGATION_KEY>1' ;
+    end
+
   	exec sp_executesql @temp_sql;
 
 

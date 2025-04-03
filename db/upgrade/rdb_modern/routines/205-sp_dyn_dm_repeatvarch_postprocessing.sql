@@ -12,7 +12,7 @@ BEGIN TRY
 	DECLARE @RowCount_no INT ;
 	DECLARE @Proc_Step_no FLOAT = 0 ;
 	DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
-	--DECLARE @DATAMART_NAME VARCHAR = 'GENERIC_V2';
+
 	DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing' ;
 	DECLARE @package_Name VARCHAR(200) = 'sp_dyn_dm_repeatvarch_postprocessing: '+ @DATAMART_NAME;
 
@@ -26,8 +26,8 @@ BEGIN TRY
     --temporary table used only in this proc
 	DECLARE @tmp_DynDm_REPEAT_BLOCK varchar(500) = '[dbo].tmp_DynDm_REPEAT_BLOCK_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar);
 
-	DECLARE @ddl_sql_invreptvarchar nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY_INVESTIGATION_REPEAT_VARCHAR [bigint] NULL)';
-	DECLARE @ddl_sql_reptblkvarchar nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_REPEAT_BLOCK_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY_REPEAT_BLOCK_VARCHAR_ALL [bigint] NULL)';
+	DECLARE @ddl_sql_invreptvarchar nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY [bigint] NULL)';
+	DECLARE @ddl_sql_reptblkvarchar nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_REPEAT_BLOCK_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY [bigint] NULL)';
 
 
 	SET @Proc_Step_no = 1;
@@ -40,7 +40,7 @@ BEGIN TRY
 --------------------------------------------------------------------------------------------------------------------------------------------
 
   	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_INIT';
+	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_METADATA_INIT';
 
 
  	SELECT  distinct
@@ -190,7 +190,7 @@ if @debug='true'
 and copying the values that were for the corresponding user_defined_column_nm for each of them*/
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_OUT';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_METADATA_OUT';
 
 
 	select
@@ -219,7 +219,7 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_OUT_TMP';
+	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_METADATA_OUT_TMP';
 
 	select
 		RDB_COLUMN_NM,
@@ -244,7 +244,7 @@ if @debug='true'
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_OUT1';
+	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_METADATA_OUT1';
 
 	SELECT
 		*
@@ -265,7 +265,7 @@ if @debug='true'
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_OUT_final';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_METADATA_OUT_final';
 
 
 	SELECT
@@ -298,7 +298,7 @@ if @debug='true'
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_Case_Management_Metadata';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_Case_Management_Metadata';
 
     declare @countSTD int = 0;
 
@@ -558,7 +558,7 @@ if @debug= 'true'
 
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_BLOCK_DATA_UNIT';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_BLOCK_DATA_UNIT';
 
 
     SELECT
@@ -582,7 +582,7 @@ if @debug= 'true'
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_BLOCK_DATA_OTH';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_BLOCK_DATA_OTH';
 
     SELECT
         BLOCK_NM,
@@ -607,7 +607,7 @@ if @debug= 'true'
 
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_BLOCK_DATA';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_BLOCK_DATA';
 
     SELECT *
     into
@@ -628,7 +628,7 @@ if @debug= 'true'
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_REPEAT_BLOCK_OUT_BASE';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_REPEAT_BLOCK_OUT_BASE';
 
 	SELECT
 		DISTINCT *
@@ -652,7 +652,7 @@ if @debug= 'true'
 
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_REPEAT_BLOCK_OUT_ALL';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_REPEAT_BLOCK_OUT_ALL';
 
 
     SELECT
@@ -715,7 +715,7 @@ if @debug = 'true'
 
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_METADATA_MERGED_INIT';
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_METADATA_MERGED_INIT';
 
 
 	SELECT
@@ -743,7 +743,7 @@ if @debug = 'true'
 
     begin transaction;
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR';
+	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR;
 
 	IF OBJECT_ID(@tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR, 'U') IS NOT NULL
 		exec ('drop table '+ @tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR);

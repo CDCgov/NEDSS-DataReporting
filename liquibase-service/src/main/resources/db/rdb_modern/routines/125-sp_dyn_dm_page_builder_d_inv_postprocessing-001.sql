@@ -256,8 +256,6 @@ BEGIN
 	)
 	;
 
-	EXEC (@SQL);
-
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
 	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
@@ -286,30 +284,7 @@ BEGIN
 
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDM_'+@RDB_TABLE_NM ;
-
-
-	declare @D_INV_CASE_UNIT_list varchar(Max) = null ;
-
-	SELECT @D_INV_CASE_UNIT_list = coalesce((COALESCE(@D_INV_CASE_UNIT_list+',' ,'') + RDB_COLUMN_NM + ' AS  ' +  coalesce(USER_DEFINED_COLUMN_NM,'')),'')
-	FROM  #tmp_DynDm_D_INV_METADATA_UNIT_1;
-
-
-	if ((len(@D_INV_CASE_UNIT_list) <  1 or @D_INV_CASE_UNIT_list is null )  )
-	begin
-    	SET @D_INV_CASE_UNIT_list = null ;
-	end
-
-
-	declare @listStr as varchar(max) = '';
-	SET @listStr =   coalesce(@D_INV_CASE_UNIT_list + ',','') + coalesce(@D_INV_CASE_OTH_list + ',','') + coalesce(@D_INV_CASE_list+' ,','');
-
-
-	DECLARE @TableName VARCHAR(200) = '#tmp_DynDM_'+@RDB_TABLE_NM
-	IF OBJECT_ID(@TableName) IS NOT NULL
-    	EXEC ('DROP Table ' + @TableName)
-	;
-
+	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_SUMM_DATAMART';
 
 	SELECT 
 		isd.PATIENT_KEY AS PATIENT_KEY, 
@@ -325,11 +300,42 @@ BEGIN
 		dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.investigation_key
      and  I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
+	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
+ 	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+
+
+	DECLARE @tmp_DynDM_RDB_TABLE_NM VARCHAR(200) = 'dbo.tmp_DynDM_'+@RDB_TABLE_NM;
+
+	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDM_RDB_TABLE_NM ;
+
+
+	declare @D_INV_CASE_UNIT_list varchar(Max) = null ;
+
+	SELECT @D_INV_CASE_UNIT_list = coalesce((COALESCE(@D_INV_CASE_UNIT_list+',' ,'') + RDB_COLUMN_NM + ' AS  ' +  coalesce(USER_DEFINED_COLUMN_NM,'')),'')
+	FROM  #tmp_DynDm_D_INV_METADATA_UNIT_1;
+
+
+	if ((len(@D_INV_CASE_UNIT_list) <  1 or @D_INV_CASE_UNIT_list is null )  )
+	begin
+    	SET @D_INV_CASE_UNIT_list = null ;
+	end
+
+	declare @listStr as varchar(max) = '';
+	SET @listStr =   coalesce(@D_INV_CASE_UNIT_list + ',','') + coalesce(@D_INV_CASE_OTH_list + ',','') + coalesce(@D_INV_CASE_list+' ,','')
+	
+	
+	IF OBJECT_ID(@tmp_DynDM_RDB_TABLE_NM) IS NOT NULL
+    	EXEC ('DROP Table ' + @tmp_DynDM_RDB_TABLE_NM)
+	;
+
+    declare @SQL varchar(max);
 
 	if  object_id('dbo.'+@RDB_TABLE_NM) is not null
 	Begin
 		SET @SQL = '   SELECT distinct  '+@listStr + ' tmp.INVESTIGATION_KEY ' +
-				'    into dbo.tmp_DynDM_'+@RDB_TABLE_NM +
+				'    into ' + @tmp_DynDM_RDB_TABLE_NM +
 				'    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)'+
 				'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
 				'		INNER JOIN  dbo.'+@RDB_TABLE_NM+'  with (nolock) ON	'+@FACT_CASE+'.'+@DIM_KEY+'  = '+@RDB_TABLE_NM+'.'+@DIM_KEY +
@@ -339,7 +345,7 @@ BEGIN
 	else
 	Begin
 		SET @SQL = '  SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
-			'    into #tmp_DynDM_'+@RDB_TABLE_NM +
+			'    into '+@tmp_DynDM_RDB_TABLE_NM +
 			'    FROM #tmp_DynDM_SUMM_DATAMART with (nolock) '
 			;
 	end
