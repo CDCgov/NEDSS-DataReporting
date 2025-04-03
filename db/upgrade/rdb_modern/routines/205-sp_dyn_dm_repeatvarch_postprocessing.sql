@@ -14,7 +14,7 @@ BEGIN TRY
 	DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
 	--DECLARE @DATAMART_NAME VARCHAR = 'GENERIC_V2';
 	DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing' ;
-	DECLARE @package_Name VARCHAR(100) = 'sp_dyn_dm_repeatvarch_postprocessing: '+ @DATAMART_NAME;
+	DECLARE @package_Name VARCHAR(200) = 'sp_dyn_dm_repeatvarch_postprocessing: '+ @DATAMART_NAME;
 
     DECLARE @nbs_page_form_cd varchar(200)='';
 	SET @nbs_page_form_cd = (SELECT top 1 FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM=@DATAMART_NAME)
