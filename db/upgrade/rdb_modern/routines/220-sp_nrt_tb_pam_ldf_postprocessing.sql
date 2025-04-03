@@ -13,6 +13,13 @@ BEGIN
 	DECLARE @Dataflow_Name VARCHAR(200) = 'TB_PAM_LDF POST-Processing';
 	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_tb_pam_ldf_postprocessing';
 
+    DECLARE @global_temp_table_name varchar(500) = '';
+    DECLARE @sql_code NVARCHAR(MAX);
+    DECLARE @obscoded_columns NVARCHAR(MAX) = '';
+    DECLARE @tb_obscoded_columns NVARCHAR(MAX) = '';
+
+    SET @global_temp_table_name = '##TB_PAM_LDF_TRANSLATED' + '_' + CAST(@Batch_id as varchar(50));    
+
     BEGIN TRY
         
 
@@ -422,8 +429,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING OBSCODED_COLUMNS';
 
-            DECLARE @obscoded_columns NVARCHAR(MAX) = '';
-        
+                   
             SELECT @obscoded_columns = COALESCE(STRING_AGG(CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION), '')
             FROM (SELECT DISTINCT COLUMN_NAME, ORDINAL_POSITION FROM #COL_LIST) AS cols;
 
@@ -439,48 +445,46 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##LDF_TRANSLATED_TB_PAM_LDF';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_table_name;                
 
-            DECLARE @ldf_translated NVARCHAR(MAX);    
-
-            IF OBJECT_ID('##LDF_TRANSLATED_TB_PAM_LDF') IS NOT NULL
-                DROP TABLE ##LDF_TRANSLATED_TB_PAM_LDF;
+            EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_table_name +''', ''U'')  IS NOT NULL
+            BEGIN
+                DROP TABLE ' + @global_temp_table_name +';
+            END;')
 
             IF @obscoded_columns != ''
             BEGIN
-                SET @ldf_translated = 'SELECT *
-                INTO ##LDF_TRANSLATED_TB_PAM_LDF
+                SET @sql_code = 'SELECT *
+                INTO ' + @global_temp_table_name +'
                 FROM (
                     SELECT 
                         TB_PAM_UID, 
                         ADD_TIME, 
                         ANSWER_TXT, 
                         DATAMART_COLUMN_NM 
-                    FROM #LDF_BASE_COUNTRY_CONCAT
+                    FROM ' + @global_temp_table_name +'
                     ) AS SourceTable
                 PIVOT (
                     MAX(ANSWER_TXT)
                     FOR DATAMART_COLUMN_NM IN (' + @obscoded_columns + ')
                 ) AS PivotTable';
-
-                EXEC sp_executesql @ldf_translated;
             END
             ELSE
             BEGIN
-                SELECT 
+                SET @sql_code = 'SELECT 
                     TB_PAM_UID, 
                     ADD_TIME
-                INTO ##LDF_TRANSLATED_TB_PAM_LDF
+                INTO ' + @global_temp_table_name +'
                 FROM #LDF_BASE_COUNTRY_CONCAT
+                '
             END;
-            
+            EXEC sp_executesql @sql_code;    
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
             IF
                 @debug = 'true'
-                SELECT @Proc_Step_Name AS step, *
-                FROM ##LDF_TRANSLATED_TB_PAM_LDF;
+                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_table_name + ';');
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -495,17 +499,18 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'DELETE INCOMING RECORDS FROM TB_PAM_LDF';
 
-            DELETE D
+            SET @sql_code = 'DELETE D
             FROM [dbo].TB_PAM_LDF D
-            INNER JOIN ##LDF_TRANSLATED_TB_PAM_LDF T
+            INNER JOIN ' + @global_temp_table_name + ' T
                 ON T.TB_PAM_UID = D.TB_PAM_UID
+            '
+            EXEC sp_executesql @sql_code; 
     
             SELECT @RowCount_no = @@ROWCOUNT;
 
             IF
                 @debug = 'true'
-                SELECT @Proc_Step_Name AS step, *
-                FROM ##LDF_TRANSLATED_TB_PAM_LDF;
+                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_table_name + ';');
     
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -523,9 +528,6 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'INSERT INCOMING RECORDS TO TB_PAM_LDF';
 
-            DECLARE @Insert_sql NVARCHAR(MAX) = '';
-            DECLARE @tb_obscoded_columns NVARCHAR(MAX) = '';
-
             SET @tb_obscoded_columns = (
                 SELECT ISNULL(
                     STRING_AGG('tb.' + TRIM(value), ','),
@@ -535,7 +537,7 @@ BEGIN
                 WHERE TRIM(value) != ''
             );
 
-            SET @Insert_sql = 
+            SET @sql_code = 
             'INSERT INTO dbo.TB_PAM_LDF([INVESTIGATION_KEY], [TB_PAM_UID], [add_time] '+ 
                 CASE
                     WHEN @obscoded_columns != '' THEN ',' + @obscoded_columns
@@ -553,21 +555,23 @@ BEGIN
             +
             '
             FROM
-            ##LDF_TRANSLATED_TB_PAM_LDF tb
+            ' + @global_temp_table_name +' tb
             LEFT JOIN [dbo].investigation inv WITH(nolock)
-                ON tb.TB_APM_UID = inv.CASE_UID
+                ON tb.TB_PAM_UID = inv.CASE_UID
             ';
+            EXEC sp_executesql @sql_code;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
             IF
                 @debug = 'true'
-                SELECT @Proc_Step_Name AS step, *
-                FROM ##LDF_TRANSLATED_TB_PAM_LDF;
+                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_table_name + ';');
 
             -- Force drop global temp table
-            IF OBJECT_ID('##LDF_TRANSLATED_TB_PAM_LDF') IS NOT NULL
-                DROP TABLE ##LDF_TRANSLATED_TB_PAM_LDF;
+            EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_table_name +''', ''U'')  IS NOT NULL
+            BEGIN
+                DROP TABLE ' + @global_temp_table_name +';
+            END;')
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
