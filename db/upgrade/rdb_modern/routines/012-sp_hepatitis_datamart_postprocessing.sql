@@ -59,7 +59,7 @@ BEGIN
 
         SELECT CONDITION_CD, CONDITION_DESC, DISEASE_GRP_DESC, CONDITION_KEY
         INTO #TMP_CONDITION
-        FROM [dbo].v_condition_dim WITH(NOLOCK)
+        FROM dbo.v_condition_dim WITH(NOLOCK)
         WHERE CONDITION_CD IN( '10110', '10104', '10100', '10106', '10101', '10102', '10103', '10105', '10481', '50248', '999999' );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -97,7 +97,7 @@ BEGIN
 
 
 
-       IF @debug ='true' SELECT * FROM #TMP_F_PAGE_CASE;
+        IF @debug ='true' SELECT * FROM #TMP_F_PAGE_CASE;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -191,7 +191,7 @@ BEGIN
         SELECT F_PAGE_CASE.D_INV_CLINICAL_KEY, F_PAGE_CASE.INVESTIGATION_KEY
         INTO #TMP_F_INV_CLINICAL
         FROM dbo.F_PAGE_CASE WITH(NOLOCK)
-  INNER JOIN	 #TMP_F_PAGE_CASE AS PAGE_CASE ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY ---(my Table)
+                 INNER JOIN	 #TMP_F_PAGE_CASE AS PAGE_CASE ON F_PAGE_CASE.INVESTIGATION_KEY = PAGE_CASE.INVESTIGATION_KEY ---(my Table)
         ORDER BY D_INV_CLINICAL_KEY;
 
 
@@ -1140,11 +1140,11 @@ BEGIN
                  LEFT JOIN dbo.NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
                  LEFT JOIN
              (SELECT
-                DISTINCT invobs.public_health_case_uid, invobs.observation_id
-                FROM dbo.NRT_INVESTIGATION_OBSERVATION invobs with (nolock)
-                left outer join dbo.NRT_INVESTIGATION inv
-                on inv.public_health_case_uid = invobs.public_health_case_uid
-                where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
+                  DISTINCT invobs.public_health_case_uid, invobs.observation_id
+              FROM dbo.NRT_INVESTIGATION_OBSERVATION invobs with (nolock)
+                       left outer join dbo.NRT_INVESTIGATION inv
+                                       on inv.public_health_case_uid = invobs.public_health_case_uid
+              where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
 
              ) NIO ON nio.public_health_case_uid = i.case_uid
                  LEFT JOIN dbo.nrt_observation no2 WITH(NOLOCK) ON nio.observation_id = no2.observation_uid
@@ -1465,12 +1465,12 @@ BEGIN
         SELECT C.CONDITION_KEY, M.block_nm, M.investigation_form_cd, M.question_identifier
         INTO #TMP_METADATA_TEST
         FROM (
-            select pca.*
-            from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
-            left outer join dbo.NRT_INVESTIGATION inv with(nolock)
-            on pca.act_uid = inv.public_health_case_uid
-            where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
-        ) AS M
+                 select pca.*
+                 from dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
+                          left outer join dbo.NRT_INVESTIGATION inv with(nolock)
+                                          on pca.act_uid = inv.public_health_case_uid
+                 where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
+             ) AS M
                  INNER JOIN
              #TMP_CONDITION AS C
              ON M.INVESTIGATION_FORM_CD = C.DISEASE_GRP_DESC
@@ -2909,7 +2909,7 @@ BEGIN
 
             END;
 
-         -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
@@ -2919,7 +2919,7 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
         VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no,  @Proc_Step_name,  @FullErrorMessage,0
-        );
+              );
 
         RETURN -1;
 

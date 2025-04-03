@@ -321,7 +321,7 @@ BEGIN
                dtm.Stored_Procedure               AS stored_procedure
         FROM #temp_ntf_event_table ntf
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ntf.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c ON c.CONDITION_KEY = ntf.CONDITION_KEY
+                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = ntf.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ntf.PATIENT_KEY
                  LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD;
 
