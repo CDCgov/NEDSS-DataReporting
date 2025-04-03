@@ -126,6 +126,8 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_nrt_d_pcr_source_postprocessing")
     void executeStoredProcForDPcrSource(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
+    @Procedure("sp_nrt_var_pam_ldf_postprocessing")
+    void executeStoredProcForVarPamLdf(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     @Procedure("sp_f_var_pam_postprocessing")
     void executeStoredProcForFVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 }
