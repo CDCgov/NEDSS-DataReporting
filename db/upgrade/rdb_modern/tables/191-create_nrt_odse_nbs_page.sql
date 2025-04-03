@@ -13,7 +13,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_NBS_page' and xty
             [last_chg_time] [datetime] NOT NULL,
             [record_status_cd] [varchar](20) NOT NULL,
             [record_status_time] [datetime] NOT NULL,
-            CONSTRAINT [PK_NBS_page] PRIMARY KEY CLUSTERED (
+            CONSTRAINT [PK_nrt_odse_NBS_page] PRIMARY KEY CLUSTERED (
                 [nbs_page_uid] ASC
             )
             WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
