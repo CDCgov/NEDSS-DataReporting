@@ -9,3 +9,24 @@ if not exists(
     begin
         exec sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'Treatment',@role_name = NULL;
     end;
+
+-- CNDE-2340
+IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'Page_cond_mapping')
+    BEGIN
+        EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'Page_cond_mapping',@role_name = NULL;
+    END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'NBS_page')
+    BEGIN
+        EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'NBS_page',@role_name = NULL;
+    END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'NBS_ui_metadata')
+    BEGIN
+        EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'NBS_ui_metadata',@role_name = NULL;
+    END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'NBS_rdb_metadata')
+    BEGIN
+        EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'NBS_rdb_metadata',@role_name = NULL;
+    END;
