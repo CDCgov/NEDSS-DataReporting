@@ -192,7 +192,7 @@ BEGIN
         DELETE T FROM DBO.NRT_DISEASE_SITE_KEY T
         join #TEMP_D_DISEASE_SITE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_DISEASE_SITE_KEY = T.D_DISEASE_SITE_KEY
+        S.D_DISEASE_SITE_KEY = T.D_DISEASE_SITE_KEY;
 
 
         if
@@ -207,11 +207,9 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -221,7 +219,7 @@ BEGIN
         DELETE T FROM DBO.NRT_DISEASE_SITE_GROUP_KEY T
         join #TEMP_D_DISEASE_SITE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_DISEASE_SITE_GROUP_KEY = T.D_DISEASE_SITE_GROUP_KEY
+        S.D_DISEASE_SITE_GROUP_KEY = T.D_DISEASE_SITE_GROUP_KEY;
 
 
         if
@@ -236,12 +234,9 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
-
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -252,7 +247,7 @@ BEGIN
         DELETE T FROM DBO.D_DISEASE_SITE T
         join #TEMP_D_DISEASE_SITE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_DISEASE_SITE_KEY = T.D_DISEASE_SITE_KEY
+        S.D_DISEASE_SITE_KEY = T.D_DISEASE_SITE_KEY;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -262,18 +257,30 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;   
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_DISEASE_SITE_GROUP';
 
+        -- ensure entry D_DISEASE_SITE_GROUP_KEY = 1 exists
+        INSERT INTO  DBO.D_DISEASE_SITE_GROUP (D_DISEASE_SITE_GROUP_KEY)
+        SELECT 1
+        WHERE NOT EXISTS (
+            SELECT 1 FROM  DBO.D_DISEASE_SITE_GROUP
+            WHERE D_DISEASE_SITE_GROUP_KEY = 1
+        );
 
+        -- update F_TB_PAM table
+        UPDATE F
+            SET F.D_DISEASE_SITE_GROUP_KEY = 1
+        FROM DBO.F_TB_PAM F
+        INNER JOIN #TEMP_D_DISEASE_SITE_DEL T on T.D_DISEASE_SITE_GROUP_KEY = F.D_DISEASE_SITE_GROUP_KEY
+
+        -- delete from DBO.D_DISEASE_SITE_GROUP
         DELETE T FROM DBO.D_DISEASE_SITE_GROUP T
         left join (select distinct D_DISEASE_SITE_GROUP_KEY from dbo.D_DISEASE_SITE) DBO
             ON DBO.D_DISEASE_SITE_GROUP_KEY = T.D_DISEASE_SITE_GROUP_KEY

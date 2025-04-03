@@ -192,7 +192,7 @@ BEGIN
         DELETE T FROM DBO.NRT_ADDL_RISK_KEY T
         join #TEMP_D_ADDL_RISK_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_ADDL_RISK_KEY = T.D_ADDL_RISK_KEY
+        S.D_ADDL_RISK_KEY = T.D_ADDL_RISK_KEY;
 
 
         if
@@ -207,11 +207,7 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
-
 ---------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -221,7 +217,7 @@ BEGIN
         DELETE T FROM DBO.NRT_ADDL_RISK_GROUP_KEY T
         join #TEMP_D_ADDL_RISK_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY
+        S.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY;
 
 
         if
@@ -236,12 +232,8 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
-
 
 -------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -252,7 +244,7 @@ BEGIN
         DELETE T FROM DBO.D_ADDL_RISK T
         join #TEMP_D_ADDL_RISK_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_ADDL_RISK_KEY = T.D_ADDL_RISK_KEY
+        S.D_ADDL_RISK_KEY = T.D_ADDL_RISK_KEY;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -262,18 +254,28 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;   
-
 ---------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_ADDL_RISK_GROUP';
 
+        -- ensure entry D_ADDL_RISK_GROUP_KEY = 1 exists
+        INSERT INTO  DBO.D_ADDL_RISK_GROUP (D_ADDL_RISK_GROUP_KEY)
+        SELECT 1
+        WHERE NOT EXISTS (
+            SELECT 1 FROM  DBO.D_ADDL_RISK_GROUP
+            WHERE D_ADDL_RISK_GROUP_KEY = 1
+        );
 
+        -- update F_TB_PAM table
+        UPDATE F
+            SET F.D_ADDL_RISK_GROUP_KEY = 1
+        FROM DBO.F_TB_PAM F
+        INNER JOIN #TEMP_D_ADDL_RISK_DEL T on T.D_ADDL_RISK_GROUP_KEY = F.D_ADDL_RISK_GROUP_KEY;
+
+        -- delete from DBO.D_ADDL_RISK_GROUP
         DELETE T FROM DBO.D_ADDL_RISK_GROUP T
         left join (select distinct D_ADDL_RISK_GROUP_KEY from dbo.D_ADDL_RISK) DBO
             ON DBO.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY
@@ -290,8 +292,6 @@ BEGIN
         COMMIT TRANSACTION;   
 
 ---------------------------------------------------------------------------------------------------------------------
-
-
 
         BEGIN TRANSACTION
 

@@ -206,7 +206,7 @@ BEGIN
             FROM [dbo].nrt_d_out_of_cntry_key K
             INNER JOIN #TEMP_D_OUT_OF_CNTRY_DEL T with (nolock)
                 ON T.TB_PAM_UID = K.TB_PAM_UID 
-                AND T.D_OUT_OF_CNTRY_KEY = K.D_OUT_OF_CNTRY_KEY
+                AND T.D_OUT_OF_CNTRY_KEY = K.D_OUT_OF_CNTRY_KEY;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -219,12 +219,10 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -235,7 +233,7 @@ BEGIN
             FROM [dbo].nrt_d_out_of_cntry_group_key GK
             INNER JOIN #TEMP_D_OUT_OF_CNTRY_DEL T 
                 ON T.TB_PAM_UID = GK.TB_PAM_UID 
-                AND T.D_OUT_OF_CNTRY_GROUP_KEY = GK.D_OUT_OF_CNTRY_GROUP_KEY
+                AND T.D_OUT_OF_CNTRY_GROUP_KEY = GK.D_OUT_OF_CNTRY_GROUP_KEY;
 
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -249,11 +247,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -264,7 +260,7 @@ BEGIN
             FROM [dbo].D_OUT_OF_CNTRY D
             INNER join #TEMP_D_OUT_OF_CNTRY_DEL T with (nolock)
                 ON T.TB_PAM_UID =D.TB_PAM_UID 
-                AND T.D_OUT_OF_CNTRY_KEY = D.D_OUT_OF_CNTRY_KEY
+                AND T.D_OUT_OF_CNTRY_KEY = D.D_OUT_OF_CNTRY_KEY;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -272,18 +268,30 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
  
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_OUT_OF_CNTRY_GROUP';
     
-    
+            -- ensure entry D_OUT_OF_CNTRY_GROUP_KEY = 1 exists
+            INSERT INTO  [dbo].D_OUT_OF_CNTRY_GROUP (D_OUT_OF_CNTRY_GROUP_KEY)
+            SELECT 1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM  [dbo].D_OUT_OF_CNTRY_GROUP
+                WHERE D_OUT_OF_CNTRY_GROUP_KEY = 1
+            );
+
+            -- update F_TB_PAM table
+            UPDATE F
+                SET F.D_OUT_OF_CNTRY_GROUP_KEY = 1
+            FROM [dbo].F_TB_PAM F
+            INNER JOIN #TEMP_D_OUT_OF_CNTRY_DEL T on T.D_OUT_OF_CNTRY_GROUP_KEY = F.D_OUT_OF_CNTRY_GROUP_KEY;
+
+            -- delete from [dbo].D_OUT_OF_CNTRY_GROUP 
             DELETE G 
             FROM [dbo].D_OUT_OF_CNTRY_GROUP G
             LEFT JOIN (SELECT DISTINCT D_OUT_OF_CNTRY_GROUP_KEY FROM [dbo].D_OUT_OF_CNTRY) D
@@ -345,7 +353,9 @@ BEGIN
             LEFT JOIN [dbo].nrt_d_out_of_cntry_key K WITH (NOLOCK)
                 ON K.TB_PAM_UID = S.TB_PAM_UID
                 AND K.NBS_CASE_ANSWER_UID = S.NBS_CASE_ANSWER_UID
-            WHERE K.TB_PAM_UID is null;
+            WHERE 
+                K.TB_PAM_UID IS NULL
+                AND K.NBS_CASE_ANSWER_UID IS NULL;
             
 
             SELECT @RowCount_no = @@ROWCOUNT;

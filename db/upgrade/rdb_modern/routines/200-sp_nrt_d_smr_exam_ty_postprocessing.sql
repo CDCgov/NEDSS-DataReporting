@@ -206,7 +206,7 @@ BEGIN
             FROM [dbo].nrt_d_smr_exam_ty_key K
             INNER JOIN #TEMP_D_SMR_EXAM_TY_DEL T with (nolock)
                 ON T.TB_PAM_UID = K.TB_PAM_UID 
-                AND T.D_SMR_EXAM_TY_KEY = K.D_SMR_EXAM_TY_KEY
+                AND T.D_SMR_EXAM_TY_KEY = K.D_SMR_EXAM_TY_KEY;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -219,12 +219,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -235,7 +232,7 @@ BEGIN
             FROM [dbo].nrt_d_smr_exam_ty_group_key GK
             INNER JOIN #TEMP_D_SMR_EXAM_TY_DEL T 
                 ON T.TB_PAM_UID = GK.TB_PAM_UID 
-                AND T.D_SMR_EXAM_TY_GROUP_KEY = GK.D_SMR_EXAM_TY_GROUP_KEY
+                AND T.D_SMR_EXAM_TY_GROUP_KEY = GK.D_SMR_EXAM_TY_GROUP_KEY;
 
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -249,11 +246,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -272,18 +267,30 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
  
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_SMR_EXAM_TY_GROUP';
     
-    
+            -- ensure entry D_SMR_EXAM_TY_GROUP_KEY = 1 exists
+            INSERT INTO  [dbo].D_SMR_EXAM_TY_GROUP (D_SMR_EXAM_TY_GROUP_KEY)
+            SELECT 1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM  [dbo].D_SMR_EXAM_TY_GROUP
+                WHERE D_SMR_EXAM_TY_GROUP_KEY = 1
+            );
+
+            -- update F_TB_PAM table
+            UPDATE F
+                SET F.D_SMR_EXAM_TY_GROUP_KEY = 1
+            FROM [dbo].F_TB_PAM F
+            INNER JOIN #TEMP_D_SMR_EXAM_TY_DEL T on T.D_SMR_EXAM_TY_GROUP_KEY = F.D_SMR_EXAM_TY_GROUP_KEY;
+
+            -- delete from [dbo].D_SMR_EXAM_TY_GROUP    
             DELETE G 
             FROM [dbo].D_SMR_EXAM_TY_GROUP G
             LEFT JOIN (SELECT DISTINCT D_SMR_EXAM_TY_GROUP_KEY FROM [dbo].D_SMR_EXAM_TY) D
@@ -345,7 +352,9 @@ BEGIN
             LEFT JOIN [dbo].nrt_d_smr_exam_ty_key K WITH (NOLOCK)
                 ON K.TB_PAM_UID = S.TB_PAM_UID
                 AND K.NBS_CASE_ANSWER_UID = S.NBS_CASE_ANSWER_UID
-            WHERE K.TB_PAM_UID is null;
+            WHERE 
+                K.TB_PAM_UID IS NULL
+                AND K.NBS_CASE_ANSWER_UID IS NULL;
             
 
             SELECT @RowCount_no = @@ROWCOUNT;

@@ -219,12 +219,10 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -249,11 +247,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -272,18 +268,30 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
  
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_GT_12_REAS_GROUP';
     
-    
+            -- ensure entry D_GT_12_REAS_GROUP_KEY = 1 exists
+            INSERT INTO  [dbo].D_GT_12_REAS_GROUP (D_GT_12_REAS_GROUP_KEY)
+            SELECT 1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM  [dbo].D_GT_12_REAS_GROUP
+                WHERE D_GT_12_REAS_GROUP_KEY = 1
+            );
+
+            -- update F_TB_PAM table
+            UPDATE F
+                SET F.D_GT_12_REAS_GROUP_KEY = 1
+            FROM [dbo].F_TB_PAM F
+            INNER JOIN #TEMP_D_GT_12_REAS_DEL T on T.D_GT_12_REAS_GROUP_KEY = F.D_GT_12_REAS_GROUP_KEY;
+
+            -- delete from [dbo].D_GT_12_REAS_GROUP
             DELETE G 
             FROM [dbo].D_GT_12_REAS_GROUP G
             LEFT JOIN (SELECT DISTINCT D_GT_12_REAS_GROUP_KEY FROM [dbo].D_GT_12_REAS) D
@@ -345,7 +353,9 @@ BEGIN
             LEFT JOIN [dbo].nrt_d_gt_12_reas_key K WITH (NOLOCK)
                 ON K.TB_PAM_UID = S.TB_PAM_UID
                 AND K.NBS_CASE_ANSWER_UID = S.NBS_CASE_ANSWER_UID
-            WHERE K.TB_PAM_UID is null;
+            WHERE 
+                K.TB_PAM_UID IS NULL
+                AND K.NBS_CASE_ANSWER_UID IS NULL;
             
 
             SELECT @RowCount_no = @@ROWCOUNT;
