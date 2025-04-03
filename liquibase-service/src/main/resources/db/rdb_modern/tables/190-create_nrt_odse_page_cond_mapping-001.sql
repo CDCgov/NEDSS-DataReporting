@@ -8,7 +8,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_Page_cond_mapping
             [add_user_id] [bigint] NOT NULL,
             [last_chg_time] [datetime] NOT NULL,
             [last_chg_user_id] [bigint] NOT NULL,
-            CONSTRAINT [PK_Page_cond_mapping] PRIMARY KEY CLUSTERED (
+            CONSTRAINT [PK_nrt_odse_Page_cond_mapping] PRIMARY KEY CLUSTERED (
                 [page_cond_mapping_uid] ASC
             ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
         ) ON [PRIMARY];
