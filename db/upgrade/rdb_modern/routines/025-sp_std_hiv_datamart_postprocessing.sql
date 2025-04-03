@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_std_hiv_datamart_postprocessing]
+CREATE OR ALTER PROCEDURE dbo.sp_std_hiv_datamart_postprocessing
     @phc_id nvarchar(max),
     @debug bit = 'false'
 AS
@@ -25,7 +25,6 @@ BEGIN
 
     BEGIN TRY
 
-        BEGIN TRANSACTION;
         SET @Proc_Step_Name = 'SP_Start';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
@@ -42,7 +41,6 @@ BEGIN
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type] ,[step_number],[step_name],[row_count],[msg_description1])
         VALUES( @Batch_id,'STD_HIV_DATAMART','STD_HIV_DATAMART','START',@Proc_Step_no,@Proc_Step_Name,0,LEFT(@phc_id, 500));
-        COMMIT TRANSACTION;
 
         /*New logic for INV_HIV*/
         --IF @COUNTSTD>0 AND @COUNTHIV>0
@@ -1167,52 +1165,52 @@ BEGIN
                            ,SYM.SYM_LATE_CLINICAL_MANIFES
                            ,TRT.TRT_TREATMENT_DATE
 
-             FROM dbo.F_STD_PAGE_CASE PC
-                      INNER JOIN #tmp_investigation INV ON INV.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
-                      LEFT JOIN dbo.v_condition_dim COND ON COND.CONDITION_KEY = PC.CONDITION_KEY
+             FROM dbo.F_STD_PAGE_CASE PC with(nolock)
+                      INNER JOIN #tmp_investigation INV with(nolock) ON INV.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
+                      LEFT JOIN dbo.v_condition_dim COND with(nolock) ON COND.CONDITION_KEY = PC.CONDITION_KEY
                       LEFT JOIN (SELECT DISTINCT INVESTIGATION_KEY, CONFIRMATION_DT         -- CAN HAVE MULTIPLE METHODS BUT THE DATE IS ALWAYS THE SAME
-                                 FROM dbo.CONFIRMATION_METHOD_GROUP) AS CONF ON CONF.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
-                      LEFT JOIN dbo.D_CASE_MANAGEMENT CM ON CM.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
-                      LEFT JOIN dbo.D_INV_ADMINISTRATIVE AM ON AM.D_INV_ADMINISTRATIVE_KEY = PC.D_INV_ADMINISTRATIVE_KEY
-                      LEFT JOIN dbo.D_INV_CLINICAL CLN ON CLN.D_INV_CLINICAL_KEY = PC.D_INV_CLINICAL_KEY
-                      LEFT JOIN dbo.D_INV_COMPLICATION CMP ON CMP.D_INV_COMPLICATION_KEY = PC.D_INV_COMPLICATION_KEY
-                      LEFT JOIN dbo.D_INV_CONTACT ICC ON ICC.D_INV_CONTACT_KEY = PC.D_INV_CONTACT_KEY
-                      LEFT JOIN dbo.D_INV_EPIDEMIOLOGY EPI ON EPI.D_INV_EPIDEMIOLOGY_KEY = PC.D_INV_EPIDEMIOLOGY_KEY
-                      LEFT JOIN dbo.INV_HIV HIV ON HIV.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
-                      LEFT JOIN dbo.D_INV_LAB_FINDING LF ON LF.D_INV_LAB_FINDING_KEY = PC.D_INV_LAB_FINDING_KEY
-                      LEFT JOIN dbo.D_INV_MEDICAL_HISTORY MH ON MH.D_INV_MEDICAL_HISTORY_KEY = PC.D_INV_MEDICAL_HISTORY_KEY
-                      LEFT JOIN dbo.D_INV_PATIENT_OBS OBS ON OBS.D_INV_PATIENT_OBS_KEY = PC.D_INV_PATIENT_OBS_KEY
-                      LEFT JOIN dbo.D_INV_PREGNANCY_BIRTH PBI ON PBI.D_INV_PREGNANCY_BIRTH_KEY = PC.D_INV_PREGNANCY_BIRTH_KEY
-                      LEFT JOIN dbo.D_INV_RISK_FACTOR RI ON RI.D_INV_RISK_FACTOR_KEY = PC.D_INV_RISK_FACTOR_KEY
-                      LEFT JOIN dbo.D_INV_SOCIAL_HISTORY SH ON SH.D_INV_SOCIAL_HISTORY_KEY = PC.D_INV_SOCIAL_HISTORY_KEY
-                      LEFT JOIN dbo.D_INV_SYMPTOM SYM ON SYM.D_INV_SYMPTOM_KEY = PC.D_INV_SYMPTOM_KEY
-                      LEFT JOIN dbo.D_INV_TREATMENT TRT ON TRT.D_INV_TREATMENT_KEY = PC.D_INV_TREATMENT_KEY
-                      LEFT JOIN dbo.D_PATIENT PAT ON PAT.PATIENT_KEY = PC.PATIENT_KEY
-                      LEFT JOIN dbo.D_PROVIDER INVEST ON INVEST.PROVIDER_KEY = PC.CLOSED_BY_KEY
+                                 FROM dbo.CONFIRMATION_METHOD_GROUP with(nolock)) AS CONF ON CONF.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
+                      LEFT JOIN dbo.D_CASE_MANAGEMENT CM with(nolock) ON CM.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
+                      LEFT JOIN dbo.D_INV_ADMINISTRATIVE AM with(nolock) ON AM.D_INV_ADMINISTRATIVE_KEY = PC.D_INV_ADMINISTRATIVE_KEY
+                      LEFT JOIN dbo.D_INV_CLINICAL CLN with(nolock) ON CLN.D_INV_CLINICAL_KEY = PC.D_INV_CLINICAL_KEY
+                      LEFT JOIN dbo.D_INV_COMPLICATION CMP with(nolock) ON CMP.D_INV_COMPLICATION_KEY = PC.D_INV_COMPLICATION_KEY
+                      LEFT JOIN dbo.D_INV_CONTACT ICC with(nolock) ON ICC.D_INV_CONTACT_KEY = PC.D_INV_CONTACT_KEY
+                      LEFT JOIN dbo.D_INV_EPIDEMIOLOGY EPI with(nolock) ON EPI.D_INV_EPIDEMIOLOGY_KEY = PC.D_INV_EPIDEMIOLOGY_KEY
+                      LEFT JOIN dbo.INV_HIV HIV with(nolock) ON HIV.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
+                      LEFT JOIN dbo.D_INV_LAB_FINDING LF with(nolock) ON LF.D_INV_LAB_FINDING_KEY = PC.D_INV_LAB_FINDING_KEY
+                      LEFT JOIN dbo.D_INV_MEDICAL_HISTORY MH with(nolock) ON MH.D_INV_MEDICAL_HISTORY_KEY = PC.D_INV_MEDICAL_HISTORY_KEY
+                      LEFT JOIN dbo.D_INV_PATIENT_OBS OBS with(nolock) ON OBS.D_INV_PATIENT_OBS_KEY = PC.D_INV_PATIENT_OBS_KEY
+                      LEFT JOIN dbo.D_INV_PREGNANCY_BIRTH PBI with(nolock) ON PBI.D_INV_PREGNANCY_BIRTH_KEY = PC.D_INV_PREGNANCY_BIRTH_KEY
+                      LEFT JOIN dbo.D_INV_RISK_FACTOR RI with(nolock) ON RI.D_INV_RISK_FACTOR_KEY = PC.D_INV_RISK_FACTOR_KEY
+                      LEFT JOIN dbo.D_INV_SOCIAL_HISTORY SH with(nolock) ON SH.D_INV_SOCIAL_HISTORY_KEY = PC.D_INV_SOCIAL_HISTORY_KEY
+                      LEFT JOIN dbo.D_INV_SYMPTOM SYM with(nolock) ON SYM.D_INV_SYMPTOM_KEY = PC.D_INV_SYMPTOM_KEY
+                      LEFT JOIN dbo.D_INV_TREATMENT TRT with(nolock) ON TRT.D_INV_TREATMENT_KEY = PC.D_INV_TREATMENT_KEY
+                      LEFT JOIN dbo.D_PATIENT PAT with(nolock) ON PAT.PATIENT_KEY = PC.PATIENT_KEY
+                      LEFT JOIN dbo.D_PROVIDER INVEST with(nolock) ON INVEST.PROVIDER_KEY = PC.CLOSED_BY_KEY
                  AND INVEST.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER CRNTI ON CRNTI.PROVIDER_KEY = PC.INVESTIGATOR_KEY
+                      LEFT JOIN dbo.D_PROVIDER CRNTI with(nolock) ON CRNTI.PROVIDER_KEY = PC.INVESTIGATOR_KEY
                  AND CRNTI.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER DISP ON DISP.PROVIDER_KEY = PC.DISPOSITIONED_BY_KEY
+                      LEFT JOIN dbo.D_PROVIDER DISP with(nolock) ON DISP.PROVIDER_KEY = PC.DISPOSITIONED_BY_KEY
                  AND DISP.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER FLD ON FLD.PROVIDER_KEY = PC.INVSTGTR_FLD_FOLLOW_UP_KEY
+                      LEFT JOIN dbo.D_PROVIDER FLD with(nolock) ON FLD.PROVIDER_KEY = PC.INVSTGTR_FLD_FOLLOW_UP_KEY
                  AND FLD.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER INITIV ON INITIV.PROVIDER_KEY = PC.INIT_ASGNED_INTERVIEWER_KEY
+                      LEFT JOIN dbo.D_PROVIDER INITIV with(nolock) ON INITIV.PROVIDER_KEY = PC.INIT_ASGNED_INTERVIEWER_KEY
                  AND INITIV.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER FUP ON FUP.PROVIDER_KEY = PC.INIT_ASGNED_FLD_FOLLOW_UP_KEY
+                      LEFT JOIN dbo.D_PROVIDER FUP with(nolock) ON FUP.PROVIDER_KEY = PC.INIT_ASGNED_FLD_FOLLOW_UP_KEY
                  AND FUP.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER INIT ON INIT.PROVIDER_KEY = PC.INIT_FOLLOW_UP_INVSTGTR_KEY
+                      LEFT JOIN dbo.D_PROVIDER INIT with(nolock) ON INIT.PROVIDER_KEY = PC.INIT_FOLLOW_UP_INVSTGTR_KEY
                  AND INIT.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER IVW ON IVW.PROVIDER_KEY = PC.INTERVIEWER_ASSIGNED_KEY
+                      LEFT JOIN dbo.D_PROVIDER IVW with(nolock) ON IVW.PROVIDER_KEY = PC.INTERVIEWER_ASSIGNED_KEY
                  AND IVW.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER SUPV ON SUPV.PROVIDER_KEY = PC.SUPRVSR_OF_CASE_ASSGNMENT_KEY
+                      LEFT JOIN dbo.D_PROVIDER SUPV with(nolock) ON SUPV.PROVIDER_KEY = PC.SUPRVSR_OF_CASE_ASSGNMENT_KEY
                  AND SUPV.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER SUPVFUP ON SUPVFUP.PROVIDER_KEY = PC.SUPRVSR_OF_FLD_FOLLOW_UP_KEY
+                      LEFT JOIN dbo.D_PROVIDER SUPVFUP with(nolock) ON SUPVFUP.PROVIDER_KEY = PC.SUPRVSR_OF_FLD_FOLLOW_UP_KEY
                  AND SUPVFUP.PROVIDER_KEY != 1
-                      LEFT JOIN dbo.D_PROVIDER SURV ON SURV.PROVIDER_KEY = PC.SURVEILLANCE_INVESTIGATOR_KEY
+                      LEFT JOIN dbo.D_PROVIDER SURV with(nolock) ON SURV.PROVIDER_KEY = PC.SURVEILLANCE_INVESTIGATOR_KEY
                  AND SURV.PROVIDER_KEY != 1
                       LEFT JOIN (SELECT IXC.INVESTIGATION_KEY, DV.IX_DATE
                                  FROM dbo.F_INTERVIEW_CASE IXC
-                                          LEFT JOIN dbo.D_INTERVIEW DV ON DV.D_INTERVIEW_KEY = IXC.D_INTERVIEW_KEY
+                                          LEFT JOIN dbo.D_INTERVIEW DV with(nolock) ON DV.D_INTERVIEW_KEY = IXC.D_INTERVIEW_KEY
                                  WHERE DV.IX_TYPE_CD = 'INITIAL'
                                    AND DV.RECORD_STATUS_CD = 'ACTIVE') DIVW ON DIVW.INVESTIGATION_KEY = PC.INVESTIGATION_KEY
              WHERE
@@ -1294,23 +1292,23 @@ BEGIN
             BEGIN
                 ROLLBACK TRANSACTION;
             END;
-    -- Construct the error message string with all details:
-    DECLARE @FullErrorMessage VARCHAR(8000) =
-        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
-        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Message: ' + ERROR_MESSAGE();
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
         VALUES( @Batch_id
-          , 'STD_HIV_DATAMART'
-          , 'STD_HIV_DATAMART'
-          , 'ERROR'
-          , @Proc_Step_no
-          , @Proc_Step_name
-          , @FullErrorMessage
-          , 0 );
+              , 'STD_HIV_DATAMART'
+              , 'STD_HIV_DATAMART'
+              , 'ERROR'
+              , @Proc_Step_no
+              , @Proc_Step_name
+              , @FullErrorMessage
+              , 0 );
         RETURN -1;
 
     END CATCH;
