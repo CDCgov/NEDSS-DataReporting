@@ -285,7 +285,7 @@ BEGIN
         COMMIT TRANSACTION;
 
         SET @proc_step_name='SP_COMPLETE';
-        SET @proc_step_no = 6;
+        SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log]
         (

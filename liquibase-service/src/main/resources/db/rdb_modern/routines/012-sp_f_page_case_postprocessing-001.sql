@@ -15,9 +15,6 @@ BEGIN
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
-
-        BEGIN TRANSACTION;
-
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
                                          ,[Dataflow_Name]
@@ -39,11 +36,6 @@ BEGIN
             ,0
             ,LEFT('ID List-' + @phc_ids,500)
             );
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
 
 
         SET @Proc_Step_no = 2;
@@ -73,16 +65,13 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 3;
         SET @Proc_Step_Name = ' Generating PHC_CASE_UIDS_ALL';
 
         IF OBJECT_ID('#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
-            drop table #PHC_CASE_UIDS_ALL
-            ;
+            drop table #PHC_CASE_UIDS_ALL;
 
 
         SELECT
@@ -108,9 +97,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 4;
         SET @Proc_Step_Name = ' Generating ENTITY_KEYSTORE_INC';
@@ -185,9 +171,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 5;
         SET @Proc_Step_Name = ' Generating DIMENSION_KEYS_PAGECASEID';
@@ -238,9 +221,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 6;
         SET @Proc_Step_Name = ' Generating DIMENSIONAL_KEYS';
@@ -311,9 +291,7 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 7;
         SET @Proc_Step_Name = ' Generating F_PAGE_CASE_TEMP_INC';
@@ -360,7 +338,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
 
@@ -412,9 +389,8 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION ;
 
-        SET @Proc_Step_no = 9;
+        SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
@@ -441,7 +417,6 @@ BEGIN
             );
 
 
-        COMMIT TRANSACTION;
     END TRY
 
     BEGIN CATCH
