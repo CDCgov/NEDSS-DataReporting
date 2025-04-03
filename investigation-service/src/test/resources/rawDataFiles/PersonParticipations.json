@@ -49,5 +49,22 @@
     "person_parent_uid": 321432524,
     "person_record_status": "ACTIVE",
     "person_last_chg_time": "2024-01-15T10:20:57.597"
+  },
+  {
+    "act_uid": 234567890,
+    "type_cd": "PerAsReporterOfPHC",
+    "entity_id": 10003004,
+    "subject_class_cd": "PSN",
+    "participation_record_status": "ACTIVE",
+    "participation_last_change_time": null,
+    "first_name": "John",
+    "last_name": "Xerogeanes",
+    "local_id": "PSN10064000GA01",
+    "birth_time": null,
+    "curr_sex_cd": null,
+    "person_cd": "PRV",
+    "person_parent_uid": 10003004,
+    "person_record_status": "ACTIVE",
+    "person_last_chg_time": "2024-07-23T12:19:24.770"
   }
 ]

@@ -1,4 +1,4 @@
-CREATE OR ALTER VIEW [dbo].[v_nrt_srte_state_code]
+CREATE OR ALTER VIEW dbo.v_nrt_srte_state_code
     AS
     SELECT 
         state_cd,
@@ -26,4 +26,4 @@ CREATE OR ALTER VIEW [dbo].[v_nrt_srte_state_code]
         state_cd AS concept_code,
         code_desc_txt AS concept_preferred_nm, 
         code_desc_txt AS concept_nm
-    FROM [dbo].nrt_srte_State_code;
+    FROM dbo.nrt_srte_State_code;
