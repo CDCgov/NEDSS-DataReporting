@@ -34,6 +34,32 @@ BEGIN
             , @Proc_Step_Name
             , 0
             , LEFT('ID List-' + @phc_id_list, 500));
+        
+--------------------------------------------------------------------------------------------------------
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING S_INVESTIGATION_LIST TABLE';
+          
+        IF OBJECT_ID('#S_INVESTIGATION_LIST', 'U') IS NOT NULL
+            drop table #S_INVESTIGATION_LIST;
+
+        SELECT 
+            i.value as CASE_UID,
+            inv.INVESTIGATION_KEY
+        INTO  #S_INVESTIGATION_LIST
+        FROM STRING_SPLIT(@phc_id_list, ',') i
+        INNER JOIN [dbo].INVETIGATION inv WITH (NOLOCK)
+            ON inv.CASE_UID = i.value;
+        
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+            
 
 -------------------------------------------------------------------------------------------------------
 
@@ -55,7 +81,9 @@ BEGIN
         INTO #TB_HIV_WITH_UID
         FROM [dbo].D_TB_HIV h WITH(nolock) 
         INNER JOIN [dbo].D_TB_PAM p WITH(nolock) 
-            ON h.TB_PAM_UID = p.TB_PAM_UID;
+            ON h.TB_PAM_UID = p.TB_PAM_UID
+        INNER JOIN #S_INVESTIGATION_LIST i 
+            ON i.CASE_UID = h.TB_PAM_UID    
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -97,6 +125,29 @@ BEGIN
             @debug = 'true'
             SELECT @Proc_Step_Name AS step, *
             FROM #TB_HIV_DATAMART;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+--------------------------------------------------------------------------------------------------------
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETE INCOMING RECORDS FROM  TB_HIV_DATAMART';
+        
+
+        DELETE D
+        FROM [dbo].TB_HIV_DATAMART D
+        INNER JOIN #S_INVESTIGATION_LIST i
+            ON i.INVESTIGATION_KEY = D.INVESTIGATION_KEY
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        IF
+            @debug = 'true'
+            SELECT @Proc_Step_Name AS step, *
+            FROM #S_INVESTIGATION_LIST;
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -813,31 +864,3 @@ END;
 
 
 ---------------------------------------------------END OF PROCEDURE---------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- Update D_TB_HIV_KEY: if > 0 keep as is, else set to 1
-UPDATE #TB_HIV_DATAMART
-SET D_TB_HIV_KEY = CASE 
-    WHEN D_TB_HIV_KEY > 0 THEN D_TB_HIV_KEY 
-    ELSE 1 
-END;
-
--- Execute the dbload procedure to append data to permanent table
-EXEC dbload 'TB_HIV_DATAMART', '#TB_HIV_DATAMART';
-
--- Optional: Clean up temporary tables
--- DROP TABLE #TB_HIV_WITH_UID;
--- DROP TABLE #TB_HIV_DATAMART;
