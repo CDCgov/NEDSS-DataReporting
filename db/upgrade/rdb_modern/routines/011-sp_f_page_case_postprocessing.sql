@@ -15,9 +15,6 @@ BEGIN
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
-
-        BEGIN TRANSACTION;
-
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
                                          ,[Dataflow_Name]
@@ -40,11 +37,6 @@ BEGIN
             ,LEFT('ID List-' + @phc_ids,500)
             );
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
-
 
         SET @Proc_Step_no = 2;
         SET @Proc_Step_Name = ' Generating PHC_UIDS_ALL';
@@ -61,7 +53,7 @@ BEGIN
           AND INVESTIGATION_FORM_CD  NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
                                               'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
                                               'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
-        AND CASE_MANAGEMENT_UID is null;
+          AND CASE_MANAGEMENT_UID is null;
 
         if @debug  = 'true' select * from #PHC_UIDS;
 
@@ -73,16 +65,13 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 3;
         SET @Proc_Step_Name = ' Generating PHC_CASE_UIDS_ALL';
 
         IF OBJECT_ID('#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
-            drop table #PHC_CASE_UIDS_ALL
-            ;
+            drop table #PHC_CASE_UIDS_ALL;
 
 
         SELECT
@@ -108,9 +97,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 4;
         SET @Proc_Step_Name = ' Generating ENTITY_KEYSTORE_INC';
@@ -166,16 +152,16 @@ BEGIN
         --'' as TEMP
         into #ENTITY_KEYSTORE_INC
         FROM #F_S_INV_CASE  FSIV
-                 LEFT OUTER JOIN dbo.D_PATIENT PATIENT	 ON	FSIV.PATIENT_UID= PATIENT.PATIENT_UID
-                 LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPITAL ON 	FSIV.HOSPITAL_UID= HOSPITAL.ORGANIZATION_UID
-                 LEFT OUTER JOIN dbo.D_ORGANIZATION REPORTERORG ON 	FSIV.ORG_AS_REPORTER_UID= REPORTERORG.ORGANIZATION_UID
-                 LEFT OUTER JOIN dbo.D_PROVIDER PERSONREPORTER ON  	FSIV.PERSON_AS_REPORTER_UID= PERSONREPORTER.PROVIDER_UID
-                 LEFT OUTER JOIN dbo.D_PROVIDER PROVIDER ON 	FSIV.INVESTIGATOR_UID= PROVIDER.PROVIDER_UID
-                 LEFT OUTER JOIN dbo.D_PROVIDER PHYSICIAN ON 	FSIV.PHYSICIAN_UID= PHYSICIAN.PROVIDER_UID
-                 LEFT OUTER JOIN dbo.INVESTIGATION  INVESTIGATION ON 	FSIV.PAGE_CASE_UID= INVESTIGATION.CASE_UID
-                 LEFT OUTER JOIN #PHC_CASE_UIDS_ALL  CASE_UID ON 	FSIV.PAGE_CASE_UID= CASE_UID.PAGE_CASE_UID
-                 LEFT OUTER JOIN dbo.CONDITION CONDITION ON 	CASE_UID.CD= CONDITION.CONDITION_CD
-                 LEFT JOIN dbo.GEOCODING_LOCATION AS LOC ON LOC.ENTITY_UID = PATIENT.PATIENT_UID
+                 LEFT OUTER JOIN dbo.D_PATIENT PATIENT WITH (NOLOCK) ON	FSIV.PATIENT_UID= PATIENT.PATIENT_UID
+                 LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPITAL WITH (NOLOCK) ON 	FSIV.HOSPITAL_UID= HOSPITAL.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.D_ORGANIZATION REPORTERORG WITH (NOLOCK) ON 	FSIV.ORG_AS_REPORTER_UID= REPORTERORG.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PERSONREPORTER WITH (NOLOCK) ON  	FSIV.PERSON_AS_REPORTER_UID= PERSONREPORTER.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PROVIDER WITH (NOLOCK) ON 	FSIV.INVESTIGATOR_UID= PROVIDER.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PHYSICIAN WITH (NOLOCK) ON 	FSIV.PHYSICIAN_UID= PHYSICIAN.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.INVESTIGATION  INVESTIGATION WITH (NOLOCK) ON 	FSIV.PAGE_CASE_UID= INVESTIGATION.CASE_UID
+                 LEFT OUTER JOIN #PHC_CASE_UIDS_ALL  CASE_UID WITH (NOLOCK) ON 	FSIV.PAGE_CASE_UID= CASE_UID.PAGE_CASE_UID
+                 LEFT OUTER JOIN dbo.v_condition_dim CONDITION WITH (NOLOCK) ON 	CASE_UID.CD= CONDITION.CONDITION_CD
+                 LEFT JOIN dbo.GEOCODING_LOCATION AS LOC WITH (NOLOCK) ON LOC.ENTITY_UID = PATIENT.PATIENT_UID
         ;
 
         if @debug  = 'true' select * from #ENTITY_KEYSTORE_INC;
@@ -185,9 +171,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 5;
         SET @Proc_Step_Name = ' Generating DIMENSION_KEYS_PAGECASEID';
@@ -225,8 +208,8 @@ BEGIN
         select cte.*
         into #DIMENSION_KEYS_PAGECASEID
         from LOOKUPCTE cte
-         INNER JOIN #ENTITY_KEYSTORE_INC keystore --joining with this table in advance to reduce the rows
-                    ON cte.PAGE_CASE_UID = keystore.PAGE_CASE_UID
+                 INNER JOIN #ENTITY_KEYSTORE_INC keystore --joining with this table in advance to reduce the rows
+                            ON cte.PAGE_CASE_UID = keystore.PAGE_CASE_UID
         ;
 
         if @debug  = 'true' select * from #DIMENSION_KEYS_PAGECASEID where page_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','));
@@ -238,9 +221,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 6;
         SET @Proc_Step_Name = ' Generating DIMENSIONAL_KEYS';
@@ -311,9 +291,7 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 7;
         SET @Proc_Step_Name = ' Generating F_PAGE_CASE_TEMP_INC';
@@ -345,8 +323,8 @@ BEGIN
         INTO #F_PAGE_CASE_TEMP_INC
         FROM  #ENTITY_KEYSTORE_INC AS KEYSTORE
                   INNER JOIN #DIMENSIONAL_KEYS as DIM_KEYS ON DIM_KEYS.PAGE_CASE_UID = KEYSTORE.PAGE_CASE_UID
-                  LEFT OUTER JOIN dbo.RDB_DATE DATE1 ON cast(DATE1.DATE_MM_DD_YYYY as date)= cast(KEYSTORE.ADD_TIME as date)
-                  LEFT OUTER JOIN dbo.RDB_DATE DATE2 ON cast(DATE2.DATE_MM_DD_YYYY as date )=cast(KEYSTORE.LAST_CHG_TIME as date)
+                  LEFT OUTER JOIN dbo.RDB_DATE DATE1 WITH (NOLOCK) ON cast(DATE1.DATE_MM_DD_YYYY as date)= cast(KEYSTORE.ADD_TIME as date)
+                  LEFT OUTER JOIN dbo.RDB_DATE DATE2 WITH (NOLOCK) ON cast(DATE2.DATE_MM_DD_YYYY as date )=cast(KEYSTORE.LAST_CHG_TIME as date)
         ;
 
 
@@ -360,7 +338,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
-        COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
 
@@ -412,9 +389,8 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION ;
 
-        SET @Proc_Step_no = 9;
+        SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
@@ -441,7 +417,6 @@ BEGIN
             );
 
 
-        COMMIT TRANSACTION;
     END TRY
 
     BEGIN CATCH
@@ -449,7 +424,7 @@ BEGIN
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-         -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +

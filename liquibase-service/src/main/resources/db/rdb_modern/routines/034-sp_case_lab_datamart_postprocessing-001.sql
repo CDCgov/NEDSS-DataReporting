@@ -1,11 +1,10 @@
 CREATE OR ALTER PROCEDURE [dbo].[sp_case_lab_datamart_postprocessing] @phc_id nvarchar(max),
-                                                             @debug bit = 'false'
+                                                                      @debug bit = 'false'
 AS
 BEGIN
     DECLARE @batch_id BIGINT;
 
-    SET
-        @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmssffff')) AS BIGINT);
+    SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmssffff')) AS BIGINT);
 
     DECLARE @RowCount_no INT;
 
@@ -13,11 +12,9 @@ BEGIN
 
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
     BEGIN TRY
-        SET
-            @Proc_Step_no = 1;
+        SET @Proc_Step_no = 1;
+        SET @Proc_Step_Name = 'SP_Start';
 
-        SET
-            @Proc_Step_Name = 'SP_Start';
         BEGIN TRANSACTION;
 
         SELECT @ROWCOUNT_NO = 0;
@@ -43,7 +40,7 @@ BEGIN
 -- new as per the team discussion, to remove TEMP_UPDATED_LAB_INV_MAP from SP_RUN sp
         IF OBJECT_ID('tempdb..#TEMP_UPDATED_LAB_INV_MAP') IS NOT NULL
             DROP TABLE #TEMP_UPDATED_LAB_INV_MAP;
-            BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Creating LAB_INV_MAP';
 
@@ -142,9 +139,9 @@ BEGIN
                                             where LAB_TEST_KEY in (select lab_test_key
                                                                    FROM dbo.LAB_TEST
                                                                    where case_uid in (SELECT value
-                                                                                               FROM
-                                                                                                   STRING_SPLIT(@phc_id,
-                                                                                                                ',')))
+                                                                                      FROM
+                                                                                          STRING_SPLIT(@phc_id,
+                                                                                                       ',')))
                                               and INVESTIGATION_KEY <> 1)
             UNION
 
@@ -166,33 +163,33 @@ BEGIN
                                                                 on
                                                                     mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
                                             where case_uid in (SELECT value
-                                                                        FROM
-                                                                            STRING_SPLIT(@phc_id,
-                                                                                         ',')))
-          /*  UNION
+                                                               FROM
+                                                                   STRING_SPLIT(@phc_id,
+                                                                                ',')))
+            /*  UNION
 
-            SELECT inv.INVESTIGATION_KEY,
-                   RPT_SRC_ORG_KEY,
-                   INV_LOCAL_ID    AS INVESTIGATION_LOCAL_ID,
-                   CONDITION_KEY,
-                   JURISDICTION_NM AS JURISDICTION_NAME,
-                   PATIENT_key,
-                   PHYSICIAN_KEY
-            FROM dbo.INVESTIGATION inv with (nolock)
-                     LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
-                                     ON
-                                         inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
-            WHERE CASE_TYPE = 'I'
-              AND cc.patient_key in (select patient_key
-                                     from dbo.d_patient
-                                     where PATIENT_KEY in (select PATIENT_KEY
-                                                           from dbo.INVESTIGATION
-                                                           where INVESTIGATION_KEY in (SELECT value
-                                                                                       FROM
-                                                                                           STRING_SPLIT(@phc_id,
-                                                                                                        ',')))
-                                     group by PATIENT_LOCAL_ID,
-                                              patient_key); */
+              SELECT inv.INVESTIGATION_KEY,
+                     RPT_SRC_ORG_KEY,
+                     INV_LOCAL_ID    AS INVESTIGATION_LOCAL_ID,
+                     CONDITION_KEY,
+                     JURISDICTION_NM AS JURISDICTION_NAME,
+                     PATIENT_key,
+                     PHYSICIAN_KEY
+              FROM dbo.INVESTIGATION inv with (nolock)
+                       LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
+                                       ON
+                                           inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
+              WHERE CASE_TYPE = 'I'
+                AND cc.patient_key in (select patient_key
+                                       from dbo.d_patient
+                                       where PATIENT_KEY in (select PATIENT_KEY
+                                                             from dbo.INVESTIGATION
+                                                             where INVESTIGATION_KEY in (SELECT value
+                                                                                         FROM
+                                                                                             STRING_SPLIT(@phc_id,
+                                                                                                          ',')))
+                                       group by PATIENT_LOCAL_ID,
+                                                patient_key); */
 
             if @debug = 'true'
                 select '#TMP_CLDM_All_Case',
@@ -255,7 +252,7 @@ BEGIN
         from #TMP_CLDM_ALL_CASE as GC with (nolock)
                  left join dbo.D_PATIENT as p with (nolock)
                            ON GC.PATIENT_KEY = p.PATIENT_key
-                 left join dbo.CONDITION as C with (nolock)
+                 left join dbo.v_condition_dim as C with (nolock)
                            ON C.CONDITION_KEY = GC.CONDITION_KEY
                                AND P.PATIENT_KEY <> 1;
 
@@ -446,7 +443,7 @@ BEGIN
                cast(null as varchar(200)) as EVENT_DATE_TYPE
         INTO #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND
         FROM #TMP_CLDM_GEN_PATCOMPL_INV_INVESTIGATOR AS GPIPR with (nolock)
-                 LEFT JOIN dbo.CONDITION AS C with (nolock)
+                 LEFT JOIN dbo.v_condition_dim AS C with (nolock)
                            ON GPIPR.CONDITION_KEY = C.CONDITION_KEY;
 
         if @debug = 'true'
@@ -458,7 +455,7 @@ BEGIN
                                FROM dbo.[CONFIRMATION_METHOD_GROUP] CMG with (nolock)
                                WHERE CMG.[INVESTIGATION_KEY] =
                                      #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND.investigation_key);
-COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 -- Declare the dynamic SQL variable
         DECLARE @Update_sql NVARCHAR(MAX);
@@ -1250,7 +1247,8 @@ WHERE EVENT_DATE is null;';
 
         -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
-            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) +
+            CHAR(10) + -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +

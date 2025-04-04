@@ -250,7 +250,7 @@ BEGIN
             principle for adding a prog_area_cd row to the condition, it sure will cause
             some confusion among users.  There's no "disease" ON the input.
             */
-                 LEFT JOIN dbo.Condition	AS con with (nolock)
+                 LEFT JOIN dbo.v_condition_dim	AS con with (nolock)
                            ON	no2.prog_area_cd  = con.program_area_cd
                                AND con.condition_cd IS NULL
             /*LDF_GRP_KEY*/
@@ -1652,7 +1652,7 @@ BEGIN
             INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
             JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
             LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            LEFT JOIN dbo.CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
             LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
             JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
         WHERE ltr.INVESTIGATION_KEY <> 1
@@ -1666,7 +1666,7 @@ BEGIN
             INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
             JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
             LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            LEFT JOIN dbo.CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
             LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
             JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
         WHERE ltr.INVESTIGATION_KEY <> 1;
