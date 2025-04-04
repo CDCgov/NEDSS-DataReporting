@@ -187,7 +187,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_CNTY_KEY T
         join #TEMP_D_MOVE_CNTY_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_CNTY_KEY = T.D_MOVE_CNTY_KEY
+        S.D_MOVE_CNTY_KEY = T.D_MOVE_CNTY_KEY;
 
 
         if
@@ -202,11 +202,9 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -216,7 +214,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_CNTY_GROUP_KEY T
         join #TEMP_D_MOVE_CNTY_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_CNTY_GROUP_KEY = T.D_MOVE_CNTY_GROUP_KEY
+        S.D_MOVE_CNTY_GROUP_KEY = T.D_MOVE_CNTY_GROUP_KEY;
 
 
         if
@@ -229,14 +227,11 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
-        
-        COMMIT TRANSACTION;    
+                @RowCount_no);        
 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -247,7 +242,7 @@ BEGIN
         DELETE T FROM DBO.D_MOVE_CNTY T
         join #TEMP_D_MOVE_CNTY_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_CNTY_KEY = T.D_MOVE_CNTY_KEY
+        S.D_MOVE_CNTY_KEY = T.D_MOVE_CNTY_KEY;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -257,18 +252,22 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;   
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_CNTY_GROUP';
 
+        -- update F_TB_PAM table
+        UPDATE F
+            SET F.D_MOVE_CNTY_GROUP_KEY = 1
+        FROM DBO.F_TB_PAM F
+        INNER JOIN #TEMP_D_MOVE_CNTY_DEL T on T.D_MOVE_CNTY_GROUP_KEY = F.D_MOVE_CNTY_GROUP_KEY;
 
+        -- delete from DBO.D_MOVE_CNTY_GROUP
         DELETE T FROM DBO.D_MOVE_CNTY_GROUP T
         left join (select distinct D_MOVE_CNTY_GROUP_KEY from dbo.d_move_cnty) DBO
             ON DBO.D_MOVE_CNTY_GROUP_KEY = T.D_MOVE_CNTY_GROUP_KEY
