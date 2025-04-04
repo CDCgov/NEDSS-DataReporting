@@ -57,16 +57,16 @@ BEGIN
 --        	SET @temp_sql = 'drop table dbo.tmp_DynDm_ProvPart_Table_temp' + @datamart_suffix;
 --        	exec sp_executesql @temp_sql;
 --
-        IF OBJECT_ID('dbo.tmp_DynDm_Investigation_Data'+@datamart_suffix, 'U') IS NOT NULL
-            SET @temp_sql = 'drop table dbo.tmp_DynDm_Investigation_Data' + @datamart_suffix;
+        IF OBJECT_ID('dbo.tmp_DynDm_Investigation_Data_'+@datamart_suffix, 'U') IS NOT NULL
+            SET @temp_sql = 'drop table dbo.tmp_DynDm_Investigation_Data_' + @datamart_suffix;
         exec sp_executesql @temp_sql;
 
-        IF OBJECT_ID('dbo.tmp_DynDm_OrgPart_Table_temp'+@datamart_suffix, 'U') IS NOT NULL
-            SET @temp_sql = 'drop table dbo.tmp_DynDm_OrgPart_Table_temp' + @datamart_suffix;
+        IF OBJECT_ID('dbo.tmp_DynDm_OrgPart_Table_temp_'+@datamart_suffix, 'U') IS NOT NULL
+            SET @temp_sql = 'drop table dbo.tmp_DynDm_OrgPart_Table_temp_' + @datamart_suffix;
         exec sp_executesql @temp_sql;
 
-        IF OBJECT_ID('dbo.tmp_DynDm_Organization'+@datamart_suffix, 'U') IS NOT NULL
-            SET @temp_sql = 'drop table dbo.tmp_DynDm_Organization' + @datamart_suffix;
+        IF OBJECT_ID('dbo.tmp_DynDm_Organization_'+@datamart_suffix, 'U') IS NOT NULL
+            SET @temp_sql = 'drop table dbo.tmp_DynDm_Organization_' + @datamart_suffix;
         exec sp_executesql @temp_sql;
 
         IF OBJECT_ID('dbo.tmp_DynDm_Patient_Data_'+@datamart_suffix, 'U') IS NOT NULL
@@ -81,8 +81,8 @@ BEGIN
             SET @temp_sql = 'drop table dbo.tmp_DynDm_D_INV_Administrative_' + @datamart_suffix;
         exec sp_executesql @temp_sql;
 
-        IF OBJECT_ID('dbo.tmp_DynDm_D_INV_CLINICAL'+@datamart_suffix, 'U') IS NOT NULL
-            SET @temp_sql = 'drop table dbo.tmp_DynDm_D_INV_CLINICAL' + @datamart_suffix;
+        IF OBJECT_ID('dbo.tmp_DynDm_D_INV_CLINICAL_'+@datamart_suffix, 'U') IS NOT NULL
+            SET @temp_sql = 'drop table dbo.tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix;
         exec sp_executesql @temp_sql;
 
         IF OBJECT_ID('dbo.tmp_DynDm_D_INV_CONTACT_'+@datamart_suffix, 'U') IS NOT NULL
@@ -368,4 +368,3 @@ BEGIN
 
     END CATCH;
 END;
-
