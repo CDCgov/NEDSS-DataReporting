@@ -2,7 +2,8 @@ CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_org_data_postprocessing
 
             @batch_id BIGINT,
 			@DATAMART_NAME VARCHAR(100),
-			@phc_id_list nvarchar(max)
+			@phc_id_list nvarchar(max),
+			@debug bit = false
 
 	AS
 BEGIN
@@ -19,15 +20,15 @@ BEGIN
 		DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
 	    DECLARE @Package_Name varchar(200)='DynDm_OrgData_sp '+@DATAMART_NAME;
 
+		DECLARE @tmp_DynDm_ORGANIZATION varchar(200) = 'dbo.tmp_DynDm_Organization_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 
-	SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM=@DATAMART_NAME)
+	    DECLARE @temp_sql nvarchar(max);
+	    SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.V_NRT_NBS_PAGE WHERE DATAMART_NM=@DATAMART_NAME);
 
 
 	SET @Proc_Step_no = 1;
 	SET @Proc_Step_Name = 'SP_Start';
 
-
-	BEGIN TRANSACTION;
 
    SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -54,9 +55,6 @@ BEGIN
 
 
 
-    COMMIT TRANSACTION;
-
-
     BEGIN TRANSACTION;
 
 	SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -71,8 +69,9 @@ BEGIN
       declare @countstd int = 0;
 
 
-	   select  @COUNTSTD =   count(*) from dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata
-        ;
+	   select @COUNTSTD = count(*)
+        from dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata case_meta
+        where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
 
 
 		  declare @FACT_CASE varchar(40) = '';
@@ -87,6 +86,8 @@ BEGIN
 			  set @FACT_CASE = 'F_PAGE_CASE';
 			 end
 		  ;
+
+		  IF @debug = 'true' PRINT @FACT_CASE;
 
  -- select @fact_case;
 
@@ -103,17 +104,16 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
     BEGIN TRANSACTION;
 
+
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Organization_METADATA';
 
 
 --CREATE TABLE ORGANIZATION_METADATA  AS
-
-	Select RDB_COLUMN_NM, user_defined_column_nm, part_type_cd, [Key], Detail, QEC, UID, INVESTIGATION_FORM_CD
-	into #tmp_DynDm_Organization_METADATA
-	from v_nrt_nbs_d_organization_rdb_table_metadata
-	where INVESTIGATION_FORM_CD=@nbs_page_form_cd ;
-
+		Select RDB_COLUMN_NM, user_defined_column_nm, part_type_cd, [Key], Detail, QEC, UID, INVESTIGATION_FORM_CD
+		into #tmp_DynDm_Organization_METADATA
+		from v_nrt_nbs_d_organization_rdb_table_metadata
+		where INVESTIGATION_FORM_CD=@nbs_page_form_cd ;
 
 
 SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -132,9 +132,10 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Organization';
 
 
-
-     IF OBJECT_ID('dbo.tmp_DynDm_Organization', 'U') IS NOT NULL
- 				drop table dbo.tmp_DynDm_Organization;
+	SET @temp_sql = '
+    	IF OBJECT_ID('''+@tmp_DynDm_ORGANIZATION+''', ''U'') IS NOT NULL
+ 				drop table '+@tmp_DynDm_ORGANIZATION;
+	exec sp_executesql @temp_sql;
 
 
 --CREATE TABLE #tmp_DynDm_Organization
@@ -148,14 +149,14 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	     and  I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
 
-
-select distinct investigation_key,
-cast(null as bigint) as ORGANIZATION_UID
-into dbo.tmp_DynDm_Organization
- FROM #tmp_DynDm_SUMM_DATAMART
- -- pass the org_Id_List  param
-;
-
+	SET @temp_sql = '
+		select distinct investigation_key,
+		cast(null as bigint) as ORGANIZATION_UID
+		into '+@tmp_DynDm_ORGANIZATION+'
+		 FROM #tmp_DynDm_SUMM_DATAMART'
+		 -- pass the org_Id_List  param
+		;
+	exec sp_executesql @temp_sql;
 
 
 
@@ -397,8 +398,7 @@ BEGIN
 
 
 
-							SET @SQL =  'alter table dbo.tmp_DynDm_Organization add  ' +  @DETAIL  + ' [varchar](2000) , ' +  @USER_DEFINED_COLUMN_NM+ ' bigint , '  +  @QEC+ ' [varchar](50) , ' +  @UID+ ' bigint ; '
-
+								SET @SQL =  'alter table '+@tmp_DynDm_ORGANIZATION+' add  ' +  @DETAIL  + ' [varchar](2000) , ' +  @USER_DEFINED_COLUMN_NM+ ' bigint , '  +  @QEC+ ' [varchar](50) , ' +  @UID+ ' bigint ; '
 
 							EXEC(@SQL);
 
@@ -433,7 +433,7 @@ BEGIN
 									  +  @USER_DEFINED_COLUMN_NM+ ' =  ORGANIZATION_KEY , '
 									  +  @QEC+ ' = ORGANIZATION_QUICK_CODE , '
 									  +  @UID+ ' = orgtemp.ORGANIZATION_UID '
-									  +  ' FROM dbo.tmp_DynDm_Organization  tDO '
+									  +  ' FROM '+@tmp_DynDm_ORGANIZATION+'  tDO '
 									  +  ' INNER JOIN #tmp_DynDm_OrgPart_Table_temp orgtemp  ON  tDO.investigation_key = orgtemp.investigation_key '
 									  + ' ; '
 
