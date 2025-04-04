@@ -14,7 +14,8 @@ BEGIN
 	DECLARE @nbs_page_form_cd VARCHAR(200) = '';
 
 	DECLARE @Dataflow_Name VARCHAR(200)='DYNAMIC_DATAMART POST-Processing';
-	DECLARE @Package_Name VARCHAR(200)='DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM;
+	DECLARE @Package_Name VARCHAR(200)='sp_dyn_dm_page_builder_d_inv_postprocessing: '+@DATAMART_NAME+' - '+@RDB_TABLE_NM;
+	DECLARE @tmp_DynDm_D_INVESTIGATION varchar(200) = 'dbo.tmp_DynDM_'+@RDB_TABLE_NM+'_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 
 	SET @Proc_Step_no = 1;
 	SET @Proc_Step_Name = 'SP_Start';
@@ -33,8 +34,9 @@ BEGIN
     declare @countstd int = 0;
 
 	select  @countstd = count(*)
-	from dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA with (nolock)
-	;
+        from dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA case_meta with (nolock)
+        where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
+
 
   declare @FACT_CASE varchar(40) = '';
 
@@ -305,13 +307,11 @@ BEGIN
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	DECLARE @tmp_DynDM_RDB_TABLE_NM VARCHAR(200) = 'dbo.tmp_DynDM_'+@RDB_TABLE_NM;
-
 	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDM_RDB_TABLE_NM ;
+	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_D_INVESTIGATION ;
 
 
-	declare @D_INV_CASE_UNIT_list varchar(Max) = null ;
+	declare @D_INV_CASE_UNIT_list VARCHAR(Max) = null ;
 
 	SELECT @D_INV_CASE_UNIT_list = coalesce((COALESCE(@D_INV_CASE_UNIT_list+',' ,'') + RDB_COLUMN_NM + ' AS  ' +  coalesce(USER_DEFINED_COLUMN_NM,'')),'')
 	FROM  #tmp_DynDm_D_INV_METADATA_UNIT_1;
@@ -326,29 +326,29 @@ BEGIN
 	SET @listStr =   coalesce(@D_INV_CASE_UNIT_list + ',','') + coalesce(@D_INV_CASE_OTH_list + ',','') + coalesce(@D_INV_CASE_list+' ,','')
 
 
-	IF OBJECT_ID(@tmp_DynDM_RDB_TABLE_NM) IS NOT NULL
-    	EXEC ('DROP Table ' + @tmp_DynDM_RDB_TABLE_NM)
+	IF OBJECT_ID(@tmp_DynDm_D_INVESTIGATION) IS NOT NULL
+    	EXEC ('DROP Table ' + @tmp_DynDm_D_INVESTIGATION)
 	;
 
     declare @SQL varchar(max);
 
 	if  object_id('dbo.'+@RDB_TABLE_NM) is not null
-	Begin
-		SET @SQL = '   SELECT distinct  '+@listStr + ' tmp.INVESTIGATION_KEY ' +
-				'    into ' + @tmp_DynDM_RDB_TABLE_NM +
-				'    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)'+
-				'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
-				'		INNER JOIN  dbo.'+@RDB_TABLE_NM+'  with (nolock) ON	'+@FACT_CASE+'.'+@DIM_KEY+'  = '+@RDB_TABLE_NM+'.'+@DIM_KEY +
-				'	  WHERE tmp.DISEASE_GRP_CD = '+@nbs_page_form_cd
-				;
-	end
+		Begin
+			SET @SQL = '   SELECT distinct  '+@listStr + ' tmp.INVESTIGATION_KEY ' +
+					'    into ' + @tmp_DynDm_D_INVESTIGATION +
+					'    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)'+
+					'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
+					'		INNER JOIN  dbo.'+@RDB_TABLE_NM+'  with (nolock) ON	'+@FACT_CASE+'.'+@DIM_KEY+'  = '+@RDB_TABLE_NM+'.'+@DIM_KEY+
+					'       WHERE tmp.DISEASE_GRP_CD = '+@nbs_page_form_cd
+					;
+		end
 	else
-	Begin
-		SET @SQL = '  SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
-			'    into '+@tmp_DynDM_RDB_TABLE_NM +
-			'    FROM #tmp_DynDM_SUMM_DATAMART with (nolock) '
-			;
-	end
+		Begin
+			SET @SQL = '  SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
+				'    into '+@tmp_DynDm_D_INVESTIGATION +
+				'    FROM #tmp_DynDM_SUMM_DATAMART with (nolock) '
+				;
+		end
 	;
 	exec (@SQL);
 
