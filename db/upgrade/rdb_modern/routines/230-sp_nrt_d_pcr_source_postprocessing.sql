@@ -199,12 +199,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -229,11 +226,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -252,18 +247,22 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
  
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_PCR_SOURCE_GROUP';
     
-    
+            -- update F_VAR_PAM table
+            UPDATE F
+                SET F.D_PCR_SOURCE_GROUP_KEY = 1
+            FROM [dbo].F_VAR_PAM F
+            INNER JOIN #TEMP_D_PCR_SOURCE_DEL T on T.D_PCR_SOURCE_GROUP_KEY = F.D_PCR_SOURCE_GROUP_KEY;
+
+            -- delete from [dbo].D_PCR_SOURCE_GROUP    
             DELETE G 
             FROM [dbo].D_PCR_SOURCE_GROUP G
             LEFT JOIN (SELECT DISTINCT D_PCR_SOURCE_GROUP_KEY FROM [dbo].D_PCR_SOURCE) D
