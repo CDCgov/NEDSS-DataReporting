@@ -135,10 +135,8 @@ AND DATA_TYPE='PART'
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_PROVIDER';
 
-        SET @temp_sql = '
- 		IF OBJECT_ID('''+@tmp_DynDm_PROVIDER+''', ''U'') IS NOT NULL
- 				drop table '+@tmp_DynDm_PROVIDER;
-        exec sp_executesql @temp_sql;
+        IF OBJECT_ID(@tmp_DynDm_PROVIDER, 'U') IS NOT NULL
+ 				exec ('drop table ' +@tmp_DynDm_PROVIDER);
 
         SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
         into #tmp_DynDm_SUMM_DATAMART
@@ -412,7 +410,7 @@ AND DATA_TYPE='PART'
                 UPDATE #tmp_DynDm_ProvPart_Table_temp SET   DETAIL = LTRIM(RTRIM(DETAIL))  +  '<br>'  +  LTRIM(RTRIM(PROVIDER_STREET_ADDRESS_2)) 	 WHERE  LEN(LTRIM(RTRIM(PROVIDER_STREET_ADDRESS_2)))>0 	 ;
                 UPDATE #tmp_DynDm_ProvPart_Table_temp SET   DETAIL =LTRIM(RTRIM(DETAIL)) +  '<br>'  +  LTRIM(  RTRIM(CITY_STATE_ZIP)) 	 WHERE  LEN(LTRIM(RTRIM(CITY_STATE_ZIP)))>0 	 ;
                 UPDATE #tmp_DynDm_ProvPart_Table_temp SET   DETAIL =LTRIM(RTRIM(DETAIL)) +  '<br>'  +  LTRIM(RTRIM(PROVIDER_COUNTY)) WHERE  LEN(LTRIM(RTRIM(PROVIDER_COUNTY)))>0 	 ;
-                UPDATE #tmp_DynDm_ProvPart_Table_temp SET  DETAIL =LTRIM(RTRIM(DETAIL)) +  '<br>'  +  LTRIM(  RTRIM(PROVIDER_PHONE_WORK)) 	 WHERE  LEN(LTRIM(RTRIM(PROVIDER_PHONE_WORK)))>0 	 ;
+                UPDATE #tmp_DynDm_ProvPart_Table_temp SET DETAIL =LTRIM(RTRIM(DETAIL)) +  '<br>'  +  LTRIM(  RTRIM(PROVIDER_PHONE_WORK)) 	 WHERE  LEN(LTRIM(RTRIM(PROVIDER_PHONE_WORK)))>0 	 ;
                 UPDATE #tmp_DynDm_ProvPart_Table_temp SET   DETAIL =LTRIM(RTRIM(DETAIL)) +  ', ext. '  +  LTRIM(  RTRIM(PROVIDER_PHONE_EXT_WORK)) 	 WHERE  LEN(LTRIM(RTRIM(PROVIDER_PHONE_WORK)))>0 and LEN(LTRIM(RTRIM(PROVIDER_PHONE_EXT_WORK)))>0 	 ;
                 UPDATE #tmp_DynDm_ProvPart_Table_temp SET   DETAIL =LTRIM(RTRIM(DETAIL)) +  '<br> ext. '  +  LTRIM(  RTRIM(PROVIDER_PHONE_EXT_WORK)) 	 WHERE  LEN(LTRIM(RTRIM(PROVIDER_PHONE_WORK)))=0 and LEN(LTRIM(RTRIM(PROVIDER_PHONE_EXT_WORK)))>0 	 ;
                 UPDATE #tmp_DynDm_ProvPart_Table_temp SET   DETAIL =LTRIM(RTRIM(DETAIL)) +  '<br>' 	 WHERE  LEN(LTRIM(RTRIM(DETAIL )))>0 	 ;

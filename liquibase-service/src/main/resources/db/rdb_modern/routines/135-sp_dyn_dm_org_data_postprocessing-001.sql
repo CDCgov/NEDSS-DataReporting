@@ -131,12 +131,8 @@ SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	SET @Proc_Step_no = @Proc_Step_no + 1;
 	SET @Proc_Step_Name = 'GENERATING  tmp_DynDm_Organization';
 
-
-	SET @temp_sql = '
-    	IF OBJECT_ID('''+@tmp_DynDm_ORGANIZATION+''', ''U'') IS NOT NULL
- 				drop table '+@tmp_DynDm_ORGANIZATION;
-	exec sp_executesql @temp_sql;
-
+	IF OBJECT_ID(@tmp_DynDm_ORGANIZATION, 'U') IS NOT NULL
+ 		exec ('drop table ' +@tmp_DynDm_ORGANIZATION);
 
 --CREATE TABLE #tmp_DynDm_Organization
 --(INVESTIGATION_KEY bigint);
