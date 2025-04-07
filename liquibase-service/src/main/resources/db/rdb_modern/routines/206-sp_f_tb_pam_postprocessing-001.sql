@@ -57,7 +57,7 @@ BEGIN
             MAX(I.physician_id) AS PHYSICIAN_UID
         INTO #F_S_TB_PAM
         FROM [dbo].nrt_investigation I WITH (NOLOCK) 
-        INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = I.public_health_case_uid
+        INNER JOIN (SELECT TRIM(value) FROM STRING_SPLIT(@phc_id_list, ',')) nu ON nu.value = I.public_health_case_uid
         WHERE 
             I.investigation_form_cd='INV_FORM_RVCT'
             AND I.patient_id IS NOT NULL
