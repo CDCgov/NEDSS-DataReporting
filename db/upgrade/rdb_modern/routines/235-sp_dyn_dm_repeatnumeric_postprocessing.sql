@@ -10,6 +10,12 @@ BEGIN
 
     BEGIN TRY
 
+        /**
+         * OUTPUT TABLES:
+         * tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC_<DATAMART_NAME>_<batch_id>
+         * tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_<DATAMART_NAME>_<batch_id>
+         * */
+
         DECLARE @RowCount_no INT ;
         DECLARE @Proc_Step_no FLOAT = 0 ;
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;

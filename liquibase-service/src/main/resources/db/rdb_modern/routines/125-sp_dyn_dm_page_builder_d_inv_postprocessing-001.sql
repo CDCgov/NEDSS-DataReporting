@@ -8,6 +8,11 @@ CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
 BEGIN
 	 BEGIN TRY
 
+	 /**
+     * OUTPUT TABLES:
+     * tmp_DynDM_<RDB_TABLE_NM>_<DATAMART_NAME>_<batch_id>
+     * */
+
 	DECLARE @RowCount_no INT = 0 ;
 	DECLARE @Proc_Step_no FLOAT = 0 ;
 	DECLARE @Proc_Step_Name VARCHAR(200) = '' ;

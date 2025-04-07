@@ -8,6 +8,11 @@ BEGIN
 
 BEGIN TRY
 
+    /**
+     * OUTPUT TABLES:
+     * tmp_DynDm_INVESTIGATION_REPEAT_VARCHAR_<DATAMART_NAME>_<batch_id>
+     * tmp_DynDm_REPEAT_BLOCK_VARCHAR_ALL_<DATAMART_NAME>_<batch_id>
+     * */
 
 	DECLARE @RowCount_no INT ;
 	DECLARE @Proc_Step_no FLOAT = 0 ;

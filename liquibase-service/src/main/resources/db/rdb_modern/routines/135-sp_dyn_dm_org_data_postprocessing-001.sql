@@ -9,7 +9,10 @@ CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_org_data_postprocessing
 BEGIN
 	 BEGIN TRY
 
---DECLARE  @batch_id BIGINT = 999;  DECLARE @DATAMART_NAME  VARCHAR(100) = 'CONG_SYPHILIS';
+	    /**
+         * OUTPUT TABLES:
+         * tmp_DynDm_Organization_<DATAMART_NAME>_<batch_id>
+         * */
 
 		DECLARE @RowCount_no INT = 0  ;
 		DECLARE @Proc_Step_no FLOAT = 0 ;

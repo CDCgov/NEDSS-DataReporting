@@ -49,8 +49,8 @@ BEGIN
         SET @DATAMART_TABLE_NAME = 'DM_INV_' + LTRIM(RTRIM(@datamart_name));
 
         -- Generate batch_id for logging
-        --SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
-        SET @batch_id = cast('10003' as bigint);
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
+        --SET @batch_id = cast('10003' as bigint);
 
         if @debug='true'
             print @batch_id;
