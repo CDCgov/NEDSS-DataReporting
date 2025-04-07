@@ -152,6 +152,30 @@ databaseChangeLog:
             path: 001-fn_get_record_status-001.sql
             splitStatements: false
   - changeSet:
+      id: 20.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 028-create_nrt_srte_Condition_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 027-create_nrt_srte_Program_area_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 011-v_condition_dim-001.sql
+            splitStatements: false
+  - changeSet:
       id: 21
       author: liquibase
       runOnChange: true
@@ -461,7 +485,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 027-create_nrt_srte_Program_area_code-001.sql
+            path: 029-create_nrt_srte_Codeset-001.sql
             splitStatements: false
   - changeSet:
       id: 70.4
@@ -469,23 +493,15 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 028-create_nrt_srte_Condition_code-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 70.5
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 029-create_nrt_srte_Codeset-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 70.6
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
             path: 030-create_nrt_srte_Code_value_general-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.7
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 187-create_nrt_srte_State_code-001.sql
             splitStatements: false
   - changeSet:
       id: 71
@@ -678,14 +694,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 010-v_code_value_general-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 96
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 011-v_condition_dim-001.sql
             splitStatements: false
   - changeSet:
       id: 97
@@ -1960,6 +1968,7 @@ databaseChangeLog:
         - sqlFile:
             path: 240-sp_f_var_pam_postprocessing-001.sql
             splitStatements: false
+
   - changeSet:
       id: 660
       author: liquibase
@@ -1969,18 +1978,66 @@ databaseChangeLog:
             path: 245-sp_dyn_dm_createdm_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 685
+      id: 665
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 193-create_tb_hiv_datamart-001.sql
+            path: 190-create_nrt_odse_page_cond_mapping-001.sql
             splitStatements: false
   - changeSet:
-      id: 690
+      id: 666
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 265-sp_tb_hiv_datamart_postprocessing-001.sql
+            path: 191-create_nrt_odse_nbs_page-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 668
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 192-create_nrt_odse_nbs_ui_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 670
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 193-create_nrt_odse_nbs_rdb_metadata-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 675
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 189-create_var_pam_ldf-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 680
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 235-sp_nrt_var_pam_ldf_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 705
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 196-create_tb_hiv_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 710
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 260-sp_tb_hiv_datamart_postprocessing-001.sql
             splitStatements: false

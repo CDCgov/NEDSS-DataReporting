@@ -79,7 +79,7 @@ BEGIN
                            ON CAST(nrt.public_health_case_uid AS bigint) = inv.CASE_UID
                  LEFT JOIN dbo.nrt_investigation nrt_inv WITH (NOLOCK)
                            ON CAST(nrt.public_health_case_uid AS bigint) = nrt_inv.public_health_case_uid
-                 LEFT JOIN dbo.CONDITION cnd WITH (NOLOCK) ON nrt_inv.cd = cnd.CONDITION_CD
+                 LEFT JOIN dbo.v_condition_dim cnd WITH (NOLOCK) ON nrt_inv.cd = cnd.CONDITION_CD
                  LEFT JOIN dbo.D_PATIENT p WITH (NOLOCK) ON CAST(nrt.patient_treatment_uid AS bigint) = p.PATIENT_UID
                  LEFT JOIN dbo.D_ORGANIZATION org WITH (NOLOCK)
                            ON CAST(nrt.organization_uid AS bigint) = org.ORGANIZATION_UID
@@ -347,7 +347,7 @@ BEGIN
               dtm.Stored_Procedure AS stored_procedure
           FROM #temp_trt_event_table trt
               LEFT JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = trt.INVESTIGATION_KEY
-              LEFT JOIN dbo.CONDITION c ON c.CONDITION_KEY = trt.CONDITION_KEY
+              LEFT JOIN dbo.v_condition_dim c ON c.CONDITION_KEY = trt.CONDITION_KEY
               LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = trt.PATIENT_KEY
               LEFT JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.condition_cd = c.CONDITION_CD;*/
 
