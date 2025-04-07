@@ -61,9 +61,9 @@ BEGIN
                 exec sp_executesql @temp_sql;
             END
 
-        IF OBJECT_ID('dbo.tmp_DynDm_OrgPart_Table_temp_'+@datamart_suffix, 'U') IS NOT NULL
+        IF OBJECT_ID('dbo.tmp_DynDm_INV_SUMM_DATAMART_'+@datamart_suffix, 'U') IS NOT NULL
             BEGIN
-                SET @temp_sql = 'drop table dbo.tmp_DynDm_OrgPart_Table_temp_' + @datamart_suffix;
+                SET @temp_sql = 'drop table dbo.tmp_DynDm_INV_SUMM_DATAMART_' + @datamart_suffix;
                 exec sp_executesql @temp_sql;
             END
 
@@ -214,18 +214,6 @@ BEGIN
         IF OBJECT_ID('dbo.tmp_DynDm_D_INV_STD_'+@datamart_suffix, 'U') IS NOT NULL
             BEGIN
                 SET @temp_sql = 'drop table dbo.tmp_DynDm_D_INV_STD_' + @datamart_suffix;
-                exec sp_executesql @temp_sql;
-            END
-
-        IF OBJECT_ID('dbo.tmp_DynDm_PROVIDER_'+@datamart_suffix, 'U') IS NOT NULL
-            BEGIN
-                SET @temp_sql = 'drop table dbo.tmp_DynDm_PROVIDER_' + @datamart_suffix;
-                exec sp_executesql @temp_sql;
-            END
-
-        IF OBJECT_ID('dbo.tmp_DynDm_PROVIDER_'+@datamart_suffix, 'U') IS NOT NULL
-            BEGIN
-                SET @temp_sql = 'drop table dbo.tmp_DynDm_PROVIDER_' + @datamart_suffix;
                 exec sp_executesql @temp_sql;
             END
 
