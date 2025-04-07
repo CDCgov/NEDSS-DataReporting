@@ -176,6 +176,262 @@ databaseChangeLog:
             path: 011-v_condition_dim-001.sql
             splitStatements: false
   - changeSet:
+      id: 20.4
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 194-create_nrt_srte_XSS_Filter_Pattern-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.5
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 195-create_nrt_srte_Lab_coding_system-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.6
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 196-create_nrt_srte_Language_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.7
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 197-create_nrt_srte_LOINC_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.8
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 198-create_nrt_srte_State_code_backup-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.9
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 199-create_nrt_srte_Snomed_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.10
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 200-create_nrt_srte_Cntycity_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.11
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 201-create_nrt_srte_Country_Code_ISO-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.12
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 202-create_nrt_srte_Lab_test-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.13
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 203-create_nrt_srte_Specimen_source_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.14
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 204-create_nrt_srte_Investigation_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.15
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 205-create_nrt_srte_NAICS_Industry_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.16
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 206-create_nrt_srte_Occupation_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.17
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 207-create_nrt_srte_Participation_type-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.18
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 208-create_nrt_srte_Lab_result-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.19
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 209-create_nrt_srte_Labtest_loinc-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.20
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 210-create_nrt_srte_Loinc_condition-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.21
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 211-create_nrt_srte_Snomed_condition-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.22
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 212-create_nrt_srte_Country_XREF-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.23
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 213-create_nrt_srte_Lab_result_Snomed-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.24
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 214-create_nrt_srte_Loinc_snomed_condition-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.25
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 215-create_nrt_srte_ELR_XREF-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.26
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 216-create_nrt_srte_Labtest_Progarea_Mapping-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.27
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 217-create_nrt_srte_Standard_XREF-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.28
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 218-create_nrt_srte_Jurisdiction_participation-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.29
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 219-create_nrt_srte_State_model-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.30
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 220-create_nrt_srte_Treatment_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.31
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 221-create_nrt_srte_Unit_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.32
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 222-create_nrt_srte_LDF_page_set-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.33
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 223-create_nrt_srte_Zip_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.34
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 224-create_nrt_srte_Zipcnty_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.35
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 225-create_nrt_srte_Race_code-001.sql
+            splitStatements: false
+  - changeSet:
       id: 21
       author: liquibase
       runOnChange: true
@@ -646,7 +902,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 097-create_nrt_srte_jurisdiction_code-001.sql
-            splitStatements: false            
+            splitStatements: false
   - changeSet:
       id: 90
       author: liquibase
