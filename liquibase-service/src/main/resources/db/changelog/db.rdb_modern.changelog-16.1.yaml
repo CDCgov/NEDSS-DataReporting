@@ -2010,3 +2010,20 @@ databaseChangeLog:
         - sqlFile:
             path: 193-create_nrt_odse_nbs_rdb_metadata-001.sql
             splitStatements: false
+  - changeSet:
+      id: 675
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 189-create_var_pam_ldf-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 680
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 235-sp_nrt_var_pam_ldf_postprocessing-001.sql
+            splitStatements: false
+
