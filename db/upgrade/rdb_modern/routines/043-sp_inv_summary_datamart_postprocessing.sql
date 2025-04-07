@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_inv_summary_datamart_postprocessing]
+CREATE OR ALTER PROCEDURE dbo.sp_inv_summary_datamart_postprocessing
 (@phc_uids nvarchar(max) = '',
  @notif_uids nvarchar(max) = '',
  @obs_uids nvarchar(max) = '',
@@ -388,9 +388,6 @@ BEGIN
 
         --------------------------------------5. Create Table TMP_S_CONFIRMATION_METHOD_PIVOT
 
-        IF OBJECT_ID('tempdb..#TMP_CONFIRMATION_METHOD_BASE') IS NOT NULL
-            drop table #TMP_CONFIRMATION_METHOD_BASE ;
-
 
         SELECT CM.*,
                CMG.INVESTIGATION_KEY,
@@ -406,7 +403,6 @@ BEGIN
         if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_CONFIRMATION_METHOD_BASE;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
