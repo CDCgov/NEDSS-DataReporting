@@ -47,7 +47,7 @@ public class InvestigationService {
     private static int nProc = Runtime.getRuntime().availableProcessors();
 
     private static final Logger logger = LoggerFactory.getLogger(InvestigationService.class);
-    private final ExecutorService phcExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("phc-"));
+    private ExecutorService phcExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("phc-"));
 
     @Value("${spring.kafka.input.topic-name-phc}")
     private String investigationTopic;
@@ -349,5 +349,9 @@ public class InvestigationService {
         if (!phcExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
             phcExecutor.shutdownNow();
         }
+    }
+
+    public void setPhcExecutor(ExecutorService phcExecutor) {
+        this.phcExecutor = phcExecutor;
     }
 }

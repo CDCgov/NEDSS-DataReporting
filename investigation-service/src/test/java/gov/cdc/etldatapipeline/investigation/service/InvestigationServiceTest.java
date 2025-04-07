@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
@@ -69,6 +70,9 @@ class InvestigationServiceTest {
     @Captor
     private ArgumentCaptor<String> messageCaptor;
 
+    @Mock
+    private ExecutorService phcExecutor;
+
     private AutoCloseable closeable;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -96,6 +100,7 @@ class InvestigationServiceTest {
 
         investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository,treatmentRepository, kafkaTemplate, transformer);
 
+        investigationService.setPhcExecutor(phcExecutor);
         investigationService.setPhcDatamartEnable(true);
         investigationService.setBmirdCaseEnable(true);
         investigationService.setContactRecordEnable(true);
@@ -495,4 +500,11 @@ class InvestigationServiceTest {
     private ConsumerRecord<String, String> getRecord(String topic, String payload) {
         return new ConsumerRecord<>(topic, 0,  11L, null, payload);
     }
+
+    @Test
+    void testShutdown() {
+        investigationService.shutdown();
+        verify(phcExecutor).shutdownNow();
+    }
+
 }
