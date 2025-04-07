@@ -53,7 +53,7 @@ BEGIN
         FROM STRING_SPLIT(@phc_id_list, ',') i
         INNER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
             ON inv.CASE_UID = i.value
-        WHERE inv.RECORD_STATUS_CD <> 'LOG_DEL';
+        WHERE UPPER(inv.RECORD_STATUS_CD) = 'ACTIVE';
         
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -85,7 +85,7 @@ BEGIN
         FROM STRING_SPLIT(@phc_id_list, ',') i
         INNER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
             ON inv.CASE_UID = i.value
-        WHERE inv.RECORD_STATUS_CD = 'LOG_DEL';
+        WHERE UPPER(inv.RECORD_STATUS_CD) = 'INACTIVE';
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
