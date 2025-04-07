@@ -90,7 +90,7 @@ BEGIN
             LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
                 ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                 AND CVG.CODE = VAR.ANSWER_TXT
-            INNER JOIN ( SELECT TRIM(value) FROM STRING_SPLIT(@phc_id_list, ',')) nu ON VAR.ACT_UID = nu.value
+            INNER JOIN ( SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON VAR.ACT_UID = nu.value
             WHERE VAR.DATAMART_COLUMN_NM <> 'n/a'
             AND ISNULL(VAR.batch_id, 1) = ISNULL(inv.batch_id, 1)
             AND QUESTION_IDENTIFIER = 'VAR176';
