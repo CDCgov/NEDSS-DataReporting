@@ -3,10 +3,12 @@ CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
 	@DATAMART_NAME VARCHAR(100),
 	@RDB_TABLE_NM  VARCHAR(100),
 	@DIM_KEY VARCHAR(100),
-	@phc_id_list nvarchar(max)
+	@phc_id_list nvarchar(max),
+	@debug BIT = 'false'
 	AS
 BEGIN
 	 BEGIN TRY
+
 
 	DECLARE @RowCount_no INT = 0 ;
 	DECLARE @Proc_Step_no FLOAT = 0 ;
@@ -14,27 +16,42 @@ BEGIN
 	DECLARE @nbs_page_form_cd VARCHAR(200) = '';
 
 	DECLARE @Dataflow_Name VARCHAR(200)='DYNAMIC_DATAMART POST-Processing';
-	DECLARE @Package_Name VARCHAR(200)='DynDm_Manage_D_Inv_sp '+@DATAMART_NAME+' - '+@RDB_TABLE_NM;
+	DECLARE @Package_Name VARCHAR(200)='sp_dyn_dm_page_builder_d_inv_postprocessing: '+@DATAMART_NAME+' - '+@RDB_TABLE_NM;
+	DECLARE @tmp_DynDm_D_INVESTIGATION varchar(200) = 'dbo.tmp_DynDM_'+@RDB_TABLE_NM+'_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 
 	SET @Proc_Step_no = 1;
 	SET @Proc_Step_Name = 'SP_Start';
 
- 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
- 	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
+	--Serialize input parameters to JSON for clean logging
+	DECLARE @params_json NVARCHAR(MAX) = JSON_QUERY((
+		SELECT
+			@batch_id AS batch_id,
+			@DATAMART_NAME AS DATAMART_NAME,
+			@RDB_TABLE_NM AS RDB_TABLE_NM,
+			@DIM_KEY AS DIM_KEY,
+			@phc_id_list AS phc_id_list,
+			@debug AS debug
+		FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+	));
+
+
+ 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count], msg_description1 )
+ 	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO, @params_json );
 
 	SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.V_NRT_NBS_PAGE WHERE DATAMART_NM=@DATAMART_NAME);
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --2
 	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_D_INV_METADATA';
 
 
     declare @countstd int = 0;
 
 	select  @countstd = count(*)
-	from dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA with (nolock)
-	;
+        from dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA case_meta with (nolock)
+        where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
+
 
   declare @FACT_CASE varchar(40) = '';
 
@@ -64,17 +81,16 @@ BEGIN
 	  	AND d_inv_meta.INVESTIGATION_FORM_CD= @nbs_page_form_cd
    ;
 
-	update #tmp_DynDm_D_INV_METADATA
-	  set FORM_CD =@nbs_page_form_cd,
-	  RDB_TABLE_NM=@RDB_TABLE_NM
-	;
+	if @debug='true' print @Proc_Step_Name;
+
+	if @debug='true' select '#tmp_DynDm_D_INV_METADATA',* from #tmp_DynDm_D_INV_METADATA;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --3
 	SET @Proc_Step_Name = ' REMOVING MISSING COLUMNS  #tmp_DynDm_D_INV_METADATA';
 
 	DELETE FROM
@@ -85,13 +101,14 @@ BEGIN
 		)
 	;
 
+	if @debug='true' print @Proc_Step_Name;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
 	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --4
 	SET @Proc_Step_Name = ' UPDATING #tmp_DynDm_D_INV_METADATA';
 
 
@@ -100,12 +117,14 @@ BEGIN
 	where USER_DEFINED_COLUMN_NM is null
 	;
 
+	if @debug='true' print @Proc_Step_Name;
+
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --5
 	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_D_INV_METADATA_1';
 
 
@@ -122,6 +141,8 @@ BEGIN
     WHERE b.SEQ = 1
 	;
 
+	if @debug='true' print @Proc_Step_Name;
+	if @debug='true' select '#tmp_DynDm_D_INV_METADATA_1',* from #tmp_DynDm_D_INV_METADATA_1;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
  	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -129,7 +150,7 @@ BEGIN
 
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --6
 	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_D_INV_METADATA_distinct';
 
 	SELECT DISTINCT (RDB_COLUMN_NM  + ' AS ' + USER_DEFINED_COLUMN_NM) as USER_DEFINED_COLUMN_NM
@@ -137,12 +158,14 @@ BEGIN
 	FROM #tmp_DynDm_D_INV_METADATA_1
 	;
 
+	if @debug='true' print @Proc_Step_Name;
+
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
  	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --7
 	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_D_INV_METADATA_OTH';
 
 
@@ -166,13 +189,14 @@ BEGIN
 		AND OTHER_VALUE_IND_CD='T'
 	;
 
+	if @debug='true' print @Proc_Step_Name;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
  	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --8
 	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_D_INV_METADATA_OTH_1';
 
 	SELECT a.*
@@ -191,13 +215,14 @@ BEGIN
     WHERE b.SEQ = 1
 	;
 
+	if @debug='true' print @Proc_Step_Name;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --9
 	SET @Proc_Step_Name = ' GENERATING  COLUMN LIST';
 
 
@@ -213,13 +238,14 @@ BEGIN
     	SET @D_INV_CASE_OTH_list_flag = 1;
 	end
 
+	if @debug='true' print @Proc_Step_Name;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --10
 	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_D_INV_METADATA_UNIT';
 
 
@@ -241,13 +267,15 @@ BEGIN
 		)
 	;
 
+	if @debug='true' print @Proc_Step_Name;
+	if @debug='true' select '#tmp_DynDm_D_INV_METADATA_UNIT',* from #tmp_DynDm_D_INV_METADATA_UNIT;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
  	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --11
 	SET @Proc_Step_Name = ' REMOVING MISSING COLUMNS #tmp_DynDm_D_INV_METADATA_UNIT';
 
 	DELETE FROM  #tmp_DynDm_D_INV_METADATA_UNIT
@@ -256,13 +284,15 @@ BEGIN
 	)
 	;
 
+	if @debug='true' print @Proc_Step_Name;
+
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
 	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --12
 	SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_D_INV_METADATA_UNIT_1';
 
 
@@ -277,13 +307,15 @@ BEGIN
     WHERE b.SEQ = 1
 	;
 
+	if @debug='true' print @Proc_Step_Name;
+	if @debug='true' select '#tmp_DynDm_D_INV_METADATA_UNIT_1',* from #tmp_DynDm_D_INV_METADATA_UNIT_1;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	SET @Proc_Step_no = @Proc_Step_no + 1;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --13
 	SET @Proc_Step_Name = ' GENERATING  #tmp_DynDm_SUMM_DATAMART';
 
 	SELECT
@@ -300,18 +332,18 @@ BEGIN
 		dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.investigation_key
      and  I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
+	if @debug='true' print @Proc_Step_Name;
+
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
  	VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name , @ROWCOUNT_NO );
 
 
-	DECLARE @tmp_DynDM_RDB_TABLE_NM VARCHAR(200) = 'dbo.tmp_DynDM_'+@RDB_TABLE_NM;
-
-	SET @Proc_Step_no = @Proc_Step_no + 1;
-	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDM_RDB_TABLE_NM ;
+	SET @Proc_Step_no = @Proc_Step_no + 1; --14
+	SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_D_INVESTIGATION ;
 
 
-	declare @D_INV_CASE_UNIT_list varchar(Max) = null ;
+	declare @D_INV_CASE_UNIT_list VARCHAR(Max) = null ;
 
 	SELECT @D_INV_CASE_UNIT_list = coalesce((COALESCE(@D_INV_CASE_UNIT_list+',' ,'') + RDB_COLUMN_NM + ' AS  ' +  coalesce(USER_DEFINED_COLUMN_NM,'')),'')
 	FROM  #tmp_DynDm_D_INV_METADATA_UNIT_1;
@@ -325,33 +357,36 @@ BEGIN
 	declare @listStr as varchar(max) = '';
 	SET @listStr =   coalesce(@D_INV_CASE_UNIT_list + ',','') + coalesce(@D_INV_CASE_OTH_list + ',','') + coalesce(@D_INV_CASE_list+' ,','')
 
+	if @debug='true' print @listStr;
 
-	IF OBJECT_ID(@tmp_DynDM_RDB_TABLE_NM) IS NOT NULL
-    	EXEC ('DROP Table ' + @tmp_DynDM_RDB_TABLE_NM)
+	IF OBJECT_ID(@tmp_DynDm_D_INVESTIGATION) IS NOT NULL
+    	EXEC ('DROP Table ' + @tmp_DynDm_D_INVESTIGATION)
 	;
 
     declare @SQL varchar(max);
 
 	if  object_id('dbo.'+@RDB_TABLE_NM) is not null
-	Begin
-		SET @SQL = '   SELECT distinct  '+@listStr + ' tmp.INVESTIGATION_KEY ' +
-				'    into ' + @tmp_DynDM_RDB_TABLE_NM +
-				'    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)'+
-				'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
-				'		INNER JOIN  dbo.'+@RDB_TABLE_NM+'  with (nolock) ON	'+@FACT_CASE+'.'+@DIM_KEY+'  = '+@RDB_TABLE_NM+'.'+@DIM_KEY +
-				'	  WHERE tmp.DISEASE_GRP_CD = '+@nbs_page_form_cd
-				;
-	end
+		Begin
+			SET @SQL = '   SELECT distinct  '+@listStr + ' tmp.INVESTIGATION_KEY ' +
+					'    into ' + @tmp_DynDm_D_INVESTIGATION +
+					'    FROM #tmp_DynDM_SUMM_DATAMART tmp with (nolock)'+
+					'		INNER JOIN  dbo.'+@FACT_CASE +'   with (nolock)  ON tmp.INVESTIGATION_KEY  = '+@FACT_CASE+'.INVESTIGATION_KEY '+
+					'		INNER JOIN  dbo.'+@RDB_TABLE_NM+'  with (nolock) ON	'+@FACT_CASE+'.'+@DIM_KEY+'  = '+@RDB_TABLE_NM+'.'+@DIM_KEY
+					;
+		end
 	else
-	Begin
-		SET @SQL = '  SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
-			'    into '+@tmp_DynDM_RDB_TABLE_NM +
-			'    FROM #tmp_DynDM_SUMM_DATAMART with (nolock) '
-			;
-	end
+		Begin
+			SET @SQL = '  SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
+				'    into '+@tmp_DynDm_D_INVESTIGATION +
+				'    FROM #tmp_DynDM_SUMM_DATAMART with (nolock) '
+				;
+		end
 	;
+
+	if @debug='true' print @SQL;
 	exec (@SQL);
 
+	if @debug='true' print @Proc_Step_Name;
 
 	SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 	INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -370,7 +405,7 @@ BEGIN
 	BEGIN CATCH
 		IF @@TRANCOUNT > 0
 		BEGIN
-			ROLLBACK;
+			COMMIT TRANSACTION;
 		END;
 
 		-- Construct the error message string with all details:
@@ -380,6 +415,8 @@ BEGIN
 			'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
 			'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
 			'Error Message: ' + ERROR_MESSAGE();
+
+		if @debug='true' print @FullErrorMessage;
 
 		INSERT INTO [dbo].[job_flow_log] ( batch_id
 											, [Dataflow_Name]

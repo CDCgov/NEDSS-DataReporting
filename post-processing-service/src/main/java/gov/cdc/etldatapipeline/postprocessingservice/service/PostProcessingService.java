@@ -9,6 +9,7 @@ import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datama
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +25,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -61,6 +62,9 @@ public class PostProcessingService {
     // cache to store ids that needs to be processed for datamarts
     // a map of datamart names and the needed ids
     final Map<String, Map<String, Queue<Long>>> dmCache = new ConcurrentHashMap<>();
+
+    private static int nProc = Runtime.getRuntime().availableProcessors();
+    private final ExecutorService dynDmExecutor = Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
 
     private final PostProcRepository postProcRepository;
     private final InvestigationRepository investigationRepository;
@@ -653,10 +657,21 @@ public class PostProcessingService {
             dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
 
             if(!dmDataList.isEmpty() && dynDmEnable) {
-                for(DatamartData dmData : dmDataList){
-                    postProcRepository.executeStoredProcForDynDatamart(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
-                    logger.info("Updates to Dynamic Datamart: {} ",dmData.getDatamart());
-                }
+
+                Map<String, String> datamartPhcIdMap = dmDataList.stream()
+                        .collect(Collectors.groupingBy(
+                                DatamartData::getDatamart,
+                                Collectors.mapping(
+                                        dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
+                                        Collectors.joining(",")
+                                )
+                        ));
+                datamartPhcIdMap.forEach((datamart, phcIds) -> {
+                            CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
+                                    .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart));
+                        }
+                );
+
             } else {
                 logger.info("No updates to Dynamic Datamarts");
             }
@@ -672,16 +687,22 @@ public class PostProcessingService {
         }
     }
 
+
     private String listToParameterString(Collection<Long> inputList) {
         return Optional.ofNullable(inputList)
                 .map(list -> list.stream().map(String::valueOf).collect(Collectors.joining(",")))
                 .orElse("");
     }
 
+    @SneakyThrows
     @PreDestroy
     public void shutdown() {
         processCachedIds();
         processDatamartIds();
+        dynDmExecutor.shutdown();
+        if (!dynDmExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+            dynDmExecutor.shutdownNow();
+        }
     }
 
     private boolean assertMatches(String value, String... vals) {
