@@ -1616,7 +1616,7 @@ BEGIN
         BEGIN TRANSACTION;
 
 
-        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NO = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
 

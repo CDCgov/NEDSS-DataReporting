@@ -2890,7 +2890,7 @@ BEGIN
         -------------------------------------------------------------------------------------------------------------------------
         BEGIN TRANSACTION;
 
-        SET @Proc_Step_no = 29;
+        SET @Proc_Step_no = 999;
 
         SET @Proc_Step_Name = 'SP_COMPLETE';
 

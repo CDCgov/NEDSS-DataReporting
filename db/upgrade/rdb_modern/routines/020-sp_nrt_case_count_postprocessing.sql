@@ -1,21 +1,21 @@
 CREATE or ALTER PROCEDURE [dbo].[sp_nrt_case_count_postprocessing] @phc_id_list nvarchar(max)
 AS
 BEGIN
-BEGIN TRY
+    BEGIN TRY
 
-   declare @rowcount_no bigint;
-   declare @proc_step_no float = 0;
-   declare @proc_step_name varchar(200) = '';
-   declare @batch_id bigint;
-   declare @create_dttm datetime2(7) = current_timestamp;
-   declare @update_dttm datetime2(7) = current_timestamp;
-   declare @dataflow_name varchar(200) = 'Case Count POST-Processing';
-   declare @package_name varchar(200) = 'sp_nrt_case_count_postprocessing';
+        declare @rowcount_no bigint;
+        declare @proc_step_no float = 0;
+        declare @proc_step_name varchar(200) = '';
+        declare @batch_id bigint;
+        declare @create_dttm datetime2(7) = current_timestamp;
+        declare @update_dttm datetime2(7) = current_timestamp;
+        declare @dataflow_name varchar(200) = 'Case Count POST-Processing';
+        declare @package_name varchar(200) = 'sp_nrt_case_count_postprocessing';
 
-   SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
+        SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id
         ,[create_dttm]
         ,[update_dttm]
         ,[Dataflow_Name]
@@ -25,19 +25,19 @@ BEGIN TRY
         ,[step_name]
         ,[msg_description1]
         ,[row_count])
-    VALUES (@batch_id
-            ,@create_dttm
-            ,@update_dttm
-            ,@dataflow_name
-            ,@package_name
-            ,'START'
-            ,0
-            ,'SP_Start'
-            ,LEFT(@phc_id_list, 500)
-            ,0);
+        VALUES (@batch_id
+               ,@create_dttm
+               ,@update_dttm
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,0
+               ,'SP_Start'
+               ,LEFT(@phc_id_list, 500)
+               ,0);
 
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
         SET @proc_step_no = 1;
         SET @proc_step_name = ' Create Key Associations table';
 
@@ -78,9 +78,9 @@ BEGIN TRY
             SELECT value FROM STRING_SPLIT(@phc_id_list, ',')
         )
         ;
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING Case Count Table - Update';
@@ -102,10 +102,10 @@ BEGIN TRY
             diagnosis_dt_key = src.diagnosis_dt_key,
             inv_rpt_dt_key = src.inv_rpt_dt_key,
             geocoding_location_key = src.geocoding_location_key
-            from
-                    dbo.CASE_COUNT tgt
+        from
+            dbo.CASE_COUNT tgt
                 inner join #CASE_COUNT src
-        on src.investigation_key = tgt.investigation_key;
+                           on src.investigation_key = tgt.investigation_key;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO dbo.[JOB_FLOW_LOG]
@@ -151,8 +151,8 @@ BEGIN TRY
             src.geocoding_location_key
         from
             #CASE_COUNT src
-        left outer join dbo.CASE_COUNT tgt
-            on src.investigation_key = tgt.investigation_key
+                left outer join dbo.CASE_COUNT tgt
+                                on src.investigation_key = tgt.investigation_key
         where tgt.investigation_key is null
         ;
 
@@ -161,62 +161,61 @@ BEGIN TRY
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@dataflow_name, @package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
 
-	SET @PROC_STEP_NO =  999 ;
-	SET @Proc_Step_Name = 'SP_COMPLETE';
+        SET @PROC_STEP_NO =  999 ;
+        SET @Proc_Step_Name = 'SP_COMPLETE';
 
-    INSERT INTO dbo.[job_flow_log]
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type] ,[step_number],[step_name],[row_count])
-    VALUES
-        (@batch_id,@dataflow_name, @package_name,'COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
-
-
-
-END TRY
-
-BEGIN CATCH
-
-IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
-
-    -- Construct the error message string with all details:
-    DECLARE @FullErrorMessage VARCHAR(8000) =
-        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
-        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Message: ' + ERROR_MESSAGE();
+        INSERT INTO dbo.[job_flow_log]
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type] ,[step_number],[step_name],[row_count])
+        VALUES
+            (@batch_id,@dataflow_name, @package_name,'COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
 
 
 
-INSERT INTO dbo.[job_flow_log] (
-                                 batch_id
-    ,[Dataflow_Name]
-    ,[package_Name]
-    ,[Status_Type]
-    ,[step_number]
-    ,[step_name]
-    ,[Error_Description]
-    ,[row_count]
-)
-VALUES
-    (
-    @batch_id
-        ,@dataflow_name
-        ,@package_name
-        ,'ERROR'
-        ,@Proc_Step_no
-        ,@Proc_Step_name
-        , @FullErrorMessage
-        ,0
-    );
+    END TRY
+
+    BEGIN CATCH
+
+        IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
-return -1 ;
 
-END CATCH
+        INSERT INTO dbo.[job_flow_log] (
+                                         batch_id
+                                       ,[Dataflow_Name]
+                                       ,[package_Name]
+                                       ,[Status_Type]
+                                       ,[step_number]
+                                       ,[step_name]
+                                       ,[Error_Description]
+                                       ,[row_count]
+        )
+        VALUES
+            (
+              @batch_id
+            ,@dataflow_name
+            ,@package_name
+            ,'ERROR'
+            ,@Proc_Step_no
+            ,@Proc_Step_name
+            , @FullErrorMessage
+            ,0
+            );
 
-END
-;
+
+        return -1 ;
+
+    END CATCH
+
+END;
