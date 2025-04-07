@@ -666,10 +666,9 @@ public class PostProcessingService {
                                         Collectors.joining(",")
                                 )
                         ));
-                datamartPhcIdMap.forEach((datamart, phcIds) -> {
+                datamartPhcIdMap.forEach((datamart, phcIds) ->
                             CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
-                                    .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart));
-                        }
+                                    .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart))
                 );
 
             } else {
