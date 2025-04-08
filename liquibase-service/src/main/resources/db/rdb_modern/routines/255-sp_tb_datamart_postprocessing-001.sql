@@ -1014,7 +1014,7 @@ BEGIN
                 THEN 'TRUE' 
                 ELSE 'FALSE' 
             END AS DISEASE_SITE_GT3_IND
-        INTO #DISEASE_SITE_OUT  -- Temporary table
+        INTO #DISEASE_SITE_OUT  
         FROM Ranked
         GROUP BY D_DISEASE_SITE_GROUP_KEY;
 
@@ -1062,7 +1062,7 @@ BEGIN
                 THEN 'TRUE' 
                 ELSE 'FALSE' 
             END AS HC_PROV_TY_GT3_IND
-        INTO #HC_PROV_TY_3_OUT  -- Temporary table
+        INTO #HC_PROV_TY_3_OUT  
         FROM Ranked
         GROUP BY D_HC_PROV_TY_3_GROUP_KEY;
 
@@ -1110,7 +1110,7 @@ BEGIN
                 THEN 'TRUE' 
                 ELSE 'FALSE' 
             END AS MOVED_WHERE_GT3_IND
-        INTO #MOVED_WHERE_OUT  -- Temporary table
+        INTO #MOVED_WHERE_OUT  
         FROM Ranked
         GROUP BY D_MOVED_WHERE_GROUP_KEY;
 
@@ -1158,7 +1158,7 @@ BEGIN
                 THEN 'TRUE' 
                 ELSE 'FALSE' 
             END AS OUT_OF_CNTRY_GT3_IND
-        INTO #OUT_OF_CNTRY_OUT  -- Temporary table
+        INTO #OUT_OF_CNTRY_OUT  
         FROM Ranked
         GROUP BY D_OUT_OF_CNTRY_GROUP_KEY;
 
@@ -1206,7 +1206,7 @@ BEGIN
                 THEN 'TRUE' 
                 ELSE 'FALSE' 
             END AS MOVE_STATE_GT3_IND
-        INTO #MOVE_STATE_OUT  -- Temporary table
+        INTO #MOVE_STATE_OUT  
         FROM Ranked
         GROUP BY D_MOVE_STATE_GROUP_KEY;
 
@@ -1255,7 +1255,7 @@ BEGIN
                 THEN 'TRUE' 
                 ELSE 'FALSE' 
             END AS MOVE_CNTRY_GT3_IND
-        INTO #MOVE_CNTRY_OUT  -- Temporary table
+        INTO #MOVE_CNTRY_OUT  
         FROM Ranked
         GROUP BY D_MOVE_CNTRY_GROUP_KEY;
 
@@ -1409,7 +1409,7 @@ BEGIN
             CONFIRMATION_METHOD_1, CONFIRMATION_METHOD_2, CONFIRMATION_METHOD_3,
             CONFIRMATION_METHOD_GT3_IND, CONFIRMATION_METHOD_ALL, confirmation_dt AS CONFIRMATION_DT,
             investigation_key AS INVESTIGATION_KEY
-        INTO #CONFIRMATION_METHOD_OUT  -- Temporary table
+        INTO #CONFIRMATION_METHOD_OUT  
         FROM Processed
         WHERE LEN(CONFIRMATION_METHOD_ALL) > 0
         ORDER BY INVESTIGATION_KEY;
@@ -1511,8 +1511,7 @@ BEGIN
         WITH BaseData AS (
             SELECT 
                 tdi.*,
-                --rd.date_mm_dd_yyyy AS notification_sent_date,
-                invn.last_notification_send_date AS notification_sent_date,
+                invn.last_notification_send_date AS notification_sent_date, --(original) rd.date_mm_dd_yyyy AS notification_sent_date,
                 n.NOTIFICATION_STATUS,
                 n.NOTIFICATION_LOCAL_ID,
                 nu.first_nm AS notif_first_nm,
@@ -1522,20 +1521,22 @@ BEGIN
                 eu.first_nm AS editUser_first_nm,
                 eu.last_nm AS editUser_last_nm
             FROM #TB_DATAMART_init tdi
-            LEFT JOIN [dbo].notification_event ne ON tdi.person_key = ne.patient_key
-            LEFT JOIN [dbo].notification n ON ne.notification_key = n.notification_key
-            left join [dbo].nrt_investigation_notification invn 
-                ON invn.public_health_case_uid = tdi.TB_PAM_UID
-            --LEFT JOIN [dbo].RDB_DATE rd ON ne.NOTIFICATION_SENT_DT_KEY = rd.DATE_key
-            LEFT JOIN [dbo].user_profile nu ON n.notification_submitted_by = nu.NEDSS_ENTRY_ID
-            LEFT JOIN [dbo].user_profile cu ON tdi.INVESTIGATION_CREATED_BY = cu.NEDSS_ENTRY_ID
-            LEFT JOIN [dbo].user_profile eu ON tdi.INVESTIGATION_LAST_UPDTD_BY = eu.NEDSS_ENTRY_ID
+            LEFT JOIN [dbo].notification_event ne WITH(NOLOCK) 
+                ON tdi.person_key = ne.patient_key
+            LEFT JOIN [dbo].notification n WITH(NOLOCK) 
+                ON ne.notification_key = n.notification_key
+            LEFT JOIN [dbo].nrt_investigation_notification invn WITH(NOLOCK)  
+                ON invn.public_health_case_uid = tdi.TB_PAM_UID     -- (original) LEFT JOIN [dbo].RDB_DATE rd ON ne.NOTIFICATION_SENT_DT_KEY = rd.DATE_key
+            LEFT JOIN [dbo].user_profile nu WITH(NOLOCK) 
+                ON n.notification_submitted_by = nu.NEDSS_ENTRY_ID
+            LEFT JOIN [dbo].user_profile cu WITH(NOLOCK) 
+                ON tdi.INVESTIGATION_CREATED_BY = cu.NEDSS_ENTRY_ID
+            LEFT JOIN [dbo].user_profile eu WITH(NOLOCK) 
+                ON tdi.INVESTIGATION_LAST_UPDTD_BY = eu.NEDSS_ENTRY_ID
         ),
         ProcessedData AS (
             SELECT 
                 --[list all columns from TB_DATAMART_init except INVESTIGATION_CREATED_BY and INVESTIGATION_LAST_UPDTD_BY],
-
-
                 CALC_5_YEAR_AGE_GROUP, CALC_10_YEAR_AGE_GROUP,         
                 PATIENT_NAME_SUFFIX, PATIENT_STATE, PATIENT_COUNTY, PATIENT_COUNTRY, 
                 PATIENT_WITHIN_CITY_LIMITS, AGE_REPORTED_UNIT, PATIENT_BIRTH_SEX, PATIENT_CURRENT_SEX, 
@@ -1669,7 +1670,7 @@ BEGIN
             FROM BaseData
         )
         SELECT *
-        INTO #TB_DATAMART  -- Temporary table
+        INTO #TB_DATAMART  
         FROM ProcessedData
         WHERE investigation_key > 0;
 
@@ -1691,11 +1692,11 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'DELETE INCOMMING ACTIVE RECORDS';
+            @PROC_STEP_NAME = 'DELETE INCOMING ACTIVE RECORDS';
         
         BEGIN TRANSACTION
 
-            -- 23. DELETE INCOMMING ACTIVE RECORDS
+            -- 23. DELETE INCOMING ACTIVE RECORDS
             DELETE T
             FROM [dbo].TB_DATAMART T
             INNER JOIN #S_INVESTIGATION_LIST S 
@@ -1720,7 +1721,7 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'DELETE INCOMMING DELETED RECORDS';
+            @PROC_STEP_NAME = 'DELETE INCOMING DELETED RECORDS';
 
         BEGIN TRANSACTION
 
@@ -1749,11 +1750,11 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'INSERT INCOMMING RECORDS';
+            @PROC_STEP_NAME = 'INSERT INCOMING RECORDS';
 
         BEGIN TRANSACTION
 
-            -- 25. INSERT INCOMMING RECORDS
+            -- 25. INSERT INCOMING RECORDS
             INSERT INTO [dbo].TB_DATAMART (
                 CALC_5_YEAR_AGE_GROUP,
                 CALC_10_YEAR_AGE_GROUP,
