@@ -50,6 +50,7 @@ BEGIN
                                                ON ni.rpt_cnty_cd = sccv.code
                             WHERE ni.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','))
                               AND nio.root_type_cd IN ('SummaryForm','SummaryNotification')
+                              AND ni.case_type_cd = 'S'
         ),
              compileSumRptWork AS (SELECT sr.public_health_case_uid,
                                           sr.rpt_cnty_cd,
@@ -330,4 +331,3 @@ BEGIN
 
     END CATCH
 END;
-
