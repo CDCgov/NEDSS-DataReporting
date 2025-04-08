@@ -454,7 +454,10 @@ BEGIN
 
             IF @obscoded_columns != ''
             BEGIN
-                SET @sql_code = 'SELECT *
+                SET @sql_code = 'SELECT 
+                    TB_PAM_UID, 
+                    ADD_TIME,
+                    ' + @obscoded_columns + '
                 INTO ' + @global_temp_table_name +'
                 FROM (
                     SELECT 
@@ -462,7 +465,7 @@ BEGIN
                         ADD_TIME, 
                         ANSWER_TXT, 
                         DATAMART_COLUMN_NM 
-                    FROM ' + @global_temp_table_name +'
+                    FROM #LDF_BASE_COUNTRY_CONCAT
                     ) AS SourceTable
                 PIVOT (
                     MAX(ANSWER_TXT)
