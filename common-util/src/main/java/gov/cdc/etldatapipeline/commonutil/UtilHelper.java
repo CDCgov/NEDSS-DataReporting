@@ -37,9 +37,29 @@ public class UtilHelper {
         }
     }
 
+    public static String extractUidBefore(String value, String uidName) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(value);
+        JsonNode payloadNode = jsonNode.get("payload").path("before");
+        if (!payloadNode.isMissingNode() && payloadNode.has(uidName)) {
+            return payloadNode.get(uidName).asText();
+        } else {
+            throw new NoSuchElementException("The " + uidName + " field is missing in the message payload.");
+        }
+    }
+
     public static String extractValue(String message, String fieldName) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(message);
         return jsonNode.get("payload").path("after").path(fieldName).asText();
+    }
+
+    public static String extractValueBefore(String message, String fieldName) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(message);
+        return jsonNode.get("payload").path("before").path(fieldName).asText();
+    }
+
+    public static String extractChangeDataCaptureOperation(String message) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(message);
+        return jsonNode.get("payload").path("op").asText();
     }
 
     public static String errorMessage(String entityName, String ids, Exception e) {

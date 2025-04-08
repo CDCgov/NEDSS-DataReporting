@@ -12,6 +12,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.*;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -48,8 +50,11 @@ class ObservationServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private AutoCloseable closeable;
 
-    private final String inputTopicName = "Observation";
-    private final String outputTopicName = "ObservationOutput";
+    private final String inputTopicNameObservation = "Observation";
+    private final String outputTopicNameObservation = "ObservationOutput";
+
+    private final String inputTopicNameActRelationship = "Act_relationship";
+
 
     @BeforeEach
     void setUp() {
@@ -57,8 +62,9 @@ class ObservationServiceTest {
         ProcessObservationDataUtil transformer = new ProcessObservationDataUtil(kafkaTemplate);
         transformer.setMaterialTopicName("materialTopic");
         observationService = new ObservationService(observationRepository, kafkaTemplate, transformer);
-        observationService.setObservationTopic(inputTopicName);
-        observationService.setObservationTopicOutputReporting(outputTopicName);
+        observationService.setObservationTopic(inputTopicNameObservation);
+        observationService.setActRelationshipTopic(inputTopicNameActRelationship);
+        observationService.setObservationTopicOutputReporting(outputTopicNameObservation);
         transformer.setCodedTopicName("ObservationCoded");
         transformer.setReasonTopicName("ObservationReason");
         transformer.setTxtTopicName("ObservationTxt");
@@ -81,16 +87,69 @@ class ObservationServiceTest {
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
 
-        validateData(payload, observation);
+        validateData(payload, observation, inputTopicNameObservation);
 
         verify(observationRepository).computeObservations(String.valueOf(observationUid));
+    }
+
+    @ParameterizedTest
+    @CsvSource (
+            {"d,LabReport",
+                    "c,LabReport",
+                    "d,OTHER"}
+    )
+    void testProcessActRelationship(String op, String typeCd) throws JsonProcessingException {
+        Long sourceActUid = 123456789L;
+        String obsDomainCdSt = "Order";
+        String payload = "{\"payload\": {\"before\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \"" + typeCd + "\"}," +
+                "\"after\": {\"source_act_uid\": \"123\"}," +
+                "\"op\": \"" + op + "\"}}";
+
+        if (typeCd.equals("OTHER") || !op.equals("d")) {
+            ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
+
+            observationService.processMessage(rec);
+            verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+        }
+        else {
+            Observation observation = constructObservation(sourceActUid, obsDomainCdSt);
+            when(observationRepository.computeObservations(String.valueOf(sourceActUid))).thenReturn(Optional.of(observation));
+            when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+            when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
+
+            validateData(payload, observation, inputTopicNameActRelationship);
+
+            verify(observationRepository).computeObservations(String.valueOf(sourceActUid));
+        }
+
+    }
+
+    @Test
+    void testProcessActRelationshipNullPayload() {
+        ConsumerRecord<String, String> rec = getRecord(null, inputTopicNameActRelationship);
+
+        observationService.processMessage(rec);
+
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
     void testProcessMessageException() {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
 
-        ConsumerRecord<String, String> rec = getRecord(invalidPayload);
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload, inputTopicNameObservation);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(rec));
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+    }
+
+    @Test
+    void testProcessMessageExceptionActRelationship() {
+        String invalidPayload = "{\"payload\": {\"before\": {}," +
+                "\"after\": {\"source_act_uid\": \"123\"}," +
+                "\"op\": \"d\"}}";
+
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload, inputTopicNameActRelationship);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(rec));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
@@ -100,14 +159,14 @@ class ObservationServiceTest {
     void testProcessMessageNoDataException() {
         Long observationUid = 123456789L;
         String payload = "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
-        ConsumerRecord<String, String> rec = getRecord(payload);
+        ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameObservation);
 
         when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.empty());
         assertThrows(NoDataException.class, () -> observationService.processMessage(rec));
     }
 
-    private void validateData(String payload, Observation observation) throws JsonProcessingException {
-        ConsumerRecord<String, String> rec = getRecord(payload);
+    private void validateData(String payload, Observation observation, String inputTopic) throws JsonProcessingException {
+        ConsumerRecord<String, String> rec = getRecord(payload, inputTopic);
         observationService.processMessage(rec);
 
         ObservationKey observationKey = new ObservationKey();
@@ -127,7 +186,7 @@ class ObservationServiceTest {
         var actualObservationKey = objectMapper.readValue(
                 objectMapper.readTree(actualKey).path("payload").toString(), ObservationKey.class);
 
-        assertEquals(outputTopicName, actualTopic);
+        assertEquals(outputTopicNameObservation, actualTopic);
         assertEquals(observationKey, actualObservationKey);
         assertEquals(reportingModel, actualReporting);
     }
@@ -197,7 +256,7 @@ class ObservationServiceTest {
         return observation;
     }
 
-    private ConsumerRecord<String, String> getRecord(String payload) {
-        return new ConsumerRecord<>(inputTopicName, 0,  11L, null, payload);
+    private ConsumerRecord<String, String> getRecord(String payload, String inputTopic) {
+        return new ConsumerRecord<>(inputTopic, 0,  11L, null, payload);
     }
 }
