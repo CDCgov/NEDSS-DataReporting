@@ -23,7 +23,7 @@ BEGIN
 	SET @Proc_Step_Name = 'SP_Start';
 
 	--Serialize input parameters to JSON for clean logging
-	DECLARE @params_json NVARCHAR(MAX) = JSON_QUERY((
+	DECLARE @params_json VARCHAR(200) = JSON_QUERY((
 		SELECT
 			@batch_id AS batch_id,
 			@DATAMART_NAME AS DATAMART_NAME,
