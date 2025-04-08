@@ -689,9 +689,9 @@ class PostProcessingServiceTest {
         String tbHivDatamartTopic = "tb_hiv_datamart";
         String varDatamartTopic = "var_datamart";
         String tbDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
+                "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"\"}}";
         String tbHivDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-        "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
+        "\"datamart\":\"tb_hiv_datamart\",\"stored_procedure\":\"\"}}";
 
         String varDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
         "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
