@@ -152,7 +152,7 @@ databaseChangeLog:
             path: 001-fn_get_record_status-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.1
+      id: 20.01
       author: liquibase
       runOnChange: true
       changes:
@@ -160,7 +160,7 @@ databaseChangeLog:
             path: 028-create_nrt_srte_Condition_code-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.2
+      id: 20.02
       author: liquibase
       runOnChange: true
       changes:
@@ -168,7 +168,7 @@ databaseChangeLog:
             path: 027-create_nrt_srte_Program_area_code-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.3
+      id: 20.03
       author: liquibase
       runOnChange: true
       changes:
@@ -176,7 +176,7 @@ databaseChangeLog:
             path: 011-v_condition_dim-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.4
+      id: 20.04
       author: liquibase
       runOnChange: true
       changes:
@@ -184,7 +184,7 @@ databaseChangeLog:
             path: 194-create_nrt_srte_XSS_Filter_Pattern-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.5
+      id: 20.05
       author: liquibase
       runOnChange: true
       changes:
@@ -192,7 +192,7 @@ databaseChangeLog:
             path: 195-create_nrt_srte_Lab_coding_system-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.6
+      id: 20.06
       author: liquibase
       runOnChange: true
       changes:
@@ -200,7 +200,7 @@ databaseChangeLog:
             path: 196-create_nrt_srte_Language_code-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.7
+      id: 20.07
       author: liquibase
       runOnChange: true
       changes:
@@ -208,7 +208,7 @@ databaseChangeLog:
             path: 197-create_nrt_srte_LOINC_code-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.8
+      id: 20.08
       author: liquibase
       runOnChange: true
       changes:
@@ -216,7 +216,7 @@ databaseChangeLog:
             path: 198-create_nrt_srte_State_code_backup-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.9
+      id: 20.09
       author: liquibase
       runOnChange: true
       changes:
