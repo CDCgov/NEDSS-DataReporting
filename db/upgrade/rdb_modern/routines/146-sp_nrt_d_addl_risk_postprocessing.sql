@@ -62,7 +62,7 @@ BEGIN
         IF OBJECT_ID('#S_ADDL_RISK_CD_TRANSLATED', 'U') IS NOT NULL
         drop table #S_ADDL_RISK_CD_TRANSLATED;
         
-        SELECT 
+        SELECT DISTINCT
             CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
             TB.SEQ_NBR, 
             TB.DATAMART_COLUMN_NM, 
