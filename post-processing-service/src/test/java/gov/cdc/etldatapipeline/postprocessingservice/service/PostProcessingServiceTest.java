@@ -157,7 +157,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(50, logs.size());
+        assertEquals(46, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -187,11 +187,9 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForDSmrExamTy(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFTbPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForTbPamLdf(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock).executeStoredProcForTbDatamart(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock).executeStoredProcForTbHivDatamart(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(50, logs.size());
+        assertEquals(46, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -213,7 +211,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForFVarPam(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(50, logs.size());
+        assertEquals(46, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -233,7 +231,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(54, logs.size());
+        assertEquals(50, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -251,7 +249,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(52, logs.size());
+        assertEquals(48, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -336,7 +334,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(52, logs.size());
+        assertEquals(48, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -653,7 +651,7 @@ class PostProcessingServiceTest {
     @MethodSource("datamartTestData")
     void testPostProcessDatamart(DatamartTestCase testCase) {
         String topic = "dummy_datamart";
-
+        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock, "123");
@@ -710,7 +708,22 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)));
+                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                            "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"sp_tb_datamart_postprocessing\"}}",
+                    TB_DATAMART.getEntityName(), TB_DATAMART.getStoredProcedure(), 3,
+                    (repo, uid) -> verify(repo).executeStoredProcForTbDatamart(uid)),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                                "\"datamart\":\"tb_hiv_datamart\",\"stored_procedure\":\"sp_tb_hiv_datamart_postprocessing\"}}",
+                        TB_HIV_DATAMART.getEntityName(), TB_HIV_DATAMART.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForTbHivDatamart(uid)),
+                new DatamartTestCase(
+                            "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                                    "\"datamart\":\"var_datamart\",\"stored_procedure\":\"sp_nrt_var_datamart_postprocessing\"}}",
+                            VAR_DATAMART.getEntityName(), VAR_DATAMART.getStoredProcedure(), 3,
+                        (repo, uid) -> verify(repo).executeStoredProcForVarDatamart(uid)));
     }
 
     @Test
