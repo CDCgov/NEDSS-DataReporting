@@ -2233,7 +2233,6 @@ databaseChangeLog:
         - sqlFile:
             path: 245-sp_dyn_dm_createdm_postprocessing-001.sql
             splitStatements: false
-
   - changeSet:
       id: 665
       author: liquibase
@@ -2298,4 +2297,20 @@ databaseChangeLog:
         - sqlFile:
             path: 255-sp_tb_datamart_postprocessing-001.sql
             splitStatements: false 
+  - changeSet:
+      id: 705
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 196-create_tb_hiv_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 710
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 260-sp_tb_hiv_datamart_postprocessing-001.sql
+            splitStatements: false
 
