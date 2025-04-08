@@ -2282,4 +2282,20 @@ databaseChangeLog:
         - sqlFile:
             path: 235-sp_nrt_var_pam_ldf_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 695
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 195-create_tb_datamart-001.sql
+            splitStatements: false  
+  - changeSet:
+      id: 700
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 255-sp_tb_datamart_postprocessing-001.sql
+            splitStatements: false 
 
