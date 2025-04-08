@@ -1,4 +1,4 @@
-CREATE or alter PROCEDURE dbo.sp_dyn_dm_main_postprocessing
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
     @datamart_name VARCHAR(100),
     @phc_id_list VARCHAR(MAX) = NULL,
     @debug BIT = 'false'
@@ -114,7 +114,8 @@ BEGIN
         EXEC [dbo].sp_dyn_dm_invest_form_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+        	 @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';
@@ -123,7 +124,8 @@ BEGIN
         EXEC [dbo].sp_dyn_dm_case_management_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_case_management_postprocessing';
@@ -136,9 +138,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_ADMINISTRATIVE',
-             @TABLE_NM   = 'D_INV_ADMINISTRATIVE',
              @DIM_KEY = 'D_INV_ADMINISTRATIVE_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_ADMINISTRATIVE';
@@ -150,9 +152,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_CLINICAL',
-             @TABLE_NM   = 'D_INV_CLINICAL',
              @DIM_KEY = 'D_INV_CLINICAL_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_CLINICAL';
@@ -163,9 +165,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_COMPLICATION',
-             @TABLE_NM   = 'D_INV_COMPLICATION',
              @DIM_KEY = 'D_INV_COMPLICATION_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_COMPLICATION_KEY';
@@ -176,9 +178,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_CONTACT',
-             @TABLE_NM   = 'D_INV_CONTACT',
              @DIM_KEY = 'D_INV_CONTACT_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_CONTACT';
@@ -190,9 +192,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_DEATH',
-             @TABLE_NM   = 'D_INV_DEATH',
              @DIM_KEY = 'D_INV_DEATH_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_DEATH';
@@ -204,9 +206,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_EPIDEMIOLOGY',
-             @TABLE_NM   = 'D_INV_EPIDEMIOLOGY',
              @DIM_KEY = 'D_INV_EPIDEMIOLOGY_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_EPIDEMIOLOGY_KEY';
@@ -217,9 +219,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_HIV',
-             @TABLE_NM   = 'D_INV_HIV',
              @DIM_KEY = 'D_INV_HIV_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_HIV';
@@ -231,9 +233,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_PATIENT_OBS',
-             @TABLE_NM   = 'D_INV_PATIENT_OBS',
              @DIM_KEY = 'D_INV_PATIENT_OBS_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_PATIENT_OBS';
@@ -245,9 +247,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_ISOLATE_TRACKING',
-             @TABLE_NM   = 'D_INV_ISOLATE_TRACKING',
              @DIM_KEY = 'D_INV_ISOLATE_TRACKING_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_ISOLATE_TRACKING';
@@ -259,9 +261,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_LAB_FINDING',
-             @TABLE_NM   = 'D_INV_LAB_FINDING',
              @DIM_KEY = 'D_INV_LAB_FINDING_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_LAB_FINDING';
@@ -273,9 +275,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_MEDICAL_HISTORY',
-             @TABLE_NM   = 'D_INV_MEDICAL_HISTORY',
              @DIM_KEY = 'D_INV_MEDICAL_HISTORY_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_MEDICAL_HISTORY';
@@ -287,9 +289,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_MOTHER',
-             @TABLE_NM   = 'D_INV_MOTHER',
              @DIM_KEY = 'D_INV_MOTHER_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_MOTHER';
 
@@ -299,9 +301,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_OTHER',
-             @TABLE_NM   = 'D_INV_OTHER',
              @DIM_KEY = 'D_INV_OTHER_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_OTHER';
@@ -313,9 +315,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_PREGNANCY_BIRTH',
-             @TABLE_NM   = 'D_INV_PREGNANCY_BIRTH',
              @DIM_KEY = 'D_INV_PREGNANCY_BIRTH_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_PREGNANCY_BIRTH';
@@ -327,9 +329,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_RESIDENCY',
-             @TABLE_NM   = 'D_INV_RESIDENCY',
              @DIM_KEY = 'D_INV_RESIDENCY_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_RESIDENCY';
@@ -341,9 +343,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_RISK_FACTOR',
-             @TABLE_NM   = 'D_INV_RISK_FACTOR',
              @DIM_KEY = 'D_INV_RISK_FACTOR_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_RISK_FACTOR';
@@ -355,9 +357,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_SOCIAL_HISTORY',
-             @TABLE_NM   = 'D_INV_SOCIAL_HISTORY',
              @DIM_KEY = 'D_INV_SOCIAL_HISTORY_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_SOCIAL_HISTORY';
@@ -369,9 +371,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_SYMPTOM',
-             @TABLE_NM   = 'D_INV_SYMPTOM',
              @DIM_KEY = 'D_INV_SYMPTOM_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_SYMPTOM';
@@ -383,9 +385,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_TREATMENT',
-             @TABLE_NM   = 'D_INV_TREATMENT',
              @DIM_KEY = 'D_INV_TREATMENT_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_TREATMENT';
@@ -397,9 +399,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_TRAVEL',
-             @TABLE_NM   = 'D_INV_TRAVEL',
              @DIM_KEY = 'D_INV_TRAVEL_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_TRAVEL';
@@ -411,9 +413,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_UNDER_CONDITION',
-             @TABLE_NM   = 'D_INV_UNDER_CONDITION',
              @DIM_KEY = 'D_INV_UNDER_CONDITION_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_UNDER_CONDITION';
@@ -425,9 +427,9 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_VACCINATION',
-             @TABLE_NM   = 'D_INV_VACCINATION',
              @DIM_KEY = 'D_INV_VACCINATION_KEY',
-             @phc_id_list = @phc_id_list;
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_VACCINATION';

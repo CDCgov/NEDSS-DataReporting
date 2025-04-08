@@ -24,13 +24,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -61,6 +61,9 @@ public class PostProcessingService {
     // cache to store ids that needs to be processed for datamarts
     // a map of datamart names and the needed ids
     final Map<String, Map<String, Queue<Long>>> dmCache = new ConcurrentHashMap<>();
+
+    private static int nProc = Runtime.getRuntime().availableProcessors();
+    private final ExecutorService dynDmExecutor = Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
 
     private final PostProcRepository postProcRepository;
     private final InvestigationRepository investigationRepository;
@@ -655,10 +658,20 @@ public class PostProcessingService {
             dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
 
             if(!dmDataList.isEmpty() && dynDmEnable) {
-                for(DatamartData dmData : dmDataList){
-                    postProcRepository.executeStoredProcForDynDatamart(dmData.getDatamart(), String.valueOf(dmData.getPublicHealthCaseUid()));
-                    logger.info("Updates to Dynamic Datamart: {} ",dmData.getDatamart());
-                }
+
+                Map<String, String> datamartPhcIdMap = dmDataList.stream()
+                        .collect(Collectors.groupingBy(
+                                DatamartData::getDatamart,
+                                Collectors.mapping(
+                                        dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
+                                        Collectors.joining(",")
+                                )
+                        ));
+                datamartPhcIdMap.forEach((datamart, phcIds) ->
+                            CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
+                                    .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart))
+                );
+
             } else {
                 logger.info("No updates to Dynamic Datamarts");
             }
@@ -673,6 +686,7 @@ public class PostProcessingService {
             logger.info("No updates to MORBIDITY_REPORT_DATAMART");
         }
     }
+
 
     private String listToParameterString(Collection<Long> inputList) {
         return Optional.ofNullable(inputList)
@@ -751,4 +765,5 @@ public class PostProcessingService {
     private void completeLog(String sp) {
         logger.info(SP_EXECUTION_COMPLETED, sp);
     }
+
 }

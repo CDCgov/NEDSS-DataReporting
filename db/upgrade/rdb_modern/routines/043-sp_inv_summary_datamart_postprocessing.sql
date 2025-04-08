@@ -1179,7 +1179,9 @@ BEGIN
         select
             distinct inv.CASE_UID as public_health_case_uid,
             inv_meta.DATAMART_NM as datamart,
-            c.CONDITION_CD as condition_cd
+            c.CONDITION_CD as condition_cd,
+            null as patient_uid,
+            null as stored_procedure
         from
         dbo.INVESTIGATION inv  with ( nolock)
         inner join dbo.INV_SUMM_DATAMART isd with ( nolock) on isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
