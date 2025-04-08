@@ -15,8 +15,8 @@ BEGIN
 
     DECLARE @global_temp_table_name varchar(500) = '';
     DECLARE @sql_code NVARCHAR(MAX);
-    DECLARE @obscoded_columns NVARCHAR(MAX) = '';
-    DECLARE @tb_obscoded_columns NVARCHAR(MAX) = '';
+    DECLARE @ldf_columns NVARCHAR(MAX) = '';
+    DECLARE @tb_ldf_columns NVARCHAR(MAX) = '';
 
     SET @global_temp_table_name = '##TB_PAM_LDF_TRANSLATED' + '_' + CAST(@Batch_id as varchar(50));    
 
@@ -427,10 +427,10 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING OBSCODED_COLUMNS';
+                @PROC_STEP_NAME = 'GENERATING LDF_COLUMNS';
 
                    
-            SELECT @obscoded_columns = COALESCE(STRING_AGG(CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION), '')
+            SELECT @ldf_columns = COALESCE(STRING_AGG(CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION), '')
             FROM (SELECT DISTINCT COLUMN_NAME, ORDINAL_POSITION FROM #COL_LIST) AS cols;
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -452,12 +452,12 @@ BEGIN
                 DROP TABLE ' + @global_temp_table_name +';
             END;')
 
-            IF @obscoded_columns != ''
+            IF @ldf_columns != ''
             BEGIN
                 SET @sql_code = 'SELECT 
                     TB_PAM_UID, 
                     ADD_TIME,
-                    ' + @obscoded_columns + '
+                    ' + @ldf_columns + '
                 INTO ' + @global_temp_table_name +'
                 FROM (
                     SELECT 
@@ -469,7 +469,7 @@ BEGIN
                     ) AS SourceTable
                 PIVOT (
                     MAX(ANSWER_TXT)
-                    FOR DATAMART_COLUMN_NM IN (' + @obscoded_columns + ')
+                    FOR DATAMART_COLUMN_NM IN (' + @ldf_columns + ')
                 ) AS PivotTable';
             END
             ELSE
@@ -531,19 +531,19 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'INSERT INCOMING RECORDS TO TB_PAM_LDF';
 
-            SET @tb_obscoded_columns = (
+            SET @tb_ldf_columns = (
                 SELECT ISNULL(
                     STRING_AGG('tb.' + TRIM(value), ','),
                     ''
                 )
-                FROM STRING_SPLIT(ISNULL(@obscoded_columns, ''), ',')
+                FROM STRING_SPLIT(ISNULL(@ldf_columns, ''), ',')
                 WHERE TRIM(value) != ''
             );
 
             SET @sql_code = 
             'INSERT INTO dbo.TB_PAM_LDF([INVESTIGATION_KEY], [TB_PAM_UID], [add_time] '+ 
                 CASE
-                    WHEN @obscoded_columns != '' THEN ',' + @obscoded_columns
+                    WHEN @ldf_columns != '' THEN ',' + @ldf_columns
                     ELSE ''
                 END
             + ' )
@@ -552,7 +552,7 @@ BEGIN
                 tb.TB_PAM_UID,
                 tb.add_time'+
             + CASE
-                    WHEN @obscoded_columns != '' THEN ',' + @tb_obscoded_columns
+                    WHEN @ldf_columns != '' THEN ',' + @tb_ldf_columns
                     ELSE ''
                 END
             +
