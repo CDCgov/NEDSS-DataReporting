@@ -55,11 +55,11 @@ BEGIN TRY
 		
 		WITH 
 		CTE_INVESTIGATION_BATCH_ID AS (
-			SELECT 
+			SELECT DISTINCT
 				public_health_case_uid,
 				batch_id
 			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
-			INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
+			INNER JOIN  (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
 			WHERE I.investigation_form_cd='INV_FORM_RVCT'
 		)
 		SELECT 

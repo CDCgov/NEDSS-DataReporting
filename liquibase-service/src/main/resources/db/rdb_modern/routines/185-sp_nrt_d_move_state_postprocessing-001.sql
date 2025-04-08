@@ -62,7 +62,7 @@ BEGIN
         IF OBJECT_ID('#S_MOVE_STATE_TRANSLATED', 'U') IS NOT NULL
         drop table #S_MOVE_STATE_TRANSLATED;
         
-        SELECT 
+        SELECT DISTINCT
             CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
             TB.SEQ_NBR, 
             TB.DATAMART_COLUMN_NM, 
@@ -187,7 +187,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_STATE_KEY T
         join #TEMP_D_MOVE_STATE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY
+        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY;
 
 
         if
@@ -216,7 +216,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_STATE_GROUP_KEY T
         join #TEMP_D_MOVE_STATE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_STATE_GROUP_KEY = T.D_MOVE_STATE_GROUP_KEY
+        S.D_MOVE_STATE_GROUP_KEY = T.D_MOVE_STATE_GROUP_KEY;
 
 
         if
@@ -247,7 +247,7 @@ BEGIN
         DELETE T FROM DBO.D_MOVE_STATE T
         join #TEMP_D_MOVE_STATE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY
+        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -268,7 +268,13 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_STATE_GROUP';
 
+        -- update F_TB_PAM table
+        UPDATE F
+            SET F.D_MOVE_STATE_GROUP_KEY = 1
+        FROM DBO.F_TB_PAM F
+        INNER JOIN #TEMP_D_MOVE_STATE_DEL T on T.D_MOVE_STATE_GROUP_KEY = F.D_MOVE_STATE_GROUP_KEY;
 
+        -- delete from DBO.D_MOVE_STATE_GROUP
         DELETE T FROM DBO.D_MOVE_STATE_GROUP T
         left join (select distinct D_MOVE_STATE_GROUP_KEY from dbo.d_move_state) DBO
             ON DBO.D_MOVE_STATE_GROUP_KEY = T.D_MOVE_STATE_GROUP_KEY

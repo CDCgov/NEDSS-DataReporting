@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_inv_summary_datamart_postprocessing]
+CREATE OR ALTER PROCEDURE dbo.sp_inv_summary_datamart_postprocessing
 (@phc_uids nvarchar(max) = '',
  @notif_uids nvarchar(max) = '',
  @obs_uids nvarchar(max) = '',
@@ -23,8 +23,6 @@ BEGIN
         SET @Proc_Step_Name = 'SP_Start';
 
 
-        BEGIN TRANSACTION;
-
         INSERT INTO [dbo].[job_flow_log] ( batch_id ---------------@batch_id
                                          , [Dataflow_Name] --------------'INV_SUMM_DATAMART'
                                          , [package_Name] --------------'INV_SUMM_DATAMART'
@@ -44,16 +42,13 @@ BEGIN
                , LEFT('PHC_ID List-' + @phc_uids, 500)
                , LEFT('NOTF_ID List-' + @notif_uids, 500));
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
+----------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_name = 'Checking case_management COUNT';
 
         /*Notes: Determination between executing either F_STD_PAGE_CASE or F_PAGE_CASE blocks.*/
-        SET @COUNTSTD = (select count(*) from rdb_modern.dbo.nrt_investigation_case_management nicm with (nolock));
+        SET @COUNTSTD = (select count(*) from dbo.nrt_investigation_case_management nicm with (nolock));
         ----Print @COUNTSTD
 
 
@@ -63,9 +58,9 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
+----------------------------------------------------------------------------
 
-        BEGIN TRANSACTION;
+
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Generating #TMP_UPDATED_INV_WITH_NOTIF';
 
@@ -73,10 +68,6 @@ BEGIN
         DECLARE @INV_SUMMARY_DATAMART_COUNT AS BIGINT=0;
         SET @INV_SUMMARY_DATAMART_COUNT = (SELECT COUNT(*) FROM dbo.INV_SUMM_DATAMART);
         PRINT @INV_SUMMARY_DATAMART_COUNT;
-
-
-        IF OBJECT_ID('tempdb..#TMP_UPDATED_INV_WITH_NOTIF', 'U') IS NOT NULL
-            drop table #TMP_UPDATED_INV_WITH_NOTIF;
 
 
         SELECT INVESTIGATION.INVESTIGATION_KEY, INVESTIGATION.CASE_UID
@@ -112,12 +103,8 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
+----------------------------------------------------------------------------
 
-        BEGIN TRANSACTION;
-
-        IF OBJECT_ID('tempdb..#TMP_PATIENT_LOCATION_KEYS_INIT', 'U') IS NOT NULL
-            DROP TABLE #TMP_PATIENT_LOCATION_KEYS_INIT;
 
         CREATE TABLE #TMP_PATIENT_LOCATION_KEYS_INIT
         (
@@ -160,7 +147,7 @@ BEGIN
             F_TB_PAM_PHYSICIAN_KEY        bigint         NULL,
             F_TB_PAM_PAT_KEY              bigint         NULL,
             F_VAR_PAM_PHYSICIAN_KEY       bigint         NULL,
-            F_VAR_PAM_PAT_KEY             bigint         NULL,
+            F_VAR_PAM_PAT_KEY           bigint         NULL,
             F_PAGE_CASE_PHYSICIAN_KEY     bigint         NULL,
             F_PAGE_PATIENT_KEY            bigint         NULL,
             F_STD_PHYSICIAN_KEY           bigint         NULL,
@@ -210,8 +197,8 @@ BEGIN
                                 COALESCE(HC.PHYSICIAN_KEY, 0)                     AS 'HEPATITIS_PHYSICIAN_KEY',---30
                                 COALESCE(HC.PATIENT_KEY, 0)                       AS 'HEPATITIS_PAT_KEY',---31
                                 COALESCE(BC.PHYSICIAN_KEY, 0)                     AS 'BMIRD_PHYSICIAN_KEY',---32
-                                COALESCE(BC.PATIENT_KEY, 0)                       AS 'BMIRD_PAT_KEY',---33
-                                BC.FIRST_POSITIVE_CULTURE_DT                      AS 'FIRST_POSITIVE_CULTURE_DT',---34
+                                COALESCE(BC.PATIENT_KEY, 0)                 AS 'BMIRD_PAT_KEY',---33
+                                BC.FIRST_POSITIVE_CULTURE_DT     AS 'FIRST_POSITIVE_CULTURE_DT',---34
                                 COALESCE(PC.PHYSICIAN_KEY, 0)                     AS 'PERTUSSIS_PHYSICIAN_KEY',---35
                                 COALESCE(PC.PATIENT_KEY, 0)                       AS 'PERTUSSIS_PAT_KEY',---36
                                 COALESCE(F_TB.PHYSICIAN_KEY, 0)                   AS 'F_TB_PAM_PHYSICIAN_KEY',---37
@@ -248,7 +235,7 @@ BEGIN
                                     WHEN COALESCE(F_PAGE.PHYSICIAN_KEY, 0) > 1 then F_PAGE.PHYSICIAN_KEY
                                     WHEN COALESCE(F_STD.PHYSICIAN_KEY, 0) > 1 then F_STD.PHYSICIAN_KEY
                                     ELSE NULL
-                                    END                                           AS 'PHYSICIAN_KEY'
+                                    END                  AS 'PHYSICIAN_KEY'
                 --                    Cast (NULL as  bigint)		 AS  'PATIENT_KEY',---45
 --                    Cast (NULL as  bigint)               AS  'PHYSICIAN_KEY'---46
                 FROM [dbo].[INVESTIGATION] I with (nolock)
@@ -283,9 +270,7 @@ BEGIN
 
 
             END;
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
 
         ------------------------2a. Create Table #TMP_PATIENT_LOCATION_KEYS_INIT---NON-STD Cases
         if (@COUNTSTD = 0) ------------------NO STD CASES
@@ -301,14 +286,14 @@ BEGIN
                                 I.EARLIEST_RPT_TO_CNTY_DT                         AS 'EARLIEST_RPT_TO_CNTY_DT',---4
                                 I.EARLIEST_RPT_TO_STATE_DT                        AS 'EARLIEST_RPT_TO_STATE_DT',---5
                                 I.DIAGNOSIS_DT                                    AS 'DIAGNOSIS_DATE',---6
-                                I.ILLNESS_ONSET_DT                                AS 'ILLNESS_ONSET_DATE', ---7
+                                I.ILLNESS_ONSET_DT                           AS 'ILLNESS_ONSET_DATE', ---7
                                 SUBSTRING(I.INV_CASE_STATUS, 1, 50)               AS 'CASE_STATUS',---8
                                 I.CASE_RPT_MMWR_WK                                AS 'MMWR_WEEK', ---9
                                 I.CASE_RPT_MMWR_YR AS 'MMWR_YEAR', ---10
                                 I.CASE_OID                                        AS 'PROGRAM_JURISDICTION_OID',---11
                                 I.HSPTL_ADMISSION_DT                              AS 'HSPTL_ADMISSION_DT',--12
                                 I.INV_START_DT                                    AS 'INV_START_DT',---13
-                                I.INV_RPT_DT                                      AS 'INV_RPT_DT', ---14
+                                I.INV_RPT_DT                   AS 'INV_RPT_DT', ---14
                                 SUBSTRING(I.CURR_PROCESS_STATE, 1, 50)            AS 'CURR_PROCESS_STATE',----15
                                 SUBSTRING(I.JURISDICTION_NM, 1, 100)              AS 'JURISDICTION_NM', ---16
                                 I.ADD_TIME                                        AS 'INVESTIGATION_CREATE_DATE',--17
@@ -398,23 +383,16 @@ BEGIN
             END;
 
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Generating #TMP_CONFIRMATION_METHOD_BASE2';
-
+        SET @Proc_Step_Name = 'Generating #TMP_CONFIRMATION_METHOD_BASE';
 
         --------------------------------------5. Create Table TMP_S_CONFIRMATION_METHOD_PIVOT
-
-        IF OBJECT_ID('tempdb..#TMP_CONFIRMATION_METHOD_BASE') IS NOT NULL
-            drop table #TMP_CONFIRMATION_METHOD_BASE ;
 
 
         SELECT CM.*,
                CMG.INVESTIGATION_KEY,
-               CMG.[CONFIRMATION_DT]
+               CMG.[CONFIRMATION_DT],
+               CAST(NULL AS VARCHAR(200)) AS CONFIRMATION_METHOD
         INTO #TMP_CONFIRMATION_METHOD_BASE
         FROM dbo.[CONFIRMATION_METHOD] CM with (nolock)
                  INNER JOIN dbo.[CONFIRMATION_METHOD_GROUP] CMG with (nolock)
@@ -422,65 +400,31 @@ BEGIN
                  INNER JOIN #TMP_PATIENT_LOCATION_KEYS_INIT PL with (nolock)
                             ON CMG.[INVESTIGATION_KEY] = PL.INVESTIGATION_KEY;
 
+        if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_CONFIRMATION_METHOD_BASE;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
+----------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Generating ##TMP_CONFIRMATION_METHOD_PIVOT';
+        SET @Proc_Step_Name = 'Generating #TMP_CONFIRMATION_METHOD_PIVOT';
 
 
-        IF OBJECT_ID('tempdb..##TMP_CONFIRMATION_METHOD_PIVOT', 'U') IS NOT NULL
-            DROP TABLE ##TMP_CONFIRMATION_METHOD_PIVOT;
+        IF OBJECT_ID('tempdb..#TMP_CONFIRMATION_METHOD_PIVOT', 'U') IS NOT NULL
+            DROP TABLE #TMP_CONFIRMATION_METHOD_PIVOT;
 
 
-        DECLARE @CONFIRMATION_METHOD_DESC nvarchar(max)='',
-            @sqlQuery nvarchar(max)='';
-        With CTE_Description
-                 AS
-                 (SELECT DISTINCT COALESCE(CONFIRMATION_METHOD_DESC, 'NULL') as CMD FROM [dbo].[CONFIRMATION_METHOD])
+        SELECT INVESTIGATION_KEY,
+               CONFIRMATION_DT,
+               STRING_AGG(LTRIM(RTRIM(CONFIRMATION_METHOD_DESC)), ' | ') AS CONFIRMATION_METHOD
+        INTO #TMP_CONFIRMATION_METHOD_PIVOT
+        FROM #TMP_CONFIRMATION_METHOD_BASE
+        GROUP BY INVESTIGATION_KEY, CONFIRMATION_DT;
 
-        SELECT @CONFIRMATION_METHOD_DESC = @CONFIRMATION_METHOD_DESC + QUOTENAME(LTRIM(RTRIM([CMD]))) + ','
-        from CTE_Description
-        SET @CONFIRMATION_METHOD_DESC = LEFT(@CONFIRMATION_METHOD_DESC, len(@CONFIRMATION_METHOD_DESC) - 1)
-
-        Print @CONFIRMATION_METHOD_DESC;
-
-
-        SET @sqlQuery =
-                '
-				SELECT *
-				INTO ##TMP_CONFIRMATION_METHOD_PIVOT
-                FROM
-                (
-                SELECT * FROM
-                      (
-                 SELECT CONFIRMATION_METHOD_DESC,investigation_key ,confirmation_dt
-                 FROM  #TMP_CONFIRMATION_METHOD_BASE
-                 GROUP BY  investigation_key,CONFIRMATION_METHOD_DESC,confirmation_dt
-                      )MAIN
-                     PIVOT
-                   (
-                MAX(CONFIRMATION_METHOD_DESC) For CONFIRMATION_METHOD_DESC in
-
- (' +
-                @CONFIRMATION_METHOD_DESC
-                    + ')
-				)as P) as c
-
-			'
-        PRINT (@sqlQuery)
-        EXEC sp_executesql @sqlQuery;
-
-        if @debug = 'true' select @Proc_Step_Name as step, * from ##TMP_CONFIRMATION_METHOD_PIVOT;
+        if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_CONFIRMATION_METHOD_PIVOT;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -489,57 +433,9 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
-
-        SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Update ##TMP_CONFIRMATION_METHOD_PIVOT';
-
-        ----added
-        BEGIN
-
-            ALTER TABLE ##TMP_CONFIRMATION_METHOD_PIVOT
-                ADD CONFIRMATION_METHOD varchar(2000)
-
-        END;
-        WITH CTE as
-                 (select Investigation_key,
-                         (STUFF(
-                                 (SELECT ' | ' + CAST(CMB.[CONFIRMATION_METHOD_DESC] AS varchar(2000))
-                                  FROM #TMP_CONFIRMATION_METHOD_Base CMB
-                                           inner join ##TMP_CONFIRMATION_METHOD_PIVOT p
-                                                      on CMB.INVESTIGATION_KEY = p.INVESTIGATION_KEY
-                                  WHERE CMB.[INVESTIGATION_KEY] = CMP.[INVESTIGATION_KEY]
-                                  FOR XML PATH(''))
-                             , 2, 1, ''
-                          )
-                             ) AS CODE_DESC_TXT_List
-                  from ##TMP_CONFIRMATION_METHOD_PIVOT CMP
-                  ----	where [CONFIRMATION_dt] is not null ----Commended on 3/29/2021
-                  group by [INVESTIGATION_KEY])
-
-        UPDATE CMP
-        set CMP.confirmation_Method = RTRIM(ltrim(cte1.CODE_DESC_TXT_List))
-        from ##TMP_CONFIRMATION_METHOD_PIVOT CMP,
-             CTE CTE1
-        where CMP.[INVESTIGATION_KEY] = CTE1.[INVESTIGATION_KEY];
-
-        if @debug = 'true' select @Proc_Step_Name as step, * from ##TMP_CONFIRMATION_METHOD_PIVOT;
+----------------------------------------------------------------------------
 
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Generating #tmp_PATIENT_LOCATION_KEYS';
 
@@ -552,7 +448,7 @@ BEGIN
                B.CONFIRMATION_METHOD,
                B.CONFIRMATION_DT AS confirmationdte
         INTO #TMP_PATIENT_LOCATION_KEYS
-        FROM ##TMP_CONFIRMATION_METHOD_PIVOT B
+        FROM #TMP_CONFIRMATION_METHOD_PIVOT B
                  INNER JOIN #TMP_PATIENT_LOCATION_KEYS_INIT A ON a.investigation_key = b.investigation_key;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_PATIENT_LOCATION_KEYS;
@@ -564,16 +460,11 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
+----------------------------------------------------------------------------
 
 
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Generating #tmp_PATIENT_INFO';
-
-
-        IF OBJECT_ID('tempdb..#TMP_PATIENT_INFO', 'U') IS NOT NULL
-            DROP TABLE #TMP_PATIENT_INFO;
 
         SELECT KEYS.*,
                substring(C.CONDITION_DESC, 1, 50) AS DISEASE,
@@ -581,7 +472,7 @@ BEGIN
         into #TMP_PATIENT_INFO
         FROM #TMP_PATIENT_LOCATION_KEYS keys
                  INNER JOIN dbo.CASE_COUNT CC ON keys.investigation_key = CC.investigation_key
-                 INNER JOIN dbo.CONDITION C ON C.CONDITION_KEY = CC.CONDITION_KEY;
+                 INNER JOIN dbo.v_condition_dim C with (nolock) ON C.CONDITION_KEY = CC.CONDITION_KEY;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_PATIENT_INFO;
 
@@ -592,17 +483,10 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
+----------------------------------------------------------------------------
 
-
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Generating #tmp_PHYSICIAN_INFO';
-
-
-        IF OBJECT_ID('tempdb..#TMP_PHYSICIAN_INFO', 'U') IS NOT NULL
-            DROP TABLE #TMP_PHYSICIAN_INFO;
-
 
         SELECT KEYS.*,
                PROVIDER_LAST_NAME  AS PHYSICIAN_LAST_NAME,
@@ -622,16 +506,10 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
+----------------------------------------------------------------------------
 
-
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Generating #tmp_PATIENT_DETAILS';
-
-
-        IF OBJECT_ID('tempdb..#TMP_PATIENT_DETAILS', 'U') IS NOT NULL
-            DROP TABLE #TMP_PATIENT_DETAILS;
 
 
         SELECT A.*,
@@ -666,17 +544,11 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
+----------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #TMP_S_INV_SUMM_DATAMART_INIT';
 
-        IF OBJECT_ID('tempdb..#TMP_S_INV_SUMM_DATAMART_INIT', 'U') IS NOT NULL
-            DROP TABLE #TMP_S_INV_SUMM_DATAMART_INIT;
-            ;
         With CTE as (SELECT A.*,
                             NOTI.NOTIFICATION_STATUS,
                             NOTI.NOTIFICATION_LOCAL_ID,
@@ -715,17 +587,12 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
 
 ---------------------------------------------------------12. Create table TMP_InvLab
-        BEGIN TRANSACTION;
+
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @Proc_Step_Name = 'GENERATING #TMP_InvLab';
-
-
-        IF OBJECT_ID('tempdb..#TMP_InvLab', 'U') IS NOT NULL
-            drop table #TMP_InvLab ;
 
 
         SELECT L.INVESTIGATION_KEY, L.LAB_TEST_KEY
@@ -747,20 +614,13 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
 
 --------------------------------------------------13. Create Table  Tmp_BothTable--------------------------------------
 
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @Proc_Step_no + 1;
-
         SET @PROC_STEP_NAME = 'GENERATING  #Tmp_BothTable';
 
-
-        IF OBJECT_ID('tempdb..#TMP_BothTable', 'U') IS NOT NULL
-            drop table #TMP_BothTable ;
 
 
         SELECT INV.INVESTIGATION_KEY,
@@ -781,16 +641,10 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
 
-
-        BEGIN TRANSACTION;;
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @Proc_Step_Name = 'GENERATING  #TMP_Inv2Labs';
 
-
-        IF OBJECT_ID('tempdb..#TMP_Inv2Labs', 'U') IS NOT NULL
-            DROP TABLE #TMP_Inv2Labs ;
 
         SELECT distinct b.investigation_key,
                         b.LabTestKey as lab_test_key,
@@ -812,50 +666,42 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-        COMMIT TRANSACTION;
+
 ------------------------------------------------------------------15. Create Table TMP_SPECIMEN_COLLECTION---------------------------------------------------------
-        BEGIN TRANSACTION
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @Proc_Step_Name = 'GENERATING  #TMP_SPECIMEN_COLLECTION';
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @Proc_Step_Name = 'GENERATING  #TMP_SPECIMEN_COLLECTION';
 
 
-            IF OBJECT_ID('tempdb..#TMP_SPECIMEN_COLLECTION', 'U') IS NOT NULL
-                DROP TABLE #TMP_SPECIMEN_COLLECTION ;
+        SELECT DISTINCT INVESTIGATION_KEY,
+                        MIN(SPECIMEN_COLLECTION_DT) as EARLIEST_SPECIMEN_COLLECTION_DT
+        INTO #TMP_SPECIMEN_COLLECTION
+        from #TMP_Inv2Labs with (nolock)
+        where SPECIMEN_COLLECTION_DT is not null
+        Group by INVESTIGATION_KEY
+        union
+        select INVESTIGATION_KEY, EARLIEST_SPECIMEN_COLLECT_DATE AS EARLIEST_SPECIMEN_COLLECTION_DT
+        from dbo.CASE_LAB_DATAMART c
+        WHERE c.INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY
+                                      FROM dbo.INVESTIGATION
+                                      WHERE case_uid IN (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
 
-            SELECT DISTINCT INVESTIGATION_KEY,
-                            MIN(SPECIMEN_COLLECTION_DT) as EARLIEST_SPECIMEN_COLLECTION_DT
-            INTO #TMP_SPECIMEN_COLLECTION
-            from #TMP_Inv2Labs with (nolock)
-            where SPECIMEN_COLLECTION_DT is not null
-            Group by INVESTIGATION_KEY
-            union
-            select INVESTIGATION_KEY, EARLIEST_SPECIMEN_COLLECT_DATE AS EARLIEST_SPECIMEN_COLLECTION_DT
-            from dbo.CASE_LAB_DATAMART c
-            WHERE c.INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY
-                                          FROM dbo.INVESTIGATION
-                                          WHERE case_uid IN (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
-
-            if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_SPECIMEN_COLLECTION;
+        if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_SPECIMEN_COLLECTION;
 
 
-            SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-            INSERT INTO [DBO].[JOB_FLOW_LOG]
-            (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-            VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-        COMMIT TRANSACTION;
 -----------------------------------------------------------------16. Create Table TMP_CASE_LAB_DATAMART_MODIFIED---------------------------------
-        BEGIN TRANSACTION;
+
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING  #TMP_CASE_LAB_DATAMART_MODIFIED';
 
-
-        IF OBJECT_ID('tempdb..#TMP_CASE_LAB_DATAMART_MODIFIED', 'U') IS NOT NULL
-            DROP TABLE #TMP_CASE_LAB_DATAMART_MODIFIED ;
 
         CREATE TABLE #TMP_CASE_LAB_DATAMART_MODIFIED
         (
@@ -875,23 +721,16 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
+
         ------------------------------------------------------17. Create Table  TMP_INV_SUMM_DATAMART
-
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Generating #TMP_INV_SUMM_DATAMART';
 
-
-        IF OBJECT_ID('tempdb..#TMP_INV_SUMM_DATAMART', 'U') IS NOT NULL
-            DROP TABLE #TMP_INV_SUMM_DATAMART
 
         select A.*
              , CASE
@@ -906,7 +745,7 @@ BEGIN
                    WHEN A.NOTIFICATION_STATUS IS NOT NULL THEN Substring(A.INVESTIGATION_LAST_UPDTD_BY, 1, 50)
                    ELSE NULL END                            AS NOTIFICATION_LAST_UPDATED_USER ---44
              , A.CONFIRMATIONDTE                            as CONFIRMATION_DT                ----49
-             , A.DIAGNOSIS_DATE                             as DIAGNOSIS_DT                   ----49
+             , A.DIAGNOSIS_DATE                             as DIAGNOSIS_DT            ----49
              , A.ILLNESS_ONSET_DATE                         as ILLNESS_ONSET_DT
              , Substring(B.LABORATORY_INFORMATION, 1, 4000) as LABORATORY_INFORMATION         ----54----6/2/2021
              , S.EARLIEST_SPECIMEN_COLLECTION_DT               EARLIEST_SPECIMEN_COLLECT_DATE ----55 ----dont have this field in the table
@@ -924,15 +763,11 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
+        INSERT INTO [DBO].[JOB_FLOW_LOG](BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
+----------------------------------------------------------------------------
 
-
-        ---------------------
 
         BEGIN TRANSACTION;
 
@@ -953,7 +788,7 @@ BEGIN
             [PATIENT_CURRENT_SEX]            = ISD.[PATIENT_CURRENT_SEX],---10
             [AGE_REPORTED]                   = ISD.[AGE_REPORTED],----11
             [AGE_REPORTED_UNIT]              = ISD.[AGE_REPORTED_UNIT],----12
-            [PATIENT_STREET_ADDRESS_1]       = ISD.[PATIENT_STREET_ADDRESS_1],----13
+            [PATIENT_STREET_ADDRESS_1]      = ISD.[PATIENT_STREET_ADDRESS_1],----13
             [PATIENT_STREET_ADDRESS_2]       = ISD.[PATIENT_STREET_ADDRESS_2],-----14
             [PATIENT_CITY]                   = ISD.[PATIENT_CITY],----15
             [PATIENT_STATE]                  = ISD.[PATIENT_STATE],----16
@@ -1010,7 +845,8 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        ---------------------
+----------------------------------------------------------------------------
+
 
         BEGIN TRANSACTION;
 
@@ -1033,8 +869,8 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+----------------------------------------------------------------------------
 
-        -------------------
         BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Inserting new records into dbo.INV_SUMM_DATAMART';
@@ -1166,13 +1002,13 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
+----------------------------------------------------------------------------
 
         BEGIN TRANSACTION;
 
@@ -1212,15 +1048,10 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-
-        BEGIN TRANSACTION;
+        ----------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @PROC_STEP_NAME = 'Creating #TMP_CASE_LAB_DATAMART_MODIFIED_OUTPUT';
-
-        --new stag testing changes 02012024
-        IF OBJECT_ID('tempdb..#TMP_CASE_LAB_DATAMART_MODIFIED_output') IS NOT NULL
-            DROP TABLE #TMP_CASE_LAB_DATAMART_MODIFIED_output;
 
 
         SELECT distinct CASE_UID
@@ -1241,22 +1072,15 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
+----------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @PROC_STEP_NAME = 'Creating #TEMP_MIN_MAX_NOTIFICATION';
 
-
-        IF OBJECT_ID('tempdb..#TEMP_MIN_MAX_NOTIFICATION') IS NOT NULL
-            DROP TABLE #TEMP_MIN_MAX_NOTIFICATION;
 
         SELECT DISTINCT first_notification_status       AS FIRSTNOTIFICATIONSTATUS
                       , notif_rejected_count            AS NOTIFREJECTEDCOUNT
@@ -1273,33 +1097,26 @@ BEGIN
                       , PUBLIC_HEALTH_CASE_UID
         INTO #TEMP_MIN_MAX_NOTIFICATION
         FROM dbo.nrt_investigation_notification n WITH (NOLOCK)
-        LEFT JOIN (
+                 LEFT JOIN (
             SELECT value FROM STRING_SPLIT(@notif_uids, ',')
         ) nu ON n.notification_uid = nu.value
-        LEFT JOIN
-            #TMP_CASE_LAB_DATAMART_MODIFIED_output pc ON n.PUBLIC_HEALTH_CASE_UID = pc.CASE_UID
+                 LEFT JOIN
+             #TMP_CASE_LAB_DATAMART_MODIFIED_output pc ON n.PUBLIC_HEALTH_CASE_UID = pc.CASE_UID
         WHERE nu.value is not null or pc.CASE_UID is not null;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TEMP_MIN_MAX_NOTIFICATION;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
+        ----------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @PROC_STEP_NAME = 'Creating tmp_inv_sum_nnd_info'; -- DO NOT DROP NEEDED FOR HEP_DATAMART
 
-
-        IF OBJECT_ID('tempdb..#TMP_inv_sum_nnd_info') IS NOT NULL
-            DROP TABLE #TMP_inv_sum_nnd_info;
 
         SELECT PUBLIC_HEALTH_CASE_UID, FIRSTNOTIFICATIONSENDDATE, INVESTIGATION_KEY
         INTO #TMP_inv_sum_nnd_info
@@ -1310,16 +1127,13 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
+        ----------------------------------------------------------------------------
 
         BEGIN TRANSACTION;
-
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @PROC_STEP_NAME = 'Updating INIT_NND_NOTF_DT in INV_SUMM_DATAMART';
 
@@ -1331,86 +1145,14 @@ BEGIN
         where INIT_NND_NOT_DT is null;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
         COMMIT TRANSACTION;
 
-
-        BEGIN TRANSACTION;
-        SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Deleting TMP Tables ';
-
-
-        IF OBJECT_ID('tempdb..#TMP_UPDATED_INV_WITH_NOTIF', 'U') IS NOT NULL
-            DROP TABLE #TMP_UPDATED_INV_WITH_NOTIF;
-
-        IF OBJECT_ID('tempdb..#TMP_PATIENT_LOCATION_KEYS_INIT', 'U') IS NOT NULL
-            DROP TABLE #TMP_PATIENT_LOCATION_KEYS_INIT;
-
-        IF OBJECT_ID('tempdb..#TMP_CONFIRMATION_METHOD_BASE', 'U') IS NOT NULL
-            DROP TABLE #TMP_CONFIRMATION_METHOD_BASE;
-
-        IF OBJECT_ID('tempdb..##TMP_CONFIRMATION_METHOD_PIVOT', 'U') IS NOT NULL
-            DROP TABLE ##TMP_CONFIRMATION_METHOD_PIVOT;
-
-        IF OBJECT_ID('tempdb..#TMP_PATIENT_LOCATION_KEYS', 'U') IS NOT NULL
-            DROP TABLE #TMP_PATIENT_LOCATION_KEYS;
-
-        IF OBJECT_ID('tempdb..#TMP_PATIENT_INFO', 'U') IS NOT NULL
-            DROP TABLE #TMP_PATIENT_INFO;
-
-        IF OBJECT_ID('tempdb..#TMP_PHYSICIAN_INFO', 'U') IS NOT NULL
-            DROP TABLE #TMP_PHYSICIAN_INFO;
-
-        IF OBJECT_ID('tempdb..#TMP_PATIENT_DETAILS', 'U') IS NOT NULL
-            DROP TABLE #TMP_PATIENT_DETAILS;
-
-        IF OBJECT_ID('tempdb..#TMP_S_INV_SUMM_DATAMART_INIT', 'U') IS NOT NULL
-            DROP TABLE #TMP_S_INV_SUMM_DATAMART_INIT;
-
-        IF OBJECT_ID('tempdb..#TMP_InvLab', 'U') IS NOT NULL
-            DROP TABLE #TMP_InvLab;
-
-        IF OBJECT_ID('tempdb..#TMP_Lab', 'U') IS NOT NULL
-            DROP TABLE #TMP_Lab;
-
-        IF OBJECT_ID('tempdb..#TMP_BothTable', 'U') IS NOT NULL
-            DROP TABLE #TMP_BothTable;
-
-        IF OBJECT_ID('tempdb..#TMP_Inv2Labs', 'U') IS NOT NULL
-            DROP TABLE #TMP_Inv2Labs;
-
-        IF OBJECT_ID('tempdb..#TMP_SPECIMEN_COLLECTION', 'U') IS NOT NULL
-            DROP TABLE #TMP_SPECIMEN_COLLECTION;
-
-
-        IF OBJECT_ID('tempdb..#TMP_INV_SUMM_DATAMART', 'U') IS NOT NULL
-            DROP TABLE #TMP_INV_SUMM_DATAMART;
-
-
-        IF OBJECT_ID('tempdb..#TMP_INV_SUMM_DATAMART_LAB_DT', 'U') IS NOT NULL
-            drop table #TMP_INV_SUMM_DATAMART_LAB_DT ;
-
-
-        IF OBJECT_ID('tempdb..#TEMP_MIN_MAX_NOTIFICATION', 'U') IS NOT NULL
-            drop table #TEMP_MIN_MAX_NOTIFICATION
-
-        IF OBJECT_ID('tempdb..#TEMP_PHCFACT', 'U') IS NOT NULL
-            drop table #TEMP_PHCFACT ;
-
-        IF OBJECT_ID('tempdb..#TMP_CLDM_CASE_LAB_DATAMART_FINAL', 'U') IS NOT NULL
-            drop table #TMP_CLDM_CASE_LAB_DATAMART_FINAL ;
-
-        IF OBJECT_ID('tempdb..#TMP_CASE_LAB_DATAMART_MODIFIED_output') IS NOT NULL
-            DROP TABLE #TMP_CASE_LAB_DATAMART_MODIFIED_output;
-
-        COMMIT TRANSACTION;
 
 ----------------------------------------------------------------------------
-        BEGIN TRANSACTION ;
+
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
@@ -1433,7 +1175,19 @@ BEGIN
                , @RowCount_no);
 
 
-        COMMIT TRANSACTION;
+
+        select
+            distinct inv.CASE_UID as public_health_case_uid,
+            inv_meta.DATAMART_NM as datamart,
+            c.CONDITION_CD as condition_cd,
+            null as patient_uid,
+            null as stored_procedure
+        from
+        dbo.INVESTIGATION inv  with ( nolock)
+        inner join dbo.INV_SUMM_DATAMART isd with ( nolock) on isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
+        INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD
+        inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on c.DISEASE_GRP_CD =  inv_meta.FORM_CD
+        where inv.CASE_UID in (SELECT value FROM STRING_SPLIT(@phc_uids, ','));
 
     END TRY
     BEGIN CATCH

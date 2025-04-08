@@ -24,13 +24,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -61,6 +61,9 @@ public class PostProcessingService {
     // cache to store ids that needs to be processed for datamarts
     // a map of datamart names and the needed ids
     final Map<String, Map<String, Queue<Long>>> dmCache = new ConcurrentHashMap<>();
+
+    private static int nProc = Runtime.getRuntime().availableProcessors();
+    private final ExecutorService dynDmExecutor = Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
 
     private final PostProcRepository postProcRepository;
     private final InvestigationRepository investigationRepository;
@@ -101,6 +104,9 @@ public class PostProcessingService {
     @Value("${featureFlag.d-tb-hiv-enable}")
     private boolean dTbHivEnable;
 
+    @Value("${featureFlag.dyn-dm-enable}")
+    private boolean dynDmEnable;
+
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
@@ -132,6 +138,19 @@ public class PostProcessingService {
             "${spring.kafka.topic.treatment}",
             "${spring.kafka.topic.vaccination}"
     })
+    /**
+     * Processes a message from a Kafka topic. This method is the entry point for handling messages
+     * from Kafka topics.
+     *
+     * @param topic The name of the Kafka topic from which the message was received.
+     * @param key The key of the Kafka message, typically used for partitioning.
+     * @param value The value of the Kafka message, which contains the payload to be processed.
+     *
+     * Steps:
+     * 1. Identify the entity type based on the topic.
+     * 2. Extract relevant IDs or data from the message payload.
+     * 3. Cache the extracted IDs for further processing in idCache and data in idVals.
+     */
     public void postProcessMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
@@ -143,6 +162,12 @@ public class PostProcessingService {
         val.ifPresent(v -> idVals.put(id, v));
     }
 
+    /**
+     * Extract id from the kafka message key
+     * @param topic
+     * @param messageKey
+     * @return id or uid
+     */
     private Long extractIdFromMessage(String topic, String messageKey) {
         try {
             logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
@@ -158,6 +183,48 @@ public class PostProcessingService {
             String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
             throw new RuntimeException(msg, e);
         }
+    }
+    /**
+     * Extracts relevant value from the kafka message payload
+     * @param uid
+     * @param topic
+     * @param payload
+     * @return String
+     */
+    private String extractValFromMessage(Long uid, String topic, String payload) {
+        try {
+            JsonNode payloadNode = objectMapper.readTree(payload).get(PAYLOAD);
+            if (topic.endsWith(INVESTIGATION.getEntityName())) {
+                extractSummaryCase(uid, payloadNode.path("case_type_cd").asText());
+
+                JsonNode tblNode = payloadNode.path("rdb_table_name_list");
+                if (!tblNode.isMissingNode() && !tblNode.isNull()) {
+                    return tblNode.asText();
+                }
+            } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
+                String actTypeCd = payloadNode.path("act_type_cd").asText();
+                Long phcUid = payloadNode.get(INVESTIGATION.getUidName()).asLong();
+                extractSummaryCase(phcUid, actTypeCd);
+            } else if (topic.endsWith(OBSERVATION.getEntityName())) {
+                String domainCd = payloadNode.path("obs_domain_cd_st_1").asText();
+                String ctrlCd = Optional
+                        .ofNullable(payloadNode.get("ctrl_cd_display_form"))
+                        .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
+
+                if (MORB_REPORT.equals(ctrlCd)) {
+                    if ("Order".equals(domainCd)) {
+                        return ctrlCd;
+                    }
+                } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null) &&
+                        assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result",
+                                "Order_rslt")) {
+                    return LAB_REPORT;
+                }
+            }
+        } catch (Exception ex) {
+            logger.warn("Error processing ID values for the {} message: {}", topic, ex.getMessage());
+        }
+        return null;
     }
 
     private void extractSummaryCase(Long uid, String caseType) {
@@ -215,12 +282,27 @@ public class PostProcessingService {
         }
     }
 
+    /**
+     * Processes all cached IDs for various entities (e.g., investigations, notifications, organizations)
+     * and executes the appropriate stored procedures for each entity type. This method triggers at fixed intervals and
+     * consolidates the processing of IDs collected from multiple Kafka messages.
+     *
+     * Steps:
+     * 1. Iterate through cached IDs grouped by entity type.
+     * 2. Execute the corresponding stored procedure for each entity type.
+     * 3. Log the execution status for debugging and monitoring purposes.
+     * 4. Store the entity name and ids for later if it is needed for data marts (both direct dependent and also for multi-id data marts)
+     * 5. Process event metric and summary data marts
+     * 6. Send the event message to the kafka topic that handles data mart events for building other data marts
+     */
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processCachedIds() {
 
         // Making cache snapshot preventing out-of-sequence ids processing
+        // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
         final Map<String, List<Long>> idCacheSnapshot;
         final Map<Long, String> idValsSnapshot;
+
         synchronized (cacheLock) {
             idCacheSnapshot = idCache.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
@@ -232,9 +314,11 @@ public class PostProcessingService {
         }
 
         if (!idCacheSnapshot.isEmpty()) {
+            // sorting idCacheSnapshot so that entities with higher priority is processed first
             List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
                     .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
 
+            // list to store details of datamarts and the associated ids that needs to be hydrated downstream
             List<DatamartData> dmData = new ArrayList<>();
 
             // Isolated temporary map to accumulate entity ID collections by entity type.
@@ -320,7 +404,7 @@ public class PostProcessingService {
             processSummaryCases();
             datamartProcessor.process(dmData);
 
-            // merge entity IDs collections from temporary map into main datamart cache
+            // merge entity IDs collections from temporary map `newDmMulti` into main datamart cache
             synchronized (cacheLock) {
                 Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTIID, k -> new ConcurrentHashMap<>());
                 newDmMulti.forEach((key, queue) ->
@@ -389,14 +473,18 @@ public class PostProcessingService {
             processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
             processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
             processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
-            
+            processTopic(keyTopic, TB_DATAMART, ids, investigationRepository::executeStoredProcForTbDatamart);
+            processTopic(keyTopic, TB_HIV_DATAMART, ids, investigationRepository::executeStoredProcForTbHivDatamart);
+
             //VAR
             processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
             processTopic(keyTopic, D_RASH_LOC_GEN, ids, investigationRepository::executeStoredProcForDRashLocGen);
             processTopic(keyTopic, D_PCR_SOURCE, ids, investigationRepository::executeStoredProcForDPcrSource);
             processTopic(keyTopic, F_VAR_PAM, ids, investigationRepository::executeStoredProcForFVarPam);
+            processTopic(keyTopic, VAR_PAM_LDF, ids, investigationRepository::executeStoredProcForVarPamLdf);
+
         }   
-         
+        
         return dmData;
     }
 
@@ -433,6 +521,15 @@ public class PostProcessingService {
         return dmData;
     }
 
+    /**
+     * Processes cached IDs for datamarts by executing the appropriate stored procedures. This method triggers at fixed
+     * intervals and handles the processing of data that needs to be loaded into specific datamarts.
+     *
+     * Steps:
+     * 1. Iterate through cached IDs grouped by datamart type.
+     * 2. Execute the corresponding stored procedure for each datamart type.
+     * 3. Log the execution status for debugging and monitoring purposes.
+     */
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
     protected void processDatamartIds() {
         for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
@@ -447,6 +544,7 @@ public class PostProcessingService {
                 Queue<Long> uids = entry.getValue().get(INVESTIGATION.getEntityName());
                 dmCache.put(dmType, new ConcurrentHashMap<>());
 
+                // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
                 String cases = uids.stream().map(String::valueOf).collect(Collectors.joining(","));
 
                 // make sure the entity names for datamart enum values follows the same naming
@@ -533,6 +631,10 @@ public class PostProcessingService {
         }
     }
 
+    /**
+     * Processes cached IDs for multi-ID datamarts by executing the appropriate stored procedures.
+     * @param dmMulti
+     */
     private void processMultiIdDatamart(Map<String, Queue<Long>> dmMulti) {
         String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
         String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
@@ -552,7 +654,28 @@ public class PostProcessingService {
         }
 
         if (totalLengthInvSummary > 0 && invSummaryDmEnable) {
-            postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+            List<DatamartData> dmDataList; //reusing the same DTO class for Dynamic Marts
+            dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+
+            if(!dmDataList.isEmpty() && dynDmEnable) {
+
+                Map<String, String> datamartPhcIdMap = dmDataList.stream()
+                        .collect(Collectors.groupingBy(
+                                DatamartData::getDatamart,
+                                Collectors.mapping(
+                                        dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
+                                        Collectors.joining(",")
+                                )
+                        ));
+                datamartPhcIdMap.forEach((datamart, phcIds) ->
+                            CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
+                                    .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart))
+                );
+
+            } else {
+                logger.info("No updates to Dynamic Datamarts");
+            }
+
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
         }
@@ -563,6 +686,7 @@ public class PostProcessingService {
             logger.info("No updates to MORBIDITY_REPORT_DATAMART");
         }
     }
+
 
     private String listToParameterString(Collection<Long> inputList) {
         return Optional.ofNullable(inputList)
@@ -576,53 +700,22 @@ public class PostProcessingService {
         processDatamartIds();
     }
 
-    private String extractValFromMessage(Long uid, String topic, String payload) {
-        try {
-            JsonNode payloadNode = objectMapper.readTree(payload).get(PAYLOAD);
-            if (topic.endsWith(INVESTIGATION.getEntityName())) {
-                extractSummaryCase(uid, payloadNode.path("case_type_cd").asText());
-
-                JsonNode tblNode = payloadNode.path("rdb_table_name_list");
-                if (!tblNode.isMissingNode() && !tblNode.isNull()) {
-                    return tblNode.asText();
-                }
-            } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
-                String actTypeCd = payloadNode.path("act_type_cd").asText();
-                Long phcUid = payloadNode.get(INVESTIGATION.getUidName()).asLong();
-                extractSummaryCase(phcUid, actTypeCd);
-            } else if (topic.endsWith(OBSERVATION.getEntityName())) {
-                String domainCd = payloadNode.path("obs_domain_cd_st_1").asText();
-                String ctrlCd = Optional
-                        .ofNullable(payloadNode.get("ctrl_cd_display_form"))
-                        .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
-
-                if (MORB_REPORT.equals(ctrlCd)) {
-                    if ("Order".equals(domainCd)) {
-                        return ctrlCd;
-                    }
-                } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null) &&
-                        assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result",
-                                "Order_rslt")) {
-                    return LAB_REPORT;
-                }
-            }
-        } catch (Exception ex) {
-            logger.warn("Error processing ID values for the {} message: {}", topic, ex.getMessage());
-        }
-        return null;
-    }
-
     private boolean assertMatches(String value, String... vals) {
         return Arrays.asList(vals).contains(value);
     }
 
     /**
-     * Gets the Entity by using the string passed to this function
-     * E.g: if dummy_contact_record is passed, it will return the entity
-     * CONTACT_RECORD
-     * 
-     * @param topic Incoming Kafka topic
-     * @return Entity
+     * Retrieves the entity type (e.g., INVESTIGATION, NOTIFICATION, ORGANIZATION) based on the Kafka
+     * topic name. This mapping is used to determine how to process the message and which stored
+     * procedure to execute.
+     *
+     * @param topic The name of the Kafka topic (e.g., "dummy_investigation", "dummy_notification").
+     * @return The corresponding entity type as an `Entity` enum value.
+     *
+     * Example:
+     * If the topic is "dummy_investigation", the method will return `Entity.INVESTIGATION`.
+     *
+     * @throws IllegalArgumentException If the topic does not map to a known entity type.
      */
     private Entity getEntityByTopic(String topic) {
         return Arrays.stream(Entity.values())
@@ -672,4 +765,5 @@ public class PostProcessingService {
     private void completeLog(String sp) {
         logger.info(SP_EXECUTION_COMPLETED, sp);
     }
+
 }

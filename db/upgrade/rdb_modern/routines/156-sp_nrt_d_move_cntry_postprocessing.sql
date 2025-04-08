@@ -62,7 +62,7 @@ BEGIN
         IF OBJECT_ID('#S_MOVE_CNTRY_TRANSLATED', 'U') IS NOT NULL
         drop table #S_MOVE_CNTRY_TRANSLATED;
         
-        SELECT 
+        SELECT DISTINCT
             CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
             TB.SEQ_NBR, 
             TB.DATAMART_COLUMN_NM, 
@@ -187,7 +187,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_CNTRY_KEY T
         join #TEMP_D_MOVE_CNTRY_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_CNTRY_KEY = T.D_MOVE_CNTRY_KEY
+        S.D_MOVE_CNTRY_KEY = T.D_MOVE_CNTRY_KEY;
 
 
         if
@@ -202,11 +202,9 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -216,7 +214,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_CNTRY_GROUP_KEY T
         join #TEMP_D_MOVE_CNTRY_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_CNTRY_GROUP_KEY = T.D_MOVE_CNTRY_GROUP_KEY
+        S.D_MOVE_CNTRY_GROUP_KEY = T.D_MOVE_CNTRY_GROUP_KEY;
 
 
         if
@@ -231,12 +229,10 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -247,7 +243,7 @@ BEGIN
         DELETE T FROM DBO.D_MOVE_CNTRY T
         join #TEMP_D_MOVE_CNTRY_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_CNTRY_KEY = T.D_MOVE_CNTRY_KEY
+        S.D_MOVE_CNTRY_KEY = T.D_MOVE_CNTRY_KEY;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -257,18 +253,22 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;   
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_CNTRY_GROUP';
 
+        -- update F_TB_PAM table
+        UPDATE F
+            SET F.D_MOVE_CNTRY_GROUP_KEY = 1
+        FROM DBO.F_TB_PAM F
+        INNER JOIN #TEMP_D_MOVE_CNTRY_DEL T on T.D_MOVE_CNTRY_GROUP_KEY = F.D_MOVE_CNTRY_GROUP_KEY;
 
+        -- delete from DBO.D_MOVE_CNTRY_GROUP
         DELETE T FROM DBO.D_MOVE_CNTRY_GROUP T
         left join (select distinct D_MOVE_CNTRY_GROUP_KEY from dbo.d_move_cntry) DBO
             ON DBO.D_MOVE_CNTRY_GROUP_KEY = T.D_MOVE_CNTRY_GROUP_KEY

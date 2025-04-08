@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.investigation.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+
 import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
@@ -22,8 +23,7 @@ import org.springframework.kafka.support.SendResult;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.etldatapipeline.investigation.service.InvestigationService.toBatchId;
@@ -97,7 +97,7 @@ class InvestigationServiceTest {
         closeable = MockitoAnnotations.openMocks(this);
         ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
 
-        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository,treatmentRepository, kafkaTemplate, transformer);
+        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository, treatmentRepository, kafkaTemplate, transformer);
 
         investigationService.setPhcDatamartEnable(true);
         investigationService.setBmirdCaseEnable(true);
@@ -284,10 +284,10 @@ class InvestigationServiceTest {
 
         investigationService.processMessage(getRecord(contactTopic, payload), consumer);
 
-        final  ContactReportingKey contactReportingKey = new ContactReportingKey();
+        final ContactReportingKey contactReportingKey = new ContactReportingKey();
         contactReportingKey.setContactUid(contactUid);
 
-        final ContactReporting  contactReportingValue = constructContactReporting(contactUid);
+        final ContactReporting contactReportingValue = constructContactReporting(contactUid);
 
         Awaitility.await()
                 .atMost(1, TimeUnit.SECONDS)
@@ -350,7 +350,7 @@ class InvestigationServiceTest {
 
         investigationService.processMessage(getRecord(vaccinationTopic, payload), consumer);
 
-        final  VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
+        final VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
         vaccinationReportingKey.setVaccinationUid(vaccinationUid);
 
         final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting(vaccinationUid);
@@ -589,6 +589,6 @@ class InvestigationServiceTest {
     }
 
     private ConsumerRecord<String, String> getRecord(String topic, String payload) {
-        return new ConsumerRecord<>(topic, 0,  11L, null, payload);
+        return new ConsumerRecord<>(topic, 0, 11L, null, payload);
     }
 }
