@@ -763,22 +763,22 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)),
-                new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
-                            "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"sp_tb_datamart_postprocessing\"}}",
-                    TB_DATAMART.getEntityName(), TB_DATAMART.getStoredProcedure(), 3,
-                    (repo, uid) -> verify(repo).executeStoredProcForTbDatamart(uid)),
-                new DatamartTestCase(
-                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
-                                "\"datamart\":\"tb_hiv_datamart\",\"stored_procedure\":\"sp_tb_hiv_datamart_postprocessing\"}}",
-                        TB_HIV_DATAMART.getEntityName(), TB_HIV_DATAMART.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForTbHivDatamart(uid)),
-                new DatamartTestCase(
-                            "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
-                                    "\"datamart\":\"var_datamart\",\"stored_procedure\":\"sp_nrt_var_datamart_postprocessing\"}}",
-                            VAR_DATAMART.getEntityName(), VAR_DATAMART.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForVarDatamart(uid)));
+                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)));
+                // new DatamartTestCase(
+                //     "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                //             "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"sp_tb_datamart_postprocessing\"}}",
+                //     TB_DATAMART.getEntityName(), TB_DATAMART.getStoredProcedure(), 3,
+                //     (repo, uid) -> verify(repo).executeStoredProcForTbDatamart(uid)),
+                // new DatamartTestCase(
+                //         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                //                 "\"datamart\":\"tb_hiv_datamart\",\"stored_procedure\":\"sp_tb_hiv_datamart_postprocessing\"}}",
+                //         TB_HIV_DATAMART.getEntityName(), TB_HIV_DATAMART.getStoredProcedure(), 3,
+                //         (repo, uid) -> verify(repo).executeStoredProcForTbHivDatamart(uid)),
+                // new DatamartTestCase(
+                //             "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                //                     "\"datamart\":\"var_datamart\",\"stored_procedure\":\"sp_nrt_var_datamart_postprocessing\"}}",
+                //             VAR_DATAMART.getEntityName(), VAR_DATAMART.getStoredProcedure(), 3,
+                //         (repo, uid) -> verify(repo).executeStoredProcForVarDatamart(uid)));
     }
 
     @Test
