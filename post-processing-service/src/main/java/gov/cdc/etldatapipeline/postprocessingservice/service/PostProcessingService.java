@@ -589,19 +589,22 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
                         break;
                     case TB_DATAMART:
+                        if(dTbHivEnable) {
                             executeDatamartProc(TB_DATAMART,
                                     investigationRepository::executeStoredProcForTbDatamart, cases);
-                        
+                        }
                         break;
                     case TB_HIV_DATAMART:
+                        if(dTbHivEnable) {
                             executeDatamartProc(TB_HIV_DATAMART,
                                 investigationRepository::executeStoredProcForTbHivDatamart, cases);
-                        
+                        }
                         break;
                     case VAR_DATAMART:
+                        if(dTbHivEnable) {
                             executeDatamartProc(VAR_DATAMART,
                                 investigationRepository::executeStoredProcForVarDatamart, cases);
-                        
+                        }
                         break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ", dmType);
