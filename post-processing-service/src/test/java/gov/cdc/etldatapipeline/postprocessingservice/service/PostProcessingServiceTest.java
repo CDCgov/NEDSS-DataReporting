@@ -684,38 +684,10 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessVarDatamartNegative() {
+    void testPostProcessDatamartNegative() {
         String topic = "var_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.setDTbHivEnable(false);
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(1, logs.size());
-    }
-
-    @Test
-    void testPostProcessTBDatamartNegative() {
-        String topic = "tb_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.setDTbHivEnable(false);
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-        
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(1, logs.size());
-    }
-
-    @Test
-    void testPostProcessTBHIVDatamartNegative() {
-        String topic = "tb_hiv_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"tb_hiv_datamart\",\"stored_procedure\":\"\"}}";
 
         postProcessingServiceMock.setDTbHivEnable(false);
         postProcessingServiceMock.postProcessDatamart(topic, msg);
