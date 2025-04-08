@@ -460,20 +460,21 @@ public class PostProcessingService {
         if(dTbHivEnable) {
             //TB
             processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);
-        processTopic(keyTopic, D_GT_12_REAS, ids, investigationRepository::executeStoredProcForDGt12Reas);
-        processTopic(keyTopic, D_MOVE_CNTRY, ids, investigationRepository::executeStoredProcForDMoveCntry);
-        processTopic(keyTopic, D_MOVE_CNTY, ids, investigationRepository::executeStoredProcForDMoveCnty);
-        processTopic(keyTopic, D_MOVE_STATE, ids, investigationRepository::executeStoredProcForDMoveState);
-        processTopic(keyTopic, D_MOVED_WHERE, ids, investigationRepository::executeStoredProcForDMovedWhere);
-        processTopic(keyTopic, D_HC_PROV_TY_3, ids, investigationRepository::executeStoredProcForDHcProvTy3);
-        processTopic(keyTopic, D_OUT_OF_CNTRY, ids, investigationRepository::executeStoredProcForDOutOfCntry);
-        processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
-        processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
-        processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
+            processTopic(keyTopic, D_GT_12_REAS, ids, investigationRepository::executeStoredProcForDGt12Reas);
+            processTopic(keyTopic, D_MOVE_CNTRY, ids, investigationRepository::executeStoredProcForDMoveCntry);
+            processTopic(keyTopic, D_MOVE_CNTY, ids, investigationRepository::executeStoredProcForDMoveCnty);
+            processTopic(keyTopic, D_MOVE_STATE, ids, investigationRepository::executeStoredProcForDMoveState);
+            processTopic(keyTopic, D_MOVED_WHERE, ids, investigationRepository::executeStoredProcForDMovedWhere);
+            processTopic(keyTopic, D_HC_PROV_TY_3, ids, investigationRepository::executeStoredProcForDHcProvTy3);
+            processTopic(keyTopic, D_OUT_OF_CNTRY, ids, investigationRepository::executeStoredProcForDOutOfCntry);
+            processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
+            processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
+            processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
+            processTopic(keyTopic, TB_DATAMART, ids, investigationRepository::executeStoredProcForTbDatamart);
             processTopic(keyTopic, TB_HIV_DATAMART, ids, investigationRepository::executeStoredProcForTbHivDatamart);
 
             //VAR
-        processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
+            processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
             processTopic(keyTopic, D_RASH_LOC_GEN, ids, investigationRepository::executeStoredProcForDRashLocGen);
             processTopic(keyTopic, D_PCR_SOURCE, ids, investigationRepository::executeStoredProcForDPcrSource);
             processTopic(keyTopic, F_VAR_PAM, ids, investigationRepository::executeStoredProcForFVarPam);
