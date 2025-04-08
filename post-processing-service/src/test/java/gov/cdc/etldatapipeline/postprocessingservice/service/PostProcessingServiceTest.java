@@ -685,16 +685,25 @@ class PostProcessingServiceTest {
 
     @Test
     void testPostProcessDatamartNegative() {
-        String topic = "var_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+        String tbDatamartTopic = "tb_datamart";
+        String tbHivDatamartTopic = "tb_hiv_datamart";
+        String varDatamartTopic = "var_datamart";
+        String tbDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
+        String tbHivDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+        "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
+
+        String varDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+        "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
 
         postProcessingServiceMock.setDTbHivEnable(false);
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.postProcessDatamart(tbDatamartTopic, tbDatamartMsg);
+        postProcessingServiceMock.postProcessDatamart(tbHivDatamartTopic, tbHivDatamartMsg);
+        postProcessingServiceMock.postProcessDatamart(varDatamartTopic, varDatamartMsg);
         postProcessingServiceMock.processDatamartIds();
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(1, logs.size());
+        assertEquals(3, logs.size());
     }
 
     @Test
