@@ -70,7 +70,7 @@ BEGIN
             IF OBJECT_ID('#S_D_PCR_SOURCE_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_PCR_SOURCE_TRANSLATED;
             
-            SELECT 
+            SELECT DISTINCT
                 CAST(VAR.ACT_UID AS BIGINT) AS VAR_PAM_UID,
                 VAR.SEQ_NBR, 
                 VAR.DATAMART_COLUMN_NM, 

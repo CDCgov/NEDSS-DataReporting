@@ -57,7 +57,7 @@ BEGIN
         IF OBJECT_ID('#S_RASH_LOC_GEN_TRANSLATED', 'U') IS NOT NULL
         drop table #S_RASH_LOC_GEN_TRANSLATED;
         
-        SELECT 
+        SELECT DISTINCT
             CAST(VAR.ACT_UID AS BIGINT) AS VAR_PAM_UID,
             VAR.SEQ_NBR, 
             VAR.DATAMART_COLUMN_NM, 
