@@ -80,7 +80,7 @@ BEGIN
             IF OBJECT_ID('#S_D_HC_PROV_TY_3_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_HC_PROV_TY_3_TRANSLATED;
             
-            SELECT 
+            SELECT DISTINCT
                 CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
                 TB.SEQ_NBR, 
                 TB.DATAMART_COLUMN_NM, 
