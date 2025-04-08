@@ -9,7 +9,6 @@ import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datama
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -693,15 +692,10 @@ public class PostProcessingService {
                 .orElse("");
     }
 
-    @SneakyThrows
     @PreDestroy
     public void shutdown() {
         processCachedIds();
         processDatamartIds();
-        dynDmExecutor.shutdown();
-        if (!dynDmExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-            dynDmExecutor.shutdownNow();
-        }
     }
 
     private boolean assertMatches(String value, String... vals) {
@@ -769,4 +763,5 @@ public class PostProcessingService {
     private void completeLog(String sp) {
         logger.info(SP_EXECUTION_COMPLETED, sp);
     }
+
 }

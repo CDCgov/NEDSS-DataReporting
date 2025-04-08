@@ -8,11 +8,9 @@ import gov.cdc.etldatapipeline.investigation.repository.model.reporting.Investig
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.TreatmentReportingKey;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
-import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
@@ -35,7 +33,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.ToLongFunction;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.*;
@@ -340,18 +337,5 @@ public class InvestigationService {
         reportingModel.setBatchId(investigationTransformed.getBatchId());
 
         return reportingModel;
-    }
-
-    @SneakyThrows
-    @PreDestroy
-    public void shutdown() {
-        phcExecutor.shutdown();
-        if (!phcExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-            phcExecutor.shutdownNow();
-        }
-    }
-
-    public void setPhcExecutor(ExecutorService phcExecutor) {
-        this.phcExecutor = phcExecutor;
     }
 }
