@@ -92,6 +92,7 @@ BEGIN
                       ,nesteddata.obs_code
                       ,nesteddata.obs_date
                       ,nesteddata.obs_num
+                      ,nesteddata.associated_phc_uids
               -- ,nesteddata.associated_investigations
               -- ,nesteddata.ldf_observation
               FROM Observation o WITH (NOLOCK) OUTER apply (
@@ -99,6 +100,14 @@ BEGIN
                       *
                   FROM
                       -- follow up observations associated with observation-nested obs handling
+                      (
+                          SELECT 
+                                STRING_AGG(ar.target_act_uid, ',') AS associated_phc_uids
+                          from nbs_odse.dbo.Act_relationship ar
+                          where ar.type_cd IN ('MorbReport', 'LabReport')
+                            and ar.target_class_cd = 'CASE'
+                            and ar.source_act_uid = o.observation_uid
+                      ) as associated_phc_uids,
                       (
                           SELECT
                               (
