@@ -170,7 +170,7 @@ BEGIN
         INTO #TEXT_DATA_REPT
         FROM #NBS_CASE_ANSWER_REPT as nrt_page
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE nrt_page.ANSWER_GROUP_SEQ_NBR IS NOT NULL
           AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE' AND
@@ -238,7 +238,7 @@ BEGIN
         INTO #CODED_TABLE_TEMP_REPT
         FROM #NBS_CASE_ANSWER_REPT AS nrt_page
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE nrt_page.ANSWER_GROUP_SEQ_NBR IS NOT NULL AND
             CVG.CODE_SET_NM = 'NBS_DATA_TYPE' AND
@@ -277,10 +277,10 @@ BEGIN
         INTO #CODED_TABLE_REPT
         FROM #CODED_TABLE_TEMP_REPT AS CODED LEFT
                                                  JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA
+             dbo.nrt_srte_Codeset_Group_Metadata AS METADATA
              ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID LEFT
                                                  JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG
+             dbo.nrt_srte_Code_value_general AS CVG
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM AND
                 CVG.CODE = CODED.ANSWER_TXT;
         /*
@@ -338,10 +338,10 @@ ON #CODED_TABLE_REPT
         INTO #CODED_COUNTY_TABLE_REPT
         FROM #CODED_TABLE_REPT AS CODED WITH(NOLOCK) LEFT
                                                          JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA WITH(NOLOCK)
+             dbo.nrt_srte_Codeset_Group_Metadata AS METADATA WITH(NOLOCK)
              ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID LEFT
                                                          JOIN
-             NBS_SRTE.dbo.V_STATE_COUNTY_CODE_VALUE AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_State_county_code_value AS CVG WITH(NOLOCK)
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM AND
                 CVG.CODE = CODED.ANSWER_TXT
         WHERE METADATA.CODE_SET_NM = 'COUNTY_CCD';
@@ -419,7 +419,7 @@ ON #CODED_TABLE_REPT
         INTO #CODED_TABLE_SNTEMP_REPT
         FROM #NBS_CASE_ANSWER_REPT AS nrt_page
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
                  INNER JOIN #phc_uids_REPT phc
                             ON phc.PAGE_CASE_UID = nrt_page.act_uid
@@ -457,10 +457,10 @@ ON #CODED_TABLE_REPT
         INTO #CODED_TABLE_SNTEMP_TRANS_A_REPT
         FROM #CODED_TABLE_SNTEMP_REPT AS CODED LEFT
                                                    JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA
+             dbo.nrt_srte_Codeset_Group_Metadata AS METADATA
              ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID LEFT
                                                    JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG
+             dbo.nrt_srte_Code_value_general AS CVG
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM AND
                 CVG.CODE = CODED.ANSWER_TXT_CODE
         ORDER BY NBS_CASE_ANSWER_UID, RDB_COLUMN_NM;
@@ -631,7 +631,7 @@ ON #CODED_TABLE_REPT
         INTO #DATE_DATA_REPT
         FROM #NBS_CASE_ANSWER_REPT as nrt_page
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE
             CVG.CODE_SET_NM = 'NBS_DATA_TYPE' AND
@@ -653,8 +653,8 @@ ON #CODED_TABLE_REPT
                      dbo.nrt_investigation as inv
                      ON nrt_page.ACT_UID = inv.PUBLIC_HEALTH_CASE_UID
                          INNER JOIN
-                     NBS_SRTE.DBO.CONDITION_CODE
-                     ON CONDITION_CODE.CONDITION_CD = inv.CD
+                     dbo.nrt_srte_Condition_code cc
+                     ON cc.CONDITION_CD = inv.CD
                 WHERE
                     DATA_TYPE IN( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
                     (ISDATE(ANSWER_TXT) != 1) AND
@@ -752,7 +752,7 @@ ON #CODED_TABLE_REPT
         INTO #NUMERIC_BASE_DATA_REPT
         FROM #NBS_CASE_ANSWER_REPT as nrt_page
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE ANSWER_GROUP_SEQ_NBR IS NOT NULL
           AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
@@ -831,10 +831,10 @@ ON #CODED_TABLE_REPT
         INTO #NUMERIC_DATA_TRANS_REPT
         FROM #NUMERIC_DATA_MERGED_REPT AS CODED LEFT
                                                     JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA
+             dbo.nrt_srte_Codeset_Group_Metadata AS METADATA
              ON METADATA.CODE_SET_GROUP_ID = CODED.UNIT_VALUE1 LEFT
                                                     JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG
+             dbo.nrt_srte_Code_value_general AS CVG
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM AND
                 ANSWER_GROUP_SEQ_NBR IS NOT NULL;
 
@@ -882,8 +882,8 @@ ON #CODED_TABLE_REPT
                          dbo.nrt_investigation as inv
                          ON rept.page_case_uid= inv.PUBLIC_HEALTH_CASE_UID
                              INNER JOIN
-                         NBS_SRTE.DBO.CONDITION_CODE
-                         ON CONDITION_CODE.CONDITION_CD = inv.CD
+                         DBO.nrt_srte_Condition_code cc
+                         ON cc.CONDITION_CD = inv.CD
                              INNER JOIN
                          #NRT_PAGE as nrt_page
                          ON nrt_page.act_uid = inv.PUBLIC_HEALTH_CASE_UID

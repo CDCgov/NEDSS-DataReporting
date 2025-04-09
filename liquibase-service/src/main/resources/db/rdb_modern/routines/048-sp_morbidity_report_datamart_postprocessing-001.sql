@@ -48,7 +48,7 @@ BEGIN TRY
                 CODE_SET_NM,
                 CODE_SHORT_DESC_TXT
         INTO #SRTLOOKUP
-        FROM dbo.v_nrt_srte_code_value_general WITH (NOLOCK)
+        FROM dbo.nrt_srte_Code_value_general WITH (NOLOCK)
         WHERE CODE_SET_NM IN('MORB_RPT_TYPE','MRB_RPT_METH','P_NM_SFX','AGE_UNIT','YNU');
 
         if @debug = 'true'

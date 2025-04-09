@@ -158,11 +158,11 @@ BEGIN
                         obs.PROCESSING_DECISION_CD
         into #LAB_TESTinit_a
         from dbo.nrt_observation obs
-                 left join nbs_srte..loinc_condition as loinc_con on obs.cd = loinc_con.loinc_cd
-                 left join nbs_srte..code_value_general as cvg
+                 left join dbo.nrt_srte_Loinc_condition as loinc_con on obs.cd = loinc_con.loinc_cd
+                 left join dbo.nrt_srte_Code_value_general as cvg
                            on obs.status_cd = cvg.code
                                and cvg.code_set_nm = 'ACT_OBJ_ST'
-                 left join nbs_srte..Jurisdiction_code jc
+                 left join dbo.nrt_srte_Jurisdiction_code jc
                            on obs.jurisdiction_cd = jc.code
                                and jc.code_set_nm = 'S_JURDIC_C'
         where obs.obs_domain_cd_st_1 in ('Order', 'Result', 'R_Order', 'R_Result', 'I_Order', 'I_Result', 'Order_rslt')
@@ -895,7 +895,7 @@ BEGIN
         from #LAB_TEST1_uid2 lt1
                  left outer join #LAB_TEST1_TMP lto on lt1.lab_rpt_uid = lto.Lab_Rpt_Uid_Test1
                  left outer join #Morb_OID tmo on lt1.lab_rpt_uid = tmo.lab_rpt_uid_mor
-                 left join nbs_srte..Code_value_general cvg
+                 left join dbo.nrt_srte_Code_value_general cvg
                            on lto.processing_decision_cd = cvg.code
                                and lto.processing_decision_cd is not null
                                and cvg.code_set_nm = 'STD_NBS_PROCESSING_DECISION_ALL';
@@ -2114,7 +2114,7 @@ BEGIN
                             FROM ordered_mat
                             where row_num = 1) mat
                            on obs.observation_uid = mat.act_uid
-                 left join nbs_srte..jurisdiction_code jc
+                 left join dbo.nrt_srte_Jurisdiction_code jc
                            on obs.jurisdiction_cd = jc.code
                                and jc.code_set_nm = 'S_JURDIC_C';
 
