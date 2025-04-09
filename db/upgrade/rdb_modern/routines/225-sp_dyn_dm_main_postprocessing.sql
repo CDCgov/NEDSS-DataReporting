@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.sp_dyn_dm_main_postprocessing
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
     @datamart_name VARCHAR(100),
     @phc_id_list VARCHAR(MAX) = NULL,
     @debug BIT = 'false'
@@ -50,7 +50,6 @@ BEGIN
 
         -- Generate batch_id for logging
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
-        --SET @batch_id = cast('10003' as bigint);
 
         if @debug='true'
             print @batch_id;
@@ -116,7 +115,7 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list,
-             @debug = @debug;
+        	 @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';

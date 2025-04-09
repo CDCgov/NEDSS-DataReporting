@@ -80,7 +80,7 @@ BEGIN
             IF OBJECT_ID('#S_D_GT_12_REAS_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_GT_12_REAS_TRANSLATED;
             
-            SELECT 
+            SELECT DISTINCT
                 CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
                 TB.SEQ_NBR, 
                 TB.DATAMART_COLUMN_NM, 
@@ -100,7 +100,7 @@ BEGIN
             LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
                 ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                 AND CVG.CODE = TB.ANSWER_TXT
-            INNER JOIN ( SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON TB.ACT_UID = nu.value
+            INNER JOIN ( SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON TB.ACT_UID = nu.value
             WHERE TB.DATAMART_COLUMN_NM <> 'n/a'
             AND ISNULL(tb.batch_id, 1) = ISNULL(inv.batch_id, 1)
             AND QUESTION_IDENTIFIER = 'TUB235';
