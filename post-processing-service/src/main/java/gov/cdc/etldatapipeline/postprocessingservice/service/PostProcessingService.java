@@ -592,12 +592,9 @@ public class PostProcessingService {
                         if(dTbHivEnable) {
                             executeDatamartProc(TB_DATAMART,
                                     investigationRepository::executeStoredProcForTbDatamart, cases);
-                        }
-                        break;
-                    case TB_HIV_DATAMART:
-                        if(dTbHivEnable) {
+                            
                             executeDatamartProc(TB_HIV_DATAMART,
-                                investigationRepository::executeStoredProcForTbHivDatamart, cases);
+                                    investigationRepository::executeStoredProcForTbHivDatamart, cases);
                         }
                         break;
                     case VAR_DATAMART:

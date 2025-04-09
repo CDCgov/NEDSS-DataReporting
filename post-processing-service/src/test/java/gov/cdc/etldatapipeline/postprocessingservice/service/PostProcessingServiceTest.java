@@ -661,26 +661,8 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForTbDatamart(id);
         
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
+        assertEquals(5, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(TB_DATAMART.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessTBHIVDatamart() {
-        String topic = "tb_hiv_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"tb_hiv_datamart\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.setDTbHivEnable(true);
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForTbHivDatamart(id);
-        
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(TB_HIV_DATAMART.getStoredProcedure()));
     }
 
     @Test
@@ -703,7 +685,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processDatamartIds();
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
+        assertEquals(4, logs.size());
     }
 
     @Test

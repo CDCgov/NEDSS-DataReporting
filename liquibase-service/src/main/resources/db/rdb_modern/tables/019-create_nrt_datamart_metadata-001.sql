@@ -233,25 +233,6 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            WHERE ndm.condition_cd = gen_codes.condition_cd);
             END;
 
-        -- TB_HIV_DATAMART
-        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'TB_HIV_Datamart')
-            BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
-                SELECT condition_cd,
-                       condition_desc_txt,
-                       'TB_HIV_Datamart',
-                       'sp_tb_hiv_datamart_postprocessing'
-                FROM
-                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
-                     FROM NBS_SRTE.dbo.Condition_code cc
-                     WHERE (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE 'INV_FORM_RVCT%')
-                    ) gen_codes
-                WHERE NOT EXISTS
-                          (SELECT 1
-                           FROM dbo.nrt_datamart_metadata ndm
-                           WHERE ndm.condition_cd = gen_codes.condition_cd);
-            END;
-        
         -- VAR_DATAMART
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'VAR_Datamart')
             BEGIN
