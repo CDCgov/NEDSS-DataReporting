@@ -2287,7 +2287,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 250-sp_nrt_var_datamart_postprocessing-001.sql
+            path: 250-sp_var_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
       id: 695

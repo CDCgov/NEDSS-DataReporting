@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_var_datamart_postprocessing 
+CREATE OR ALTER PROCEDURE dbo.sp_var_datamart_postprocessing 
 @phc_uids nvarchar(max),
 @debug bit = 'false'
 AS
@@ -10,7 +10,7 @@ BEGIN
             declare @proc_step_name varchar(200) = '';
             declare @batch_id bigint;
             declare @dataflow_name varchar(200) = 'var_datamart POST-Processing';
-            declare @package_name varchar(200) = 'sp_nrt_var_datamart_postprocessing';
+            declare @package_name varchar(200) = 'sp_var_datamart_postprocessing';
                 set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
