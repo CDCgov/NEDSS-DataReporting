@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_case_management_postprocessing
+CREATE OR ALTER PROCEDURE dbo.sp_dyn_dm_case_management_postprocessing
             @batch_id BIGINT,
 			@DATAMART_NAME VARCHAR(100),
 			@phc_id_list nvarchar(max)
@@ -114,7 +114,8 @@ BEGIN
   END TRY
   BEGIN CATCH
 
-     IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+     IF @@TRANCOUNT > 0
+        COMMIT TRANSACTION;
 
 	-- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
