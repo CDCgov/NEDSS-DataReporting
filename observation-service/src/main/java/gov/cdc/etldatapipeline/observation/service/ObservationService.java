@@ -124,6 +124,7 @@ public class ObservationService {
     private void processActRelationship(String value, long batchId) {
         String sourceActUid = "";
         String typeCd = "";
+        String targetClassCd;
         String operationType = "";
 
         try {
@@ -132,6 +133,7 @@ public class ObservationService {
             if (operationType.equals("d")) {
                 sourceActUid = extractUidBefore(value, "source_act_uid");
                 typeCd = extractValueBefore(value, "type_cd");
+                targetClassCd = extractValueBefore(value, "target_class_cd");
             }
             else {
                 return;
@@ -139,7 +141,9 @@ public class ObservationService {
 
             logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
             // For LabReport values, we only need to trigger if the relationship is deleted (not covered in updates to Observation)
-            if (typeCd.equals("LabReport")) {
+            // PHC targets are excluded from the LabReport association updates, as the LabReport will receive
+            // an update in Observation
+            if (typeCd.equals("LabReport") && targetClassCd.equals("OBS")) {
                 processObservation(value, batchId, false, sourceActUid);
             }
         } catch (Exception e) {

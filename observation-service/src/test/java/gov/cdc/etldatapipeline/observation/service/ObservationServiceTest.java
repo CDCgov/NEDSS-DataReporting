@@ -94,18 +94,23 @@ class ObservationServiceTest {
 
     @ParameterizedTest
     @CsvSource (
-            {"d,LabReport",
-                    "c,LabReport",
-                    "d,OTHER"}
+            {"d,LabReport,OBS",
+                    "d,LabReport,OTHER",
+                    "c,LabReport,OBS",
+                    "c,LabReport,OTHER",
+                    "d,OTHER,OBS",
+                    "d,OTHER,OTHER"
+            }
     )
-    void testProcessActRelationship(String op, String typeCd) throws JsonProcessingException {
+    void testProcessActRelationship(String op, String typeCd, String targetClassCd) throws JsonProcessingException {
         Long sourceActUid = 123456789L;
         String obsDomainCdSt = "Order";
-        String payload = "{\"payload\": {\"before\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \"" + typeCd + "\"}," +
+        String payload = "{\"payload\": {\"before\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \""
+                    + typeCd + "\", \"target_class_cd\": \"" + targetClassCd + "\"}," +
                 "\"after\": {\"source_act_uid\": \"123\"}," +
                 "\"op\": \"" + op + "\"}}";
 
-        if (typeCd.equals("OTHER") || !op.equals("d")) {
+        if (typeCd.equals("OTHER") || !op.equals("d") || targetClassCd.equals("OTHER")) {
             ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
 
             observationService.processMessage(rec);
