@@ -98,4 +98,6 @@ public class ObservationReporting {
     private String lastChgTime;
 
     private Long batchId;
+
+    private String associatedPhcUids;
 }
