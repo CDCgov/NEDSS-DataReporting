@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_treatment_event]
+CREATE OR ALTER PROCEDURE [dbo].[sp_treatment_event_copy]
     @treatment_uids nvarchar(max),
     @debug bit = 'false'
 AS
@@ -42,11 +42,13 @@ BEGIN
 
         SELECT DISTINCT
             rx1.treatment_uid,
-            act1.target_act_uid AS public_health_case_uid,
+            -- Leaving column in until updates to postprocessing are done to keep liquibase
+            -- run from failing in the meantime
+            NULL AS public_health_case_uid,
             par.subject_entity_uid AS organization_uid,
             par1.subject_entity_uid AS provider_uid,
             viewPatientKeys.treatment_uid AS patient_treatment_uid,
-            act2.target_act_uid AS morbidity_uid,
+            act1.target_act_uid AS morbidity_uid,
             rx1.local_id,
             rx1.add_time,
             rx1.add_user_id,
@@ -57,11 +59,11 @@ BEGIN
         FROM NBS_ODSE.dbo.treatment AS rx1 WITH (NOLOCK)
                  INNER JOIN NBS_ODSE.dbo.Treatment_administered AS rx2 WITH (NOLOCK)
                             ON rx1.treatment_uid = rx2.treatment_uid
-                 LEFT JOIN NBS_ODSE.dbo.act_relationship AS act1 WITH (NOLOCK)
-                           ON rx1.Treatment_uid = act1.source_act_uid
-                               AND act1.target_class_cd = 'CASE'
-                               AND act1.source_class_cd = 'TRMT'
-                               AND act1.type_cd = 'TreatmentToPHC'
+                --  LEFT JOIN NBS_ODSE.dbo.act_relationship AS act1 WITH (NOLOCK)
+                --            ON rx1.Treatment_uid = act1.source_act_uid
+                --                AND act1.target_class_cd = 'CASE'
+                --                AND act1.source_class_cd = 'TRMT'
+                --                AND act1.type_cd = 'TreatmentToPHC'
                  LEFT JOIN NBS_ODSE.dbo.participation AS par WITH (NOLOCK)
                            ON rx1.Treatment_uid = par.act_uid
                                AND par.type_cd = 'ReporterOfTrmt'
@@ -74,11 +76,11 @@ BEGIN
                                AND par1.act_class_cd = 'TRMT'
                  LEFT JOIN NBS_ODSE.dbo.uvw_treatment_patient_keys AS viewPatientKeys WITH (NOLOCK)
                            ON rx1.treatment_uid = viewPatientKeys.treatment_uid
-                 LEFT JOIN NBS_ODSE.dbo.act_relationship AS act2 WITH (NOLOCK)
-                           ON rx1.Treatment_uid = act2.source_act_uid
-                               AND act2.target_class_cd = 'OBS'
-                               AND act2.source_class_cd = 'TRMT'
-                               AND act2.type_cd = 'TreatmentToMorb'
+                 LEFT JOIN NBS_ODSE.dbo.act_relationship AS act1 WITH (NOLOCK)
+                           ON rx1.Treatment_uid = act1.source_act_uid
+                               AND act1.target_class_cd = 'OBS'
+                               AND act1.source_class_cd = 'TRMT'
+                               AND act1.type_cd = 'TreatmentToMorb'
         WHERE rx1.treatment_uid IN (
             SELECT value
             FROM STRING_SPLIT(@treatment_uids, ',')
@@ -105,7 +107,48 @@ BEGIN
                );
         COMMIT TRANSACTION;
 
-        -- STEP 2: Get Treatment Details
+        -- STEP 2: CREATE #ASSOCIATED_PHC_UIDS
+        BEGIN TRANSACTION;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'CREATING #ASSOCIATED_PHC_UIDS';
+
+        SELECT DISTINCT
+            source_act_uid as treatment_uid,
+            STRING_AGG(target_act_uid, ',') AS associated_phc_uids
+        INTO #ASSOCIATED_PHC_UIDS
+        FROM NBS_ODSE.dbo.act_relationship WITH (NOLOCK)
+            where source_act_uid IN (
+            SELECT value
+            FROM STRING_SPLIT(@treatment_uids, ',')
+        )
+            AND target_class_cd = 'CASE'
+            AND source_class_cd = 'TRMT'
+            AND type_cd = 'TreatmentToPHC'
+            GROUP BY source_act_uid
+        ;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        ( batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count])
+        VALUES (
+                   @batch_id,
+                   @DATAFLOW_NAME,
+                   @PACKAGE_NAME,
+                   'START',
+                   @Proc_Step_no,
+                   @Proc_Step_Name,
+                   @RowCount_no
+               );
+        COMMIT TRANSACTION;
+
+        -- STEP 3: Get Treatment Details
         BEGIN TRANSACTION;
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'COLLECTING TREATMENT DETAILS';
@@ -137,13 +180,17 @@ BEGIN
             t.add_user_id,
             t.last_chg_time,
             t.last_chg_user_id,
-            t.version_ctrl_nbr
+            t.version_ctrl_nbr,
+            aphc.associated_phc_uids
         INTO #TREATMENT_DETAILS
         FROM #TREATMENT_UIDS t
+                 LEFT JOIN #ASSOCIATED_PHC_UIDS aphc
+                            ON t.treatment_uid = aphc.treatment_uid 
                  INNER JOIN NBS_ODSE.dbo.treatment rx1 WITH (NOLOCK)
                             ON t.treatment_uid = rx1.treatment_uid
                  INNER JOIN NBS_ODSE.dbo.Treatment_administered rx2 WITH (NOLOCK)
-                            ON rx1.treatment_uid = rx2.treatment_uid;
+                            ON rx1.treatment_uid = rx2.treatment_uid
+                    ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -160,7 +207,8 @@ BEGIN
                );
         COMMIT TRANSACTION;
 
-        -- STEP 3: Final Output
+
+        -- STEP 4: Final Output
         BEGIN TRANSACTION;
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING FINAL OUTPUT';
@@ -192,7 +240,8 @@ BEGIN
             t.add_user_id,
             t.last_chg_time,
             t.last_chg_user_id,
-            t.version_ctrl_nbr
+            t.version_ctrl_nbr,
+            t.associated_phc_uids
         FROM #TREATMENT_DETAILS t;
 
 
