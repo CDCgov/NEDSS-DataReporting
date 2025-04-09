@@ -57,6 +57,7 @@ enum Entity {
     F_VAR_PAM(0, "f_var_pam", Constants.PHC_UID, "sp_f_var_pam_postprocessing"),
     TB_DATAMART(0, "tb_datamart", Constants.PHC_UID, "sp_tb_datamart_postprocessing"),    
     TB_HIV_DATAMART(0, "tb_hiv_datamart", Constants.PHC_UID, "sp_tb_hiv_datamart_postprocessing"),
+    VAR_DATAMART(0, "var_datamart", Constants.PHC_UID, "sp_var_datamart_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
 
     private final int priority;
