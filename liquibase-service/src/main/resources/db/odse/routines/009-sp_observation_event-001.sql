@@ -103,7 +103,7 @@ BEGIN
                       (
                           SELECT 
                                 STRING_AGG(ar.target_act_uid, ',') AS associated_phc_uids
-                          from nbs_odse.dbo.Act_relationship ar
+                          from nbs_odse.dbo.Act_relationship ar with (NOLOCK) 
                           where ar.type_cd IN ('MorbReport', 'LabReport')
                             and ar.target_class_cd = 'CASE'
                             and ar.source_act_uid = o.observation_uid
