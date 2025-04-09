@@ -461,10 +461,17 @@ class InvestigationServiceTest {
         verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
-    @Test
-    void testProcessActRelationshipException() {
+    @ParameterizedTest
+    @CsvSource(
+            {
+                    "d",
+                    "c"
+            }
+    )
+    void testProcessActRelationshipException(String op) {
         String payload = "{\"payload\": {\"before\": { }," +
-                "\"op\": \"d\"}}";
+                "\"after\": { }," +
+                "\"op\": \"" + op + "\"}}";
         ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
 
         RuntimeException ex = assertThrows(RuntimeException.class,

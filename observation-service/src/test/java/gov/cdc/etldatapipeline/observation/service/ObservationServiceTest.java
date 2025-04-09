@@ -134,6 +134,15 @@ class ObservationServiceTest {
     }
 
     @Test
+    void testProcessMessageUnknownTopic() {
+        ConsumerRecord<String, String> rec = getRecord(null, "dummyTopicName");
+
+        observationService.processMessage(rec);
+
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
     void testProcessMessageException() {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
 

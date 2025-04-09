@@ -306,7 +306,7 @@ public class InvestigationService {
         }
     }
 
-    private void processTreatment(String value, Boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
+    private void processTreatment(String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
         String treatmentUid = "";
         String operationType = "";
         String topic = (isFromTreatmentTopic) ? treatmentTopic : actRelationshipTopic;
