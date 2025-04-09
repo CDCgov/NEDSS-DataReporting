@@ -115,7 +115,7 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list,
-        	 @debug = @debug;
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';

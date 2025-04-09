@@ -17,8 +17,6 @@ BEGIN
 		DECLARE @RowCount_no INT = 0  ;
 		DECLARE @Proc_Step_no FLOAT = 0 ;
 		DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
-		DECLARE @batch_start_time datetime = null ;
-		DECLARE @batch_end_time datetime = null ;
 		DECLARE @nbs_page_form_cd  varchar(200)= '';
 		DECLARE @Dataflow_Name varchar(200)='DYNAMIC_DATAMART POST-PROCESSING';
 	    DECLARE @Package_Name varchar(200)='DynDm_OrgData_sp '+@DATAMART_NAME;
