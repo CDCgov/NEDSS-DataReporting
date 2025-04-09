@@ -70,7 +70,7 @@ BEGIN
             IF OBJECT_ID('#S_D_PCR_SOURCE_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_PCR_SOURCE_TRANSLATED;
             
-            SELECT 
+            SELECT DISTINCT
                 CAST(VAR.ACT_UID AS BIGINT) AS VAR_PAM_UID,
                 VAR.SEQ_NBR, 
                 VAR.DATAMART_COLUMN_NM, 
@@ -90,7 +90,7 @@ BEGIN
             LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
                 ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                 AND CVG.CODE = VAR.ANSWER_TXT
-            INNER JOIN ( SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON VAR.ACT_UID = nu.value
+            INNER JOIN ( SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON VAR.ACT_UID = nu.value
             WHERE VAR.DATAMART_COLUMN_NM <> 'n/a'
             AND ISNULL(VAR.batch_id, 1) = ISNULL(inv.batch_id, 1)
             AND QUESTION_IDENTIFIER = 'VAR176';
@@ -199,12 +199,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
-
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -229,11 +226,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -252,18 +247,22 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
  
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_PCR_SOURCE_GROUP';
     
-    
+            -- update F_VAR_PAM table
+            UPDATE F
+                SET F.D_PCR_SOURCE_GROUP_KEY = 1
+            FROM [dbo].F_VAR_PAM F
+            INNER JOIN #TEMP_D_PCR_SOURCE_DEL T on T.D_PCR_SOURCE_GROUP_KEY = F.D_PCR_SOURCE_GROUP_KEY;
+
+            -- delete from [dbo].D_PCR_SOURCE_GROUP    
             DELETE G 
             FROM [dbo].D_PCR_SOURCE_GROUP G
             LEFT JOIN (SELECT DISTINCT D_PCR_SOURCE_GROUP_KEY FROM [dbo].D_PCR_SOURCE) D

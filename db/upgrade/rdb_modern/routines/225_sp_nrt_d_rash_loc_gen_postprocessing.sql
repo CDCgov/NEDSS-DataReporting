@@ -57,7 +57,7 @@ BEGIN
         IF OBJECT_ID('#S_RASH_LOC_GEN_TRANSLATED', 'U') IS NOT NULL
         drop table #S_RASH_LOC_GEN_TRANSLATED;
         
-        SELECT 
+        SELECT DISTINCT
             CAST(VAR.ACT_UID AS BIGINT) AS VAR_PAM_UID,
             VAR.SEQ_NBR, 
             VAR.DATAMART_COLUMN_NM, 
@@ -189,11 +189,9 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -218,12 +216,10 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;    
 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -244,18 +240,22 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;   
 
 ---------------------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = 'DELETING FROM DBO.D_RASH_LOC_GEN_GROUP';
 
+        -- update F_VAR_PAM table
+        UPDATE F
+            SET F.D_RASH_LOC_GEN_GROUP_KEY = 1
+        FROM DBO.F_VAR_PAM F
+        INNER JOIN #TEMP_D_RASH_LOC_GEN_DEL T on T.D_RASH_LOC_GEN_GROUP_KEY = F.D_RASH_LOC_GEN_GROUP_KEY
 
+        -- delete from DBO.D_RASH_LOC_GEN_GROUP
         DELETE T FROM DBO.D_RASH_LOC_GEN_GROUP T
         left join (select distinct D_RASH_LOC_GEN_GROUP_KEY from dbo.d_rash_loc_gen) DBO
             ON DBO.D_RASH_LOC_GEN_GROUP_KEY = T.D_RASH_LOC_GEN_GROUP_KEY

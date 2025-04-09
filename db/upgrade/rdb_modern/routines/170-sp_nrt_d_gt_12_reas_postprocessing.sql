@@ -80,7 +80,7 @@ BEGIN
             IF OBJECT_ID('#S_D_GT_12_REAS_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_GT_12_REAS_TRANSLATED;
             
-            SELECT 
+            SELECT DISTINCT
                 CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
                 TB.SEQ_NBR, 
                 TB.DATAMART_COLUMN_NM, 
@@ -100,7 +100,7 @@ BEGIN
             LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
                 ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
                 AND CVG.CODE = TB.ANSWER_TXT
-            INNER JOIN ( SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON TB.ACT_UID = nu.value
+            INNER JOIN ( SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu ON TB.ACT_UID = nu.value
             WHERE TB.DATAMART_COLUMN_NM <> 'n/a'
             AND ISNULL(tb.batch_id, 1) = ISNULL(inv.batch_id, 1)
             AND QUESTION_IDENTIFIER = 'TUB235';
@@ -219,12 +219,10 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION;
 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -249,11 +247,9 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -272,18 +268,22 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
  
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
                 @PROC_STEP_NAME = 'DELETING FROM dbo.D_GT_12_REAS_GROUP';
     
-    
+            -- update F_TB_PAM table
+            UPDATE F
+                SET F.D_GT_12_REAS_GROUP_KEY = 1
+            FROM [dbo].F_TB_PAM F
+            INNER JOIN #TEMP_D_GT_12_REAS_DEL T on T.D_GT_12_REAS_GROUP_KEY = F.D_GT_12_REAS_GROUP_KEY;
+
+            -- delete from [dbo].D_GT_12_REAS_GROUP
             DELETE G 
             FROM [dbo].D_GT_12_REAS_GROUP G
             LEFT JOIN (SELECT DISTINCT D_GT_12_REAS_GROUP_KEY FROM [dbo].D_GT_12_REAS) D
@@ -345,7 +345,9 @@ BEGIN
             LEFT JOIN [dbo].nrt_d_gt_12_reas_key K WITH (NOLOCK)
                 ON K.TB_PAM_UID = S.TB_PAM_UID
                 AND K.NBS_CASE_ANSWER_UID = S.NBS_CASE_ANSWER_UID
-            WHERE K.TB_PAM_UID is null;
+            WHERE 
+                K.TB_PAM_UID IS NULL
+                AND K.NBS_CASE_ANSWER_UID IS NULL;
             
 
             SELECT @RowCount_no = @@ROWCOUNT;

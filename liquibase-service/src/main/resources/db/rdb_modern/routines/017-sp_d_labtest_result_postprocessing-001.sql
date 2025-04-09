@@ -25,7 +25,7 @@ BEGIN
     DECLARE @RowCount_no INT ;
     DECLARE @Proc_Step_no FLOAT = 0 ;
     DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
- 	DECLARE @Dataflow_Name VARCHAR(200) = 'D_LABTEST_RESULTS Post-Processing Event';
+    DECLARE @Dataflow_Name VARCHAR(200) = 'D_LABTEST_RESULTS Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_labtest_result_postprocessing';
 
     BEGIN TRY
@@ -105,10 +105,10 @@ BEGIN
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
-                SET
-        @PROC_STEP_NO = @PROC_STEP_NO + 1;
-                SET
-        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
 
 
         select obstxt.*
@@ -117,9 +117,9 @@ BEGIN
                  select *
                  from dbo.nrt_observation_txt
                  where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
-         ) obstxt
-             left outer join dbo.nrt_observation obs
-             on obs.observation_uid = obstxt.observation_uid
+             ) obstxt
+                 left outer join dbo.nrt_observation obs
+                                 on obs.observation_uid = obstxt.observation_uid
         where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
         ;
 
@@ -132,10 +132,10 @@ BEGIN
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
-                        SET
-        @PROC_STEP_NO = @PROC_STEP_NO + 1;
-                        SET
-        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_coded';
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_coded';
 
         select obscoded.*
         into #tmp_nrt_observation_coded
@@ -143,11 +143,11 @@ BEGIN
                  select *
                  from dbo.nrt_observation_coded
                  where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
-         ) obscoded
-             left outer join dbo.nrt_observation obs
-             on obs.observation_uid = obscoded.observation_uid
+             ) obscoded
+                 left outer join dbo.nrt_observation obs
+                                 on obs.observation_uid = obscoded.observation_uid
         where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1)
-       ;
+        ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -159,9 +159,9 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET
-        @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_investigation_observation';
+            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_investigation_observation';
 
         select invobs.*
         into #tmp_nrt_investigation_observation
@@ -171,7 +171,7 @@ BEGIN
                  where observation_id in (select value from STRING_SPLIT(@pLabResultList, ',') )
              ) invobs
                  left outer join dbo.NRT_INVESTIGATION inv
-                 on inv.public_health_case_uid = invobs.public_health_case_uid
+                                 on inv.public_health_case_uid = invobs.public_health_case_uid
         where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
         ;
 
@@ -250,7 +250,7 @@ BEGIN
             principle for adding a prog_area_cd row to the condition, it sure will cause
             some confusion among users.  There's no "disease" ON the input.
             */
-                 LEFT JOIN dbo.Condition	AS con with (nolock)
+                 LEFT JOIN dbo.v_condition_dim	AS con with (nolock)
                            ON	no2.prog_area_cd  = con.program_area_cd
                                AND con.condition_cd IS NULL
             /*LDF_GRP_KEY*/
@@ -1273,8 +1273,8 @@ BEGIN
 
         DELETE lrc
         FROM dbo.LAB_RESULT_COMMENT lrc
-            INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = lrc.lab_test_uid
-            LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = lrc.lab_test_uid
+                 INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = lrc.lab_test_uid
+                 LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = lrc.lab_test_uid
         WHERE tcg.lab_test_uid IS NULL;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -1293,8 +1293,8 @@ BEGIN
 
         DELETE rcg
         FROM dbo.RESULT_COMMENT_GROUP rcg
-            INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = rcg.lab_test_uid
-            LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = rcg.lab_test_uid
+                 INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = rcg.lab_test_uid
+                 LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = rcg.lab_test_uid
         WHERE tcg.lab_test_uid IS NULL;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -1407,8 +1407,8 @@ BEGIN
             [RECORD_STATUS_CD]	 =	SUBSTRING(tmp.RECORD_STATUS_CD ,1,8),
             [RDB_LAST_REFRESH_TIME]	 =	GETDATE()
         FROM #TMP_LAB_TEST_RESULT tmp
-            INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
-                AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY;
+                 INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+            AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY;
 
 
         IF @pDebug = 'true' SELECT 'TMP_LAB_TEST_RESULT', * FROM #TMP_LAB_TEST_RESULT;
@@ -1616,7 +1616,7 @@ BEGIN
         BEGIN TRANSACTION;
 
 
-        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NO = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
@@ -1649,12 +1649,12 @@ BEGIN
                c.CONDITION_CD                   AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure
         FROM #TMP_D_LAB_TEST_N tmp
-            INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
-            JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
-            LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            LEFT JOIN dbo.CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
-            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
-            JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+                 JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                 LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
         WHERE ltr.INVESTIGATION_KEY <> 1
         UNION
         SELECT inv.CASE_UID                     AS public_health_case_uid,
@@ -1663,12 +1663,12 @@ BEGIN
                null                             AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure
         FROM #TMP_D_LAB_TEST_N tmp
-            INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
-            JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
-            LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            LEFT JOIN dbo.CONDITION c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
-            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
-            JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+                 JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                 LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
         WHERE ltr.INVESTIGATION_KEY <> 1;
 
     END TRY
