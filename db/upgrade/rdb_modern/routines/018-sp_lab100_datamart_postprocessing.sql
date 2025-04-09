@@ -493,7 +493,7 @@ BEGIN
             tlroc1.*, pac.*
         into #TMP_LAB_RESULTS_ORDER_CONTACT2
         from #TMP_LAB_RESULTS_ORDER_CONTACT1 tlroc1
-                 left outer join nbs_srte.dbo.PROGRAM_AREA_CODE pac with(NOLOCK)
+                 left outer join dbo.nrt_srte_Program_area_code pac with(NOLOCK)
                                  on left( pac.NBS_UID+ space(5), 5)  = cast(tlroc1.PROGRAM_AREA_ID as int)
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -954,7 +954,7 @@ BEGIN
              , cast ( null as varchar(50)) as  CONDITION
         into #TMP_LABTESTS
         from #TMP_LABTESTSINIT li
-                 left outer join nbs_srte.dbo.CONDITION_CODE cc with(NOLOCK) on cc.CONDITION_CD = li.CONDITION_CD
+                 left outer join dbo.nrt_srte_Condition_code cc with(NOLOCK) on cc.CONDITION_CD = li.CONDITION_CD
                  left outer join #TMP_LAB_RESULTS_ORDER_CONTACT2  lroc2 on lroc2.RESULTED_TEST_UID = li.RESULTED_TEST_UID
         ;
 
@@ -1124,7 +1124,7 @@ BEGIN
             tl.CONDITION
         into #TMP_LABTESTS2
         from #TMP_LABTESTS tl
-                 left outer join NBS_SRTE..LABTEST_LOINC ll  on ll.LAB_TEST_CD = tl.ORDERED_LAB_TEST_CD
+                 left outer join dbo.nrt_srte_Labtest_loinc ll  on ll.LAB_TEST_CD = tl.ORDERED_LAB_TEST_CD
         ;
 
 
@@ -1296,7 +1296,7 @@ BEGIN
             lt2.CONDITION
         into #TMP_LABTESTS3
         from #TMP_LABTESTS2 lt2
-                 left outer join nbs_srte.dbo.LOINC_CONDITION lc with(NOLOCK) on lc.loinc_cd = lt2.LOINC
+                 left outer join dbo.nrt_srte_Loinc_condition lc with(NOLOCK) on lc.loinc_cd = lt2.LOINC
         ;
 
 
@@ -1488,7 +1488,7 @@ BEGIN
                 end as SNOMED
         into #TMP_LABTESTS4
         from #TMP_LABTESTS3 lt3
-                 left outer join nbs_srte.dbo.SNOMED_CONDITION sc with(NOLOCK) on sc.SNOMED_CD = lt3.TEST_RESULT_VAL_CD
+                 left outer join dbo.nrt_srte_Snomed_condition sc with(NOLOCK) on sc.SNOMED_CD = lt3.TEST_RESULT_VAL_CD
         ;
 
 
@@ -1866,5 +1866,4 @@ BEGIN
 
     END CATCH
 
-END
-    ;
+END;

@@ -93,7 +93,7 @@ BEGIN
         INTO #text_data_INV
         FROM #NRT_PAGE AS nrt_page
             INNER JOIN
-            NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+            dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
             ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
             AND (nrt_page.RDB_TABLE_NM = @rdb_table_name AND nrt_page.QUESTION_GROUP_SEQ_NBR IS NULL AND UPPER(nrt_page.DATA_TYPE) = 'TEXT')
@@ -213,7 +213,7 @@ BEGIN
         INTO #CODED_TABLE_INV
         FROM #CASE_ANSWER_PHC_UIDS AS PA WITH(NOLOCK)
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(PA.DATA_TYPE)
         WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
           AND UPPER(data_type) = 'CODED'
@@ -389,7 +389,7 @@ BEGIN
         WHERE CODED.CODE_SET_GROUP_ID IN
               (
                   SELECT code_set_group_id
-                  FROM nbs_srte..codeset
+                  FROM dbo.nrt_srte_Codeset
                   WHERE CLASS_CD = 'V_State_county_code_value'
               )
         ORDER BY NBS_CASE_ANSWER_UID, RDB_COLUMN_NM;
@@ -423,7 +423,7 @@ BEGIN
         INTO #CODED_TABLE_SNTEMP_INV
         FROM #NRT_PAGE AS nrt_page WITH(NOLOCK) --3
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE
           nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
@@ -481,8 +481,8 @@ BEGIN
                      dbo.nrt_investigation inv
                      on #CODED_TABLE_SNTEMP_INV.page_case_uid = inv.public_health_case_uid
                          INNER JOIN
-                     NBS_SRTE.DBO.CONDITION_CODE
-                     ON CONDITION_CODE.CONDITION_CD = inv.CD
+                     dbo.nrt_srte_Condition_code cc
+                     ON cc.CONDITION_CD = inv.CD
                          INNER JOIN
                      #NRT_PAGE nrt_page
                      ON nrt_page.act_uid = inv.public_health_case_uid
@@ -687,10 +687,10 @@ BEGIN
         INTO #CODED_COUNTY_TABLE_INV
         FROM #CODED_TABLE_INV AS CODED WITH(NOLOCK) LEFT
                                                         JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA WITH(NOLOCK)
+             dbo.nrt_srte_Codeset_Group_Metadata AS METADATA WITH(NOLOCK)
              ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID LEFT
                                                         JOIN
-             NBS_SRTE.dbo.V_STATE_COUNTY_CODE_VALUE AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_State_county_code_value AS CVG WITH(NOLOCK)
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM AND
                 CVG.CODE = CODED.ANSWER_TXT
         WHERE METADATA.CODE_SET_NM = 'COUNTY_CCD';
@@ -793,7 +793,7 @@ BEGIN
         INTO #DATE_DATA_INV
         FROM #NRT_PAGE AS nrt_page
                  LEFT OUTER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE
           nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
@@ -816,15 +816,15 @@ BEGIN
                      dbo.nrt_investigation inv
                      ON nrt_page.ACT_UID = inv.PUBLIC_HEALTH_CASE_UID
                          INNER JOIN
-                     NBS_SRTE.DBO.CONDITION_CODE
-                     ON CONDITION_CODE.CONDITION_CD = inv.CD
+                     dbo.nrt_srte_Condition_code cc
+                     ON cc.CONDITION_CD = inv.CD
                 WHERE
                     DATA_TYPE IN ( 'Date/Time', 'Date', 'DATETIME', 'DATE' ) AND
                     (ISDATE(ANSWER_TXT) != 1) AND
                     UPPER(nrt_page.DATA_LOCATION) = 'NBS_CASE_ANSWER.ANSWER_TXT' AND
                     ANSWER_TXT IS NOT NULL AND
                     nrt_page.rdb_table_nm = @rdb_table_name
-                  AND CONDITION_CODE.INVESTIGATION_FORM_CD = nrt_page.INVESTIGATION_FORM_CD
+                  AND cc.INVESTIGATION_FORM_CD = nrt_page.INVESTIGATION_FORM_CD
             );
 
 
@@ -954,7 +954,7 @@ BEGIN
         INTO #NUMERIC_BASE_DATA_INV_CAT
         FROM #NRT_PAGE AS nrt_page
                  INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON UPPER(CVG.CODE) = UPPER(nrt_page.DATA_TYPE)
         WHERE
           nrt_page.ANSWER_GROUP_SEQ_NBR IS NULL
@@ -1047,10 +1047,10 @@ BEGIN
         INTO #NUMERIC_DATA_TRANS_INV_CAT
         FROM #NUMERIC_DATA_MERGED_INV_CAT AS CODED WITH(NOLOCK) LEFT
                                                                     JOIN
-             NBS_SRTE.dbo.CODESET_GROUP_METADATA AS METADATA WITH(NOLOCK)
+             dbo.nrt_srte_Codeset_Group_Metadata AS METADATA WITH(NOLOCK)
              ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID LEFT
                                                                     JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH(NOLOCK)
+             dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
         WHERE CVG.CODE = CODED.ANSWER_CODED OR
             ANSWER_CODED IS NULL
@@ -1296,15 +1296,15 @@ BEGIN
                      dbo.nrt_investigation inv
                      ON numeric_inv.page_case_uid = inv.PUBLIC_HEALTH_CASE_UID
                          INNER JOIN
-                     NBS_SRTE.DBO.CONDITION_CODE
-                     ON CONDITION_CODE.CONDITION_CD = inv.CD
+                     dbo.nrt_srte_Condition_code cc
+                     ON cc.CONDITION_CD = inv.CD
                          INNER JOIN
                      #NRT_PAGE nrt_page
                      ON nrt_page.act_uid = inv.public_health_case_uid
                 WHERE
                     (isNumeric(numeric_inv.ANSWER_TXT) != 1) AND
                     numeric_inv.ANSWER_TXT IS NOT NULL AND
-                    CONDITION_CODE.INVESTIGATION_FORM_CD = nrt_page.INVESTIGATION_FORM_CD);
+                    cc.INVESTIGATION_FORM_CD = nrt_page.INVESTIGATION_FORM_CD);
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
