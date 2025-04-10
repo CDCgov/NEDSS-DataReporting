@@ -1,5 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_provider_data_postprocessing
-
+CREATE OR ALTER PROCEDURE dbo.sp_dyn_dm_provider_data_postprocessing
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100), @phc_id_list nvarchar(max),
     @debug bit = false
@@ -41,7 +40,7 @@ BEGIN
         declare @countstd int = 0;
 
         select  @countstd = count(*) from dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata case_meta
-            where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
+        where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
 
 
         declare @FACT_CASE varchar(40) = '';
@@ -143,30 +142,30 @@ BEGIN
 
 
                 CREATE TABLE #tmp_DynDm_ProvPart_Table_temp(
-                   [PROVIDER_KEY] [bigint] NULL,
-                   [PROVIDER_QUICK_CODE] [varchar](50) NULL,
-                   [PROVIDER_LOCAL_ID] [varchar](50) NULL,
-                   [PROVIDER_UID] [bigint] NULL,
-                   [PROVIDER_FIRST_NAME] [varchar](50) NULL,
-                   [PROVIDER_MIDDLE_NAME] [varchar](50) NULL,
-                   [PROVIDER_LAST_NAME] [varchar](50) NULL,
-                   [PROVIDER_NAME_SUFFIX] [varchar](50) NULL,
-                   [PROVIDER_NAME_DEGREE] [varchar](50) NULL,
-                   [PROVIDER_STREET_ADDRESS_1] [varchar](50) NULL,
-                   [PROVIDER_STREET_ADDRESS_2] [varchar](50) NULL,
-                   [PROVIDER_CITY] [varchar](50) NULL,
-                   [PROVIDER_STATE] [varchar](50) NULL,
-                   [PROVIDER_ZIP] [varchar](50) NULL,
-                   [PROVIDER_COUNTY] [varchar](50) NULL,
-                   [PROVIDER_PHONE_WORK] [varchar](50) NULL,
-                   [PROVIDER_PHONE_EXT_WORK] [varchar](50) NULL,
-                   [PROVIDER_EMAIL_WORK] [varchar](50) NULL,
-                   [PART_TYPE_CD] [bigint] NULL,
-                   [PART_TYPE_CD_NM] [varchar](200) NOT NULL,
-                   [CITY_STATE_ZIP] [varchar](4000) NULL,
-                   [PROVIDER_NAME] [varchar](5000) NULL,
-                   [DETAIL] varchar(2000),
-                   [INVESTIGATION_KEY] [bigint] NOT NULL
+                                                               [PROVIDER_KEY] [bigint] NULL,
+                                                               [PROVIDER_QUICK_CODE] [varchar](50) NULL,
+                                                               [PROVIDER_LOCAL_ID] [varchar](50) NULL,
+                                                               [PROVIDER_UID] [bigint] NULL,
+                                                               [PROVIDER_FIRST_NAME] [varchar](50) NULL,
+                                                               [PROVIDER_MIDDLE_NAME] [varchar](50) NULL,
+                                                               [PROVIDER_LAST_NAME] [varchar](50) NULL,
+                                                               [PROVIDER_NAME_SUFFIX] [varchar](50) NULL,
+                                                               [PROVIDER_NAME_DEGREE] [varchar](50) NULL,
+                                                               [PROVIDER_STREET_ADDRESS_1] [varchar](50) NULL,
+                                                               [PROVIDER_STREET_ADDRESS_2] [varchar](50) NULL,
+                                                               [PROVIDER_CITY] [varchar](50) NULL,
+                                                               [PROVIDER_STATE] [varchar](50) NULL,
+                                                               [PROVIDER_ZIP] [varchar](50) NULL,
+                                                               [PROVIDER_COUNTY] [varchar](50) NULL,
+                                                               [PROVIDER_PHONE_WORK] [varchar](50) NULL,
+                                                               [PROVIDER_PHONE_EXT_WORK] [varchar](50) NULL,
+                                                               [PROVIDER_EMAIL_WORK] [varchar](50) NULL,
+                                                               [PART_TYPE_CD] [bigint] NULL,
+                                                               [PART_TYPE_CD_NM] [varchar](200) NOT NULL,
+                                                               [CITY_STATE_ZIP] [varchar](4000) NULL,
+                                                               [PROVIDER_NAME] [varchar](5000) NULL,
+                                                               [DETAIL] varchar(2000),
+                                                               [INVESTIGATION_KEY] [bigint] NOT NULL
                 );
 
 

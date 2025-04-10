@@ -115,7 +115,7 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list,
-        	 @debug = @debug;
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';
@@ -455,7 +455,6 @@ BEGIN
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_provider_data_postprocessing';
 
-
         -- Process repeating varchar data
         BEGIN TRANSACTION;
         EXEC dbo.sp_dyn_dm_repeatvarch_postprocessing
@@ -465,7 +464,6 @@ BEGIN
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatvarch_postprocessing';
-
 
         -- Process repeating date data
         BEGIN TRANSACTION;
@@ -477,7 +475,6 @@ BEGIN
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
 
-
         -- Process repeating numeric data
         BEGIN TRANSACTION;
         EXEC dbo.sp_dyn_dm_repeatnumeric_postprocessing
@@ -487,7 +484,6 @@ BEGIN
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatnumeric_postprocessing';
-
 
         /**
         Building temporary table to find any column collisions between all the transient tables
@@ -513,11 +509,11 @@ BEGIN
                 FROM
                     INFORMATION_SCHEMA.COLUMNS
                 WHERE
-                    ( lower(table_name) like lower('tmp_DynDm_D_INV_%'+@datamart_name+'%_'+cast(@batch_id as varchar))
-                        or lower(table_name) like lower('tmp_DynDm_%_REPEAT_%'+@datamart_name+'%_'+cast(@batch_id as varchar))
-                        or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+@datamart_name+'%_'+cast(@batch_id as varchar))
-                        or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+@datamart_name+'%_'+cast(@batch_id as varchar))
-                        or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+@datamart_name+'%_'+cast(@batch_id as varchar))
+                    ( lower(table_name) like lower('tmp_DynDm_D_INV_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_%_REPEAT_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
                         )
                   and COLUMN_NAME not in (
                                           'DATAMART_NM',
@@ -584,24 +580,25 @@ BEGIN
         IF @debug = 'true' PRINT 'Step completed: DynDM_AlterKey_sp';
 
 
-        --        BEGIN TRANSACTION;
---        EXEC dbo.sp_dyn_dm_createdm_postprocessing
---         @batch_id = @batch_id,
---        @datamart_name = @datamart_name;
---        COMMIT TRANSACTION;
---
---        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
-
-
-        -- Cleanup
-        BEGIN TRANSACTION;
-        EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
+            BEGIN TRANSACTION;
+            EXEC dbo.sp_dyn_dm_createdm_postprocessing
              @batch_id = @batch_id,
-             @datamart_name = @datamart_name
-        COMMIT TRANSACTION;
+             @datamart_name = @datamart_name,
+             @debug = @debug;
+            COMMIT TRANSACTION;
+
+            IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
 
 
-        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
+            -- Cleanup
+            BEGIN TRANSACTION;
+            EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+
+           IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
 
 
         -- Log completion

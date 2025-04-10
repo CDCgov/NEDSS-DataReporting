@@ -8,8 +8,8 @@ BEGIN
     BEGIN TRY
 
         /* Output Tables:
-         * tmp_DynDm_INVESTIGATION_REPEAT_DATE_{@DATAMART_NAME}_{batch_id}
-         * tmp_DynDm_REPEAT_BLOCK_DATE_ALL_{@DATAMART_NAME}_{batch_id}
+         * tmp_DynDm_INVESTIGATION_REPEAT_DATE_<DATAMART_NAME>_<batch_id>
+         * tmp_DynDm_REPEAT_BLOCK_DATE_ALL_<DATAMART_NAME_<batch_id>
          * */
 
 
@@ -29,6 +29,7 @@ BEGIN
 
         DECLARE @temp_sql nvarchar(max);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
@@ -63,6 +64,7 @@ BEGIN
             drop table '+@tmp_DynDm_INVESTIGATION_REPEAT_DATE;
         exec sp_executesql @temp_sql;
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_Metadata';
@@ -97,6 +99,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Check for countmeta';
@@ -149,6 +152,7 @@ BEGIN
             end;
 
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING update #tmp_DynDM_Metadata';
@@ -193,7 +197,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
-
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_METADATA_OUT';
@@ -233,6 +237,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_METADATA_OUT1';
@@ -251,6 +256,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_METADATA_OUT_final';
@@ -304,7 +310,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
-
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING #tmp_DynDM_D_INV_REPEAT_METADATA';
@@ -321,6 +327,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING RDB Column List';
@@ -362,6 +369,8 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  RDB_COLUMN_NAME_LIST';
 
@@ -396,6 +405,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -462,6 +472,7 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
         COMMIT TRANSACTION;
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT';
@@ -503,6 +514,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_BLOCK_DATA';
@@ -531,6 +543,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT_BASE';
@@ -549,6 +562,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT_ALL';
@@ -595,6 +609,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_METADATA_OUT1_2';
@@ -616,6 +631,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_METADATA_MERGED_INIT';
@@ -637,6 +653,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -694,6 +711,7 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
         COMMIT TRANSACTION;
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_ALL';
@@ -708,6 +726,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  insert tmp_DynDM_REPEAT_BLOCK_OUT_ALL ';
@@ -759,6 +778,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max';
@@ -776,6 +796,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_OUT_BASE_max_1';
@@ -824,6 +845,7 @@ BEGIN
         INSERT [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_METADATA_OUT';
@@ -843,6 +865,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_METADATA_OUT_FINAL';
@@ -870,6 +893,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],[step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -923,6 +947,7 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no,@Proc_Step_Name, @ROWCOUNT_NO);
         COMMIT TRANSACTION;
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Drop tmp_DynDM_REPEAT_BLOCK';
@@ -934,6 +959,7 @@ BEGIN
         exec sp_executesql @temp_sql;
 
 
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';

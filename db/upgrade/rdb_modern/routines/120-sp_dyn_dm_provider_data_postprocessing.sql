@@ -1,5 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_provider_data_postprocessing
-
+CREATE OR ALTER PROCEDURE dbo.sp_dyn_dm_provider_data_postprocessing
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100), @phc_id_list nvarchar(max),
     @debug bit = false

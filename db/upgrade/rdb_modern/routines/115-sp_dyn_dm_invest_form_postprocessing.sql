@@ -1,7 +1,8 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_invest_form_postprocessing @batch_id BIGINT,
-                                                                     @DATAMART_NAME VARCHAR(100),
-                                                                     @phc_id_list nvarchar(max),
-                                                                     @debug bit = 'false'
+CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_invest_form_postprocessing
+    @batch_id BIGINT,
+    @DATAMART_NAME VARCHAR(100),
+    @phc_id_list nvarchar(max),
+    @debug bit = 'false'
 AS
 BEGIN
     BEGIN TRY
@@ -13,61 +14,58 @@ BEGIN
          * tmp_DynDm_Investigation_Data_<DATAMART_NAME>_<batch_id>
          * */
 
-        DECLARE @RowCount_no INT;
-        DECLARE @Proc_Step_no FLOAT = 0;
-        DECLARE @Proc_Step_Name VARCHAR(200) = '';
+        DECLARE @RowCount_no INT ;
+        DECLARE @Proc_Step_no FLOAT = 0 ;
+        DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
         DECLARE @nbs_page_form_cd VARCHAR(200) = '';
 
         DECLARE @Dataflow_Name VARCHAR(200)='DYNAMIC_DATAMART POST-Processing';
-        DECLARE @Package_Name VARCHAR(200)='sp_dyn_dm_invest_form_postprocessing ' + @DATAMART_NAME;
+        DECLARE @Package_Name VARCHAR(200)='sp_dyn_dm_invest_form_postprocessing '+@DATAMART_NAME;
 
-        DECLARE @tmp_DynDm_INV_SUMM_DATAMART VARCHAR(200) = 'dbo.tmp_DynDm_INV_SUMM_DATAMART_' + @DATAMART_NAME + '_' +
-                                                            CAST(@batch_id AS varchar(50));
-        DECLARE @tmp_DynDm_PATIENT_DATA VARCHAR(200) = 'dbo.tmp_DynDm_Patient_Data_' + @DATAMART_NAME + '_' +
-                                                       CAST(@batch_id AS varchar(50));
-        DECLARE @tmp_DynDm_INVESTIGATION_DATA VARCHAR(200) = 'dbo.tmp_DynDm_Investigation_Data_' + @DATAMART_NAME +
-                                                             '_' + CAST(@batch_id AS varchar(50));
+        DECLARE @tmp_DynDm_INV_SUMM_DATAMART VARCHAR(200) = 'dbo.tmp_DynDm_INV_SUMM_DATAMART_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
+        DECLARE @tmp_DynDm_PATIENT_DATA VARCHAR(200) = 'dbo.tmp_DynDm_Patient_Data_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
+        DECLARE @tmp_DynDm_INVESTIGATION_DATA VARCHAR(200) = 'dbo.tmp_DynDm_Investigation_Data_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 
         DECLARE @temp_sql nvarchar(max);
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
-        INSERT INTO dbo.job_flow_log (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],
-                                      [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, 0);
+        INSERT INTO dbo.job_flow_log (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+        VALUES (@batch_id,@Dataflow_Name,@Package_Name,'START',@Proc_Step_no,@Proc_Step_Name,0);
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = ' GENERATING #tmp_DynDm_SUMM_DATAMART';
 
-        SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM = @DATAMART_NAME)
+        SET @nbs_page_form_cd = (SELECT FORM_CD FROM dbo.v_nrt_nbs_page WHERE DATAMART_NM=@DATAMART_NAME)
 
-        SELECT isd.PATIENT_KEY AS PATIENT_KEY,
-               isd.INVESTIGATION_KEY,
-               c.DISEASE_GRP_CD
-        into #tmp_DynDm_SUMM_DATAMART
-        FROM dbo.INV_SUMM_DATAMART isd with (nolock)
-                 INNER JOIN
-             dbo.V_CONDITION_DIM c with (nolock)
-             ON isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
-                 INNER JOIN
-             dbo.INVESTIGATION inv with (nolock) ON isd.investigation_key = inv.investigation_key
-                 and inv.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
+        SELECT
+            isd.PATIENT_KEY AS PATIENT_KEY,
+            isd.INVESTIGATION_KEY,
+            c.DISEASE_GRP_CD
+        into
+            #tmp_DynDm_SUMM_DATAMART
+        FROM
+            dbo.INV_SUMM_DATAMART isd with (nolock)
+                INNER JOIN
+            dbo.V_CONDITION_DIM c with (nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
+                INNER JOIN
+            dbo.INVESTIGATION inv with (nolock) ON isd.investigation_key = inv.investigation_key
+                and  inv.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 
         if @debug = 'true'
             select * from #tmp_DynDm_SUMM_DATAMART;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO dbo.job_flow_log (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],
-                                      [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
+        INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
+        VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = ' GENERATING  ' + @tmp_DynDm_INVESTIGATION_DATA;
+        SET @Proc_Step_Name = ' GENERATING  '+ @tmp_DynDm_INVESTIGATION_DATA;
 
 
         DECLARE @listStr VARCHAR(MAX)
@@ -79,7 +77,7 @@ BEGIN
 
         SET @temp_sql = '
  		SELECT  rdb_column_nm_list , isd.INVESTIGATION_KEY
-	    into ' + @tmp_DynDm_INVESTIGATION_DATA + '
+	    into '+@tmp_DynDm_INVESTIGATION_DATA+'
 	    FROM
 			dbo.INVESTIGATION inv with ( nolock)
 	    INNER JOIN
@@ -90,13 +88,12 @@ BEGIN
         exec sp_executesql @temp_sql;
 
         if @debug = 'true'
-            exec ('select * from '+@tmp_DynDm_INVESTIGATION_DATA);
+            exec('select * from '+@tmp_DynDm_INVESTIGATION_DATA);
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO dbo.job_flow_log (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],
-                                      [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
+        INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
+        VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -132,27 +129,26 @@ BEGIN
 			INV_SUMM_DATAMART.PATIENT_COUNTY_CODE,
 			INV_SUMM_DATAMART.JURISDICTION_NM
 	INTO
-		' + @tmp_DynDm_INV_SUMM_DATAMART + '
+		' +@tmp_DynDm_INV_SUMM_DATAMART+'
 	FROM
 		dbo.INV_SUMM_DATAMART with ( nolock)
 	INNER JOIN
-		' + @tmp_DynDm_INVESTIGATION_DATA + ' d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY';
+		'+@tmp_DynDm_INVESTIGATION_DATA+' d ON d.INVESTIGATION_KEY = INV_SUMM_DATAMART.INVESTIGATION_KEY';
 
         exec sp_executesql @temp_sql;
 
         if @debug = 'true'
-            exec ('select * from '+@tmp_DynDm_INV_SUMM_DATAMART);
+            exec('select * from '+@tmp_DynDm_INV_SUMM_DATAMART);
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO dbo.job_flow_log (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],
-                                      [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
+        INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
+        VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = ' GENERATING ' + @tmp_DynDm_PATIENT_DATA;
+        SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_PATIENT_DATA;
 
 
         IF OBJECT_ID(@tmp_DynDm_PATIENT_DATA, 'U') IS NOT NULL
@@ -161,7 +157,7 @@ BEGIN
 
         SET @temp_sql = '
 		SELECT  pat_meta.rdb_column_nm_list , isd.INVESTIGATION_KEY
-		into ' + @tmp_DynDm_PATIENT_DATA + '
+		into '+@tmp_DynDm_PATIENT_DATA+'
 		FROM
 			dbo.D_PATIENT pat with ( nolock)
 		INNER JOIN
@@ -173,12 +169,11 @@ BEGIN
 
 
         if @debug = 'true'
-            exec ('select * from '+@tmp_DynDm_PATIENT_DATA);
+            exec('select * from '+@tmp_DynDm_PATIENT_DATA);
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO dbo.job_flow_log (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],
-                                      [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
+        INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
+        VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -186,19 +181,17 @@ BEGIN
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
-        INSERT INTO dbo.job_flow_log (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number],
-                                      [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+        INSERT INTO dbo.job_flow_log (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+        VALUES(@batch_id,@Dataflow_Name,@Package_Name,'COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
 
     END TRY
     BEGIN CATCH
 
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
         -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
-            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) +
-            CHAR(10) + -- Carriage return and line feed for new lines
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
@@ -222,7 +215,7 @@ BEGIN
                , 0);
 
 
-        return -1;
+        return -1 ;
 
     END CATCH
 

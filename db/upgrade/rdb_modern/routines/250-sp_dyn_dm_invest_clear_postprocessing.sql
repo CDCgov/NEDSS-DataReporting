@@ -1,7 +1,7 @@
 CREATE OR ALTER PROCEDURE dbo.sp_dyn_dm_invest_clear_postprocessing
 
     @batch_id BIGINT,
-    @DATAMART_NAME VARCHAR(100),
+    @DATAMART_NAME VARCHAR(100), --HEPATITIS_A_ACUTE
     @debug bit = 'false'
 AS
 BEGIN
@@ -100,6 +100,12 @@ BEGIN
         IF OBJECT_ID('dbo.tmp_DynDm_D_INV_CONTACT_'+@datamart_suffix, 'U') IS NOT NULL
             BEGIN
                 SET @temp_sql = 'drop table dbo.tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix;
+                exec sp_executesql @temp_sql;
+            END
+
+        IF OBJECT_ID('dbo.tmp_DynDM_D_INV_COMPLICATION_'+@datamart_suffix, 'U') IS NOT NULL
+            BEGIN
+                SET @temp_sql = 'drop table dbo.tmp_DynDM_D_INV_COMPLICATION_' + @datamart_suffix;
                 exec sp_executesql @temp_sql;
             END
 
@@ -250,6 +256,12 @@ BEGIN
         IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_'+@datamart_suffix, 'U') IS NOT NULL
             BEGIN
                 SET @temp_sql = 'drop table dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix;
+                exec sp_executesql @temp_sql;
+            END
+
+        IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_'+@datamart_suffix, 'U') IS NOT NULL
+            BEGIN
+                SET @temp_sql = 'drop table dbo.tmp_DynDm_REPEAT_BLOCK_' + @datamart_suffix;
                 exec sp_executesql @temp_sql;
             END
 
