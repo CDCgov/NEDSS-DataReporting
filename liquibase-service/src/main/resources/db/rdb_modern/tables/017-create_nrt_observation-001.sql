@@ -358,5 +358,12 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
                     ADD batch_id bigint;
             END;
 
+--CNDE-2511
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'associated_phc_uids'   AND Object_ID = Object_ID(N'nrt_observation'))
+            BEGIN
+                ALTER TABLE nrt_observation
+                    ADD associated_phc_uids NVARCHAR(MAX);
+            END;
+
     END;
 
