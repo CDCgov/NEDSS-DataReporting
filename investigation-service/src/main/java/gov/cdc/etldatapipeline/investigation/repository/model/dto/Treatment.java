@@ -92,4 +92,7 @@ public class Treatment {
 
     @Column(name = "morbidity_uid")
     private String morbidityUid;
+
+    @Column(name = "associated_phc_uids")
+    private String associatedPhcUids;
 }

@@ -473,16 +473,13 @@ public class PostProcessingService {
             processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
             processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
             processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
-            processTopic(keyTopic, TB_DATAMART, ids, investigationRepository::executeStoredProcForTbDatamart);
-            processTopic(keyTopic, TB_HIV_DATAMART, ids, investigationRepository::executeStoredProcForTbHivDatamart);
-
+           
             //VAR
             processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
             processTopic(keyTopic, D_RASH_LOC_GEN, ids, investigationRepository::executeStoredProcForDRashLocGen);
             processTopic(keyTopic, D_PCR_SOURCE, ids, investigationRepository::executeStoredProcForDPcrSource);
             processTopic(keyTopic, F_VAR_PAM, ids, investigationRepository::executeStoredProcForFVarPam);
             processTopic(keyTopic, VAR_PAM_LDF, ids, investigationRepository::executeStoredProcForVarPamLdf);
-
         }   
         
         return dmData;
@@ -593,6 +590,21 @@ public class PostProcessingService {
                     case PERTUSSIS_CASE:
                         executeDatamartProc(PERTUSSIS_CASE,
                                 investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
+                        break;
+                    case TB_DATAMART:
+                        if(dTbHivEnable) {
+                            executeDatamartProc(TB_DATAMART,
+                                    investigationRepository::executeStoredProcForTbDatamart, cases);
+                            
+                            executeDatamartProc(TB_HIV_DATAMART,
+                                    investigationRepository::executeStoredProcForTbHivDatamart, cases);
+                        }
+                        break;
+                    case VAR_DATAMART:
+                        if(dTbHivEnable) {
+                            executeDatamartProc(VAR_DATAMART,
+                                investigationRepository::executeStoredProcForVarDatamart, cases);
+                        }
                         break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ", dmType);
