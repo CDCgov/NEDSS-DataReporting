@@ -61,11 +61,19 @@ BEGIN
             RDB_COLUMN_NM,
             USER_DEFINED_COLUMN_NM,
             BLOCK_PIVOT_NBR,
-            BLOCK_NM
+            BLOCK_NM,
+            data_type,
+            code_set_group_id
         into #tmp_DynDm_METADATA_INIT
         FROM dbo.V_NRT_NBS_REPEATNUMERIC_RDB_TABLE_METADATA meta
         WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd
+          and (code_set_group_id < 0
+            OR data_type in ( 'Numeric','NUMERIC') )
         ORDER BY RDB_COLUMN_NM;
+
+        if @debug = 'true'
+            select @Proc_Step_Name,* from #tmp_DynDm_METADATA_INIT;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -88,6 +96,10 @@ BEGIN
         WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd
           AND UNIT_TYPE_CD='CODED'
           AND MASK IS NOT NULL;
+
+        if @debug = 'true'
+            select @Proc_Step_Name,* from #tmp_DynDm_METADATA_UNIT;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -501,7 +513,7 @@ BEGIN
 
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'GENERATING @tmp_DynDm_REPEAT_BLOCK_OUT';
+        SET @Proc_Step_Name = 'GENERATING #tmp_DynDm_REPEAT_BLOCK_OUT';
 
         create table #tmp_DynDm_REPEAT_BLOCK_OUT
         (INVESTIGATION_KEY bigint,

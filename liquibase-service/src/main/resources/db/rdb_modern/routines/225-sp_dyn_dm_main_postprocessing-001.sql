@@ -115,7 +115,7 @@ BEGIN
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list,
-        	 @debug = @debug;
+             @debug = @debug;
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';
@@ -455,28 +455,6 @@ BEGIN
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_provider_data_postprocessing';
 
-
-        -- Clean up temporary metadata tables before repeating data processing
-        /* BEGIN TRANSACTION;
-         IF OBJECT_ID('dbo.tmp_DynDm_METADATA', 'U') IS NOT NULL
-             DROP TABLE dbo.tmp_DynDm_METADATA;
-
-         IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
-             DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
-
-         IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-             DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
-
-         IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
-             DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
-
-         IF OBJECT_ID('dbo.tmp_DynDm_METADATA_OUT_final', 'U') IS NOT NULL
-             DROP TABLE dbo.tmp_DynDm_METADATA_OUT_final;
-
-         IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
-             DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
-         COMMIT TRANSACTION;*/
-
         -- Process repeating varchar data
         BEGIN TRANSACTION;
         EXEC dbo.sp_dyn_dm_repeatvarch_postprocessing
@@ -486,39 +464,6 @@ BEGIN
         COMMIT TRANSACTION;
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatvarch_postprocessing';
-
-        -- Additional cleanup before date data processing
-        /*  BEGIN TRANSACTION;
-          IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_METADATA_OUT;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_ALL', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_REPEAT_ALL;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_BLOCK_DATA', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_BLOCK_DATA;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_INVESTIGATION_REPEAT_DATE;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
-
-          IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
-              DROP TABLE dbo.tmp_DynDm_Metadata;
-          COMMIT TRANSACTION;*/
 
         -- Process repeating date data
         BEGIN TRANSACTION;
@@ -530,38 +475,15 @@ BEGIN
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
 
-
-        -- Additional cleanup before numeric data processing
-        /*   BEGIN TRANSACTION;
-           IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL', 'U') IS NOT NULL
-               DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
-
-           IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE', 'U') IS NOT NULL
-               DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
-
-           IF OBJECT_ID('dbo.tmp_DynDm_REPEAT_BLOCK', 'U') IS NOT NULL
-               DROP TABLE dbo.tmp_DynDm_REPEAT_BLOCK;
-
-           IF OBJECT_ID('dbo.tmp_DynDm_METADATA_OUT_final', 'U') IS NOT NULL
-               DROP TABLE dbo.tmp_DynDm_METADATA_OUT_final;
-
-           IF OBJECT_ID('dbo.tmp_DynDm_METADATA_UNIT', 'U') IS NOT NULL
-               DROP TABLE dbo.tmp_DynDm_METADATA_UNIT;
-
-           IF OBJECT_ID('dbo.tmp_DynDm_Metadata', 'U') IS NOT NULL
-               DROP TABLE dbo.tmp_DynDm_Metadata;
-           COMMIT TRANSACTION; */
-
         -- Process repeating numeric data
         BEGIN TRANSACTION;
         EXEC dbo.sp_dyn_dm_repeatnumeric_postprocessing
-         @batch_id = @batch_id,
-         @datamart_name = @datamart_name,
-         @phc_id_list = @phc_id_list;
+             @batch_id = @batch_id,
+             @datamart_name = @datamart_name,
+             @phc_id_list = @phc_id_list;
         COMMIT TRANSACTION;
 
-       IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatnumeric_postprocessing';
-
+        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatnumeric_postprocessing';
 
         /**
         Building temporary table to find any column collisions between all the transient tables
@@ -589,93 +511,95 @@ BEGIN
                 WHERE
                     ( lower(table_name) like lower('tmp_DynDm_D_INV_%'+@datamart_name+'_'+cast(@batch_id as varchar))
                         or lower(table_name) like lower('tmp_DynDm_%_REPEAT_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-                            or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-                            or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-                            or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                        )
+                  and COLUMN_NAME not in (
+                                          'DATAMART_NM',
+                                          'OTHER_VALUE_IND_CD',
+                                          'RDB_COLUMN_NM',
+                                          'RDB_TABLE_NM',
+                                          'USER_DEFINED_COLUMN_NM'
                     )
-                    and COLUMN_NAME not in (
-                     'DATAMART_NM',
-                    'OTHER_VALUE_IND_CD',
-                    'RDB_COLUMN_NM',
-                    'RDB_TABLE_NM',
-                    'USER_DEFINED_COLUMN_NM'
-                )
                 group BY
                     Column_Name
                 having
                     count(*) > 1
             )
-        and (
+          and (
             lower(table_name) like lower('tmp_DynDm_D_INV_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-            or lower(table_name) like lower('tmp_DynDm_%_REPEAT_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-            or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-            or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-            or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
-        )
+                or lower(table_name) like lower('tmp_DynDm_%_REPEAT_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                or lower(table_name) like lower('tmp_DynDm_Investigation_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                or lower(table_name) like lower('tmp_DynDm_Patient_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+                or lower(table_name) like lower('tmp_DynDm_Case_Management_Data_%'+@datamart_name+'_'+cast(@batch_id as varchar))
+            )
         ;
 
         if OBJECT_ID('tempdb..#tmp_DynDm_fixcols', 'U') IS NOT NULL
-        begin
-            update #tmp_DynDm_fixcols
-            set dsql = 'exec sp_rename ''dbo.'+table_name+'.'+column_name+''', '''+column_name+ cast(Rank_no as varchar)+''',''COLUMN'' ;'
-            where rank_no <> 1
-
-            IF @debug = 'true'
-                select '#tmp_DynDm_fixcols',* from #tmp_DynDm_fixcols;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-            /**
-            Building temporary table to find any column collisions between all the temporary tables
-             */
-            SET @Proc_Step_no = @Proc_Step_no + 1;
-            SET @Proc_Step_Name = ' Renaming columns on the temporary tables for collisions: ' + @datamart_name;
-
-            DECLARE @Sql NVARCHAR(MAX);
-
-            DECLARE c CURSOR LOCAL FAST_FORWARD FOR
-                SELECT  dsql
-                FROM  #tmp_DynDm_fixcols
+            begin
+                update #tmp_DynDm_fixcols
+                set dsql = 'exec sp_rename ''dbo.'+table_name+'.'+column_name+''', '''+column_name+ cast(Rank_no as varchar)+''',''COLUMN'' ;'
                 where rank_no <> 1
-            ;
 
-            OPEN c
+                IF @debug = 'true'
+                    select '#tmp_DynDm_fixcols',* from #tmp_DynDm_fixcols;
+
+                SELECT @RowCount_no = @@ROWCOUNT;
+                INSERT INTO [dbo].[job_flow_log]
+                (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+                VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+                /**
+                Building temporary table to find any column collisions between all the temporary tables
+                 */
+                SET @Proc_Step_no = @Proc_Step_no + 1;
+                SET @Proc_Step_Name = ' Renaming columns on the temporary tables for collisions: ' + @datamart_name;
+
+                DECLARE @Sql NVARCHAR(MAX);
+
+                DECLARE c CURSOR LOCAL FAST_FORWARD FOR
+                    SELECT  dsql
+                    FROM  #tmp_DynDm_fixcols
+                    where rank_no <> 1
+                ;
+
+                OPEN c
                 FETCH NEXT FROM c INTO @Sql
 
                 WHILE (@@FETCH_STATUS = 0)
-                BEGIN
-                    EXEC sp_executesql @Sql;
-                    FETCH NEXT FROM c INTO @Sql
-                END
+                    BEGIN
+                        EXEC sp_executesql @Sql;
+                        FETCH NEXT FROM c INTO @Sql
+                    END
 
-            CLOSE c
-            DEALLOCATE c;
-        end
+                CLOSE c
+                DEALLOCATE c;
+            end
 
         IF @debug = 'true' PRINT 'Step completed: DynDM_AlterKey_sp';
 
-    /*
-        BEGIN TRANSACTION;
-        EXEC dbo.DynDM_CreateDm_sp
-         @batch_id = @batch_id,
-        @datamart_name = @datamart_name;
-        COMMIT TRANSACTION;
 
-        IF @debug = 'true' PRINT 'Step completed: DynDM_CreateDm_sp';
+            BEGIN TRANSACTION;
+            EXEC dbo.sp_dyn_dm_createdm_postprocessing
+             @batch_id = @batch_id,
+             @datamart_name = @datamart_name,
+             @debug = @debug;
+            COMMIT TRANSACTION;
+
+            IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
 
 
-        -- Cleanup
-        BEGIN TRANSACTION;
-        EXEC dbo.DynDM_INVEST_FORM_CLEAR_PROC_sp
-          @batch_id = @batch_id,
-        @datamart_table_name = @DATAMART_TABLE_NAME;
-        COMMIT TRANSACTION;
+            -- Cleanup
+            BEGIN TRANSACTION;
+            EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
 
-       IF @debug = 'true' PRINT 'Step completed: DynDM_INVEST_FORM_CLEAR_PROC_sp';
-     */
+           IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
+
 
         -- Log completion
         BEGIN TRANSACTION;
