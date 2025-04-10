@@ -82,10 +82,10 @@ SELECT
     label
 FROM InvFormQObservations obs
          LEFT JOIN dbo.v_codeset cs with (nolock) on cs.cd = obs.cd
-         LEFT JOIN nbs_srte.dbo.code_value_general cvg with (nolock)  on
+         LEFT JOIN dbo.nrt_srte_Code_value_general cvg with (nolock)  on
     cvg.code_set_nm = cs.CODE_SET_NM and cvg.code = obs.ovc_code
-         LEFT JOIN nbs_srte.dbo.Country_code cc with (nolock) on cc.code = obs.ovc_code
-         LEFT JOIN nbs_srte.dbo.State_code sc with (nolock) on sc.state_cd = obs.ovc_code
-         LEFT JOIN nbs_srte.dbo.State_county_code_value sccv with (nolock) on sccv.code = obs.ovc_code
-         LEFT JOIN nbs_srte.dbo.Jurisdiction_code jc with (nolock) on jc.code = obs.ovc_code
-         LEFT JOIN nbs_srte.dbo.Condition_code con_code with (nolock) on con_code.condition_cd = obs.ovc_code;
+         LEFT JOIN dbo.nrt_srte_Country_code cc with (nolock) on cc.code = obs.ovc_code
+         LEFT JOIN dbo.nrt_srte_State_code sc with (nolock) on sc.state_cd = obs.ovc_code
+         LEFT JOIN dbo.nrt_srte_State_county_code_value sccv with (nolock) on sccv.code = obs.ovc_code
+         LEFT JOIN dbo.nrt_srte_Jurisdiction_code jc with (nolock) on jc.code = obs.ovc_code
+         LEFT JOIN dbo.nrt_srte_Condition_code con_code with (nolock) on con_code.condition_cd = obs.ovc_code;

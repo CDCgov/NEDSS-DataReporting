@@ -48,7 +48,7 @@ BEGIN
                CD,
                LAST_CHG_TIME
         INTO #PHC_UIDS
-        FROM dbo.nrt_investigation inv
+        FROM dbo.nrt_investigation inv WITH(NOLOCK)
         WHERE inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','))
           AND INVESTIGATION_FORM_CD  NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
                                               'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
@@ -81,10 +81,7 @@ BEGIN
             CD,
             LAST_CHG_TIME
         INTO  #PHC_CASE_UIDS_ALL
-        FROM
-            dbo.nrt_investigation inv
-        --LEFT OUTER JOIN NBS_ODSE.dbo.CASE_MANAGEMENT ON	inv.PUBLIC_HEALTH_CASE_UID= CASE_MANAGEMENT.PUBLIC_HEALTH_CASE_UID
-        --LEFT OUTER JOIN NBS_SRTE.dbo.CONDITION_CODE ON 	CONDITION_CODE.CONDITION_CD= inv.CD AND
+        FROM dbo.nrt_investigation inv WITH(NOLOCK)
         where inv.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_ids, ','))
           and INVESTIGATION_FORM_CD  NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
           AND CASE_MANAGEMENT_UID is null;
