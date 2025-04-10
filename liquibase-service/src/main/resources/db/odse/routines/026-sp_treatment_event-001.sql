@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_treatment_event_copy]
+CREATE OR ALTER PROCEDURE [dbo].[sp_treatment_event]
     @treatment_uids nvarchar(max),
     @debug bit = 'false'
 AS
