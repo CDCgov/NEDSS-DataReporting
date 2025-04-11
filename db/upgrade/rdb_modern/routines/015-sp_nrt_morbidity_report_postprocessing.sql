@@ -154,32 +154,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_investigation_observation';
 
-        select invobs.*
-        into #tmp_nrt_investigation_observation
-        from #morb_obs_reference obsref
-                 left join dbo.nrt_investigation_observation invobs  WITH (NOLOCK) on obsref.observation_uid = invobs.observation_id
-                 left outer join dbo.nrt_investigation inv
-                                 on inv.public_health_case_uid = invobs.public_health_case_uid
-        where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1);
-
-
-
-        if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_nrt_investigation_observation;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
@@ -189,7 +164,14 @@ BEGIN
         IF OBJECT_ID('#tmp_morb_root', 'U') IS NOT NULL
             DROP TABLE #tmp_morb_root ;
 
+        /*
+            Note regarding associated_phc_uids column for morbs:
 
+            associated_phc_uids is a comma separated list of phc's that are
+            associated with a LabReport or a MorbReport. For MorbReport observations,
+            there can only be one associated investigation. For that reason,
+            we can use it as if it were not a comma separated list.
+        */
         CREATE TABLE #tmp_morb_root(
                                        [morb_rpt_local_id] [varchar](50) NULL,
                                        [morb_rpt_share_ind] [char](1) NOT NULL,
@@ -208,6 +190,7 @@ BEGIN
                                        [record_status_cd] [varchar](20) NULL,
                                        [PROCESSING_DECISION_CD] [varchar](20) NULL,
                                        [PROCESSING_DECISION_DESC] [varchar](25) NULL,
+                                       [associated_phc_uids] [nvarchar](max) NULL,
                                        [PROVIDER_KEY] [numeric](18, 0) NULL,
                                        morb_rpt_KEY int
 
@@ -231,6 +214,7 @@ BEGIN
                                   ,[record_status_cd]
                                   ,[PROCESSING_DECISION_CD]
                                   ,[PROCESSING_DECISION_DESC]
+                                  ,[associated_phc_uids]
         )
         SELECT 	obs.local_id				 AS morb_rpt_local_id,
                   obs.shared_ind				 AS morb_rpt_share_ind,
@@ -252,7 +236,8 @@ BEGIN
                       ELSE obs.[record_status_cd]
                       END AS record_status_cd,
                   obs.PROCESSING_DECISION_CD ,
-                  substring(cvg.Code_short_desc_txt,1,25)
+                  substring(cvg.Code_short_desc_txt,1,25) AS PROCESSING_DECISION_DESC,
+                  obs.associated_phc_uids
         FROM #nrt_morbidity_observation AS updated_lab
                  INNER JOIN dbo.nrt_observation obs  WITH (NOLOCK) ON updated_lab.observation_uid = obs.observation_uid
                  LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg ON cvg.code_set_nm = 'STD_NBS_PROCESSING_DECISION_ALL'
@@ -674,7 +659,8 @@ BEGIN
 					WHEN rtrim(mr.[PROCESSING_DECISION_CD])  = '''' THEN NULL
 					ELSE mr.[PROCESSING_DECISION_CD]
 				  END AS PROCESSING_DECISION_CD,
-               mr.[PROCESSING_DECISION_DESC],
+               mr.[PROCESSING_DECISION_DESC], 
+               mr.[associated_phc_uids], 
 			   mr.[record_status_cd], --Updated in #tmp_morb_root
 			   tmc2.*, tmd2.*,tmt2.*,
                Cast( NULL AS datetime) AS TEMP_ILLNESS_ONSET_DT_KEY,
@@ -965,11 +951,7 @@ BEGIN
             /*ILLNESS_ONSET_DT_KEY*/
                  left join dbo.rdb_date	as dt4 WITH (NOLOCK) ON rpt.temp_illness_onset_dt_key = dt4.date_mm_dd_yyyy
             /* INVESTIGATION_KEY  */
-                 left join (select distinct public_health_case_uid, observation_id
-                 			from
-                 			#tmp_nrt_investigation_observation
-                 			) ninv ON rpt.morb_rpt_uid = ninv.observation_id
-                 left join dbo.Investigation inv WITH (NOLOCK) ON ninv.public_health_case_uid = inv.case_uid
+                 left join dbo.Investigation inv WITH (NOLOCK) ON rpt.associated_phc_uids = inv.case_uid
             /*MORB_RPT_CREATE_DT_KEY*/
                  left join dbo.rdb_date AS dt5 WITH (NOLOCK) ON CAST(CONVERT(VARCHAR,rpt.morb_RPT_Created_DT,102) AS DATETIME)  = dt5.DATE_MM_DD_YYYY
             /*MORB_RPT_DT_KEY*/

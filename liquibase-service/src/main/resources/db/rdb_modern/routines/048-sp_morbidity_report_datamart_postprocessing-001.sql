@@ -164,7 +164,7 @@ BEGIN TRY
             EM.LAST_CHG_TIME AS MORB_REPORT_LAST_UPDATED_DATE, 
             EM.LAST_CHG_USER_ID,
             inv.INV_CASE_STATUS AS CASE_STATUS,
-            IIF(inv.INVESTIGATION_KEY IS NULL, 'No', 'Yes') AS INVESTIGATION_CREATED_IND,
+            IIF(COALESCE(inv.INVESTIGATION_KEY, 1) = 1, 'No', 'Yes') AS INVESTIGATION_CREATED_IND,
             inv.INVESTIGATION_KEY,
             CASE  
             WHEN CHARINDEX(',', EM.add_user_name) > 0  
