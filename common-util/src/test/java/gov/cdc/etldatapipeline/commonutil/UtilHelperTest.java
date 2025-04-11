@@ -40,19 +40,38 @@ class UtilHelperTest {
     }
 
     @Test
-    void testDeserializePayload_invalidJson_returnsNull() {
+    void testDeserializePayload_invalidJson() {
         String invalidJson = "{ invalid json }";
         assertNull(UtilHelper.deserializePayload(invalidJson, Object.class));
     }
 
     @Test
-    void testExtractUid_validField_returnsValue() throws JsonProcessingException {
+    void testDeserializePayload_nullJson() {
+        String invalidJson = null;
+        assertNull(UtilHelper.deserializePayload(invalidJson, Object.class));
+    }
+
+    @Test
+    void testExtractUid_validField() throws JsonProcessingException {
         String uid = UtilHelper.extractUid(sampleJson, "uid");
         assertEquals("12345", uid);
     }
 
     @Test
-    void testExtractUid_missingField_throwsException() {
+    void testExtractUid_invalidField() throws JsonProcessingException {
+        String inValidJson = """
+            {
+          "payload": ""
+          }
+          """;
+        Exception exception = assertThrows(NoSuchElementException.class, () -> {
+            UtilHelper.extractUid(inValidJson, "uid");
+        });
+        assertTrue(exception.getMessage().contains("The uid field is missing in the message payload"));
+    }
+
+    @Test
+    void testExtractUid_missingField() {
         Exception exception = assertThrows(NoSuchElementException.class, () -> {
             UtilHelper.extractUid(sampleJson, "nonexistentField");
         });
@@ -61,13 +80,13 @@ class UtilHelperTest {
     }
 
     @Test
-    void testExtractValue_validField_returnsValue() throws JsonProcessingException {
+    void testExtractValue_validField() throws JsonProcessingException {
         String name = UtilHelper.extractValue(sampleJson, "name");
         assertEquals("Test Name", name);
     }
 
     @Test
-    void testExtractValue_missingField_returnsEmptyString() throws JsonProcessingException {
+    void testExtractValue_missingField() throws JsonProcessingException {
         String value = UtilHelper.extractValue(sampleJson, "missingField");
         assertEquals("", value);  // .asText() on missing node returns ""
     }
