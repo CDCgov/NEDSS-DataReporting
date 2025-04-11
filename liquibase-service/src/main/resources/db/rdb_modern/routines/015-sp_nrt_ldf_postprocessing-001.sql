@@ -46,65 +46,6 @@ BEGIN
         SET @proc_step_name='Create LDF_DATA Temp tables-'+ LEFT(@ldf_uid_list,105);
         SET @proc_step_no = 1;
 
-
-        /**Initial null condition for LDF_DATA and LDF_Group*/
-        IF NOT EXISTS (SELECT 1 FROM dbo.ldf_data UNION ALL SELECT 1 FROM dbo.LDF_GROUP)
-            BEGIN
-                insert into dbo.nrt_ldf_group_key(business_object_uid)
-                VALUES (NULL);
-
-                insert into dbo.nrt_ldf_data_key(d_ldf_group_key, business_object_uid, ldf_uid)
-                VALUES (1, NULL, NULL)
-
-                insert into dbo.ldf_group(ldf_group_key, business_object_uid)
-                VALUES (1, NULL);
-
-                insert into dbo.ldf_data
-                (ldf_data_key
-                ,ldf_group_key
-                ,ldf_column_type
-                ,condition_cd
-                ,condition_desc_txt
-                ,class_cd
-                ,code_set_nm
-                ,business_obj_nm
-                ,display_order_number
-                ,field_size
-                ,ldf_value
-                ,import_version_nbr
-                ,label_txt
-                ,ldf_oid
-                ,nnd_ind
-                ,record_status_cd
-                )
-                values (1
-                       ,1
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,'ACTIVE');
-
-                insert into dbo.PATIENT_LDF_GROUP (PATIENT_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-                values (1, 1, 'ACTIVE');
-
-                insert into dbo.PROVIDER_LDF_GROUP (PROVIDER_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-                values (1, 1, 'ACTIVE');
-
-                insert into dbo.ORGANIZATION_LDF_GROUP (ORGANIZATION_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-                values (1, 1, 'ACTIVE');
-            END
-
-
         /**Create temp table for LDF_DATA */
         select
             ldf.ldf_data_key,
@@ -233,7 +174,7 @@ BEGIN
 
         insert into dbo.nrt_ldf_data_key(d_ldf_group_key, business_object_uid, ldf_uid)
         select distinct lg.d_ldf_group_key, lg.business_object_uid, ld.ldf_uid
-        from #tmp_ldf_data ld
+    from #tmp_ldf_data ld
                  left join dbo.nrt_ldf_group_key lg with (nolock) on ld.business_object_uid = lg.business_object_uid
                  left join dbo.nrt_ldf_data_key nldk with (nolock) on ld.ldf_uid = nldk.ldf_uid
         where nldk.d_ldf_data_key is null and nldk.d_ldf_group_key is null;
@@ -353,11 +294,11 @@ BEGIN
         (PATIENT_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
         select d.patient_key, ldf.d_ldf_group_key, d.patient_record_status
         from dbo.nrt_ldf_data_key ldf
-        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ld_uid --join on UID with nrt_ldf_data_key
+        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
             left join dbo.d_patient d with (nolock) on ldf.ldf_uid = d.patient_uid
         where
-         ld.PATIENT_KEY is null and ld.LDF_GROUP_KEY is null
-        and d.record_status_cd <> 'INACTIVE';
+         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
+  and d.patient_record_status <> 'INACTIVE';
 
 
         /* Logging */
@@ -405,11 +346,11 @@ BEGIN
         (PROVIDER_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
         select d.provider_key, ldf.d_ldf_group_key, d.provider_record_status
         from dbo.nrt_ldf_data_key ldf
-        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ld_uid --join on UID with nrt_ldf_data_key
+        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
             left join dbo.d_provider d with (nolock) on ldf.ldf_uid = d.provider_uid
         where
-         ld.PROVIDER_KEY is null and ld.LDF_GROUP_KEY is null
-        and d.record_status_cd <> 'INACTIVE';
+         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
+        and d.provider_record_status <> 'INACTIVE';
 
         /* Logging */
         set @rowcount=@@rowcount
@@ -456,11 +397,11 @@ BEGIN
         (ORGANIZATION_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
         select d.organization_key, ldf.d_ldf_group_key, d.organization_record_status
         from dbo.nrt_ldf_data_key ldf
-        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ld_uid --join on UID with nrt_ldf_data_key
+        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
             left join dbo.d_organization d with (nolock) on ldf.ldf_uid = d.organization_uid
         where
-         ld.ORGANIZATION_KEY is null and ld.LDF_GROUP_KEY is null
-        and d.record_status_cd <> 'INACTIVE';
+         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
+        and d.organization_record_status <> 'INACTIVE';
 
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -478,7 +419,7 @@ BEGIN
                  @batch_id
                ,@dataflow_name
                ,@package_name
-               ,'START'
+           ,'START'
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
