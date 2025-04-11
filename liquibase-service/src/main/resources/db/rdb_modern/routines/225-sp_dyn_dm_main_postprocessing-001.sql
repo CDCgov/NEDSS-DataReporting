@@ -8,125 +8,71 @@ BEGIN
         DECLARE @RowCount_no INT;
         DECLARE @Proc_Step_no FLOAT = 0;
         DECLARE @Proc_Step_Name VARCHAR(200) = '';
-        DECLARE @DATAMART_TABLE_NAME varchar(100);
         DECLARE @batch_id BIGINT;
         DECLARE @DATAFLOW_NAME VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing';
         DECLARE @PACKAGE_NAME VARCHAR(100) = 'sp_dyn_dm_main_postprocessing';
+        DECLARE @returnCode INT = 0;
+        DECLARE @returnMsg VARCHAR(200) = '';
+
+        -- Generate batch_id for logging
+        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
         -- Input validation
         IF @datamart_name IS NULL OR LEN(LTRIM(RTRIM(@datamart_name))) = 0
             BEGIN
                 -- Log the validation error to job_flow_log
-                INSERT INTO [dbo].[job_flow_log] (
-                    batch_id,
-                    [Dataflow_Name],
-                    [package_Name],
-                    [Status_Type],
-                    [step_number],
-                    [step_name],
-                    [row_count],
-                    [Msg_Description1],
-                    [Error_Description]
-                )
-                VALUES (
-                           @batch_id,
-                           @DATAFLOW_NAME,
-                           @PACKAGE_NAME,
-                           'ERROR',
-                           0,
-                           'Input Validation',
-                           0,
-                           'Missing required parameter',
-                           'Parameter @datamart_name is required'
-                       );
+                INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[Msg_Description1],[Error_Description])
+                VALUES (@batch_id,@DATAFLOW_NAME,@PACKAGE_NAME,'ERROR',0,'Input Validation',0,'Missing required parameter','Parameter @datamart_name is required');
 
                 RAISERROR('Parameter @datamart_name is required', 16, 1);
-
-                RETURN -1;
             END
 
-        -- Set up datamart table name
-        SET @DATAMART_TABLE_NAME = 'DM_INV_' + LTRIM(RTRIM(@datamart_name));
-
-        -- Generate batch_id for logging
-        SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
         if @debug='true'
             print @batch_id;
 
-        INSERT INTO [dbo].[job_flow_log] (
-            batch_id,
-            [Dataflow_Name],
-            [package_Name],
-            [Status_Type],
-            [step_number],
-            [step_name],
-            [row_count],
-            [Msg_Description1]
-        )
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'START',
-                   0,
-                   'SP_Start',
-                   0,
-                   LEFT(@phc_id_list, 500)
-               );
+        INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count],[Msg_Description1] )
+	    VALUES ( @batch_id ,@DATAFLOW_NAME ,@PACKAGE_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO, LEFT(@phc_id_list, 500) );
+
 
         -- Log start of processing for this datamart
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = ' STARTING DYNAMIC DATAMART ' + @datamart_name;
 
-        INSERT INTO [dbo].[job_flow_log] (
-            batch_id,
-            [Dataflow_Name],
-            [package_Name],
-            [Status_Type],
-            [step_number],
-            [step_name],
-            [row_count],
-            [Msg_Description1]
-        )
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'START',
-                   @Proc_Step_no,
-                   @Proc_Step_Name,
-                   0,
-                   LEFT('DataMart: ' + @datamart_name, 199)
-               );
+	    INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count], [Msg_Description1] )
+        VALUES ( @batch_id ,@DATAFLOW_NAME ,@PACKAGE_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,0, LEFT('DataMart: ' + @datamart_name, 199) );
 
 
-
-        -- Clear any temporary tables.
-        BEGIN TRANSACTION;
-        EXEC [dbo].DynDM_CLEAR_sp;
-        COMMIT TRANSACTION;
-
-        IF @debug = 'true' PRINT 'Step completed: DynDM_CLEAR_sp';
 
         -- Process form and case management data
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_invest_form_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_invest_form_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_invest_form_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
+
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';
 
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_case_management_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_case_management_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_case_management_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_case_management_postprocessing';
 
@@ -134,7 +80,7 @@ BEGIN
         -- Process dimension tables - each in a separate transaction
         -- D_INV_ADMINISTRATIVE dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_ADMINISTRATIVE',
@@ -142,13 +88,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ADMINISTRATIVE';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_ADMINISTRATIVE';
 
 
         -- D_INV_CLINICAL dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_CLINICAL',
@@ -156,12 +107,17 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CLINICAL';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_CLINICAL';
 
         -- D_INV_COMPLICATION dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_COMPLICATION',
@@ -169,12 +125,17 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_COMPLICATION';
+            goto CLEANUP_HANDLER;
+        END
 
-        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_COMPLICATION_KEY';
+        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_COMPLICATION';
 
         -- D_INV_CONTACT dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_CONTACT',
@@ -182,13 +143,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CONTACT';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_CONTACT';
 
 
         -- D_INV_DEATH dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_DEATH',
@@ -196,13 +162,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_DEATH';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_DEATH';
 
 
         -- D_INV_EPIDEMIOLOGY dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_EPIDEMIOLOGY',
@@ -210,12 +181,17 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_EPIDEMIOLOGY';
+            goto CLEANUP_HANDLER;
+        END
 
-        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_EPIDEMIOLOGY_KEY';
+        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_EPIDEMIOLOGY';
 
         -- D_INV_HIV dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_HIV',
@@ -223,13 +199,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_HIV';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_HIV';
 
 
         -- D_INV_PATIENT_OBS dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_PATIENT_OBS',
@@ -237,13 +218,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PATIENT_OBS';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_PATIENT_OBS';
 
 
         -- D_INV_ISOLATE_TRACKING dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_ISOLATE_TRACKING',
@@ -251,13 +237,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ISOLATE_TRACKING';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_ISOLATE_TRACKING';
 
 
         -- D_INV_LAB_FINDING dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_LAB_FINDING',
@@ -265,13 +256,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_LAB_FINDING';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_LAB_FINDING';
 
 
         -- D_INV_MEDICAL_HISTORY dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_MEDICAL_HISTORY',
@@ -279,13 +275,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MEDICAL_HISTORY';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_MEDICAL_HISTORY';
 
 
         -- D_INV_MOTHER dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_MOTHER',
@@ -293,11 +294,17 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MOTHER';
+            goto CLEANUP_HANDLER;
+        END
+
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_MOTHER';
 
         -- D_INV_OTHER dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_OTHER',
@@ -305,13 +312,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_OTHER';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_OTHER';
 
 
         -- D_INV_PREGNANCY_BIRTH dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_PREGNANCY_BIRTH',
@@ -319,13 +331,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PREGNANCY_BIRTH';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_PREGNANCY_BIRTH';
 
 
         -- D_INV_RESIDENCY dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_RESIDENCY',
@@ -333,13 +350,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RESIDENCY';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_RESIDENCY';
 
 
         -- D_INV_RISK_FACTOR dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_RISK_FACTOR',
@@ -347,13 +369,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RISK_FACTOR';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_RISK_FACTOR';
 
 
         -- D_INV_SOCIAL_HISTORY dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_SOCIAL_HISTORY',
@@ -361,13 +388,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SOCIAL_HISTORY';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_SOCIAL_HISTORY';
 
 
         -- D_INV_SYMPTOM dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_SYMPTOM',
@@ -375,13 +407,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SYMPTOM';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_SYMPTOM';
 
 
         -- D_INV_TREATMENT dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_TREATMENT',
@@ -389,13 +426,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TREATMENT';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_TREATMENT';
 
 
         -- D_INV_TRAVEL dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_TRAVEL',
@@ -403,13 +445,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TRAVEL';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_TRAVEL';
 
 
         -- D_INV_UNDER_CONDITION dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_UNDER_CONDITION',
@@ -417,13 +464,18 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_UNDER_CONDITION';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_UNDER_CONDITION';
 
 
         -- D_INV_VACCINATION dimension
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @RDB_TABLE_NM = 'D_INV_VACCINATION',
@@ -431,57 +483,91 @@ BEGIN
              @phc_id_list = @phc_id_list,
              @debug = @debug;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_VACCINATION';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_VACCINATION';
 
         -- Process organization data
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_org_data_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_org_data_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_org_data_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_org_data_postprocessing';
 
 
         -- Process provider data
         BEGIN TRANSACTION;
-        EXEC [dbo].sp_dyn_dm_provider_data_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_provider_data_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_provider_data_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_provider_data_postprocessing';
 
+
         -- Process repeating varchar data
         BEGIN TRANSACTION;
-        EXEC dbo.sp_dyn_dm_repeatvarch_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_repeatvarch_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_repeatvarch_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatvarch_postprocessing';
 
+
         -- Process repeating date data
         BEGIN TRANSACTION;
-        EXEC dbo.sp_dyn_dm_repeatdate_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_repeatdate_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_repeatdate_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
 
+
+
         -- Process repeating numeric data
         BEGIN TRANSACTION;
-        EXEC dbo.sp_dyn_dm_repeatnumeric_postprocessing
+        EXEC @returnCode = dbo.sp_dyn_dm_repeatnumeric_postprocessing
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @phc_id_list = @phc_id_list;
         COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_repeatnumeric_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatnumeric_postprocessing';
 
@@ -546,7 +632,7 @@ BEGIN
                     select '#tmp_DynDm_fixcols',* from #tmp_DynDm_fixcols;
 
                 SELECT @RowCount_no = @@ROWCOUNT;
-                INSERT INTO [dbo].[job_flow_log]
+                INSERT INTO dbo.[job_flow_log]
                 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
                 VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
@@ -580,77 +666,44 @@ BEGIN
         IF @debug = 'true' PRINT 'Step completed: DynDM_AlterKey_sp';
 
 
-            BEGIN TRANSACTION;
-            EXEC dbo.sp_dyn_dm_createdm_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @debug = @debug;
-            COMMIT TRANSACTION;
+        
+        EXEC @returnCode = dbo.sp_dyn_dm_createdm_postprocessing
+            @batch_id = @batch_id,
+            @datamart_name = @datamart_name,
+            @debug = @debug;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_createdm_postprocessing';
+            goto CLEANUP_HANDLER;
+        END
 
-            IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
+        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
 
 
+        CLEANUP_HANDLER:
+        begin
             -- Cleanup
-            BEGIN TRANSACTION;
             EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
-                 @batch_id = @batch_id,
-                 @datamart_name = @datamart_name,
-                 @debug = @debug;
-            COMMIT TRANSACTION;
+                @batch_id = @batch_id,
+                @datamart_name = @datamart_name,
+                @debug = @debug;
 
-           IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
 
+            if @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
+
+            -- raise error so that it goes to catch block and not log "complete"
+            if @returnMsg <> ''
+                RAISERROR(@returnMsg, 16, 1);
+        end
 
         -- Log completion
-        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'COMPLETED DYNAMIC DATAMART ' + @datamart_name;
 
-        INSERT INTO [dbo].[job_flow_log] (
-            batch_id,
-            [Dataflow_Name],
-            [package_Name],
-            [Status_Type],
-            [step_number],
-            [step_name],
-            [row_count],
-            [Msg_Description1]
-        )
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'COMPLETE',
-                   @Proc_Step_no,
-                   @Proc_Step_Name,
-                   0,
-                   LEFT('DataMart: ' + @datamart_name, 199)
-               );
-        COMMIT TRANSACTION;
 
-        -- Final completion log
-        BEGIN TRANSACTION;
-        INSERT INTO [dbo].[job_flow_log] (
-            batch_id,
-            [Dataflow_Name],
-            [package_Name],
-            [Status_Type],
-            [step_number],
-            [step_name],
-            [row_count],
-            [Msg_Description1]
-        )
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'COMPLETE',
-                   0,
-                   LEFT( @datamart_name, 199),
-                   0,
-                   LEFT(@phc_id_list, 500)
-               );
-        COMMIT TRANSACTION;
+	    INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count], [Msg_Description1] )
+        VALUES ( @batch_id ,@DATAFLOW_NAME ,@PACKAGE_NAME  ,'COMPLETE' ,@Proc_Step_no ,@Proc_Step_Name ,0, LEFT('DataMart: ' + @datamart_name, 199) );
+
 
     END TRY
     BEGIN CATCH

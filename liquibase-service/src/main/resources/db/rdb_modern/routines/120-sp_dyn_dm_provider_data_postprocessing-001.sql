@@ -16,8 +16,8 @@ BEGIN
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
 
         DECLARE @nbs_page_form_cd varchar(200)=''
-        DECLARE @Dataflow_Name varchar(200) = 'DYNAMIC_DATAMART POST-PROCESSING';
-        DECLARE @Package_Name varchar(200) = 'sp_dyn_dm_provider_data_postprocessing '+@DATAMART_NAME;
+        DECLARE @Dataflow_Name varchar(200) = 'DYNAMIC_DATAMART POST-Processing';
+        DECLARE @Package_Name varchar(200) = 'sp_dyn_dm_provider_data_postprocessing: '+@DATAMART_NAME;
 
         DECLARE @tmp_DynDm_PROVIDER varchar(200) = 'dbo.tmp_DynDm_PROVIDER_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 

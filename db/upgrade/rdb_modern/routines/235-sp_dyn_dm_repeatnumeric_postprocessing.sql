@@ -13,8 +13,8 @@ BEGIN
         DECLARE @RowCount_no INT ;
         DECLARE @Proc_Step_no FLOAT = 0 ;
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
-        --DECLARE @DATAMART_NAME VARCHAR = 'GENERIC_V2';
-        DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST PROCESSING' ;
+
+        DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing' ;
         DECLARE @package_Name VARCHAR(100) = 'sp_dyn_dm_repeatnumeric_postprocessing: '+ @DATAMART_NAME;
 
         DECLARE @nbs_page_form_cd varchar(200)='';

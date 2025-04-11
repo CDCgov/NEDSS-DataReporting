@@ -33,6 +33,17 @@ BEGIN
         BEGIN
             TRANSACTION;
 
+        --Serialize input parameters to JSON for clean logging
+        DECLARE @params_json VARCHAR(500) = JSON_QUERY((
+            SELECT
+                @phc_uids AS phc_uids,
+                @pat_uids AS pat_uids,
+                @prov_uids AS prov_uids,
+                @org_uids AS org_uids,
+                @debug AS debug
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        ));
+
         INSERT INTO dbo.job_flow_log ( batch_id
                                      , [Dataflow_Name]
                                      , [package_Name]
@@ -48,7 +59,7 @@ BEGIN
                , @Proc_Step_no
                , @Proc_Step_Name
                , 0
-               , LEFT('ID List-' + @phc_uids, 500));
+               , LEFT('ID List-' + @params_json, 500));
 
         COMMIT TRANSACTION;
 
@@ -1018,14 +1029,12 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
-            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
-
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
                                          , [Dataflow_Name]
