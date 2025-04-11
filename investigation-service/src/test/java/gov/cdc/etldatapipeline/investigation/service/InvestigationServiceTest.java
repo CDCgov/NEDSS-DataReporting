@@ -14,6 +14,8 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.*;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -80,6 +82,7 @@ class InvestigationServiceTest {
     private final String contactTopic = "Contact";
     private final String vaccinationTopic = "Vaccination";
     private final String treatmentTopic = "Treatment";
+    private final String actRelationshipTopic = "Act_relationship";
 
     //output topics
     private final String investigationTopicOutput = "InvestigationOutput";
@@ -108,6 +111,7 @@ class InvestigationServiceTest {
         investigationService.setVaccinationTopic(vaccinationTopic);
         investigationService.setTreatmentTopic(treatmentTopic);
         investigationService.setTreatmentOutputTopicName(treatmentTopicOutput);
+        investigationService.setActRelationshipTopic(actRelationshipTopic);
 
         transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
         transformer.setInvestigationObservationOutputTopicName("investigationObservation");
@@ -389,6 +393,92 @@ class InvestigationServiceTest {
         assertThrows(NoDataException.class, () -> investigationService.processMessage(rec, consumer));
     }
 
+    @ParameterizedTest
+    @CsvSource(
+                {"d,TreatmentToPHC,true",
+                        "d,TreatmentToPHC,false",
+                        "d,TreatmentToMorb,true",
+                        "d,TreatmentToMorb,false",
+                        "c,TreatmentToPHC,true",
+                        "c,TreatmentToPHC,false",
+                        "c,TreatmentToMorb,true",
+                        "c,TreatmentToMorb,false",
+                        "c,OTHER,true"}
+    )
+    void testProcessActRelationshipTreatment(String op, String typeCd, String treatmentEnabled) throws JsonProcessingException {
+        Long sourceActUid = 123456789L;
+
+        String payload = "{\"payload\": {\"before\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \"" + typeCd + "\"}," +
+                "\"after\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \"" + typeCd + "\"}," +
+                "\"op\": \"" + op + "\"}}";
+
+        final Treatment treatment = constructTreatment(sourceActUid);
+
+        when(treatmentRepository.computeTreatment(String.valueOf(sourceActUid))).thenReturn(Optional.of(treatment));
+
+        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+
+        // Create a ConsumerRecord object
+        ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
+
+        if (treatmentEnabled.equals("false") || typeCd.equals("OTHER")) {
+            investigationService.setTreatmentEnable(false);
+            investigationService.processMessage(rec, consumer);
+            verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+        }
+        else {
+            investigationService.processMessage(rec, consumer);
+            future.complete(null);
+
+            verify(treatmentRepository).computeTreatment(String.valueOf(sourceActUid));
+            verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+
+            assertEquals(treatmentTopicOutput, topicCaptor.getValue());
+
+            String treatmentJson = messageCaptor.getValue();
+            Treatment actualTreatment = objectMapper.readValue(
+                    objectMapper.readTree(treatmentJson).path("payload").toString(),
+                    Treatment.class);
+
+            String keyJson = keyCaptor.getValue();
+            TreatmentReportingKey keyObject = objectMapper.readValue(
+                    objectMapper.readTree(keyJson).path("payload").toString(),
+                    TreatmentReportingKey.class);
+            assertEquals(treatment.getTreatmentUid(), keyObject.getTreatmentUid());
+
+            assertEquals(treatment, actualTreatment);
+        }
+
+    }
+
+    @Test
+    void testProcessActRelationshipNullPayload() {
+        ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, null);
+
+        investigationService.processMessage(rec, consumer);
+
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            {
+                    "d",
+                    "c"
+            }
+    )
+    void testProcessActRelationshipException(String op) {
+        String payload = "{\"payload\": {\"before\": { }," +
+                "\"after\": { }," +
+                "\"op\": \"" + op + "\"}}";
+        ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> investigationService.processMessage(rec, consumer));
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+    }
+
     private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
 
         ConsumerRecord<String, String> rec = getRecord(investigationTopic, payload);
@@ -428,7 +518,8 @@ class InvestigationServiceTest {
     @Test
     void testProcessTreatmentMessage() throws JsonProcessingException {
         Long treatmentUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}}}";
+        String op = "u";
+        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}, \"op\": \"" + op + "\"}}";
 
         final Treatment treatment = constructTreatment(treatmentUid);
 
@@ -464,7 +555,7 @@ class InvestigationServiceTest {
     @Test
     void testProcessTreatmentWhenFeatureDisabled() {
         Long treatmentUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}}}";
+        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}, \"op\": \"u\"}}";
 
         final Treatment treatment = constructTreatment(treatmentUid);
         when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
@@ -475,8 +566,20 @@ class InvestigationServiceTest {
     }
 
     @Test
+    void testProcessTreatmentNonUpdate() {
+        Long treatmentUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}, \"op\": \"c\"}}";
+
+        final Treatment treatment = constructTreatment(treatmentUid);
+        when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
+
+        investigationService.processMessage(getRecord(treatmentTopic, payload), consumer);
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
     void testProcessTreatmentException() {
-        String invalidPayload = "{\"payload\": {\"after\": {}}}";
+        String invalidPayload = "{\"payload\": {\"after\": {}, \"op\": \"u\"}}";
         // Create a ConsumerRecord object
         ConsumerRecord<String, String> rec = getRecord(treatmentTopic, invalidPayload);
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -486,7 +589,7 @@ class InvestigationServiceTest {
 
     @Test
     void testProcessTreatmentNoDataException() {
-        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"\"}}}";
+        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"\"}, \"op\": \"u\"}}";
         // Create a ConsumerRecord object
         ConsumerRecord<String, String> rec = getRecord(treatmentTopic, payload);
         assertThrows(NoDataException.class, () -> investigationService.processMessage(rec, consumer));
