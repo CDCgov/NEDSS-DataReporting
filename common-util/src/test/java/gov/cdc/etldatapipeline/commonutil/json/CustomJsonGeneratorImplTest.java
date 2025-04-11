@@ -5,6 +5,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CustomJsonGeneratorImplTest {
@@ -29,13 +31,15 @@ class CustomJsonGeneratorImplTest {
         private String stringField;
         private int intField;
         private long longField;
+        private Instant instantField;
         @JsonProperty("custom_name")
         private String annotatedField;
 
-        public ComplexTestBean(String stringField, int intField, long longField, String annotatedField) {
+        public ComplexTestBean(String stringField, int intField, long longField, Instant instantField, String annotatedField) {
             this.stringField = stringField;
             this.intField = intField;
             this.longField = longField;
+            this.instantField = instantField;
             this.annotatedField = annotatedField;
         }
     }
@@ -62,12 +66,13 @@ class CustomJsonGeneratorImplTest {
 
     @Test
     void testGenerateStringJson_ComplexObject() {
-        ComplexTestBean testBean = new ComplexTestBean("test", 42, 1234L, "annotated");
+        ComplexTestBean testBean = new ComplexTestBean("test", 42, 1234L, Instant.ofEpochSecond(1001), "annotated");
         String jsonVal = jsonGenerator.generateStringJson(testBean);
         
         assertTrue(jsonVal.contains("\"string_field\":\"test\""));
         assertTrue(jsonVal.contains("\"int_field\":42"));
         assertTrue(jsonVal.contains("\"long_field\":1234"));
+        assertTrue(jsonVal.contains("\"instant_field\":1001"));
         assertTrue(jsonVal.contains("\"custom_name\":\"annotated\""));
         assertTrue(jsonVal.contains("\"type\":\"int32\""));
         assertTrue(jsonVal.contains("\"type\":\"int64\""));
@@ -75,22 +80,21 @@ class CustomJsonGeneratorImplTest {
 
     @Test
     void testGenerateStringJson_WithOverrideKeys() {
-        ComplexTestBean testBean = new ComplexTestBean("test", 42, 1234L, "annotated");
+        ComplexTestBean testBean = new ComplexTestBean("test", 42, 1234L, Instant.ofEpochSecond(1001),"annotated");
         String jsonVal = jsonGenerator.generateStringJson(testBean, "string_field", "custom_name");
         
         assertTrue(jsonVal.contains("\"optional\":false") && 
                   jsonVal.contains("\"field\":\"string_field\""));
         assertTrue(jsonVal.contains("\"optional\":false") && 
                   jsonVal.contains("\"field\":\"custom_name\""));
-        assertTrue(jsonVal.contains("\"optional\":true") && 
+        assertTrue(jsonVal.contains("\"optional\":true") &&
                   jsonVal.contains("\"field\":\"int_field\""));
     }
 
     @Test
     void testGenerateStringJson_NullModel() {
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
-            jsonGenerator.generateStringJson(null);
-        });
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> jsonGenerator.generateStringJson(null));
 
         assertTrue(ex.getMessage().contains("Cannot invoke \"Object.getClass()\" because \"model\" is null"));
     }

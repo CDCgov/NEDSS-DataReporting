@@ -3,6 +3,8 @@ package gov.cdc.etldatapipeline.commonutil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,6 +22,17 @@ class UtilHelperTest {
           }
         }
         """;
+
+    @Test
+    void testConstructor() throws Exception {
+        Constructor<UtilHelper> constructor = UtilHelper.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        InvocationTargetException exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
+        assertInstanceOf(IllegalStateException.class, exception.getCause());
+        assertEquals("Utility class", exception.getCause().getMessage());
+    }
+
 
     @Test
     void testDeserializePayload_validJson() {
@@ -58,23 +71,21 @@ class UtilHelperTest {
     }
 
     @Test
-    void testExtractUid_invalidField() throws JsonProcessingException {
+    void testExtractUid_invalidField() {
         String inValidJson = """
             {
           "payload": ""
           }
           """;
-        Exception exception = assertThrows(NoSuchElementException.class, () -> {
-            UtilHelper.extractUid(inValidJson, "uid");
-        });
+        Exception exception = assertThrows(NoSuchElementException.class,
+                () -> UtilHelper.extractUid(inValidJson, "uid"));
         assertTrue(exception.getMessage().contains("The uid field is missing in the message payload"));
     }
 
     @Test
     void testExtractUid_missingField() {
-        Exception exception = assertThrows(NoSuchElementException.class, () -> {
-            UtilHelper.extractUid(sampleJson, "nonexistentField");
-        });
+        Exception exception = assertThrows(NoSuchElementException.class,
+                () -> UtilHelper.extractUid(sampleJson, "nonexistentField"));
 
         assertTrue(exception.getMessage().contains("nonexistentField"));
     }
@@ -104,6 +115,9 @@ class UtilHelperTest {
         String msg = UtilHelper.errorMessage("Person", "", new RuntimeException("Boom"));
         assertTrue(msg.contains("Person"));
         assertTrue(msg.contains("Boom"));
+        assertFalse(msg.contains("with ids"));
+
+        msg = UtilHelper.errorMessage("Person", null, new RuntimeException("Boom"));
         assertFalse(msg.contains("with ids"));
     }
 }
