@@ -6,14 +6,18 @@ AS
 BEGIN
     BEGIN TRY
 
+        /**
+    	 * OUTPUT TABLES:
+    	 * tmp_DynDm_PROVIDER_<DATAMART_NAME>_<batch_id>
+    	 * */
 
         DECLARE @RowCount_no INT = 0 ;
         DECLARE @Proc_Step_no FLOAT = 0 ;
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
 
         DECLARE @nbs_page_form_cd varchar(200)=''
-        DECLARE @Dataflow_Name varchar(200) = 'DYNAMIC_DATAMART POST-PROCESSING';
-        DECLARE @Package_Name varchar(200) = 'sp_dyn_dm_provider_data_postprocessing '+@DATAMART_NAME;
+        DECLARE @Dataflow_Name varchar(200) = 'DYNAMIC_DATAMART POST-Processing';
+        DECLARE @Package_Name varchar(200) = 'sp_dyn_dm_provider_data_postprocessing: '+@DATAMART_NAME;
 
         DECLARE @tmp_DynDm_PROVIDER varchar(200) = 'dbo.tmp_DynDm_PROVIDER_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 
@@ -36,7 +40,7 @@ BEGIN
         declare @countstd int = 0;
 
         select  @countstd = count(*) from dbo.v_nrt_nbs_d_case_mgmt_rdb_table_metadata case_meta
-            where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
+        where case_meta.INVESTIGATION_FORM_CD = @nbs_page_form_cd;
 
 
         declare @FACT_CASE varchar(40) = '';
@@ -85,7 +89,7 @@ BEGIN
         SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_PROVIDER;
 
         IF OBJECT_ID(@tmp_DynDm_PROVIDER, 'U') IS NOT NULL
- 				exec ('drop table ' +@tmp_DynDm_PROVIDER);
+            exec ('drop table ' +@tmp_DynDm_PROVIDER);
 
         SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
         into #tmp_DynDm_SUMM_DATAMART
@@ -138,30 +142,30 @@ BEGIN
 
 
                 CREATE TABLE #tmp_DynDm_ProvPart_Table_temp(
-                   [PROVIDER_KEY] [bigint] NULL,
-                   [PROVIDER_QUICK_CODE] [varchar](50) NULL,
-                   [PROVIDER_LOCAL_ID] [varchar](50) NULL,
-                   [PROVIDER_UID] [bigint] NULL,
-                   [PROVIDER_FIRST_NAME] [varchar](50) NULL,
-                   [PROVIDER_MIDDLE_NAME] [varchar](50) NULL,
-                   [PROVIDER_LAST_NAME] [varchar](50) NULL,
-                   [PROVIDER_NAME_SUFFIX] [varchar](50) NULL,
-                   [PROVIDER_NAME_DEGREE] [varchar](50) NULL,
-                   [PROVIDER_STREET_ADDRESS_1] [varchar](50) NULL,
-                   [PROVIDER_STREET_ADDRESS_2] [varchar](50) NULL,
-                   [PROVIDER_CITY] [varchar](50) NULL,
-                   [PROVIDER_STATE] [varchar](50) NULL,
-                   [PROVIDER_ZIP] [varchar](50) NULL,
-                   [PROVIDER_COUNTY] [varchar](50) NULL,
-                   [PROVIDER_PHONE_WORK] [varchar](50) NULL,
-                   [PROVIDER_PHONE_EXT_WORK] [varchar](50) NULL,
-                   [PROVIDER_EMAIL_WORK] [varchar](50) NULL,
-                   [PART_TYPE_CD] [bigint] NULL,
-                   [PART_TYPE_CD_NM] [varchar](200) NOT NULL,
-                   [CITY_STATE_ZIP] [varchar](4000) NULL,
-                   [PROVIDER_NAME] [varchar](5000) NULL,
-                   [DETAIL] varchar(2000),
-                   [INVESTIGATION_KEY] [bigint] NOT NULL
+                                                               [PROVIDER_KEY] [bigint] NULL,
+                                                               [PROVIDER_QUICK_CODE] [varchar](50) NULL,
+                                                               [PROVIDER_LOCAL_ID] [varchar](50) NULL,
+                                                               [PROVIDER_UID] [bigint] NULL,
+                                                               [PROVIDER_FIRST_NAME] [varchar](50) NULL,
+                                                               [PROVIDER_MIDDLE_NAME] [varchar](50) NULL,
+                                                               [PROVIDER_LAST_NAME] [varchar](50) NULL,
+                                                               [PROVIDER_NAME_SUFFIX] [varchar](50) NULL,
+                                                               [PROVIDER_NAME_DEGREE] [varchar](50) NULL,
+                                                               [PROVIDER_STREET_ADDRESS_1] [varchar](50) NULL,
+                                                               [PROVIDER_STREET_ADDRESS_2] [varchar](50) NULL,
+                                                               [PROVIDER_CITY] [varchar](50) NULL,
+                                                               [PROVIDER_STATE] [varchar](50) NULL,
+                                                               [PROVIDER_ZIP] [varchar](50) NULL,
+                                                               [PROVIDER_COUNTY] [varchar](50) NULL,
+                                                               [PROVIDER_PHONE_WORK] [varchar](50) NULL,
+                                                               [PROVIDER_PHONE_EXT_WORK] [varchar](50) NULL,
+                                                               [PROVIDER_EMAIL_WORK] [varchar](50) NULL,
+                                                               [PART_TYPE_CD] [bigint] NULL,
+                                                               [PART_TYPE_CD_NM] [varchar](200) NOT NULL,
+                                                               [CITY_STATE_ZIP] [varchar](4000) NULL,
+                                                               [PROVIDER_NAME] [varchar](5000) NULL,
+                                                               [DETAIL] varchar(2000),
+                                                               [INVESTIGATION_KEY] [bigint] NOT NULL
                 );
 
 

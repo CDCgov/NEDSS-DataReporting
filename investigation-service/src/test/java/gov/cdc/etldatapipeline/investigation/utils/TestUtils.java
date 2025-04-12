@@ -401,6 +401,7 @@ public class TestUtils {
         treatment.setLastChangeTime("2024-01-01T10:00:00");
         treatment.setLastChangeUserId("55555");
         treatment.setVersionControlNumber("1");
+        treatment.setAssociatedPhcUids("123456,123457");
         return treatment;
     }
 }

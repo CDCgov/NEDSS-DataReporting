@@ -65,7 +65,10 @@ public class UtilHelper {
     }
 
     public static String errorMessage(String entityName, String ids, Exception e) {
-        return "Error processing " + entityName + " data" +
-                (!ids.isEmpty() ? " with ids '" + ids + "': " : ": " + e.getMessage());
+        String base = "Error processing " + entityName + " data";
+        if (ids != null && !ids.isEmpty()) {
+            base += " with ids '" + ids + "'";
+        }
+        return base + ": " + e.getMessage();
     }
 }

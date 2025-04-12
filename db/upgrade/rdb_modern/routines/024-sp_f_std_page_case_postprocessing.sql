@@ -80,7 +80,7 @@ BEGIN
         FROM
             dbo.nrt_investigation  ni
                 LEFT OUTER JOIN dbo.nrt_investigation_case_management nicm ON	ni.public_health_case_uid = nicm.public_health_case_uid
-                LEFT OUTER JOIN NBS_SRTE.dbo.CONDITION_CODE cc with(nolock) ON 	cc.CONDITION_CD= ni.CD AND	cc.INVESTIGATION_FORM_CD
+                LEFT OUTER JOIN dbo.nrt_srte_Condition_code cc with(nolock) ON 	cc.CONDITION_CD= ni.CD AND	cc.INVESTIGATION_FORM_CD
                 NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
         where
             ni.public_health_case_uid in (

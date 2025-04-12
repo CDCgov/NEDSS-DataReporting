@@ -45,7 +45,7 @@ FROM (SELECT
         RDB_attribute,
         db_field,
         r.n 
-    FROM nbs_srte.dbo.imrdbmapping
+    FROM dbo.nrt_srte_IMRDBMapping
 CROSS JOIN (SELECT 1 AS n UNION ALL SELECT 2) r) imrdb
          LEFT JOIN dbo.v_getobscode ovc ON imrdb.unique_cd = ovc.cd and imrdb.n = 2
          LEFT JOIN dbo.v_getobsnum ovn ON imrdb.unique_cd = ovn.cd and imrdb.n = 2

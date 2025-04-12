@@ -124,7 +124,7 @@ BEGIN
                 FROM dbo.v_rdb_obs_mapping rom
                 LEFT JOIN (SELECT code_desc_txt,
                                   nbs_uid
-                                FROM dbo.v_nrt_srte_code_value_general
+                                FROM dbo.nrt_srte_Code_value_general
                                 WHERE code_set_nm = 'RUB_PRE_CARE_T') cvg
                     ON rom.coded_response = cvg.code_desc_txt)
             select public_health_case_uid,
@@ -227,7 +227,7 @@ BEGIN
             /*
                 AND unique_cd != 'CRS013'
 
-                This condition wass in temporarily, as CRS013 wass improperly labeled as a date value. It caused an error if it is used in the date table.
+                This condition was in temporarily, as CRS013 was improperly labeled as a date value. It caused an error if it is used in the date table.
                 As of the completion of ticket CNDE-2107, this value has been fixed in DTS1's NBS_SRTE.dbo.imrdbmapping
             */
 

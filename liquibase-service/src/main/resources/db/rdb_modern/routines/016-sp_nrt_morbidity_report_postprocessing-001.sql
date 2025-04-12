@@ -264,7 +264,7 @@ BEGIN
         UPDATE #tmp_morb_root
         SET jurisdiction_nm = (
             SELECT code_short_desc_txt
-            FROM NBS_SRTE.dbo.jurisdiction_code WHERE code= #tmp_morb_root.Jurisdiction_cd and code_set_nm = 'S_JURDIC_C'
+            FROM dbo.nrt_srte_Jurisdiction_code WHERE code= #tmp_morb_root.Jurisdiction_cd and code_set_nm = 'S_JURDIC_C'
         )
         WHERE Jurisdiction_cd IS NOT NULL;
 
