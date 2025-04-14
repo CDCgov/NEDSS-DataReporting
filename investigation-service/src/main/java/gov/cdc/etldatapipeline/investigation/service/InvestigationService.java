@@ -197,15 +197,14 @@ public class InvestigationService {
 
     private void processActRelationship(String value) {
         String sourceActUid = "";
-        String typeCd = "";
-        String operationType = "";
 
         try {
-            operationType = extractChangeDataCaptureOperation(value);
+            String typeCd;
+            String operationType = extractChangeDataCaptureOperation(value);
 
             if (operationType.equals("d")) {
-                sourceActUid = extractUidBefore(value, "source_act_uid");
-                typeCd = extractValueBefore(value, "type_cd");
+                sourceActUid = extractUid(value, "source_act_uid", "before");
+                typeCd = extractValue(value, "type_cd", "before");
             }
             else {
                 sourceActUid = extractUid(value, "source_act_uid");
@@ -308,11 +307,10 @@ public class InvestigationService {
 
     private void processTreatment(String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
         String treatmentUid = "";
-        String operationType = "";
         String topic = (isFromTreatmentTopic) ? treatmentTopic : actRelationshipTopic;
 
         try {
-            operationType = extractChangeDataCaptureOperation(value);
+            String operationType = extractChangeDataCaptureOperation(value);
 
             // Treatment cannot be created without an association to Investigation by default
             // Therefore, if the message comes from the treatment topic, only process if it is an update

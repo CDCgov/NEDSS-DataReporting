@@ -123,17 +123,16 @@ public class ObservationService {
 
     private void processActRelationship(String value, long batchId) {
         String sourceActUid = "";
-        String typeCd = "";
-        String targetClassCd;
-        String operationType = "";
 
         try {
-            operationType = extractChangeDataCaptureOperation(value);
+            String typeCd;
+            String targetClassCd;
+            String operationType = extractChangeDataCaptureOperation(value);
 
             if (operationType.equals("d")) {
-                sourceActUid = extractUidBefore(value, "source_act_uid");
-                typeCd = extractValueBefore(value, "type_cd");
-                targetClassCd = extractValueBefore(value, "target_class_cd");
+                sourceActUid = extractUid(value, "source_act_uid", "before");
+                typeCd = extractValue(value, "type_cd", "before");
+                targetClassCd = extractValue(value, "target_class_cd");
             }
             else {
                 return;

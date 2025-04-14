@@ -14,6 +14,7 @@ public class UtilHelper {
             .registerModule(new JavaTimeModule());
 
     private static final String PAYLOAD_KEY = "payload";
+    private static final String DEFAULT_PATH = "after";
 
     private UtilHelper() {
         throw new IllegalStateException("Utility class");
@@ -29,9 +30,10 @@ public class UtilHelper {
         return null;
     }
 
-    public static String extractUid(String value, String uidName) throws JsonProcessingException {
+    public static String extractUid(String value, String uidName, String... overridePath) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(value);
-        JsonNode payloadNode = jsonNode.get(PAYLOAD_KEY).path("after");
+        String path = overridePath.length > 0 ? overridePath[0] : DEFAULT_PATH;
+        JsonNode payloadNode = jsonNode.get(PAYLOAD_KEY).path(path);
         if (!payloadNode.isMissingNode() && payloadNode.has(uidName)) {
             return payloadNode.get(uidName).asText();
         } else {
@@ -39,24 +41,10 @@ public class UtilHelper {
         }
     }
 
-    public static String extractUidBefore(String value, String uidName) throws JsonProcessingException {
-        JsonNode jsonNode = objectMapper.readTree(value);
-        JsonNode payloadNode = jsonNode.get(PAYLOAD_KEY).path("before");
-        if (!payloadNode.isMissingNode() && payloadNode.has(uidName)) {
-            return payloadNode.get(uidName).asText();
-        } else {
-            throw new NoSuchElementException("The " + uidName + " field is missing in the message payload.");
-        }
-    }
-
-    public static String extractValue(String message, String fieldName) throws JsonProcessingException {
+    public static String extractValue(String message, String fieldName, String... overridePath) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(message);
-        return jsonNode.get(PAYLOAD_KEY).path("after").path(fieldName).asText();
-    }
-
-    public static String extractValueBefore(String message, String fieldName) throws JsonProcessingException {
-        JsonNode jsonNode = objectMapper.readTree(message);
-        return jsonNode.get(PAYLOAD_KEY).path("before").path(fieldName).asText();
+        String nodePath = overridePath.length > 0 ? overridePath[0] : DEFAULT_PATH;
+        return jsonNode.get(PAYLOAD_KEY).path(nodePath).path(fieldName).asText();
     }
 
     public static String extractChangeDataCaptureOperation(String message) throws JsonProcessingException {
