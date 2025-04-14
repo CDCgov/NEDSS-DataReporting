@@ -1,4 +1,4 @@
-CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing_copy
     @datamart_name VARCHAR(100),
     @phc_id_list VARCHAR(MAX) = NULL,
     @debug BIT = 'false'
@@ -520,7 +520,8 @@ BEGIN
                                           'OTHER_VALUE_IND_CD',
                                           'RDB_COLUMN_NM',
                                           'RDB_TABLE_NM',
-                                          'USER_DEFINED_COLUMN_NM'
+                                          'USER_DEFINED_COLUMN_NM',
+                                          'INVESTIGATION_KEY'
                     )
                 group BY
                     Column_Name
@@ -580,25 +581,25 @@ BEGIN
         IF @debug = 'true' PRINT 'Step completed: DynDM_AlterKey_sp';
 
 
-            BEGIN TRANSACTION;
-            EXEC dbo.sp_dyn_dm_createdm_postprocessing
+        BEGIN TRANSACTION;
+        EXEC dbo.sp_dyn_dm_createdm_postprocessing_copy
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @debug = @debug;
-            COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-            IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
+        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
 
 
-            -- Cleanup
-            BEGIN TRANSACTION;
-            EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
-                 @batch_id = @batch_id,
-                 @datamart_name = @datamart_name,
-                 @debug = @debug;
-            COMMIT TRANSACTION;
+        -- Cleanup
+        BEGIN TRANSACTION;
+        EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
+             @batch_id = @batch_id,
+             @datamart_name = @datamart_name,
+             @debug = @debug;
+        COMMIT TRANSACTION;
 
-           IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
+        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
 
 
         -- Log completion

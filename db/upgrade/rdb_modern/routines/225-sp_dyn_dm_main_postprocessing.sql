@@ -1,4 +1,4 @@
-CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing_copy
     @datamart_name VARCHAR(100),
     @phc_id_list VARCHAR(MAX) = NULL,
     @debug BIT = 'false'
@@ -520,7 +520,8 @@ BEGIN
                                           'OTHER_VALUE_IND_CD',
                                           'RDB_COLUMN_NM',
                                           'RDB_TABLE_NM',
-                                          'USER_DEFINED_COLUMN_NM'
+                                          'USER_DEFINED_COLUMN_NM',
+                                          'INVESTIGATION_KEY'
                     )
                 group BY
                     Column_Name
@@ -581,7 +582,7 @@ BEGIN
 
 
         BEGIN TRANSACTION;
-        EXEC dbo.sp_dyn_dm_createdm_postprocessing
+        EXEC dbo.sp_dyn_dm_createdm_postprocessing_copy
              @batch_id = @batch_id,
              @datamart_name = @datamart_name,
              @debug = @debug;
