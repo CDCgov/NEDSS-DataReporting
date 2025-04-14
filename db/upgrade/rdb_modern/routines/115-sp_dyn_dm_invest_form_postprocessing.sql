@@ -68,22 +68,45 @@ BEGIN
         SET @Proc_Step_Name = ' GENERATING  '+ @tmp_DynDm_INVESTIGATION_DATA;
 
 
-        DECLARE @listStr VARCHAR(MAX)
+        DECLARE @listStr VARCHAR(MAX);
+
+        SELECT @listStr = COALESCE(@listStr+',' ,'') + RDB_COLUMN_NM  + ' '+ coalesce(USER_DEFINED_COLUMN_NM,'')
+        FROM  dbo.V_NRT_NBS_INVESTIGATION_RDB_TABLE_METADATA
+        WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd;
+
+        if @debug = 'true'
+            select @listStr;
 
         IF OBJECT_ID(@tmp_DynDm_INVESTIGATION_DATA, 'U') IS NOT NULL
             exec ('drop table '+ @tmp_DynDm_INVESTIGATION_DATA);
 
-        exec sp_executesql @temp_sql;
 
-        SET @temp_sql = '
- 		SELECT  rdb_column_nm_list , isd.INVESTIGATION_KEY
-	    into '+@tmp_DynDm_INVESTIGATION_DATA+'
-	    FROM
-			dbo.INVESTIGATION inv with ( nolock)
-	    INNER JOIN
-			#tmp_DynDm_SUMM_DATAMART isd ON	isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
-	    INNER JOIN
-			dbo.V_NRT_NBS_INVESTIGATION_RDB_TABLE_METADATA inv_meta on isd.DISEASE_GRP_CD =  inv_meta.INVESTIGATION_FORM_CD';
+        if len(@listStr) > 1
+            begin
+                SET @temp_sql = '
+                SELECT  isd.INVESTIGATION_KEY, '+@listStr+'
+                into '+@tmp_DynDm_INVESTIGATION_DATA+'
+                FROM
+                    dbo.INVESTIGATION inv with ( nolock)
+                INNER JOIN
+                    #tmp_DynDm_SUMM_DATAMART isd ON	isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY'
+               ;
+            end
+        else
+            begin
+                SET @temp_sql = '
+                SELECT  isd.INVESTIGATION_KEY
+                into '+@tmp_DynDm_INVESTIGATION_DATA+'
+                FROM
+                    dbo.INVESTIGATION inv with ( nolock)
+                INNER JOIN
+                    #tmp_DynDm_SUMM_DATAMART isd ON	isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY'
+                ;
+            end
+
+
+        if @debug = 'true'
+            select @temp_sql;
 
         exec sp_executesql @temp_sql;
 
@@ -151,19 +174,42 @@ BEGIN
         SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_PATIENT_DATA;
 
 
+        SET  @listStr = null;
+
+        SELECT @listStr = COALESCE(@listStr+',' ,'') + RDB_COLUMN_NM  + ' '+ coalesce(USER_DEFINED_COLUMN_NM,'')
+        FROM  dbo.V_NRT_NBS_D_PATIENT_RDB_TABLE_METADATA
+        WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd;
+
+        if @debug = 'true'
+            select @listStr;
+
         IF OBJECT_ID(@tmp_DynDm_PATIENT_DATA, 'U') IS NOT NULL
             exec ('drop table '+@tmp_DynDm_PATIENT_DATA);
 
+        if len(@listStr) > 1
+            begin
+                SET @temp_sql = '
+                SELECT isd.INVESTIGATION_KEY, '+@listStr+'
+                into '+@tmp_DynDm_PATIENT_DATA+'
+                FROM
+                    dbo.D_PATIENT pat with ( nolock)
+                INNER JOIN
+                    #tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY';
+            end
+        else
+            begin
+                SET @temp_sql = '
+                SELECT  isd.INVESTIGATION_KEY
+                into '+@tmp_DynDm_PATIENT_DATA+'
+                FROM
+                    dbo.D_PATIENT pat with ( nolock)
+                INNER JOIN
+                    #tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY';
+            end
 
-        SET @temp_sql = '
-		SELECT  pat_meta.rdb_column_nm_list , isd.INVESTIGATION_KEY
-		into '+@tmp_DynDm_PATIENT_DATA+'
-		FROM
-			dbo.D_PATIENT pat with ( nolock)
-		INNER JOIN
-			#tmp_DynDm_SUMM_DATAMART isd ON 	pat.PATIENT_KEY = isd.PATIENT_KEY
-		INNER JOIN
-			dbo.V_NRT_NBS_D_PATIENT_RDB_TABLE_METADATA pat_meta on isd.DISEASE_GRP_CD =  pat_meta.INVESTIGATION_FORM_CD';
+
+        if @debug = 'true'
+            select @temp_sql;
 
         exec sp_executesql @temp_sql;
 

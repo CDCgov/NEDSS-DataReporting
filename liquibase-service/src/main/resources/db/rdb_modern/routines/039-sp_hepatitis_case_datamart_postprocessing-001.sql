@@ -124,9 +124,9 @@ BEGIN
             from dbo.v_rdb_obs_mapping rom
             LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
+                ON UPPER(isc.TABLE_NAME) = UPPER(@tgt_table_nm)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt'
+            WHERE (RDB_TABLE = @tgt_table_nm or unique_cd = 'INV172') and db_field = 'value_txt'
               and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
             if

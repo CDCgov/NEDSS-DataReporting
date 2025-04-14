@@ -12,7 +12,7 @@ BEGIN
         DECLARE @Proc_Step_no FLOAT = 0 ;
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
 
-        DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST-PROCESSING' ;
+        DECLARE @Dataflow_Name VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing' ;
         DECLARE @package_Name VARCHAR(100) = 'sp_dyn_dm_invest_clear_postprocessing: '+ @DATAMART_NAME;
 
         DECLARE @temp_sql nvarchar(max);
