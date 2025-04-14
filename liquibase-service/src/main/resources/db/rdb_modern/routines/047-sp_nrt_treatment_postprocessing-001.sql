@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_treatment_postprocessing] @treatment_uids nvarchar(max),
+CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_treatment_postprocessing_copy] @treatment_uids nvarchar(max),
                                                                   @debug bit = 'false'
 AS
 BEGIN
@@ -51,12 +51,24 @@ BEGIN
                nrt.treatment_shared_ind                                     AS TREATMENT_SHARED_IND,
                nrt.treatment_oid                                            AS TREATMENT_OID,
                nrt.record_status_cd                                         AS RECORD_STATUS_CD,
-               tk.d_treatment_key                                           AS TREATMENT_KEY
+               tk.d_treatment_key                                           AS TREATMENT_KEY,
+               nrt.morbidity_uid,
+               nrt.organization_uid,
+               nrt.patient_treatment_uid,
+               nrt.provider_uid,
+               nrt.treatment_date,
+               nrt.public_health_case_uid
         INTO #temp_trt_table
-        FROM dbo.nrt_treatment nrt
+        FROM (SELECT t.*, 
+                     phc.value as public_health_case_uid
+              FROM dbo.nrt_treatment t 
+              OUTER APPLY STRING_SPLIT(t.associated_phc_uids, ',') as phc) nrt
                  LEFT JOIN dbo.nrt_treatment_key tk WITH (NOLOCK)
                            ON CAST(nrt.treatment_uid AS bigint) = tk.treatment_uid
+                           AND COALESCE(nrt.public_health_case_uid, 1) = COALESCE(tk.public_health_case_uid, 1)
         WHERE nrt.treatment_uid IN (SELECT value FROM STRING_SPLIT(@treatment_uids, ','));
+
+        IF @debug = 'true' SELECT @proc_step_name, * from #temp_trt_table;
 
         /* Temp treatment_event table creation */
         SELECT CAST(nrt.treatment_uid AS bigint)  AS treatment_uid,
@@ -72,9 +84,8 @@ BEGIN
                COALESCE(ldf.LDF_GROUP_KEY, 1)     AS LDF_GROUP_KEY,
                nrt.record_status_cd               AS RECORD_STATUS_CD
         INTO #temp_trt_event_table
-        FROM dbo.nrt_treatment nrt
-                 LEFT JOIN dbo.nrt_treatment_key tk ON CAST(nrt.treatment_uid AS bigint) = tk.treatment_uid
-                 LEFT JOIN dbo.TREATMENT trt WITH (NOLOCK) ON trt.TREATMENT_KEY = tk.d_treatment_key
+        FROM #temp_trt_table nrt
+                 LEFT JOIN dbo.TREATMENT trt WITH (NOLOCK) ON trt.TREATMENT_KEY = nrt.treatment_key
                  LEFT JOIN dbo.INVESTIGATION inv WITH (NOLOCK)
                            ON CAST(nrt.public_health_case_uid AS bigint) = inv.CASE_UID
                  LEFT JOIN dbo.nrt_investigation nrt_inv WITH (NOLOCK)
@@ -91,6 +102,9 @@ BEGIN
                            ON CAST(nrt.treatment_uid AS bigint) = ldf.business_object_uid
         WHERE nrt.treatment_uid IN (SELECT value FROM STRING_SPLIT(@treatment_uids, ','));
 
+        IF @debug = 'true' SELECT @proc_step_name, * from #temp_trt_event_table;
+
+       RETURN;
         /* Logging */
         SET @rowcount = @@rowcount;
         INSERT INTO [dbo].[job_flow_log]
@@ -197,7 +211,7 @@ BEGIN
                , LEFT(@treatment_uids, 500));
 
         SET @proc_step_name = 'Insert into TREATMENT Dimension';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 5;
 
         /* Treatment Insert Operation - Generate keys first */
         INSERT INTO dbo.nrt_treatment_key(treatment_uid)
