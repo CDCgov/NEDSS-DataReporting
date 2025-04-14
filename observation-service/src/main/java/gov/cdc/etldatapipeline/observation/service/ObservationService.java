@@ -38,6 +38,7 @@ import static gov.cdc.etldatapipeline.commonutil.UtilHelper.*;
 @RequiredArgsConstructor
 public class ObservationService {
     private static final Logger logger = LoggerFactory.getLogger(ObservationService.class);
+    private static final String BEFORE_PATH = "before";
 
     @Value("${spring.kafka.input.topic-name}")
     private String observationTopic;
@@ -130,9 +131,9 @@ public class ObservationService {
             String operationType = extractChangeDataCaptureOperation(value);
 
             if (operationType.equals("d")) {
-                sourceActUid = extractUid(value, "source_act_uid", "before");
-                typeCd = extractValue(value, "type_cd", "before");
-                targetClassCd = extractValue(value, "target_class_cd");
+                sourceActUid = extractUid(value, "source_act_uid", BEFORE_PATH);
+                typeCd = extractValue(value, "type_cd", BEFORE_PATH);
+                targetClassCd = extractValue(value, "target_class_cd", BEFORE_PATH);
             }
             else {
                 return;
