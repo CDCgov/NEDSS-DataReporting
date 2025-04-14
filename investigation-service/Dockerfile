@@ -1,5 +1,7 @@
 FROM amazoncorretto:21 as builder
 
+RUN yum update -y && yum clean all
+
 #Copy project config
 COPY gradle /usr/src/gradle
 COPY gradlew /usr/src/gradlew
