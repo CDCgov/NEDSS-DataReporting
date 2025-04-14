@@ -131,6 +131,8 @@ BEGIN
         where ld.ldf_group_key is not null
           and ld.ldf_data_key is not null;
 
+        COMMIT TRANSACTION;
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -154,6 +156,8 @@ BEGIN
                ,@rowcount
                ,LEFT(@ldf_uid_list,500)
                );
+
+        BEGIN TRANSACTION;
 
         SET @proc_step_name='Insert into LDF_GROUP Dimension';
         SET @proc_step_no = 3;
@@ -179,6 +183,8 @@ BEGIN
                  left join dbo.nrt_ldf_data_key nldk with (nolock) on ld.ldf_uid = nldk.ldf_uid
         where nldk.d_ldf_data_key is null and nldk.d_ldf_group_key is null;
 
+        COMMIT TRANSACTION;
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -202,6 +208,8 @@ BEGIN
                ,@rowcount
                ,LEFT(@ldf_uid_list,500)
                );
+
+        BEGIN TRANSACTION;
 
         SET @proc_step_name='Insert into LDF_DATA Dimension';
         SET @proc_step_no = 4;
@@ -248,6 +256,8 @@ BEGIN
             and ld.ldf_group_key = k.d_ldf_group_key
         where ld.ldf_data_key is null and ld.ldf_group_key is null;
 
+        COMMIT TRANSACTION;
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -272,6 +282,7 @@ BEGIN
                ,LEFT(@ldf_uid_list,500)
                );
 
+        BEGIN TRANSACTION;
 
         SET @proc_step_name='Update PATIENT_LDF_GROUP Dimension';
         SET @proc_step_no = @proc_step_no +1;
@@ -300,6 +311,7 @@ BEGIN
          ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
   and d.patient_record_status <> 'INACTIVE';
 
+        COMMIT TRANSACTION;
 
         /* Logging */
         set @rowcount=@@rowcount
@@ -324,6 +336,8 @@ BEGIN
                ,@rowcount
                ,LEFT(@ldf_uid_list,500)
                );
+
+        BEGIN TRANSACTION;
 
         SET @proc_step_name='Update PROVIDER_LDF_GROUP Dimension';
         SET @proc_step_no = @proc_step_no +1;
@@ -352,6 +366,8 @@ BEGIN
          ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
         and d.provider_record_status <> 'INACTIVE';
 
+        COMMIT TRANSACTION;
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -375,6 +391,8 @@ BEGIN
                ,@rowcount
                ,LEFT(@ldf_uid_list,500)
                );
+
+        BEGIN TRANSACTION;
 
         SET @proc_step_name='Update ORGANIZATION_LDF_GROUP Dimension';
         SET @proc_step_no = @proc_step_no +1;
@@ -403,6 +421,8 @@ BEGIN
          ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
         and d.organization_record_status <> 'INACTIVE';
 
+        COMMIT TRANSACTION;
+
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
         (
@@ -427,10 +447,8 @@ BEGIN
                );
 
 
-        COMMIT TRANSACTION;
-
         SET @proc_step_name='SP_COMPLETE';
-        SET @proc_step_no = 8;
+        SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log]
         (
@@ -490,7 +508,7 @@ BEGIN
         ,[Error_Description]
         )
       VALUES
-            (
+  (
               @batch_id
             ,current_timestamp
             ,current_timestamp
