@@ -135,7 +135,6 @@ BEGIN
         SELECT @select_cols = STRING_AGG(CAST(QUOTENAME(TABLE_NAME) + '.' + QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ', ')
         FROM ColumnNames;
 
-        SELECT @select_cols;
 
                 SET @temp_sql = 
 
