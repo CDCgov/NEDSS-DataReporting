@@ -17,6 +17,7 @@ WORKDIR /usr/src/
 #Build person service along with any required libraries
 RUN ./gradlew :person-service:buildNeeded -x test --no-daemon
 FROM amazoncorretto:21
+RUN yum update -y && yum clean all
 COPY --from=builder /usr/src/person-service/build/libs/person-service*.jar person-service.jar
 
 # Run jar
