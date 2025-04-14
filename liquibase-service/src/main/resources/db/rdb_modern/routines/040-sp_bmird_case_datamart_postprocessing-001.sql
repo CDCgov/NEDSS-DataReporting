@@ -101,8 +101,8 @@ BEGIN
             INTO #OBS_TXT_BMIRD_Case
             FROM dbo.v_rdb_obs_mapping rom
             LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt' or unique_cd in ('INV172','BMD267','BMD302','BMD303','BMD304','BMD305','BMD306')
+                ON UPPER(isc.TABLE_NAME) = UPPER(@tgt_table_nm) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+            WHERE (RDB_TABLE = 'BMIRD_Case' OR unique_cd = 'INV172') and (db_field = 'value_txt' OR unique_cd in ('BMD267','BMD302','BMD303','BMD304','BMD305','BMD306'))
                 AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
             if
@@ -138,8 +138,8 @@ BEGIN
             INTO #OBS_DATE_BMIRD_Case
             FROM dbo.v_rdb_obs_mapping rom
             LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'from_time' or unique_cd = 'BMD307')
+                ON UPPER(isc.TABLE_NAME) = UPPER(@tgt_table_nm) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+            WHERE (RDB_TABLE = @tgt_table_nm OR unique_cd = 'BMD307') and db_field = 'from_time'
               and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
             if
