@@ -1,4 +1,4 @@
-CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing_copy
+CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
     @datamart_name VARCHAR(100),
     @phc_id_list VARCHAR(MAX) = NULL,
     @debug BIT = 'false'

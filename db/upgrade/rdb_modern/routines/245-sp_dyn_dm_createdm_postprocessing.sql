@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_createdm_postprocessing_copy
+CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_createdm_postprocessing
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100),
     @debug bit = 'false'
