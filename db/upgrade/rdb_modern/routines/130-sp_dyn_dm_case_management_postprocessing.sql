@@ -75,13 +75,11 @@ BEGIN
             begin
                 SET @temp_sql = '
             SELECT
-                isd.INVESTIGATION_KEY ,rdb_column_nm_list
+                isd.INVESTIGATION_KEY ,'+ @listStr +'
             INTO
                 '+ @tmp_DynDm_CASE_MANAGEMENT_DATA +'
             FROM
                 #tmp_DynDM_SUMM_DATAMART isd
-            INNER JOIN
-                dbo.V_NRT_NBS_D_CASE_MGMT_RDB_TABLE_METADATA case_mgmt_meta on  case_mgmt_meta.INVESTIGATION_FORM_CD = isd.DISEASE_GRP_CD
             LEFT JOIN
                 dbo.D_CASE_MANAGEMENT case_mgmt ON isd.INVESTIGATION_KEY = case_mgmt.INVESTIGATION_KEY
             WHERE  case_mgmt.INVESTIGATION_KEY>1' ;
