@@ -1202,7 +1202,7 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
             tgt.MIC_VALUE_7 = src.MIC_VALUE_7,
             tgt.ANTIMICROBIAL_AGENT_TESTED_8 = src.ANTIMICROBIAL_AGENT_TESTED_8,
             tgt.SUSCEPTABILITY_METHOD_8 = src.SUSCEPTABILITY_METHOD_8,
-            tgt.S_I_R_U_RESULT_8 = NULL,
+            tgt.S_I_R_U_RESULT_8 = src.S_I_R_U_RESULT_8,
             tgt.MIC_SIGN_8 = src.MIC_SIGN_8,
             tgt.MIC_VALUE_8 = src.MIC_VALUE_8,
             tgt.ANTIMIC_GT_8_AGENT_AND_RESULT = src.ANTIMIC_GT_8_AGENT_AND_RESULT,
