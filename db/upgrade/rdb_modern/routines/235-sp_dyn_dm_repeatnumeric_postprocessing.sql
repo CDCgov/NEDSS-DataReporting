@@ -41,8 +41,8 @@ BEGIN
         --temporary table used only in this proc
         DECLARE @tmp_DynDm_REPEAT_BLOCK varchar(500) = '[dbo].tmp_DynDm_REPEAT_BLOCK_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar);
 
-        DECLARE @ddl_sql_invreptnum nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY_REPEAT_NUMERIC [bigint] NULL)';
-        DECLARE @ddl_sql_reptblknum nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY_REPEAT_BLOCK_NUMERIC_ALL [bigint] NULL)';
+        DECLARE @ddl_sql_invreptnum nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY [bigint] NULL)';
+        DECLARE @ddl_sql_reptblknum nvarchar(800) = 'CREATE TABLE [dbo].tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_'+ @DATAMART_NAME +'_'+ cast(@batch_id as varchar) +'(INVESTIGATION_KEY [bigint] NULL)';
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';

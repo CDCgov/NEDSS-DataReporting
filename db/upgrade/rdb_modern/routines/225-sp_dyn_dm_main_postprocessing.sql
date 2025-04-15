@@ -491,6 +491,24 @@ BEGIN
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_VACCINATION';
 
+         -- D_INV_STD dimension
+        BEGIN TRANSACTION;
+        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+             @batch_id = @batch_id,
+             @datamart_name = @datamart_name,
+             @RDB_TABLE_NM = 'D_INV_STD',
+             @DIM_KEY = 'D_INV_STD_KEY',
+             @phc_id_list = @phc_id_list,
+             @debug = @debug;
+        COMMIT TRANSACTION;
+        if @returnCode is null or @returnCode < 0
+        BEGIN
+            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_STD';
+            goto CLEANUP_HANDLER;
+        END
+
+        IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_STD';
+
         -- Process organization data
         BEGIN TRANSACTION;
         EXEC @returnCode = dbo.sp_dyn_dm_org_data_postprocessing

@@ -2,6 +2,7 @@ spring:
   kafka:
     input:
       topic-name: nbs_Observation
+      topic-name-ar: nbs_Act_relationship
     output:
       topic-name-reporting: nrt_observation
       topic-name-coded: nrt_observation_coded

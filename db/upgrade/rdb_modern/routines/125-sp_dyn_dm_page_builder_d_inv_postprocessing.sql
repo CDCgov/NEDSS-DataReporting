@@ -380,9 +380,9 @@ BEGIN
             end
         else
             Begin
-                SET @SQL = '  SELECT  distinct '+@listStr + ' tmp_DynDM_SUMM_DATAMART.INVESTIGATION_KEY ' +
+                SET @SQL = '  SELECT  distinct '+@listStr + ' ids.INVESTIGATION_KEY ' +
                            '    into '+@tmp_DynDm_D_INVESTIGATION +
-                           '    FROM #tmp_DynDM_SUMM_DATAMART with (nolock) '
+                           '    FROM #tmp_DynDM_SUMM_DATAMART ids with (nolock) '
                 ;
             end
             ;
