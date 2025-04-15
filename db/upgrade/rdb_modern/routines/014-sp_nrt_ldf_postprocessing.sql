@@ -44,7 +44,7 @@ BEGIN
                );
 
         SET @proc_step_name='Create LDF_DATA Temp tables-'+ LEFT(@ldf_uid_list,105);
-        SET @proc_step_no = 1;
+        SET @proc_step_no = @proc_step_no +1;
 
         /**Create temp table for LDF_DATA */
         select
@@ -103,7 +103,7 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET @proc_step_name='Update LDF_DATA Dimension';
-        SET @proc_step_no = 2;
+        SET @proc_step_no = @proc_step_no +1;
 
 
         /** Update condition for LDF_DATA*/
@@ -160,7 +160,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @proc_step_name='Insert into LDF_GROUP Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = @proc_step_no +1;
 
         /**Create new keys for LDF_Group*/
         insert into dbo.nrt_ldf_group_key (business_object_uid)
@@ -212,7 +212,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @proc_step_name='Insert into LDF_DATA Dimension';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = @proc_step_no +1;
 
 
         insert into dbo.ldf_data
@@ -247,7 +247,7 @@ BEGIN
              ,tld.import_version_nbr
              ,tld.label_txt
              ,tld.ldf_oid
-             ,tld.nnd_ind
+           ,tld.nnd_ind
              ,tld.metadata_record_status_cd
         FROM #tmp_ldf_data tld
                  join dbo.nrt_ldf_data_key k with (nolock) on tld.ldf_uid = k.ldf_uid
@@ -528,4 +528,4 @@ BEGIN
 
     END CATCH
 
-END;
+    END;

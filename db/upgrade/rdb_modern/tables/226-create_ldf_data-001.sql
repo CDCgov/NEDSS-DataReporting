@@ -23,4 +23,38 @@ IF NOT EXISTS (SELECT 1
                RECORD_STATUS_CD VARCHAR(8) NOT NULL
                CONSTRAINT CHK_LDFDATA_RECORD_STATUS CHECK(RECORD_STATUS_CD IN('ACTIVE' ,'INACTIVE'))
         );
+        insert into dbo.ldf_data
+            (ldf_data_key
+            ,ldf_group_key
+            ,ldf_column_type
+            ,condition_cd
+            ,condition_desc_txt
+            ,class_cd
+            ,code_set_nm
+            ,business_obj_nm
+            ,display_order_number
+            ,field_size
+            ,ldf_value
+            ,import_version_nbr
+            ,label_txt
+            ,ldf_oid
+            ,nnd_ind
+            ,record_status_cd
+            )
+                values (1
+                        ,1
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,NULL
+                        ,'ACTIVE');
     END;
