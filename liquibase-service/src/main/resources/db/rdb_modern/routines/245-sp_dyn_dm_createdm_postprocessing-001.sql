@@ -98,9 +98,9 @@ BEGIN
             , 'tmp_DynDm_Patient_Data_' + @datamart_suffix
             , 'tmp_DynDm_Case_Management_Data_' + @datamart_suffix
             , 'tmp_DynDm_D_INV_Administrative_' + @datamart_suffix
-            , 'dbo.tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix
-            , 'dbo.tmp_DynDm_D_INV_COMPLICATION_' + @datamart_suffix
-            , 'dbo.tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_CLINICAL_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_COMPLICATION_' + @datamart_suffix
+            , 'tmp_DynDm_D_INV_CONTACT_' + @datamart_suffix
             , 'tmp_DynDm_D_INV_DEATH_' + @datamart_suffix
             , 'tmp_DynDm_D_INV_EPIDEMIOLOGY_' + @datamart_suffix
             , 'tmp_DynDm_D_INV_HIV_' + @datamart_suffix
