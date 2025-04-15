@@ -64,6 +64,9 @@ public class InvestigationService {
     @Value("${spring.kafka.input.topic-name-tmt}")
     private String treatmentTopic;
 
+    @Value("${spring.kafka.input.topic-name-ar}")
+    private String actRelationshipTopic;
+
     @Value("${spring.kafka.output.topic-name-treatment}")
     private String treatmentOutputTopicName;
 
@@ -123,7 +126,8 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-int}",
                     "${spring.kafka.input.topic-name-ctr}",
                     "${spring.kafka.input.topic-name-vac}",
-                    "${spring.kafka.input.topic-name-tmt}"
+                    "${spring.kafka.input.topic-name-tmt}",
+                    "${spring.kafka.input.topic-name-ar}"
             }
     )
     public void processMessage(ConsumerRecord<String, String> rec,
@@ -145,7 +149,9 @@ public class InvestigationService {
         } else if (topic.equals(vaccinationTopic)) {
             processVaccination(message);
         } else if (topic.equals(treatmentTopic) && treatmentEnable) {
-            processTreatment(message);
+            processTreatment(message, true, "");
+        } else if (topic.equals(actRelationshipTopic) && message != null) {
+            processActRelationship(message);
         }
         consumer.commitSync();
     }
@@ -186,6 +192,31 @@ public class InvestigationService {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             throw new RuntimeException(errorMessage("Investigation", publicHealthCaseUid, e), e);
+        }
+    }
+
+    private void processActRelationship(String value) {
+        String sourceActUid = "";
+
+        try {
+            String typeCd;
+            String operationType = extractChangeDataCaptureOperation(value);
+
+            if (operationType.equals("d")) {
+                sourceActUid = extractUid(value, "source_act_uid", "before");
+                typeCd = extractValue(value, "type_cd", "before");
+            }
+            else {
+                sourceActUid = extractUid(value, "source_act_uid");
+                typeCd = extractValue(value, "type_cd");
+            }
+
+            logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
+            if ((typeCd.equals("TreatmentToPHC") || typeCd.equals("TreatmentToMorb")) && treatmentEnable) {
+                processTreatment(value, false, sourceActUid);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(errorMessage("ActRelationship", sourceActUid, e), e);
         }
     }
 
@@ -274,12 +305,27 @@ public class InvestigationService {
         }
     }
 
-    private void processTreatment(String value) {
+    private void processTreatment(String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
         String treatmentUid = "";
-        try {
-            treatmentUid = extractUid(value, "treatment_uid");
+        String topic = (isFromTreatmentTopic) ? treatmentTopic : actRelationshipTopic;
 
-            logger.info(topicDebugLog, "Treatment", treatmentUid, treatmentTopic);
+        try {
+            String operationType = extractChangeDataCaptureOperation(value);
+
+            // Treatment cannot be created without an association to Investigation by default
+            // Therefore, if the message comes from the treatment topic, only process if it is an update
+            if (isFromTreatmentTopic) {
+                if (!operationType.equals("u")) {
+                    return;
+                }
+                treatmentUid = extractUid(value, "treatment_uid");
+            }
+            else {
+                treatmentUid = actRelationshipSourceActUid;
+            }
+
+
+            logger.info(topicDebugLog, "Treatment", treatmentUid, topic);
             Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
             if(treatmentData.isPresent()) {
                 Treatment treatment = treatmentData.get();
