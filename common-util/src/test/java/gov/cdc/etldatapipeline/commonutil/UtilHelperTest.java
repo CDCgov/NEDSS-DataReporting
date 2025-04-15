@@ -14,11 +14,17 @@ class UtilHelperTest {
     private final String sampleJson = """
         {
           "payload": {
+            "before": {
+              "uid": "12344",
+              "name": "Test Name Before",
+              "age": 30
+            },
             "after": {
               "uid": "12345",
               "name": "Test Name",
               "age": 30
-            }
+            },
+            "op": "d"
           }
         }
         """;
@@ -68,6 +74,9 @@ class UtilHelperTest {
     void testExtractUid_validField() throws JsonProcessingException {
         String uid = UtilHelper.extractUid(sampleJson, "uid");
         assertEquals("12345", uid);
+
+        uid = UtilHelper.extractUid(sampleJson, "uid", "before");
+        assertEquals("12344", uid);
     }
 
     @Test
@@ -94,6 +103,9 @@ class UtilHelperTest {
     void testExtractValue_validField() throws JsonProcessingException {
         String name = UtilHelper.extractValue(sampleJson, "name");
         assertEquals("Test Name", name);
+
+        name = UtilHelper.extractValue(sampleJson, "name", "before");
+        assertEquals("Test Name Before", name);
     }
 
     @Test
@@ -119,5 +131,11 @@ class UtilHelperTest {
 
         msg = UtilHelper.errorMessage("Person", null, new RuntimeException("Boom"));
         assertFalse(msg.contains("with ids"));
+    }
+
+    @Test
+    void testExtractCdcOperation() throws JsonProcessingException {
+        String value = UtilHelper.extractChangeDataCaptureOperation(sampleJson);
+        assertEquals("d", value);
     }
 }
