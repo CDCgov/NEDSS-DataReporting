@@ -5,7 +5,6 @@ IF NOT EXISTS (SELECT 1
 CREATE TABLE dbo.nrt_treatment
 (
     treatment_uid                  varchar(100)                                    NOT NULL,
-    public_health_case_uid         varchar(100)                                    NULL,
     organization_uid               varchar(100)                                    NULL,
     provider_uid                   varchar(100)                                    NULL,
     patient_treatment_uid          varchar(100)                                    NULL,

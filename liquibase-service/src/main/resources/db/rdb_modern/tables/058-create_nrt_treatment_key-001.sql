@@ -32,5 +32,5 @@ IF NOT EXISTS (SELECT 1 FROM dbo.TREATMENT)
                         AND Object_ID = Object_ID(N'nrt_treatment_key'))
             BEGIN
                 ALTER TABLE dbo.nrt_treatment_key
-                    ADD public_health_case_uid nvarchar(max);
+                    ADD public_health_case_uid bigint;
             END;
