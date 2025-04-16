@@ -531,7 +531,7 @@ BEGIN
 			c.class_cd AS data_source
 		INTO #LDF_DATA
 		FROM [dbo].nrt_ldf_data a WITH (NOLOCK) 
-		INNER JOIN [dbo].nrt_srte_Codeset c WITH (NOLOCK) 
+		LEFT JOIN [dbo].nrt_srte_Codeset c WITH (NOLOCK) 
 			ON a.code_set_nm = c.code_set_nm
 		INNER JOIN [dbo].LDF_DATAMART_TABLE_REF b WITH (NOLOCK) 
 			ON b.condition_cd = a.condition_cd
