@@ -2329,3 +2329,52 @@ databaseChangeLog:
         - sqlFile:
             path: 250-sp_dyn_dm_invest_clear_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 720
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 226-create_ldf_datamart_table_ref-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 725
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 227-create_ldf_datamart_column_ref-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 730
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 228-create_d_ldf_meta_data-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 735
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 229-create_ldf_dimensional_data-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 740
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 003-fn_nbs_strings_split-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 745
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 265-sp_ldf_dimensional_data_postprocessing-001.sql
+            splitStatements: false
+    
