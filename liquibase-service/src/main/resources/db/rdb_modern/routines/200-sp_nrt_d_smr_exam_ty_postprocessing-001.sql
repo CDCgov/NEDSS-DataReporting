@@ -177,8 +177,7 @@ BEGIN
             LEFT JOIN #S_D_SMR_EXAM_TY S 
             ON S.TB_PAM_UID = K.TB_PAM_UID AND
                 S.NBS_CASE_ANSWER_UID = K.NBS_CASE_ANSWER_UID
-            WHERE D.TB_PAM_UID IN (SELECT value FROM #D_SMR_EXAM_TY_PHC_LIST) 
-            AND S.NBS_CASE_ANSWER_UID IS NULL;
+            WHERE D.TB_PAM_UID IN (SELECT value FROM #D_SMR_EXAM_TY_PHC_LIST);
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
