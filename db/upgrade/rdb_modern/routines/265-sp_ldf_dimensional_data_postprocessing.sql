@@ -32,7 +32,7 @@ BEGIN
 			@PROC_STEP_NAME = 'GENERATING #LDF_PHC_UID_LIST TABLE';
 
 		IF OBJECT_ID('#LDF_PHC_UID_LIST', 'U') IS NOT NULL
-			drop table #LDF_PHC_UID_LIST;
+			DROP TABLE #LDF_PHC_UID_LIST;
 
 		SELECT 
 			a.business_object_uid AS phc_iud,
