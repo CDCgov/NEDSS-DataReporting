@@ -26,4 +26,12 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_numeric' and x
 
         END;
 
+    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'batch_id' AND Object_ID = Object_ID(N'nrt_observation_numeric'))
+        BEGIN
+
+        ALTER TABLE dbo.nrt_observation_numeric
+           ADD batch_id bigint;
+
+        END;
+
     END;
