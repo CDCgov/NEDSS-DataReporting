@@ -39,7 +39,8 @@ BEGIN
 			a.ldf_uid
 		INTO  #LDF_PHC_UID_LIST
 		FROM [dbo].nrt_ldf_data a WITH (NOLOCK) 
-		INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = a.business_object_uid 
+		INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu 
+			ON nu.value = a.business_object_uid 
 			
 
 		SELECT @RowCount_no = @@ROWCOUNT;
