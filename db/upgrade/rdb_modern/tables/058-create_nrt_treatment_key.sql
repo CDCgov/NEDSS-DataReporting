@@ -1,8 +1,9 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment_key' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.nrt_treatment_key (
-                                               d_treatment_key bigint IDENTITY (1,1) NOT NULL,
-                                               treatment_uid   bigint                NULL
+                                               d_treatment_key          bigint IDENTITY (1,1) NOT NULL,
+                                               treatment_uid            bigint                NULL,
+                                               public_health_case_uid   bigint                NULL
         );
 
         declare @max bigint;

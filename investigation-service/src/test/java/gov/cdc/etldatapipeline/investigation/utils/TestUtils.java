@@ -376,7 +376,6 @@ public class TestUtils {
     public static Treatment constructTreatment(Long treatmentUid) {
         Treatment treatment = new Treatment();
         treatment.setTreatmentUid(String.valueOf(treatmentUid));
-        treatment.setPublicHealthCaseUid("12345");
         treatment.setOrganizationUid("67890");
         treatment.setProviderUid("11111");
         treatment.setPatientTreatmentUid("22222");

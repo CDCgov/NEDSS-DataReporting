@@ -243,4 +243,14 @@ IF EXISTS (SELECT 1
                 ALTER TABLE dbo.nrt_treatment
                     ADD associated_phc_uids nvarchar(max);
             END;
+
+-- CNDE-2536
+        IF EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'public_health_case_uid'
+                        AND Object_ID = Object_ID(N'nrt_treatment'))
+            BEGIN
+                ALTER TABLE dbo.nrt_treatment
+                    DROP public_health_case_uid;
+            END;
     END;
