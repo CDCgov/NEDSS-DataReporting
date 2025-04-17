@@ -2329,3 +2329,51 @@ databaseChangeLog:
         - sqlFile:
             path: 250-sp_dyn_dm_invest_clear_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 750
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 230-create_ldf_generic-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 755
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 231-create_ldf_generic1-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 760
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 232-create_ldf_generic2-001.sql
+            splitStatements: false    
+  - changeSet:
+      id: 765
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 270-sp_merge_tables-001.sql
+            splitStatements: false      
+  - changeSet:
+      id: 765
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 275-sp_execute_ldf_generic-001.sql
+            splitStatements: false   
+  - changeSet:
+      id: 765
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 280-sp_ldf_generic_datamart_postprocessing-001.sql
+            splitStatements: false            
