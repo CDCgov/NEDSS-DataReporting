@@ -383,6 +383,7 @@ public class PostProcessingService {
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
                         break;
                     case OBSERVATION:
                         dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);

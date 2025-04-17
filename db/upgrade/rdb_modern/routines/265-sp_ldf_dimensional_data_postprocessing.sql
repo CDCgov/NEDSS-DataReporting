@@ -1,6 +1,6 @@
 
 CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_dimensional_data_postprocessing]
-  @phc_id_list nvarchar(max),
+  @ldf_id_list nvarchar(max),
   @debug bit = 'false'
  AS
 BEGIN
@@ -29,18 +29,20 @@ BEGIN
 		SET
 			@PROC_STEP_NO = @PROC_STEP_NO + 1;
 		SET
-			@PROC_STEP_NAME = 'GENERATING #LDF_PHC_UID_LIST TABLE';
+			@PROC_STEP_NAME = 'GENERATING #LDF_UID_LIST TABLE';
 
-		IF OBJECT_ID('#LDF_PHC_UID_LIST', 'U') IS NOT NULL
-			DROP TABLE #LDF_PHC_UID_LIST;
+		IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL
+			DROP TABLE #LDF_UID_LIST;
 
 		SELECT 
-			a.business_object_uid AS phc_iud,
 			a.ldf_uid
-		INTO  #LDF_PHC_UID_LIST
+		INTO  #LDF_UID_LIST
 		FROM [dbo].nrt_ldf_data a WITH (NOLOCK) 
-		INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu 
-			ON nu.value = a.business_object_uid 
+		INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@ldf_id_list, ',')) nu 
+			ON nu.value = a.ldf_uid 
+		WHERE
+			a.ldf_meta_data_business_object_nm IN ('PHC', 'BMD', 'NIP', 'HEP')
+			AND a.data_type IN ('ST', 'CV', 'LIST_ST')
 			
 
 		SELECT @RowCount_no = @@ROWCOUNT;
@@ -48,7 +50,7 @@ BEGIN
 		IF
 			@debug = 'true'
 			SELECT @Proc_Step_Name AS step, *
-			FROM #LDF_PHC_UID_LIST;
+			FROM #LDF_UID_LIST;
 
 		INSERT INTO [dbo].[job_flow_log]
 			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -91,12 +93,10 @@ BEGIN
 			END AS LDF_PAGE_SET
 		INTO #LDF_META_DATA
 		FROM [dbo].nrt_ldf_data a WITH (NOLOCK)
-		INNER JOIN #LDF_PHC_UID_LIST l 
+		INNER JOIN #LDF_UID_LIST l 
 			ON l.ldf_uid = a.ldf_uid
 		WHERE 
-			a.ldf_meta_data_business_object_nm IN ('PHC', 'BMD', 'NIP', 'HEP')
-			AND a.data_type IN ('ST', 'CV', 'LIST_ST')
-			AND (
+			(
 				a.condition_cd IN (SELECT condition_cd FROM [dbo].LDF_DATAMART_TABLE_REF WITH (NOLOCK)) 
 				OR a.condition_cd IS NULL
 			);
@@ -318,7 +318,7 @@ BEGIN
 			) AS datamart_column_nm
 		INTO #LDF_METADATA
 		FROM [dbo].D_LDF_META_DATA a WITH(NOLOCK)
-		INNER JOIN #LDF_PHC_UID_LIST l 
+		INNER JOIN #LDF_UID_LIST l 
 			ON l.ldf_uid = a.ldf_uid
 		GROUP BY 
 			a.cdc_national_id,
@@ -536,11 +536,8 @@ BEGIN
 			ON a.code_set_nm = c.code_set_nm
 		INNER JOIN [dbo].LDF_DATAMART_TABLE_REF b WITH (NOLOCK) 
 			ON b.condition_cd = a.condition_cd
-		INNER JOIN #LDF_PHC_UID_LIST l 
-			ON l.ldf_uid = a.ldf_uid
-		WHERE 
-			a.ldf_meta_data_business_object_nm IN ('PHC', 'BMD', 'NIP', 'HEP')
-			AND a.data_type IN ('ST', 'CV', 'LIST_ST')
+		INNER JOIN #LDF_UID_LIST l 
+			ON l.ldf_uid = a.ldf_uid		
 				
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 

@@ -372,9 +372,10 @@ class PostProcessingServiceTest {
 
         String expectedLdfIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForLdfIds(expectedLdfIdsString);
+        verify(postProcRepositoryMock).executeStoredProcForLdfDimensionalData(expectedLdfIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(7, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(LDF_DATA.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -621,11 +622,12 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(15).contains(cmTopic));
         assertTrue(topicLogList.get(16).contains(cmTopic));
         assertTrue(topicLogList.get(17).contains(ldfTopic));
-        assertTrue(topicLogList.get(18).contains(obsTopic));
-        assertTrue(topicLogList.get(19).contains(contactTopic));
+        assertTrue(topicLogList.get(18).contains(ldfTopic));
+        assertTrue(topicLogList.get(19).contains(obsTopic));
         assertTrue(topicLogList.get(20).contains(contactTopic));
-        assertTrue(topicLogList.get(21).contains(vacTopic));
-        assertTrue(topicLogList.get(22).contains(vacTopic));        
+        assertTrue(topicLogList.get(21).contains(contactTopic));
+        assertTrue(topicLogList.get(22).contains(vacTopic));
+        assertTrue(topicLogList.get(23).contains(vacTopic));        
     }
 
     @Test
