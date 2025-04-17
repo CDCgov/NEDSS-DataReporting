@@ -166,7 +166,7 @@ BEGIN
         insert into dbo.nrt_ldf_group_key (business_object_uid)
         select distinct tld.business_object_uid from #tmp_ldf_data tld
         	left join dbo.nrt_ldf_group_key nl with (nolock) on nl.business_object_uid = tld.business_object_uid
-        where nl.d_ldf_group_key is null and nl.business_object_uid is null
+        where nl.business_object_uid is null
         order by tld.business_object_uid;
 
         insert into dbo.ldf_group(ldf_group_key, business_object_uid)
@@ -490,7 +490,7 @@ BEGIN
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-            'Error Message: ' + ERROR_MESSAGE();
+          'Error Message: ' + ERROR_MESSAGE();
 
         /* Logging */
         INSERT INTO [dbo].[job_flow_log]
