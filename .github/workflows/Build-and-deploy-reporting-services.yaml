@@ -21,6 +21,10 @@ jobs:
  
   # person-reporting-microservice
   call-build-person-reporting-microservice-container-workflow:
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     name: Build Person Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
@@ -36,6 +40,10 @@ jobs:
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   call-update-helm-for-person-reporting-microservice:
+    permissions:
+      id-token: write
+      contents: write      
+      pull-requests: write
     needs: call-build-person-reporting-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
@@ -49,6 +57,10 @@ jobs:
  
   # organization-reporting-microservice
   call-build-organization-reporting-microservice-container-workflow:
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     name: Build Organization Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
@@ -64,6 +76,10 @@ jobs:
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   call-update-helm-for-organization-reporting-microservice:
+    permissions:
+      id-token: write
+      contents: write      
+      pull-requests: write
     needs: call-build-organization-reporting-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
@@ -77,6 +93,10 @@ jobs:
   
   # investigation-reporting-microservice
   call-build-investigation-reporting-microservice-container-workflow:
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     name: Build Investigation Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
@@ -92,6 +112,10 @@ jobs:
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   call-update-helm-for-investigation-reporting-microservice:
+    permissions:
+      id-token: write
+      contents: write      
+      pull-requests: write
     needs: call-build-investigation-reporting-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
@@ -105,6 +129,10 @@ jobs:
     
   # post-processing-reporting-microservice
   call-build-post-processing-reporting-microservice-container-workflow:
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     name: Build post-processing Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
@@ -120,6 +148,10 @@ jobs:
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   call-update-helm-for-post-processing-reporting-microservice:
+    permissions:
+      id-token: write
+      contents: write      
+      pull-requests: write
     needs: call-build-post-processing-reporting-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
@@ -133,6 +165,10 @@ jobs:
 
   # observation-reporting-microservice
   call-build-observation-reporting-microservice-container-workflow:
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     name: Build Observation Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
@@ -148,6 +184,10 @@ jobs:
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   call-update-helm-for-observation-reporting-microservice:
+    permissions:
+      id-token: write
+      contents: write      
+      pull-requests: write
     needs: call-build-observation-reporting-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
@@ -161,6 +201,10 @@ jobs:
 
  # LdfData-reporting-microservice
   call-build-ldfdata-reporting-microservice-container-workflow:
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     name: Build LdfData Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
@@ -176,6 +220,10 @@ jobs:
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   call-update-helm-for-ldfdata-reporting-microservice:
+    permissions:
+      id-token: write
+      contents: write      
+      pull-requests: write
     needs: call-build-ldfdata-reporting-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
@@ -189,6 +237,10 @@ jobs:
 
   # liquibase-microservice
   call-build-liquibase-microservice-container-workflow:
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     name: Build Liquibase Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
@@ -205,6 +257,10 @@ jobs:
 
   # Helm Update Liquibase service
   call-update-helm-for-liquibase-microservice:
+    permissions:
+      id-token: write
+      contents: write      
+      pull-requests: write
     needs: call-build-liquibase-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
