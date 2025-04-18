@@ -19,201 +19,471 @@ BEGIN TRY
 
 	SET @Proc_Step_Name = 'SP_Start';
 
+	INSERT INTO dbo.job_flow_log ( batch_id
+									, [Dataflow_Name]
+									, [package_Name]
+									, [Status_Type]
+									, [step_number]
+									, [step_name]
+									, [row_count]
+									, [Msg_Description1])
+	VALUES ( @batch_id
+			, @Dataflow_Name
+			, @Package_Name
+			, 'START'
+			, @Proc_Step_no
+			, @Proc_Step_Name
+			, 0
+			, LEFT('ID List-' + @phc_id_list, 500));
+    
 
-	BEGIN TRANSACTION;
+	--------------------------------------------------------------------------------------------------------
 
-        INSERT INTO dbo.job_flow_log ( batch_id
-                                     , [Dataflow_Name]
-                                     , [package_Name]
-                                     , [Status_Type]
-                                     , [step_number]
-                                     , [step_name]
-                                     , [row_count]
-                                     , [Msg_Description1])
-        VALUES ( @batch_id
-               , @Dataflow_Name
-               , @Package_Name
-               , 'START'
-               , @Proc_Step_no
-               , @Proc_Step_Name
-               , 0
-               , LEFT('ID List-' + @phc_id_list, 500));
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'GENERATING #TB_PAM_UID_LIST';
+	
+	IF OBJECT_ID('#TB_PAM_UID_LIST') IS NOT NULL
+		DROP TABLE #TB_PAM_UID_LIST;
 
-    COMMIT TRANSACTION;
+	SELECT DISTINCT
+		public_health_case_uid,
+		batch_id
+	INTO #TB_PAM_UID_LIST	
+	FROM [dbo].nrt_investigation I WITH (NOLOCK) 
+	INNER JOIN  (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
+	WHERE I.investigation_form_cd='INV_FORM_RVCT'
 
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #TB_PAM_UID_LIST;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
+
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'EXTRACTING TB-HIV DATA';
+	
+	-- #S_TB_HIV_SET
+	IF OBJECT_ID('#S_TB_HIV_SET') IS NOT NULL
+		DROP TABLE #S_TB_HIV_SET;
+	
+	SELECT 
+		CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID,
+		A.CODE_SET_GROUP_ID, 
+		A.DATAMART_COLUMN_NM, 
+		A.ANSWER_TXT,			
+		A.LAST_CHG_TIME
+	INTO #S_TB_HIV_SET	
+	FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
+	INNER JOIN #TB_PAM_UID_LIST I 
+	ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
+	WHERE 
+		A.datamart_column_nm IS NOT NULL
+		AND A.datamart_column_nm <> 'N/A'
+		AND A.question_identifier IN ('TUB154', 'TUB155', 'TUB156')
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #S_TB_HIV_SET;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'GENRATING DELETED TB-HIV';
+	
+	IF OBJECT_ID('#TB_HIV_DEL') IS NOT NULL
+		DROP TABLE #TB_HIV_DEL;
+
+	SELECT public_health_case_uid
+	INTO #TB_HIV_DEL	
+	FROM #TB_PAM_UID_LIST
+	EXCEPT
+	SELECT TB_PAM_UID
+	FROM #S_TB_HIV_SET
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #TB_HIV_DEL;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+	--------------------------------------------------------------------------------------------------------
 
 	BEGIN TRANSACTION
-
+	
 		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' EXTRACTING TB-HIV DATA';
-		
-		-- #S_TB_HIV_SET
-		IF OBJECT_ID('tempdb..#S_TB_HIV_SET') IS NOT NULL
-			DROP TABLE #S_TB_HIV_SET;
-		
-		WITH 
-		CTE_INVESTIGATION_BATCH_ID AS (
-			SELECT DISTINCT
-				public_health_case_uid,
-				batch_id
-			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
-			INNER JOIN  (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
-			WHERE I.investigation_form_cd='INV_FORM_RVCT'
-		)
-		SELECT 
-			CAST(A.ACT_UID AS BIGINT) AS TB_PAM_UID,
-			A.CODE_SET_GROUP_ID, 
-			A.DATAMART_COLUMN_NM, 
-			A.ANSWER_TXT,			
-			A.LAST_CHG_TIME
-		INTO #S_TB_HIV_SET	
-		FROM [dbo].nrt_page_case_answer A WITH (NOLOCK) 
-		INNER JOIN CTE_INVESTIGATION_BATCH_ID I 
-		ON I.public_health_case_uid = A.ACT_UID AND ISNULL(I.batch_id, 1) = ISNULL(A.batch_id, 1)
-		WHERE 
-			A.datamart_column_nm IS NOT NULL
-			AND A.datamart_column_nm <> 'N/A'
-			AND A.question_identifier IN ('TUB154', 'TUB155', 'TUB156')
+			@PROC_STEP_NO = @PROC_STEP_NO + 1;
+		SET
+			@PROC_STEP_NAME = 'DELETE FROM D_TB_HIV';
 
+		DELETE D
+		FROM [dbo].D_TB_HIV D 
+		INNER JOIN #TB_HIV_DEL R
+			ON R.public_health_case_uid = D.TB_PAM_UID
+		
 		SELECT @RowCount_no = @@ROWCOUNT;
 
 		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #S_TB_HIV_SET;
+			@debug = 'true'
+			SELECT @Proc_Step_Name AS step, *
+			FROM #TB_HIV_DEL;
 
 		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		VALUES 
+			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
 	COMMIT TRANSACTION;
 
+	--------------------------------------------------------------------------------------------------------
 
 	BEGIN TRANSACTION
-
+	
 		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' JOIN WITH METADATA';
+			@PROC_STEP_NO = @PROC_STEP_NO + 1;
+		SET
+			@PROC_STEP_NAME = 'DELETE FROM nrt_d_tb_hiv_key';
 
-		-- #S_TB_HIV_CODED
-		IF OBJECT_ID('tempdb..#S_TB_HIV_CODED') IS NOT NULL
+		DELETE D
+		FROM [dbo].[nrt_d_tb_hiv_key] D 
+		INNER JOIN #TB_HIV_DEL R
+			ON R.public_health_case_uid = D.TB_PAM_UID
+		
+		SELECT @RowCount_no = @@ROWCOUNT;
+
+		IF
+			@debug = 'true'
+			SELECT @Proc_Step_Name AS step, *
+			FROM #TB_HIV_DEL;
+
+		INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		VALUES 
+			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	COMMIT TRANSACTION;
+
+	--------------------------------------------------------------------------------------------------------
+
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'JOIN WITH METADATA';
+
+	-- #S_TB_HIV_CODED
+	IF OBJECT_ID('#S_TB_HIV_CODED') IS NOT NULL
 		DROP TABLE #S_TB_HIV_CODED;
 
-		SELECT 
-			TB.*,
-			METADATA.code_set_desc_txt,
-			METADATA.code_set_nm,
-			METADATA.code_set_short_desc_txt,
-			METADATA.ldf_picklist_ind_cd,
-			METADATA.phin_std_val_ind,
-			METADATA.vads_value_set_code
-		INTO #S_TB_HIV_CODED
-		FROM #S_TB_HIV_SET TB
-		LEFT JOIN [dbo].nrt_srte_codeset_group_metadata METADATA WITH (NOLOCK)
-			ON METADATA.CODE_SET_GROUP_ID = TB.CODE_SET_GROUP_ID;
+	SELECT 
+		TB.*,
+		METADATA.code_set_desc_txt,
+		METADATA.code_set_nm,
+		METADATA.code_set_short_desc_txt,
+		METADATA.ldf_picklist_ind_cd,
+		METADATA.phin_std_val_ind,
+		METADATA.vads_value_set_code
+	INTO #S_TB_HIV_CODED
+	FROM #S_TB_HIV_SET TB
+	LEFT JOIN [dbo].nrt_srte_codeset_group_metadata METADATA WITH (NOLOCK)
+		ON METADATA.CODE_SET_GROUP_ID = TB.CODE_SET_GROUP_ID;
 
-		SELECT @RowCount_no = @@ROWCOUNT;
+	SELECT @RowCount_no = @@ROWCOUNT;
 
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #S_TB_HIV_CODED;
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #S_TB_HIV_CODED;
 
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-	COMMIT TRANSACTION;
+
+	--------------------------------------------------------------------------------------------------------
 
 
-	BEGIN TRANSACTION
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'TRANSLATE AND ADD CODES';
 
-		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' TRANSLATE AND ADD CODES';
-
-		IF OBJECT_ID('tempdb..#S_TB_PAM_HIV_TRANSLATED') IS NOT NULL
+	IF OBJECT_ID('#S_TB_PAM_HIV_TRANSLATED') IS NOT NULL
 		DROP TABLE #S_TB_PAM_HIV_TRANSLATED;
 
-		SELECT 
-			TB.CODE_SET_GROUP_ID, 
-			TB.TB_PAM_UID, 
-			TB.ANSWER_TXT, 
-			TB.CODE_SET_NM, 
-			TB.DATAMART_COLUMN_NM, 
-			CVG.CODE, 
-			CVG.CODE_SHORT_DESC_TXT, 
-			TB.LAST_CHG_TIME
-		INTO #S_TB_PAM_HIV_TRANSLATED
-		FROM #S_TB_HIV_CODED TB
-		LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
-			ON CVG.CODE_SET_NM = TB.CODE_SET_NM
-			AND CVG.CODE = TB.ANSWER_TXT;
-		
-		SELECT @RowCount_no = @@ROWCOUNT;
+	SELECT 
+		TB.CODE_SET_GROUP_ID, 
+		TB.TB_PAM_UID, 
+		TB.ANSWER_TXT, 
+		TB.CODE_SET_NM, 
+		TB.DATAMART_COLUMN_NM, 
+		CVG.CODE, 
+		CVG.CODE_SHORT_DESC_TXT, 
+		TB.LAST_CHG_TIME
+	INTO #S_TB_PAM_HIV_TRANSLATED
+	FROM #S_TB_HIV_CODED TB
+	LEFT JOIN [dbo].nrt_srte_code_value_general CVG WITH (NOLOCK)
+		ON CVG.CODE_SET_NM = TB.CODE_SET_NM
+		AND CVG.CODE = TB.ANSWER_TXT;
+	
+	SELECT @RowCount_no = @@ROWCOUNT;
 
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #S_TB_PAM_HIV_TRANSLATED;
-
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-	COMMIT TRANSACTION;		
-
-
-	BEGIN TRANSACTION
-
-		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' TRANSFORM DATA';
-
-		IF OBJECT_ID('tempdb..#S_TB_PAM_HIV_TIME') IS NOT NULL
-		Drop Table #S_TB_PAM_HIV_TIME;
-
-		SELECT DISTINCT TB_PAM_UID, LAST_CHG_TIME
-		INTO #S_TB_PAM_HIV_TIME
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
 		FROM #S_TB_PAM_HIV_TRANSLATED;
 
-		IF OBJECT_ID('tempdb..#S_TB_PAM_HIV_CVG') IS NOT NULL
-			Drop Table #S_TB_PAM_HIV_CVG;
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-		SELECT 
-			CODE_SET_GROUP_ID, 
-			TB_PAM_UID, 
-			CASE 
-				WHEN CODE_SET_GROUP_ID IS NULL OR CODE_SET_GROUP_ID = '' 
-				THEN ANSWER_TXT 
-				ELSE CODE_SHORT_DESC_TXT 
-			END AS ANSWER_TXT,
-			CODE_SET_NM, 
-			DATAMART_COLUMN_NM, 
-			CODE, 
-			CODE_SHORT_DESC_TXT, 
-			LAST_CHG_TIME
-		INTO #S_TB_PAM_HIV_CVG
-		FROM #S_TB_PAM_HIV_TRANSLATED;
 
-		SELECT @RowCount_no = @@ROWCOUNT;
+	--------------------------------------------------------------------------------------------------------
 
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #S_TB_PAM_HIV_CVG;
 
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'TRANSFORM DATA';
 
-	COMMIT TRANSACTION;	
+	IF OBJECT_ID('#S_TB_PAM_HIV_TIME') IS NOT NULL
+	Drop Table #S_TB_PAM_HIV_TIME;
+
+	SELECT DISTINCT TB_PAM_UID, LAST_CHG_TIME
+	INTO #S_TB_PAM_HIV_TIME
+	FROM #S_TB_PAM_HIV_TRANSLATED;
+
+	IF OBJECT_ID('#S_TB_PAM_HIV_CVG') IS NOT NULL
+		Drop Table #S_TB_PAM_HIV_CVG;
+
+	SELECT 
+		CODE_SET_GROUP_ID, 
+		TB_PAM_UID, 
+		CASE 
+			WHEN CODE_SET_GROUP_ID IS NULL OR CODE_SET_GROUP_ID = '' 
+			THEN ANSWER_TXT 
+			ELSE CODE_SHORT_DESC_TXT 
+		END AS ANSWER_TXT,
+		CODE_SET_NM, 
+		DATAMART_COLUMN_NM, 
+		CODE, 
+		CODE_SHORT_DESC_TXT, 
+		LAST_CHG_TIME
+	INTO #S_TB_PAM_HIV_CVG
+	FROM #S_TB_PAM_HIV_TRANSLATED;
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #S_TB_PAM_HIV_CVG;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
+
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'PIVOT TO CREATE STAGING S_TB_HIV';
+	
+	IF OBJECT_ID('#S_TB_HIV') IS NOT NULL
+	Drop Table #S_TB_HIV;
+
+	SELECT 
+		T.TB_PAM_UID, 
+		MAX([HIV_STATE_PATIENT_NUM]) AS HIV_STATE_PATIENT_NUM, 
+		MAX([HIV_STATUS]) AS HIV_STATUS, 
+		MAX([HIV_CITY_CNTY_PATIENT_NUM]) AS HIV_CITY_CNTY_PATIENT_NUM,
+		MAX(T.LAST_CHG_TIME) AS LAST_CHG_TIME
+	INTO #S_TB_HIV
+	FROM #S_TB_PAM_HIV_CVG
+	PIVOT (
+		MAX(ANSWER_TXT)
+		FOR DATAMART_COLUMN_NM IN ([HIV_STATE_PATIENT_NUM], [HIV_STATUS], [HIV_CITY_CNTY_PATIENT_NUM])
+	) AS PivotTable
+	INNER JOIN #S_TB_PAM_HIV_TIME T
+		ON PivotTable.TB_PAM_UID = T.TB_PAM_UID
+	WHERE T.TB_PAM_UID IS NOT NULL
+	GROUP BY T.TB_PAM_UID;
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #S_TB_HIV;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
+
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'GET NEW ANSWER ENTRIES L_TB_HIV_N';
+
+	IF OBJECT_ID('#L_TB_HIV_BASE_NEW') IS NOT NULL
+	DROP Table #L_TB_HIV_BASE_NEW;
+
+	-- L_TB_HIV_BASE_NEW
+	SELECT 
+		TB_PAM_UID
+	INTO #L_TB_HIV_BASE_NEW
+	FROM #S_TB_HIV
+	EXCEPT 
+	SELECT TB_PAM_UID 
+	FROM [dbo].D_TB_HIV WITH (NOLOCK); 
+
+	--insert new items to generate key D_TB_HIV_KEY
+	INSERT INTO [dbo].[nrt_d_tb_hiv_key] (TB_PAM_UID)
+	SELECT TB_PAM_UID		
+	FROM #L_TB_HIV_BASE_NEW;
+
+	ALTER TABLE #L_TB_HIV_BASE_NEW 
+	ADD D_TB_HIV_KEY INT;
+
+	UPDATE #L_TB_HIV_BASE_NEW 
+	SET D_TB_HIV_KEY = K.D_TB_HIV_key
+	FROM #L_TB_HIV_BASE_NEW N
+	INNER JOIN [dbo].[nrt_d_tb_hiv_key] K
+	ON K.TB_PAM_UID = N.TB_PAM_UID;
+
+	IF OBJECT_ID('#L_TB_HIV_N') IS NOT NULL
+	DROP TABLE #L_TB_HIV_N;
+
+	SELECT
+		TB_PAM_UID,
+		D_TB_HIV_KEY
+	INTO #L_TB_HIV_N
+	FROM #L_TB_HIV_BASE_NEW;
+
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #L_TB_HIV_N;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
+
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'GET EXISTING ANSWER ENTRIES L_TB_HIV_E';
+
+	-- L_TB_HIV_E
+	IF OBJECT_ID('#L_TB_HIV_E') IS NOT NULL
+		DROP TABLE #L_TB_HIV_E
+
+	SELECT 
+		S.TB_PAM_UID, 
+		D.D_TB_HIV_KEY
+	INTO #L_TB_HIV_E
+	FROM #S_TB_HIV S
+	INNER JOIN  [dbo].D_TB_HIV D 
+		ON S.TB_PAM_UID = D.TB_PAM_UID;
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #L_TB_HIV_E;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
+
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'GET NEW DIMENSION ENTRIES D_TB_HIV_N';
+
+	-- D_TB_HIV_N (for INSERT)
+	IF OBJECT_ID('#D_TB_HIV_N') IS NOT NULL
+		DROP TABLE #D_TB_HIV_N;
+
+	SELECT 
+		L.D_TB_HIV_KEY,
+		S.*
+	INTO #D_TB_HIV_N
+	FROM #S_TB_HIV S
+	INNER JOIN #L_TB_HIV_N L
+		ON S.TB_PAM_UID = L.TB_PAM_UID;
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #D_TB_HIV_N
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
 
 
 	BEGIN TRANSACTION
@@ -221,171 +491,7 @@ BEGIN TRY
 		SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = ' PIVOT TO CREATE STAGING S_TB_HIV';
-
-		
-		IF OBJECT_ID('tempdb..#S_TB_HIV') IS NOT NULL
-		Drop Table #S_TB_HIV;
-
-		SELECT 
-			T.TB_PAM_UID, 
-			MAX([HIV_STATE_PATIENT_NUM]) AS HIV_STATE_PATIENT_NUM, 
-			MAX([HIV_STATUS]) AS HIV_STATUS, 
-			MAX([HIV_CITY_CNTY_PATIENT_NUM]) AS HIV_CITY_CNTY_PATIENT_NUM,
-			MAX(T.LAST_CHG_TIME) AS LAST_CHG_TIME
-		INTO #S_TB_HIV
-		FROM #S_TB_PAM_HIV_CVG
-		PIVOT (
-			MAX(ANSWER_TXT)
-			FOR DATAMART_COLUMN_NM IN ([HIV_STATE_PATIENT_NUM], [HIV_STATUS], [HIV_CITY_CNTY_PATIENT_NUM])
-		) AS PivotTable
-		INNER JOIN #S_TB_PAM_HIV_TIME T
-			ON PivotTable.TB_PAM_UID = T.TB_PAM_UID
-		WHERE T.TB_PAM_UID IS NOT NULL
-		GROUP BY T.TB_PAM_UID;
-
-		SELECT @RowCount_no = @@ROWCOUNT;
-
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #S_TB_HIV;
-
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-	COMMIT TRANSACTION;	
-
-
-	BEGIN TRANSACTION
-
-		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GET NEW ANSWER ENTRIES L_TB_HIV_N';
-
-		IF OBJECT_ID('tempdb..#L_TB_HIV_BASE_NEW') IS NOT NULL
-		DROP Table #L_TB_HIV_BASE_NEW;
-
-		-- L_TB_HIV_BASE_NEW
-		SELECT 
-			TB_PAM_UID
-		INTO #L_TB_HIV_BASE_NEW
-		FROM #S_TB_HIV
-		EXCEPT 
-		SELECT TB_PAM_UID 
-		FROM [dbo].D_TB_HIV WITH (NOLOCK); 
-
-		--insert new items to generate key D_TB_HIV_KEY
-		INSERT INTO [dbo].[nrt_d_tb_hiv_key] (TB_PAM_UID)
-		SELECT TB_PAM_UID		
-		FROM #L_TB_HIV_BASE_NEW;
-
-		ALTER TABLE #L_TB_HIV_BASE_NEW 
-		ADD D_TB_HIV_KEY INT;
-
-		UPDATE #L_TB_HIV_BASE_NEW 
-		SET D_TB_HIV_KEY = K.D_TB_HIV_key
-		FROM #L_TB_HIV_BASE_NEW N
-		INNER JOIN [dbo].[nrt_d_tb_hiv_key] K
-		ON K.TB_PAM_UID = N.TB_PAM_UID;
-
-		IF OBJECT_ID('tempdb..#L_TB_HIV_N') IS NOT NULL
-		DROP TABLE #L_TB_HIV_N;
-
-		SELECT
-			TB_PAM_UID,
-			D_TB_HIV_KEY
-		INTO #L_TB_HIV_N
-		FROM #L_TB_HIV_BASE_NEW;
-
-
-		SELECT @RowCount_no = @@ROWCOUNT;
-
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #L_TB_HIV_N;
-
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-	COMMIT TRANSACTION;	
-
-	BEGIN TRANSACTION
-
-		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GET EXISTING ANSWER ENTRIES L_TB_HIV_E';
-
-		-- L_TB_HIV_E
-		IF OBJECT_ID('tempdb..#L_TB_HIV_E') IS NOT NULL
-			DROP TABLE #L_TB_HIV_E
-
-		SELECT 
-			S.TB_PAM_UID, 
-			D.D_TB_HIV_KEY
-		INTO #L_TB_HIV_E
-		FROM #S_TB_HIV S
-		INNER JOIN  [dbo].D_TB_HIV D 
-			ON S.TB_PAM_UID = D.TB_PAM_UID;
-
-		SELECT @RowCount_no = @@ROWCOUNT;
-
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #L_TB_HIV_E;
-
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-	COMMIT TRANSACTION;
-
-
-	BEGIN TRANSACTION
-
-		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GET NEW DIMENSION ENTRIES D_TB_HIV_N';
-
-		-- D_TB_HIV_N (for INSERT)
-		IF OBJECT_ID('tempdb..#D_TB_HIV_N') IS NOT NULL
-			DROP TABLE #D_TB_HIV_N;
-
-		SELECT 
-			L.D_TB_HIV_KEY,
-			S.*
-		INTO #D_TB_HIV_N
-		FROM #S_TB_HIV S
-		INNER JOIN #L_TB_HIV_N L
-			ON S.TB_PAM_UID = L.TB_PAM_UID;
-
-		SELECT @RowCount_no = @@ROWCOUNT;
-
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #D_TB_HIV_N
-
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-	COMMIT TRANSACTION;
-
-
-	BEGIN TRANSACTION
-
-		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' INSERT NEW DIMENSION ENTRIES IN TABLE D_TB_HIV ';
+            @PROC_STEP_NAME = 'INSERT NEW DIMENSION ENTRIES IN TABLE D_TB_HIV ';
 
 		-- D_TB_HIV_N
 		INSERT INTO [dbo].D_TB_HIV (
@@ -404,7 +510,6 @@ BEGIN TRY
 			HIV_CITY_CNTY_PATIENT_NUM,
 			LAST_CHG_TIME
 		FROM #D_TB_HIV_N;
-		
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -414,10 +519,46 @@ BEGIN TRY
             FROM #D_TB_HIV_N;
 
 		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        	(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES 
+			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;
+
+	--------------------------------------------------------------------------------------------------------
+
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'GET EXISTING DIMENSION ENTRIES D_TB_HIV_E';
+
+	-- D_TB_HIV_E (for UPDATE)
+	IF OBJECT_ID('#D_TB_HIV_E') IS NOT NULL
+		DROP TABLE #D_TB_HIV_E;
+
+	SELECT 
+		E.D_TB_HIV_KEY, 
+		S.*
+	INTO #D_TB_HIV_E
+	FROM #S_TB_HIV S
+	INNER JOIN #L_TB_HIV_E E
+		ON S.TB_PAM_UID = E.TB_PAM_UID;
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	IF
+		@debug = 'true'
+		SELECT @Proc_Step_Name AS step, *
+		FROM #D_TB_HIV_E;
+
+	INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+	--------------------------------------------------------------------------------------------------------
 
 
 	BEGIN TRANSACTION
@@ -425,40 +566,7 @@ BEGIN TRY
 		SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = ' GET EXISTING DIMENSION ENTRIES D_TB_HIV_E';
-
-		-- D_TB_HIV_E (for UPDATE)
-		IF OBJECT_ID('tempdb..#D_TB_HIV_E') IS NOT NULL
-			DROP TABLE #D_TB_HIV_E;
-
-		SELECT 
-			E.D_TB_HIV_KEY, 
-			S.*
-		INTO #D_TB_HIV_E
-		FROM #S_TB_HIV S
-		INNER JOIN #L_TB_HIV_E E
-			ON S.TB_PAM_UID = E.TB_PAM_UID;
-
-		SELECT @RowCount_no = @@ROWCOUNT;
-
-		IF
-            @debug = 'true'
-            SELECT @Proc_Step_Name AS step, *
-            FROM #D_TB_HIV_E;
-
-		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-	COMMIT TRANSACTION;
-
-
-	BEGIN TRANSACTION
-
-		SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' UPDATE EXISTING DIMENSION ENTRIES IN TABLE D_TB_HIV';
+            @PROC_STEP_NAME = 'UPDATE EXISTING DIMENSION ENTRIES IN TABLE D_TB_HIV';
 
 		-- 10. UPADTE into D_TB_HIV
 			UPDATE D
@@ -479,10 +587,24 @@ BEGIN TRY
 			
 
 		INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        	(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES 
+			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 	COMMIT TRANSACTION;
+
+	--------------------------------------------------------------------------------------------------------
+
+	SET @Proc_Step_no = 999;
+	SET @Proc_Step_Name = 'SP_COMPLETE';
+	SELECT @ROWCOUNT_NO = 0;
+
+	INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES 
+		(@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
+
+	--------------------------------------------------------------------------------------------------------	
 
 END TRY
 
