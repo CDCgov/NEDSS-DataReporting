@@ -42,9 +42,6 @@ BEGIN
 
         SELECT DISTINCT
             rx1.treatment_uid,
-            -- Leaving column in until updates to postprocessing are done to keep liquibase
-            -- run from failing in the meantime
-            NULL AS public_health_case_uid,
             par.subject_entity_uid AS organization_uid,
             par1.subject_entity_uid AS provider_uid,
             viewPatientKeys.treatment_uid AS patient_treatment_uid,
@@ -59,11 +56,6 @@ BEGIN
         FROM NBS_ODSE.dbo.treatment AS rx1 WITH (NOLOCK)
                  INNER JOIN NBS_ODSE.dbo.Treatment_administered AS rx2 WITH (NOLOCK)
                             ON rx1.treatment_uid = rx2.treatment_uid
-                --  LEFT JOIN NBS_ODSE.dbo.act_relationship AS act1 WITH (NOLOCK)
-                --            ON rx1.Treatment_uid = act1.source_act_uid
-                --                AND act1.target_class_cd = 'CASE'
-                --                AND act1.source_class_cd = 'TRMT'
-                --                AND act1.type_cd = 'TreatmentToPHC'
                  LEFT JOIN NBS_ODSE.dbo.participation AS par WITH (NOLOCK)
                            ON rx1.Treatment_uid = par.act_uid
                                AND par.type_cd = 'ReporterOfTrmt'
