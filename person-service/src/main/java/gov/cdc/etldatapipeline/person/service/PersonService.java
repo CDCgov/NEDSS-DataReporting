@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.person.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
@@ -131,7 +132,7 @@ public class PersonService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Person", personUid, e), e);
+            throw new DataProcessingException(errorMessage("Person", personUid, e), e);
         }
     }
 
@@ -187,9 +188,7 @@ public class PersonService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            String msg = "Error processing User data" +
-                    (!userUid.isEmpty() ? " with ids '" + userUid + "': " : ": " + e.getMessage());
-            throw new RuntimeException(msg, e);
+            throw new DataProcessingException(errorMessage("User", userUid, e), e);
         }
     }
 }

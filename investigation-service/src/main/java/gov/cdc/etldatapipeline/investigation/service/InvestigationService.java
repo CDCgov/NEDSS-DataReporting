@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.investigation.service;
 
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.*;
@@ -191,7 +192,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Investigation", publicHealthCaseUid, e), e);
+            throw new DataProcessingException(errorMessage("Investigation", publicHealthCaseUid, e), e);
         }
     }
 
@@ -216,7 +217,7 @@ public class InvestigationService {
                 processTreatment(value, false, sourceActUid);
             }
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("ActRelationship", sourceActUid, e), e);
+            throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
         }
     }
 
@@ -236,7 +237,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Notification", notificationUid, e), e);
+            throw new DataProcessingException(errorMessage("Notification", notificationUid, e), e);
         }
     }
 
@@ -259,7 +260,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Interview", interviewUid, e), e);
+            throw new DataProcessingException(errorMessage("Interview", interviewUid, e), e);
         }
     }
 
@@ -280,7 +281,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Contact", contactUid, e), e);
+            throw new DataProcessingException(errorMessage("Contact", contactUid, e), e);
         }
     }
 
@@ -301,7 +302,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Vaccination", vaccinationUid, e), e);
+            throw new DataProcessingException(errorMessage("Vaccination", vaccinationUid, e), e);
         }
     }
 
@@ -345,7 +346,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Treatment", treatmentUid, e), e);
+            throw new DataProcessingException(errorMessage("Treatment", treatmentUid, e), e);
         }
     }
 

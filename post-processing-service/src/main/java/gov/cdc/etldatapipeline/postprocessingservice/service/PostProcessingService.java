@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
@@ -181,7 +182,7 @@ public class PostProcessingService {
             return keyNode.get(PAYLOAD).get(entity.getUidName()).asLong();
         } catch (Exception e) {
             String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
-            throw new RuntimeException(msg, e);
+            throw new DataProcessingException(msg, e);
         }
     }
     /**
@@ -278,7 +279,7 @@ public class PostProcessingService {
 
         } catch (Exception e) {
             String msg = "Error processing datamart message: " + e.getMessage();
-            throw new RuntimeException(msg, e);
+            throw new DataProcessingException(msg, e);
         }
     }
 
