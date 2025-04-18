@@ -4,7 +4,6 @@ AS
 BEGIN
 
     BEGIN TRY
-
         /* Logging */
         declare @rowcount bigint;
         declare @proc_step_no float = 0;
@@ -45,66 +44,7 @@ BEGIN
                );
 
         SET @proc_step_name='Create LDF_DATA Temp tables-'+ LEFT(@ldf_uid_list,105);
-        SET @proc_step_no = 1;
-
-
-        /**Initial null condition for LDF_DATA and LDF_Group*/
-        IF NOT EXISTS (SELECT 1 FROM dbo.ldf_data UNION ALL SELECT 1 FROM dbo.LDF_GROUP)
-            BEGIN
-                insert into dbo.nrt_ldf_group_key(business_object_uid)
-                VALUES (NULL);
-
-                insert into dbo.nrt_ldf_data_key(d_ldf_group_key, business_object_uid, ldf_uid)
-                VALUES (1, NULL, NULL)
-
-                insert into dbo.ldf_group(ldf_group_key, business_object_uid)
-                VALUES (1, NULL);
-
-                insert into dbo.ldf_data
-                (ldf_data_key
-                ,ldf_group_key
-                ,ldf_column_type
-                ,condition_cd
-                ,condition_desc_txt
-                ,class_cd
-                ,code_set_nm
-                ,business_obj_nm
-                ,display_order_number
-                ,field_size
-                ,ldf_value
-                ,import_version_nbr
-                ,label_txt
-                ,ldf_oid
-                ,nnd_ind
-                ,record_status_cd
-                )
-                values (1
-                       ,1
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,NULL
-                       ,'ACTIVE');
-
-                insert into dbo.PATIENT_LDF_GROUP (PATIENT_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-                values (1, 1, 'ACTIVE');
-
-                insert into dbo.PROVIDER_LDF_GROUP (PROVIDER_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-                values (1, 1, 'ACTIVE');
-
-                insert into dbo.ORGANIZATION_LDF_GROUP (ORGANIZATION_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-                values (1, 1, 'ACTIVE');
-            END
-
+        SET @proc_step_no = @proc_step_no +1;
 
         /**Create temp table for LDF_DATA */
         select
@@ -120,7 +60,7 @@ BEGIN
             ld.ldf_field_data_business_object_nm as business_object_nm,
             ld.display_order_nbr as display_order_number,
             ld.field_size,
-            ld.ldf_value,
+    ld.ldf_value,
             ld.import_version_nbr,
             ld.label_txt,
             ld.ldf_oid,
@@ -163,7 +103,7 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET @proc_step_name='Update LDF_DATA Dimension';
-        SET @proc_step_no = 2;
+        SET @proc_step_no = @proc_step_no +1;
 
 
         /** Update condition for LDF_DATA*/
@@ -191,6 +131,8 @@ BEGIN
         where ld.ldf_group_key is not null
           and ld.ldf_data_key is not null;
 
+        COMMIT TRANSACTION;
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -215,29 +157,33 @@ BEGIN
                ,LEFT(@ldf_uid_list,500)
                );
 
+        BEGIN TRANSACTION;
+
         SET @proc_step_name='Insert into LDF_GROUP Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = @proc_step_no +1;
 
         /**Create new keys for LDF_Group*/
         insert into dbo.nrt_ldf_group_key (business_object_uid)
         select distinct tld.business_object_uid from #tmp_ldf_data tld
-                                                         left join nrt_ldf_group_key nl with (nolock) on nl.business_object_uid = tld.business_object_uid
-        where nl.d_ldf_group_key is null and nl.business_object_uid is null
+        	left join dbo.nrt_ldf_group_key nl with (nolock) on nl.business_object_uid = tld.business_object_uid
+        where nl.business_object_uid is null
         order by tld.business_object_uid;
 
         insert into dbo.ldf_group(ldf_group_key, business_object_uid)
         select distinct lgk.d_ldf_group_key, lgk.business_object_uid
         from #tmp_ldf_data ld
-                 join nrt_ldf_group_key lgk with (nolock) on ld.business_object_uid = lgk.business_object_uid
-                 left join ldf_group lg with (nolock) on lg.ldf_group_key = lgk.d_ldf_group_key
-        where lg.ldf_group_key is null;
+        	join dbo.nrt_ldf_group_key lgk with (nolock) on ld.business_object_uid = lgk.business_object_uid
+            left join ldf_group lg with (nolock) on lg.ldf_group_key = lgk.d_ldf_group_key
+     where lg.ldf_group_key is null;
 
         insert into dbo.nrt_ldf_data_key(d_ldf_group_key, business_object_uid, ldf_uid)
         select distinct lg.d_ldf_group_key, lg.business_object_uid, ld.ldf_uid
-        from #tmp_ldf_data ld
-                 left join nrt_ldf_group_key lg with (nolock) on ld.business_object_uid = lg.business_object_uid
-                 left join nrt_ldf_data_key nldk with (nolock) on ld.ldf_uid = nldk.ldf_uid
+    from #tmp_ldf_data ld
+                 left join dbo.nrt_ldf_group_key lg with (nolock) on ld.business_object_uid = lg.business_object_uid
+                 left join dbo.nrt_ldf_data_key nldk with (nolock) on ld.ldf_uid = nldk.ldf_uid
         where nldk.d_ldf_data_key is null and nldk.d_ldf_group_key is null;
+
+        COMMIT TRANSACTION;
 
         /* Logging */
         set @rowcount=@@rowcount
@@ -263,8 +209,10 @@ BEGIN
                ,LEFT(@ldf_uid_list,500)
                );
 
+        BEGIN TRANSACTION;
+
         SET @proc_step_name='Insert into LDF_DATA Dimension';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = @proc_step_no +1;
 
 
         insert into dbo.ldf_data
@@ -299,7 +247,7 @@ BEGIN
              ,tld.import_version_nbr
              ,tld.label_txt
              ,tld.ldf_oid
-             ,tld.nnd_ind
+           ,tld.nnd_ind
              ,tld.metadata_record_status_cd
         FROM #tmp_ldf_data tld
                  join dbo.nrt_ldf_data_key k with (nolock) on tld.ldf_uid = k.ldf_uid
@@ -308,6 +256,8 @@ BEGIN
             and ld.ldf_group_key = k.d_ldf_group_key
         where ld.ldf_data_key is null and ld.ldf_group_key is null;
 
+        COMMIT TRANSACTION;
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -331,110 +281,174 @@ BEGIN
                ,@rowcount
                ,LEFT(@ldf_uid_list,500)
                );
+
+        BEGIN TRANSACTION;
+
+        SET @proc_step_name='Update PATIENT_LDF_GROUP Dimension';
+        SET @proc_step_no = @proc_step_no +1;
+
+       	UPDATE
+	       	dbo.PATIENT_LDF_GROUP
+	       	SET
+	       	PATIENT_KEY =  d.patient_key,
+	       	LDF_GROUP_KEY = ldf.d_ldf_group_key,
+	       	RECORD_STATUS_CD = d.patient_record_status
+	        from dbo.nrt_ldf_data_key ldf
+	           inner join dbo.d_patient d with (nolock) on ldf.ldf_uid = d.patient_uid
+	        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
+
 
         SET @proc_step_name='Insert into PATIENT_LDF_GROUP Dimension';
-        SET @proc_step_no = 5;
+        SET @proc_step_no = @proc_step_no +1;
 
-        insert into dbo.PATIENT_LDF_GROUP (PATIENT_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
+        insert into dbo.PATIENT_LDF_GROUP
+        (PATIENT_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
         select d.patient_key, ldf.d_ldf_group_key, d.patient_record_status
-        from nrt_ldf_data_key ldf
-                 inner join d_patient d with (nolock) on ldf.ldf_uid = d.patient_uid
-        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','));
-
-        /* Logging */
-        set @rowcount=@@rowcount
-        INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(@ldf_uid_list,500)
-               );
-
-        SET @proc_step_name='Insert into PROVIDER_LDF_GROUP Dimension';
-        SET @proc_step_no = 6;
-
-        insert into dbo.PROVIDER_LDF_GROUP (PROVIDER_KEY , LDF_GROUP_KEY, RECORD_STATUS_CD)
-        select d.provider_key, ldf.d_ldf_group_key, d.provider_record_status
-        from nrt_ldf_data_key ldf
-                 inner join d_provider d with (nolock) on ldf.ldf_uid = d.provider_uid
-        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','));
-
-        /* Logging */
-        set @rowcount=@@rowcount
-        INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(@ldf_uid_list,500)
-               );
-
-        SET @proc_step_name='Insert into ORGANIZATION_LDF_GROUP Dimension';
-        SET @proc_step_no = 7;
-
-        insert into dbo.ORGANIZATION_LDF_GROUP (ORGANIZATION_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-        select d.organization_key, ldf.d_ldf_group_key, d.organization_record_status
-        from nrt_ldf_data_key ldf
-                 inner join d_organization d with (nolock) on ldf.ldf_uid = d.organization_uid
-        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','));
-
-        set @rowcount=@@rowcount
-        INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(@ldf_uid_list,500)
-               );
-
+        from dbo.nrt_ldf_data_key ldf
+        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
+            left join dbo.d_patient d with (nolock) on ldf.ldf_uid = d.patient_uid
+        where
+         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
+  and d.patient_record_status <> 'INACTIVE';
 
         COMMIT TRANSACTION;
 
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+    ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+        BEGIN TRANSACTION;
+
+        SET @proc_step_name='Update PROVIDER_LDF_GROUP Dimension';
+        SET @proc_step_no = @proc_step_no +1;
+
+        UPDATE
+	       	dbo.PROVIDER_LDF_GROUP
+	       	SET
+	       	PROVIDER_KEY =  d.provider_key,
+	       	LDF_GROUP_KEY = ldf.d_ldf_group_key,
+	       	RECORD_STATUS_CD = d.provider_record_status
+	        from dbo.nrt_ldf_data_key ldf
+	           inner join dbo.d_provider d with (nolock) on ldf.ldf_uid = d.provider_uid
+	        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
+
+
+        SET @proc_step_name='Insert into PROVIDER_LDF_GROUP Dimension';
+        SET @proc_step_no = @proc_step_no +1;
+
+        insert into dbo.PROVIDER_LDF_GROUP
+        (PROVIDER_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
+        select d.provider_key, ldf.d_ldf_group_key, d.provider_record_status
+        from dbo.nrt_ldf_data_key ldf
+        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
+            left join dbo.d_provider d with (nolock) on ldf.ldf_uid = d.provider_uid
+        where
+         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
+        and d.provider_record_status <> 'INACTIVE';
+
+        COMMIT TRANSACTION;
+
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+        BEGIN TRANSACTION;
+
+        SET @proc_step_name='Update ORGANIZATION_LDF_GROUP Dimension';
+        SET @proc_step_no = @proc_step_no +1;
+
+        UPDATE
+	       	dbo.ORGANIZATION_LDF_GROUP
+	       	SET
+	       	ORGANIZATION_KEY =  d.organization_key,
+	       	LDF_GROUP_KEY = ldf.d_ldf_group_key,
+	       	RECORD_STATUS_CD = d.organization_record_status
+	        from dbo.nrt_ldf_data_key ldf
+	           inner join dbo.d_organization d with (nolock) on ldf.ldf_uid = d.organization_uid
+	        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
+
+
+        SET @proc_step_name='Insert into ORGANIZATION_LDF_GROUP Dimension';
+        SET @proc_step_no = @proc_step_no +1;
+
+        insert into dbo.ORGANIZATION_LDF_GROUP
+        (ORGANIZATION_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
+        select d.organization_key, ldf.d_ldf_group_key, d.organization_record_status
+        from dbo.nrt_ldf_data_key ldf
+        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
+            left join dbo.d_organization d with (nolock) on ldf.ldf_uid = d.organization_uid
+        where
+         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
+        and d.organization_record_status <> 'INACTIVE';
+
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+           ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+
         SET @proc_step_name='SP_COMPLETE';
-        SET @proc_step_no = 8;
+        SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log]
         (
@@ -476,7 +490,7 @@ BEGIN
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-            'Error Message: ' + ERROR_MESSAGE();
+          'Error Message: ' + ERROR_MESSAGE();
 
         /* Logging */
         INSERT INTO [dbo].[job_flow_log]
@@ -493,8 +507,8 @@ BEGIN
         ,[msg_description1]
         ,[Error_Description]
         )
-        VALUES
-            (
+      VALUES
+  (
               @batch_id
             ,current_timestamp
             ,current_timestamp
