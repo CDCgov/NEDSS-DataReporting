@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.postprocessingservice.service;
 
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
@@ -48,7 +49,7 @@ public class ProcessDatamartData {
                 }
             } catch (Exception e) {
                 String msg = "Error processing Datamart JSON array from investigation result data: " + e.getMessage();
-                throw new RuntimeException(msg, e);
+                throw new DataProcessingException(msg, e);
             }
         }
     }
