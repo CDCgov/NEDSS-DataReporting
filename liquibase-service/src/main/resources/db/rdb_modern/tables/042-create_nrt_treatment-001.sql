@@ -251,6 +251,6 @@ IF EXISTS (SELECT 1
                         AND Object_ID = Object_ID(N'nrt_treatment'))
             BEGIN
                 ALTER TABLE dbo.nrt_treatment
-                    DROP public_health_case_uid;
+                    DROP COLUMN public_health_case_uid;
             END;
     END;
