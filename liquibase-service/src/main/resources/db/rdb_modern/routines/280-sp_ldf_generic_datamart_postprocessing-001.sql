@@ -18,9 +18,9 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_generic_datamart_postprocessing]
 		SET @Proc_Step_Name = 'SP_START';
 
 		INSERT INTO [dbo].[job_flow_log]
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Msg_Description1])
 		VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-				@RowCount_no); 
+				@RowCount_no, LEFT (@phc_uids, 199)); 
 --------------------------------------------------------------------------------------------------------
 
 		BEGIN TRANSACTION
