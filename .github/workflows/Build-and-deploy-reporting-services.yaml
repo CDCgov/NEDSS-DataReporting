@@ -13,6 +13,9 @@ on:
       - "**.md"
 jobs:
   sonar_scan:
+    permissions:
+      id-token: write
+      contents: read
     name: Sonar Scan Analyze
     uses: ./.github/workflows/sonar.yaml
     secrets:
