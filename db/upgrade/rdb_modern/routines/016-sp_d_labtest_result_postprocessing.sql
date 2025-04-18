@@ -140,7 +140,29 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
---------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_numeric';
+
+        select obsnum.*
+        into #tmp_nrt_observation_numeric
+        from (
+                 select *
+                 from dbo.nrt_observation_numeric
+                 where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
+             ) obsnum
+                 left outer join dbo.nrt_observation obs
+                                 on obs.observation_uid = obsnum.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obsnum.batch_id,1);
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
@@ -565,7 +587,7 @@ BEGIN
             Commented out because an ELR Test Result can have zero to many text result values
             AND otxt.OBS_VALUE_TXT_SEQ =1
             */
-                 LEFT JOIN dbo.nrt_observation_numeric	as onum  with (nolock)	ON rslt.lab_test_uid = onum.observation_uid
+                 LEFT JOIN #tmp_nrt_observation_numeric	as onum  with (nolock)	ON rslt.lab_test_uid = onum.observation_uid
                  LEFT JOIN #tmp_nrt_observation_coded	as code	 ON rslt.lab_test_uid = code.observation_uid
                  LEFT JOIN dbo.nrt_observation_date		as ndate  with (nolock)	ON rslt.lab_test_uid = ndate.observation_uid
 
