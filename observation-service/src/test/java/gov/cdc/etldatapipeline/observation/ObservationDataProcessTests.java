@@ -298,6 +298,7 @@ class ObservationDataProcessTests {
         numeric.setOvnNumericUnitCd("mL");
         numeric.setOvnSeparatorCd(":");
         numeric.setOvnSeq(1);
+        numeric.setBatchId(BATCH_ID);
 
         transformer.transformObservationData(observation, BATCH_ID);
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());

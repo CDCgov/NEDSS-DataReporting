@@ -22,4 +22,5 @@ public class ObservationNumeric {
     private String ovnNumericUnitCd;
     private String ovnSeparatorCd;
     private Integer ovnSeq;
+    private Long batchId;
 }
