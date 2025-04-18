@@ -2367,14 +2367,6 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 003-fn_nbs_strings_split-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 745
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
             path: 265-sp_ldf_dimensional_data_postprocessing-001.sql
             splitStatements: false
     
