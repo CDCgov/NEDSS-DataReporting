@@ -120,7 +120,9 @@ BEGIN TRY
 
 	SELECT public_health_case_uid
 	INTO #TB_HIV_DEL	
-	FROM #TB_PAM_UID_LIST
+	FROM #TB_PAM_UID_LIST S
+	INNER JOIN [dbo].D_TB_HIV D WITH (NOLOCK)
+		ON D.TB_PAM_UID = S.public_health_case_uid
 	EXCEPT
 	SELECT TB_PAM_UID
 	FROM #S_TB_HIV_SET
@@ -239,7 +241,7 @@ BEGIN TRY
 	SET
 		@PROC_STEP_NO = @PROC_STEP_NO + 1;
 	SET
-		@PROC_STEP_NAME = 'TRANSLATE AND ADD CODES';
+		@PROC_STEP_NAME = 'TRANSFORM DATA';
 
 	IF OBJECT_ID('#S_TB_PAM_HIV_TRANSLATED') IS NOT NULL
 		DROP TABLE #S_TB_PAM_HIV_TRANSLATED;
@@ -247,7 +249,11 @@ BEGIN TRY
 	SELECT 
 		TB.CODE_SET_GROUP_ID, 
 		TB.TB_PAM_UID, 
-		TB.ANSWER_TXT, 
+		CASE 
+			WHEN TB.CODE_SET_GROUP_ID IS NULL OR TB.CODE_SET_GROUP_ID = '' 
+			THEN TB.ANSWER_TXT 
+			ELSE CVG.CODE_SHORT_DESC_TXT 
+		END AS ANSWER_TXT,
 		TB.CODE_SET_NM, 
 		TB.DATAMART_COLUMN_NM, 
 		CVG.CODE, 
@@ -278,74 +284,24 @@ BEGIN TRY
 	SET
 		@PROC_STEP_NO = @PROC_STEP_NO + 1;
 	SET
-		@PROC_STEP_NAME = 'TRANSFORM DATA';
-
-	IF OBJECT_ID('#S_TB_PAM_HIV_TIME') IS NOT NULL
-	Drop Table #S_TB_PAM_HIV_TIME;
-
-	SELECT DISTINCT TB_PAM_UID, LAST_CHG_TIME
-	INTO #S_TB_PAM_HIV_TIME
-	FROM #S_TB_PAM_HIV_TRANSLATED;
-
-	IF OBJECT_ID('#S_TB_PAM_HIV_CVG') IS NOT NULL
-		Drop Table #S_TB_PAM_HIV_CVG;
-
-	SELECT 
-		CODE_SET_GROUP_ID, 
-		TB_PAM_UID, 
-		CASE 
-			WHEN CODE_SET_GROUP_ID IS NULL OR CODE_SET_GROUP_ID = '' 
-			THEN ANSWER_TXT 
-			ELSE CODE_SHORT_DESC_TXT 
-		END AS ANSWER_TXT,
-		CODE_SET_NM, 
-		DATAMART_COLUMN_NM, 
-		CODE, 
-		CODE_SHORT_DESC_TXT, 
-		LAST_CHG_TIME
-	INTO #S_TB_PAM_HIV_CVG
-	FROM #S_TB_PAM_HIV_TRANSLATED;
-
-	SELECT @RowCount_no = @@ROWCOUNT;
-
-	IF
-		@debug = 'true'
-		SELECT @Proc_Step_Name AS step, *
-		FROM #S_TB_PAM_HIV_CVG;
-
-	INSERT INTO [dbo].[job_flow_log]
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-	VALUES 
-		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-	--------------------------------------------------------------------------------------------------------
-
-
-	SET
-		@PROC_STEP_NO = @PROC_STEP_NO + 1;
-	SET
 		@PROC_STEP_NAME = 'PIVOT TO CREATE STAGING S_TB_HIV';
 	
 	IF OBJECT_ID('#S_TB_HIV') IS NOT NULL
 	Drop Table #S_TB_HIV;
 
 	SELECT 
-		T.TB_PAM_UID, 
-		MAX([HIV_STATE_PATIENT_NUM]) AS HIV_STATE_PATIENT_NUM, 
-		MAX([HIV_STATUS]) AS HIV_STATUS, 
-		MAX([HIV_CITY_CNTY_PATIENT_NUM]) AS HIV_CITY_CNTY_PATIENT_NUM,
-		MAX(T.LAST_CHG_TIME) AS LAST_CHG_TIME
+		TB_PAM_UID, 
+		MAX(HIV_STATE_PATIENT_NUM) AS HIV_STATE_PATIENT_NUM, 
+		MAX(HIV_STATUS) AS HIV_STATUS, 
+		MAX(HIV_CITY_CNTY_PATIENT_NUM) AS HIV_CITY_CNTY_PATIENT_NUM,
+		MAX(LAST_CHG_TIME) AS LAST_CHG_TIME
 	INTO #S_TB_HIV
-	FROM #S_TB_PAM_HIV_CVG
+	FROM #S_TB_PAM_HIV_TRANSLATED
 	PIVOT (
 		MAX(ANSWER_TXT)
 		FOR DATAMART_COLUMN_NM IN ([HIV_STATE_PATIENT_NUM], [HIV_STATUS], [HIV_CITY_CNTY_PATIENT_NUM])
 	) AS PivotTable
-	INNER JOIN #S_TB_PAM_HIV_TIME T
-		ON PivotTable.TB_PAM_UID = T.TB_PAM_UID
-	WHERE T.TB_PAM_UID IS NOT NULL
-	GROUP BY T.TB_PAM_UID;
+	GROUP BY TB_PAM_UID;
 
 	SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -366,83 +322,23 @@ BEGIN TRY
 	SET
 		@PROC_STEP_NO = @PROC_STEP_NO + 1;
 	SET
-		@PROC_STEP_NAME = 'GET NEW ANSWER ENTRIES L_TB_HIV_N';
+		@PROC_STEP_NAME = 'GENERATE NEW KEYS';
 
-	IF OBJECT_ID('#L_TB_HIV_BASE_NEW') IS NOT NULL
-	DROP Table #L_TB_HIV_BASE_NEW;
-
-	-- L_TB_HIV_BASE_NEW
-	SELECT 
-		TB_PAM_UID
-	INTO #L_TB_HIV_BASE_NEW
+	--insert new items to generate key D_TB_HIV_KEY
+	INSERT INTO [dbo].[nrt_d_tb_hiv_key] (TB_PAM_UID)
+	SELECT TB_PAM_UID		
 	FROM #S_TB_HIV
 	EXCEPT 
 	SELECT TB_PAM_UID 
 	FROM [dbo].D_TB_HIV WITH (NOLOCK); 
 
-	--insert new items to generate key D_TB_HIV_KEY
-	INSERT INTO [dbo].[nrt_d_tb_hiv_key] (TB_PAM_UID)
-	SELECT TB_PAM_UID		
-	FROM #L_TB_HIV_BASE_NEW;
-
-	ALTER TABLE #L_TB_HIV_BASE_NEW 
-	ADD D_TB_HIV_KEY INT;
-
-	UPDATE #L_TB_HIV_BASE_NEW 
-	SET D_TB_HIV_KEY = K.D_TB_HIV_key
-	FROM #L_TB_HIV_BASE_NEW N
-	INNER JOIN [dbo].[nrt_d_tb_hiv_key] K
-	ON K.TB_PAM_UID = N.TB_PAM_UID;
-
-	IF OBJECT_ID('#L_TB_HIV_N') IS NOT NULL
-	DROP TABLE #L_TB_HIV_N;
-
-	SELECT
-		TB_PAM_UID,
-		D_TB_HIV_KEY
-	INTO #L_TB_HIV_N
-	FROM #L_TB_HIV_BASE_NEW;
-
-
 	SELECT @RowCount_no = @@ROWCOUNT;
 
 	IF
 		@debug = 'true'
 		SELECT @Proc_Step_Name AS step, *
-		FROM #L_TB_HIV_N;
-
-	INSERT INTO [dbo].[job_flow_log]
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-	VALUES 
-		(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-	--------------------------------------------------------------------------------------------------------
-
-
-	SET
-		@PROC_STEP_NO = @PROC_STEP_NO + 1;
-	SET
-		@PROC_STEP_NAME = 'GET EXISTING ANSWER ENTRIES L_TB_HIV_E';
-
-	-- L_TB_HIV_E
-	IF OBJECT_ID('#L_TB_HIV_E') IS NOT NULL
-		DROP TABLE #L_TB_HIV_E
-
-	SELECT 
-		S.TB_PAM_UID, 
-		D.D_TB_HIV_KEY
-	INTO #L_TB_HIV_E
-	FROM #S_TB_HIV S
-	INNER JOIN  [dbo].D_TB_HIV D 
-		ON S.TB_PAM_UID = D.TB_PAM_UID;
-
-	SELECT @RowCount_no = @@ROWCOUNT;
-
-	IF
-		@debug = 'true'
-		SELECT @Proc_Step_Name AS step, *
-		FROM #L_TB_HIV_E;
+		FROM [dbo].[nrt_d_tb_hiv_key] L WITH (NOLOCK) 
+		INNER JOIN #S_TB_HIV S ON S.TB_PAM_UID = L.TB_PAM_UID;
 
 	INSERT INTO [dbo].[job_flow_log]
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -467,8 +363,11 @@ BEGIN TRY
 		S.*
 	INTO #D_TB_HIV_N
 	FROM #S_TB_HIV S
-	INNER JOIN #L_TB_HIV_N L
-		ON S.TB_PAM_UID = L.TB_PAM_UID;
+	INNER JOIN [dbo].[nrt_d_tb_hiv_key] L WITH (NOLOCK)
+		ON S.TB_PAM_UID = L.TB_PAM_UID
+	LEFT JOIN [dbo].D_TB_HIV D WITH (NOLOCK)
+		ON S.TB_PAM_UID = D.TB_PAM_UID
+	WHERE D.TB_PAM_UID IS NULL
 
 	SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -538,12 +437,12 @@ BEGIN TRY
 		DROP TABLE #D_TB_HIV_E;
 
 	SELECT 
-		E.D_TB_HIV_KEY, 
+		D.D_TB_HIV_KEY, 
 		S.*
 	INTO #D_TB_HIV_E
-	FROM #S_TB_HIV S
-	INNER JOIN #L_TB_HIV_E E
-		ON S.TB_PAM_UID = E.TB_PAM_UID;
+	FROM #S_TB_HIV S	
+	INNER JOIN [dbo].D_TB_HIV D WITH (NOLOCK)
+		ON S.TB_PAM_UID = D.TB_PAM_UID
 
 	SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -630,4 +529,3 @@ BEGIN CATCH
 END CATCH
 
 END;
-
