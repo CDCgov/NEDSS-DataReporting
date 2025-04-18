@@ -18,10 +18,22 @@ BEGIN
     
 		SET @Proc_Step_Name = 'SP_Start';
 		
-		INSERT INTO [dbo].[job_flow_log] 
-			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-		VALUES 
-			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, 0);
+		INSERT INTO dbo.job_flow_log ( batch_id
+                                    , [Dataflow_Name]
+                                    , [package_Name]
+                                    , [Status_Type]
+                                    , [step_number]
+                                    , [step_name]
+                                    , [row_count]
+                                    , [Msg_Description1])
+        VALUES ( @batch_id
+            , @Dataflow_Name
+            , @Package_Name
+            , 'START'
+            , @Proc_Step_no
+            , @Proc_Step_Name
+            , 0
+            , LEFT('ID List-' + @ldf_id_list, 500));
 
 
 		------------------------------------------------------------------------------------------------------------------------------------------

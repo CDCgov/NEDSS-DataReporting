@@ -29,6 +29,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import org.awaitility.Awaitility;
+import java.util.concurrent.TimeUnit;
+
 class PostProcessingServiceTest {
 
     @InjectMocks @Spy
@@ -1014,8 +1017,12 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processDatamartIds();
 
 
-        verify(postProcRepositoryMock).executeStoredProcForInvSummaryDatamart("126","127","130");
-        verify(postProcRepositoryMock).executeStoredProcForDynDatamart("GENERIC_V2", "126");
+        Awaitility.await()
+            .atMost(5, TimeUnit.SECONDS)
+            .untilAsserted(() -> {
+                verify(postProcRepositoryMock).executeStoredProcForInvSummaryDatamart("126","127","130");
+                verify(postProcRepositoryMock).executeStoredProcForDynDatamart("GENERIC_V2", "126");
+            });
     }
 
 
