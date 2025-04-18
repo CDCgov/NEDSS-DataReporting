@@ -566,7 +566,7 @@ public class PostProcessingService {
                         executeDatamartProc(GENERIC_CASE,
                             investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
                             
-                            if(ldfType.toUpperCase().equals("LDF_GENERIC")){
+                            if(ldfType.equalsIgnoreCase("LDF_GENERIC")){
                                 executeDatamartProc(LDF_GENERIC,
                                 investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
                             }
