@@ -18,4 +18,12 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_date' and xtyp
                 ALTER TABLE dbo.nrt_observation_date
                     ADD ovd_seq smallint;
             END;
+
+--CNDE-2502
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'batch_id' AND Object_ID = Object_ID(N'nrt_observation_date'))
+            BEGIN
+                ALTER TABLE dbo.nrt_observation_date
+                    ADD batch_id bigint;
+            END;
+
     END;

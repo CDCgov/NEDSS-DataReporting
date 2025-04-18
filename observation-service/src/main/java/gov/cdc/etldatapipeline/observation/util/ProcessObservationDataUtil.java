@@ -76,7 +76,7 @@ public class ProcessObservationDataUtil {
         transformParentObservations(observation.getParentObservations(), observationTransformed);
         transformActIds(observation.getActIds(), observationTransformed);
         transformObservationCoded(observation.getObsCode(), batchId);
-        transformObservationDate(observation.getObsDate());
+        transformObservationDate(observation.getObsDate(), batchId);
         transformObservationEdx(observation.getEdxIds());
         transformObservationNumeric(observation.getObsNum(), batchId);
         transformObservationReasons(observation.getObsReason(), batchId);
@@ -340,12 +340,13 @@ public class ProcessObservationDataUtil {
         }
     }
 
-    private void transformObservationDate(String observationDate) {
+    private void transformObservationDate(String observationDate, long batchId) {
         try {
             JsonNode observationDateJsonArray = parseJsonArray(observationDate);
 
             for (JsonNode jsonNode : observationDateJsonArray) {
                 ObservationDate obsDate = objectMapper.treeToValue(jsonNode, ObservationDate.class);
+                obsDate.setBatchId(batchId);
                 sendToKafka(observationKey, obsDate, dateTopicName, obsDate.getObservationUid(), "Observation Date data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {

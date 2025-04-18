@@ -13,4 +13,5 @@ public class ObservationDate {
     private String ovdFromDate;
     private String ovdToDate;
     private Integer ovdSeq;
+    private Long batchId;
 }
