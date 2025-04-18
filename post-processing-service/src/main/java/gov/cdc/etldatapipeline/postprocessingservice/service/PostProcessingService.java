@@ -565,18 +565,12 @@ public class PostProcessingService {
                     case GENERIC_CASE:
                         executeDatamartProc(GENERIC_CASE,
                             investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
-                                if(!ldfType.isEmpty()){
-                                    switch (Entity.valueOf(ldfType.toUpperCase())) {
-                                        case LDF_GENERIC:
-                                            executeDatamartProc(LDF_GENERIC,
-                                                investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
-                                        break;
-                                    default:
-                                        logger.info("No associated datamart processing logic found for the key: {} ", ldfType);
-                
-                                    }
-                                }
-                            break;
+                            
+                            if(ldfType.toUpperCase().equals("LDF_GENERIC")){
+                                executeDatamartProc(LDF_GENERIC,
+                                investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
+                            }
+                        break;
                     case CRS_CASE:
                         executeDatamartProc(CRS_CASE,
                                 investigationRepository::executeStoredProcForCRSCaseDatamart, cases);
