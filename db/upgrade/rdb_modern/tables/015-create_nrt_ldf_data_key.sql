@@ -12,7 +12,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data_key' and xtyp
         select @max=max(ldf_data_key)+2 from dbo.ldf_data;
         select @max;
         if @max IS NULL   --check when max is returned as null
-            SET @max = 1;
+            SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_ldf_data_key', RESEED, @max);
 
     END
