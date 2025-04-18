@@ -104,22 +104,23 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TB_HIV_WITH_UID';
 
-        IF OBJECT_ID('tempdb..#TB_HIV_WITH_UID') IS NOT NULL
+        IF OBJECT_ID('#TB_HIV_WITH_UID') IS NOT NULL
             DROP TABLE #TB_HIV_WITH_UID;
 
         -- Create temporary table #TB_HIV_WITH_UID
         SELECT 
-            h.TB_PAM_UID,
+            p.TB_PAM_UID,
             h.HIV_STATE_PATIENT_NUM,
             h.HIV_STATUS,
             h.HIV_CITY_CNTY_PATIENT_NUM,
             h.D_TB_HIV_KEY
         INTO #TB_HIV_WITH_UID
-        FROM [dbo].D_TB_HIV h WITH(nolock) 
-        INNER JOIN [dbo].D_TB_PAM p WITH(nolock) 
-            ON h.TB_PAM_UID = p.TB_PAM_UID
+        FROM [dbo].D_TB_PAM p WITH(nolock) 
         INNER JOIN #S_INVESTIGATION_LIST i 
-            ON i.TB_PAM_UID = h.TB_PAM_UID    
+            ON i.TB_PAM_UID = p.TB_PAM_UID 
+        LEFT JOIN [dbo].D_TB_HIV h WITH(nolock) 
+            ON h.TB_PAM_UID = p.TB_PAM_UID
+           
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -139,7 +140,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TB_HIV_DATAMART';
         
-        IF OBJECT_ID('tempdb..#TB_HIV_DATAMART') IS NOT NULL
+        IF OBJECT_ID('#TB_HIV_DATAMART') IS NOT NULL
             DROP TABLE #TB_HIV_DATAMART;
 
         -- Create temporary table #TB_HIV_DATAMART
@@ -832,9 +833,9 @@ BEGIN
                 ,INVESTIGATION_LAST_UPDTD_BY
                 ,NOTIFICATION_LOCAL_ID
                 ,NOTIFICATION_SUBMITTER
-                ,HIV_STATE_PATIENT_NUM
-                ,HIV_STATUS
-                ,HIV_CITY_CNTY_PATIENT_NUM
+                ,LEFT(HIV_STATE_PATIENT_NUM, 50)
+                ,LEFT(HIV_STATUS, 50)
+                ,LEFT(HIV_CITY_CNTY_PATIENT_NUM, 50)
                 ,D_TB_HIV_KEY
                 ,INIT_DRUG_REG_CALC
                 ,REPORTER_PHONE_NUMBER
