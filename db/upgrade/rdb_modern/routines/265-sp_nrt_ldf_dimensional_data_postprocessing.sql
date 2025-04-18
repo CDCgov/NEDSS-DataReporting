@@ -1,5 +1,5 @@
 
-CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_dimensional_data_postprocessing]
+CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_ldf_dimensional_data_postprocessing]
   @ldf_id_list nvarchar(max),
   @debug bit = 'false'
  AS
@@ -12,7 +12,7 @@ BEGIN
     DECLARE @Proc_Step_no FLOAT = 0; 
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
 	DECLARE @Dataflow_Name VARCHAR(200) = 'LDF_DIMENSIONAL_DATA POST-Processing';
-	DECLARE @Package_Name VARCHAR(200) = 'sp_ldf_dimensional_data_postprocessing';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_ldf_dimensional_data_postprocessing';
  
 	BEGIN TRY
     

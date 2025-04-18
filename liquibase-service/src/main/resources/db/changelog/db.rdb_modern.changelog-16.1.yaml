@@ -2375,7 +2375,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 226-create_ldf_datamart_table_ref-001.sql
+            path: 231-create_ldf_datamart_table_ref-001.sql
             splitStatements: false
   - changeSet:
       id: 725
@@ -2383,7 +2383,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 227-create_ldf_datamart_column_ref-001.sql
+            path: 232-create_ldf_datamart_column_ref-001.sql
             splitStatements: false
   - changeSet:
       id: 730
@@ -2391,7 +2391,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 228-create_d_ldf_meta_data-001.sql
+            path: 233-create_d_ldf_meta_data-001.sql
             splitStatements: false
   - changeSet:
       id: 735
@@ -2399,7 +2399,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 229-create_ldf_dimensional_data-001.sql
+            path: 234-create_ldf_dimensional_data-001.sql
             splitStatements: false
   - changeSet:
       id: 740
@@ -2407,6 +2407,6 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 265-sp_ldf_dimensional_data_postprocessing-001.sql
+            path: 265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql
             splitStatements: false
     
