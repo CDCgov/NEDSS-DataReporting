@@ -2409,4 +2409,52 @@ databaseChangeLog:
         - sqlFile:
             path: 265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 750
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 235-create_ldf_generic-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 755
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 236-create_ldf_generic1-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 760
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 237-create_ldf_generic2-001.sql
+            splitStatements: false    
+  - changeSet:
+      id: 765
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 270-sp_merge_tables-001.sql
+            splitStatements: false      
+  - changeSet:
+      id: 770
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 275-sp_execute_ldf_generic-001.sql
+            splitStatements: false   
+  - changeSet:
+      id: 775
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 280-sp_ldf_generic_datamart_postprocessing-001.sql
+            splitStatements: false  
     
