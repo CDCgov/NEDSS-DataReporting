@@ -679,7 +679,7 @@ BEGIN
                         CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN 'MAX' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END
                     + ')'
                     ELSE ''
-                END, ', ') from #MISSED_COLS);
+                END, ', ') FROM #MISSED_COLS);
 
                 EXEC sp_executesql @sql_code;
                 
