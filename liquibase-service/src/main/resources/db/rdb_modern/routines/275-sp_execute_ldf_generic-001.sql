@@ -40,15 +40,14 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 			FROM dbo.LDF_DIMENSIONAL_DATA LDF_DIMENSIONAL_DATA  with (nolock) 
 				INNER JOIN dbo.LDF_DATAMART_TABLE_REF   with (nolock) ON LDF_DIMENSIONAL_DATA.PHC_CD = dbo.LDF_DATAMART_TABLE_REF.condition_cd 
 															AND DATAMART_NAME = upper(@target_table_name)
-				where INVESTIGATION_UID in (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ','))									
+				INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ',')) phc								
+				on LDF_DIMENSIONAL_DATA.INVESTIGATION_UID = phc.value 									
 		);	 
 
 		IF (@count > 0) 
 		BEGIN 
 	
 			--------- Create #LDF_GENERIC1 table 
-	
-			BEGIN TRANSACTION; 
 	
 				SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 				SET @PROC_STEP_NAME = ' GENERATING TMP_BASE_GENERIC';  
@@ -61,9 +60,11 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 				SELECT LDA.* 
 								INTO #TMP_BASE_GENERIC 
 								FROM dbo.LDF_DIMENSIONAL_DATA LDA 
-									INNER JOIN dbo.LDF_DATAMART_TABLE_REF ON PHC_CD = LDF_DATAMART_TABLE_REF.CONDITION_CD 
-																				AND DATAMART_NAME = upper(@target_table_name)
-						where LDA.INVESTIGATION_UID in (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ','))														; 
+									INNER JOIN dbo.LDF_DATAMART_TABLE_REF with (nolock)
+										ON PHC_CD = LDF_DATAMART_TABLE_REF.CONDITION_CD 
+										AND DATAMART_NAME = upper(@target_table_name)
+									INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ',')) phc								
+									on LDA.INVESTIGATION_UID = phc.value 												
 					
 				SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
@@ -80,12 +81,9 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
 						@RowCount_no);  
 		
-				COMMIT TRANSACTION; 
 --------------------------------------------------------------------------------------------------------				
 					--- CREATE TABLE LINKED_GENERIC AS  
 				
-					BEGIN TRANSACTION; 
-	
 					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 					SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_GENERIC';  
 	
@@ -102,8 +100,8 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 							CONDITION.CONDITION_SHORT_NM 'DISEASE_NAME' 
 						INTO  #TMP_LINKED_GENERIC 
 						FROM 
-							#TMP_BASE_GENERIC GEN_LDF  with (nolock) 
-							INNER JOIN  dbo.INVESTIGATION INV 
+							#TMP_BASE_GENERIC GEN_LDF
+							INNER JOIN  dbo.INVESTIGATION INV with (nolock) 
 						ON   
 							GEN_LDF.INVESTIGATION_UID=INV.CASE_UID  
 						INNER JOIN dbo.GENERIC_CASE GEN  with (nolock) 
@@ -128,14 +126,10 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
 							@RowCount_no);  
 
-					COMMIT TRANSACTION; 
-
 	--------------------------------------------------------------------------------------------------------				
 			
 					----- CREATE TABLE ALL_GENERIC AS  
 				
-					BEGIN TRANSACTION; 
-	
 					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 					SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_GENERIC';  
 	
@@ -172,12 +166,8 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
 							@RowCount_no);  
 
-					COMMIT TRANSACTION; 
-
 	--------------------------------------------------------------------------------------------------------				
 				
-					BEGIN TRANSACTION; 
-	
 					SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
 					SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_GENERIC_SHORT_COL';  
 	
@@ -194,7 +184,7 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 									DATAMART_COLUMN_NM, 
 									SUBSTRING(COL1, 1, 8000) as ANSWERCOL
 						INTO #TMP_ALL_GENERIC_SHORT_COL 
-						FROM #TMP_ALL_GENERIC with (nolock)  
+						FROM #TMP_ALL_GENERIC
 						WHERE data_type IN ('CV', 'ST');  
 					
 					
@@ -210,18 +200,13 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
 							@RowCount_no);   
 	
-					COMMIT TRANSACTION; 
-
 	--------------------------------------------------------------------------------------------------------				
 				
-				BEGIN TRANSACTION; 
-	
 					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 					SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_GENERIC_TA';  
 	
 				IF OBJECT_ID('#TMP_ALL_GENERIC_TA', 'U') IS NOT NULL   
 						DROP TABLE #TMP_ALL_GENERIC_TA; 
-	
 					
 						SELECT INVESTIGATION_KEY, 
 									INVESTIGATION_LOCAL_ID, 
@@ -233,7 +218,7 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 									DATAMART_COLUMN_NM, 
 									SUBSTRING(COL1, 1, 8000) as ANSWERCOL  
 						INTO #TMP_ALL_GENERIC_TA 
-						FROM #TMP_ALL_GENERIC with (nolock)  
+						FROM #TMP_ALL_GENERIC
 						WHERE data_type IN ('LIST_ST'); 
 
                     if
@@ -248,8 +233,6 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
 							@RowCount_no);   
 	
-					COMMIT TRANSACTION; 
-
 	--------------------------------------------------------------------------------------------------------		 
 	
 					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -308,7 +291,6 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 
 
 	--------------------------------------------------------------------------------------------------------
-					
 					
                     SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 					SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_TA';  

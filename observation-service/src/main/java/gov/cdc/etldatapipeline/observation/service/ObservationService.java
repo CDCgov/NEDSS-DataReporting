@@ -1,6 +1,7 @@
 package gov.cdc.etldatapipeline.observation.service;
 
 
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
@@ -118,7 +119,7 @@ public class ObservationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Observation", observationUid, e), e);
+            throw new DataProcessingException(errorMessage("Observation", observationUid, e), e);
         }
     }
 
@@ -147,7 +148,7 @@ public class ObservationService {
                 processObservation(value, batchId, false, sourceActUid);
             }
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("ActRelationship", sourceActUid, e), e);
+            throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
         }
     }
 

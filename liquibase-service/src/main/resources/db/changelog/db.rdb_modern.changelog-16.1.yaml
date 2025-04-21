@@ -120,6 +120,46 @@ databaseChangeLog:
             path: 014-create_nrt_page_case_answer-001.sql
             splitStatements: false
   - changeSet:
+      id: 15.01
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 226-create_ldf_data-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 15.02
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 227-create_ldf_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 15.03
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 228-create_patient_ldf_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 15.04
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 229-create_provider_ldf_group-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 15.05
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 230-create_organization_ldf_group-001.sql
+            splitStatements: false
+  - changeSet:
       id: 16
       author: liquibase
       runOnChange: true
@@ -2330,12 +2370,52 @@ databaseChangeLog:
             path: 250-sp_dyn_dm_invest_clear_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 720
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 231-create_ldf_datamart_table_ref-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 725
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 232-create_ldf_datamart_column_ref-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 730
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 233-create_d_ldf_meta_data-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 735
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 234-create_ldf_dimensional_data-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 740
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 750
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 230-create_ldf_generic-001.sql
+            path: 235-create_ldf_generic-001.sql
             splitStatements: false
   - changeSet:
       id: 755
@@ -2343,7 +2423,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 231-create_ldf_generic1-001.sql
+            path: 236-create_ldf_generic1-001.sql
             splitStatements: false
   - changeSet:
       id: 760
@@ -2351,7 +2431,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 232-create_ldf_generic2-001.sql
+            path: 237-create_ldf_generic2-001.sql
             splitStatements: false    
   - changeSet:
       id: 765
@@ -2362,7 +2442,7 @@ databaseChangeLog:
             path: 270-sp_merge_tables-001.sql
             splitStatements: false      
   - changeSet:
-      id: 765
+      id: 770
       author: liquibase
       runOnChange: true
       changes:
@@ -2370,10 +2450,11 @@ databaseChangeLog:
             path: 275-sp_execute_ldf_generic-001.sql
             splitStatements: false   
   - changeSet:
-      id: 765
+      id: 775
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
             path: 280-sp_ldf_generic_datamart_postprocessing-001.sql
-            splitStatements: false            
+            splitStatements: false  
+    

@@ -58,6 +58,7 @@ enum Entity {
     TB_DATAMART(0, "tb_datamart", Constants.PHC_UID, "sp_tb_datamart_postprocessing"),    
     TB_HIV_DATAMART(0, "tb_hiv_datamart", Constants.PHC_UID, "sp_tb_hiv_datamart_postprocessing"),
     VAR_DATAMART(0, "var_datamart", Constants.PHC_UID, "sp_var_datamart_postprocessing"),
+    LDF_DIMENSIONAL_DATA(0, "ldf_dimensional_data", Constants.PHC_UID, "sp_nrt_ldf_dimensional_data_postprocessing"),
     LDF_GENERIC(0, "LDF_GENERIC", Constants.PHC_UID, "sp_ldf_generic_datamart_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
 

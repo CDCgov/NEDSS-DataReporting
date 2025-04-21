@@ -8,13 +8,17 @@ import java.nio.charset.Charset;
 
 public class TestUtils {
 
+    private TestUtils() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static String readFileData(String fileName) {
         try {
             return FileUtils.readFileToString(
                     new ClassPathResource(fileName).getFile(),
                     Charset.defaultCharset());
         } catch (IOException e) {
-            throw new RuntimeException("File Read failed : " + fileName);
+            throw new DataProcessingException("File Read failed : " + fileName);
         }
     }
 }
