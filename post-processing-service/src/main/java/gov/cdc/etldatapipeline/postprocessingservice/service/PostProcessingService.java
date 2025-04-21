@@ -105,6 +105,9 @@ public class PostProcessingService {
     @Value("${featureFlag.d-tb-hiv-enable}")
     private boolean dTbHivEnable;
 
+    @Value("${featureFlag.ldf-enable}")
+    private boolean ldfEnable;
+
     @Value("${featureFlag.dyn-dm-enable}")
     private boolean dynDmEnable;
 
@@ -568,9 +571,10 @@ public class PostProcessingService {
                         executeDatamartProc(GENERIC_CASE,
                             investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
                             
-                            if(ldfType.equalsIgnoreCase("LDF_GENERIC")){
+                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_GENERIC")){
                                 executeDatamartProc(LDF_GENERIC,
                                 investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
+                            
                             }
                         break;
                     case CRS_CASE:

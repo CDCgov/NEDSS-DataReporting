@@ -717,6 +717,7 @@ class PostProcessingServiceTest {
     void testPostProcessDatamart(DatamartTestCase testCase) {
         String topic = "dummy_datamart";
         postProcessingServiceMock.setDTbHivEnable(true);
+        postProcessingServiceMock.setLdfEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock, "123");

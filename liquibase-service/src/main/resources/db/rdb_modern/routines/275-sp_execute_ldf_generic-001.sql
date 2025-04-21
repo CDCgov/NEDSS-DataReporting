@@ -8,8 +8,8 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 	declare @RowCount_no bigint;
 	declare @proc_step_no float = 0;
 	declare @proc_step_name varchar(200) = '';
-	declare @dataflow_name varchar(200) = 'sp_'+lower(@target_table_name)+'_datamart_postprocessing';
-	declare @package_name varchar(200) = 'sp_execute_ldf_generic';
+	declare @dataflow_name varchar(200) = 'sp_ldf_generic_datamart_postprocessing';
+	declare @package_name varchar(200) = 'sp_execute_ldf_generic : '+lower(@target_table_name);
 
 	DECLARE @cols  AS NVARCHAR(MAX)=''; 
 	DECLARE @query AS NVARCHAR(MAX)=''; 
@@ -30,6 +30,29 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 
 	DECLARE @global_tmp_generic NVARCHAR(MAX);
 	set @global_tmp_generic = '##TMP_GENERIC_' + CAST(@batch_id as varchar(50));
+
+	--------------------------------------------------------------------------------------------------------
+
+	SET @Proc_Step_no = 1;
+    SET @Proc_Step_Name = 'SP_Start';
+
+        --Serialize input parameters to JSON for clean logging
+        DECLARE @params_json VARCHAR(200) = JSON_QUERY((
+            SELECT
+                @phc_uids AS phc_uids,
+                @batch_id AS batch_id,
+                @debug AS debug,
+                @target_table_name AS target_table_name
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        ));
+
+
+       INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Msg_Description1])
+		VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+				@RowCount_no, @params_json); 
+       
+--------------------------------------------------------------------------------------------------------
  
  	BEGIN TRY 
 

@@ -4,7 +4,6 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_merge_tables]
 	@OUTPUT_TABLE       VARCHAR(150) = '', 
 	@JOIN_ON_COLUMN       VARCHAR(150) = '',
 	@batch_id bigint,
-	@debug bit = 'false',
 	@target_table_name nvarchar(max)
 AS 
 BEGIN 
@@ -12,14 +11,39 @@ BEGIN
 	declare @RowCount_no bigint;
 	declare @proc_step_no float = 0;
 	declare @proc_step_name varchar(200) = '';
-	declare @dataflow_name varchar(200) = 'sp_'+lower(@target_table_name)+'_datamart_postprocessing';
-	declare @package_name varchar(200) = 'sp_merge_tables';
+	declare @dataflow_name varchar(200) = 'sp_ldf_generic_datamart_postprocessing';
+	declare @package_name varchar(200) = 'sp_merge_tables : '+lower(@target_table_name);
  
 	DECLARE  @alterDynamicColumnList VARCHAR(MAX)=''; 
 	DECLARE  @dynamicColumnUpdate VARCHAR(MAX)=''; 
 	DECLARE  @dynamicColumnInsert VARCHAR(MAX)=''; 
  
-	BEGIN TRY 
+	BEGIN TRY
+
+	--------------------------------------------------------------------------------------------------------
+
+	SET @Proc_Step_no = 1;
+    SET @Proc_Step_Name = 'SP_Start';
+
+        --Serialize input parameters to JSON for clean logging
+        DECLARE @params_json VARCHAR(200) = JSON_QUERY((
+            SELECT
+                @INPUT_TABLE1 AS INPUT_TABLE1,
+                @INPUT_TABLE2 AS INPUT_TABLE2,
+                @OUTPUT_TABLE AS OUTPUT_TABLE,
+                @JOIN_ON_COLUMN AS JOIN_ON_COLUMN,
+				@batch_id as batch_id,
+				@target_table_name as target_table_name
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        ));
+
+
+       INSERT INTO [dbo].[job_flow_log]
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Msg_Description1])
+		VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+				@RowCount_no, @params_json); 
+       
+	--------------------------------------------------------------------------------------------------------
 	 
 		SELECT   @alterDynamicColumnList  = @alterDynamicColumnList+ 'ALTER TABLE '+@OUTPUT_TABLE+' ADD [' + name   +  '] VARCHAR(4000) ', 
 				 @dynamicColumnUpdate= @dynamicColumnUpdate + @OUTPUT_TABLE+'.[' +  name  + ']='  + @INPUT_TABLE1+'.['  +name  + '] ,' 

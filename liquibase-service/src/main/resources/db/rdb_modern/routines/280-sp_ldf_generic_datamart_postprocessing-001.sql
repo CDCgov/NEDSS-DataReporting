@@ -7,7 +7,7 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_generic_datamart_postprocessing]
 	declare @proc_step_no float = 0;
 	declare @proc_step_name varchar(200) = '';
 	declare @batch_id bigint;
-	declare @dataflow_name varchar(200) = 'sp_ldf_generic_datamart POST-Processing';
+	declare @dataflow_name varchar(200) = 'sp_ldf_generic_datamart_postprocessing';
 	declare @package_name varchar(200) = 'sp_ldf_generic_datamart_postprocessing';
 	set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
@@ -32,13 +32,14 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_generic_datamart_postprocessing]
 		EXECUTE  [dbo].[sp_execute_ldf_generic]  
 			@phc_uids= @phc_uids
 			,@batch_id= @batch_id
-			,@target_table_name = 'LDF_GENERIC';
+			,@target_table_name = 'LDF_GENERIC'
+			,@debug = @debug;
 
 
 		INSERT INTO [dbo].[job_flow_log]
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Msg_Description1])
 		VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-				@RowCount_no); 
+				@RowCount_no, LEFT (@phc_uids, 199)); 
 
 		COMMIT TRANSACTION
 
@@ -52,12 +53,13 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_generic_datamart_postprocessing]
 		EXECUTE  [dbo].[sp_execute_ldf_generic]  
 		@phc_uids= @phc_uids
 		,@batch_id= @batch_id
-		,@target_table_name = 'LDF_GENERIC1';
+		,@target_table_name = 'LDF_GENERIC1'
+		,@debug = @debug;
 
 		INSERT INTO [dbo].[job_flow_log]
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count],[Msg_Description1])
 		VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-				@RowCount_no); 
+				@RowCount_no, LEFT (@phc_uids, 199)); 
 
 		COMMIT TRANSACTION
 
@@ -72,13 +74,14 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_generic_datamart_postprocessing]
 		EXECUTE  [dbo].[sp_execute_ldf_generic]  
 		@phc_uids= @phc_uids
 		,@batch_id= @batch_id
-		,@target_table_name = 'LDF_GENERIC2';
+		,@target_table_name = 'LDF_GENERIC2'
+		,@debug = @debug;
 
 
 		INSERT INTO [dbo].[job_flow_log]
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count],[Msg_Description1])
 		VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-				@RowCount_no); 
+				@RowCount_no, LEFT (@phc_uids, 199)); 
 
 		COMMIT TRANSACTION
 
@@ -89,7 +92,7 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_generic_datamart_postprocessing]
 
 		INSERT INTO [dbo].[job_flow_log]
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-		VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+		VALUES (@batch_id, @dataflow_name, @package_name, 'COMPLETE', @Proc_Step_no, @Proc_Step_Name,
 				@RowCount_no); 
 
 --------------------------------------------------------------------------------------------------------
