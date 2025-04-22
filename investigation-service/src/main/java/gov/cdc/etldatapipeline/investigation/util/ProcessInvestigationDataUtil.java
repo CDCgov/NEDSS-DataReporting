@@ -333,8 +333,7 @@ public class ProcessInvestigationDataUtil {
             }
             investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
             investigationConfirmation.setBatchId(investigationTransformed.getBatchId());
-            investigationConfirmation.setConfirmationMethodTime(
-                    confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
+            investigationConfirmation.setConfirmationMethodTime(confirmationMethodTime);
 
             investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
 
