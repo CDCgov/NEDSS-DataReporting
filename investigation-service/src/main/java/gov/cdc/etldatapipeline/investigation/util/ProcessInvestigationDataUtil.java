@@ -320,7 +320,7 @@ public class ProcessInvestigationDataUtil {
             InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
             Map<String, String> confirmationMethodMap = new HashMap<>();
             String confirmationMethodTime = null;
-            
+
             for(JsonNode node : investigationConfirmationMethodJsonArray) {
                 JsonNode timeNode = node.get("confirmation_method_time");
                 if (timeNode != null && !timeNode.isNull()) {
