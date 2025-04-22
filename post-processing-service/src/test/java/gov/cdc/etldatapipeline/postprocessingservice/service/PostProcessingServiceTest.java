@@ -653,6 +653,29 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessBmirdLDFCase() {
+
+        postProcessingServiceMock.setLdfEnable(true);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                "\"datamart\":\"BMIRD_Case,LDF_BMIRD\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForLdfBmirdDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(7, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
+        assertTrue(logs.get(6).getFormattedMessage().contains(LDF_BMIRD.getStoredProcedure()));
+    }
+
+    @Test
     void testPostProcessTBDatamart() {
         String topic = "tb_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
