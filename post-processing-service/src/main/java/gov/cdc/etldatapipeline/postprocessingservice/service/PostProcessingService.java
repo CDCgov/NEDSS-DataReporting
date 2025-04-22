@@ -105,6 +105,9 @@ public class PostProcessingService {
     @Value("${featureFlag.d-tb-hiv-enable}")
     private boolean dTbHivEnable;
 
+    @Value("${featureFlag.ldf-enable}")
+    private boolean ldfEnable;
+
     @Value("${featureFlag.dyn-dm-enable}")
     private boolean dynDmEnable;
 
@@ -533,7 +536,12 @@ public class PostProcessingService {
     protected void processDatamartIds() {
         for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
             if (!entry.getValue().isEmpty()) {
-                String dmType = entry.getKey();
+                // String dmType = 
+                
+                String[] dmTypes = entry.getKey().split(",");
+                String dmType = dmTypes[0];
+                String ldfType = dmTypes.length>1 ? dmTypes[1] : "" ;
+
 
                 // skip multi ID processing here, it should after this processing
                 if (MULTIID.equals(dmType)) {
@@ -561,7 +569,13 @@ public class PostProcessingService {
                         break;
                     case GENERIC_CASE:
                         executeDatamartProc(GENERIC_CASE,
-                                investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
+                            investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
+                            
+                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_GENERIC")){
+                                executeDatamartProc(LDF_GENERIC,
+                                investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
+                            
+                            }
                         break;
                     case CRS_CASE:
                         executeDatamartProc(CRS_CASE,
@@ -681,6 +695,8 @@ public class PostProcessingService {
                                         Collectors.joining(",")
                                 )
                         ));
+                    
+
                 datamartPhcIdMap.forEach((datamart, phcIds) ->
                             CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
                                     .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart))

@@ -717,10 +717,11 @@ class PostProcessingServiceTest {
     void testPostProcessDatamart(DatamartTestCase testCase) {
         String topic = "dummy_datamart";
         postProcessingServiceMock.setDTbHivEnable(true);
+        postProcessingServiceMock.setLdfEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock, "123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName.split(",")[0]));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(testCase.logSize, logs.size());
         assertEquals(logs.getLast().getFormattedMessage(),
@@ -743,7 +744,18 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}",
                         GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForGenericCaseDatamart(uid)),
+                        (repo, uid) ->
+                            verify(repo).executeStoredProcForGenericCaseDatamart(uid)
+                        ),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                            "\"datamart\":\"Generic_Case,LDF_GENERIC\",\"stored_procedure\":\"sp_ldf_generic_datamart_postprocessing\"}}",
+                    "Generic_Case,LDF_GENERIC", LDF_GENERIC.getStoredProcedure(), 5,
+                    (repo, uid) -> {
+                        verify(repo).executeStoredProcForGenericCaseDatamart(uid);
+                        verify(repo).executeStoredProcForLdfGenericDatamart(uid);
+                        }
+                    ),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
