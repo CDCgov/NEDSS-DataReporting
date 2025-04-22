@@ -5,6 +5,19 @@ DECLARE @ServiceName NVARCHAR(100) = 'investigation_service'; -- Hardcoded servi
 DECLARE @UserPassword NVARCHAR(100) = 'DummyPassword123'; -- Will be changed
 DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb'; -- lowercase _rdb suffix
 
+-- Check if login already exists before creating
+IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = @UserName)
+    BEGIN
+        -- Create the login at server level
+        DECLARE @CreateLoginSQL NVARCHAR(MAX) = 'CREATE LOGIN [' + @UserName + '] WITH PASSWORD=N''' + @UserPassword + ''', DEFAULT_DATABASE=[RDB], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF';
+        EXEC sp_executesql @CreateLoginSQL;
+        PRINT 'Created login [' + @UserName + ']';
+    END
+ELSE
+    BEGIN
+        PRINT 'Login [' + @UserName + '] already exists';
+    END
+
 -- ==========================================
 -- Grant permissions on ODSE database (READ)
 -- ==========================================
@@ -15,7 +28,7 @@ PRINT 'Switched to database [NBS_ODSE]';
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
     BEGIN
         -- Create the user in ODSE database
-        DECLARE @CreateUserODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] WITH PASSWORD = ''' + @UserPassword + '''';
+        DECLARE @CreateUserODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
         EXEC sp_executesql @CreateUserODSESQL;
         PRINT 'Created database user [' + @UserName + '] in NBS_ODSE';
 
@@ -44,7 +57,7 @@ PRINT 'Switched to database [NBS_SRTE]';
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
     BEGIN
         -- Create the user in SRT database
-        DECLARE @CreateUserSRTSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] WITH PASSWORD = ''' + @UserPassword + '''';
+        DECLARE @CreateUserSRTSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
         EXEC sp_executesql @CreateUserSRTSQL;
         PRINT 'Created database user [' + @UserName + '] in NBS_SRTE';
 
@@ -73,7 +86,7 @@ PRINT 'Switched to database [RDB]';
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
     BEGIN
         -- Create the user in RDB database
-        DECLARE @CreateUserRDBSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] WITH PASSWORD = ''' + @UserPassword + '''';
+        DECLARE @CreateUserRDBSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
         EXEC sp_executesql @CreateUserRDBSQL;
         PRINT 'Created database user [' + @UserName + '] in RDB';
 
@@ -99,7 +112,7 @@ PRINT 'Switched to database [rdb_modern]';
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
     BEGIN
         -- Create the user in RDB_MODERN database
-        DECLARE @CreateUserRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] WITH PASSWORD = ''' + @UserPassword + '''';
+        DECLARE @CreateUserRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
         EXEC sp_executesql @CreateUserRDBModernSQL;
         PRINT 'Created database user [' + @UserName + '] in rdb_modern';
 
