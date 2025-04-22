@@ -2457,4 +2457,20 @@ databaseChangeLog:
         - sqlFile:
             path: 280-sp_ldf_generic_datamart_postprocessing-001.sql
             splitStatements: false  
+  - changeSet:
+      id: 810
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 241-create_ldf_tetanus-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 815
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 300-sp_ldf_tetanus_datamart_postprocessing-001.sql
+            splitStatements: false
     

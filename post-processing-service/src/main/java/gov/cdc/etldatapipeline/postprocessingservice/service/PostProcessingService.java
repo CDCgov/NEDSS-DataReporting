@@ -576,6 +576,11 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
                             
                             }
+                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_TETANUS")){
+                                executeDatamartProc(LDF_TETANUS,
+                                investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
+                            }
+
                         break;
                     case CRS_CASE:
                         executeDatamartProc(CRS_CASE,
