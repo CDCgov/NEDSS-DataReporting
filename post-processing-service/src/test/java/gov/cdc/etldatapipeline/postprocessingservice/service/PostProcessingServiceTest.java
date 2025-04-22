@@ -635,6 +635,8 @@ class PostProcessingServiceTest {
 
     @Test
     void testPostProcessBmirdCase() {
+        
+        postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"\"}}";
