@@ -43,6 +43,7 @@ featureFlag:
   summary-report-enable: ${FF_SUMMARY_REPORT_ENABLE:false}
   aggregate-report-enable: ${FF_AGGREGATE_REPORT_ENABLE:false}
   d-tb-hiv-enable: ${FF_D_TB_HIV_ENABLE:false}
+  ldf-enable: ${FF_LDF_ENABLE:false}
   dyn-dm-enable: ${FF_DYM_DM_ENABLE:false}
 service:
   fixed-delay:
