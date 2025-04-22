@@ -320,10 +320,7 @@ public class ProcessInvestigationDataUtil {
             InvestigationConfirmationMethod investigationConfirmation = new InvestigationConfirmationMethod();
             Map<String, String> confirmationMethodMap = new HashMap<>();
             String confirmationMethodTime = null;
-
-            // Redundant time variable in case if confirmation_method_time is null in all rows of the array
-            String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
-
+            
             for(JsonNode node : investigationConfirmationMethodJsonArray) {
                 JsonNode timeNode = node.get("confirmation_method_time");
                 if (timeNode != null && !timeNode.isNull()) {
