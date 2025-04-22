@@ -236,16 +236,19 @@ BEGIN
                 a.PATIENT_LOCAL_ID,
                 a.DISEASE_NAME,
                 CASE 
-                    WHEN LEN(RTRIM(a.CONDITION_CD)) > 1 THEN a.CONDITION_CD
-                    ELSE a.phc_cd
+                    WHEN DATALENGTH(REPLACE(a.CONDITION_CD, ' ', '')) > 1 
+                    THEN a.CONDITION_CD
+                    ELSE a.PHC_CD
                 END AS DISEASE_CD,
                 CASE 
-                    WHEN LEN(RTRIM(a.page_set)) < 2 THEN a.page_set
+                    WHEN DATALENGTH(a.page_set) < 2 
+                    THEN a.page_set
                     ELSE a.page_set
                 END AS DISEASE_NM,
                 CASE 
-                    WHEN LEN(RTRIM(b.DATAMART_COLUMN_NM)) > 2 THEN b.DATAMART_COLUMN_NM
-                    ELSE NULL
+                    WHEN DATALENGTH(b.DATAMART_COLUMN_NM) > 2 
+                    THEN b.DATAMART_COLUMN_NM
+                    ELSE a.DATAMART_COLUMN_NM
                 END AS DATAMART_COLUMN_NM
             INTO #ALL_FOODBORNE
             FROM #LINKED_FOODBORNE a
