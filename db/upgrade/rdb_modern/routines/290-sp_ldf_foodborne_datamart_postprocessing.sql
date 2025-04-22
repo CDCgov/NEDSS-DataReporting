@@ -1,5 +1,5 @@
 
-CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_foodborne_postprocessing]  
+CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_foodborne_datamart_postprocessing]  
   @phc_id_list nvarchar(max),
   @debug bit = 'false'
  AS
@@ -12,7 +12,7 @@ BEGIN
     DECLARE @Proc_Step_no FLOAT = 0; 
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
 	DECLARE @Dataflow_Name VARCHAR(200) = 'LDF_FOODBORNE POST-Processing';
-	DECLARE @Package_Name VARCHAR(200) = 'sp_ldf_foodborne_postprocessing';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_ldf_foodborne_datamart_postprocessing';
 
     DECLARE @global_temp_foodborne_ta varchar(500) = '';
     DECLARE @global_temp_foodborne_short_col varchar(500) = '';
