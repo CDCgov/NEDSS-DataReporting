@@ -36,7 +36,7 @@ BEGIN
                 @PROC_STEP_NO,
                 @PROC_STEP_NAME,
                 @ROWCOUNT_NO,
-                LEFT('NOTF_ID List-' + @phc_id, 500));
+                LEFT( @phc_id, 500));
 
         COMMIT TRANSACTION;
 -- new as per the team discussion, to remove TEMP_UPDATED_LAB_INV_MAP from SP_RUN sp
