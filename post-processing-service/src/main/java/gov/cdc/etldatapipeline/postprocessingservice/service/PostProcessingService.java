@@ -596,13 +596,15 @@ public class PostProcessingService {
                     case BMIRD_CASE:
                         executeDatamartProc(BMIRD_CASE,
                                 investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
-                        executeDatamartProc(BMIRD_STREP_PNEUMO_DATAMART,
-                                investigationRepository::executeStoredProcForBmirdStrepPneumoDatamart, cases);
                         
                         if(ldfEnable && ldfType.equalsIgnoreCase("LDF_BMIRD")){
                             executeDatamartProc(LDF_BMIRD,
                             investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
                         }
+
+                        executeDatamartProc(BMIRD_STREP_PNEUMO_DATAMART,
+                                investigationRepository::executeStoredProcForBmirdStrepPneumoDatamart, cases);
+
                         break;
                     case HEPATITIS_CASE:
                         executeDatamartProc(HEPATITIS_CASE,
