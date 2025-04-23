@@ -1,5 +1,5 @@
 CREATE OR ALTER PROCEDURE [dbo].[sp_case_lab_datamart_postprocessing] @phc_id nvarchar(max),
-                                                                      @debug bit = 'false'
+                                                                        @debug bit = 'false'
 AS
 BEGIN
     DECLARE @batch_id BIGINT;
@@ -27,14 +27,16 @@ BEGIN
          [STATUS_TYPE],
          [STEP_NUMBER],
          [STEP_NAME],
-         [ROW_COUNT])
+         [ROW_COUNT],
+         [msg_description1])
         VALUES (@batch_id,
                 'CASE_LAB_DATAMART',
                 'CASE_LAB_DATAMART',
                 'START',
                 @PROC_STEP_NO,
                 @PROC_STEP_NAME,
-                @ROWCOUNT_NO);
+                @ROWCOUNT_NO,
+                LEFT('NOTF_ID List-' + @phc_id, 500));
 
         COMMIT TRANSACTION;
 -- new as per the team discussion, to remove TEMP_UPDATED_LAB_INV_MAP from SP_RUN sp
@@ -182,7 +184,7 @@ BEGIN
               WHERE CASE_TYPE = 'I'
                 AND cc.patient_key in (select patient_key
                                        from dbo.d_patient
-                                       where PATIENT_KEY in (select PATIENT_KEY
+              where PATIENT_KEY in (select PATIENT_KEY
                                                              from dbo.INVESTIGATION
                                                              where INVESTIGATION_KEY in (SELECT value
                                                                                          FROM
@@ -885,25 +887,23 @@ WHERE EVENT_DATE is null;';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_sample3';
 
-        select distinct [key],
-                        subkey,
+        select distinct [key], subkey,
                         (
-                            '<b>Local ID:</b> ' + rtrim(coalesce(C8, '')) + '<br>' +
-                            '<b>Date Received by PH:</b> ' + rtrim(coalesce(C1, '')) + '<br>' +
-                            '<b>Specimen Collection Date:</b> ' + rtrim(coalesce(C2, '')) + '<br>' +
-                            '<b>ELR Indicator:</b>' + rtrim(coalesce(c9, '')) + '<br>' +
-                            '<b>Resulted Test:</b> ' +
-                            (case when rtrim(coalesce(C3, '')) = '' THEN '' else rtrim(C3) END) + '<br>' +
-                            '<b>Coded Result:</b> ' +
-                            (case when rtrim(coalesce(C4, '')) = '' THEN '' else rtrim(C4) END) + '<br>' +
-                            '<b>Numeric Result:</b> ' +
-                            (case when rtrim(coalesce(C5, '')) = '' THEN '' else rtrim(C5) END) + '<br>' +
-                            '<b>Text Result:</b> ' +
-                            (case when rtrim(coalesce(C6, '')) = '' THEN '' else rtrim(C6) END) + '<br>' +
-                            '<b>Comments:</b> ' + (case when rtrim(coalesce(C7, '')) = '' THEN '' else rtrim(C7) END)
-                            ) as bigChunk
+                            '<b>Local ID:</b> '  +  rtrim (coalesce(C8,''))  +  '<br>'  +
+                            '<b>Date Received by PH:</b> '  + rtrim (coalesce(C1,''))  +  '<br>'  +
+                            '<b>Specimen Collection Date:</b> '  +  rtrim (coalesce(C2,''))  +  '<br>'  +
+                            '<b>ELR Indicator:</b>' +  rtrim (coalesce(c9,'')) +  '<br>'  +
+                            '<b>Resulted Test:</b> '  +  (case when rtrim(coalesce(C3,''))='' THEN '' else rtrim(C3) END)  +  '<br>'  +
+                            '<b>Coded Result:</b> '   +  (case when rtrim(coalesce(C4,''))='' THEN '' else rtrim(C4) END)  +  '<br>'  +
+                            '<b>Numeric Result:</b> ' +  (case when rtrim(coalesce(C5,''))='' THEN '' else rtrim(C5) END)  +  '<br>'  +
+                            '<b>Text Result:</b> '    +  (case when rtrim(coalesce(C6,''))='' THEN '' else rtrim(C6) END)  +  '<br>'  +
+                            '<b>Comments:</b> '       +    (case when rtrim(coalesce(C7,''))='' THEN '' else rtrim(C7) END)
+                            )	as bigChunk
         into #TMP_CLDM_sample3
         from #TMP_CLDM_sample21;
+
+        if @debug = 'true' select @PROC_STEP_NAME, * from #TMP_CLDM_sample3;
+
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -922,14 +922,18 @@ WHERE EVENT_DATE is null;';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_sample4';
 
-        SELECT [key],
-               bigChunk = STUFF((SELECT DISTINCT ' <br><br>' + bigChunk
-                                 FROM #TMP_CLDM_sample3 b
-                                 WHERE b.[key] = a.[key]
-                                 FOR XML PATH('')), 1, 2, '')
+        SELECT [key], bigChunk =
+            STUFF((SELECT DISTINCT '  <br><br>' + bigChunk
+                   FROM #TMP_CLDM_sample3 b
+                   WHERE b.[key] = a.[key]
+                   FOR XML PATH('')), 1, 2, '')
         into #TMP_CLDM_sample4
         FROM #TMP_CLDM_sample3 a
         GROUP BY [key];
+
+
+        if @debug = 'true' select @PROC_STEP_NAME, * from #TMP_CLDM_sample4;
+
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -952,6 +956,9 @@ WHERE EVENT_DATE is null;';
                bigChunk as LABORATORY_INFORMATION
         into #TMP_CLDM_sample5
         from #TMP_CLDM_sample4;
+
+        if @debug = 'true' select @PROC_STEP_NAME, * from #TMP_CLDM_sample5;
+
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -993,9 +1000,9 @@ WHERE EVENT_DATE is null;';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_CASE_LAB_DATAMART_FINAL';
 
+
         select tcld.*,
-               replace(replace(replace(replace(ts5.Laboratory_Information, '&lt;', '<'), '&gt;', '>'), '&amp;', '&'),
-                       '™', '&trade;') as Laboratory_Information,
+               replace(replace(replace(replace(ts5.Laboratory_Information, '&lt;', '<'), '&gt;', '>'), '&amp;', '&') ,'™', '&trade;')as Laboratory_Information,
                SPECIMEN_COLLECTION_DT  as EARLIEST_SPECIMEN_COLLECTION_DT
         into #TMP_CLDM_CASE_LAB_DATAMART_FINAL
         from #TMP_CLDM_CASE_LAB_DATAMART tcld
@@ -1013,11 +1020,16 @@ WHERE EVENT_DATE is null;';
         set Laboratory_Information = cast([LABORATORY_INFORMATION] as varchar(3996)) + '<br>'
         where len(Laboratory_Information) >= 4000;
 
+
 -- Update event dates based on specimen collection
         update #TMP_CLDM_CASE_LAB_DATAMART_FINAL
         set EVENT_DATE      = EARLIEST_SPECIMEN_COLLECTION_DT,
             EVENT_DATE_TYPE = 'Specimen Collection Date of Earliest Associated Lab'
         where EARLIEST_SPECIMEN_COLLECTION_DT is not null;
+
+
+        if @debug = 'true' select @PROC_STEP_NAME, * from #TMP_CLDM_CASE_LAB_DATAMART_FINAL;
+
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -1273,4 +1285,4 @@ WHERE EVENT_DATE is null;';
 
         RETURN -1;
     END CATCH;
-END
+END;
