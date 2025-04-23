@@ -577,6 +577,9 @@ public class PostProcessingService {
                             
                             }
                             if(ldfEnable && ldfType.equalsIgnoreCase("LDF_TETANUS")){
+                                // to test this Tetanus must be added as a legacy page 
+                                // and [dbo].nrt_datamart_metadata table must be updated
+                                // adding TETANUS
                                 executeDatamartProc(LDF_TETANUS,
                                 investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
                             }
