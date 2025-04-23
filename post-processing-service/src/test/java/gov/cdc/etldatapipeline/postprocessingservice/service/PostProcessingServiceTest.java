@@ -804,13 +804,22 @@ class PostProcessingServiceTest {
                     ),
                 new DatamartTestCase(
                     "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                            "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"sp_ldf_foodborne_datamart_postprocessing\"}}",
+                    "Generic_Case,LDF_FOODBORNE", LDF_FOODBORNE.getStoredProcedure(), 5,
+                    (repo, uid) -> {
+                        verify(repo).executeStoredProcForGenericCaseDatamart(uid);
+                        verify(repo).executeStoredProcForLdfFoodBorneDatamart(uid);
+                        }
+                    ), 
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                             "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"sp_ldf_tetanus_datamart_postprocessing\"}}",
                     "Generic_Case,LDF_TETANUS", LDF_TETANUS.getStoredProcedure(), 5,
                     (repo, uid) -> {
                         verify(repo).executeStoredProcForGenericCaseDatamart(uid);
                         verify(repo).executeStoredProcForLdfTetanusDatamart(uid);
                         }
-                    ),    
+                    ),       
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",

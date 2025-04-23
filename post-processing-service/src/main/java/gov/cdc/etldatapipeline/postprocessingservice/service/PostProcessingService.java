@@ -576,6 +576,10 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
                             
                             }
+                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_FOODBORNE")){
+                                executeDatamartProc(LDF_FOODBORNE,
+                                investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
+                            }
                             if(ldfEnable && ldfType.equalsIgnoreCase("LDF_TETANUS")){
                                 // to test this Tetanus must be added as a legacy page 
                                 // and [dbo].nrt_datamart_metadata table must be updated
