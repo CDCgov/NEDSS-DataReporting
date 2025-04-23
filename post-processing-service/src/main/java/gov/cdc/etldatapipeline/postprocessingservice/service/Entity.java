@@ -60,6 +60,7 @@ enum Entity {
     VAR_DATAMART(0, "var_datamart", Constants.PHC_UID, "sp_var_datamart_postprocessing"),
     LDF_DIMENSIONAL_DATA(0, "ldf_dimensional_data", Constants.PHC_UID, "sp_nrt_ldf_dimensional_data_postprocessing"),
     LDF_GENERIC(0, "LDF_GENERIC", Constants.PHC_UID, "sp_ldf_generic_datamart_postprocessing"),
+    LDF_BMIRD(0, "LDF_BMIRD", Constants.PHC_UID, "sp_ldf_bmird_datamart_postprocessing"),
     LDF_FOODBORNE(0, "LDF_FOODBORNE", Constants.PHC_UID, "sp_ldf_foodborne_datamart_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
 
