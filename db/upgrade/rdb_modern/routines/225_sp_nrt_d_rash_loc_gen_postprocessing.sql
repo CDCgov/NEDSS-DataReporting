@@ -17,6 +17,8 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = 0;
 
+        SET @Proc_Step_Name = 'SP_Start';
+
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Msg_Description1])
         VALUES (@BATCH_ID, @dataflow_name, @package_name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT (@phc_uids, 199));
@@ -239,34 +241,6 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-
----------------------------------------------------------------------------------------------------------------------
-
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'DELETING FROM DBO.D_RASH_LOC_GEN_GROUP';
-
-        -- update F_VAR_PAM table
-        UPDATE F
-            SET F.D_RASH_LOC_GEN_GROUP_KEY = 1
-        FROM DBO.F_VAR_PAM F
-        INNER JOIN #TEMP_D_RASH_LOC_GEN_DEL T on T.D_RASH_LOC_GEN_GROUP_KEY = F.D_RASH_LOC_GEN_GROUP_KEY
-
-        -- delete from DBO.D_RASH_LOC_GEN_GROUP
-        DELETE T FROM DBO.D_RASH_LOC_GEN_GROUP T
-        left join (select distinct D_RASH_LOC_GEN_GROUP_KEY from dbo.d_rash_loc_gen) DBO
-            ON DBO.D_RASH_LOC_GEN_GROUP_KEY = T.D_RASH_LOC_GEN_GROUP_KEY
-        WHERE DBO.D_RASH_LOC_GEN_GROUP_KEY is null;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
         
         COMMIT TRANSACTION;   
 
@@ -538,6 +512,43 @@ BEGIN
         
         COMMIT TRANSACTION;          
 --------------------------------------------------------------------------------------------
+        BEGIN TRANSACTION
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_RASH_LOC_GEN_GROUP';
+
+        -- update F_VAR_PAM table
+        UPDATE F
+            SET F.D_RASH_LOC_GEN_GROUP_KEY = D.D_RASH_LOC_GEN_GROUP_KEY
+        FROM DBO.F_VAR_PAM F with (nolock)
+        INNER JOIN DBO.D_VAR_PAM DIM  with (nolock)
+            ON DIM.D_VAR_PAM_KEY = F.D_VAR_PAM_KEY
+        INNER JOIN DBO.D_RASH_LOC_GEN D with (nolock)
+            ON D.VAR_PAM_UID = DIM.VAR_PAM_UID
+        INNER JOIN #S_PHC_LIST S
+            ON D.VAR_PAM_UID = S.VALUE;
+
+        -- delete from DBO.D_RASH_LOC_GEN_GROUP
+        DELETE T FROM DBO.D_RASH_LOC_GEN_GROUP T with (nolock)
+        INNER JOIN #TEMP_D_RASH_LOC_GEN_DEL DEL
+            on T.D_RASH_LOC_GEN_GROUP_KEY = DEL.D_RASH_LOC_GEN_GROUP_KEY
+        left join (select distinct D_RASH_LOC_GEN_GROUP_KEY from dbo.D_RASH_LOC_GEN with (nolock)) DBO
+            ON DBO.D_RASH_LOC_GEN_GROUP_KEY = T.D_RASH_LOC_GEN_GROUP_KEY
+        WHERE DBO.D_RASH_LOC_GEN_GROUP_KEY is null;
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;         
+---------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
 
