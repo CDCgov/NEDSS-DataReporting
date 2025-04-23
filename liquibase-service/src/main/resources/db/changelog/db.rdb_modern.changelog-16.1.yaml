@@ -2458,6 +2458,22 @@ databaseChangeLog:
             path: 280-sp_ldf_generic_datamart_postprocessing-001.sql
             splitStatements: false  
   - changeSet:
+      id: 780
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 238-create_ldf_bmird-001.sql
+            splitStatements: false  
+  - changeSet:
+      id: 785
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 285-sp_ldf_bmird_datamart_postprocessing-001.sql
+            splitStatements: false  
+  - changeSet:
       id: 810
       author: liquibase
       runOnChange: true
@@ -2472,5 +2488,5 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 300-sp_ldf_tetanus_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: false                     
     
