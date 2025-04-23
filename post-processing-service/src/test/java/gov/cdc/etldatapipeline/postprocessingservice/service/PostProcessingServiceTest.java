@@ -694,8 +694,8 @@ class PostProcessingServiceTest {
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(7, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
-        assertTrue(logs.get(6).getFormattedMessage().contains(LDF_BMIRD.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_BMIRD.getStoredProcedure()));
+        assertTrue(logs.get(6).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
     }
 
     @Test
