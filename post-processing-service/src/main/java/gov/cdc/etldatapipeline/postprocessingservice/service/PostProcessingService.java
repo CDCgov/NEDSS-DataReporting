@@ -539,7 +539,7 @@ public class PostProcessingService {
                 // String dmType = 
                 
                 String[] dmTypes = entry.getKey().split(",");
-                String dmType = dmTypes[0];
+                String dmType =  dmTypes[0].isEmpty() ? "UNKNOWN":  dmTypes[0];
                 String ldfType = dmTypes.length>1 ? dmTypes[1] : "" ;
 
 

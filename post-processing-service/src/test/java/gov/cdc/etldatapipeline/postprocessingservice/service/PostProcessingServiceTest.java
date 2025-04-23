@@ -699,6 +699,18 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostEmptyProcess() {
+
+        postProcessingServiceMock.setLdfEnable(true);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                "\"datamart\":\"\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+    }
+
+    @Test
     void testPostProcessTBDatamart() {
         String topic = "tb_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
