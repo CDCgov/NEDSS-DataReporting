@@ -279,6 +279,7 @@ BEGIN
                                                   STRING_ESCAPE(pn.first_nm, 'json')                   AS [firstNm],
                                                   soundex(pn.first_nm)                                 AS [firstNmSndx],
                                                   pn.nm_use_cd                                         AS [nm_use_cd],
+                                                  pn.status_cd                                         AS [status_name_cd],
                                                   pn.nm_suffix                                         AS [nmSuffix],
                                                   case
                                                       when (pn.nm_suffix is not null or pn.nm_suffix != '')
@@ -369,7 +370,7 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-              -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +

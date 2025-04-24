@@ -23,6 +23,8 @@ public class Name implements ExtendPerson {
     private String firstNmSndx;
     @JsonProperty("nm_use_cd")
     private String nmUseCd;
+    @JsonProperty("status_name_cd")
+    private String statusNameCd;
     private String nmSuffix;
     private String nmPrefix;
     private String nmDegree;
@@ -43,6 +45,7 @@ public class Name implements ExtendPerson {
         person.setPersonNmSeq(this.personNmSeq);
         person.setNmUseCd(this.nmUseCd);
         person.setNmDegree(this.nmDegree);
+        person.setStatusNameCd(this.statusNameCd);
         return person;
     }
 

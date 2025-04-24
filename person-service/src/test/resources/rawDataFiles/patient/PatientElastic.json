@@ -280,6 +280,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "status_name_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "street_address1"
       },
       {
@@ -505,6 +510,7 @@
     "nmdegree": null,
     "person_nm_seq": "2",
     "nm_use_cd": "L",
+    "status_name_cd": null,
     "street_address1": "123 Main St.",
     "street_address2": "",
     "city": "Atlanta",

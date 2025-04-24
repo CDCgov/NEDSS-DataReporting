@@ -15,6 +15,8 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = 0;
 
+        SET @Proc_Step_Name = 'SP_Start';
+
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Msg_Description1])
         VALUES (@BATCH_ID, @dataflow_name, @package_name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT (@phc_uids, 199));
@@ -29,7 +31,7 @@ BEGIN
         IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
             drop table #S_PHC_LIST;
 
-        SELECT value
+        SELECT DISTINCT value
         INTO  #S_PHC_LIST
         FROM STRING_SPLIT(@phc_uids, ',');
         
@@ -41,6 +43,67 @@ BEGIN
                 @RowCount_no);
             
 --------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING S_INVESTIGATION_LIST_DEL TABLE';
+          
+        IF OBJECT_ID('#S_INVESTIGATION_LIST_DEL', 'U') IS NOT NULL
+            DROP TABLE #S_INVESTIGATION_LIST_DEL;
+
+        SELECT DISTINCT
+            inv.CASE_UID as VAR_PAM_UID,
+            inv.INVESTIGATION_KEY
+        INTO  #S_INVESTIGATION_LIST_DEL
+        FROM #S_PHC_LIST phc
+        INNER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK)
+            ON inv.CASE_UID = phc.value
+        WHERE UPPER(inv.RECORD_STATUS_CD) = 'INACTIVE';
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        IF
+            @debug = 'true'
+            SELECT @Proc_Step_Name AS step, *
+            FROM #S_INVESTIGATION_LIST_DEL;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETE INCOMING INACTIVE RECORDS';
+
+        BEGIN TRANSACTION
+
+            -- 24. DELETE DELETED RECORDS
+            DELETE T
+            FROM [dbo].VAR_DATAMART T
+            INNER JOIN #S_INVESTIGATION_LIST_DEL S 
+                ON S.INVESTIGATION_KEY = T.INVESTIGATION_KEY;
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF
+                @debug = 'true'
+                SELECT @Proc_Step_Name AS step, *
+                FROM #S_INVESTIGATION_LIST_DEL;
+
+           INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+        COMMIT TRANSACTION;
+
+--------------------------------------------------------------------------------------------------------  
     
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -55,11 +118,12 @@ BEGIN
         from [dbo].nrt_investigation I  with (nolock)
         INNER JOIN #S_PHC_LIST PHC_LIST
             on I.PUBLIC_HEALTH_CASE_UID = PHC_LIST.value
-        inner join (select condition_cd, PORT_REQ_IND_CD from dbo.NRT_SRTE_condition_code with (nolock) where condition_cd ='10030' ) cc
-            on I.cd = cc.condition_cd
+        inner join dbo.NRT_SRTE_condition_code cc with (nolock) 
+            on I.cd = cc.condition_cd 
+            and  cc.condition_cd = '10030'
+            and cc.PORT_REQ_IND_CD = 'T' 
         inner join dbo.D_VAR_PAM D_VAR_PAM  with (nolock)
-        ON D_VAR_PAM.VAR_PAM_UID = PHC_LIST.value
-        where cc.PORT_REQ_IND_CD = 'T';
+        ON D_VAR_PAM.VAR_PAM_UID = I.PUBLIC_HEALTH_CASE_UID;
         
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -1691,13 +1755,13 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'GENERATING  TABLE';
+            @PROC_STEP_NAME = 'SP_COMPLETE';
           
         SELECT @RowCount_no = @@ROWCOUNT;
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+        VALUES (@batch_id, @dataflow_name, @package_name, 'SP_COMPLETE', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
         COMMIT TRANSACTION;

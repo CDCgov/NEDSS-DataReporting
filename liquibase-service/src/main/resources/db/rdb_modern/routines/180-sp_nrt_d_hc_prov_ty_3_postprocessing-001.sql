@@ -266,36 +266,6 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-
--------------------------------------------------------------------------------------------
-
- 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'DELETING FROM dbo.D_HC_PROV_TY_3_GROUP';
-    
-            -- update F_TB_PAM table
-            UPDATE F
-                SET F.D_HC_PROV_TY_3_GROUP_KEY = 1
-            FROM [dbo].F_TB_PAM F
-            INNER JOIN #TEMP_D_HC_PROV_TY_3_DEL T on T.D_HC_PROV_TY_3_GROUP_KEY = F.D_HC_PROV_TY_3_GROUP_KEY;
-
-            -- delete from [dbo].D_HC_PROV_TY_3_GROUP    
-            DELETE G 
-            FROM [dbo].D_HC_PROV_TY_3_GROUP G
-            LEFT JOIN (SELECT DISTINCT D_HC_PROV_TY_3_GROUP_KEY FROM [dbo].D_HC_PROV_TY_3) D
-                ON D.D_HC_PROV_TY_3_GROUP_KEY = G.D_HC_PROV_TY_3_GROUP_KEY
-            WHERE D.D_HC_PROV_TY_3_GROUP_KEY is null;
-    
-    
-            SELECT @RowCount_no = @@ROWCOUNT;
-    
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-        
         COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
@@ -592,6 +562,43 @@ BEGIN
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
         COMMIT TRANSACTION;          
+-------------------------------------------------------------------------------------------
+
+            BEGIN TRANSACTION
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETING FROM dbo.D_HC_PROV_TY_3_GROUP';
+    
+            -- update F_TB_PAM table
+            UPDATE F
+                SET F.D_HC_PROV_TY_3_GROUP_KEY = D.D_HC_PROV_TY_3_GROUP_KEY
+            FROM DBO.F_TB_PAM F with (nolock)
+            INNER JOIN DBO.D_TB_PAM DIM  with (nolock)
+                ON DIM.D_TB_PAM_KEY = F.D_TB_PAM_KEY
+            INNER JOIN DBO.D_HC_PROV_TY_3 D with (nolock)
+                ON D.TB_PAM_UID = DIM.TB_PAM_UID
+            INNER JOIN #D_HC_PROV_TY_3_PHC_LIST S
+                ON D.TB_PAM_UID = S.VALUE;
+
+            -- delete from DBO.D_HC_PROV_TY_3_GROUP
+            DELETE T FROM DBO.D_HC_PROV_TY_3_GROUP T with (nolock)
+            INNER JOIN #TEMP_D_HC_PROV_TY_3_DEL DEL
+                on T.D_HC_PROV_TY_3_GROUP_KEY = DEL.D_HC_PROV_TY_3_GROUP_KEY
+            left join (select distinct D_HC_PROV_TY_3_GROUP_KEY from dbo.D_HC_PROV_TY_3 with (nolock)) D
+                ON D.D_HC_PROV_TY_3_GROUP_KEY = T.D_HC_PROV_TY_3_GROUP_KEY
+            WHERE D.D_HC_PROV_TY_3_GROUP_KEY is null;
+    
+    
+            SELECT @RowCount_no = @@ROWCOUNT;
+    
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+
+            COMMIT TRANSACTION;       
 -------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
