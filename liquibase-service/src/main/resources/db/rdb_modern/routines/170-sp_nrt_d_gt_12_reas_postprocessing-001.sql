@@ -588,9 +588,9 @@ BEGIN
             DELETE T FROM DBO.D_GT_12_REAS_GROUP T with (nolock)
             INNER JOIN #TEMP_D_GT_12_REAS_DEL DEL
                 on T.D_GT_12_REAS_GROUP_KEY = DEL.D_GT_12_REAS_GROUP_KEY
-            left join (select distinct D_GT_12_REAS_GROUP_KEY from dbo.D_GT_12_REAS with (nolock)) DBO
-                ON DBO.D_GT_12_REAS_GROUP_KEY = T.D_GT_12_REAS_GROUP_KEY
-            WHERE DBO.D_GT_12_REAS_GROUP_KEY is null;
+            left join (select distinct D_GT_12_REAS_GROUP_KEY from dbo.D_GT_12_REAS with (nolock)) D
+                ON D.D_GT_12_REAS_GROUP_KEY = T.D_GT_12_REAS_GROUP_KEY
+            WHERE D.D_GT_12_REAS_GROUP_KEY is null;
     
     
             SELECT @RowCount_no = @@ROWCOUNT;

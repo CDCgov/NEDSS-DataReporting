@@ -567,9 +567,9 @@ BEGIN
         DELETE T FROM DBO.D_DISEASE_SITE_GROUP T with (nolock)
         INNER JOIN #TEMP_D_DISEASE_SITE_DEL DEL
             on T.D_DISEASE_SITE_GROUP_KEY = DEL.D_DISEASE_SITE_GROUP_KEY
-        left join (select distinct D_DISEASE_SITE_GROUP_KEY from dbo.D_DISEASE_SITE with (nolock)) DBO
-            ON DBO.D_DISEASE_SITE_GROUP_KEY = T.D_DISEASE_SITE_GROUP_KEY
-        WHERE DBO.D_DISEASE_SITE_GROUP_KEY is null;
+        left join (select distinct D_DISEASE_SITE_GROUP_KEY from dbo.D_DISEASE_SITE with (nolock)) D
+            ON D.D_DISEASE_SITE_GROUP_KEY = T.D_DISEASE_SITE_GROUP_KEY
+        WHERE D.D_DISEASE_SITE_GROUP_KEY is null;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 

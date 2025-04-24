@@ -588,9 +588,9 @@ BEGIN
             DELETE T FROM DBO.D_OUT_OF_CNTRY_GROUP T with (nolock)
             INNER JOIN #TEMP_D_OUT_OF_CNTRY_DEL DEL
                 on T.D_OUT_OF_CNTRY_GROUP_KEY = DEL.D_OUT_OF_CNTRY_GROUP_KEY
-            left join (select distinct D_OUT_OF_CNTRY_GROUP_KEY from dbo.D_OUT_OF_CNTRY with (nolock)) DBO
-                ON DBO.D_OUT_OF_CNTRY_GROUP_KEY = T.D_OUT_OF_CNTRY_GROUP_KEY
-            WHERE DBO.D_OUT_OF_CNTRY_GROUP_KEY is null;
+            left join (select distinct D_OUT_OF_CNTRY_GROUP_KEY from dbo.D_OUT_OF_CNTRY with (nolock)) D
+                ON D.D_OUT_OF_CNTRY_GROUP_KEY = T.D_OUT_OF_CNTRY_GROUP_KEY
+            WHERE D.D_OUT_OF_CNTRY_GROUP_KEY is null;
     
     
             SELECT @RowCount_no = @@ROWCOUNT;

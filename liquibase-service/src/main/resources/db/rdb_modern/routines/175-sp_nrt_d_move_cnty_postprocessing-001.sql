@@ -564,9 +564,9 @@ BEGIN
         DELETE T FROM DBO.D_MOVE_CNTY_GROUP T with (nolock)
         INNER JOIN #TEMP_D_MOVE_CNTY_DEL DEL
             on T.D_MOVE_CNTY_GROUP_KEY = DEL.D_MOVE_CNTY_GROUP_KEY
-        left join (select distinct D_MOVE_CNTY_GROUP_KEY from dbo.D_MOVE_CNTY with (nolock)) DBO
-            ON DBO.D_MOVE_CNTY_GROUP_KEY = T.D_MOVE_CNTY_GROUP_KEY
-        WHERE DBO.D_MOVE_CNTY_GROUP_KEY is null;
+        left join (select distinct D_MOVE_CNTY_GROUP_KEY from dbo.D_MOVE_CNTY with (nolock)) D
+            ON D.D_MOVE_CNTY_GROUP_KEY = T.D_MOVE_CNTY_GROUP_KEY
+        WHERE D.D_MOVE_CNTY_GROUP_KEY is null;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 

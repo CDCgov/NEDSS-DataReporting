@@ -586,9 +586,9 @@ BEGIN
             DELETE T FROM DBO.D_HC_PROV_TY_3_GROUP T with (nolock)
             INNER JOIN #TEMP_D_HC_PROV_TY_3_DEL DEL
                 on T.D_HC_PROV_TY_3_GROUP_KEY = DEL.D_HC_PROV_TY_3_GROUP_KEY
-            left join (select distinct D_HC_PROV_TY_3_GROUP_KEY from dbo.D_HC_PROV_TY_3 with (nolock)) DBO
-                ON DBO.D_HC_PROV_TY_3_GROUP_KEY = T.D_HC_PROV_TY_3_GROUP_KEY
-            WHERE DBO.D_HC_PROV_TY_3_GROUP_KEY is null;
+            left join (select distinct D_HC_PROV_TY_3_GROUP_KEY from dbo.D_HC_PROV_TY_3 with (nolock)) D
+                ON D.D_HC_PROV_TY_3_GROUP_KEY = T.D_HC_PROV_TY_3_GROUP_KEY
+            WHERE D.D_HC_PROV_TY_3_GROUP_KEY is null;
     
     
             SELECT @RowCount_no = @@ROWCOUNT;

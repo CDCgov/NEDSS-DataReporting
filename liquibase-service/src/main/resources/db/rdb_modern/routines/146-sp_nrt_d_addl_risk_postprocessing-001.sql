@@ -563,9 +563,9 @@ BEGIN
         DELETE T FROM DBO.D_ADDL_RISK_GROUP T with (nolock)
         INNER JOIN #TEMP_D_ADDL_RISK_DEL DEL
             on T.D_ADDL_RISK_GROUP_KEY = DEL.D_ADDL_RISK_GROUP_KEY
-        left join (select distinct D_ADDL_RISK_GROUP_KEY from dbo.D_ADDL_RISK with (nolock)) DBO
-            ON DBO.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY
-        WHERE DBO.D_ADDL_RISK_GROUP_KEY is null;
+        left join (select distinct D_ADDL_RISK_GROUP_KEY from dbo.D_ADDL_RISK with (nolock)) D
+            ON D.D_ADDL_RISK_GROUP_KEY = T.D_ADDL_RISK_GROUP_KEY
+        WHERE D.D_ADDL_RISK_GROUP_KEY is null;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;

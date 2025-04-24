@@ -564,9 +564,9 @@ BEGIN
         DELETE T FROM DBO.D_MOVED_WHERE_GROUP T with (nolock)
         INNER JOIN #TEMP_D_MOVED_WHERE_DEL DEL
             on T.D_MOVED_WHERE_GROUP_KEY = DEL.D_MOVED_WHERE_GROUP_KEY
-        left join (select distinct D_MOVED_WHERE_GROUP_KEY from dbo.D_MOVED_WHERE with (nolock)) DBO
-            ON DBO.D_MOVED_WHERE_GROUP_KEY = T.D_MOVED_WHERE_GROUP_KEY
-        WHERE DBO.D_MOVED_WHERE_GROUP_KEY is null;
+        left join (select distinct D_MOVED_WHERE_GROUP_KEY from dbo.D_MOVED_WHERE with (nolock)) D
+            ON D.D_MOVED_WHERE_GROUP_KEY = T.D_MOVED_WHERE_GROUP_KEY
+        WHERE D.D_MOVED_WHERE_GROUP_KEY is null;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;

@@ -586,9 +586,9 @@ BEGIN
             DELETE T FROM DBO.D_SMR_EXAM_TY_GROUP T with (nolock)
             INNER JOIN #TEMP_D_SMR_EXAM_TY_DEL DEL
                 on T.D_SMR_EXAM_TY_GROUP_KEY = DEL.D_SMR_EXAM_TY_GROUP_KEY
-            left join (select distinct D_SMR_EXAM_TY_GROUP_KEY from dbo.D_SMR_EXAM_TY with (nolock)) DBO
-                ON DBO.D_SMR_EXAM_TY_GROUP_KEY = T.D_SMR_EXAM_TY_GROUP_KEY
-            WHERE DBO.D_SMR_EXAM_TY_GROUP_KEY is null;
+            left join (select distinct D_SMR_EXAM_TY_GROUP_KEY from dbo.D_SMR_EXAM_TY with (nolock)) D
+                ON D.D_SMR_EXAM_TY_GROUP_KEY = T.D_SMR_EXAM_TY_GROUP_KEY
+            WHERE D.D_SMR_EXAM_TY_GROUP_KEY is null;
     
     
             SELECT @RowCount_no = @@ROWCOUNT;

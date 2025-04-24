@@ -551,9 +551,9 @@ BEGIN
         DELETE T FROM DBO.D_PCR_SOURCE_GROUP T with (nolock)
         INNER JOIN #TEMP_D_PCR_SOURCE_DEL DEL
             on T.D_PCR_SOURCE_GROUP_KEY = DEL.D_PCR_SOURCE_GROUP_KEY
-        left join (select distinct D_PCR_SOURCE_GROUP_KEY from dbo.d_pcr_source with (nolock)) DBO
-            ON DBO.D_PCR_SOURCE_GROUP_KEY = T.D_PCR_SOURCE_GROUP_KEY
-        WHERE DBO.D_PCR_SOURCE_GROUP_KEY is null;
+        left join (select distinct D_PCR_SOURCE_GROUP_KEY from dbo.d_pcr_source with (nolock)) D
+            ON D.D_PCR_SOURCE_GROUP_KEY = T.D_PCR_SOURCE_GROUP_KEY
+        WHERE D.D_PCR_SOURCE_GROUP_KEY is null;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;

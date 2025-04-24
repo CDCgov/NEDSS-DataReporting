@@ -535,9 +535,9 @@ BEGIN
         DELETE T FROM DBO.D_RASH_LOC_GEN_GROUP T with (nolock)
         INNER JOIN #TEMP_D_RASH_LOC_GEN_DEL DEL
             on T.D_RASH_LOC_GEN_GROUP_KEY = DEL.D_RASH_LOC_GEN_GROUP_KEY
-        left join (select distinct D_RASH_LOC_GEN_GROUP_KEY from dbo.D_RASH_LOC_GEN with (nolock)) DBO
-            ON DBO.D_RASH_LOC_GEN_GROUP_KEY = T.D_RASH_LOC_GEN_GROUP_KEY
-        WHERE DBO.D_RASH_LOC_GEN_GROUP_KEY is null;
+        left join (select distinct D_RASH_LOC_GEN_GROUP_KEY from dbo.D_RASH_LOC_GEN with (nolock)) D
+            ON D.D_RASH_LOC_GEN_GROUP_KEY = T.D_RASH_LOC_GEN_GROUP_KEY
+        WHERE D.D_RASH_LOC_GEN_GROUP_KEY is null;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
