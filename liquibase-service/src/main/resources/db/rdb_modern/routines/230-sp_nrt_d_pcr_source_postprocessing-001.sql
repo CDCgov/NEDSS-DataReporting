@@ -245,37 +245,7 @@ BEGIN
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-
--------------------------------------------------------------------------------------------
-
- 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'DELETING FROM dbo.D_PCR_SOURCE_GROUP';
-    
-            -- update F_VAR_PAM table
-            UPDATE F
-                SET F.D_PCR_SOURCE_GROUP_KEY = 1
-            FROM [dbo].F_VAR_PAM F
-            INNER JOIN #TEMP_D_PCR_SOURCE_DEL T on T.D_PCR_SOURCE_GROUP_KEY = F.D_PCR_SOURCE_GROUP_KEY;
-
-            -- delete from [dbo].D_PCR_SOURCE_GROUP    
-            DELETE G 
-            FROM [dbo].D_PCR_SOURCE_GROUP G
-            LEFT JOIN (SELECT DISTINCT D_PCR_SOURCE_GROUP_KEY FROM [dbo].D_PCR_SOURCE) D
-                ON D.D_PCR_SOURCE_GROUP_KEY = G.D_PCR_SOURCE_GROUP_KEY
-            WHERE D.D_PCR_SOURCE_GROUP_KEY is null;
-    
-    
-            SELECT @RowCount_no = @@ROWCOUNT;
-    
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-        
+  
         COMMIT TRANSACTION; 
 
 -------------------------------------------------------------------------------------------
@@ -346,14 +316,14 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING #D_TB_PAM_TEMP';
+                @PROC_STEP_NAME = 'GENERATING #D_VAR_PAM_TEMP';
 
-            IF OBJECT_ID('#D_TB_PAM_TEMP', 'U') IS NOT NULL
-                DROP TABLE #D_TB_PAM_TEMP;
+            IF OBJECT_ID('#D_VAR_PAM_TEMP', 'U') IS NOT NULL
+                DROP TABLE #D_VAR_PAM_TEMP;
             
 
             SELECT DISTINCT D_VAR_PAM.VAR_PAM_UID
-                INTO #D_TB_PAM_TEMP
+                INTO #D_VAR_PAM_TEMP
                 FROM (
                     SELECT DISTINCT VAR_PAM_UID 
                     FROM [dbo].D_VAR_PAM WITH (NOLOCK)
@@ -367,7 +337,7 @@ BEGIN
             IF
                 @debug = 'true'
                 SELECT @Proc_Step_Name AS step, *
-                FROM #D_TB_PAM_TEMP;
+                FROM #D_VAR_PAM_TEMP;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -381,15 +351,15 @@ BEGIN
                 @PROC_STEP_NAME = 'GENERATING #L_D_PCR_SOURCE_GROUP';
 
             IF OBJECT_ID('#L_D_PCR_SOURCE_GROUP', 'U') IS NOT NULL
-                DROP TABLE #L_GT_12_REAS_GROUP;
+                DROP TABLE #L_D_PCR_SOURCE_GROUP;
 
             SELECT 
-                D_VAR_PAM.VAR_PAM_UID,
+                D.VAR_PAM_UID,
                 GK.D_PCR_SOURCE_GROUP_KEY
             INTO #L_D_PCR_SOURCE_GROUP
-            FROM #D_TB_PAM_TEMP D_VAR_PAM
+            FROM #D_VAR_PAM_TEMP D
             LEFT OUTER JOIN [dbo].nrt_d_pcr_source_group_key GK WITH (NOLOCK)
-                ON GK.VAR_PAM_UID=D_VAR_PAM.VAR_PAM_UID;
+                ON GK.VAR_PAM_UID=D.VAR_PAM_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -556,6 +526,44 @@ BEGIN
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
         COMMIT TRANSACTION;          
+
+--------------------------------------------------------------------------------------------
+        BEGIN TRANSACTION
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_PCR_SOURCE_GROUP';
+
+        -- update F_VAR_PAM table
+        UPDATE F
+            SET F.D_PCR_SOURCE_GROUP_KEY = D.D_PCR_SOURCE_GROUP_KEY
+        FROM DBO.F_VAR_PAM F with (nolock)
+        INNER JOIN DBO.D_VAR_PAM DIM  with (nolock)
+            ON DIM.D_VAR_PAM_KEY = F.D_VAR_PAM_KEY
+        INNER JOIN DBO.D_PCR_SOURCE D with (nolock)
+            ON D.VAR_PAM_UID = DIM.VAR_PAM_UID
+        INNER JOIN #D_PCR_SOURCE_PHC_LIST S
+            ON D.VAR_PAM_UID = S.VALUE;
+
+        -- delete from DBO.D_PCR_SOURCE_GROUP
+        DELETE T FROM DBO.D_PCR_SOURCE_GROUP T with (nolock)
+        INNER JOIN #TEMP_D_PCR_SOURCE_DEL DEL
+            on T.D_PCR_SOURCE_GROUP_KEY = DEL.D_PCR_SOURCE_GROUP_KEY
+        left join (select distinct D_PCR_SOURCE_GROUP_KEY from dbo.d_pcr_source with (nolock)) D
+            ON D.D_PCR_SOURCE_GROUP_KEY = T.D_PCR_SOURCE_GROUP_KEY
+        WHERE D.D_PCR_SOURCE_GROUP_KEY is null;
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;  
 -------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
