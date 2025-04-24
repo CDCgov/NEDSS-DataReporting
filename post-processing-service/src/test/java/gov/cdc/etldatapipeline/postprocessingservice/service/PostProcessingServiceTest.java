@@ -767,7 +767,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock, "123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName.split(",")[0]));
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(testCase.logSize, logs.size());
         assertEquals(logs.getLast().getFormattedMessage(),
@@ -881,6 +881,22 @@ class PostProcessingServiceTest {
 
         // patientKey=1L for no patient data in D_PATIENT
         List<DatamartData> invResults = getDatamartData(123L, null);
+
+        datamartProcessor.datamartTopic = dmTopic;
+        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testProduceDatamartTopicWithNoDatamart() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String dmTopic = "dummy_datamart";
+
+        List<DatamartData> invResults = getDatamartData(123L, 200L, "");
 
         datamartProcessor.datamartTopic = dmTopic;
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
@@ -1324,13 +1340,13 @@ class PostProcessingServiceTest {
         inOrder.verify(postProcessingServiceMock).processDatamartIds();
     }
 
-    private List<DatamartData> getDatamartData(Long phcUid, Long patientUid) {
+    private List<DatamartData> getDatamartData(Long phcUid, Long patientUid, String... dmVar) {
         List<DatamartData> datamartDataLst = new ArrayList<>();
         DatamartData datamartData = new DatamartData();
         datamartData.setPublicHealthCaseUid(phcUid);
         datamartData.setPatientUid(patientUid);
         datamartData.setConditionCd("10110");
-        datamartData.setDatamart(HEPATITIS_DATAMART.getEntityName());
+        datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : HEPATITIS_DATAMART.getEntityName());
         datamartData.setStoredProcedure(HEPATITIS_DATAMART.getStoredProcedure());
         datamartDataLst.add(datamartData);
         return datamartDataLst;
