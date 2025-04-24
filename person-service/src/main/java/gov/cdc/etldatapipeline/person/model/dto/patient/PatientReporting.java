@@ -61,6 +61,8 @@ public class PatientReporting implements PersonExtendedProps {
     @JsonProperty("name_suffix")
     private String nmSuffix;
     private String aliasNickname;
+    private String nmUseCd;
+    private String statusNameCd;
 
     //Address
     @JsonProperty("street_address_1")
