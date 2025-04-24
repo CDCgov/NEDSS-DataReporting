@@ -536,20 +536,20 @@ public class PostProcessingService {
     protected void processDatamartIds() {
         for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
             if (!entry.getValue().isEmpty()) {
-                // String dmType = 
-                
-                String[] dmTypes = entry.getKey().split(",");
-                String dmType =  dmTypes[0].isEmpty() ? "UNKNOWN":  dmTypes[0];
-                String ldfType = dmTypes.length>1 ? dmTypes[1] : "" ;
-
+                String dmKey = entry.getKey();
 
                 // skip multi ID processing here, it should after this processing
-                if (MULTIID.equals(dmType)) {
+                if (MULTIID.equals(dmKey)) {
                     continue;
                 }
 
+                // for complex value (e.g. "GENERIC_CASE,LDF_GENERIC") the key should be parsed
+                String[] dmTypes = dmKey.split(",");
+                String dmType =  dmTypes[0];
+                String ldfType = (ldfEnable && dmTypes.length > 1) ? dmTypes[1] : "" ;
+
                 Queue<Long> uids = entry.getValue().get(INVESTIGATION.getEntityName());
-                dmCache.put(dmType, new ConcurrentHashMap<>());
+                dmCache.put(dmKey, new ConcurrentHashMap<>());
 
                 // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
                 String cases = uids.stream().map(String::valueOf).collect(Collectors.joining(","));
@@ -571,12 +571,12 @@ public class PostProcessingService {
                         executeDatamartProc(GENERIC_CASE,
                             investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
                             
-                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_GENERIC")){
+                            if(ldfType.equalsIgnoreCase("LDF_GENERIC")){
                                 executeDatamartProc(LDF_GENERIC,
                                 investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
                             
                             }
-                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_FOODBORNE")){
+                            if(ldfType.equalsIgnoreCase("LDF_FOODBORNE")){
                                 executeDatamartProc(LDF_FOODBORNE,
                                 investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
                             }
@@ -601,7 +601,7 @@ public class PostProcessingService {
                         executeDatamartProc(BMIRD_CASE,
                                 investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
                         
-                        if(ldfEnable && ldfType.equalsIgnoreCase("LDF_BMIRD")){
+                        if(ldfType.equalsIgnoreCase("LDF_BMIRD")){
                             executeDatamartProc(LDF_BMIRD,
                             investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
                         }
