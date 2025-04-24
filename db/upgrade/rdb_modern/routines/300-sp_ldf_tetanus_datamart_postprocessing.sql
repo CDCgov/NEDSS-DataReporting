@@ -507,7 +507,7 @@ BEGIN
                             PATIENT_LOCAL_ID,
                             DISEASE_NAME,
                             DISEASE_CD
-                        INTO ' + @global_temp_tetanus_ta +'
+                        INTO ' + @global_temp_tetanus_short_col +'
                         FROM #ALL_TETANUS_SHORT_COL';
                     END
                 END
@@ -521,7 +521,7 @@ BEGIN
                         PATIENT_LOCAL_ID,
                         DISEASE_NAME,
                         DISEASE_CD                 
-                    INTO ' + @global_temp_tetanus_ta +'
+                    INTO ' + @global_temp_tetanus_short_col +'
                     FROM #ALL_TETANUS_SHORT_COL';
                 END;
 
