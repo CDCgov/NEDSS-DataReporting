@@ -546,7 +546,7 @@ public class PostProcessingService {
                 // for complex value (e.g. "GENERIC_CASE,LDF_GENERIC") the key should be parsed
                 String[] dmTypes = dmKey.split(",");
                 String dmType =  dmTypes[0];
-                String ldfType = (ldfEnable && dmTypes.length > 1) ? dmTypes[1] : "" ;
+                String ldfType = (ldfEnable && dmTypes.length > 1) ? dmTypes[1] : "UNKNOWN" ;
 
                 Queue<Long> uids = entry.getValue().get(INVESTIGATION.getEntityName());
                 dmCache.put(dmKey, new ConcurrentHashMap<>());
@@ -571,23 +571,25 @@ public class PostProcessingService {
                         executeDatamartProc(GENERIC_CASE,
                             investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
                             
-                            if(ldfType.equalsIgnoreCase("LDF_GENERIC")){
-                                executeDatamartProc(LDF_GENERIC,
-                                investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
-                            
+                            switch (Entity.valueOf(ldfType.toUpperCase())) {
+                                case LDF_GENERIC:
+                                    executeDatamartProc(LDF_GENERIC,
+                                    investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
+                                    break;
+                                case LDF_FOODBORNE:
+                                    executeDatamartProc(LDF_FOODBORNE,
+                                    investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
+                                    break;
+                                case LDF_TETANUS:
+                                    // to test this Tetanus must be added as a legacy page 
+                                    // and [dbo].nrt_datamart_metadata table must be updated
+                                    // adding TETANUS
+                                    executeDatamartProc(LDF_TETANUS,
+                                    investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
+                                    break;
+                                default:
+                                    break;
                             }
-                            if(ldfType.equalsIgnoreCase("LDF_FOODBORNE")){
-                                executeDatamartProc(LDF_FOODBORNE,
-                                investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
-                            }
-                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_TETANUS")){
-                                // to test this Tetanus must be added as a legacy page 
-                                // and [dbo].nrt_datamart_metadata table must be updated
-                                // adding TETANUS
-                                executeDatamartProc(LDF_TETANUS,
-                                investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
-                            }
-
                         break;
                     case CRS_CASE:
                         executeDatamartProc(CRS_CASE,
