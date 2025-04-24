@@ -828,7 +828,8 @@ BEGIN
                             (
                         SELECT '; ' + CAST(add_time AS VARCHAR(20)) + '^' + replace(replace(replace(note, CHAR(0x0002), ''), CHAR(0x0001), ''), CHAR(0x0000), '')
                         FROM nbs_odse.dbo.NBS_Note nbsNote
-                        WHERE nbsNote.note_parent_uid = NBS_NOTE.note_parent_uid FOR XML PATH, TYPE, BINARY BASE64
+                        WHERE note_parent_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','))
+                            and nbsNote.note_parent_uid = NBS_NOTE.note_parent_uid FOR XML PATH, TYPE, BINARY BASE64
                     ).value('.[1]', 'varchar(max)'), 1, 2, '') PHC_NOTES
                     FROM nbs_odse.dbo.NBS_NOTE WITH(NOLOCK)
                     GROUP BY note_parent_uid
