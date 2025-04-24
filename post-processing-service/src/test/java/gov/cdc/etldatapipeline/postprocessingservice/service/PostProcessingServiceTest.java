@@ -635,6 +635,8 @@ class PostProcessingServiceTest {
 
     @Test
     void testPostProcessBmirdCase() {
+        
+        postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"\"}}";
@@ -650,6 +652,50 @@ class PostProcessingServiceTest {
         assertEquals(5, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
         assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
+    }
+
+    @Test
+    void testPostProcessBmirdCaseNegativeLdf() {
+        
+        postProcessingServiceMock.setLdfEnable(false);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                "\"datamart\":\"BMIRD_Case,LDF_BMIRD\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(5, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
+    }
+
+    @Test
+    void testPostProcessBmirdLDFCase() {
+
+        postProcessingServiceMock.setLdfEnable(true);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                "\"datamart\":\"BMIRD_Case,LDF_BMIRD\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForLdfBmirdDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(7, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_BMIRD.getStoredProcedure()));
+        assertTrue(logs.get(6).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
     }
 
     @Test
@@ -721,7 +767,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock, "123");
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName.split(",")[0]));
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(testCase.logSize, logs.size());
         assertEquals(logs.getLast().getFormattedMessage(),
@@ -756,6 +802,15 @@ class PostProcessingServiceTest {
                         verify(repo).executeStoredProcForLdfGenericDatamart(uid);
                         }
                     ),
+                new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                            "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"sp_ldf_foodborne_datamart_postprocessing\"}}",
+                    "Generic_Case,LDF_FOODBORNE", LDF_FOODBORNE.getStoredProcedure(), 5,
+                    (repo, uid) -> {
+                        verify(repo).executeStoredProcForGenericCaseDatamart(uid);
+                        verify(repo).executeStoredProcForLdfFoodBorneDatamart(uid);
+                        }
+                    ),    
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
@@ -826,6 +881,22 @@ class PostProcessingServiceTest {
 
         // patientKey=1L for no patient data in D_PATIENT
         List<DatamartData> invResults = getDatamartData(123L, null);
+
+        datamartProcessor.datamartTopic = dmTopic;
+        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testProduceDatamartTopicWithNoDatamart() {
+        String topic = "dummy_investigation";
+        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String dmTopic = "dummy_datamart";
+
+        List<DatamartData> invResults = getDatamartData(123L, 200L, "");
 
         datamartProcessor.datamartTopic = dmTopic;
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
@@ -1269,13 +1340,13 @@ class PostProcessingServiceTest {
         inOrder.verify(postProcessingServiceMock).processDatamartIds();
     }
 
-    private List<DatamartData> getDatamartData(Long phcUid, Long patientUid) {
+    private List<DatamartData> getDatamartData(Long phcUid, Long patientUid, String... dmVar) {
         List<DatamartData> datamartDataLst = new ArrayList<>();
         DatamartData datamartData = new DatamartData();
         datamartData.setPublicHealthCaseUid(phcUid);
         datamartData.setPatientUid(patientUid);
         datamartData.setConditionCd("10110");
-        datamartData.setDatamart(HEPATITIS_DATAMART.getEntityName());
+        datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : HEPATITIS_DATAMART.getEntityName());
         datamartData.setStoredProcedure(HEPATITIS_DATAMART.getStoredProcedure());
         datamartDataLst.add(datamartData);
         return datamartDataLst;

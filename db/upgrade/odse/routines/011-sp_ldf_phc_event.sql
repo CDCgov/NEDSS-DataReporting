@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.sp_ldf_phc_event  @ldf_uid_list nvarchar(max), @bus_obj_uid_list nvarchar(max)
 AS
-BEGIN
+Begin
 
     BEGIN TRY
         /*
@@ -50,16 +50,16 @@ BEGIN
                         cvg.code_desc_txt as ldf_column_type,
                         m.record_status_time as metadata_record_status_time,
                         dbo.fn_get_record_status(m.record_status_cd) as metadata_record_status_cd
-        from  dbo.State_Defined_Field_MetaData m
-                  join dbo.State_Defined_Field_Data d with (nolock) on m.ldf_uid = d.ldf_uid  and d.business_object_nm = 'PHC'
+        from  nbs_odse.dbo.State_Defined_Field_MetaData m
+                  join nbs_odse.dbo.State_Defined_Field_Data d with (nolock) on m.ldf_uid = d.ldf_uid  and d.business_object_nm in ('PHC', 'BMD', 'HEP', 'NIP')
             and d.business_object_uid  in (SELECT value FROM STRING_SPLIT(@bus_obj_uid_list, ','))
             and d.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
                   join nbs_srte.dbo.code_value_general cvg with (nolock) on  cvg.code = m.data_type  and cvg.code_set_nm = 'LDF_DATA_TYPE'
-                  join dbo.public_health_case p with (nolock) on d.business_object_uid=p.public_health_case_uid
+                  join nbs_odse.dbo.public_health_case p with (nolock) on d.business_object_uid=p.public_health_case_uid
 
         Order By business_object_uid, display_order_nbr;
 
-    END TRY
+    end try
 
     BEGIN CATCH
 
@@ -72,4 +72,4 @@ BEGIN
 
     END CATCH
 
-END;
+end;
