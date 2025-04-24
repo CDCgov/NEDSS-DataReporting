@@ -319,6 +319,9 @@ public class Investigation {
     @Column(name = "investigation_confirmation_method")
     private String investigationConfirmationMethod;
 
+    @Column(name = "phc_notes")
+    private String phcNotes;
+
     @Column(name = "investigation_case_answer")
     private String investigationCaseAnswer;
 

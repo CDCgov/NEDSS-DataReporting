@@ -382,7 +382,7 @@ public class InvestigationService {
         reportingModel.setChronicCareFacUid(investigationTransformed.getChronicCareFacUid());
 
         reportingModel.setBatchId(investigationTransformed.getBatchId());
-
+        reportingModel.setNotes(investigation.getPhcNotes());
         return reportingModel;
     }
 }
