@@ -21,9 +21,9 @@ BEGIN
     DECLARE @ldf_columns NVARCHAR(MAX) = '';
     DECLARE @count BIGINT;
 
-    SET @global_temp_tetanus_ta = '##LDF_TETANUS_TA' + '_' + CAST(@Batch_id as varchar(50)); 
-    SET @global_temp_tetanus_short_col = '##LDF_TETANUS_SHORT_COL' + '_' + CAST(@Batch_id as varchar(50)); 
-    SET @global_temp_tetanus = '##LDF_TETANUS' + '_' + CAST(@Batch_id as varchar(50)); 
+    SET @global_temp_tetanus_ta = '##TETANUS_TA' + '_' + CAST(@Batch_id as varchar(50)); 
+    SET @global_temp_tetanus_short_col = '##TETANUS_SHORT_COL' + '_' + CAST(@Batch_id as varchar(50)); 
+    SET @global_temp_tetanus = '##TETANUS' + '_' + CAST(@Batch_id as varchar(50)); 
     
  
 	BEGIN TRY
@@ -354,7 +354,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##TETANUS_TA';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_tetanus_ta;
             
             EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_tetanus_ta +''', ''U'')  IS NOT NULL
             BEGIN
@@ -449,7 +449,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##TETANUS_SHORT_COL';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_tetanus_short_col;
             
             EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_tetanus_short_col +''', ''U'')  IS NOT NULL
             BEGIN
@@ -598,7 +598,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##TETANUS';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_tetanus;
 
             EXECUTE  [dbo].[sp_MERGE_TABLES] 
                 @INPUT_TABLE1= @global_temp_tetanus_short_col

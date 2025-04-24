@@ -354,7 +354,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##FOODBORNE_TA';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne_ta;
             
             EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_ta +''', ''U'')  IS NOT NULL
             BEGIN
@@ -449,7 +449,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##FOODBORNE_SHORT_COL';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne_short_col;
             
             EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_short_col +''', ''U'')  IS NOT NULL
             BEGIN
@@ -598,7 +598,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##FOODBORNE';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne;
 
             EXECUTE  [dbo].[sp_MERGE_TABLES] 
                 @INPUT_TABLE1= @global_temp_foodborne_short_col
