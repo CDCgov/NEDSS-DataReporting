@@ -790,42 +790,62 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}",
                         GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), 3,
-                        (repo, uid) ->
-                            verify(repo).executeStoredProcForGenericCaseDatamart(uid)
-                        ),
+                        (repo, uid) -> verify(repo).executeStoredProcForGenericCaseDatamart(uid)),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                            "\"datamart\":\"Generic_Case,LDF_GENERIC\",\"stored_procedure\":\"sp_ldf_generic_datamart_postprocessing\"}}",
-                    "Generic_Case,LDF_GENERIC", LDF_GENERIC.getStoredProcedure(), 5,
-                    (repo, uid) -> {
-                        verify(repo).executeStoredProcForGenericCaseDatamart(uid);
-                        verify(repo).executeStoredProcForLdfGenericDatamart(uid);
-                        }
-                    ),
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Generic_Case,LDF_GENERIC\",\"stored_procedure\":\"sp_ldf_generic_datamart_postprocessing\"}}",
+                        "Generic_Case,LDF_GENERIC", LDF_GENERIC.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfGenericDatamart(uid);
+                        }),
                 new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                            "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"sp_ldf_foodborne_datamart_postprocessing\"}}",
-                    "Generic_Case,LDF_FOODBORNE", LDF_FOODBORNE.getStoredProcedure(), 5,
-                    (repo, uid) -> {
-                        verify(repo).executeStoredProcForGenericCaseDatamart(uid);
-                        verify(repo).executeStoredProcForLdfFoodBorneDatamart(uid);
-                        }
-                    ),    
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"sp_ldf_foodborne_datamart_postprocessing\"}}",
+                        "Generic_Case,LDF_FOODBORNE", LDF_FOODBORNE.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfFoodBorneDatamart(uid);
+                        }),    
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
-                                "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
-                        CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), 3,
+                                "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_crs_case_datamart_postprocessing\"}}",
+                                    CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), 3,
                         (repo, uid) -> verify(repo).executeStoredProcForCRSCaseDatamart(uid)),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
+                                "\"datamart\":\"CRS_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_ldf_vaccine_prevent_diseases_datamart_postprocessing\"}}",
+                        "CRS_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForCRSCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfVaccinePreventDiseasesDatamart(uid);
+                        }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
                                 "\"datamart\":\"Rubella_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
                         RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), 3,
                         (repo, uid) -> verify(repo).executeStoredProcForRubellaCaseDatamart(uid)),
                 new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
+                            "\"datamart\":\"Rubella_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_ldf_vaccine_prevent_diseases_datamart_postprocessing\"}}",
+                        "Rubella_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForRubellaCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfVaccinePreventDiseasesDatamart(uid);
+                        }),
+                new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
                                 "\"datamart\":\"Measles_Case\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}",
                         MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), 3,
                         (repo, uid) -> verify(repo).executeStoredProcForMeaslesCaseDatamart(uid)),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
+                            "\"datamart\":\"Measles_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_ldf_vaccine_prevent_diseases_datamart_postprocessing\"}}",
+                        "Measles_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForMeaslesCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfVaccinePreventDiseasesDatamart(uid);
+                        }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null," +
                                 "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
@@ -840,8 +860,15 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)));
-
+                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
+                            "\"datamart\":\"Pertussis_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_ldf_vaccine_prevent_diseases_datamart_postprocessing\"}}",
+                        "Pertussis_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForPertussisCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfVaccinePreventDiseasesDatamart(uid);
+                        }));
     }
 
     @Test
