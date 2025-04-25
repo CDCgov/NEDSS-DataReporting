@@ -580,6 +580,10 @@ public class PostProcessingService {
                                 executeDatamartProc(LDF_FOODBORNE,
                                 investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
                             }
+                            if(ldfEnable && ldfType.equalsIgnoreCase("LDF_MUMPS")){
+                                executeDatamartProc(LDF_MUMPS,
+                                investigationRepository::executeStoredProcForLdfMumpsDatamart, cases);
+                            }
                         break;
                     case CRS_CASE:
                         executeDatamartProc(CRS_CASE,

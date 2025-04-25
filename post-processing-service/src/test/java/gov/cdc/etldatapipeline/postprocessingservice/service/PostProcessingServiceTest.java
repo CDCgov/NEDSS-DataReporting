@@ -802,6 +802,15 @@ class PostProcessingServiceTest {
                         verify(repo).executeStoredProcForLdfGenericDatamart(uid);
                         }
                     ),
+                    new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Generic_Case,LDF_MUMPS\",\"stored_procedure\":\"sp_ldf_mumps_datamart_postprocessing\"}}",
+                        "Generic_Case,LDF_MUMPS", LDF_MUMPS.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfMumpsDatamart(uid);
+                            }
+                        ),
                 new DatamartTestCase(
                     "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                             "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"sp_ldf_foodborne_datamart_postprocessing\"}}",
