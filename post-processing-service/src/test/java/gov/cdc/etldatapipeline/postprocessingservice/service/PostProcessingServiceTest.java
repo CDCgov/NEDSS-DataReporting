@@ -1031,8 +1031,7 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid))
-        );
+                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)));
     }
 
     @Test
