@@ -185,7 +185,7 @@ BEGIN
                 ON b.INVESTIGATION_UID = i.CASE_UID 
             INNER JOIN [dbo].MEASLES_CASE g WITH (NOLOCK)
                 ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
-            INNER JOIN [dbo].CONDITION c WITH (NOLOCK)
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
                 ON c.CONDITION_KEY = g.CONDITION_KEY
             INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
                 ON p.PATIENT_KEY = g.PATIENT_KEY;
@@ -244,7 +244,7 @@ BEGIN
                 ON b.INVESTIGATION_UID = i.CASE_UID 
             INNER JOIN [dbo].PERTUSSIS_CASE g WITH (NOLOCK)
                 ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
-            INNER JOIN [dbo].CONDITION c WITH (NOLOCK)
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
                 ON c.CONDITION_KEY = g.CONDITION_KEY
             INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
                 ON p.PATIENT_KEY = g.PATIENT_KEY;
@@ -302,7 +302,7 @@ BEGIN
                 ON b.INVESTIGATION_UID = i.CASE_UID 
             INNER JOIN [dbo].RUBELLA_CASE g WITH (NOLOCK)
                 ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
-            INNER JOIN [dbo].CONDITION c WITH (NOLOCK)
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
                 ON c.CONDITION_KEY = g.CONDITION_KEY
             INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
                 ON p.PATIENT_KEY = g.PATIENT_KEY;
@@ -360,7 +360,7 @@ BEGIN
                 ON b.INVESTIGATION_UID = i.CASE_UID 
             INNER JOIN [dbo].CRS_CASE g WITH (NOLOCK)
                 ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
-            INNER JOIN [dbo].CONDITION c WITH (NOLOCK)
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
                 ON c.CONDITION_KEY = g.CONDITION_KEY
             INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
                 ON p.PATIENT_KEY = g.PATIENT_KEY;
