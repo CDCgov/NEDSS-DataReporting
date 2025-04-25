@@ -699,6 +699,47 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessGenericCaseLdfTetanusNegative() {
+        
+        postProcessingServiceMock.setLdfEnable(false);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(3, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
+    }
+
+    @Test
+    void testPostProcessGenericCaseLdfTetanus() {
+
+        postProcessingServiceMock.setLdfEnable(true);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForLdfTetanusDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(5, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_TETANUS.getStoredProcedure()));
+    }
+
+
+    @Test
     void testPostProcessTBDatamart() {
         String topic = "tb_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
@@ -810,16 +851,7 @@ class PostProcessingServiceTest {
                         verify(repo).executeStoredProcForGenericCaseDatamart(uid);
                         verify(repo).executeStoredProcForLdfFoodBorneDatamart(uid);
                         }
-                    ), 
-                new DatamartTestCase(
-                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                            "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"sp_ldf_tetanus_datamart_postprocessing\"}}",
-                    "Generic_Case,LDF_TETANUS", LDF_TETANUS.getStoredProcedure(), 5,
-                    (repo, uid) -> {
-                        verify(repo).executeStoredProcForGenericCaseDatamart(uid);
-                        verify(repo).executeStoredProcForLdfTetanusDatamart(uid);
-                        }
-                    ),       
+                    ),                       
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
