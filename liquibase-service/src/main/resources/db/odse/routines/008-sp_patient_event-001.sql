@@ -279,6 +279,7 @@ BEGIN
                                                   STRING_ESCAPE(pn.first_nm, 'json')                   AS [firstNm],
                                                   soundex(pn.first_nm)                                 AS [firstNmSndx],
                                                   pn.nm_use_cd                                         AS [nm_use_cd],
+                                                  pn.status_cd                                         AS [status_name_cd],
                                                   pn.nm_suffix                                         AS [nmSuffix],
                                                   case
                                                       when (pn.nm_suffix is not null or pn.nm_suffix != '')
