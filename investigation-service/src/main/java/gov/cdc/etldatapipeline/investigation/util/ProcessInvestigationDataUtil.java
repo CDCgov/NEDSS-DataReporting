@@ -270,6 +270,7 @@ public class ProcessInvestigationDataUtil {
                 String sourceClassCode = node.path("source_class_cd").asText();
                 String actTypeCode = node.path("act_type_cd").asText();
                 Long sourceActId = node.get("source_act_uid").asLong();
+                Long rootUid = node.get("root_uid").asLong();
                 Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
                 String rootTypeCd = node.path("act_type_cd").asText();
 
@@ -278,7 +279,7 @@ public class ProcessInvestigationDataUtil {
                 }
 
                 investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
-                investigationObservation.setObservationId(sourceActId);
+                investigationObservation.setObservationId(rootUid);
                 investigationObservation.setRootTypeCd(rootTypeCd);
                 investigationObservation.setBranchId(null);
                 investigationObservation.setBranchTypeCd(null);

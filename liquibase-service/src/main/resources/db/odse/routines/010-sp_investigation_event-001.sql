@@ -160,7 +160,7 @@ BEGIN
                results.investigation_notifications,
                results.investigation_case_count,
                con.investigation_form_cd,
-               	nt.phc_notes
+               nt.phc_notes
         -- ,results.investigation_act_entity
         -- ,results.ldf_public_health_case
         -- into dbo.Investigation_Dim_Event
@@ -378,14 +378,16 @@ BEGIN
                                                                 then (select * from dbo.fn_get_user_name(act.last_chg_user_id))
                                                             end              as last_chg_user_name,
                                                         act.last_chg_time    as act_last_chg_time,
-                                                        act1.target_Act_uid  as root_uid,
-                                                        act1.source_act_uid  as branch_uid,
-                                                        act1.target_class_cd as root_source_class_cd,
-                                                        act1.source_class_cd as branch_source_class_cd,
-                                                        act1.type_cd         as branch_type_cd
+                                                        COALESCE(root.target_act_uid, branch.target_act_uid) AS root_uid,
+                                                        branch.source_act_uid  as branch_uid,
+                                                        branch.target_class_cd as root_source_class_cd,
+                                                        branch.source_class_cd as branch_source_class_cd,
+                                                        branch.type_cd         as branch_type_cd
                                                  FROM dbo.act_relationship act WITH (NOLOCK)
-                                                          left join dbo.act_relationship act1 WITH (NOLOCK)
-                                                                    on act.source_act_uid = act1.target_act_uid
+                                                 left join dbo.act_relationship branch WITH (NOLOCK)
+                                                     on act.source_act_uid = branch.target_act_uid
+                                                 left join dbo.act_relationship AS root WITH (NOLOCK)
+                                                     on branch.source_act_uid = root.source_act_uid and root.type_cd = 'ItemToRow'
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
                                         -- act_ids associated with public health case
