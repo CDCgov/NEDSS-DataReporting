@@ -153,4 +153,10 @@ BEGIN
     ('50265','Salmonellosis (excluding S. typhi/paratyphi)',3,'LDF_FOODBORNE','GENERIC_CASE',null),
     ('50266','Salmonella Paratyphi A/B/C',3,'LDF_FOODBORNE','GENERIC_CASE',null),
     ('50267','Typhoid Fever (S. typhi)',3,'LDF_FOODBORNE','GENERIC_CASE',null);
+
+    delete ldf from dbo.LDF_DATAMART_TABLE_REF ldf with (nolock)
+    left join dbo.nrt_datamart_metadata d with (nolock)
+        on ldf.CONDITION_CD = d.condition_cd
+    where d.condition_cd is null;
+    
 END
