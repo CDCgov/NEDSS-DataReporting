@@ -54,542 +54,528 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 
 		IF (@count > 0) 
 		BEGIN 
-	
 			--------- Create #LDF_MUMPS table 
 	
-				SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-				SET @PROC_STEP_NAME = ' GENERATING TMP_BASE_MUMPS';  
-	
-				--------- Create #TMP_BASE_MUMPS table 
-	
-				IF OBJECT_ID('#TMP_BASE_MUMPS', 'U') IS NOT NULL   
-						DROP TABLE #TMP_BASE_MUMPS; 
-			
-				SELECT LDA.* 
-								INTO #TMP_BASE_MUMPS 
-								FROM dbo.LDF_DIMENSIONAL_DATA LDA 
-									INNER JOIN dbo.LDF_DATAMART_TABLE_REF ON PHC_CD = LDF_DATAMART_TABLE_REF.CONDITION_CD 
-																				AND DATAMART_NAME = upper('LDF_MUMPS')
-									INNER JOIN 	(SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ',')) phc									
-									on LDA.INVESTIGATION_UID = phc.value;				
-					
-				SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_BASE_MUMPS';  
 
-					
-				if
-				@debug = 'true'
-				select @Proc_Step_Name as step, *
-				from #TMP_BASE_MUMPS;
+			--------- Create #TMP_BASE_MUMPS table 
+
+			IF OBJECT_ID('#TMP_BASE_MUMPS', 'U') IS NOT NULL   
+					DROP TABLE #TMP_BASE_MUMPS; 
 		
-				SELECT @RowCount_no = @@ROWCOUNT;
-			
-				INSERT INTO [dbo].[job_flow_log]
-				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-						@RowCount_no);  
+			SELECT LDA.* 
+							INTO #TMP_BASE_MUMPS 
+							FROM dbo.LDF_DIMENSIONAL_DATA LDA 
+								INNER JOIN dbo.LDF_DATAMART_TABLE_REF ON PHC_CD = LDF_DATAMART_TABLE_REF.CONDITION_CD 
+																			AND DATAMART_NAME = upper('LDF_MUMPS')
+								INNER JOIN 	(SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ',')) phc									
+								on LDA.INVESTIGATION_UID = phc.value;				
+				
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+				
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_BASE_MUMPS;
+	
+			SELECT @RowCount_no = @@ROWCOUNT;
+		
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
 		
 --------------------------------------------------------------------------------------------------------				
-					--- CREATE TABLE LINKED_MUMPS AS  
-				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_MUMPS';  
-	
-					IF OBJECT_ID('#TMP_LINKED_MUMPS', 'U') IS NOT NULL   
-							DROP TABLE #TMP_LINKED_MUMPS; 
-	
-	
-						SELECT GEN_LDF.*,  
-							INV.INVESTIGATION_KEY,  
-							INV.INV_LOCAL_ID 'INVESTIGATION_LOCAL_ID',  
-							INV.CASE_OID 'PROGRAM_JURISDICTION_OID', 
-							GEN.PATIENT_KEY, 
-							PATIENT.PATIENT_LOCAL_ID 'PATIENT_LOCAL_ID', 
-							CONDITION.CONDITION_SHORT_NM 'DISEASE_NAME' 
-						INTO  #TMP_LINKED_MUMPS 
-						FROM 
-							#TMP_BASE_MUMPS GEN_LDF  with (nolock) 
-							INNER JOIN  dbo.INVESTIGATION INV with (nolock) 
-						ON   
-							GEN_LDF.INVESTIGATION_UID=INV.CASE_UID  
-						INNER JOIN dbo.MUMPS_CASE GEN  with (nolock) 
-						ON  
-							GEN.INVESTIGATION_KEY=INV.INVESTIGATION_KEY 
-						INNER JOIN dbo.CONDITION  with (nolock) 
-						ON  
-							CONDITION.CONDITION_KEY= GEN.CONDITION_KEY 
-						INNER JOIN dbo.D_PATIENT PATIENT  with (nolock) 
-						ON  
-							PATIENT.PATIENT_KEY=GEN.PATIENT_KEY;
+			--- CREATE TABLE LINKED_MUMPS AS  
+		
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_MUMPS';  
 
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_LINKED_MUMPS;	
-						
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
+			IF OBJECT_ID('#TMP_LINKED_MUMPS', 'U') IS NOT NULL   
+					DROP TABLE #TMP_LINKED_MUMPS; 
+
+			SELECT GEN_LDF.*,  
+				INV.INVESTIGATION_KEY,  
+				INV.INV_LOCAL_ID 'INVESTIGATION_LOCAL_ID',  
+				INV.CASE_OID 'PROGRAM_JURISDICTION_OID', 
+				GEN.PATIENT_KEY, 
+				PATIENT.PATIENT_LOCAL_ID 'PATIENT_LOCAL_ID', 
+				CONDITION.CONDITION_SHORT_NM 'DISEASE_NAME' 
+			INTO  #TMP_LINKED_MUMPS 
+			FROM 
+				#TMP_BASE_MUMPS GEN_LDF  with (nolock) 
+				INNER JOIN  dbo.INVESTIGATION INV with (nolock) 
+			ON   
+				GEN_LDF.INVESTIGATION_UID=INV.CASE_UID  
+			INNER JOIN dbo.MUMPS_CASE GEN  with (nolock) 
+			ON  
+				GEN.INVESTIGATION_KEY=INV.INVESTIGATION_KEY 
+			INNER JOIN dbo.V_CONDITION_DIM  with (nolock) 
+			ON  
+				CONDITION.CONDITION_KEY= GEN.CONDITION_KEY 
+			INNER JOIN dbo.D_PATIENT PATIENT  with (nolock) 
+			ON  
+				PATIENT.PATIENT_KEY=GEN.PATIENT_KEY;
+
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_LINKED_MUMPS;	
+				
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
 
 	--------------------------------------------------------------------------------------------------------				
 			
-					----- CREATE TABLE ALL_MUMPS AS  
-				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_MUMPS';  
-	
-				IF OBJECT_ID('#TMP_ALL_MUMPS', 'U') IS NOT NULL   
-					DROP TABLE #TMP_ALL_MUMPS; 
-	
-					SELECT A.*,  
-					B.DATAMART_COLUMN_NM 'DM', 
-					CASE WHEN  DATALENGTH(REPLACE(A.CONDITION_CD, ' ', ''))>1 THEN A.CONDITION_CD
-					WHEN DATALENGTH(REPLACE(A.CONDITION_CD, ' ', ''))<=1 THEN A.PHC_CD
-					WHEN DATALENGTH(A.page_set)<2 THEN A.PAGE_SET
-					WHEN DATALENGTH(B.DATAMART_COLUMN_NM)>2 THEN B.DATAMART_COLUMN_NM
-					ELSE A.phc_cd END AS DISEASE_CD, 
-					A.page_set AS DISEASE_NM
-					INTO #TMP_ALL_MUMPS 
-					FROM 	dbo.LDF_DATAMART_COLUMN_REF  B with (nolock) 
-					INNER JOIN #TMP_LINKED_MUMPS A with (nolock) 
-					ON A.LDF_UID= B.LDF_UID WHERE 
-					( 
-						B.LDF_PAGE_SET ='MUMPS' 
-						OR B.CONDITION_CD IN (SELECT CONDITION_CD FROM  
-						dbo.LDF_DATAMART_TABLE_REF WHERE DATAMART_NAME = 'LDF_MUMPS')
-					);
+				----- CREATE TABLE ALL_MUMPS AS  
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_MUMPS';  
 
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_MUMPS;	
-						
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
+			IF OBJECT_ID('#TMP_ALL_MUMPS', 'U') IS NOT NULL   
+				DROP TABLE #TMP_ALL_MUMPS; 
+
+			SELECT A.*,  
+			B.DATAMART_COLUMN_NM 'DM', 
+			CASE WHEN  DATALENGTH(REPLACE(A.CONDITION_CD, ' ', ''))>1 THEN A.CONDITION_CD
+			WHEN DATALENGTH(REPLACE(A.CONDITION_CD, ' ', ''))<=1 THEN A.PHC_CD
+			WHEN DATALENGTH(A.page_set)<2 THEN A.PAGE_SET
+			WHEN DATALENGTH(B.DATAMART_COLUMN_NM)>2 THEN B.DATAMART_COLUMN_NM
+			ELSE A.phc_cd END AS DISEASE_CD, 
+			A.page_set AS DISEASE_NM
+			INTO #TMP_ALL_MUMPS 
+			FROM 	dbo.LDF_DATAMART_COLUMN_REF  B with (nolock) 
+			INNER JOIN #TMP_LINKED_MUMPS A with (nolock) 
+			ON A.LDF_UID= B.LDF_UID WHERE 
+			( 
+				B.LDF_PAGE_SET ='MUMPS' 
+				OR B.CONDITION_CD IN (SELECT CONDITION_CD FROM  
+				dbo.LDF_DATAMART_TABLE_REF WHERE DATAMART_NAME = 'LDF_MUMPS')
+			);
+
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_ALL_MUMPS;	
+				
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
 
 	--------------------------------------------------------------------------------------------------------				
 				
-				SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-				SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_MUMPS_SHORT_COL';  
-	
-				IF OBJECT_ID('#TMP_ALL_MUMPS_SHORT_COL', 'U') IS NOT NULL   
-						DROP TABLE #TMP_ALL_MUMPS_SHORT_COL; 
-					
-						SELECT INVESTIGATION_KEY, 
-									INVESTIGATION_LOCAL_ID, 
-									PROGRAM_JURISDICTION_OID, 
-									PATIENT_KEY, 
-									PATIENT_LOCAL_ID, 
-									DISEASE_NAME, 
-									DISEASE_CD, 
-									DATAMART_COLUMN_NM, 
-									SUBSTRING(COL1, 1, 8000) as ANSWERCOL
-						INTO #TMP_ALL_MUMPS_SHORT_COL 
-						FROM #TMP_ALL_MUMPS
-						WHERE data_type IN ('CV', 'ST');  
-					
-					
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_MUMPS;	
-                    
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_MUMPS_SHORT_COL';  
+
+			IF OBJECT_ID('#TMP_ALL_MUMPS_SHORT_COL', 'U') IS NOT NULL   
+					DROP TABLE #TMP_ALL_MUMPS_SHORT_COL; 
+				
+			SELECT INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						SUBSTRING(COL1, 1, 8000) as ANSWERCOL
+			INTO #TMP_ALL_MUMPS_SHORT_COL 
+			FROM #TMP_ALL_MUMPS
+			WHERE data_type IN ('CV', 'ST');  
+				
+				
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_ALL_MUMPS;	
+			
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
 	
 	--------------------------------------------------------------------------------------------------------				
 				
-				SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-				SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_MUMPS_TA';  
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_MUMPS_TA';  
 
-				IF OBJECT_ID('#TMP_ALL_MUMPS_TA', 'U') IS NOT NULL   
-						DROP TABLE #TMP_ALL_MUMPS_TA; 
-	
-					
-					SELECT INVESTIGATION_KEY, 
-								INVESTIGATION_LOCAL_ID, 
-								PROGRAM_JURISDICTION_OID, 
-								PATIENT_KEY, 
-								PATIENT_LOCAL_ID, 
-								DISEASE_NAME, 
-								DISEASE_CD, 
-								DATAMART_COLUMN_NM, 
-								SUBSTRING(COL1, 1, 8000) as ANSWERCOL  
-					INTO #TMP_ALL_MUMPS_TA 
-					FROM #TMP_ALL_MUMPS
-					WHERE data_type IN ('LIST_ST'); 
+			IF OBJECT_ID('#TMP_ALL_MUMPS_TA', 'U') IS NOT NULL   
+					DROP TABLE #TMP_ALL_MUMPS_TA; 
+				
+			SELECT INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						SUBSTRING(COL1, 1, 8000) as ANSWERCOL  
+			INTO #TMP_ALL_MUMPS_TA 
+			FROM #TMP_ALL_MUMPS
+			WHERE data_type IN ('LIST_ST'); 
 
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_MUMPS_TA;	
-					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_ALL_MUMPS_TA;	
+			
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
 	
 	--------------------------------------------------------------------------------------------------------		 
 	
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_TA';  
-					set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_TA) 
-					IF @count > 0 
-					BEGIN 
-						EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_ta +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_mumps_ta +';
-						END;')
-	
-						--DECLARE @cols  AS NVARCHAR(MAX)=''; 
-						--DECLARE @query AS NVARCHAR(MAX)=''; 
-						SET @cols=''; 
-						SET @query=''; 
-	
-						SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_MUMPS_TA ) as tmp 
-						select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
-	
-						--PRINT CAST(@cols AS NVARCHAR(3000)) 
-						set @query =  
-						'SELECT * 
-						INTO ' + @global_tmp_mumps_ta +'
-						fROM 
-						(  
-						SELECT     INVESTIGATION_KEY, 
-								INVESTIGATION_LOCAL_ID, 
-								PROGRAM_JURISDICTION_OID, 
-								PATIENT_KEY, 
-								PATIENT_LOCAL_ID, 
-								DISEASE_NAME, 
-								DISEASE_CD, 
-								DATAMART_COLUMN_NM, 
-								ANSWERCOL 
-							
-						FROM #TMP_ALL_MUMPS_TA ) 
-						as A  
-	
-						PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
-						execute(@query) 
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_TA';  
+			set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_TA) 
+			IF @count > 0 
+			BEGIN 
+				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_ta +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_mumps_ta +';
+				END;')
 
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_MUMPS_TA;	
+				--DECLARE @cols  AS NVARCHAR(MAX)=''; 
+				--DECLARE @query AS NVARCHAR(MAX)=''; 
+				SET @cols=''; 
+				SET @query=''; 
+
+				SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_MUMPS_TA ) as tmp 
+				select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
+
+				--PRINT CAST(@cols AS NVARCHAR(3000)) 
+				set @query =  
+				'SELECT * 
+				INTO ' + @global_tmp_mumps_ta +'
+				fROM 
+				(  
+				SELECT     INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						ANSWERCOL 
 					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-					
-					END 
+				FROM #TMP_ALL_MUMPS_TA ) 
+				as A  
 
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
+				PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
+				execute(@query) 
 
-
-	--------------------------------------------------------------------------------------------------------
-					
-					
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_TA';  
-
-                    -- If data does not exist create TMP_MUMPS_TA table same as TMP_ALL_MUMPS_TA, which will be used while merging table in step 9 
-					set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_TA) 
-					IF @count = 0 
-					
-                    BEGIN 
-
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_ta +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_mumps_ta +';
-						END;')
-
-					set @query =  
-						'SELECT INVESTIGATION_KEY, 
-								INVESTIGATION_LOCAL_ID, 
-								PROGRAM_JURISDICTION_OID, 
-								PATIENT_KEY, 
-								PATIENT_LOCAL_ID, 
-								DISEASE_NAME, 
-								DISEASE_CD 
-							INTO '+ @global_tmp_mumps_ta + '
-							FROM #TMP_ALL_MUMPS_TA with (nolock);';
-					
-					execute(@query) ;
-
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-                    INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-							
-					END	 
-
-	--------------------------------------------------------------------------------------------------------
-						
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_SHORT_COL';  
-					set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_SHORT_COL) 
-					IF @count > 0 
-					BEGIN 
-					
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_short_col +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_mumps_short_col +';
-						END;')
-
-	
-						--DECLARE @cols  AS NVARCHAR(MAX)=''; 
-						--DECLARE @query AS NVARCHAR(MAX)=''; 
-						SET @cols=''; 
-						SET @query=''; 
-							
-							SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_MUMPS_SHORT_COL ) as tmp 
-							select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
-							
-							set @query =  
-							'SELECT * 
-							INTO ' + @global_tmp_mumps_short_col +'
-							FROM 
-							(  
-							SELECT     INVESTIGATION_KEY, 
-									INVESTIGATION_LOCAL_ID, 
-									PROGRAM_JURISDICTION_OID, 
-									PATIENT_KEY, 
-									PATIENT_LOCAL_ID, 
-									DISEASE_NAME, 
-									DISEASE_CD, 
-									DATAMART_COLUMN_NM, 
-									ANSWERCOL 
-								
-							FROM #TMP_ALL_MUMPS_SHORT_COL ) 
-							as A  
-	
-							PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
-							execute(@query) 
-						
-					END 
-					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
-	
-
-	------------------------------------------------------------------------------------------------
-
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_SHORT_COL';  
-
-					-- If data does not exist create TMP_MUMPS_SHORT_COL table same as TMP_ALL_MUMPS_SHORT_COL, which will be used while merging table in step 9 
-					set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_SHORT_COL) 
-					IF @count = 0 
-					BEGIN 
-
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_short_col +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_mumps_short_col +';
-						END;')
-
-						set @query =  
-							'SELECT INVESTIGATION_KEY, 
-							INVESTIGATION_LOCAL_ID, 
-							PROGRAM_JURISDICTION_OID, 
-							PATIENT_KEY, 
-							PATIENT_LOCAL_ID, 
-							DISEASE_NAME, 
-							DISEASE_CD 
-							INTO ' +  @global_tmp_mumps_short_col + '
-							FROM #TMP_ALL_MUMPS_SHORT_COL; '; 
-							execute(@query) 
-
-					END 
-
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
-------------------------------------------------------------------------------------------------                            
-					
-					--- MERGE  MUMPS_SHORT_COL MUMPS_TA; 
-					
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS';  
-	
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_mumps +';
-						END;')
-
-	
-						EXECUTE  [dbo].[sp_MERGE_TABLES]  
-							@INPUT_TABLE1= @global_tmp_mumps_short_col
-							,@INPUT_TABLE2= @global_tmp_mumps_ta
-							,@OUTPUT_TABLE= @global_tmp_mumps
-							,@JOIN_ON_COLUMN='INVESTIGATION_KEY'
-							,@batch_id = @batch_id
-							,@target_table_name = 'LDF_MUMPS';
-
-						set @query =  
-							'DELETE FROM '+ @global_tmp_mumps +' WHERE INVESTIGATION_KEY IS NULL;'; 
-							execute(@query) 
-					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no); 
-	
-------------------------------------------------------------------------------------------------				
-			
+				if
+				@debug = 'true'
+				select @Proc_Step_Name as step, *
+				from #TMP_ALL_MUMPS_TA;	
 				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'GENERATING LDF_MUMPS';  
-	
+				SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+			
+			END 
 
-						--- If the TMP_MUMPS has additional columns compare to LDF_MUMPS, add these additional columns in LDF_MUMPS table. 
-						BEGIN TRANSACTION; 
-							SET @Alterdynamiccolumnlist=''; 
-							SET @dynamiccolumnUpdate=''; 
-							
-							SELECT   @Alterdynamiccolumnlist  = @Alterdynamiccolumnlist+ 'ALTER TABLE dbo.LDF_MUMPS ADD [' + name   +  '] varchar(4000) ', 
-								@dynamiccolumnUpdate= @dynamiccolumnUpdate + 'LDF_MUMPS.[' +  name  + ']='  + ''+  @global_tmp_mumps +'.['  +name  + '] ,' 
-							FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_mumps +'') 
-							AND name NOT IN  ( SELECT name FROM  Sys.Columns WHERE Object_ID = Object_ID('LDF_MUMPS')) 
-							
-							
-							--PRINT '@@Alterdynamiccolumnlist -----------	'+CAST(@Alterdynamiccolumnlist AS NVARCHAR(max)) 
-							--PRINT '@@@@dynamiccolumnUpdate -----------	'+CAST(@dynamiccolumnUpdate AS NVARCHAR(max)) 
-	
-							IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
-							BEGIN 
-	
-								EXEC(  @Alterdynamiccolumnlist) 
-
-                            END
-
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-
-                    INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-
-                    COMMIT TRANSACTION; 
-------------------------------------------------------------------------------------------------
-                    
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = 'Update LDF_MUMPS';  
-	
-	
-                    BEGIN TRANSACTION; 
-
-                    IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
-						
-                        BEGIN 
-                        
-                        SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
-
-                        EXEC ('update  dbo.LDF_MUMPS  SET ' +   @dynamiccolumnUpdate + ' FROM '+@global_tmp_mumps +'      
-                        inner join  dbo.LDF_MUMPS  on  ' + @global_tmp_mumps +'.INVESTIGATION_LOCAL_ID =  dbo.LDF_MUMPS.INVESTIGATION_LOCAL_ID') 
-
-						END 
-
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-
-                    INSERT INTO [dbo].[job_flow_log]
-					    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					    VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+	--------------------------------------------------------------------------------------------------------
 					
-					COMMIT TRANSACTION; 
-------------------------------------------------------------------------------------------------
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_TA';  
+
+			-- If data does not exist create TMP_MUMPS_TA table same as TMP_ALL_MUMPS_TA, which will be used while merging table in step 9 
+			set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_TA) 
+			IF @count = 0 
 					
-                    BEGIN TRANSACTION; 
-
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'Delete Existing to LDF_MUMPS';  
-						--In case of updates, delete the existing ones and insert updated ones in LDF_MUMPS 
-						EXEC ('DELETE FROM dbo.LDF_MUMPS WHERE INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY FROM ' + @global_tmp_mumps +' );');
-
-                        INSERT INTO [dbo].[job_flow_log]
-					    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					    VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-
-                    COMMIT TRANSACTION; 
-
-------------------------------------------------------------------------------------------------                            
-					
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = 'Insert to LDF_MUMPS';  
-                        
-                        BEGIN TRANSACTION; 
-					
-						--- During update if TMP_MUMPS has 4 columns updated only and the LDF_MUMPS has 7 columns then get column name dynamically from TMP_MUMPS and populate them. 
-					
-							SET @dynamiccolumnList ='' 
-							SELECT @dynamiccolumnList= @dynamiccolumnList +'['+ name +'],' FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_mumps) 
-							SET  @dynamiccolumnList=substring(@dynamiccolumnList,1,len(@dynamiccolumnList)-1) 
-	
-							--PRINT '@@@@@dynamiccolumnList -----------	'+CAST(@dynamiccolumnList AS NVARCHAR(max)) 
-	
-							EXEC ('INSERT INTO dbo.LDF_MUMPS ('+@dynamiccolumnList+') 
-							SELECT '+@dynamiccolumnList +' 
-							FROM '+ @global_tmp_mumps+';'); 
-	
-							SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-                        
-                        INSERT INTO [dbo].[job_flow_log]
-		    			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					    VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-						@RowCount_no);  
-							
-						COMMIT TRANSACTION; 
-								
-------------------------------------------------------------------------------------------------
-					
-				SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-				SET @PROC_STEP_NAME = 'DELETE global temp tables'; 
-
-				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_short_col +''', ''U'')  IS NOT NULL
-					BEGIN
-						DROP TABLE ' + @global_tmp_mumps_short_col +';
-					END;')
-
+			BEGIN 
 
 				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_ta +''', ''U'')  IS NOT NULL
 					BEGIN
 						DROP TABLE ' + @global_tmp_mumps_ta +';
 					END;')
 
+				set @query =  
+					'SELECT INVESTIGATION_KEY, 
+							INVESTIGATION_LOCAL_ID, 
+							PROGRAM_JURISDICTION_OID, 
+							PATIENT_KEY, 
+							PATIENT_LOCAL_ID, 
+							DISEASE_NAME, 
+							DISEASE_CD 
+						INTO '+ @global_tmp_mumps_ta + '
+						FROM #TMP_ALL_MUMPS_TA with (nolock);';
+						
+				execute(@query) ;
 
-				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps +''', ''U'')  IS NOT NULL
-					BEGIN
-						DROP TABLE ' + @global_tmp_mumps +';
-					END;') 
+				SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 				INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
 				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-				@RowCount_no);  
+						@RowCount_no);  
+							
+			END	 
+
+	--------------------------------------------------------------------------------------------------------
+						
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_SHORT_COL';  
+			set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_SHORT_COL) 
+			IF @count > 0 
+			BEGIN 
+				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_short_col +''', ''U'')  IS NOT NULL
+					BEGIN
+						DROP TABLE ' + @global_tmp_mumps_short_col +';
+					END;')
+	
+				--DECLARE @cols  AS NVARCHAR(MAX)=''; 
+				--DECLARE @query AS NVARCHAR(MAX)=''; 
+				SET @cols=''; 
+				SET @query=''; 
+					
+				SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_MUMPS_SHORT_COL ) as tmp 
+				select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
+				
+				set @query =  
+				'SELECT * 
+				INTO ' + @global_tmp_mumps_short_col +'
+				FROM 
+				(  
+				SELECT     INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						ANSWERCOL 
+					
+				FROM #TMP_ALL_MUMPS_SHORT_COL ) 
+				as A  
+
+				PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
+				execute(@query) 
+						
+			END 
+					
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
+	------------------------------------------------------------------------------------------------
+
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS_SHORT_COL';  
+
+			-- If data does not exist create TMP_MUMPS_SHORT_COL table same as TMP_ALL_MUMPS_SHORT_COL, which will be used while merging table in step 9 
+			set @count = (SELECT count(*) FROM #TMP_ALL_MUMPS_SHORT_COL) 
+			IF @count = 0 
+			BEGIN 
+
+				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_short_col +''', ''U'')  IS NOT NULL
+					BEGIN
+						DROP TABLE ' + @global_tmp_mumps_short_col +';
+					END;')
+
+				set @query =  
+					'SELECT INVESTIGATION_KEY, 
+					INVESTIGATION_LOCAL_ID, 
+					PROGRAM_JURISDICTION_OID, 
+					PATIENT_KEY, 
+					PATIENT_LOCAL_ID, 
+					DISEASE_NAME, 
+					DISEASE_CD 
+					INTO ' +  @global_tmp_mumps_short_col + '
+					FROM #TMP_ALL_MUMPS_SHORT_COL; '; 
+					execute(@query) 
+			END 
+
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
+------------------------------------------------------------------------------------------------                            
+					
+			--- MERGE  MUMPS_SHORT_COL MUMPS_TA; 
+			
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_MUMPS';  
+	
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_mumps +';
+				END;')
+
+	
+			EXECUTE  [dbo].[sp_MERGE_TABLES]  
+				@INPUT_TABLE1= @global_tmp_mumps_short_col
+				,@INPUT_TABLE2= @global_tmp_mumps_ta
+				,@OUTPUT_TABLE= @global_tmp_mumps
+				,@JOIN_ON_COLUMN='INVESTIGATION_KEY'
+				,@batch_id = @batch_id
+				,@target_table_name = 'LDF_MUMPS';
+
+			set @query =  
+				'DELETE FROM '+ @global_tmp_mumps +' WHERE INVESTIGATION_KEY IS NULL;'; 
+				execute(@query) 
+					
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no); 
+	
+------------------------------------------------------------------------------------------------				
+			
+				
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'GENERATING LDF_MUMPS';  
+
+			--- If the TMP_MUMPS has additional columns compare to LDF_MUMPS, add these additional columns in LDF_MUMPS table. 
+			BEGIN TRANSACTION; 
+				SET @Alterdynamiccolumnlist=''; 
+				SET @dynamiccolumnUpdate=''; 
+				
+				SELECT   @Alterdynamiccolumnlist  = @Alterdynamiccolumnlist+ 'ALTER TABLE dbo.LDF_MUMPS ADD [' + name   +  '] varchar(4000) ', 
+					@dynamiccolumnUpdate= @dynamiccolumnUpdate + 'LDF_MUMPS.[' +  name  + ']='  + ''+  @global_tmp_mumps +'.['  +name  + '] ,' 
+				FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_mumps +'') 
+				AND name NOT IN  ( SELECT name FROM  Sys.Columns WHERE Object_ID = Object_ID('LDF_MUMPS')) 
+				
+				
+				--PRINT '@@Alterdynamiccolumnlist -----------	'+CAST(@Alterdynamiccolumnlist AS NVARCHAR(max)) 
+				--PRINT '@@@@dynamiccolumnUpdate -----------	'+CAST(@dynamiccolumnUpdate AS NVARCHAR(max)) 
+
+				IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
+				BEGIN 
+
+					EXEC(  @Alterdynamiccolumnlist) 
+
+				END
+
+				SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+				INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+						@RowCount_no);  
+
+			COMMIT TRANSACTION; 
+------------------------------------------------------------------------------------------------
+                    
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'Update LDF_MUMPS';  
+
+			BEGIN TRANSACTION; 
+
+			IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
+				
+				BEGIN 
+				
+				SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
+
+				EXEC ('update  dbo.LDF_MUMPS  SET ' +   @dynamiccolumnUpdate + ' FROM '+@global_tmp_mumps +'      
+				inner join  dbo.LDF_MUMPS  on  ' + @global_tmp_mumps +'.INVESTIGATION_LOCAL_ID =  dbo.LDF_MUMPS.INVESTIGATION_LOCAL_ID') 
+
+			END 
+
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+			
+			COMMIT TRANSACTION; 
+------------------------------------------------------------------------------------------------
+			
+			BEGIN TRANSACTION; 
+
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'Delete Existing to LDF_MUMPS';  
+				--In case of updates, delete the existing ones and insert updated ones in LDF_MUMPS 
+				EXEC ('DELETE FROM dbo.LDF_MUMPS WHERE INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY FROM ' + @global_tmp_mumps +' );');
+
+				INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+
+			COMMIT TRANSACTION; 
+
+------------------------------------------------------------------------------------------------                            
+					
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'Insert to LDF_MUMPS';  
+				
+			BEGIN TRANSACTION; 
+		
+			--- During update if TMP_MUMPS has 4 columns updated only and the LDF_MUMPS has 7 columns then get column name dynamically from TMP_MUMPS and populate them. 
+		
+				SET @dynamiccolumnList ='' 
+				SELECT @dynamiccolumnList= @dynamiccolumnList +'['+ name +'],' FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_mumps) 
+				SET  @dynamiccolumnList=substring(@dynamiccolumnList,1,len(@dynamiccolumnList)-1) 
+
+				--PRINT '@@@@@dynamiccolumnList -----------	'+CAST(@dynamiccolumnList AS NVARCHAR(max)) 
+
+				EXEC ('INSERT INTO dbo.LDF_MUMPS ('+@dynamiccolumnList+') 
+				SELECT '+@dynamiccolumnList +' 
+				FROM '+ @global_tmp_mumps+';'); 
+
+				SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+			
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+			@RowCount_no);  
+				
+			COMMIT TRANSACTION; 
+								
+------------------------------------------------------------------------------------------------
+					
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'DELETE global temp tables'; 
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_short_col +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_mumps_short_col +';
+				END;')
+
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps_ta +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_mumps_ta +';
+				END;')
+
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_mumps +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_mumps +';
+				END;') 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+			@RowCount_no);  
 
 ------------------------------------------------------------------------------------------------
 		END	
