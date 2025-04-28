@@ -697,7 +697,7 @@ class PostProcessingServiceTest {
         assertTrue(logs.get(4).getFormattedMessage().contains(LDF_BMIRD.getStoredProcedure()));
         assertTrue(logs.get(6).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
     }
-
+    
     @Test
     void testPostProcessGenericCaseLdfFoodBorneNegative() {
         
@@ -736,6 +736,47 @@ class PostProcessingServiceTest {
         assertEquals(5, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
         assertTrue(logs.get(4).getFormattedMessage().contains(LDF_FOODBORNE.getStoredProcedure()));
+    }
+   
+
+    @Test
+    void testPostProcessGenericCaseLdfTetanusNegative() {
+        
+        postProcessingServiceMock.setLdfEnable(false);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(3, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
+    }
+
+    @Test
+    void testPostProcessGenericCaseLdfTetanus() {
+
+        postProcessingServiceMock.setLdfEnable(true);
+        String topic = "dummy_datamart";
+        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"\"}}";
+
+        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDatamartIds();
+
+        String id = "123";
+        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
+        verify(investigationRepositoryMock).executeStoredProcForLdfTetanusDatamart(id);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(5, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
+        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_TETANUS.getStoredProcedure()));
     }
 
     @Test

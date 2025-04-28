@@ -185,7 +185,7 @@ BEGIN
                 ON b.INVESTIGATION_UID = i.CASE_UID 
             INNER JOIN [dbo].GENERIC_CASE g WITH (NOLOCK)
                 ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
-            INNER JOIN [dbo].CONDITION c WITH (NOLOCK)
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
                 ON c.CONDITION_KEY = g.CONDITION_KEY
             INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
                 ON p.PATIENT_KEY = g.PATIENT_KEY;
@@ -354,7 +354,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##FOODBORNE_TA';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne_ta;
             
             EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_ta +''', ''U'')  IS NOT NULL
             BEGIN
@@ -449,7 +449,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##FOODBORNE_SHORT_COL';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne_short_col;
             
             EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_short_col +''', ''U'')  IS NOT NULL
             BEGIN
@@ -507,7 +507,7 @@ BEGIN
                             PATIENT_LOCAL_ID,
                             DISEASE_NAME,
                             DISEASE_CD
-                        INTO ' + @global_temp_foodborne_ta +'
+                        INTO ' + @global_temp_foodborne_short_col +'
                         FROM #ALL_FOODBORNE_SHORT_COL';
                     END
                 END
@@ -521,7 +521,7 @@ BEGIN
                         PATIENT_LOCAL_ID,
                         DISEASE_NAME,
                         DISEASE_CD                 
-                    INTO ' + @global_temp_foodborne_ta +'
+                    INTO ' + @global_temp_foodborne_short_col +'
                     FROM #ALL_FOODBORNE_SHORT_COL';
                 END;
 
@@ -598,7 +598,7 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ##FOODBORNE';
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne;
 
             EXECUTE  [dbo].[sp_MERGE_TABLES] 
                 @INPUT_TABLE1= @global_temp_foodborne_short_col
