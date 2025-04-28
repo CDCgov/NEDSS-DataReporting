@@ -589,6 +589,7 @@ public class PostProcessingService {
                             case LDF_MUMPS:
                                 executeDatamartProc(LDF_MUMPS,
                                     investigationRepository::executeStoredProcForLdfMumpsDatamart, cases);
+                                break;
                             default:
                                 break;
                         }    
