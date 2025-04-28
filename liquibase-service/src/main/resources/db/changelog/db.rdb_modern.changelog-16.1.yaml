@@ -2527,7 +2527,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 242-create_rtr_covid_contact_datamart-001.sql
+            path: 242-create_covid_contact_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 825

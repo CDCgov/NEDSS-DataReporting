@@ -244,88 +244,96 @@ BEGIN
             con.CONTACT_UID AS 'CONTACT_UID'
 
         INTO #COVID_CONTACT_DATAMART
-        FROM dbo.nrt_contact con
-                 INNER JOIN dbo.nrt_investigation inv
+        FROM dbo.nrt_contact con WITH (NOLOCK)
+                 INNER JOIN dbo.nrt_investigation inv WITH (NOLOCK)
                             ON con.SUBJECT_ENTITY_PHC_UID = inv.public_health_case_uid
                                 AND con.RECORD_STATUS_CD <> 'LOG_DEL'
 
             -- SRC: Index patient (replaces the person table in original)
-                 LEFT OUTER JOIN dbo.nrt_patient pat
+                 LEFT OUTER JOIN dbo.nrt_patient pat WITH (NOLOCK)
                                  ON pat.patient_uid = inv.patient_id
 
             -- These replace CT_CONTACT_ANSWER joins in original with corresponding question identifiers
-                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans1
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans1 WITH (NOLOCK)
                                  ON con_ans1.contact_uid = con.CONTACT_UID
                                      AND con_ans1.rdb_column_nm = 'CON104' -- Contact Exposure Type with Investigation Subject
 
-                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans2
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans2 WITH (NOLOCK)
                                  ON con_ans2.contact_uid = con.CONTACT_UID
                                      AND con_ans2.rdb_column_nm = 'CON105' -- Contact Exposure Site Type
 
-                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans3
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans3 WITH (NOLOCK)
                                  ON con_ans3.contact_uid = con.CONTACT_UID
                                      AND con_ans3.rdb_column_nm = 'CON107' -- First Exposure Date with Contact
 
-                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans4
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans4 WITH (NOLOCK)
                                  ON con_ans4.contact_uid = con.CONTACT_UID
                                      AND con_ans4.rdb_column_nm = 'CON108' -- Last Exposure Date with Contact
 
             -- These replace NBS_CASE_ANSWER joins with investigation_observation
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs1
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs1 WITH (NOLOCK)
                                  ON inv_obs1.public_health_case_uid = inv.public_health_case_uid
                                      AND inv_obs1.root_type_cd = 'NBS547' -- CDC-Assigned Case ID
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_obs1.batch_id,1)
 
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs2
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs2 WITH (NOLOCK)
                                  ON inv_obs2.public_health_case_uid = inv.public_health_case_uid
                                      AND inv_obs2.root_type_cd = 'NOT113' -- Reporting County
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_obs2.batch_id,1)
 
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs3
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs3 WITH (NOLOCK)
                                  ON inv_obs3.public_health_case_uid = inv.public_health_case_uid
                                      AND inv_obs3.root_type_cd = 'INV576' -- Symptomatic
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_obs3.batch_id,1)
 
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs4
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs4 WITH (NOLOCK)
                                  ON inv_obs4.public_health_case_uid = inv.public_health_case_uid
                                      AND inv_obs4.root_type_cd = 'NBS555' -- Symptomatic status
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_obs4.batch_id,1)
 
             -- These replace JURISDICTION_CODE table joins
-                 LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_inv
+                 LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_inv WITH (NOLOCK)
                                  ON inv.jurisdiction_cd = j_inv.CODE
 
             -- Investigator information
-                 LEFT OUTER JOIN dbo.nrt_patient pat_inv
-                                 ON pat_inv.patient_uid = inv.investigator_id
+                 LEFT OUTER JOIN dbo.nrt_provider pat_inv WITH (NOLOCK)
+                                 ON pat_inv.provider_uid = inv.investigator_id
 
             -- Contact investigation (maps to original's contactInvestigation join)
-                 LEFT OUTER JOIN dbo.nrt_investigation con_inv
+                 LEFT OUTER JOIN dbo.nrt_investigation con_inv WITH (NOLOCK)
                                  ON con.CONTACT_ENTITY_PHC_UID = con_inv.public_health_case_uid
 
             -- Contact investigation jurisdiction
-                 LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_con_inv
+                 LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_con_inv WITH (NOLOCK)
                                  ON con_inv.jurisdiction_cd = j_con_inv.CODE
 
             -- Contact investigation observations
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs1
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs1 WITH (NOLOCK)
                                  ON con_inv_obs1.public_health_case_uid = con_inv.public_health_case_uid
                                      AND con_inv_obs1.root_type_cd = 'NBS547' -- CDC-Assigned Case ID
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_obs1.batch_id,1)
 
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs2
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs2 WITH (NOLOCK)
                                  ON con_inv_obs2.public_health_case_uid = con_inv.public_health_case_uid
                                      AND con_inv_obs2.root_type_cd = 'NOT113' -- Reporting County
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_obs2.batch_id,1)
 
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs3
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs3 WITH (NOLOCK)
                                  ON con_inv_obs3.public_health_case_uid = con_inv.public_health_case_uid
                                      AND con_inv_obs3.root_type_cd = 'INV576' -- Symptomatic
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_obs3.batch_id,1)
 
-                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs4
+                 LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs4 WITH (NOLOCK)
                                  ON con_inv_obs4.public_health_case_uid = con_inv.public_health_case_uid
                                      AND con_inv_obs4.root_type_cd = 'NBS555' -- Symptomatic status
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_obs4.batch_id,1)
 
             -- CTT records from investigation
-                 LEFT OUTER JOIN dbo.nrt_patient ctt_pat_inv
+                 LEFT OUTER JOIN dbo.nrt_patient ctt_pat_inv WITH (NOLOCK)
                                  ON ctt_pat_inv.patient_uid = con_inv.patient_id
 
             -- CTT records from contact
-                 LEFT OUTER JOIN dbo.nrt_patient ctt_pat_con
+                 LEFT OUTER JOIN dbo.nrt_patient ctt_pat_con WITH (NOLOCK)
                                  ON ctt_pat_con.patient_uid = con.CONTACT_ENTITY_UID
 
         WHERE inv.cd = @conditionCd
@@ -363,12 +371,12 @@ BEGIN
         IF @debug = 'true'
             SELECT * FROM #COVID_CONTACT_DATAMART;
 
-        SET @proc_step_name = 'Update RTR_COVID_CONTACT_DATAMART';
+        SET @proc_step_name = 'Update COVID_CONTACT_DATAMART';
         SET @proc_step_no = 2;
 
 
         /* Remove existing records for these contacts */
-        DELETE FROM dbo.RTR_COVID_CONTACT_DATAMART
+        DELETE FROM dbo.COVID_CONTACT_DATAMART
         WHERE CONTACT_UID IN (SELECT CONTACT_UID FROM #COVID_CONTACT_DATAMART);
 
         /* Logging */
@@ -395,11 +403,7 @@ BEGIN
                );
 
         /* Insert updated records */
-        --INSERT INTO dbo.RTR_COVID_CONTACT_DATAMART
-        --SELECT * FROM #COVID_CONTACT_DATAMART;
-
-
-        INSERT INTO dbo.RTR_COVID_CONTACT_DATAMART (
+        INSERT INTO dbo.COVID_CONTACT_DATAMART (
             SRC_PATIENT_FIRST_NAME,
             SRC_PATIENT_MIDDLE_NAME,
             SRC_PATIENT_LAST_NAME,
@@ -593,6 +597,7 @@ BEGIN
             CTT_INV_SYMPTOM_STATUS,
             CONTACT_UID
         FROM #COVID_CONTACT_DATAMART;
+
         /* Clean up temporary table */
         DROP TABLE #COVID_CONTACT_DATAMART;
 
