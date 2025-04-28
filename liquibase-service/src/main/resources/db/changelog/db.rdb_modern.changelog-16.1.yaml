@@ -2490,6 +2490,22 @@ databaseChangeLog:
             path: 290-sp_ldf_foodborne_datamart_postprocessing-001.sql
             splitStatements: false 
   - changeSet:
+      id: 800
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 240-create_ldf_mumps-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 805
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 295-sp_ldf_mumps_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
       id: 810
       author: liquibase
       runOnChange: true
