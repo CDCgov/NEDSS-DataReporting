@@ -412,7 +412,7 @@ BEGIN
                                                         cm.confirmation_method_time,
                                                         phc1.last_chg_time      as phc_last_chg_time
                                                  from dbo.Confirmation_method cm
-                                                          join nbs_srte.dbo.Code_value_general cvg WITH (NOLOCK)
+                                                          left join nbs_srte.dbo.Code_value_general cvg WITH (NOLOCK)
                                                                on cvg.code = cm.confirmation_method_cd and cvg.code_set_nm = 'PHC_CONF_M'
                                                           join dbo.Public_health_case phc1 WITH (NOLOCK)
                                                                on cm.public_health_case_uid = phc1.public_health_case_uid
