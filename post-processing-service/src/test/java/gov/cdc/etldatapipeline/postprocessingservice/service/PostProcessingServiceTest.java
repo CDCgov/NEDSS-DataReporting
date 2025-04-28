@@ -738,7 +738,6 @@ class PostProcessingServiceTest {
         assertTrue(logs.get(4).getFormattedMessage().contains(LDF_FOODBORNE.getStoredProcedure()));
     }
    
-
     @Test
     void testPostProcessGenericCaseLdfTetanusNegative() {
         
