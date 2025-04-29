@@ -342,7 +342,8 @@ class InvestigationServiceTest {
     @Test
     void testProcessVaccinationMessage() throws JsonProcessingException {
         Long vaccinationUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"" + vaccinationUid + "\"}}}";
+        String op = "u";
+        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"" + vaccinationUid + "\"}, \"op\": \"" + op + "\"}}";
 
         final Vaccination vaccination = constructVaccination(vaccinationUid);
         when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid))).thenReturn(Optional.of(vaccination));
@@ -387,11 +388,85 @@ class InvestigationServiceTest {
     }
 
     @Test
+    void testProcessVaccinationNonUpdate() {
+        Long vaccinationUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"" + vaccinationUid + "\"}, \"op\": \"c\"}}";
+
+        final Vaccination vaccination = constructVaccination(vaccinationUid);
+        when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid))).thenReturn(Optional.of(vaccination));
+
+        investigationService.processMessage(getRecord(vaccinationTopic, payload), consumer);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+    }
+
+    @Test
     void testProcessVaccinationNoDataException() {
         String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"\"}}}";
         ConsumerRecord<String, String> rec = getRecord(vaccinationTopic, payload);
         assertThrows(NoDataException.class, () -> investigationService.processMessage(rec, consumer));
     }
+
+    @ParameterizedTest
+    @CsvSource(
+            {"c,1180",
+            "u,1180",
+            "u,1180",
+            "d,1180",
+            "c,OTHER"
+            }
+    )
+    void testProcessActRelationshipVaccination(String op, String typeCd) throws JsonProcessingException {
+        Long sourceActUid = 123456789L;
+
+        String payload = "{\"payload\": {\"before\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \"" + typeCd + "\"}," +
+                "\"after\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \"" + typeCd + "\"}," +
+                "\"op\": \"" + op + "\"}}";
+
+        final Vaccination vaccination = constructVaccination(sourceActUid);
+
+        when(vaccinationRepository.computeVaccination(String.valueOf(sourceActUid))).thenReturn(Optional.of(vaccination));
+
+        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+
+        // Create a ConsumerRecord object
+        ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
+
+        if (typeCd.equals("OTHER")) {
+            investigationService.processMessage(rec, consumer);
+            verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+        } else {
+            investigationService.processMessage(rec, consumer);
+            future.complete(null);
+
+            final VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
+            vaccinationReportingKey.setVaccinationUid(sourceActUid);
+
+            final VaccinationReporting vaccinationReportingValue = constructVaccinationReporting(sourceActUid);
+
+            Awaitility.await()
+                    .atMost(1, TimeUnit.SECONDS)
+                    .untilAsserted(() ->
+                            verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                    );
+
+            String actualTopic = topicCaptor.getAllValues().getFirst();
+            String actualKey = keyCaptor.getAllValues().getFirst();
+            String actualValue = messageCaptor.getAllValues().getFirst();
+
+            var actualVaccinationKey = objectMapper.readValue(
+                    objectMapper.readTree(actualKey).path("payload").toString(), VaccinationReportingKey.class);
+            var actualVaccinationValue = objectMapper.readValue(
+                    objectMapper.readTree(actualValue).path("payload").toString(), VaccinationReporting.class);
+
+            assertEquals(vaccinationTopicOutput, actualTopic);
+            assertEquals(vaccinationReportingKey, actualVaccinationKey);
+            assertEquals(vaccinationReportingValue, actualVaccinationValue);
+
+        }
+
+    }
+
 
     @ParameterizedTest
     @CsvSource(
