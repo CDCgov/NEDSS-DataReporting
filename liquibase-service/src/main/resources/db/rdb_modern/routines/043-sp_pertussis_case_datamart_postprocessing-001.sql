@@ -24,8 +24,6 @@ BEGIN
         SET @Proc_Step_Name = 'SP_Start';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
-        BEGIN TRANSACTION;
-
         INSERT INTO dbo.job_flow_log ( batch_id
                                      , [Dataflow_Name]
                                      , [package_Name]
@@ -43,8 +41,6 @@ BEGIN
                , 0
                , LEFT('ID List-' + @phc_uids, 500));
 
-        COMMIT TRANSACTION;
-
         /*
             Note for Pertussis_Case and Pertussis_Suspected_Source_Fld target tables:
             In IMRDBMapping, Pertussis_Suspected_Source_Fld is not explicitly mapped. So,
@@ -56,587 +52,539 @@ BEGIN
             Pertussis_Treatment_Field is explicitly mapped in IMRDBMapping, so it 
             does not need to be accounted for with any hardcoded filtering.
         */
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_Case';
-
-            IF OBJECT_ID('#OBS_CODED_PERTUSSIS_Case', 'U') IS NOT NULL
-                drop table #OBS_CODED_PERTUSSIS_Case;
-
-            SELECT public_health_case_uid,
-                   unique_cd      as cd,
-                   CASE WHEN unique_cd = 'PRT112' THEN 'BIRTH_WEIGHT_UNKNOWN'
-                   ELSE col_nm
-                   END AS col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.label,
-                   CASE WHEN unique_cd = 'PRT112' and numeric_response = -1.00000 THEN 'Yes'
-                   ELSE coded_response
-                   END as response
-            INTO #OBS_CODED_PERTUSSIS_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'code' AND unique_cd NOT IN ('PRT075', 'PRT076', 'PRT077', 'PRT087')) or unique_cd = 'PRT112'
-              AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_CODED_PERTUSSIS_Case;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_Case';
-
-            IF OBJECT_ID('#OBS_TXT_PERTUSSIS_Case', 'U') IS NOT NULL
-                drop table #OBS_TXT_PERTUSSIS_Case;
-
-            SELECT public_health_case_uid,
-                   unique_cd    as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   txt_response as response
-            INTO #OBS_TXT_PERTUSSIS_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt' and unique_cd != 'PRT078'
-                AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_TXT_PERTUSSIS_Case;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_Case';
-
-            IF OBJECT_ID('#OBS_DATE_PERTUSSIS_Case', 'U') IS NOT NULL
-                drop table #OBS_DATE_PERTUSSIS_Case;
-
-            select public_health_case_uid,
-                   unique_cd     as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   date_response as response
-            INTO #OBS_DATE_PERTUSSIS_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'from_time' and unique_cd != 'PRT088'
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_DATE_PERTUSSIS_Case;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_Case';
-
-            IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_Case', 'U') IS NOT NULL
-                drop table #OBS_NUMERIC_PERTUSSIS_Case;
-
-            select rom.public_health_case_uid,
-                   rom.unique_cd        as cd,
-                   rom.col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.numeric_response as response,
-                   CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
-                        WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
-                        WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
-                        ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
-                       END AS converted_column
-            INTO #OBS_NUMERIC_PERTUSSIS_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE rom.RDB_TABLE = @tgt_table_nm and rom.db_field = 'numeric_value_1' AND unique_cd NOT IN ('PRT074', 'PRT112')
-              and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_NUMERIC_PERTUSSIS_Case;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD';
-
-            IF OBJECT_ID('#OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
-                drop table #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            SELECT public_health_case_uid,
-                   unique_cd      as cd,
-                   col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.label,
-                   rom.branch_id,
-                   coded_response as response
-            INTO #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'code' AND unique_cd IN ('PRT075', 'PRT076', 'PRT077', 'PRT087')
-              AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD';
-
-            IF OBJECT_ID('#OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
-                drop table #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            SELECT public_health_case_uid,
-                   unique_cd    as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   rom.branch_id,
-                   txt_response as response
-            INTO #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt' and unique_cd  = 'PRT078'
-                AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD';
-
-            IF OBJECT_ID('#OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
-                drop table #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            select public_health_case_uid,
-                   unique_cd     as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   branch_id,
-                   date_response as response
-            INTO #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'from_time' and unique_cd = 'PRT088'
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD';
-
-            IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
-                drop table #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            select rom.public_health_case_uid,
-                   rom.unique_cd        as cd,
-                   rom.col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.branch_id,
-                   rom.numeric_response as response,
-                   CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
-                        WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
-                        WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
-                        ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
-                       END AS converted_column
-            INTO #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE rom.RDB_TABLE = @tgt_table_nm and rom.db_field = 'numeric_value_1' AND unique_cd = 'PRT074'
-              and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_TREATMENT_FIELD';
-
-            IF OBJECT_ID('#OBS_CODED_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
-                drop table #OBS_CODED_PERTUSSIS_TREATMENT_FIELD;
-
-            SELECT public_health_case_uid,
-                   unique_cd      as cd,
-                   col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.label,
-                   rom.branch_id,
-                   coded_response as response
-            INTO #OBS_CODED_PERTUSSIS_TREATMENT_FIELD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @prt_treatment_table_nm and db_field = 'code' 
-              AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_CODED_PERTUSSIS_TREATMENT_FIELD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_TREATMENT_FIELD';
-
-            IF OBJECT_ID('#OBS_TXT_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
-                drop table #OBS_TXT_PERTUSSIS_TREATMENT_FIELD;
-
-            SELECT public_health_case_uid,
-                   unique_cd    as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   rom.branch_id,
-                   txt_response as response
-            INTO #OBS_TXT_PERTUSSIS_TREATMENT_FIELD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @prt_treatment_table_nm and db_field = 'value_txt'
-                AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_TXT_PERTUSSIS_TREATMENT_FIELD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_TREATMENT_FIELD';
-
-            IF OBJECT_ID('#OBS_DATE_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
-                drop table #OBS_DATE_PERTUSSIS_TREATMENT_FIELD;
-
-            select public_health_case_uid,
-                   unique_cd     as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   branch_id,
-                   date_response as response
-            INTO #OBS_DATE_PERTUSSIS_TREATMENT_FIELD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @prt_treatment_table_nm and db_field = 'from_time' 
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_DATE_PERTUSSIS_TREATMENT_FIELD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD';
-
-            IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
-                drop table #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD;
-
-            select rom.public_health_case_uid,
-                   rom.unique_cd        as cd,
-                   rom.col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.branch_id,
-                   rom.numeric_response as response,
-                   CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
-                        WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
-                        WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
-                        ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
-                       END AS converted_column
-            INTO #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE rom.RDB_TABLE = @prt_treatment_table_nm and rom.db_field = 'numeric_value_1' 
-              and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OLD_TREATMENT_GRP_KEYS';
-
-            IF OBJECT_ID('#OLD_TREATMENT_GRP_KEYS', 'U') IS NOT NULL
-                drop table #OLD_TREATMENT_GRP_KEYS;
-
-            SELECT PERTUSSIS_TREATMENT_GRP_KEY
-            INTO #OLD_TREATMENT_GRP_KEYS
-            FROM dbo.Pertussis_Case prt WITH (nolock)
-            INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = prt.INVESTIGATION_KEY
-            WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OLD_TREATMENT_GRP_KEYS;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #TMP_TREATMENT_GRP';
-
-            IF OBJECT_ID('#TMP_TREATMENT_GRP', 'U') IS NOT NULL
-                drop table #TMP_TREATMENT_GRP;
-
-            SELECT DISTINCT public_health_case_uid,
-                            COALESCE(PERTUSSIS_TREATMENT_GRP_KEY, 1) AS PERTUSSIS_TREATMENT_GRP_KEY
-            INTO #TMP_TREATMENT_GRP
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.CASE_UID=rom.public_health_case_uid
-            LEFT JOIN dbo.Pertussis_Case prt WITH (nolock) ON prt.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            WHERE public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) AND RDB_table=@prt_treatment_table_nm;
-
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_TREATMENT_GRP;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #TREATMENT_IDS';
-
-            IF OBJECT_ID('#TREATMENT_IDS', 'U') IS NOT NULL
-                drop table #TREATMENT_IDS;
-
-            WITH id_cte AS (
-                SELECT public_health_case_uid, cd
-                FROM #OBS_CODED_PERTUSSIS_TREATMENT_FIELD
-                WHERE public_health_case_uid IS NOT NULL
-                UNION ALL
-                SELECT public_health_case_uid, cd
-                FROM #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD
-                WHERE public_health_case_uid IS NOT NULL
-                UNION ALL
-                SELECT public_health_case_uid, cd
-                FROM #OBS_DATE_PERTUSSIS_TREATMENT_FIELD
-                WHERE public_health_case_uid IS NOT NULL
-                UNION ALL
-                SELECT public_health_case_uid, cd
-                FROM #OBS_TXT_PERTUSSIS_TREATMENT_FIELD
-                WHERE public_health_case_uid IS NOT NULL
-            ),
-                 ordered_selection AS
-                     (SELECT public_health_case_uid,
-                             cd,
-                             ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY cd) as row_num
-                      FROM id_cte)
-
-            -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
-            SELECT DISTINCT ids.public_health_case_uid, ids.row_num
-            INTO #TREATMENT_IDS
-            FROM ordered_selection ids;
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TREATMENT_IDS;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_Case';
+
+        IF OBJECT_ID('#OBS_CODED_PERTUSSIS_Case', 'U') IS NOT NULL
+            drop table #OBS_CODED_PERTUSSIS_Case;
+
+        SELECT public_health_case_uid,
+               unique_cd      as cd,
+               CASE WHEN unique_cd = 'PRT112' THEN 'BIRTH_WEIGHT_UNKNOWN'
+               ELSE col_nm
+               END AS col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.label,
+               CASE WHEN unique_cd = 'PRT112' and numeric_response = -1.00000 THEN 'Yes'
+               ELSE coded_response
+               END as response
+        INTO #OBS_CODED_PERTUSSIS_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'code' AND unique_cd NOT IN ('PRT075', 'PRT076', 'PRT077', 'PRT087')) or unique_cd = 'PRT112'
+          AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_CODED_PERTUSSIS_Case;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_Case';
+
+        IF OBJECT_ID('#OBS_TXT_PERTUSSIS_Case', 'U') IS NOT NULL
+            drop table #OBS_TXT_PERTUSSIS_Case;
+
+        SELECT public_health_case_uid,
+               unique_cd    as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               txt_response as response
+        INTO #OBS_TXT_PERTUSSIS_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt' and unique_cd != 'PRT078'
+            AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_TXT_PERTUSSIS_Case;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_Case';
+
+        IF OBJECT_ID('#OBS_DATE_PERTUSSIS_Case', 'U') IS NOT NULL
+            drop table #OBS_DATE_PERTUSSIS_Case;
+
+        select public_health_case_uid,
+               unique_cd     as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               date_response as response
+        INTO #OBS_DATE_PERTUSSIS_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @tgt_table_nm and db_field = 'from_time' and unique_cd != 'PRT088'
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_DATE_PERTUSSIS_Case;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_Case';
+
+        IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_Case', 'U') IS NOT NULL
+            drop table #OBS_NUMERIC_PERTUSSIS_Case;
+
+        select rom.public_health_case_uid,
+               rom.unique_cd        as cd,
+               rom.col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.numeric_response as response,
+               CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
+                    WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
+                    WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
+                    ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
+                   END AS converted_column
+        INTO #OBS_NUMERIC_PERTUSSIS_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE rom.RDB_TABLE = @tgt_table_nm and rom.db_field = 'numeric_value_1' AND unique_cd NOT IN ('PRT074', 'PRT112')
+          and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_NUMERIC_PERTUSSIS_Case;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD';
+
+        IF OBJECT_ID('#OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+            drop table #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        SELECT public_health_case_uid,
+               unique_cd      as cd,
+               col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.label,
+               rom.branch_id,
+               rom.root_observation_uid as root_uid,
+               coded_response as response
+        INTO #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @tgt_table_nm and db_field = 'code' AND unique_cd IN ('PRT075', 'PRT076', 'PRT077', 'PRT087')
+          AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD';
+
+        IF OBJECT_ID('#OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+            drop table #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        SELECT public_health_case_uid,
+               unique_cd    as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               rom.branch_id,
+               rom.root_observation_uid as root_uid,
+               txt_response as response
+        INTO #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt' and unique_cd  = 'PRT078'
+            AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD';
+
+        IF OBJECT_ID('#OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+            drop table #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        select public_health_case_uid,
+               unique_cd     as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               branch_id,
+               rom.root_observation_uid as root_uid,
+               date_response as response
+        INTO #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @tgt_table_nm and db_field = 'from_time' and unique_cd = 'PRT088'
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD';
+
+        IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+            drop table #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        select rom.public_health_case_uid,
+               rom.unique_cd        as cd,
+               rom.col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.branch_id,
+               rom.root_observation_uid as root_uid,
+               rom.numeric_response as response,
+               CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
+                    WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
+                    WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
+                    ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
+                   END AS converted_column
+        INTO #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE rom.RDB_TABLE = @tgt_table_nm and rom.db_field = 'numeric_value_1' AND unique_cd = 'PRT074'
+          and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_TREATMENT_FIELD';
+
+        IF OBJECT_ID('#OBS_CODED_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+            drop table #OBS_CODED_PERTUSSIS_TREATMENT_FIELD;
+
+        SELECT public_health_case_uid,
+               unique_cd      as cd,
+               col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.label,
+               rom.branch_id,
+               rom.root_observation_uid as root_uid,
+               coded_response as response
+        INTO #OBS_CODED_PERTUSSIS_TREATMENT_FIELD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @prt_treatment_table_nm and db_field = 'code'
+          AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_CODED_PERTUSSIS_TREATMENT_FIELD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_TREATMENT_FIELD';
+
+        IF OBJECT_ID('#OBS_TXT_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+            drop table #OBS_TXT_PERTUSSIS_TREATMENT_FIELD;
+
+        SELECT public_health_case_uid,
+               unique_cd    as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               rom.branch_id,
+               rom.root_observation_uid as root_uid,
+               txt_response as response
+        INTO #OBS_TXT_PERTUSSIS_TREATMENT_FIELD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @prt_treatment_table_nm and db_field = 'value_txt'
+            AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_TXT_PERTUSSIS_TREATMENT_FIELD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_TREATMENT_FIELD';
+
+        IF OBJECT_ID('#OBS_DATE_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+            drop table #OBS_DATE_PERTUSSIS_TREATMENT_FIELD;
+
+        select public_health_case_uid,
+               unique_cd     as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               branch_id,
+               root_observation_uid as root_uid,
+               date_response as response
+        INTO #OBS_DATE_PERTUSSIS_TREATMENT_FIELD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @prt_treatment_table_nm and db_field = 'from_time'
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_DATE_PERTUSSIS_TREATMENT_FIELD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD';
+
+        IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+            drop table #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD;
+
+        select rom.public_health_case_uid,
+               rom.unique_cd        as cd,
+               rom.col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.branch_id,
+               rom.root_observation_uid as root_uid,
+               rom.numeric_response as response,
+               CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
+                    WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
+                    WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
+                    ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
+                   END AS converted_column
+        INTO #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE rom.RDB_TABLE = @prt_treatment_table_nm and rom.db_field = 'numeric_value_1'
+          and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OLD_TREATMENT_GRP_KEYS';
+
+        IF OBJECT_ID('#OLD_TREATMENT_GRP_KEYS', 'U') IS NOT NULL
+            drop table #OLD_TREATMENT_GRP_KEYS;
+
+        SELECT PERTUSSIS_TREATMENT_GRP_KEY
+        INTO #OLD_TREATMENT_GRP_KEYS
+        FROM dbo.Pertussis_Case prt WITH (nolock)
+        INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = prt.INVESTIGATION_KEY
+        WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OLD_TREATMENT_GRP_KEYS;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #TMP_TREATMENT_GRP';
+
+        IF OBJECT_ID('#TMP_TREATMENT_GRP', 'U') IS NOT NULL
+            drop table #TMP_TREATMENT_GRP;
+
+        SELECT DISTINCT public_health_case_uid,
+                        COALESCE(PERTUSSIS_TREATMENT_GRP_KEY, 1) AS PERTUSSIS_TREATMENT_GRP_KEY
+        INTO #TMP_TREATMENT_GRP
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.CASE_UID=rom.public_health_case_uid
+        LEFT JOIN dbo.Pertussis_Case prt WITH (nolock) ON prt.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+        WHERE public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) AND RDB_table=@prt_treatment_table_nm;
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_TREATMENT_GRP;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #TREATMENT_IDS';
+
+        IF OBJECT_ID('#TREATMENT_IDS', 'U') IS NOT NULL
+            drop table #TREATMENT_IDS;
+
+        WITH id_cte AS (
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_CODED_PERTUSSIS_TREATMENT_FIELD
+            WHERE public_health_case_uid IS NOT NULL
+            UNION ALL
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD
+            WHERE public_health_case_uid IS NOT NULL
+            UNION ALL
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_DATE_PERTUSSIS_TREATMENT_FIELD
+            WHERE public_health_case_uid IS NOT NULL
+            UNION ALL
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_TXT_PERTUSSIS_TREATMENT_FIELD
+            WHERE public_health_case_uid IS NOT NULL
+        )
+        -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
+        SELECT DISTINCT ids.public_health_case_uid, ids.root_uid as row_num
+        INTO #TREATMENT_IDS
+        FROM id_cte ids;
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TREATMENT_IDS;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -685,29 +633,25 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'UPDATING #TMP_TREATMENT_GRP';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATING #TMP_TREATMENT_GRP';
+        UPDATE #TMP_TREATMENT_GRP
+        SET #TMP_TREATMENT_GRP.PERTUSSIS_TREATMENT_GRP_KEY = trt.PERTUSSIS_TREATMENT_GRP_KEY
+        FROM dbo.nrt_pertussis_treatment_group_key trt
+        WHERE trt.public_health_case_uid = #TMP_TREATMENT_GRP.public_health_case_uid;
 
-            UPDATE #TMP_TREATMENT_GRP
-            SET #TMP_TREATMENT_GRP.PERTUSSIS_TREATMENT_GRP_KEY = trt.PERTUSSIS_TREATMENT_GRP_KEY
-            FROM dbo.nrt_pertussis_treatment_group_key trt
-            WHERE trt.public_health_case_uid = #TMP_TREATMENT_GRP.public_health_case_uid;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_TREATMENT_GRP;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_TREATMENT_GRP;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -742,130 +686,112 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OLD_SRC_GRP_KEYS';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OLD_SRC_GRP_KEYS';
+        IF OBJECT_ID('#OLD_SRC_GRP_KEYS', 'U') IS NOT NULL
+            drop table #OLD_SRC_GRP_KEYS;
 
-            IF OBJECT_ID('#OLD_SRC_GRP_KEYS', 'U') IS NOT NULL
-                drop table #OLD_SRC_GRP_KEYS;
+        SELECT PERTUSSIS_SUSPECT_SRC_GRP_KEY
+        INTO #OLD_SRC_GRP_KEYS
+        FROM dbo.Pertussis_Case prt WITH (nolock)
+        INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = prt.INVESTIGATION_KEY
+        WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
 
-            SELECT PERTUSSIS_SUSPECT_SRC_GRP_KEY
-            INTO #OLD_SRC_GRP_KEYS
-            FROM dbo.Pertussis_Case prt WITH (nolock)
-            INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = prt.INVESTIGATION_KEY
-            WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OLD_SRC_GRP_KEYS;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OLD_SRC_GRP_KEYS;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #TMP_SRC_GRP';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #TMP_SRC_GRP';
+        IF OBJECT_ID('#TMP_SRC_GRP', 'U') IS NOT NULL
+            drop table #TMP_SRC_GRP;
 
-            IF OBJECT_ID('#TMP_SRC_GRP', 'U') IS NOT NULL
-                drop table #TMP_SRC_GRP;
+        SELECT DISTINCT public_health_case_uid,
+                        COALESCE(PERTUSSIS_SUSPECT_SRC_GRP_KEY, 1) AS PERTUSSIS_SUSPECT_SRC_GRP_KEY
+        INTO #TMP_SRC_GRP
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.CASE_UID=rom.public_health_case_uid
+        LEFT JOIN dbo.Pertussis_Case prt WITH (nolock) ON prt.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+        WHERE public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+        AND unique_cd IN (
+            --coded
+            'PRT075',
+            'PRT076',
+            'PRT077',
+            'PRT087',
+            --numeric
+            'PRT074',
+            --date
+            'PRT088',
+            --txt
+            'PRT078'
+        );
 
-            SELECT DISTINCT public_health_case_uid,
-                            COALESCE(PERTUSSIS_SUSPECT_SRC_GRP_KEY, 1) AS PERTUSSIS_SUSPECT_SRC_GRP_KEY
-            INTO #TMP_SRC_GRP
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.CASE_UID=rom.public_health_case_uid
-            LEFT JOIN dbo.Pertussis_Case prt WITH (nolock) ON prt.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            WHERE public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-            AND unique_cd IN (
-                --coded
-                'PRT075', 
-                'PRT076',	
-                'PRT077',	
-                'PRT087',
-                --numeric
-                'PRT074',
-                --date
-                'PRT088',
-                --txt
-                'PRT078'	
-            );
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_SRC_GRP;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_SRC_GRP;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #SOURCE_IDS';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #SOURCE_IDS';
+        IF OBJECT_ID('#SOURCE_IDS', 'U') IS NOT NULL
+            drop table #SOURCE_IDS;
 
-            IF OBJECT_ID('#SOURCE_IDS', 'U') IS NOT NULL
-                drop table #SOURCE_IDS;
+        WITH id_cte AS (
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD
+            WHERE public_health_case_uid IS NOT NULL
+            UNION ALL
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD
+            WHERE public_health_case_uid IS NOT NULL
+            UNION ALL
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD
+            WHERE public_health_case_uid IS NOT NULL
+            UNION ALL
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD
+            WHERE public_health_case_uid IS NOT NULL
+        )
+        -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
+        SELECT DISTINCT ids.public_health_case_uid, ids.root_uid as row_num
+        INTO #SOURCE_IDS
+        FROM id_cte ids;
 
-            WITH id_cte AS (
-                SELECT public_health_case_uid, cd
-                FROM #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD
-                WHERE public_health_case_uid IS NOT NULL
-                UNION ALL
-                SELECT public_health_case_uid, cd
-                FROM #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD
-                WHERE public_health_case_uid IS NOT NULL
-                UNION ALL
-                SELECT public_health_case_uid, cd
-                FROM #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD
-                WHERE public_health_case_uid IS NOT NULL
-                UNION ALL
-                SELECT public_health_case_uid, cd
-                FROM #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD
-                WHERE public_health_case_uid IS NOT NULL
-            ),
-                 ordered_selection AS
-                     (SELECT public_health_case_uid,
-                             cd,
-                             ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY cd) as row_num
-                      FROM id_cte)
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #SOURCE_IDS;
 
-            -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
-            SELECT DISTINCT ids.public_health_case_uid, ids.row_num
-            INTO #SOURCE_IDS
-            FROM ordered_selection ids;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #SOURCE_IDS;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -914,29 +840,25 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'UPDATING #TMP_SRC_GRP';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATING #TMP_SRC_GRP';
+        UPDATE #TMP_SRC_GRP
+        SET #TMP_SRC_GRP.PERTUSSIS_SUSPECT_SRC_GRP_KEY = prt.PERTUSSIS_SUSPECT_SRC_GRP_KEY
+        FROM dbo.nrt_pertussis_source_group_key prt
+        WHERE prt.public_health_case_uid = #TMP_SRC_GRP.public_health_case_uid;
 
-            UPDATE #TMP_SRC_GRP
-            SET #TMP_SRC_GRP.PERTUSSIS_SUSPECT_SRC_GRP_KEY = prt.PERTUSSIS_SUSPECT_SRC_GRP_KEY
-            FROM dbo.nrt_pertussis_source_group_key prt
-            WHERE prt.public_health_case_uid = #TMP_SRC_GRP.public_health_case_uid;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_SRC_GRP;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_SRC_GRP;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -971,50 +893,46 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION;
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #KEY_ATTR_INIT';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #KEY_ATTR_INIT';
+        IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
+            drop table #KEY_ATTR_INIT;
 
-            IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
-                drop table #KEY_ATTR_INIT;
+        SELECT
+            map.public_health_case_uid,
+            INVESTIGATOR_KEY,
+            PHYSICIAN_KEY,
+            PATIENT_KEY,
+            REPORTER_KEY,
+            DAYCARE_FACILITY_KEY,
+            INV_ASSIGNED_DT_KEY,
+            COALESCE(srg.PERTUSSIS_SUSPECT_SRC_GRP_KEY, 1) AS PERTUSSIS_SUSPECT_SRC_GRP_KEY,
+            COALESCE(trg.PERTUSSIS_TREATMENT_GRP_KEY, 1) AS PERTUSSIS_TREATMENT_GRP_KEY,
+            INVESTIGATION_KEY,
+            ADT_HSPTL_KEY,
+            RPT_SRC_ORG_KEY,
+            CONDITION_KEY,
+            LDF_GROUP_KEY,
+            GEOCODING_LOCATION_KEY
+        INTO #KEY_ATTR_INIT
+        FROM dbo.v_nrt_inv_keys_attrs_mapping map
+        LEFT JOIN #TMP_SRC_GRP srg ON srg.public_health_case_uid=map.public_health_case_uid
+        LEFT JOIN #TMP_TREATMENT_GRP trg ON trg.public_health_case_uid=map.public_health_case_uid
+        WHERE map.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+          AND investigation_form_cd like @inv_form_cd;
 
-            SELECT
-                map.public_health_case_uid,
-                INVESTIGATOR_KEY,
-                PHYSICIAN_KEY,
-                PATIENT_KEY,
-                REPORTER_KEY,
-                DAYCARE_FACILITY_KEY,
-                INV_ASSIGNED_DT_KEY,
-                COALESCE(srg.PERTUSSIS_SUSPECT_SRC_GRP_KEY, 1) AS PERTUSSIS_SUSPECT_SRC_GRP_KEY,
-                COALESCE(trg.PERTUSSIS_TREATMENT_GRP_KEY, 1) AS PERTUSSIS_TREATMENT_GRP_KEY,
-                INVESTIGATION_KEY,
-                ADT_HSPTL_KEY,
-                RPT_SRC_ORG_KEY,
-                CONDITION_KEY,
-                LDF_GROUP_KEY,
-                GEOCODING_LOCATION_KEY
-            INTO #KEY_ATTR_INIT
-            FROM dbo.v_nrt_inv_keys_attrs_mapping map
-            LEFT JOIN #TMP_SRC_GRP srg ON srg.public_health_case_uid=map.public_health_case_uid
-            LEFT JOIN #TMP_TREATMENT_GRP trg ON trg.public_health_case_uid=map.public_health_case_uid
-            WHERE map.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-              AND investigation_form_cd like @inv_form_cd;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #KEY_ATTR_INIT;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #KEY_ATTR_INIT;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -1413,7 +1331,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_CODED_PERTUSSIS_TREATMENT_FIELD
                             WHERE public_health_case_uid IS NOT NULL
@@ -1430,7 +1348,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_TXT_PERTUSSIS_TREATMENT_FIELD
                             WHERE public_health_case_uid IS NOT NULL
@@ -1447,7 +1365,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_DATE_PERTUSSIS_TREATMENT_FIELD
                             WHERE public_health_case_uid IS NOT NULL
@@ -1464,7 +1382,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD
                             WHERE public_health_case_uid IS NOT NULL
@@ -1570,7 +1488,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD
                             WHERE public_health_case_uid IS NOT NULL
@@ -1587,7 +1505,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD
                             WHERE public_health_case_uid IS NOT NULL
@@ -1604,7 +1522,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD
                             WHERE public_health_case_uid IS NOT NULL
@@ -1621,7 +1539,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD
                             WHERE public_health_case_uid IS NOT NULL
