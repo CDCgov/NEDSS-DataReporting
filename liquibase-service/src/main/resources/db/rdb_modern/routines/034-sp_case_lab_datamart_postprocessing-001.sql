@@ -1,5 +1,5 @@
 CREATE OR ALTER PROCEDURE [dbo].[sp_case_lab_datamart_postprocessing] @phc_id nvarchar(max),
-                                                                        @debug bit = 'false'
+                                                                          @debug bit = 'false'
 AS
 BEGIN
     DECLARE @batch_id BIGINT;
@@ -175,7 +175,7 @@ BEGIN
                                                                                      FROM
                                                                                          STRING_SPLIT(@phc_id,
                                                                                                       ',')))
-                                   group by PATIENT_LOCAL_ID,
+                        group by PATIENT_LOCAL_ID,
                                             patient_key); */
 
         if @debug = 'true'
@@ -399,9 +399,7 @@ BEGIN
         VALUES (@batch_id, 'CASE_LAB_DATAMART', 'CASE_LAB_DATAMART', 'START', @PROC_STEP_NO, @PROC_STEP_NAME,
                 @ROWCOUNT_NO);
 
-        -------------------------------------------------------------------------------------------------------------------------------------------
-
--- Create session table for condition info
+-------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND';
@@ -409,93 +407,24 @@ BEGIN
         SELECT GPIPR.*,
                C.CONDITION_SHORT_NM,
                C.PROGRAM_AREA_DESC,
-               cast(null as datetime)     as CONFIRMATION_DT,
+               minCMG.mCONFIRMATION_DT     as CONFIRMATION_DT,
                cast(null as datetime)     as EVENT_DATE,
                cast(null as varchar(200)) as EVENT_DATE_TYPE
         INTO #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND
         FROM #TMP_CLDM_GEN_PATCOMPL_INV_INVESTIGATOR AS GPIPR with (nolock)
                  LEFT JOIN dbo.v_condition_dim AS C with (nolock)
-                           ON GPIPR.CONDITION_KEY = C.CONDITION_KEY;
+                           ON GPIPR.CONDITION_KEY = C.CONDITION_KEY
+                 LEFT JOIN
+             (SELECT
+                  cmg.INVESTIGATION_KEY,
+                  min(cmg.CONFIRMATION_DT) as mCONFIRMATION_DT
+              FROM dbo.CONFIRMATION_METHOD_GROUP cmg with (nolock)
+              GROUP BY cmg.INVESTIGATION_KEY
+             ) AS minCMG ON minCMG.INVESTIGATION_KEY = GPIPR.INVESTIGATION_KEY;
 
         if @debug = 'true'
             select '#TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND', * from #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND;
 
--- Update confirmation date
-        update #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND
-        set CONFIRMATION_DT = (SELECT min(CMG.[CONFIRMATION_DT])
-                               FROM dbo.[CONFIRMATION_METHOD_GROUP] CMG with (nolock)
-                               WHERE CMG.[INVESTIGATION_KEY] =
-                                     #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND.investigation_key);
-        -------------------------------------------------------------------------------------------------------------------------------------------
-
-
--- Declare the dynamic SQL variable
-        DECLARE @Update_sql NVARCHAR(MAX);
-
--- Step for Event Date Updates
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'UPDATE EVENT DATES';
-
--- Build the dynamic SQL
-        SET @Update_sql = N'
-			-- First Priority: Illness Onset Date
-			UPDATE #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND
-			SET EVENT_DATE = ILLNESS_ONSET_DT,
-			    EVENT_DATE_TYPE = ''Illness Onset Date''
-			WHERE ILLNESS_ONSET_DT is not null
-			AND EVENT_DATE is null;
-
-			-- Second Priority: Diagnosis Date
-			UPDATE #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND
-			SET EVENT_DATE = DIAGNOSIS_DT,
-			    EVENT_DATE_TYPE = ''Date of Diagnosis''
-			WHERE DIAGNOSIS_DT is not null
-			AND EVENT_DATE is null;
-
-			-- Third Priority: Earliest of remaining dates
-			UPDATE t
-			SET
-			    EVENT_DATE = (
-			        SELECT MIN(dt)
-			        FROM (VALUES
-			            (t.EARLIEST_RPT_TO_STATE_DT),
-			            (t.EARLIEST_RPT_TO_CNTY_DT),
-			            (t.INV_RPT_DT),
-			            (t.INV_START_DT),
-			            (t.HSPTL_ADMISSION_DT)
-			        ) AS Dates(dt)
-			        WHERE dt IS NOT NULL
-			    ),
-			    EVENT_DATE_TYPE = CASE
-			        WHEN t.EARLIEST_RPT_TO_STATE_DT IS NOT NULL
-			            AND t.EARLIEST_RPT_TO_STATE_DT <= COALESCE(t.EARLIEST_RPT_TO_CNTY_DT, ''9999-12-31'')
-			            AND t.EARLIEST_RPT_TO_STATE_DT <= COALESCE(t.INV_RPT_DT, ''9999-12-31'')
-			            AND t.EARLIEST_RPT_TO_STATE_DT <= COALESCE(t.INV_START_DT, ''9999-12-31'')
-			            AND t.EARLIEST_RPT_TO_STATE_DT <= COALESCE(t.HSPTL_ADMISSION_DT, ''9999-12-31'')
-			            THEN ''Earliest date received by the state health department''
-			        WHEN t.EARLIEST_RPT_TO_CNTY_DT IS NOT NULL
-			            AND t.EARLIEST_RPT_TO_CNTY_DT <= COALESCE(t.INV_RPT_DT, ''9999-12-31'')
-			            AND t.EARLIEST_RPT_TO_CNTY_DT <= COALESCE(t.INV_START_DT, ''9999-12-31'')
-			            AND t.EARLIEST_RPT_TO_CNTY_DT <= COALESCE(t.HSPTL_ADMISSION_DT, ''9999-12-31'')
-			            THEN ''Earliest date received by the county/local health department''
-			        WHEN t.INV_RPT_DT IS NOT NULL
-			            AND t.INV_RPT_DT <= COALESCE(t.INV_START_DT, ''9999-12-31'')
-			            AND t.INV_RPT_DT <= COALESCE(t.HSPTL_ADMISSION_DT, ''9999-12-31'')
-			            THEN ''Date of Report''
-			        WHEN t.INV_START_DT IS NOT NULL
-			            AND t.INV_START_DT <= COALESCE(t.HSPTL_ADMISSION_DT, ''9999-12-31'')
-			            THEN ''Investigation Start Date''
-			        WHEN t.HSPTL_ADMISSION_DT IS NOT NULL
-			            THEN ''Hospitalization Admit Date''
-			    END
-			FROM #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND t
-			WHERE EVENT_DATE is null;';
-
-        if @debug = 'true' select @Proc_Step_Name as step, @Update_sql as query;
-
--- Execute the dynamic SQL
-        EXEC sp_executesql @Update_sql;
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name],
@@ -541,8 +470,72 @@ BEGIN
                         CASE_OID                   AS PROGRAM_JURISDICTION_OID,
                         INV_ADD_TIME               AS PHC_ADD_TIME,
                         PHC_LAST_CHG_TIME,
-                        EVENT_DATE,
-                        EVENT_DATE_TYPE
+                        CASE
+                            WHEN ILLNESS_ONSET_DT IS NOT NULL THEN ILLNESS_ONSET_DT
+                            WHEN DIAGNOSIS_DT IS NOT NULL THEN DIAGNOSIS_DT
+                            WHEN COALESCE(
+                                    EARLIEST_RPT_TO_CNTY_DT,
+                                    EARLIEST_RPT_TO_STATE_DT,
+                                    INV_RPT_DT,
+                                    INV_START_DT,
+                                    CONFIRMATION_DT,
+                                    HSPTL_ADMISSION_DT,
+                                    HSPTL_DISCHARGE_DT
+                                 ) IS NOT NULL THEN (
+                                SELECT TOP 1 dt FROM (
+                                                         SELECT COALESCE(EARLIEST_RPT_TO_CNTY_DT, '9999-12-31') AS dt
+                                                         UNION ALL
+                                                         SELECT COALESCE(EARLIEST_RPT_TO_STATE_DT, '9999-12-31')
+                                                         UNION ALL
+                                                         SELECT COALESCE(INV_RPT_DT, '9999-12-31')
+                                                         UNION ALL
+                                                         SELECT COALESCE(INV_START_DT, '9999-12-31')
+                                                         UNION ALL
+                                                         SELECT COALESCE(CONFIRMATION_DT, '9999-12-31')
+                                                         UNION ALL
+                                                         SELECT COALESCE(HSPTL_ADMISSION_DT, '9999-12-31')
+                                                         UNION ALL
+                                                         SELECT COALESCE(HSPTL_DISCHARGE_DT, '9999-12-31')
+                                                     ) AS dtlist ORDER BY dt ASC
+                            )
+                            ELSE NULL
+                            END AS EVENT_DATE,
+                        CASE
+                            WHEN ILLNESS_ONSET_DT IS NOT NULL THEN 'Illness Onset Date'
+                            WHEN DIAGNOSIS_DT IS NOT NULL THEN 'Date of Diagnosis'
+                            WHEN COALESCE(
+                                    EARLIEST_RPT_TO_CNTY_DT,
+                                    EARLIEST_RPT_TO_STATE_DT,
+                                    INV_RPT_DT,
+                                    INV_START_DT,
+                                    HSPTL_ADMISSION_DT,
+                                    HSPTL_DISCHARGE_DT
+                                 ) IS NOT NULL THEN (
+                                SELECT TOP 1 dt_type FROM (
+                                                              SELECT COALESCE(EARLIEST_RPT_TO_CNTY_DT, '9999-12-31') AS dt,
+                                                                     'Earliest date received by the county/local health department' AS dt_type
+                                                              UNION ALL
+                                                              SELECT COALESCE(EARLIEST_RPT_TO_STATE_DT, '9999-12-31'),
+                                                                     'Earliest date received by the state health department'
+                                                              UNION ALL
+                                                              SELECT COALESCE(INV_RPT_DT, '9999-12-31'),
+                                                                     'Date of Report'
+                                                              UNION ALL
+                                                              SELECT COALESCE(INV_START_DT, '9999-12-31'),
+                                                                     'Investigation Start Date'
+                                                              UNION ALL
+                                                              SELECT COALESCE(CONFIRMATION_DT, '9999-12-31'),
+                                                                     'Confirmation Date'
+                                                              UNION ALL
+                                                              SELECT COALESCE(HSPTL_ADMISSION_DT, '9999-12-31'),
+                                                                     'Hospitalization Admit Date'
+                                                              UNION ALL
+                                                              SELECT COALESCE(HSPTL_DISCHARGE_DT, '9999-12-31'),
+                                                                     'Hospitalization Discharge Date'
+                                                          ) AS dtlist ORDER BY dt ASC
+                            )
+                            ELSE NULL
+                            END AS EVENT_DATE_TYPE
         INTO #TMP_CLDM_CASE_LAB_DATAMART
         FROM #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND with (nolock);
 
