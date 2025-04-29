@@ -148,7 +148,7 @@ public class InvestigationService {
         } else if (topic.equals(contactTopic) && contactRecordEnable) {
             processContact(message);
         } else if (topic.equals(vaccinationTopic)) {
-            processVaccination(message);
+            processVaccination(message, true, "");
         } else if (topic.equals(treatmentTopic) && treatmentEnable) {
             processTreatment(message, true, "");
         } else if (topic.equals(actRelationshipTopic) && message != null) {
@@ -213,6 +213,10 @@ public class InvestigationService {
             }
 
             logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
+
+            if (typeCd.equals("1180")) {
+                processVaccination(value, false, sourceActUid);
+            }
             if ((typeCd.equals("TreatmentToPHC") || typeCd.equals("TreatmentToMorb")) && treatmentEnable) {
                 processTreatment(value, false, sourceActUid);
             }
@@ -285,12 +289,17 @@ public class InvestigationService {
         }
     }
 
-    private void processVaccination(String value) {
+    private void processVaccination(String value, boolean isFromVaccinationTopic, String actRelationshipSourceActUid) {
         String vaccinationUid = "";
+        String topic = (isFromVaccinationTopic) ? vaccinationTopic : actRelationshipTopic;
         try {
-            vaccinationUid = extractUid(value, "intervention_uid");
 
-            logger.info(topicDebugLog, "Vaccination", vaccinationUid, vaccinationTopic);
+            if(isFromVaccinationTopic) {
+                vaccinationUid = extractUid(value, "intervention_uid");
+            } else {
+                vaccinationUid = actRelationshipSourceActUid;
+            }
+            logger.info(topicDebugLog, "Vaccination", vaccinationUid, topic);
             Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
             if(vacData.isPresent()) {
                 Vaccination vaccination = vacData.get();
