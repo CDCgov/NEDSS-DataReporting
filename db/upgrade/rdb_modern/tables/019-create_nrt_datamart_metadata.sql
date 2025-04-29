@@ -1,12 +1,12 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.nrt_datamart_metadata
-            (
-                condition_cd       varchar(20) NOT NULL,
-                condition_desc_txt varchar(300) NULL,
-                Datamart           varchar(18) NOT NULL,
-                Stored_Procedure   varchar(36) NOT NULL
-            );
+        (
+            condition_cd       varchar(20) NOT NULL,
+            condition_desc_txt varchar(300) NULL,
+            Datamart           varchar(18) NOT NULL,
+            Stored_Procedure   varchar(36) NOT NULL
+        );
     END;
 
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xtype = 'U')
@@ -30,7 +30,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                          , '10103'
                          , '10105'
                          , '50248'
-                          )
+                         )
                     ) hep_codes
                 WHERE NOT EXISTS
                           (SELECT 1
@@ -57,7 +57,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                                                                               and port_req_ind_cd ='F')
                              AND cc.prog_area_cd IN ('HIV', 'STD'))
                         OR (cc.prog_area_cd = 'HIV')
-                        AND (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE '%PG_%')
+                         AND (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE '%PG_%')
                     ) std_hiv_codes
                 WHERE NOT EXISTS
                           (SELECT 1
@@ -70,7 +70,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = object_id('nrt_datamart_metadata') AND name='Stored_Procedure' AND max_length=36)
             BEGIN
                 ALTER TABLE dbo.nrt_datamart_metadata
-                ALTER COLUMN Stored_Procedure VARCHAR(200)
+                    ALTER COLUMN Stored_Procedure VARCHAR(200)
             END
 
         /*CNDE-2046: Generic_Case Datamart condition code addition script.*/
@@ -179,10 +179,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         /*CNDE-2129: Separate Hepatitis Datamart condition code addition script.*/
         --fix to remove incorrectly mapped
         IF EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Datamart'
-            and condition_cd in ( '999999','10481', '10102') )
-        BEGIN
-            DELETE FROM dbo.nrt_datamart_metadata where Datamart = 'Hepatitis_Datamart' and condition_cd in ( '999999','10481', '10102') ;
-        END
+                                                                 and condition_cd in ( '999999','10481', '10102') )
+            BEGIN
+                DELETE FROM dbo.nrt_datamart_metadata where Datamart = 'Hepatitis_Datamart' and condition_cd in ( '999999','10481', '10102') ;
+            END
         --adding the legacy Hep cases
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Case')
             BEGIN
@@ -220,8 +220,8 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            FROM dbo.nrt_datamart_metadata ndm
                            WHERE ndm.condition_cd = per_codes.condition_cd);
             END;
-        --CNDE-2506: Adding missing Syphilis, congenital code if Std_Hiv_Datamart has already been registered
-        -- baseline STD condition is fulfilled.
+        /*CNDE-2506: Adding missing Syphilis, congenital code if Std_Hiv_Datamart has already been registered
+          baseline STD condition is fulfilled.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Std_Hiv_Datamart' and ndm.condition_cd = 10316)
             BEGIN
                 INSERT INTO dbo.nrt_datamart_metadata
