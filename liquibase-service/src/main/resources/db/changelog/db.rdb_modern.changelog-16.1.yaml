@@ -2545,7 +2545,6 @@ databaseChangeLog:
         - sqlFile:
             path: 305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql
             splitStatements: false      
-            splitStatements: false
   - changeSet:
       id: 830
       author: liquibase
@@ -2553,5 +2552,21 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 310-sp_covid_case_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 835
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 244-create_covid_contact_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 840
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 315-sp_covid_contact_datamart_postprocessing-001.sql
             splitStatements: false
     
