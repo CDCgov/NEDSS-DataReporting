@@ -7,8 +7,6 @@ BEGIN
         DECLARE @proc_step_no float = 0;
         DECLARE @proc_step_name varchar(200) = '';
         DECLARE @batch_id bigint;
-        DECLARE @create_dttm datetime2(7) = current_timestamp;
-        DECLARE @update_dttm datetime2(7) = current_timestamp;
         DECLARE @dataflow_name varchar(200) = 'covid_contact_datamart_postprocessing';
         DECLARE @package_name varchar(200) = 'covid_contact_datamart_postprocessing';
         DECLARE @conditionCd VARCHAR(200);
@@ -19,8 +17,6 @@ BEGIN
         -- Initialize logging
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
-                                         ,[create_dttm]
-                                         ,[update_dttm]
                                          ,[Dataflow_Name]
                                          ,[package_Name]
                                          ,[Status_Type]
@@ -31,8 +27,6 @@ BEGIN
         )
         VALUES (
                  @batch_id
-               ,@create_dttm
-               ,@update_dttm
                ,@dataflow_name
                ,@package_name
                ,'START'
@@ -46,9 +40,6 @@ BEGIN
         SET @proc_step_no = 1;
 
         /* Create temporary table for COVID contact data */
-
-        BEGIN TRANSACTION;
-
         IF OBJECT_ID('tempdb..#COVID_CONTACT_DATAMART', 'U') IS NOT NULL
             DROP TABLE #COVID_CONTACT_DATAMART;
 
@@ -340,9 +331,7 @@ BEGIN
           AND (@id_list IS NULL OR con.CONTACT_UID IN (
             SELECT TRY_CAST(value AS BIGINT)
             FROM STRING_SPLIT(@id_list, ',')
-            WHERE ISNUMERIC(value) = 1
         ));
-
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
@@ -374,6 +363,8 @@ BEGIN
         SET @proc_step_name = 'Update COVID_CONTACT_DATAMART';
         SET @proc_step_no = 2;
 
+        /* Start transaction for the delete and insert operations only */
+        BEGIN TRANSACTION;
 
         /* Remove existing records for these contacts */
         DELETE FROM dbo.COVID_CONTACT_DATAMART
@@ -598,21 +589,10 @@ BEGIN
             CONTACT_UID
         FROM #COVID_CONTACT_DATAMART;
 
-        /* Clean up temporary table */
-        DROP TABLE #COVID_CONTACT_DATAMART;
-
-        COMMIT TRANSACTION;
-
-
-        /* Final logging */
-        SET @proc_step_name = 'SP_COMPLETE';
-        SET @proc_step_no = 3;
-
-
+        /* Logging for insert operation */
+        SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
-                                         ,[create_dttm]
-                                         ,[update_dttm]
                                          ,[Dataflow_Name]
                                          ,[package_Name]
                                          ,[Status_Type]
@@ -623,8 +603,37 @@ BEGIN
         )
         VALUES (
                  @batch_id
-               ,current_timestamp
-               ,current_timestamp
+               ,@dataflow_name
+               ,@package_name
+               ,'PROCESSING'
+               ,@proc_step_no + 0.1
+               ,@proc_step_name + ' - Insert'
+               ,@rowcount
+               ,LEFT(ISNULL(@id_list, 'NULL'),500)
+               );
+
+        /* Commit the transaction that wrapped the delete and insert */
+        COMMIT TRANSACTION;
+
+        /* Clean up temporary table */
+        DROP TABLE #COVID_CONTACT_DATAMART;
+
+        /* Final logging */
+        SET @proc_step_name = 'SP_COMPLETE';
+        SET @proc_step_no = 3;
+
+        INSERT INTO [dbo].[job_flow_log] (
+                                           batch_id
+                                         ,[Dataflow_Name]
+                                         ,[package_Name]
+                                         ,[Status_Type]
+                                         ,[step_number]
+                                         ,[step_name]
+                                         ,[row_count]
+                                         ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
                ,@dataflow_name
                ,@package_name
                ,'COMPLETE'
@@ -633,7 +642,6 @@ BEGIN
                ,0
                ,LEFT(ISNULL(@id_list, 'NULL'),500)
                );
-
 
         SELECT 'Success' AS Result;
 
@@ -652,8 +660,6 @@ BEGIN
         /* Logging */
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
-                                         ,[create_dttm]
-                                         ,[update_dttm]
                                          ,[Dataflow_Name]
                                          ,[package_Name]
                                          ,[Status_Type]
@@ -665,8 +671,6 @@ BEGIN
         )
         VALUES (
                  @batch_id
-               ,current_timestamp
-               ,current_timestamp
                ,@dataflow_name
                ,@package_name
                ,'ERROR'
