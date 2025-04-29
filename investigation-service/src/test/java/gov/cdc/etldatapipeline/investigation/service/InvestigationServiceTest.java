@@ -342,7 +342,8 @@ class InvestigationServiceTest {
     @Test
     void testProcessVaccinationMessage() throws JsonProcessingException {
         Long vaccinationUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"" + vaccinationUid + "\"}}}";
+        String op = "u";
+        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"" + vaccinationUid + "\"}, \"op\": \"" + op + "\"}}";
 
         final Vaccination vaccination = constructVaccination(vaccinationUid);
         when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid))).thenReturn(Optional.of(vaccination));
@@ -384,6 +385,18 @@ class InvestigationServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> investigationService.processMessage(rec, consumer));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+    }
+
+    @Test
+    void testProcessVaccinationNonUpdate() {
+        Long vaccinationUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"" + vaccinationUid + "\"}, \"op\": \"c\"}}";
+
+        final Vaccination vaccination = constructVaccination(vaccinationUid);
+        when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid))).thenReturn(Optional.of(vaccination));
+
+        investigationService.processMessage(getRecord(vaccinationTopic, payload), consumer);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
     }
 
     @Test
