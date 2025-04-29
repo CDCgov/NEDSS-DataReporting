@@ -1154,7 +1154,7 @@ BEGIN
      , CASE_INFO as (
         select
             src.VACCINATION_UID,
-            actrel.SOURCE_ACT_UID as PHC_UID
+            actrel.TARGET_ACT_UID as PHC_UID
         from #TMP_VACCINATION_INIT src
         inner join NBS_ODSE.dbo.ACT_RELATIONSHIP actrel with (nolock)
              ON actrel.SOURCE_ACT_UID = src.VACCINATION_UID

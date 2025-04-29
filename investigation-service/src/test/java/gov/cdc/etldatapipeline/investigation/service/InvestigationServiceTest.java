@@ -432,12 +432,11 @@ class InvestigationServiceTest {
         // Create a ConsumerRecord object
         ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
 
-        if (typeCd.equals("OTHER")) {
+        if (typeCd.equals("OTHER") || !op.equals("u")) {
             investigationService.processMessage(rec, consumer);
             verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
         } else {
             investigationService.processMessage(rec, consumer);
-            future.complete(null);
 
             final VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
             vaccinationReportingKey.setVaccinationUid(sourceActUid);

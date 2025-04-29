@@ -293,10 +293,13 @@ public class InvestigationService {
         String vaccinationUid = "";
         String topic = (isFromVaccinationTopic) ? vaccinationTopic : actRelationshipTopic;
         try {
-
+            String operationType = extractChangeDataCaptureOperation(value);
             if(isFromVaccinationTopic) {
                 vaccinationUid = extractUid(value, "intervention_uid");
             } else {
+                if (!operationType.equals("u")) {
+                    return;
+                }
                 vaccinationUid = actRelationshipSourceActUid;
             }
             logger.info(topicDebugLog, "Vaccination", vaccinationUid, topic);
