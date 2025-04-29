@@ -7,7 +7,7 @@ BEGIN
         DECLARE @proc_step_no float = 0;
         DECLARE @proc_step_name varchar(200) = '';
         DECLARE @batch_id bigint;
-        DECLARE @dataflow_name varchar(200) = 'covid_contact_datamart_postprocessing';
+        DECLARE @dataflow_name varchar(200) = 'COVID DATAMART Post-Processing Event';
         DECLARE @package_name varchar(200) = 'covid_contact_datamart_postprocessing';
         DECLARE @conditionCd VARCHAR(200);
 
@@ -615,8 +615,9 @@ BEGIN
         /* Commit the transaction that wrapped the delete and insert */
         COMMIT TRANSACTION;
 
-        /* Clean up temporary table */
-        DROP TABLE #COVID_CONTACT_DATAMART;
+        /* Clean up temporary table - wrap in IF EXISTS check as suggested */
+        IF OBJECT_ID('tempdb..#COVID_CONTACT_DATAMART', 'U') IS NOT NULL
+            DROP TABLE #COVID_CONTACT_DATAMART;
 
         /* Final logging */
         SET @proc_step_name = 'SP_COMPLETE';
