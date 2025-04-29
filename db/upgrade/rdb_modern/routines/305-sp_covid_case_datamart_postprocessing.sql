@@ -23,12 +23,16 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT = 0;
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
+    
     DECLARE @conditionCd VARCHAR(200);
-    SET @conditionCd = '11065';
-  	DECLARE @Dataflow_Name VARCHAR(200) = 'COVID DATAMART Post-Processing Event';
+    SET @conditionCd = '11065'; -- COVID-19
+  	
+    DECLARE @Dataflow_Name VARCHAR(200) = 'COVID DATAMART Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_covid_case_datamart_postprocessing';
 
-
+    DECLARE @inv_form_cd VARCHAR(100);
+    SET @inv_form_cd = (select investigation_form_cd from dbo.nrt_srte_CONDITION_CODE cDim where
+              condition_cd = @conditionCd);
 
 BEGIN TRY
 
@@ -360,10 +364,7 @@ BEGIN TRY
                 AND nbs_ui_component_uid NOT IN(1013, 1025)
                 AND data_location LIKE '%Answer_txt'
                 AND user_defined_column_nm IS NOT NULL
-    inner join
-        dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-            ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                AND cDim.condition_cd = @conditionCd
+                AND uiMeta.investigation_form_cd = @inv_form_cd
     EXCEPT
     SELECT COLUMN_NAME
     FROM
@@ -428,10 +429,7 @@ BEGIN TRY
                 AND nbs_ui_component_uid NOT IN(1013, 1025)
                 AND data_location LIKE '%Answer_txt'
                 AND user_defined_column_nm IS NOT NULL
-        inner join
-            dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-                ON cDim.disease_grp_cd = uiMeta.investigation_form_cd --TODO: check if we should keep inv_form_cd
-                AND cDim.condition_cd = @conditionCd
+                AND uiMeta.investigation_form_cd = @inv_form_cd
     ) AS x;
 
     if
@@ -450,9 +448,7 @@ BEGIN TRY
                                 and question_group_seq_nbr is null and nbs_ui_component_uid not in (1013,1025)
                                 and data_location like ''%ANSWER_TXT''
                                 AND user_defined_column_nm is not null
-                        inner join
-                            dbo.V_CONDITION_DIM cDim on cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                                and cDim.condition_cd = '''+ @conditionCd + '''
+                                AND uiMeta.investigation_form_cd = '''+ @inv_form_cd + '''
                         left outer join
                             dbo.NRT_PAGE_CASE_ANSWER caseAns with (nolock) on caseAns.nbs_question_uid = uiMeta.nbs_question_uid
                         inner join
@@ -630,10 +626,7 @@ BEGIN TRY
                     AND nbs_ui_component_uid IN (1013, 1025)
                     AND data_location LIKE '%Answer_txt'
                     AND user_defined_column_nm IS NOT NULL
-        inner join
-            dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-                ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                    AND cDim.condition_cd = @conditionCd
+                    AND uiMeta.investigation_form_cd = @inv_form_cd
     ) AS x;
 
     if
@@ -661,10 +654,7 @@ BEGIN TRY
                             AND nbs_ui_component_uid IN(1013, 1025)
                             AND data_location like ''%Answer_txt''
                             AND user_defined_column_nm is not null
-                inner join
-                    dbo.V_CONDITION_DIM cDim with (nolock)
-                        ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                            AND cDim.condition_cd = '''+ @conditionCd + '''
+                            AND uiMeta.investigation_form_cd = '''+ @inv_form_cd + '''
                 ) AS RDB_METADATA
                     ON multiAnsData.nbs_question_uid = RDB_METADATA.nbs_question_uid
                 GROUP BY act_uid,
@@ -708,10 +698,7 @@ BEGIN TRY
                 AND nbs_ui_component_uid NOT IN(1013, 1025)
                 AND data_location LIKE '%Answer_txt'
                 AND user_defined_column_nm IS NOT NULL
-    inner join
-        dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-            ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                AND cDim.condition_cd = @conditionCd
+                AND uiMeta.investigation_form_cd = @inv_form_cd
     EXCEPT
     SELECT COLUMN_NAME
     FROM INFORMATION_SCHEMA.COLUMNS
@@ -771,10 +758,7 @@ BEGIN TRY
                     AND nbs_ui_component_uid NOT IN(1013, 1025)
                     AND data_location LIKE '%Answer_txt'
                     AND user_defined_column_nm IS NOT NULL
-        inner join
-            dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-                ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                    AND cDim.condition_cd = @conditionCd
+                    AND uiMeta.investigation_form_cd = @inv_form_cd
     ) AS x;
 
     if
@@ -791,11 +775,8 @@ BEGIN TRY
                         on uiMeta.nbs_ui_metadata_uid = rdbMeta.nbs_ui_metadata_uid
                             and question_group_seq_nbr is not null and nbs_ui_component_uid not in (1013,1025)
                             and data_location like ''%ANSWER_TXT''
-                            AND user_defined_column_nm is not null
-                inner join
-                    dbo.V_CONDITION_DIM cDim
-                        on cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                            and cDim.condition_cd = '''+@conditionCd+'''
+                            and user_defined_column_nm is not null
+                            and uiMeta.investigation_form_cd = '''+ @inv_form_cd + '''
                 left outer join
                     dbo.NRT_PAGE_CASE_ANSWER caseAns with (nolock)
                         on caseAns.nbs_question_uid = uiMeta.nbs_question_uid and caseAns.answer_group_seq_nbr=1
@@ -846,10 +827,7 @@ BEGIN TRY
                 AND nbs_ui_component_uid NOT IN(1013, 1025)
                 AND data_location LIKE '%Answer_txt'
                 AND user_defined_column_nm IS NOT NULL
-    inner join
-        dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-        ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-            AND cDim.condition_cd = @conditionCd
+                AND uiMeta.investigation_form_cd = @inv_form_cd
     EXCEPT
     SELECT COLUMN_NAME
     FROM INFORMATION_SCHEMA.COLUMNS
@@ -909,10 +887,7 @@ BEGIN TRY
 	                AND nbs_ui_component_uid NOT IN(1013, 1025)
 	                AND data_location LIKE '%Answer_txt'
 	                AND user_defined_column_nm IS NOT NULL
-        inner join
-        	dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-	            ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-	                AND cDim.condition_cd = @conditionCd
+                    AND uiMeta.investigation_form_cd = @inv_form_cd
     ) AS x;
 
     if
@@ -930,10 +905,7 @@ BEGIN TRY
                         and question_group_seq_nbr is not null and nbs_ui_component_uid not in (1013,1025)
                         and data_location like ''%ANSWER_TXT''
                         AND user_defined_column_nm is not null
-            inner join
-                dbo.V_CONDITION_DIM cDim
-                    on cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                        and cDim.condition_cd = '''+@conditionCd+'''
+                        AND uiMeta.investigation_form_cd = '''+ @inv_form_cd + '''
             left outer join
                 dbo.NRT_PAGE_CASE_ANSWER caseAns with (nolock)
                     on caseAns.nbs_question_uid = uiMeta.nbs_question_uid
@@ -986,10 +958,7 @@ BEGIN TRY
                 AND nbs_ui_component_uid NOT IN(1013, 1025)
                 AND data_location LIKE '%Answer_txt'
                 AND user_defined_column_nm IS NOT NULL
-    inner join
-        dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-            ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                AND cDim.condition_cd = @conditionCd
+                AND uiMeta.investigation_form_cd = @inv_form_cd
     EXCEPT
     SELECT COLUMN_NAME
     FROM INFORMATION_SCHEMA.COLUMNS
@@ -1047,9 +1016,7 @@ BEGIN TRY
                     AND nbs_ui_component_uid NOT IN(1013, 1025)
                     AND data_location LIKE '%Answer_txt'
                     AND user_defined_column_nm IS NOT NULL
-        inner join dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
-            ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                AND cDim.condition_cd = @conditionCd
+                    AND uiMeta.investigation_form_cd = @inv_form_cd
     ) AS x;
 
     if
@@ -1066,11 +1033,8 @@ BEGIN TRY
                         on uiMeta.nbs_ui_metadata_uid = rdbMeta.nbs_ui_metadata_uid
                             and question_group_seq_nbr is not null and nbs_ui_component_uid not in (1013,1025)
                             and data_location like ''%ANSWER_TXT''
-                            AND user_defined_column_nm is not null
-                inner join
-                    dbo.V_CONDITION_DIM cDim
-                    on cDim.disease_grp_cd = uiMeta.investigation_form_cd
-                            and cDim.condition_cd = ''' + @conditionCd + '''
+                            and user_defined_column_nm is not null
+                            and uiMeta.investigation_form_cd = '''+ @inv_form_cd + '''
                 left outer join
                     dbo.NRT_PAGE_CASE_ANSWER caseAns with (nolock)
                         on caseAns.nbs_question_uid = uiMeta.nbs_question_uid
