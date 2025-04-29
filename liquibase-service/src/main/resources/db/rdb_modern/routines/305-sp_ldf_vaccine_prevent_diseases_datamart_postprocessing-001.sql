@@ -1,5 +1,5 @@
 
-CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_foodborne_datamart_postprocessing]  
+CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_vaccine_prevent_diseases_datamart_postprocessing]  
   @phc_id_list nvarchar(max),
   @debug bit = 'false'
  AS
@@ -11,19 +11,19 @@ BEGIN
     DECLARE @RowCount_no INT =0;
     DECLARE @Proc_Step_no FLOAT = 0; 
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
-	DECLARE @Dataflow_Name VARCHAR(200) = 'LDF_FOODBORNE POST-Processing';
-	DECLARE @Package_Name VARCHAR(200) = 'sp_ldf_foodborne_datamart_postprocessing';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'LDF_VACCINE_PREVENT_DISEASES POST-Processing';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_ldf_vaccine_prevent_diseases_datamart_postprocessing';
 
-    DECLARE @global_temp_foodborne_ta varchar(500) = '';
-    DECLARE @global_temp_foodborne_short_col varchar(500) = '';
-    DECLARE @global_temp_foodborne varchar(500) = '';
+    DECLARE @global_temp_vaccine_prevent_diseases_ta varchar(500) = '';
+    DECLARE @global_temp_vaccine_prevent_diseases_short_col varchar(500) = '';
+    DECLARE @global_temp_vaccine_prevent_diseases varchar(500) = '';
     DECLARE @sql_code NVARCHAR(MAX);
     DECLARE @ldf_columns NVARCHAR(MAX) = '';
     DECLARE @count BIGINT;
 
-    SET @global_temp_foodborne_ta = '##FOODBORNE_TA' + '_' + CAST(@Batch_id as varchar(50)); 
-    SET @global_temp_foodborne_short_col = '##FOODBORNE_SHORT_COL' + '_' + CAST(@Batch_id as varchar(50)); 
-    SET @global_temp_foodborne = '##FOODBORNE' + '_' + CAST(@Batch_id as varchar(50)); 
+    SET @global_temp_vaccine_prevent_diseases_ta = '##VACCINE_PREVENT_DISEASES_TA' + '_' + CAST(@Batch_id as varchar(50)); 
+    SET @global_temp_vaccine_prevent_diseases_short_col = '##VACCINE_PREVENT_DISEASES_SHORT_COL' + '_' + CAST(@Batch_id as varchar(50)); 
+    SET @global_temp_vaccine_prevent_diseases = '##VACCINE_PREVENT_DISEASES' + '_' + CAST(@Batch_id as varchar(50)); 
     
  
 	BEGIN TRY
@@ -90,7 +90,7 @@ BEGIN
             SELECT COUNT(1)
             FROM [dbo].LDF_DIMENSIONAL_DATA s WITH (NOLOCK)
             INNER JOIN [dbo].LDF_DATAMART_TABLE_REF r WITH (NOLOCK) 
-                ON s.PHC_CD = r.condition_cd AND r.DATAMART_NAME = 'LDF_FOODBORNE'
+                ON s.PHC_CD = r.condition_cd AND r.DATAMART_NAME = 'LDF_VACCINE_PREVENT_DISEASES'
             INNER JOIN #LDF_PHC_UID_LIST l  
                 ON l.investigation_uid = s.INVESTIGATION_UID
         );	
@@ -104,10 +104,10 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING #BASE_FOODBORNE';
+                @PROC_STEP_NAME = 'GENERATING #BASE_VACCINE_PREVENT_DISEASES';
             
-            IF OBJECT_ID('#BASE_FOODBORNE', 'U') IS NOT NULL
-			    DROP TABLE #BASE_FOODBORNE;
+            IF OBJECT_ID('#BASE_VACCINE_PREVENT_DISEASES', 'U') IS NOT NULL
+			    DROP TABLE #BASE_VACCINE_PREVENT_DISEASES;
 
             SELECT DISTINCT
                 s.COL1,
@@ -126,10 +126,10 @@ BEGIN
                 s.PHC_CD,                    
                 s.DATA_TYPE,                 
                 s.FIELD_SIZE
-            INTO #BASE_FOODBORNE
+            INTO #BASE_VACCINE_PREVENT_DISEASES
             FROM [dbo].LDF_DIMENSIONAL_DATA s WITH (NOLOCK)
             INNER JOIN [dbo].LDF_DATAMART_TABLE_REF r WITH (NOLOCK) 
-                ON s.PHC_CD = r.CONDITION_CD AND r.DATAMART_NAME = 'LDF_FOODBORNE'
+                ON s.PHC_CD = r.CONDITION_CD AND r.DATAMART_NAME = 'LDF_VACCINE_PREVENT_DISEASES'
             INNER JOIN #LDF_PHC_UID_LIST l  
                 ON l.investigation_uid = s.INVESTIGATION_UID;
 
@@ -138,7 +138,7 @@ BEGIN
 			IF
 				@debug = 'true'
 				SELECT @Proc_Step_Name AS step, *
-				FROM #BASE_FOODBORNE;
+				FROM #BASE_VACCINE_PREVENT_DISEASES;
 
 			INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -151,10 +151,10 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING #LINKED_FOODBORNE';
+                @PROC_STEP_NAME = 'GENERATING #LINKED_LINKED_VAC_PREVENT_MEASLES';
             
-            IF OBJECT_ID('#LINKED_FOODBORNE', 'U') IS NOT NULL
-			    DROP TABLE #LINKED_FOODBORNE;
+            IF OBJECT_ID('#LINKED_LINKED_VAC_PREVENT_MEASLES', 'U') IS NOT NULL
+			    DROP TABLE #LINKED_LINKED_VAC_PREVENT_MEASLES;
 
             SELECT 
                 b.COL1,
@@ -179,11 +179,11 @@ BEGIN
                 g.PATIENT_KEY,
                 p.PATIENT_LOCAL_ID,
                 c.CONDITION_SHORT_NM AS DISEASE_NAME
-            INTO #LINKED_FOODBORNE
-            FROM #BASE_FOODBORNE b
+            INTO #LINKED_LINKED_VAC_PREVENT_MEASLES
+            FROM #BASE_VACCINE_PREVENT_DISEASES b
             INNER JOIN [dbo].INVESTIGATION i WITH (NOLOCK)
                 ON b.INVESTIGATION_UID = i.CASE_UID 
-            INNER JOIN [dbo].GENERIC_CASE g WITH (NOLOCK)
+            INNER JOIN [dbo].MEASLES_CASE g WITH (NOLOCK)
                 ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
             INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
                 ON c.CONDITION_KEY = g.CONDITION_KEY
@@ -195,7 +195,7 @@ BEGIN
 			IF
 				@debug = 'true'
 				SELECT @Proc_Step_Name AS step, *
-				FROM #LINKED_FOODBORNE;
+				FROM #LINKED_LINKED_VAC_PREVENT_MEASLES;
 
 			INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -205,13 +205,228 @@ BEGIN
 
             ------------------------------------------------------------------------------------------------------------------------------------------    
 
+            ------------------------------------------------------------------------------------------------------------------------------------------
+        
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING #ALL_FOODBORNE';
+                @PROC_STEP_NAME = 'GENERATING #LINKED_LINKED_VAC_PREVENT_PERTUSSIS';
             
-            IF OBJECT_ID('#ALL_FOODBORNE', 'U') IS NOT NULL
-			    DROP TABLE #ALL_FOODBORNE;
+            IF OBJECT_ID('#LINKED_LINKED_VAC_PREVENT_PERTUSSIS', 'U') IS NOT NULL
+			    DROP TABLE #LINKED_LINKED_VAC_PREVENT_PERTUSSIS;
+
+            SELECT 
+                b.COL1,
+                b.INVESTIGATION_UID,          
+                b.CODE_SHORT_DESC_TXT,     
+                b.LDF_UID,                       
+                b.CODE_SET_NM,             
+                b.LABEL_TXT,               
+                b.DATA_SOURCE,              
+                b.CDC_NATIONAL_ID,          
+                b.BUSINESS_OBJECT_NM,       
+                b.CONDITION_CD,              
+                b.CUSTOM_SUBFORM_METADATA_UID,     
+                b.PAGE_SET,                  
+                b.DATAMART_COLUMN_NM,       
+                b.PHC_CD,                    
+                b.DATA_TYPE,                 
+                b.FIELD_SIZE, 
+                i.INVESTIGATION_KEY, 
+                i.INV_LOCAL_ID  AS INVESTIGATION_LOCAL_ID, 
+                i.CASE_OID  AS PROGRAM_JURISDICTION_OID,
+                g.PATIENT_KEY,
+                p.PATIENT_LOCAL_ID,
+                c.CONDITION_SHORT_NM AS DISEASE_NAME
+            INTO #LINKED_LINKED_VAC_PREVENT_PERTUSSIS
+            FROM #BASE_VACCINE_PREVENT_DISEASES b
+            INNER JOIN [dbo].INVESTIGATION i WITH (NOLOCK)
+                ON b.INVESTIGATION_UID = i.CASE_UID 
+            INNER JOIN [dbo].PERTUSSIS_CASE g WITH (NOLOCK)
+                ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
+                ON c.CONDITION_KEY = g.CONDITION_KEY
+            INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
+                ON p.PATIENT_KEY = g.PATIENT_KEY;
+
+            SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+			IF
+				@debug = 'true'
+				SELECT @Proc_Step_Name AS step, *
+				FROM #LINKED_LINKED_VAC_PREVENT_PERTUSSIS;
+
+			INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES 
+				(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+            
+
+            ------------------------------------------------------------------------------------------------------------------------------------------    
+            ------------------------------------------------------------------------------------------------------------------------------------------
+        
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING #LINKED_LINKED_VAC_PREVENT_RUBELLA';
+            
+            IF OBJECT_ID('#LINKED_LINKED_VAC_PREVENT_RUBELLA', 'U') IS NOT NULL
+			    DROP TABLE #LINKED_LINKED_VAC_PREVENT_RUBELLA;
+
+            SELECT 
+                b.COL1,
+                b.INVESTIGATION_UID,          
+                b.CODE_SHORT_DESC_TXT,     
+                b.LDF_UID,                       
+                b.CODE_SET_NM,             
+                b.LABEL_TXT,               
+                b.DATA_SOURCE,              
+                b.CDC_NATIONAL_ID,          
+                b.BUSINESS_OBJECT_NM,       
+                b.CONDITION_CD,              
+                b.CUSTOM_SUBFORM_METADATA_UID,     
+                b.PAGE_SET,                  
+                b.DATAMART_COLUMN_NM,       
+                b.PHC_CD,                    
+                b.DATA_TYPE,                 
+                b.FIELD_SIZE, 
+                i.INVESTIGATION_KEY, 
+                i.INV_LOCAL_ID  AS INVESTIGATION_LOCAL_ID, 
+                i.CASE_OID  AS PROGRAM_JURISDICTION_OID,
+                g.PATIENT_KEY,
+                p.PATIENT_LOCAL_ID,
+                c.CONDITION_SHORT_NM AS DISEASE_NAME
+            INTO #LINKED_LINKED_VAC_PREVENT_RUBELLA
+            FROM #BASE_VACCINE_PREVENT_DISEASES b
+            INNER JOIN [dbo].INVESTIGATION i WITH (NOLOCK)
+                ON b.INVESTIGATION_UID = i.CASE_UID 
+            INNER JOIN [dbo].RUBELLA_CASE g WITH (NOLOCK)
+                ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
+                ON c.CONDITION_KEY = g.CONDITION_KEY
+            INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
+                ON p.PATIENT_KEY = g.PATIENT_KEY;
+
+            SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+			IF
+				@debug = 'true'
+				SELECT @Proc_Step_Name AS step, *
+				FROM #LINKED_LINKED_VAC_PREVENT_RUBELLA;
+
+			INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES 
+				(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+            
+
+            ------------------------------------------------------------------------------------------------------------------------------------------ 
+            ------------------------------------------------------------------------------------------------------------------------------------------
+        
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING #LINKED_LINKED_VAC_PREVENT_CRS';
+            
+            IF OBJECT_ID('#LINKED_LINKED_VAC_PREVENT_CRS', 'U') IS NOT NULL
+			    DROP TABLE #LINKED_LINKED_VAC_PREVENT_CRS;
+
+            SELECT 
+                b.COL1,
+                b.INVESTIGATION_UID,          
+                b.CODE_SHORT_DESC_TXT,     
+                b.LDF_UID,                       
+                b.CODE_SET_NM,             
+                b.LABEL_TXT,               
+                b.DATA_SOURCE,              
+                b.CDC_NATIONAL_ID,          
+                b.BUSINESS_OBJECT_NM,       
+                b.CONDITION_CD,              
+                b.CUSTOM_SUBFORM_METADATA_UID,     
+                b.PAGE_SET,                  
+                b.DATAMART_COLUMN_NM,       
+                b.PHC_CD,                    
+                b.DATA_TYPE,                 
+                b.FIELD_SIZE, 
+                i.INVESTIGATION_KEY, 
+                i.INV_LOCAL_ID  AS INVESTIGATION_LOCAL_ID, 
+                i.CASE_OID  AS PROGRAM_JURISDICTION_OID,
+                g.PATIENT_KEY,
+                p.PATIENT_LOCAL_ID,
+                c.CONDITION_SHORT_NM AS DISEASE_NAME
+            INTO #LINKED_LINKED_VAC_PREVENT_CRS
+            FROM #BASE_VACCINE_PREVENT_DISEASES b
+            INNER JOIN [dbo].INVESTIGATION i WITH (NOLOCK)
+                ON b.INVESTIGATION_UID = i.CASE_UID 
+            INNER JOIN [dbo].CRS_CASE g WITH (NOLOCK)
+                ON g.INVESTIGATION_KEY = i.INVESTIGATION_KEY
+            INNER JOIN [dbo].V_CONDITION_DIM c WITH (NOLOCK)
+                ON c.CONDITION_KEY = g.CONDITION_KEY
+            INNER JOIN [dbo].D_PATIENT p WITH (NOLOCK)
+                ON p.PATIENT_KEY = g.PATIENT_KEY;
+
+            SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+			IF
+				@debug = 'true'
+				SELECT @Proc_Step_Name AS step, *
+				FROM #LINKED_LINKED_VAC_PREVENT_CRS;
+
+			INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES 
+				(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+            
+
+            ------------------------------------------------------------------------------------------------------------------------------------------ 
+
+            --  Merging all Tables    
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING #ALL_VACCINE_PREVENT_MERGED';
+            
+            IF OBJECT_ID('#ALL_VACCINE_PREVENT_MERGED', 'U') IS NOT NULL
+			    DROP TABLE #ALL_VACCINE_PREVENT_MERGED;
+
+            ;WITH MERGED AS (
+                SELECT * FROM #LINKED_LINKED_VAC_PREVENT_MEASLES
+                UNION ALL
+                SELECT * FROM #LINKED_LINKED_VAC_PREVENT_PERTUSSIS
+                UNION ALL
+                SELECT * FROM #LINKED_LINKED_VAC_PREVENT_RUBELLA
+                UNION ALL
+                SELECT * FROM #LINKED_LINKED_VAC_PREVENT_CRS
+            )
+            SELECT 
+                * 
+            INTO #ALL_VACCINE_PREVENT_MERGED
+            FROM MERGED
+            WHERE INVESTIGATION_KEY IS NOT NULL
+
+            SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+			IF
+				@debug = 'true'
+				SELECT @Proc_Step_Name AS step, *
+				FROM #ALL_VACCINE_PREVENT_MERGED;
+
+			INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES 
+				(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);    
+
+
+            ------------------------------------------------------------------------------------------------------------------------------------------ 
+
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'GENERATING #ALL_VACCINE_PREVENT_DISEASES';
+            
+            IF OBJECT_ID('#ALL_VACCINE_PREVENT_DISEASES', 'U') IS NOT NULL
+			    DROP TABLE #ALL_VACCINE_PREVENT_DISEASES;
 
             SELECT 
                 a.COL1,
@@ -250,16 +465,16 @@ BEGIN
                     THEN b.DATAMART_COLUMN_NM
                     ELSE a.DATAMART_COLUMN_NM
                 END AS DATAMART_COLUMN_NM
-            INTO #ALL_FOODBORNE
-            FROM #LINKED_FOODBORNE a
+            INTO #ALL_VACCINE_PREVENT_DISEASES
+            FROM #ALL_VACCINE_PREVENT_MERGED a
             FULL OUTER JOIN [dbo].LDF_DATAMART_COLUMN_REF b WITH(NOLOCK)
                 ON a.LDF_UID = b.LDF_UID
             WHERE 
-                b.LDF_PAGE_SET = 'OTHER'
+                b.LDF_PAGE_SET = 'VPD'
                 OR b.CONDITION_CD IN (
                     SELECT CONDITION_CD 
                     FROM [dbo].LDF_DATAMART_TABLE_REF WITH(NOLOCK)
-                    WHERE DATAMART_NAME = 'LDF_FOODBORNE'
+                    WHERE DATAMART_NAME = 'LDF_VACCINE_PREVENT_DISEASES'
             )
 
             SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -267,7 +482,7 @@ BEGIN
 			IF
 				@debug = 'true'
 				SELECT @Proc_Step_Name AS step, *
-				FROM #ALL_FOODBORNE;
+				FROM #ALL_VACCINE_PREVENT_DISEASES;
 
 			INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -280,10 +495,10 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING #ALL_FOODBORNE_SHORT_COL';
+                @PROC_STEP_NAME = 'GENERATING #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL';
             
-            IF OBJECT_ID('#ALL_FOODBORNE_SHORT_COL', 'U') IS NOT NULL
-			    DROP TABLE #ALL_FOODBORNE_SHORT_COL;
+            IF OBJECT_ID('#ALL_VACCINE_PREVENT_DISEASES_SHORT_COL', 'U') IS NOT NULL
+			    DROP TABLE #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL;
 
             SELECT 
                 INVESTIGATION_KEY,
@@ -295,8 +510,8 @@ BEGIN
                 DISEASE_CD,
                 DATAMART_COLUMN_NM,
                 col1  
-            INTO #ALL_FOODBORNE_SHORT_COL 
-            FROM #ALL_FOODBORNE 
+            INTO #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL 
+            FROM #ALL_VACCINE_PREVENT_DISEASES 
             WHERE data_type IN ('CV', 'ST');
 
             SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -304,7 +519,7 @@ BEGIN
 			IF
 				@debug = 'true'
 				SELECT @Proc_Step_Name AS step, *
-				FROM #ALL_FOODBORNE_SHORT_COL;
+				FROM #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL;
 
 			INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -317,10 +532,10 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING #ALL_FOODBORNE_TA';
+                @PROC_STEP_NAME = 'GENERATING #ALL_VACCINE_PREVENT_DISEASES_TA';
             
-            IF OBJECT_ID('#ALL_FOODBORNE_TA', 'U') IS NOT NULL
-			    DROP TABLE #ALL_FOODBORNE_TA;
+            IF OBJECT_ID('#ALL_VACCINE_PREVENT_DISEASES_TA', 'U') IS NOT NULL
+			    DROP TABLE #ALL_VACCINE_PREVENT_DISEASES_TA;
 
             SELECT 
                 INVESTIGATION_KEY,
@@ -332,8 +547,8 @@ BEGIN
                 DISEASE_CD,
                 DATAMART_COLUMN_NM,
                 col1  
-            INTO #ALL_FOODBORNE_TA
-            FROM #ALL_FOODBORNE
+            INTO #ALL_VACCINE_PREVENT_DISEASES_TA
+            FROM #ALL_VACCINE_PREVENT_DISEASES
             WHERE data_type IN ('LIST_ST');  
 
             SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -341,7 +556,7 @@ BEGIN
 			IF
 				@debug = 'true'
 				SELECT @Proc_Step_Name AS step, *
-				FROM #ALL_FOODBORNE_TA;
+				FROM #ALL_VACCINE_PREVENT_DISEASES_TA;
 
 			INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -354,14 +569,14 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne_ta;
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_vaccine_prevent_diseases_ta;
             
-            EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_ta +''', ''U'')  IS NOT NULL
+            EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases_ta +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne_ta +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases_ta +';
             END;')
 
-            SET @count = (SELECT count(*) FROM #ALL_FOODBORNE_TA);
+            SET @count = (SELECT count(*) FROM #ALL_VACCINE_PREVENT_DISEASES_TA);
 
             IF @count > 0
                 BEGIN
@@ -369,7 +584,7 @@ BEGIN
                     SELECT @ldf_columns = STRING_AGG(QUOTENAME(DATAMART_COLUMN_NM), ',')
                     FROM (
                         SELECT DISTINCT DATAMART_COLUMN_NM 
-                        FROM #ALL_FOODBORNE_TA
+                        FROM #ALL_VACCINE_PREVENT_DISEASES_TA
                     ) AS tmp;
 
                     IF @ldf_columns != ''
@@ -383,7 +598,7 @@ BEGIN
                             DISEASE_NAME,
                             DISEASE_CD,
                             ' + @ldf_columns + '
-                        INTO ' + @global_temp_foodborne_ta +'
+                        INTO ' + @global_temp_vaccine_prevent_diseases_ta +'
                         FROM (
                             SELECT 
                                 INVESTIGATION_KEY,
@@ -395,7 +610,7 @@ BEGIN
                                 DISEASE_CD,
                                 DATAMART_COLUMN_NM,
                                 LEFT(COL1, 8000) AS ANSWERCOL 
-                            FROM #ALL_FOODBORNE_TA
+                            FROM #ALL_VACCINE_PREVENT_DISEASES_TA
                             ) AS SourceTable
                         PIVOT (
                             MAX(ANSWERCOL)
@@ -412,11 +627,11 @@ BEGIN
                             PATIENT_LOCAL_ID,
                             DISEASE_NAME,
                             DISEASE_CD
-                        INTO ' + @global_temp_foodborne_ta +'
-                        FROM #ALL_FOODBORNE_TA';
+                        INTO ' + @global_temp_vaccine_prevent_diseases_ta +'
+                        FROM #ALL_VACCINE_PREVENT_DISEASES_TA';
                     END
                 END
-                ELSE -- If data does not exist create GLOBAL_TEMP_FOODBORNE_TA table same as #ALL_FOODBORNE_TA
+                ELSE -- If data does not exist create GLOBAL_TEMP_VACCINE_PREVENT_DISEASES_TA table same as #ALL_VACCINE_PREVENT_DISEASES_TA
                 BEGIN    
                     SET @sql_code = 'SELECT 
                         INVESTIGATION_KEY,
@@ -426,8 +641,8 @@ BEGIN
                         PATIENT_LOCAL_ID,
                         DISEASE_NAME,
                         DISEASE_CD
-                    INTO ' + @global_temp_foodborne_ta +'
-                    FROM #ALL_FOODBORNE_TA';
+                    INTO ' + @global_temp_vaccine_prevent_diseases_ta +'
+                    FROM #ALL_VACCINE_PREVENT_DISEASES_TA';
                 END;
 
             EXEC sp_executesql @sql_code;
@@ -436,7 +651,7 @@ BEGIN
 
             IF
                 @debug = 'true'
-                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_foodborne_ta + ';');
+                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_vaccine_prevent_diseases_ta + ';');
 
             INSERT INTO [dbo].[job_flow_log]
                 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -449,14 +664,14 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne_short_col;
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_vaccine_prevent_diseases_short_col;
             
-            EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_short_col +''', ''U'')  IS NOT NULL
+            EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases_short_col +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne_short_col +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases_short_col +';
             END;')
 
-            SET @count = (SELECT count(*) FROM #ALL_FOODBORNE_SHORT_COL);
+            SET @count = (SELECT count(*) FROM #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL);
 
             IF @count > 0
                 BEGIN
@@ -464,7 +679,7 @@ BEGIN
                     SELECT @ldf_columns = STRING_AGG(QUOTENAME(DATAMART_COLUMN_NM), ',')
                     FROM (
                         SELECT DISTINCT DATAMART_COLUMN_NM 
-                        FROM #ALL_FOODBORNE_SHORT_COL
+                        FROM #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL
                     ) AS tmp;
 
                     IF @ldf_columns != ''
@@ -478,7 +693,7 @@ BEGIN
                             DISEASE_NAME,
                             DISEASE_CD,
                             ' + @ldf_columns + '
-                        INTO ' + @global_temp_foodborne_short_col +'
+                        INTO ' + @global_temp_vaccine_prevent_diseases_short_col +'
                         FROM (
                             SELECT 
                                 INVESTIGATION_KEY,
@@ -490,7 +705,7 @@ BEGIN
                                 DISEASE_CD,
                                 DATAMART_COLUMN_NM,
                                 LEFT(COL1, 8000) AS ANSWERCOL 
-                            FROM #ALL_FOODBORNE_SHORT_COL
+                            FROM #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL
                             ) AS SourceTable
                         PIVOT (
                             MAX(ANSWERCOL)
@@ -507,11 +722,11 @@ BEGIN
                             PATIENT_LOCAL_ID,
                             DISEASE_NAME,
                             DISEASE_CD
-                        INTO ' + @global_temp_foodborne_short_col +'
-                        FROM #ALL_FOODBORNE_SHORT_COL';
+                        INTO ' + @global_temp_vaccine_prevent_diseases_short_col +'
+                        FROM #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL';
                     END
                 END
-                ELSE -- If data does not exist create GLOBAL_TEMP_FOODBORNE_SHORT_COL table same as #ALL_FOODBORNE_SHORT_COL
+                ELSE -- If data does not exist create GLOBAL_TEMP_VACCINE_PREVENT_DISEASES_SHORT_COL table same as #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL
                 BEGIN    
                     SET @sql_code = 'SELECT 
                         INVESTIGATION_KEY,
@@ -521,8 +736,8 @@ BEGIN
                         PATIENT_LOCAL_ID,
                         DISEASE_NAME,
                         DISEASE_CD                 
-                    INTO ' + @global_temp_foodborne_short_col +'
-                    FROM #ALL_FOODBORNE_SHORT_COL';
+                    INTO ' + @global_temp_vaccine_prevent_diseases_short_col +'
+                    FROM #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL';
                 END;
 
             BEGIN TRY
@@ -536,15 +751,15 @@ BEGIN
                 IF @ErrorNumber1=511
                     BEGIN
                         -- process when error 511
-                        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_short_col +''', ''U'')  IS NOT NULL
+                        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases_short_col +''', ''U'')  IS NOT NULL
                         BEGIN
-                            DROP TABLE ' + @global_temp_foodborne_short_col +';
+                            DROP TABLE ' + @global_temp_vaccine_prevent_diseases_short_col +';
                         END;')
 
                         SELECT @ldf_columns = STRING_AGG(QUOTENAME(DATAMART_COLUMN_NM), ',')
                         FROM (
                             SELECT DISTINCT TOP 300 DATAMART_COLUMN_NM 
-                            FROM #ALL_FOODBORNE_SHORT_COL
+                            FROM #ALL_VACCINE_PREVENT_DISEASES_SHORT_COL
                         ) AS tmp;
 
                         SET @sql_code = 'SELECT 
@@ -556,7 +771,7 @@ BEGIN
                             DISEASE_NAME,
                             DISEASE_CD,
                             ' + @ldf_columns + '
-                        INTO ' + @global_temp_foodborne_short_col +'
+                        INTO ' + @global_temp_vaccine_prevent_diseases_short_col +'
                         FROM (
                             SELECT 
                                 INVESTIGATION_KEY,
@@ -568,7 +783,7 @@ BEGIN
                                 DISEASE_CD,
                                 DATAMART_COLUMN_NM,
                                 LEFT(COL1, 8000) AS ANSWERCOL 
-                            FROM #ALL_FOODBORNE_TA
+                            FROM #ALL_VACCINE_PREVENT_DISEASES_TA
                             ) AS SourceTable
                         PIVOT (
                             MAX(ANSWERCOL)
@@ -586,7 +801,7 @@ BEGIN
 
             IF
                 @debug = 'true'
-                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_foodborne_short_col + ';');
+                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_vaccine_prevent_diseases_short_col + ';');
 
             INSERT INTO [dbo].[job_flow_log]
                 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -598,24 +813,24 @@ BEGIN
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_foodborne;
+                @PROC_STEP_NAME = 'GENERATING ' + @global_temp_vaccine_prevent_diseases;
 
             EXECUTE  [dbo].[sp_MERGE_TABLES] 
-                @INPUT_TABLE1= @global_temp_foodborne_short_col
-                ,@INPUT_TABLE2= @global_temp_foodborne_ta
-                ,@OUTPUT_TABLE= @global_temp_foodborne
+                @INPUT_TABLE1= @global_temp_vaccine_prevent_diseases_short_col
+                ,@INPUT_TABLE2= @global_temp_vaccine_prevent_diseases_ta
+                ,@OUTPUT_TABLE= @global_temp_vaccine_prevent_diseases
                 ,@JOIN_ON_COLUMN='INVESTIGATION_KEY'
                 ,@batch_id= @batch_id
-                ,@target_table_name= @global_temp_foodborne;
+                ,@target_table_name= @global_temp_vaccine_prevent_diseases;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
-            SET @sql_code = 'DELETE FROM ' + @global_temp_foodborne + ' WHERE INVESTIGATION_KEY IS NULL';
+            SET @sql_code = 'DELETE FROM ' + @global_temp_vaccine_prevent_diseases + ' WHERE INVESTIGATION_KEY IS NULL';
             EXEC sp_executesql @sql_code;
 
             IF
                 @debug = 'true'
-                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_foodborne + ';');
+                EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_vaccine_prevent_diseases + ';');
 
             INSERT INTO [dbo].[job_flow_log]
                 (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -643,12 +858,12 @@ BEGIN
             FROM 
                 tempdb.INFORMATION_SCHEMA.COLUMNS c1
             WHERE 
-                c1.TABLE_NAME = @global_temp_foodborne
+                c1.TABLE_NAME = @global_temp_vaccine_prevent_diseases
                 AND c1.COLUMN_NAME NOT IN (
                     SELECT c2.COLUMN_NAME 
                     FROM INFORMATION_SCHEMA.COLUMNS c2 
                     WHERE c2.TABLE_SCHEMA = 'dbo' 
-                    AND c2.TABLE_NAME = 'LDF_FOODBORNE'
+                    AND c2.TABLE_NAME = 'LDF_VACCINE_PREVENT_DISEASES'
                 )
             ORDER BY 
                 c1.COLUMN_NAME;    
@@ -674,10 +889,10 @@ BEGIN
                     SET
                         @PROC_STEP_NO = @PROC_STEP_NO + 1;
                     SET
-                        @PROC_STEP_NAME = 'ADDING NEW COLUMNS TO TABLE LDF_FOODBORNE';
+                        @PROC_STEP_NAME = 'ADDING NEW COLUMNS TO TABLE LDF_VACCINE_PREVENT_DISEASES';
                     
 
-                    set @sql_code = 'ALTER TABLE dbo.LDF_FOODBORNE ADD ' + (SELECT STRING_AGG( '[' + col_nm + '] ' +  col_data_type +
+                    SET @sql_code = 'ALTER TABLE dbo.LDF_VACCINE_PREVENT_DISEASES ADD ' + (SELECT STRING_AGG( '[' + col_nm + '] ' +  col_data_type +
                     CASE
                         WHEN col_data_type IN ('decimal', 'numeric') THEN '(' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + ',' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + ')'
                         WHEN col_data_type = 'varchar' THEN '(' +
@@ -701,7 +916,7 @@ BEGIN
                         (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
             
                 COMMIT TRANSACTION;  
-            END  
+            END   
 
             ------------------------------------------------------------------------------------------------------------------------------------------    
 
@@ -717,7 +932,7 @@ BEGIN
             SELECT DISTINCT ic.COLUMN_NAME, ORDINAL_POSITION
             INTO #COL_LIST
             FROM tempdb.INFORMATION_SCHEMA.COLUMNS ic 
-            WHERE ic.table_name = @global_temp_foodborne
+            WHERE ic.table_name = @global_temp_vaccine_prevent_diseases
             AND UPPER(ic.COLUMN_NAME) NOT IN (
                 'INVESTIGATION_KEY',
                 'INVESTIGATION_LOCAL_ID',
@@ -750,7 +965,7 @@ BEGIN
                 SET
                     @PROC_STEP_NO = @PROC_STEP_NO + 1;
                 SET
-                    @PROC_STEP_NAME = 'DELETING INCOMING RECORDS FROM LDF_FOODBORNE';
+                    @PROC_STEP_NAME = 'DELETING INCOMING RECORDS FROM LDF_VACCINE_PREVENT_DISEASES';
 
                 IF OBJECT_ID('#LDF_PHC_UID_DEL') IS NOT NULL
                     DROP TABLE #LDF_PHC_UID_DEL;
@@ -758,11 +973,11 @@ BEGIN
                 SELECT DISTINCT L.INVESTIGATION_KEY 
                 INTO #LDF_PHC_UID_DEL
                 FROM #LDF_PHC_UID_LIST L 
-                INNER JOIN [dbo].LDF_FOODBORNE D 
+                INNER JOIN [dbo].LDF_VACCINE_PREVENT_DISEASES D 
                     ON D.INVESTIGATION_KEY = L.INVESTIGATION_KEY
                 
                 DELETE D
-                FROM [dbo].LDF_FOODBORNE D 
+                FROM [dbo].LDF_VACCINE_PREVENT_DISEASES D 
                 INNER JOIN #LDF_PHC_UID_DEL T 
                     ON T.INVESTIGATION_KEY = D.INVESTIGATION_KEY 
 
@@ -790,7 +1005,7 @@ BEGIN
                 SET
                     @PROC_STEP_NO = @PROC_STEP_NO + 1;
                 SET
-                    @PROC_STEP_NAME = 'INSERTING INCOMING RECORDS TO LDF_FOODBORNE';
+                    @PROC_STEP_NAME = 'INSERTING INCOMING RECORDS TO LDF_VACCINE_PREVENT_DISEASES';
                 
                 
                 SELECT @ldf_columns = COALESCE(STRING_AGG(CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION), '')
@@ -798,7 +1013,7 @@ BEGIN
 
 
                 SET @sql_code = 
-                'INSERT INTO dbo.LDF_FOODBORNE(
+                'INSERT INTO dbo.LDF_VACCINE_PREVENT_DISEASES(
                     INVESTIGATION_KEY,
                     INVESTIGATION_LOCAL_ID,
                     PROGRAM_JURISDICTION_OID,
@@ -825,7 +1040,7 @@ BEGIN
                     END
                 +
                 '
-                FROM ' + @global_temp_foodborne;
+                FROM ' + @global_temp_vaccine_prevent_diseases;
 
                 EXEC sp_executesql @sql_code;
 
@@ -833,7 +1048,7 @@ BEGIN
 
                 IF
                     @debug = 'true'
-                    EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_foodborne + ';');
+                    EXEC('SELECT '''+ @Proc_Step_Name +''' AS step, * FROM ' + @global_temp_vaccine_prevent_diseases + ';');
 
                 INSERT INTO [dbo].[job_flow_log]
                     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -851,19 +1066,19 @@ BEGIN
         SET @Proc_Step_Name = 'SP_COMPLETE';
         SELECT @ROWCOUNT_NO = 0;
 
-        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_ta +''', ''U'')  IS NOT NULL
+        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases_ta +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne_ta +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases_ta +';
             END;')
 
-        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_short_col +''', ''U'')  IS NOT NULL
+        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases_short_col +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne_short_col +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases_short_col +';
             END;')
 
-        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne +''', ''U'')  IS NOT NULL
+        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases +';
             END;')    
 
         INSERT INTO [dbo].[job_flow_log] 
@@ -878,19 +1093,19 @@ BEGIN
 
 		IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_ta +''', ''U'')  IS NOT NULL
+        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases_ta +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne_ta +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases_ta +';
             END;')
 
-        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne_short_col +''', ''U'')  IS NOT NULL
+        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases_short_col +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne_short_col +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases_short_col +';
             END;')
 
-        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_foodborne +''', ''U'')  IS NOT NULL
+        EXEC ('IF OBJECT_ID(''tempdb..' + @global_temp_vaccine_prevent_diseases +''', ''U'')  IS NOT NULL
             BEGIN
-                DROP TABLE ' + @global_temp_foodborne +';
+                DROP TABLE ' + @global_temp_vaccine_prevent_diseases +';
             END;')
 
 		-- Construct the error message string with all details:
