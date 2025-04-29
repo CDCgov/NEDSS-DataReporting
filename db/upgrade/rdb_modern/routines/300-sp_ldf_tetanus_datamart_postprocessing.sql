@@ -667,38 +667,41 @@ BEGIN
 
             ------------------------------------------------------------------------------------------------------------------------------------------    
 
-            BEGIN TRANSACTION
+            IF EXISTS (SELECT 1 FROM #MISSED_COLS)
+            BEGIN
+                BEGIN TRANSACTION
 
-                SET
-                    @PROC_STEP_NO = @PROC_STEP_NO + 1;
-                SET
-                    @PROC_STEP_NAME = 'ADDING NEW COLUMNS TO TABLE LDF_TETANUS';
-                
+                    SET
+                        @PROC_STEP_NO = @PROC_STEP_NO + 1;
+                    SET
+                        @PROC_STEP_NAME = 'ADDING NEW COLUMNS TO TABLE LDF_TETANUS';
+                    
 
-                set @sql_code = 'ALTER TABLE dbo.LDF_TETANUS ADD ' + (SELECT STRING_AGG( '[' + col_nm + '] ' +  col_data_type +
-                CASE
-                    WHEN col_data_type IN ('decimal', 'numeric') THEN '(' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + ',' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + ')'
-                    WHEN col_data_type = 'varchar' THEN '(' +
-                        CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN 'MAX' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END
-                    + ')'
-                    ELSE ''
-                END, ', ') FROM #MISSED_COLS);
+                    set @sql_code = 'ALTER TABLE dbo.LDF_TETANUS ADD ' + (SELECT STRING_AGG( '[' + col_nm + '] ' +  col_data_type +
+                    CASE
+                        WHEN col_data_type IN ('decimal', 'numeric') THEN '(' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + ',' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + ')'
+                        WHEN col_data_type = 'varchar' THEN '(' +
+                            CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN 'MAX' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END
+                        + ')'
+                        ELSE ''
+                    END, ', ') FROM #MISSED_COLS);
 
-                EXEC sp_executesql @sql_code;
-                
-                SELECT @RowCount_no = @@ROWCOUNT;
+                    EXEC sp_executesql @sql_code;
+                    
+                    SELECT @RowCount_no = @@ROWCOUNT;
 
-                IF
-                    @debug = 'true'
-                    SELECT @Proc_Step_Name AS step, col_nm
-                    FROM #MISSED_COLS;
+                    IF
+                        @debug = 'true'
+                        SELECT @Proc_Step_Name AS step, col_nm
+                        FROM #MISSED_COLS;
 
-                INSERT INTO [dbo].[job_flow_log]
-                    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-                VALUES 
-                    (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-            COMMIT TRANSACTION;    
+                    INSERT INTO [dbo].[job_flow_log]
+                        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+                    VALUES 
+                        (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+            
+                COMMIT TRANSACTION; 
+            END   
 
             ------------------------------------------------------------------------------------------------------------------------------------------    
 

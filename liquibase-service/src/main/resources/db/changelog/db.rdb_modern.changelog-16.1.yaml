@@ -1104,6 +1104,14 @@ databaseChangeLog:
             path: 033-sp_measles_case_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 110.01
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 242-create_case_lab_datamart-001.sql
+            splitStatements: false
+  - changeSet:
       id: 111
       author: liquibase
       runOnChange: true
@@ -2520,13 +2528,30 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 300-sp_ldf_tetanus_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: false             
   - changeSet:
       id: 820
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 305-sp_covid_case_datamart_postprocessing-001.sql
+            path: 242-create_ldf_vaccine_prevent_diseases-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 825
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql
+            splitStatements: false      
+            splitStatements: false
+  - changeSet:
+      id: 830
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 310-sp_covid_case_datamart_postprocessing-001.sql
             splitStatements: false
     
