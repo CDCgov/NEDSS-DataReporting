@@ -139,4 +139,5 @@ public class InvestigationReporting {
     private String detectionMethodCd;
     private Long batchId;
     private String rptCntyCd;
+    private String notes;
 }

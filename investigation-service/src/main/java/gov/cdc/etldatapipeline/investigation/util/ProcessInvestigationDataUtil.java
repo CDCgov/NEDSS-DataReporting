@@ -270,6 +270,7 @@ public class ProcessInvestigationDataUtil {
                 String sourceClassCode = node.path("source_class_cd").asText();
                 String actTypeCode = node.path("act_type_cd").asText();
                 Long sourceActId = node.get("source_act_uid").asLong();
+                Long rootUid = node.get("root_uid").asLong();
                 Long publicHealthCaseUid = node.get("public_health_case_uid").asLong();
                 String rootTypeCd = node.path("act_type_cd").asText();
 
@@ -278,7 +279,7 @@ public class ProcessInvestigationDataUtil {
                 }
 
                 investigationObservation.setPublicHealthCaseUid(publicHealthCaseUid);
-                investigationObservation.setObservationId(sourceActId);
+                investigationObservation.setObservationId(rootUid);
                 investigationObservation.setRootTypeCd(rootTypeCd);
                 investigationObservation.setBranchId(null);
                 investigationObservation.setBranchTypeCd(null);
@@ -321,9 +322,6 @@ public class ProcessInvestigationDataUtil {
             Map<String, String> confirmationMethodMap = new HashMap<>();
             String confirmationMethodTime = null;
 
-            // Redundant time variable in case if confirmation_method_time is null in all rows of the array
-            String phcLastChgTime = investigationConfirmationMethodJsonArray.get(0).get("phc_last_chg_time").asText();
-
             for(JsonNode node : investigationConfirmationMethodJsonArray) {
                 JsonNode timeNode = node.get("confirmation_method_time");
                 if (timeNode != null && !timeNode.isNull()) {
@@ -333,8 +331,7 @@ public class ProcessInvestigationDataUtil {
             }
             investigationConfirmation.setPublicHealthCaseUid(publicHealthCaseUid);
             investigationConfirmation.setBatchId(investigationTransformed.getBatchId());
-            investigationConfirmation.setConfirmationMethodTime(
-                    confirmationMethodTime == null ? phcLastChgTime : confirmationMethodTime);
+            investigationConfirmation.setConfirmationMethodTime(confirmationMethodTime);
 
             investigationConfirmationMethodKey.setPublicHealthCaseUid(publicHealthCaseUid);
 

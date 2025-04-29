@@ -11,11 +11,13 @@ BEGIN
             declare @proc_step_name varchar(200) = '';
             declare @batch_id bigint;
             declare @dataflow_name varchar(200) = 'MOVE_CNTY POST-Processing';
-            declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_move_cnty_postprocessing';
+            declare @package_name varchar(200) = 'sp_nrt_d_move_cnty_postprocessing';
 
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
+
+        SET @Proc_Step_Name = 'SP_Start';
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Msg_Description1])
@@ -252,34 +254,6 @@ BEGIN
                 @RowCount_no);
         
 
----------------------------------------------------------------------------------------------------------------------
-
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_CNTY_GROUP';
-
-        -- update F_TB_PAM table
-        UPDATE F
-            SET F.D_MOVE_CNTY_GROUP_KEY = 1
-        FROM DBO.F_TB_PAM F
-        INNER JOIN #TEMP_D_MOVE_CNTY_DEL T on T.D_MOVE_CNTY_GROUP_KEY = F.D_MOVE_CNTY_GROUP_KEY;
-
-        -- delete from DBO.D_MOVE_CNTY_GROUP
-        DELETE T FROM DBO.D_MOVE_CNTY_GROUP T
-        left join (select distinct D_MOVE_CNTY_GROUP_KEY from dbo.d_move_cnty) DBO
-            ON DBO.D_MOVE_CNTY_GROUP_KEY = T.D_MOVE_CNTY_GROUP_KEY
-        WHERE DBO.D_MOVE_CNTY_GROUP_KEY is null;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
-        
         COMMIT TRANSACTION;   
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -564,7 +538,45 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;          
+        COMMIT TRANSACTION;  
+
+---------------------------------------------------------------------------------------------------------------------
+        
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_CNTY_GROUP';
+
+        -- update F_TB_PAM table
+        UPDATE F
+            SET F.D_MOVE_CNTY_GROUP_KEY = D.D_MOVE_CNTY_GROUP_KEY
+        FROM DBO.F_TB_PAM F with (nolock)
+        INNER JOIN DBO.D_TB_PAM DIM  with (nolock)
+            ON DIM.D_TB_PAM_KEY = F.D_TB_PAM_KEY
+        INNER JOIN DBO.D_MOVE_CNTY D with (nolock)
+            ON D.TB_PAM_UID = DIM.TB_PAM_UID
+        INNER JOIN #S_PHC_LIST S
+            ON D.TB_PAM_UID = S.VALUE;
+
+        -- delete from DBO.D_MOVE_CNTY_GROUP
+        DELETE T FROM DBO.D_MOVE_CNTY_GROUP T with (nolock)
+        INNER JOIN #TEMP_D_MOVE_CNTY_DEL DEL
+            on T.D_MOVE_CNTY_GROUP_KEY = DEL.D_MOVE_CNTY_GROUP_KEY
+        left join (select distinct D_MOVE_CNTY_GROUP_KEY from dbo.D_MOVE_CNTY with (nolock)) D
+            ON D.D_MOVE_CNTY_GROUP_KEY = T.D_MOVE_CNTY_GROUP_KEY
+        WHERE D.D_MOVE_CNTY_GROUP_KEY is null;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+        COMMIT TRANSACTION;  
+               
 --------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;

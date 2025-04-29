@@ -11,6 +11,9 @@ public interface PersonExtendedProps {
     default void setNmUseCd(String personNameSeq) {
     }
 
+    default void setStatusNameCd(String statusNameCd) {
+    }
+
     default void setNmDegree(String nmDegree) {
     }
 

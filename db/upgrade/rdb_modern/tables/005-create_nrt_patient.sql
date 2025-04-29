@@ -83,6 +83,8 @@ CREATE TABLE dbo.nrt_patient
     last_chg_user_id      bigint                                       null,
     last_chg_user_name    varchar(50)                                  null,
     last_chg_time         datetime                                     null,
+    nm_use_cd             varchar(20)                                  null,
+    status_name_cd        varchar(1)                                   null,
     refresh_datetime      datetime2 generated always as row start      not null,
     max_datetime          datetime2 generated always as row end hidden not null,
     period for system_time (refresh_datetime,max_datetime)
