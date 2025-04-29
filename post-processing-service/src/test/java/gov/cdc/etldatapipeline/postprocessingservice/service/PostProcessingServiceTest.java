@@ -699,7 +699,7 @@ class PostProcessingServiceTest {
     }
     
     @Test
-    void testPostProcessGenericCaseLdfFoodBorneNegative() {
+    void testPostProcessGenericCaseLdfFoodBorneDatamartNegative() {
         
         postProcessingServiceMock.setLdfEnable(false);
         String topic = "dummy_datamart";
@@ -718,7 +718,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessGenericCaseLdfFoodBorne() {
+    void testPostProcessGenericCaseLdfFoodBorneDatamart() {
 
         postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
@@ -739,7 +739,7 @@ class PostProcessingServiceTest {
     }
    
     @Test
-    void testPostProcessGenericCaseLdfTetanusNegative() {
+    void testPostProcessGenericCaseLdfTetanusDatamartNegative() {
         
         postProcessingServiceMock.setLdfEnable(false);
         String topic = "dummy_datamart";
@@ -758,7 +758,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessGenericCaseLdfTetanus() {
+    void testPostProcessGenericCaseLdfTetanusDatamart() {
 
         postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
@@ -779,7 +779,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessCrsCaseLdfVaccinePreventDiseasesNegative() {  
+    void testPostProcessCrsCaseLdfVaccinePreventDiseasesDatamartNegative() {  
         
         postProcessingServiceMock.setLdfEnable(false);
         String topic = "dummy_datamart";
@@ -798,7 +798,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessCrsCaseLdfVaccinePreventDiseases() {
+    void testPostProcessCrsCaseLdfVaccinePreventDiseasesDatamart() {
 
         postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
@@ -819,7 +819,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessRubellaCaseLdfVaccinePreventDiseasesNegative() { 
+    void testPostProcessRubellaCaseLdfVaccinePreventDiseasesDatamartNegative() { 
         
         postProcessingServiceMock.setLdfEnable(false);
         String topic = "dummy_datamart";
@@ -838,7 +838,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessRubellaCaseLdfVaccinePreventDiseases() {
+    void testPostProcessRubellaCaseLdfVaccinePreventDiseasesDatamart() {
 
         postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
@@ -859,7 +859,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessMeaslesCaseLdfVaccinePreventDiseasesNegative() {  
+    void testPostProcessMeaslesCaseLdfVaccinePreventDiseasesDatamartNegative() {  
         
         postProcessingServiceMock.setLdfEnable(false);
         String topic = "dummy_datamart";
@@ -878,7 +878,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessMeaslesCaseLdfVaccinePreventDiseases() {
+    void testPostProcessMeaslesCaseLdfVaccinePreventDiseasesDatamart() {
 
         postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
@@ -899,7 +899,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessPertussisCaseLdfVaccinePreventDiseasesNegative() {  
+    void testPostProcessPertussisCaseLdfVaccinePreventDiseasesDatamartNegative() {  
         
         postProcessingServiceMock.setLdfEnable(false);
         String topic = "dummy_datamart";
@@ -918,7 +918,7 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessPertussisCaseLdfVaccinePreventDiseases() {
+    void testPostProcessPertussisCaseLdfVaccinePreventDiseasesDatamart() {
 
         postProcessingServiceMock.setLdfEnable(true);
         String topic = "dummy_datamart";
@@ -1042,6 +1042,15 @@ class PostProcessingServiceTest {
                             verify(repo).executeStoredProcForGenericCaseDatamart(uid);
                             verify(repo).executeStoredProcForLdfGenericDatamart(uid);
                         }),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Generic_Case,LDF_MUMPS\",\"stored_procedure\":\"sp_ldf_mumps_datamart_postprocessing\"}}",
+                        "Generic_Case,LDF_MUMPS", LDF_MUMPS.getStoredProcedure(), 5,
+                        (repo, uid) -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
+                            verify(repo).executeStoredProcForLdfMumpsDatamart(uid);
+                            }
+                        ),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_crs_case_datamart_postprocessing\"}}",
