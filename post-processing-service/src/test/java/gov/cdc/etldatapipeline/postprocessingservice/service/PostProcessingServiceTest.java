@@ -172,7 +172,6 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"public_health_case_uid\":12}}";
         postProcessingServiceMock.setDTbHivEnable(true);
 
-        // postProcessingServiceMock.postProcessMessage(topic, key, key);
         List<DatamartData> masterData = getTBDatamart(123L, 201L);
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
@@ -206,7 +205,6 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"public_health_case_uid\":12}}";
         postProcessingServiceMock.setDTbHivEnable(true);
 
-        // postProcessingServiceMock.postProcessMessage(topic, key, key);
         List<DatamartData> masterData = getVarDatamart(123L, 201L);
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
