@@ -160,7 +160,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(46, logs.size());
+        assertEquals(8, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -169,11 +169,14 @@ class PostProcessingServiceTest {
     @Test
     void testPostProcessInvestigationTBMessage() {
         String topic = "dummy_investigation";
-        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String key = "{\"payload\":{\"public_health_case_uid\":12}}";
         postProcessingServiceMock.setDTbHivEnable(true);
+
+        // postProcessingServiceMock.postProcessMessage(topic, key, key);
+        List<DatamartData> masterData = getTBDatamart(123L, 201L);
+        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
-
         String expectedPublicHealthCaseIdsString = "123";
 
         verify(investigationRepositoryMock).executeStoredProcForDTbPam(expectedPublicHealthCaseIdsString);
@@ -192,7 +195,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForTbPamLdf(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(46, logs.size());
+        assertEquals(36, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -200,13 +203,16 @@ class PostProcessingServiceTest {
     @Test
     void testPostProcessInvestigationVARMessage() {
         String topic = "dummy_investigation";
-        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String key = "{\"payload\":{\"public_health_case_uid\":12}}";
         postProcessingServiceMock.setDTbHivEnable(true);
+
+        // postProcessingServiceMock.postProcessMessage(topic, key, key);
+        List<DatamartData> masterData = getVarDatamart(123L, 201L);
+        when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
-
-
         String expectedPublicHealthCaseIdsString = "123";
+
         verify(investigationRepositoryMock).executeStoredProcForDVarPam(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDRashLocGen(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForDPcrSource(expectedPublicHealthCaseIdsString);
@@ -214,7 +220,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForFVarPam(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(46, logs.size());
+        assertEquals(18, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -234,7 +240,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(50, logs.size());
+        assertEquals(12, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -252,7 +258,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(48, logs.size());
+        assertEquals(10, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INVESTIGATION.getStoredProcedure()));
         assertTrue(logs.get(5).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -337,7 +343,7 @@ class PostProcessingServiceTest {
                 expectedRdbTableNames);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(48, logs.size());
+        assertEquals(10, logs.size());
         assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -617,20 +623,20 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(3).contains(userProfileTopic));
         assertTrue(topicLogList.get(4).contains(placeTopic));
         assertTrue(topicLogList.get(5).contains(invTopic));
-        assertTrue(topicLogList.get(10).contains(invTopic));
-        assertTrue(topicLogList.get(11).contains(ntfTopic));
-        assertTrue(topicLogList.get(12).contains(treatmentTopic));
-        assertTrue(topicLogList.get(13).contains(intTopic));
-        assertTrue(topicLogList.get(14).contains(intTopic));
-        assertTrue(topicLogList.get(15).contains(cmTopic));
-        assertTrue(topicLogList.get(16).contains(cmTopic));
-        assertTrue(topicLogList.get(17).contains(ldfTopic));
-        assertTrue(topicLogList.get(18).contains(ldfTopic));
-        assertTrue(topicLogList.get(19).contains(obsTopic));
-        assertTrue(topicLogList.get(20).contains(contactTopic));
-        assertTrue(topicLogList.get(21).contains(contactTopic));
-        assertTrue(topicLogList.get(22).contains(vacTopic));
-        assertTrue(topicLogList.get(23).contains(vacTopic));        
+        assertTrue(topicLogList.get(7).contains(invTopic));
+        assertTrue(topicLogList.get(8).contains(ntfTopic));
+        assertTrue(topicLogList.get(9).contains(treatmentTopic));
+        assertTrue(topicLogList.get(10).contains(intTopic));
+        assertTrue(topicLogList.get(11).contains(intTopic));
+        assertTrue(topicLogList.get(12).contains(cmTopic));
+        assertTrue(topicLogList.get(13).contains(cmTopic));
+        assertTrue(topicLogList.get(14).contains(ldfTopic));
+        assertTrue(topicLogList.get(15).contains(ldfTopic));
+        assertTrue(topicLogList.get(16).contains(obsTopic));
+        assertTrue(topicLogList.get(17).contains(contactTopic));
+        assertTrue(topicLogList.get(18).contains(contactTopic));
+        assertTrue(topicLogList.get(19).contains(vacTopic));
+        assertTrue(topicLogList.get(20).contains(vacTopic));        
     }
 
     @Test
@@ -1392,6 +1398,34 @@ class PostProcessingServiceTest {
         datamartDataLst.add(datamartData);
         return datamartDataLst;
     }
+
+    private List<DatamartData> getTBDatamart(Long phcUid, Long patientUid, String... dmVar) {
+        List<DatamartData> datamartDataLst = new ArrayList<>();
+        DatamartData datamartData = new DatamartData();
+        datamartData.setPublicHealthCaseUid(phcUid);
+        datamartData.setPatientUid(patientUid);
+        datamartData.setConditionCd("10110");
+        datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : TB_DATAMART.getEntityName());
+        datamartData.setStoredProcedure(TB_DATAMART.getStoredProcedure());
+        datamartData.setInvestigationFormCd("INV_FORM_RVCT");
+        datamartDataLst.add(datamartData);
+        return datamartDataLst;
+    }
+
+
+    private List<DatamartData> getVarDatamart(Long phcUid, Long patientUid, String... dmVar) {
+        List<DatamartData> datamartDataLst = new ArrayList<>();
+        DatamartData datamartData = new DatamartData();
+        datamartData.setPublicHealthCaseUid(phcUid);
+        datamartData.setPatientUid(patientUid);
+        datamartData.setConditionCd("10110");
+        datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : HEPATITIS_DATAMART.getEntityName());
+        datamartData.setStoredProcedure(TB_DATAMART.getStoredProcedure());
+        datamartData.setInvestigationFormCd("INV_FORM_VAR");
+        datamartDataLst.add(datamartData);
+        return datamartDataLst;
+    }
+
 
     static class DatamartTestCase {
         String msg;
