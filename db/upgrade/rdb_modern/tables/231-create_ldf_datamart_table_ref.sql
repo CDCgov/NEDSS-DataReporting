@@ -159,4 +159,17 @@ BEGIN
         on ldf.CONDITION_CD = d.condition_cd
     where d.condition_cd is null;
 
+    /* Insert Tetanus & Mumps into LDF_DATAMART_TABLE_REF for testing*/
+    INSERT INTO [dbo].[LDF_DATAMART_TABLE_REF](
+        CONDITION_CD,
+        CONDITION_DESC,
+        LDF_GROUP_ID,
+        DATAMART_NAME,
+        LINKED_FACT_TABLE,
+        ENTITY_DESC
+    )
+    VALUES
+        ('10210','Tetanus',7,'LDF_TETANUS','GENERIC_CASE',null),
+            ('10180','Mumps',6,'LDF_MUMPS','GENERIC_CASE',null);
+
 END
