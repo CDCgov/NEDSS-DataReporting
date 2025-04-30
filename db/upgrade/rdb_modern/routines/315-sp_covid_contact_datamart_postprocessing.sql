@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[covid_contact_datamart_postprocessing] @id_list nvarchar(max) = NULL, @debug bit = 'false'
+CREATE OR ALTER PROCEDURE [dbo].[sp_covid_contact_datamart_postprocessing] @id_list nvarchar(max) = NULL, @debug bit = 'false'
 AS
 BEGIN
     BEGIN TRY
