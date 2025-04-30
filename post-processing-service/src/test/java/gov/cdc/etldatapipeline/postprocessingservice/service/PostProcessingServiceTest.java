@@ -1404,7 +1404,7 @@ class PostProcessingServiceTest {
         DatamartData datamartData = new DatamartData();
         datamartData.setPublicHealthCaseUid(phcUid);
         datamartData.setPatientUid(patientUid);
-        datamartData.setConditionCd("10110");
+        datamartData.setConditionCd("10220");
         datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : TB_DATAMART.getEntityName());
         datamartData.setStoredProcedure(TB_DATAMART.getStoredProcedure());
         datamartData.setInvestigationFormCd("INV_FORM_RVCT");
@@ -1418,9 +1418,9 @@ class PostProcessingServiceTest {
         DatamartData datamartData = new DatamartData();
         datamartData.setPublicHealthCaseUid(phcUid);
         datamartData.setPatientUid(patientUid);
-        datamartData.setConditionCd("10110");
-        datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : HEPATITIS_DATAMART.getEntityName());
-        datamartData.setStoredProcedure(TB_DATAMART.getStoredProcedure());
+        datamartData.setConditionCd("10030");
+        datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : VAR_DATAMART.getEntityName());
+        datamartData.setStoredProcedure(VAR_DATAMART.getStoredProcedure());
         datamartData.setInvestigationFormCd("INV_FORM_VAR");
         datamartDataLst.add(datamartData);
         return datamartDataLst;
