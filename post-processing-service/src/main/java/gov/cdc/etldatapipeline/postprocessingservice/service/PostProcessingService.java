@@ -452,10 +452,10 @@ public class PostProcessingService {
 
     private void processByInvFormCode(List<DatamartData> dmData) {
 
-        List<Long> pamUids = dmData.stream()
+        Set<Long> pamUids = dmData.stream()
         .filter(d -> "INV_FORM_RVCT".equals(d.getInvestigationFormCd()))
         .map(DatamartData::getPublicHealthCaseUid)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
         
         processTopic(investigationTopic, D_TB_PAM, pamUids, investigationRepository::executeStoredProcForDTbPam);
         processTopic(investigationTopic, D_ADDL_RISK, pamUids, investigationRepository::executeStoredProcForDAddlRisk);
@@ -479,7 +479,7 @@ public class PostProcessingService {
             pamUids = dmData.stream()
             .filter(d -> "INV_FORM_VAR".equals(d.getInvestigationFormCd()))
             .map(DatamartData::getPublicHealthCaseUid)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
             processTopic(investigationTopic, D_VAR_PAM, pamUids, investigationRepository::executeStoredProcForDVarPam);
             processTopic(investigationTopic, D_RASH_LOC_GEN, pamUids, investigationRepository::executeStoredProcForDRashLocGen);
