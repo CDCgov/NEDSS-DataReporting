@@ -343,7 +343,7 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
         FROM #ANTIMICRO1B;
         -- Step 3: Create a new table with the merged data and add a counter column
         SELECT *,
-               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY SORT_ORDER, ANTIMICROBIAL_KEY desc) AS COUNTER
+               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY SORT_ORDER, ANTIMICROBIAL_KEY) AS COUNTER
         into #ANTIMICRO2
         FROM #ANTIMICRO1;
 
