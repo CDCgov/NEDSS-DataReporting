@@ -297,7 +297,7 @@ public class InvestigationService {
             if(isFromVaccinationTopic) {
                 vaccinationUid = extractUid(value, "intervention_uid");
             } else {
-                if (!operationType.equals("u")) {
+                if (operationType.equals("u")) {
                     return;
                 }
                 vaccinationUid = actRelationshipSourceActUid;
