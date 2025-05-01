@@ -292,6 +292,7 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
 
         SELECT
             bc.INVESTIGATION_KEY,
+            a.ANTIMICROBIAL_KEY,
             a.ANTIMICROBIAL_AGENT_TESTED_IND AS ANTIMICROBIAL_AGENT_TESTED_,
             a.SUSCEPTABILITY_METHOD AS SUSCEPTABILITY_METHOD_,
             a.S_I_R_U_RESULT AS S_I_R_U_RESULT_,
@@ -303,10 +304,11 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
                  INNER JOIN dbo.ANTIMICROBIAL a with (nolock)
                             ON bc.ANTIMICROBIAL_GRP_KEY = a.ANTIMICROBIAL_GRP_KEY
         WHERE a.ANTIMICROBIAL_GRP_KEY <> 1 AND a.ANTIMICROBIAL_AGENT_TESTED_IND = 'PENICILLIN'
-        ORDER BY INVESTIGATION_KEY, SORT_ORDER;
+        ;
 
         SELECT
             bc.INVESTIGATION_KEY,
+            a.ANTIMICROBIAL_KEY,
             a.ANTIMICROBIAL_AGENT_TESTED_IND AS ANTIMICROBIAL_AGENT_TESTED_ ,
             a.SUSCEPTABILITY_METHOD AS SUSCEPTABILITY_METHOD_,
             a.S_I_R_U_RESULT AS S_I_R_U_RESULT_,
@@ -317,7 +319,7 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
         FROM #BMIRD_PATIENT1 bc
                  INNER JOIN dbo.ANTIMICROBIAL a with (nolock)  ON bc.ANTIMICROBIAL_GRP_KEY = a.ANTIMICROBIAL_GRP_KEY
         WHERE a.ANTIMICROBIAL_GRP_KEY <> 1 AND a.ANTIMICROBIAL_AGENT_TESTED_IND <> 'PENICILLIN'
-        ORDER BY INVESTIGATION_KEY, SORT_ORDER;
+        ;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -341,7 +343,7 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
         FROM #ANTIMICRO1B;
         -- Step 3: Create a new table with the merged data and add a counter column
         SELECT *,
-               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY SORT_ORDER) AS COUNTER
+               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY SORT_ORDER, ANTIMICROBIAL_KEY) AS COUNTER
         into #ANTIMICRO2
         FROM #ANTIMICRO1;
 
@@ -549,7 +551,7 @@ Step 5: Merge the tables so that both <= 8 and > 8 results are included
                  INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
                             on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
         WHERE a.UNDERLYING_CONDITION_NM IS NOT NULL
-        ORDER BY bc.INVESTIGATION_KEY, a.UNDERLYING_CONDITION_NM;
+        ;
 
 
 
