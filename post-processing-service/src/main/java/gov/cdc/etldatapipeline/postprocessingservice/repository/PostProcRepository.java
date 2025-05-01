@@ -77,8 +77,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_d_vaccination_postprocessing")
     void executeStoredProcForDVaccination(@Param("vaccinationUids") String vaccinationUids);
 
-    @Procedure("sp_inv_summary_datamart_postprocessing")
-    void executeStoredProcForInvSummaryDatamart(
+    @Query(value = "exec sp_inv_summary_datamart_postprocessing :publicHealthCaseUids, :notificationUids, :observationUids", nativeQuery = true)
+    List<DatamartData>  executeStoredProcForInvSummaryDatamart(
             @Param("publicHealthCaseUids") String publicHealthCaseUids,
             @Param("notificationUids") String notificationUids,
             @Param("observationUids") String observationUids
@@ -94,5 +94,14 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
             @Param("providerUids") String providerUids,
             @Param("organizationUids") String organizationUids,
             @Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_dyn_dm_main_postprocessing")
+    void executeStoredProcForDynDatamart(
+            @Param("datamart") String datamart,
+            @Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+   @Procedure("sp_nrt_ldf_dimensional_data_postprocessing")
+    void executeStoredProcForLdfDimensionalData(@Param("ldfUids") String ldfUids);
+     
 }
    

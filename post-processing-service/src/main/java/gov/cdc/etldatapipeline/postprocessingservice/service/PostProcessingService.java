@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
@@ -24,13 +25,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -61,6 +62,9 @@ public class PostProcessingService {
     // cache to store ids that needs to be processed for datamarts
     // a map of datamart names and the needed ids
     final Map<String, Map<String, Queue<Long>>> dmCache = new ConcurrentHashMap<>();
+
+    private static int nProc = Runtime.getRuntime().availableProcessors();
+    private final ExecutorService dynDmExecutor = Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
 
     private final PostProcRepository postProcRepository;
     private final InvestigationRepository investigationRepository;
@@ -97,6 +101,16 @@ public class PostProcessingService {
 
     @Value("${featureFlag.aggregate-report-enable}")
     private boolean aggregateReportEnable;
+
+    @Value("${featureFlag.d-tb-hiv-enable}")
+    private boolean dTbHivEnable;
+
+    @Value("${featureFlag.ldf-enable}")
+    private boolean ldfEnable;
+
+    @Value("${featureFlag.dyn-dm-enable}")
+    private boolean dynDmEnable;
+
 
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
@@ -152,6 +166,12 @@ public class PostProcessingService {
         val.ifPresent(v -> idVals.put(id, v));
     }
 
+    /**
+     * Extract id from the kafka message key
+     * @param topic
+     * @param messageKey
+     * @return id or uid
+     */
     private Long extractIdFromMessage(String topic, String messageKey) {
         try {
             logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
@@ -165,8 +185,50 @@ public class PostProcessingService {
             return keyNode.get(PAYLOAD).get(entity.getUidName()).asLong();
         } catch (Exception e) {
             String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
-            throw new RuntimeException(msg, e);
+            throw new DataProcessingException(msg, e);
         }
+    }
+    /**
+     * Extracts relevant value from the kafka message payload
+     * @param uid
+     * @param topic
+     * @param payload
+     * @return String
+     */
+    private String extractValFromMessage(Long uid, String topic, String payload) {
+        try {
+            JsonNode payloadNode = objectMapper.readTree(payload).get(PAYLOAD);
+            if (topic.endsWith(INVESTIGATION.getEntityName())) {
+                extractSummaryCase(uid, payloadNode.path("case_type_cd").asText());
+
+                JsonNode tblNode = payloadNode.path("rdb_table_name_list");
+                if (!tblNode.isMissingNode() && !tblNode.isNull()) {
+                    return tblNode.asText();
+                }
+            } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
+                String actTypeCd = payloadNode.path("act_type_cd").asText();
+                Long phcUid = payloadNode.get(INVESTIGATION.getUidName()).asLong();
+                extractSummaryCase(phcUid, actTypeCd);
+            } else if (topic.endsWith(OBSERVATION.getEntityName())) {
+                String domainCd = payloadNode.path("obs_domain_cd_st_1").asText();
+                String ctrlCd = Optional
+                        .ofNullable(payloadNode.get("ctrl_cd_display_form"))
+                        .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
+
+                if (MORB_REPORT.equals(ctrlCd)) {
+                    if ("Order".equals(domainCd)) {
+                        return ctrlCd;
+                    }
+                } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null) &&
+                        assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result",
+                                "Order_rslt")) {
+                    return LAB_REPORT;
+                }
+            }
+        } catch (Exception ex) {
+            logger.warn("Error processing ID values for the {} message: {}", topic, ex.getMessage());
+        }
+        return null;
     }
 
     private void extractSummaryCase(Long uid, String caseType) {
@@ -220,7 +282,7 @@ public class PostProcessingService {
 
         } catch (Exception e) {
             String msg = "Error processing datamart message: " + e.getMessage();
-            throw new RuntimeException(msg, e);
+            throw new DataProcessingException(msg, e);
         }
     }
 
@@ -240,7 +302,7 @@ public class PostProcessingService {
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processCachedIds() {
 
-        // Making cache snapshot preventing out-of-sequence ids processing;
+        // Making cache snapshot preventing out-of-sequence ids processing
         // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
         final Map<String, List<Long>> idCacheSnapshot;
         final Map<Long, String> idValsSnapshot;
@@ -325,6 +387,7 @@ public class PostProcessingService {
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
                         break;
                     case OBSERVATION:
                         dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);
@@ -346,7 +409,7 @@ public class PostProcessingService {
             processSummaryCases();
             datamartProcessor.process(dmData);
 
-            // merge entity IDs collections from temporary map into main datamart cache
+            // merge entity IDs collections from temporary map `newDmMulti` into main datamart cache
             synchronized (cacheLock) {
                 Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTIID, k -> new ConcurrentHashMap<>());
                 newDmMulti.forEach((key, queue) ->
@@ -399,20 +462,30 @@ public class PostProcessingService {
         processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
         processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
         processTopic(keyTopic, D_TB_PAM, ids, investigationRepository::executeStoredProcForDTbPam);
-        processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);
-        processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
         processTopic(keyTopic, D_ADDL_RISK, ids, investigationRepository::executeStoredProcForDAddlRisk);
-        processTopic(keyTopic, D_GT_12_REAS, ids, investigationRepository::executeStoredProcForDGt12Reas);
-        processTopic(keyTopic, D_MOVE_CNTRY, ids, investigationRepository::executeStoredProcForDMoveCntry);
-        processTopic(keyTopic, D_MOVE_CNTY, ids, investigationRepository::executeStoredProcForDMoveCnty);
-        processTopic(keyTopic, D_MOVE_STATE, ids, investigationRepository::executeStoredProcForDMoveState);
-        processTopic(keyTopic, D_MOVED_WHERE, ids, investigationRepository::executeStoredProcForDMovedWhere);
-        processTopic(keyTopic, D_HC_PROV_TY_3, ids, investigationRepository::executeStoredProcForDHcProvTy3);
-        processTopic(keyTopic, D_OUT_OF_CNTRY, ids, investigationRepository::executeStoredProcForDOutOfCntry);
-        processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
-        processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
-        processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
-        processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
+        processTopic(keyTopic, D_DISEASE_SITE, ids, investigationRepository::executeStoredProcForDDiseaseSite);
+
+        if(dTbHivEnable) {
+            //TB
+            processTopic(keyTopic, D_TB_HIV, ids, investigationRepository::executeStoredProcForDTbHiv);
+            processTopic(keyTopic, D_GT_12_REAS, ids, investigationRepository::executeStoredProcForDGt12Reas);
+            processTopic(keyTopic, D_MOVE_CNTRY, ids, investigationRepository::executeStoredProcForDMoveCntry);
+            processTopic(keyTopic, D_MOVE_CNTY, ids, investigationRepository::executeStoredProcForDMoveCnty);
+            processTopic(keyTopic, D_MOVE_STATE, ids, investigationRepository::executeStoredProcForDMoveState);
+            processTopic(keyTopic, D_MOVED_WHERE, ids, investigationRepository::executeStoredProcForDMovedWhere);
+            processTopic(keyTopic, D_HC_PROV_TY_3, ids, investigationRepository::executeStoredProcForDHcProvTy3);
+            processTopic(keyTopic, D_OUT_OF_CNTRY, ids, investigationRepository::executeStoredProcForDOutOfCntry);
+            processTopic(keyTopic, D_SMR_EXAM_TY, ids, investigationRepository::executeStoredProcForDSmrExamTy);
+            processTopic(keyTopic, F_TB_PAM, ids, investigationRepository::executeStoredProcForFTbPam);
+            processTopic(keyTopic, TB_PAM_LDF, ids, investigationRepository::executeStoredProcForTbPamLdf);
+           
+            //VAR
+            processTopic(keyTopic, D_VAR_PAM, ids, investigationRepository::executeStoredProcForDVarPam);
+            processTopic(keyTopic, D_RASH_LOC_GEN, ids, investigationRepository::executeStoredProcForDRashLocGen);
+            processTopic(keyTopic, D_PCR_SOURCE, ids, investigationRepository::executeStoredProcForDPcrSource);
+            processTopic(keyTopic, F_VAR_PAM, ids, investigationRepository::executeStoredProcForFVarPam);
+            processTopic(keyTopic, VAR_PAM_LDF, ids, investigationRepository::executeStoredProcForVarPamLdf);
+        }   
         
         return dmData;
     }
@@ -463,15 +536,20 @@ public class PostProcessingService {
     protected void processDatamartIds() {
         for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
             if (!entry.getValue().isEmpty()) {
-                String dmType = entry.getKey();
+                String dmKey = entry.getKey();
 
                 // skip multi ID processing here, it should after this processing
-                if (MULTIID.equals(dmType)) {
+                if (MULTIID.equals(dmKey)) {
                     continue;
                 }
 
+                // for complex value (e.g. "GENERIC_CASE,LDF_GENERIC") the key should be parsed
+                String[] dmTypes = dmKey.split(",");
+                String dmType =  dmTypes[0];
+                String ldfType = (ldfEnable && dmTypes.length > 1) ? dmTypes[1] : "UNKNOWN" ;
+
                 Queue<Long> uids = entry.getValue().get(INVESTIGATION.getEntityName());
-                dmCache.put(dmType, new ConcurrentHashMap<>());
+                dmCache.put(dmKey, new ConcurrentHashMap<>());
 
                 // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
                 String cases = uids.stream().map(String::valueOf).collect(Collectors.joining(","));
@@ -491,19 +569,55 @@ public class PostProcessingService {
                         break;
                     case GENERIC_CASE:
                         executeDatamartProc(GENERIC_CASE,
-                                investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
+                            investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
+
+                        switch (Entity.valueOf(ldfType.toUpperCase())) {
+                            case LDF_GENERIC:
+                                executeDatamartProc(LDF_GENERIC,
+                                investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
+                                break;
+                            case LDF_FOODBORNE:
+                                executeDatamartProc(LDF_FOODBORNE,
+                                investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
+                                break;
+                            case LDF_TETANUS:
+                                // to test this, Tetanus must be added as a legacy page and 
+                                // [dbo].nrt_datamart_metadata table must be updated adding TETANUS
+                                executeDatamartProc(LDF_TETANUS,
+                                investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
+                                break;
+                            case LDF_MUMPS:
+                                executeDatamartProc(LDF_MUMPS,
+                                    investigationRepository::executeStoredProcForLdfMumpsDatamart, cases);
+                                break;
+                            default:
+                                break;
+                        }    
+                        
                         break;
                     case CRS_CASE:
                         executeDatamartProc(CRS_CASE,
                                 investigationRepository::executeStoredProcForCRSCaseDatamart, cases);
+                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
+                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                        }
                         break;
                     case RUBELLA_CASE:
                         executeDatamartProc(RUBELLA_CASE,
                                 investigationRepository::executeStoredProcForRubellaCaseDatamart, cases);
+                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
+                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                        }
                         break;
                     case MEASLES_CASE:
                         executeDatamartProc(MEASLES_CASE,
                                 investigationRepository::executeStoredProcForMeaslesCaseDatamart, cases);
+                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
+                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                        }
                         break;
                     case CASE_LAB_DATAMART:
                         executeDatamartProc(CASE_LAB_DATAMART,
@@ -512,8 +626,15 @@ public class PostProcessingService {
                     case BMIRD_CASE:
                         executeDatamartProc(BMIRD_CASE,
                                 investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
+                        
+                        if(ldfEnable && ldfType.equalsIgnoreCase("LDF_BMIRD")){
+                            executeDatamartProc(LDF_BMIRD,
+                            investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
+                        }
+
                         executeDatamartProc(BMIRD_STREP_PNEUMO_DATAMART,
                                 investigationRepository::executeStoredProcForBmirdStrepPneumoDatamart, cases);
+
                         break;
                     case HEPATITIS_CASE:
                         executeDatamartProc(HEPATITIS_CASE,
@@ -522,6 +643,25 @@ public class PostProcessingService {
                     case PERTUSSIS_CASE:
                         executeDatamartProc(PERTUSSIS_CASE,
                                 investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
+                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
+                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                        }
+                        break;
+                    case TB_DATAMART:
+                        if(dTbHivEnable) {
+                            executeDatamartProc(TB_DATAMART,
+                                    investigationRepository::executeStoredProcForTbDatamart, cases);
+                            
+                            executeDatamartProc(TB_HIV_DATAMART,
+                                    investigationRepository::executeStoredProcForTbHivDatamart, cases);
+                        }
+                        break;
+                    case VAR_DATAMART:
+                        if(dTbHivEnable) {
+                            executeDatamartProc(VAR_DATAMART,
+                                investigationRepository::executeStoredProcForVarDatamart, cases);
+                        }
                         break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ", dmType);
@@ -583,7 +723,30 @@ public class PostProcessingService {
         }
 
         if (totalLengthInvSummary > 0 && invSummaryDmEnable) {
-            postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+            List<DatamartData> dmDataList; //reusing the same DTO class for Dynamic Marts
+            dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
+
+            if(!dmDataList.isEmpty() && dynDmEnable) {
+
+                Map<String, String> datamartPhcIdMap = dmDataList.stream()
+                        .collect(Collectors.groupingBy(
+                                DatamartData::getDatamart,
+                                Collectors.mapping(
+                                        dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
+                                        Collectors.joining(",")
+                                )
+                        ));
+                    
+
+                datamartPhcIdMap.forEach((datamart, phcIds) ->
+                            CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
+                                    .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart))
+                );
+
+            } else {
+                logger.info("No updates to Dynamic Datamarts");
+            }
+
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
         }
@@ -595,6 +758,7 @@ public class PostProcessingService {
         }
     }
 
+
     private String listToParameterString(Collection<Long> inputList) {
         return Optional.ofNullable(inputList)
                 .map(list -> list.stream().map(String::valueOf).collect(Collectors.joining(",")))
@@ -605,49 +769,6 @@ public class PostProcessingService {
     public void shutdown() {
         processCachedIds();
         processDatamartIds();
-    }
-
-    /**
-     * Extracts relevant value from the payload
-     * @param uid
-     * @param topic
-     * @param payload
-     * @return String
-     */
-    private String extractValFromMessage(Long uid, String topic, String payload) {
-        try {
-            JsonNode payloadNode = objectMapper.readTree(payload).get(PAYLOAD);
-            if (topic.endsWith(INVESTIGATION.getEntityName())) {
-                extractSummaryCase(uid, payloadNode.path("case_type_cd").asText());
-
-                JsonNode tblNode = payloadNode.path("rdb_table_name_list");
-                if (!tblNode.isMissingNode() && !tblNode.isNull()) {
-                    return tblNode.asText();
-                }
-            } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
-                String actTypeCd = payloadNode.path("act_type_cd").asText();
-                Long phcUid = payloadNode.get(INVESTIGATION.getUidName()).asLong();
-                extractSummaryCase(phcUid, actTypeCd);
-            } else if (topic.endsWith(OBSERVATION.getEntityName())) {
-                String domainCd = payloadNode.path("obs_domain_cd_st_1").asText();
-                String ctrlCd = Optional
-                        .ofNullable(payloadNode.get("ctrl_cd_display_form"))
-                        .filter(node -> !node.isNull()).map(JsonNode::asText).orElse(null);
-
-                if (MORB_REPORT.equals(ctrlCd)) {
-                    if ("Order".equals(domainCd)) {
-                        return ctrlCd;
-                    }
-                } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null) &&
-                        assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result",
-                                "Order_rslt")) {
-                    return LAB_REPORT;
-                }
-            }
-        } catch (Exception ex) {
-            logger.warn("Error processing ID values for the {} message: {}", topic, ex.getMessage());
-        }
-        return null;
     }
 
     private boolean assertMatches(String value, String... vals) {
@@ -715,4 +836,5 @@ public class PostProcessingService {
     private void completeLog(String sp) {
         logger.info(SP_EXECUTION_COMPLETED, sp);
     }
+
 }

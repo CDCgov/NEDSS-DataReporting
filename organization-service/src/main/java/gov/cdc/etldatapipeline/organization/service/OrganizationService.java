@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.organization.service;
 
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.model.dto.place.Place;
@@ -121,7 +122,7 @@ public class OrganizationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Organization", organizationUid, e), e);
+            throw new DataProcessingException(errorMessage("Organization", organizationUid, e), e);
         }
     }
 
@@ -147,7 +148,7 @@ public class OrganizationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Place", placeUid, e), e);
+            throw new DataProcessingException(errorMessage("Place", placeUid, e), e);
         }
     }
 

@@ -245,6 +245,7 @@ class ObservationDataProcessTests {
         obd.setObservationUid(observation.getObservationUid());
         obd.setOvdFromDate("2024-08-16T00:00:00");
         obd.setOvdSeq(1);
+        obd.setBatchId(BATCH_ID);
 
         transformer.transformObservationData(observation, BATCH_ID);
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
@@ -298,6 +299,7 @@ class ObservationDataProcessTests {
         numeric.setOvnNumericUnitCd("mL");
         numeric.setOvnSeparatorCd(":");
         numeric.setOvnSeq(1);
+        numeric.setBatchId(BATCH_ID);
 
         transformer.transformObservationData(observation, BATCH_ID);
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());

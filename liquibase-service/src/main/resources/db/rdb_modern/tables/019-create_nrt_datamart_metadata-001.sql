@@ -1,12 +1,12 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.nrt_datamart_metadata
-            (
-                condition_cd       varchar(20) NOT NULL,
-                condition_desc_txt varchar(300) NULL,
-                Datamart           varchar(18) NOT NULL,
-                Stored_Procedure   varchar(36) NOT NULL
-            );
+        (
+            condition_cd       varchar(20)  NOT NULL,
+            condition_desc_txt varchar(300) NULL,
+            Datamart           varchar(18)  NOT NULL,
+            Stored_Procedure   varchar(36)  NOT NULL
+        );
     END;
 
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xtype = 'U')
@@ -30,7 +30,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                          , '10103'
                          , '10105'
                          , '50248'
-                          )
+                         )
                     ) hep_codes
                 WHERE NOT EXISTS
                           (SELECT 1
@@ -38,7 +38,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            WHERE ndm.condition_cd = hep_codes.condition_cd);
             END;
 
-        /*CNDE-1954: Page Builder STD HIV Codes determined using nnd_entity_identifier for STD and prog_area_cd for HIV.*/
+        /*CNDE-1954: Page Builder STD HIV Codes determined using nnd_entity_identifier for STD and prog_area_cd for HIV.
+          CNDE-2506: (Update) Check for baseline STD prog area condition. If there exists 1 or more conditions with
+          nnd_entity_identifier= 'STD_Case_Map_v1.0' and port_req_ind_cd ='F', the complete STD prog_area_cd set of
+          codes will be included, along with HIV. If the baseline condition is not fulfilled,add only HIV prog area codes.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Std_Hiv_Datamart')
             BEGIN
                 INSERT INTO dbo.nrt_datamart_metadata
@@ -49,7 +52,11 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                 FROM
                     (SELECT distinct cc.condition_cd, cc.condition_desc_txt
                      FROM NBS_SRTE.dbo.Condition_code cc
-                     WHERE cc.nnd_entity_identifier = 'STD_Case_Map_v1.0' or cc.prog_area_cd = 'HIV'
+                     WHERE
+                         (EXISTS (SELECT 1 FROM NBS_SRTE.dbo.Condition_code WHERE nnd_entity_identifier= 'STD_Case_Map_v1.0'
+                                                                              and port_req_ind_cd ='F')
+                             AND cc.prog_area_cd IN ('HIV', 'STD'))
+                        OR (cc.prog_area_cd = 'HIV')
                          AND (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE '%PG_%')
                     ) std_hiv_codes
                 WHERE NOT EXISTS
@@ -58,12 +65,11 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            WHERE ndm.condition_cd = std_hiv_codes.condition_cd);
             END;
 
-
-        --Increase varchar length according to accomodate data
+        --Increase varchar length according to accommodate data
         IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = object_id('nrt_datamart_metadata') AND name='Stored_Procedure' AND max_length=36)
             BEGIN
                 ALTER TABLE dbo.nrt_datamart_metadata
-                ALTER COLUMN Stored_Procedure VARCHAR(200)
+                    ALTER COLUMN Stored_Procedure VARCHAR(200)
             END
 
         /*CNDE-2046: Generic_Case Datamart condition code addition script.*/
@@ -123,7 +129,6 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            WHERE ndm.condition_cd = rub_codes.condition_cd);
             END;
 
-
         /*Measles_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Measles_Case')
             BEGIN
@@ -168,14 +173,13 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            WHERE ndm.condition_cd = bmird_codes.condition_cd);
             END;
 
-
         /*CNDE-2129: Separate Hepatitis Datamart condition code addition script.*/
         --fix to remove incorrectly mapped
         IF EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Datamart'
-            and condition_cd in ( '999999','10481', '10102') )
-        BEGIN
-            DELETE FROM dbo.nrt_datamart_metadata where Datamart = 'Hepatitis_Datamart' and condition_cd in ( '999999','10481', '10102') ;
-        END
+                                                                 and condition_cd in ( '999999','10481', '10102') )
+            BEGIN
+                DELETE FROM dbo.nrt_datamart_metadata where Datamart = 'Hepatitis_Datamart' and condition_cd in ( '999999','10481', '10102') ;
+            END
         --adding the legacy Hep cases
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Case')
             BEGIN
@@ -212,5 +216,59 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                           (SELECT 1
                            FROM dbo.nrt_datamart_metadata ndm
                            WHERE ndm.condition_cd = per_codes.condition_cd);
+            END;
+
+        -- TB_DATAMART
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'TB_Datamart')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT condition_cd,
+                       condition_desc_txt,
+                       'TB_Datamart',
+                       'sp_tb_datamart_postprocessing'
+                FROM
+                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
+                     FROM NBS_SRTE.dbo.Condition_code cc
+                     WHERE (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE 'INV_FORM_RVCT%')
+                    ) gen_codes
+                WHERE NOT EXISTS
+                          (SELECT 1
+                           FROM dbo.nrt_datamart_metadata ndm
+                           WHERE ndm.condition_cd = gen_codes.condition_cd);
+            END;
+
+        -- VAR_DATAMART
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'VAR_Datamart')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT condition_cd,
+                       condition_desc_txt,
+                       'VAR_Datamart',
+                       'sp_var_datamart_postprocessing'
+                FROM
+                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
+                     FROM NBS_SRTE.dbo.Condition_code cc
+                     WHERE (cc.investigation_form_cd IS NOT NULL and cc.investigation_form_cd LIKE 'INV_FORM_VAR%')
+                    ) gen_codes
+                WHERE NOT EXISTS
+                          (SELECT 1
+                           FROM dbo.nrt_datamart_metadata ndm
+                           WHERE ndm.condition_cd = gen_codes.condition_cd);
+            END;
+
+        /*CNDE-2506: Adding missing Syphilis, congenital code if Std_Hiv_Datamart has already been registered
+          baseline STD condition is fulfilled.*/
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Std_Hiv_Datamart' and ndm.condition_cd = 10316)
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT cc.condition_cd,
+                       cc.condition_desc_txt,
+                       'Std_Hiv_Datamart',
+                       'sp_std_hiv_datamart_postprocessing'
+                FROM
+                    NBS_SRTE.dbo.Condition_code cc
+                WHERE cc.condition_cd = '10316'
+                  AND EXISTS (SELECT 1 FROM NBS_SRTE.dbo.Condition_code WHERE nnd_entity_identifier= 'STD_Case_Map_v1.0'
+                                                                          and port_req_ind_cd ='F');
             END;
     END;

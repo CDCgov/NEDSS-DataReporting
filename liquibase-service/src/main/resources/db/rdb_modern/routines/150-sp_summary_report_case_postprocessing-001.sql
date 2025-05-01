@@ -50,6 +50,7 @@ BEGIN
                                                ON ni.rpt_cnty_cd = sccv.code
                             WHERE ni.public_health_case_uid in (select value FROM STRING_SPLIT(@id_list, ','))
                               AND nio.root_type_cd IN ('SummaryForm','SummaryNotification')
+                              AND ni.case_type_cd = 'S'
         ),
              compileSumRptWork AS (SELECT sr.public_health_case_uid,
                                           sr.rpt_cnty_cd,
@@ -66,7 +67,9 @@ BEGIN
                                           ovc.observation_uid                AS ovc_observation_uid
                                    FROM SumRptWork sr
                                             LEFT JOIN dbo.nrt_observation_numeric ovn with (nolock)
-                                                      on sr.branch_id = ovn.observation_uid AND sr.cd = 'SUM104'
+                                                      on sr.branch_id = ovn.observation_uid 
+                                                      AND isnull(sr.batch_id, 1) = isnull(ovn.batch_id, 1) AND
+                                                         sr.cd = 'SUM104'
                                             LEFT JOIN dbo.nrt_observation_txt ovt with (nolock)
                                                       ON sr.branch_id = ovt.observation_uid
                                                           AND isnull(sr.batch_id, 1) = isnull(ovt.batch_id, 1) AND
@@ -330,4 +333,3 @@ BEGIN
 
     END CATCH
 END;
-

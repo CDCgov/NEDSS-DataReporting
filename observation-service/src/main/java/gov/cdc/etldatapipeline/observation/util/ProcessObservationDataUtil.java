@@ -76,9 +76,9 @@ public class ProcessObservationDataUtil {
         transformParentObservations(observation.getParentObservations(), observationTransformed);
         transformActIds(observation.getActIds(), observationTransformed);
         transformObservationCoded(observation.getObsCode(), batchId);
-        transformObservationDate(observation.getObsDate());
+        transformObservationDate(observation.getObsDate(), batchId);
         transformObservationEdx(observation.getEdxIds());
-        transformObservationNumeric(observation.getObsNum());
+        transformObservationNumeric(observation.getObsNum(), batchId);
         transformObservationReasons(observation.getObsReason(), batchId);
         transformObservationTxt(observation.getObsTxt(), batchId);
 
@@ -340,12 +340,13 @@ public class ProcessObservationDataUtil {
         }
     }
 
-    private void transformObservationDate(String observationDate) {
+    private void transformObservationDate(String observationDate, long batchId) {
         try {
             JsonNode observationDateJsonArray = parseJsonArray(observationDate);
 
             for (JsonNode jsonNode : observationDateJsonArray) {
                 ObservationDate obsDate = objectMapper.treeToValue(jsonNode, ObservationDate.class);
+                obsDate.setBatchId(batchId);
                 sendToKafka(observationKey, obsDate, dateTopicName, obsDate.getObservationUid(), "Observation Date data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {
@@ -372,12 +373,13 @@ public class ProcessObservationDataUtil {
         }
     }
 
-    private void transformObservationNumeric(String observationNumeric) {
+    private void transformObservationNumeric(String observationNumeric, long batchId) {
         try {
             JsonNode observationNumericJsonArray = parseJsonArray(observationNumeric);
 
             for (JsonNode jsonNode : observationNumericJsonArray) {
                 ObservationNumeric numeric = objectMapper.treeToValue(jsonNode, ObservationNumeric.class);
+                numeric.setBatchId(batchId);
                 sendToKafka(observationKey, numeric, numericTopicName, numeric.getObservationUid(), "Observation Numeric data (uid={}) sent to {}");
             }
         } catch (IllegalArgumentException ex) {

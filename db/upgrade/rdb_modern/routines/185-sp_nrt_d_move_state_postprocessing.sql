@@ -11,11 +11,13 @@ BEGIN
             declare @proc_step_name varchar(200) = '';
             declare @batch_id bigint;
             declare @dataflow_name varchar(200) = 'MOVE_STATE POST-Processing';
-            declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_move_state_postprocessing';
+            declare @package_name varchar(200) = 'sp_nrt_d_move_state_postprocessing';
 
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         SELECT @ROWCOUNT_NO = 0;
+
+        SET @Proc_Step_Name = 'SP_Start';
 
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Msg_Description1])
@@ -62,7 +64,7 @@ BEGIN
         IF OBJECT_ID('#S_MOVE_STATE_TRANSLATED', 'U') IS NOT NULL
         drop table #S_MOVE_STATE_TRANSLATED;
         
-        SELECT 
+        SELECT DISTINCT
             CAST(TB.ACT_UID AS BIGINT) AS TB_PAM_UID,
             TB.SEQ_NBR, 
             TB.DATAMART_COLUMN_NM, 
@@ -157,8 +159,7 @@ BEGIN
         LEFT JOIN #S_MOVE_STATE S with (nolock)
         ON S.TB_PAM_UID = MOVE_STATE_KEY.TB_PAM_UID AND
             S.NBS_CASE_ANSWER_UID = MOVE_STATE_KEY.NBS_CASE_ANSWER_UID
-        WHERE MOVE_STATE.TB_PAM_UID IN (SELECT value FROM #S_PHC_LIST) AND
-        S.NBS_CASE_ANSWER_UID IS NULL;
+        WHERE MOVE_STATE.TB_PAM_UID IN (SELECT value FROM #S_PHC_LIST);
 
 
         if
@@ -187,7 +188,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_STATE_KEY T
         join #TEMP_D_MOVE_STATE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY
+        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY;
 
 
         if
@@ -216,7 +217,7 @@ BEGIN
         DELETE T FROM DBO.NRT_MOVE_STATE_GROUP_KEY T
         join #TEMP_D_MOVE_STATE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_STATE_GROUP_KEY = T.D_MOVE_STATE_GROUP_KEY
+        S.D_MOVE_STATE_GROUP_KEY = T.D_MOVE_STATE_GROUP_KEY;
 
 
         if
@@ -247,32 +248,7 @@ BEGIN
         DELETE T FROM DBO.D_MOVE_STATE T
         join #TEMP_D_MOVE_STATE_DEL S with (nolock)
         ON S.TB_PAM_UID =T.TB_PAM_UID AND
-        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
-        
-        COMMIT TRANSACTION;   
-
----------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_STATE_GROUP';
-
-
-        DELETE T FROM DBO.D_MOVE_STATE_GROUP T
-        left join (select distinct D_MOVE_STATE_GROUP_KEY from dbo.d_move_state) DBO
-            ON DBO.D_MOVE_STATE_GROUP_KEY = T.D_MOVE_STATE_GROUP_KEY
-        WHERE DBO.D_MOVE_STATE_GROUP_KEY is null;
+        S.D_MOVE_STATE_KEY = T.D_MOVE_STATE_KEY;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -566,7 +542,43 @@ BEGIN
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
         
-        COMMIT TRANSACTION;          
+        COMMIT TRANSACTION;         
+---------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM DBO.D_MOVE_STATE_GROUP';
+
+        -- update F_TB_PAM table
+        UPDATE F
+            SET F.D_MOVE_STATE_GROUP_KEY = D.D_MOVE_STATE_GROUP_KEY
+        FROM DBO.F_TB_PAM F with (nolock)
+        INNER JOIN DBO.D_TB_PAM DIM  with (nolock)
+            ON DIM.D_TB_PAM_KEY = F.D_TB_PAM_KEY
+        INNER JOIN DBO.D_MOVE_STATE D with (nolock)
+            ON D.TB_PAM_UID = DIM.TB_PAM_UID
+        INNER JOIN #S_PHC_LIST S
+            ON D.TB_PAM_UID = S.VALUE;
+
+        -- delete from DBO.D_MOVE_STATE_GROUP
+        DELETE T FROM DBO.D_MOVE_STATE_GROUP T with (nolock)
+        INNER JOIN #TEMP_D_MOVE_STATE_DEL DEL
+            on T.D_MOVE_STATE_GROUP_KEY = DEL.D_MOVE_STATE_GROUP_KEY
+        left join (select distinct D_MOVE_STATE_GROUP_KEY from dbo.D_MOVE_STATE with (nolock)) D
+            ON D.D_MOVE_STATE_GROUP_KEY = T.D_MOVE_STATE_GROUP_KEY
+        WHERE D.D_MOVE_STATE_GROUP_KEY is null;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;    
 --------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;

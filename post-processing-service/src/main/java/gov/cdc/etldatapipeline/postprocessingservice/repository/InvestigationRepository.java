@@ -119,4 +119,45 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     
     @Procedure("sp_nrt_d_var_pam_postprocessing")
     void executeStoredProcForDVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
+
+    @Procedure("sp_nrt_d_rash_loc_gen_postprocessing")
+    void executeStoredProcForDRashLocGen(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
+    @Procedure("sp_nrt_d_pcr_source_postprocessing")
+    void executeStoredProcForDPcrSource(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_nrt_var_pam_ldf_postprocessing")
+    void executeStoredProcForVarPamLdf(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_f_var_pam_postprocessing")
+    void executeStoredProcForFVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_tb_datamart_postprocessing")
+    void executeStoredProcForTbDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
+    @Procedure("sp_tb_hiv_datamart_postprocessing")
+    void executeStoredProcForTbHivDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
+    @Procedure("sp_var_datamart_postprocessing")
+    void executeStoredProcForVarDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_ldf_generic_datamart_postprocessing")
+    void executeStoredProcForLdfGenericDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_ldf_bmird_datamart_postprocessing")
+    void executeStoredProcForLdfBmirdDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
+    @Procedure("sp_ldf_foodborne_datamart_postprocessing")
+    void executeStoredProcForLdfFoodBorneDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_ldf_mumps_datamart_postprocessing")
+    void executeStoredProcForLdfMumpsDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    
+    @Procedure("sp_ldf_tetanus_datamart_postprocessing")
+    void executeStoredProcForLdfTetanusDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_ldf_vaccine_prevent_diseases_datamart_postprocessing")
+    void executeStoredProcForLdfVaccinePreventDiseasesDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    
 }

@@ -24,8 +24,6 @@ BEGIN
         SET @Proc_Step_Name = 'SP_Start';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
-        BEGIN TRANSACTION;
-
         INSERT INTO dbo.job_flow_log ( batch_id
                                      , [Dataflow_Name]
                                      , [package_Name]
@@ -43,320 +41,289 @@ BEGIN
                , 0
                , LEFT('ID List-' + @phc_uids, 500));
 
-        COMMIT TRANSACTION;
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OBS_CODED_BMIRD_Case';
+
+        IF OBJECT_ID('#OBS_CODED_BMIRD_Case', 'U') IS NOT NULL
+            drop table #OBS_CODED_BMIRD_Case;
+
+        SELECT public_health_case_uid,
+               unique_cd      as cd,
+               col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.label,
+               coded_response as response
+        INTO #OBS_CODED_BMIRD_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @tgt_table_nm and db_field = 'code'
+          AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_CODED_BMIRD_Case;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_TXT_BMIRD_Case';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OBS_CODED_BMIRD_Case';
+        IF OBJECT_ID('#OBS_TXT_BMIRD_Case', 'U') IS NOT NULL
+            drop table #OBS_TXT_BMIRD_Case;
 
-            IF OBJECT_ID('#OBS_CODED_BMIRD_Case', 'U') IS NOT NULL
-                drop table #OBS_CODED_BMIRD_Case;
+        SELECT public_health_case_uid,
+               unique_cd    as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               txt_response as response
+        INTO #OBS_TXT_BMIRD_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(@tgt_table_nm) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE (RDB_TABLE = 'BMIRD_Case' OR unique_cd = 'INV172') and (db_field = 'value_txt' OR unique_cd in ('BMD267','BMD302','BMD303','BMD304','BMD305','BMD306'))
+            AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
-            SELECT public_health_case_uid,
-                   unique_cd      as cd,
-                   col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.label,
-                   coded_response as response
-            INTO #OBS_CODED_BMIRD_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'code'
-              AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_TXT_BMIRD_Case;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_CODED_BMIRD_Case;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
 
 
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_TXT_BMIRD_Case';
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_DATE_BMIRD_Case';
 
-            IF OBJECT_ID('#OBS_TXT_BMIRD_Case', 'U') IS NOT NULL
-                drop table #OBS_TXT_BMIRD_Case;
+        IF OBJECT_ID('#OBS_DATE_BMIRD_Case', 'U') IS NOT NULL
+            drop table #OBS_DATE_BMIRD_Case;
 
-            SELECT public_health_case_uid,
-                   unique_cd    as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   txt_response as response
-            INTO #OBS_TXT_BMIRD_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @tgt_table_nm and db_field = 'value_txt' or unique_cd in ('INV172','BMD267','BMD302','BMD303','BMD304','BMD305','BMD306')
-                AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+        select public_health_case_uid,
+               unique_cd     as cd,
+               col_nm,
+               DB_field,
+               rdb_table,
+               date_response as response
+        INTO #OBS_DATE_BMIRD_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(@tgt_table_nm) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE (RDB_TABLE = @tgt_table_nm OR unique_cd = 'BMD307') and db_field = 'from_time'
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_TXT_BMIRD_Case;
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_DATE_BMIRD_Case;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
 
 
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_DATE_BMIRD_Case';
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_BMIRD_Case';
 
-            IF OBJECT_ID('#OBS_DATE_BMIRD_Case', 'U') IS NOT NULL
-                drop table #OBS_DATE_BMIRD_Case;
+        IF OBJECT_ID('#OBS_NUMERIC_BMIRD_Case', 'U') IS NOT NULL
+            drop table #OBS_NUMERIC_BMIRD_Case;
 
-            select public_health_case_uid,
-                   unique_cd     as cd,
-                   col_nm,
-                   DB_field,
-                   rdb_table,
-                   date_response as response
-            INTO #OBS_DATE_BMIRD_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE (RDB_TABLE = @tgt_table_nm and db_field = 'from_time' or unique_cd = 'BMD307')
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_DATE_BMIRD_Case;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_BMIRD_Case';
-
-            IF OBJECT_ID('#OBS_NUMERIC_BMIRD_Case', 'U') IS NOT NULL
-                drop table #OBS_NUMERIC_BMIRD_Case;
-
-            select rom.public_health_case_uid,
-                   rom.unique_cd        as cd,
-                   rom.col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.numeric_response as response,
-                   CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
-                        WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
-                        WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
-                        ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
-                       END AS converted_column
-            INTO #OBS_NUMERIC_BMIRD_Case
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE rom.RDB_TABLE = @tgt_table_nm and rom.db_field = 'numeric_value_1'
-              and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_NUMERIC_BMIRD_Case;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OBS_CODED_Antimicrobial';
-
-            IF OBJECT_ID('#OBS_CODED_Antimicrobial', 'U') IS NOT NULL
-                drop table #OBS_CODED_Antimicrobial;
-
-            SELECT public_health_case_uid,
-                   unique_cd      as cd,
-                   col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.label,
-                   coded_response as response,
-                   branch_id
-            INTO #OBS_CODED_Antimicrobial
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @am_tgt_table_nm and db_field = 'code'
-              AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
-
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_CODED_Antimicrobial;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OBS_NUMERIC_Antimicrobial';
-
-            IF OBJECT_ID('#OBS_NUMERIC_Antimicrobial', 'U') IS NOT NULL
-                drop table #OBS_NUMERIC_Antimicrobial;
-
-            SELECT public_health_case_uid,
-                   unique_cd      as cd,
-                   col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.numeric_response as response,
-                   branch_id,
-                   CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
-                        WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
-                        WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
-                        ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
+        select rom.public_health_case_uid,
+               rom.unique_cd        as cd,
+               rom.col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.numeric_response as response,
+               CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
+                    WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
+                    WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
+                    ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
                    END AS converted_column
-            INTO #OBS_NUMERIC_Antimicrobial
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @am_tgt_table_nm and db_field = 'numeric_value_1'
-              AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+        INTO #OBS_NUMERIC_BMIRD_Case
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE rom.RDB_TABLE = @tgt_table_nm and rom.db_field = 'numeric_value_1'
+          and (rom.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_NUMERIC_Antimicrobial;
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_NUMERIC_BMIRD_Case;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OBS_CODED_BMIRD_Multi_Value_field';
-
-            IF OBJECT_ID('#OBS_CODED_BMIRD_Multi_Value_field', 'U') IS NOT NULL
-                drop table #OBS_CODED_BMIRD_Multi_Value_field;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
 
 
-            select public_health_case_uid,
-                   unique_cd      as cd,
-                   col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.label,
-                   coded_response as response,
-                   branch_id
-            INTO #OBS_CODED_BMIRD_Multi_Value_field
-            from dbo.v_rdb_obs_mapping rom
-            LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
-                ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE RDB_TABLE = @multival_tgt_table_nm and db_field = 'code'
-              and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OBS_CODED_Antimicrobial';
 
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OBS_CODED_BMIRD_Multi_Value_field;
+        IF OBJECT_ID('#OBS_CODED_Antimicrobial', 'U') IS NOT NULL
+            drop table #OBS_CODED_Antimicrobial;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
+        SELECT public_health_case_uid,
+               unique_cd      as cd,
+               col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.label,
+               coded_response as response,
+               root_observation_uid as root_uid,
+               branch_id
+        INTO #OBS_CODED_Antimicrobial
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @am_tgt_table_nm and db_field = 'code'
+          AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
 
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_CODED_Antimicrobial;
 
-        COMMIT TRANSACTION;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-
-        BEGIN TRANSACTION
-
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OLD_AM_GRP_KEYS';
-
-            IF OBJECT_ID('#OLD_AM_GRP_KEYS', 'U') IS NOT NULL
-                drop table #OLD_AM_GRP_KEYS;
-
-            SELECT ANTIMICROBIAL_GRP_KEY
-            INTO #OLD_AM_GRP_KEYS
-            FROM dbo.BMIRD_Case bmc WITH (nolock)
-            INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = bmc.INVESTIGATION_KEY
-            WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OLD_AM_GRP_KEYS;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OBS_NUMERIC_Antimicrobial';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #TMP_AM_GRP';
+        IF OBJECT_ID('#OBS_NUMERIC_Antimicrobial', 'U') IS NOT NULL
+            drop table #OBS_NUMERIC_Antimicrobial;
 
-            IF OBJECT_ID('#TMP_AM_GRP', 'U') IS NOT NULL
-                drop table #TMP_AM_GRP;
+        SELECT public_health_case_uid,
+               unique_cd      as cd,
+               col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.numeric_response as response,
+               root_observation_uid as root_uid,
+               branch_id,
+               CASE WHEN isc.DATA_TYPE = 'numeric' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS NUMERIC(' + CAST(isc.NUMERIC_PRECISION as NVARCHAR(5)) + ',' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + '))'
+                    WHEN isc.DATA_TYPE LIKE '%int' THEN 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ', ' + CAST(isc.NUMERIC_SCALE as NVARCHAR(5)) + ') AS ' + isc.DATA_TYPE + ')'
+                    WHEN isc.DATA_TYPE IN ('varchar', 'nvarchar') THEN 'CAST(ovn.' + QUOTENAME(col_nm) + ' AS ' + isc.DATA_TYPE + '(' + CAST(isc.CHARACTER_MAXIMUM_LENGTH as NVARCHAR(5)) + '))'
+                    ELSE 'CAST(ROUND(ovn.' + QUOTENAME(col_nm) + ',5) AS NUMERIC(15,5))'
+               END AS converted_column
+        INTO #OBS_NUMERIC_Antimicrobial
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @am_tgt_table_nm and db_field = 'numeric_value_1'
+          AND (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')));
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_NUMERIC_Antimicrobial;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OBS_CODED_BMIRD_Multi_Value_field';
+
+        IF OBJECT_ID('#OBS_CODED_BMIRD_Multi_Value_field', 'U') IS NOT NULL
+            drop table #OBS_CODED_BMIRD_Multi_Value_field;
+
+
+        select public_health_case_uid,
+               unique_cd      as cd,
+               col_nm,
+               rom.DB_field,
+               rom.rdb_table,
+               rom.label,
+               coded_response as response,
+               branch_id
+        INTO #OBS_CODED_BMIRD_Multi_Value_field
+        from dbo.v_rdb_obs_mapping rom
+        LEFT JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table) AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
+        WHERE RDB_TABLE = @multival_tgt_table_nm and db_field = 'code'
+          and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
+
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OBS_CODED_BMIRD_Multi_Value_field;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OLD_AM_GRP_KEYS';
+
+        IF OBJECT_ID('#OLD_AM_GRP_KEYS', 'U') IS NOT NULL
+            drop table #OLD_AM_GRP_KEYS;
+
+        SELECT ANTIMICROBIAL_GRP_KEY
+        INTO #OLD_AM_GRP_KEYS
+        FROM dbo.BMIRD_Case bmc WITH (nolock)
+        INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = bmc.INVESTIGATION_KEY
+        WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OLD_AM_GRP_KEYS;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #TMP_AM_GRP';
+
+        IF OBJECT_ID('#TMP_AM_GRP', 'U') IS NOT NULL
+            drop table #TMP_AM_GRP;
 
             SELECT DISTINCT public_health_case_uid,
                             COALESCE(ANTIMICROBIAL_GRP_KEY, 1) AS ANTIMICROBIAL_GRP_KEY
@@ -366,63 +333,51 @@ BEGIN
             LEFT JOIN dbo.BMIRD_Case bmc WITH (nolock) ON bmc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
             WHERE public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) AND RDB_table=@am_tgt_table_nm;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_AM_GRP;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_AM_GRP;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #Antimicrobial_IDS';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #Antimicrobial_IDS';
+        IF OBJECT_ID('#Antimicrobial_IDS', 'U') IS NOT NULL
+            drop table #Antimicrobial_IDS;
 
-            IF OBJECT_ID('#Antimicrobial_IDS', 'U') IS NOT NULL
-                drop table #Antimicrobial_IDS;
+        WITH id_cte AS (
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_CODED_Antimicrobial
+            WHERE public_health_case_uid IS NOT NULL
+            UNION ALL
+            SELECT public_health_case_uid, root_uid
+            FROM #OBS_NUMERIC_Antimicrobial
+            WHERE public_health_case_uid IS NOT NULL
+        )
+        -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
+        SELECT DISTINCT ids.public_health_case_uid, ids.root_uid as row_num
+        INTO #Antimicrobial_IDS
+        FROM id_cte ids
+        LEFT JOIN #TMP_AM_GRP ag ON ids.public_health_case_uid = ag.public_health_case_uid;
 
-            WITH id_cte AS (
-                SELECT public_health_case_uid, cd
-                FROM #OBS_CODED_Antimicrobial
-                WHERE public_health_case_uid IS NOT NULL
-                UNION ALL
-                SELECT public_health_case_uid, cd
-                FROM #OBS_NUMERIC_Antimicrobial
-                WHERE public_health_case_uid IS NOT NULL
-            ),
-                 ordered_selection AS
-                     (SELECT public_health_case_uid,
-                             cd,
-                             ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY cd) as row_num
-                      FROM id_cte)
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #Antimicrobial_IDS;
 
-            -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
-            SELECT DISTINCT ids.public_health_case_uid, ids.row_num
-            INTO #Antimicrobial_IDS
-            FROM ordered_selection ids
-            LEFT JOIN #TMP_AM_GRP ag ON ids.public_health_case_uid = ag.public_health_case_uid;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #Antimicrobial_IDS;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -471,29 +426,25 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'UPDATING #TMP_AM_GRP';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATING #TMP_AM_GRP';
+        UPDATE #TMP_AM_GRP
+        SET #TMP_AM_GRP.ANTIMICROBIAL_GRP_KEY = amg.ANTIMICROBIAL_GRP_KEY
+        FROM dbo.nrt_antimicrobial_group_key amg
+        WHERE amg.public_health_case_uid = #TMP_AM_GRP.public_health_case_uid;
 
-            UPDATE #TMP_AM_GRP
-            SET #TMP_AM_GRP.ANTIMICROBIAL_GRP_KEY = amg.ANTIMICROBIAL_GRP_KEY
-            FROM dbo.nrt_antimicrobial_group_key amg
-            WHERE amg.public_health_case_uid = #TMP_AM_GRP.public_health_case_uid;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_AM_GRP;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_AM_GRP;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -528,106 +479,94 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OLD_MV_GRP_KEYS';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #OLD_MV_GRP_KEYS';
+        IF OBJECT_ID('#OLD_MV_GRP_KEYS', 'U') IS NOT NULL
+            drop table #OLD_MV_GRP_KEYS;
 
-            IF OBJECT_ID('#OLD_MV_GRP_KEYS', 'U') IS NOT NULL
-                drop table #OLD_MV_GRP_KEYS;
+        SELECT BMIRD_MULTI_VAL_GRP_KEY
+        INTO #OLD_MV_GRP_KEYS
+        FROM dbo.BMIRD_Case bmc WITH (nolock)
+        INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = bmc.INVESTIGATION_KEY
+        WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
 
-            SELECT BMIRD_MULTI_VAL_GRP_KEY
-            INTO #OLD_MV_GRP_KEYS
-            FROM dbo.BMIRD_Case bmc WITH (nolock)
-            INNER JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.INVESTIGATION_KEY = bmc.INVESTIGATION_KEY
-            WHERE inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #OLD_MV_GRP_KEYS;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #OLD_MV_GRP_KEYS;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #TMP_MV_GRP';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #TMP_MV_GRP';
+        IF OBJECT_ID('#TMP_MV_GRP', 'U') IS NOT NULL
+            drop table #TMP_MV_GRP;
 
-            IF OBJECT_ID('#TMP_MV_GRP', 'U') IS NOT NULL
-                drop table #TMP_MV_GRP;
+        SELECT DISTINCT public_health_case_uid,
+                        COALESCE(BMIRD_MULTI_VAL_GRP_KEY, 1) AS BMIRD_MULTI_VAL_GRP_KEY
+        INTO #TMP_MV_GRP
+        FROM dbo.v_rdb_obs_mapping rom
+        LEFT JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.CASE_UID=rom.public_health_case_uid
+        LEFT JOIN dbo.BMIRD_Case bmc WITH (nolock) ON bmc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+        WHERE public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) AND RDB_table=@multival_tgt_table_nm;
 
-            SELECT DISTINCT public_health_case_uid,
-                            COALESCE(BMIRD_MULTI_VAL_GRP_KEY, 1) AS BMIRD_MULTI_VAL_GRP_KEY
-            INTO #TMP_MV_GRP
-            FROM dbo.v_rdb_obs_mapping rom
-            LEFT JOIN dbo.INVESTIGATION inv WITH (nolock) ON inv.CASE_UID=rom.public_health_case_uid
-            LEFT JOIN dbo.BMIRD_Case bmc WITH (nolock) ON bmc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-            WHERE public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) AND RDB_table=@multival_tgt_table_nm;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_MV_GRP;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_MV_GRP;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #BMIRD_Multi_Value_field_IDS';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #BMIRD_Multi_Value_field_IDS';
+        IF OBJECT_ID('#BMIRD_Multi_Value_field_IDS', 'U') IS NOT NULL
+            drop table #BMIRD_Multi_Value_field_IDS;
 
-            IF OBJECT_ID('#BMIRD_Multi_Value_field_IDS', 'U') IS NOT NULL
-                drop table #BMIRD_Multi_Value_field_IDS;
+        WITH id_cte AS (
+            SELECT public_health_case_uid, branch_id
+            FROM #OBS_CODED_BMIRD_Multi_Value_field
+            WHERE public_health_case_uid IS NOT NULL
+        ),
+             ordered_selection AS
+                 (SELECT public_health_case_uid,
+                         branch_id,
+                         ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ORDER BY branch_id) as row_num
+                  FROM id_cte)
 
-            WITH id_cte AS (
-                SELECT public_health_case_uid, branch_id
-                FROM #OBS_CODED_BMIRD_Multi_Value_field
-                WHERE public_health_case_uid IS NOT NULL
-            ),
-                 ordered_selection AS
-                     (SELECT public_health_case_uid,
-                             branch_id,
-                             ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ORDER BY branch_id) as row_num
-                      FROM id_cte)
+        -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
+        SELECT DISTINCT ids.public_health_case_uid, ids.row_num
+        INTO #BMIRD_Multi_Value_field_IDS
+        FROM ordered_selection ids
+        LEFT JOIN #TMP_MV_GRP mvg ON ids.public_health_case_uid = mvg.public_health_case_uid;
 
-            -- distinct here makes it to where we only keep row numbers 1 -> max row num for each phc
-            SELECT DISTINCT ids.public_health_case_uid, ids.row_num
-            INTO #BMIRD_Multi_Value_field_IDS
-            FROM ordered_selection ids
-            LEFT JOIN #TMP_MV_GRP mvg ON ids.public_health_case_uid = mvg.public_health_case_uid;
+        if
+            @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #BMIRD_Multi_Value_field_IDS;
 
-            if
-                @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #BMIRD_Multi_Value_field_IDS;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
-                    @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -676,29 +615,25 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'UPDATING #TMP_MV_GRP';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'UPDATING #TMP_MV_GRP';
+        UPDATE #TMP_MV_GRP
+        SET #TMP_MV_GRP.BMIRD_MULTI_VAL_GRP_KEY = mvg.BMIRD_MULTI_VAL_GRP_KEY
+        FROM dbo.nrt_bmird_multi_val_group_key mvg
+        WHERE mvg.public_health_case_uid = #TMP_MV_GRP.public_health_case_uid;
 
-            UPDATE #TMP_MV_GRP
-            SET #TMP_MV_GRP.BMIRD_MULTI_VAL_GRP_KEY = mvg.BMIRD_MULTI_VAL_GRP_KEY
-            FROM dbo.nrt_bmird_multi_val_group_key mvg
-            WHERE mvg.public_health_case_uid = #TMP_MV_GRP.public_health_case_uid;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #TMP_MV_GRP;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #TMP_MV_GRP;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
         BEGIN TRANSACTION
@@ -733,53 +668,49 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION;
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #KEY_ATTR_INIT';
 
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'GENERATING #KEY_ATTR_INIT';
+        IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
+            drop table #KEY_ATTR_INIT;
 
-            IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
-                drop table #KEY_ATTR_INIT;
+        SELECT
+            map.public_health_case_uid,
+            INVESTIGATOR_KEY,
+            PHYSICIAN_KEY,
+            PATIENT_KEY,
+            REPORTER_KEY,
+            NURSING_HOME_KEY,
+            DAYCARE_FACILITY_KEY,
+            INV_ASSIGNED_DT_KEY,
+            1 AS TREATMENT_HOSPITAL_KEY,
+            map.diagnosis_time AS FIRST_POSITIVE_CULTURE_DT,
+            COALESCE(mvg.BMIRD_MULTI_VAL_GRP_KEY, 1) AS BMIRD_MULTI_VAL_GRP_KEY,
+            COALESCE(amg.ANTIMICROBIAL_GRP_KEY, 1) AS ANTIMICROBIAL_GRP_KEY,
+            INVESTIGATION_KEY,
+            ADT_HSPTL_KEY,
+            RPT_SRC_ORG_KEY,
+            CONDITION_KEY,
+            LDF_GROUP_KEY,
+            GEOCODING_LOCATION_KEY
+        INTO #KEY_ATTR_INIT
+        FROM dbo.V_NRT_INV_KEYS_ATTRS_MAPPING map
+        LEFT JOIN #TMP_MV_GRP mvg ON mvg.public_health_case_uid=map.public_health_case_uid
+        LEFT JOIN #TMP_AM_GRP amg ON amg.public_health_case_uid=map.public_health_case_uid
+        WHERE map.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+          AND investigation_form_cd like @inv_form_cd;
 
-            SELECT
-                map.public_health_case_uid,
-                INVESTIGATOR_KEY,
-                PHYSICIAN_KEY,
-                PATIENT_KEY,
-                REPORTER_KEY,
-                NURSING_HOME_KEY,
-                DAYCARE_FACILITY_KEY,
-                INV_ASSIGNED_DT_KEY,
-                1 AS TREATMENT_HOSPITAL_KEY,
-                map.diagnosis_time AS FIRST_POSITIVE_CULTURE_DT,
-                COALESCE(mvg.BMIRD_MULTI_VAL_GRP_KEY, 1) AS BMIRD_MULTI_VAL_GRP_KEY,
-                COALESCE(amg.ANTIMICROBIAL_GRP_KEY, 1) AS ANTIMICROBIAL_GRP_KEY,
-                INVESTIGATION_KEY,
-                ADT_HSPTL_KEY,
-                RPT_SRC_ORG_KEY,
-                CONDITION_KEY,
-                LDF_GROUP_KEY,
-                GEOCODING_LOCATION_KEY
-            INTO #KEY_ATTR_INIT
-            FROM dbo.V_NRT_INV_KEYS_ATTRS_MAPPING map
-            LEFT JOIN #TMP_MV_GRP mvg ON mvg.public_health_case_uid=map.public_health_case_uid
-            LEFT JOIN #TMP_AM_GRP amg ON amg.public_health_case_uid=map.public_health_case_uid
-            WHERE map.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-              AND investigation_form_cd like @inv_form_cd;
+        if @debug = 'true'
+            select @Proc_Step_Name as step, *
+            from #KEY_ATTR_INIT;
 
-            if @debug = 'true'
-                select @Proc_Step_Name as step, *
-                from #KEY_ATTR_INIT;
+        SELECT @RowCount_no = @@ROWCOUNT;
 
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @datamart_nm, @datamart_nm, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -1176,7 +1107,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_CODED_Antimicrobial
                             WHERE public_health_case_uid IS NOT NULL
@@ -1193,7 +1124,7 @@ BEGIN
                             SELECT
                                 public_health_case_uid,
                                 col_nm,
-                                ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, cd ORDER BY branch_id) AS row_num,
+                                root_uid AS row_num,
                                 response
                             FROM #OBS_NUMERIC_Antimicrobial
                             WHERE public_health_case_uid IS NOT NULL

@@ -1,6 +1,7 @@
 package gov.cdc.etldatapipeline.observation.service;
 
 
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
@@ -30,17 +31,21 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.function.ToLongFunction;
 
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.*;
+
 
 @Service
 @Setter
 @RequiredArgsConstructor
 public class ObservationService {
     private static final Logger logger = LoggerFactory.getLogger(ObservationService.class);
+    private static final String BEFORE_PATH = "before";
 
     @Value("${spring.kafka.input.topic-name}")
     private String observationTopic;
+
+    @Value("${spring.kafka.input.topic-name-ar}")
+    private String actRelationshipTopic;
 
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String observationTopicOutputReporting;
@@ -74,18 +79,30 @@ public class ObservationService {
             }
     )
     @KafkaListener(
-            topics = "${spring.kafka.input.topic-name}"
+                topics = {
+                        "${spring.kafka.input.topic-name}",
+                        "${spring.kafka.input.topic-name-ar}"
+                }
     )
     public void processMessage(ConsumerRecord<String, String> rec) {
-        logger.debug(topicDebugLog, rec.value(), rec.topic());
+
         long batchId = toBatchId.applyAsLong(rec);
-        processObservation(rec.value(), batchId);
+        String topic = rec.topic();
+        String message = rec.value();
+        logger.debug(topicDebugLog, message, topic);
+
+        if (topic.equals(observationTopic)) {
+            processObservation(message, batchId, true, "");
+        }
+        else if (topic.equals(actRelationshipTopic) && message != null) {
+            processActRelationship(message, batchId);
+        }
     }
 
-    private void processObservation(String value, long batchId) {
+    private void processObservation(String value, long batchId, boolean isFromObservationTopic, String actRelationshipSourceActUid) {
         String observationUid = "";
         try {
-            observationUid = extractUid(value,"observation_uid");
+            observationUid = isFromObservationTopic ? extractUid(value,"observation_uid") : actRelationshipSourceActUid;
             observationKey.setObservationUid(Long.valueOf(observationUid));
             logger.info(topicDebugLog, observationUid, observationTopic);
             Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
@@ -102,9 +119,40 @@ public class ObservationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Observation", observationUid, e), e);
+            throw new DataProcessingException(errorMessage("Observation", observationUid, e), e);
         }
     }
+
+    private void processActRelationship(String value, long batchId) {
+        String sourceActUid = "";
+
+        try {
+            String typeCd;
+            String targetClassCd;
+            String operationType = extractChangeDataCaptureOperation(value);
+
+            if (operationType.equals("d")) {
+                sourceActUid = extractUid(value, "source_act_uid", BEFORE_PATH);
+                typeCd = extractValue(value, "type_cd", BEFORE_PATH);
+                targetClassCd = extractValue(value, "target_class_cd", BEFORE_PATH);
+            }
+            else {
+                return;
+            }
+
+            logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
+            // For LabReport values, we only need to trigger if the relationship is deleted (not covered in updates to Observation)
+            // PHC targets are excluded from the LabReport association updates, as the LabReport will receive
+            // an update in Observation
+            if (typeCd.equals("LabReport") && targetClassCd.equals("OBS")) {
+                processObservation(value, batchId, false, sourceActUid);
+            }
+        } catch (Exception e) {
+            throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
+        }
+    }
+
+
 
     // This same method can be used for elastic search as well and that is why the generic model is present
     private void pushKeyValuePairToKafka(ObservationKey observationKey, Object model, String topicName) {

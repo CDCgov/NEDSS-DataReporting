@@ -1,5 +1,7 @@
 package gov.cdc.etldatapipeline.postprocessingservice.service;
 
+import com.google.common.base.Strings;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
@@ -35,7 +37,10 @@ public class ProcessDatamartData {
             data = reduce(data);
             try {
                 for (DatamartData datamartData : data) {
-                    if (Objects.isNull(datamartData.getPatientUid())) continue; // skipping now for unprocessed patients
+                    if (Strings.isNullOrEmpty(datamartData.getDatamart())
+                            || Objects.isNull(datamartData.getPatientUid())) {
+                        continue; // skipping now for empty datamart or unprocessed patients
+                    }
 
                     Datamart dmart = modelMapper.map(datamartData, Datamart.class);
                     DatamartKey dmKey = new DatamartKey();
@@ -48,7 +53,7 @@ public class ProcessDatamartData {
                 }
             } catch (Exception e) {
                 String msg = "Error processing Datamart JSON array from investigation result data: " + e.getMessage();
-                throw new RuntimeException(msg, e);
+                throw new DataProcessingException(msg, e);
             }
         }
     }

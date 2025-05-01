@@ -1,8 +1,10 @@
 package gov.cdc.etldatapipeline.ldfdata.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfData;
@@ -104,7 +106,7 @@ public class LdfDataService {
                     "',ldf_uid='" + ldfUid +
                     "',business_object_uid='" + busObjUid +"': "
             ) + e.getMessage();
-            throw new RuntimeException(msg, e);
+            throw new DataProcessingException(msg, e);
         }
     }
 
@@ -114,7 +116,7 @@ public class LdfDataService {
         kafkaTemplate.send(topicName, jsonKey, jsonValue);
     }
 
-    private String extractUid(String value) throws Exception {
+    private String extractUid(String value) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(value);
         JsonNode payloadNode = jsonNode.get("payload").path("after");
         if (!payloadNode.isMissingNode()

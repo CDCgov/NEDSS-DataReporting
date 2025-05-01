@@ -84,6 +84,7 @@ public class PatientElasticSearch implements PersonExtendedProps {
     private String nmdegree;
     private String personNmSeq;
     private String nmUseCd;
+    private String statusNameCd;
 
     //Address
     private String streetAddress1;

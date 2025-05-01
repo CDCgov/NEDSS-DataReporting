@@ -15,9 +15,6 @@ public class Treatment {
     @Column(name = "treatment_uid")
     private String treatmentUid;
 
-    @Column(name = "public_health_case_uid")
-    private String publicHealthCaseUid;
-
     @Column(name = "organization_uid")
     private String organizationUid;
 
@@ -92,4 +89,7 @@ public class Treatment {
 
     @Column(name = "morbidity_uid")
     private String morbidityUid;
+
+    @Column(name = "associated_phc_uids")
+    private String associatedPhcUids;
 }

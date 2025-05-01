@@ -56,11 +56,11 @@ BEGIN TRY
 
 		WITH 
 		CTE_INVESTIGATION_BATCH_ID AS (
-			SELECT 
+			SELECT DISTINCT
 				public_health_case_uid,
 				batch_id
 			FROM [dbo].nrt_investigation I WITH (NOLOCK) 
-			INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
+			INNER JOIN  (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
 			WHERE I.investigation_form_cd='INV_FORM_RVCT'
 		)
 		
@@ -194,7 +194,7 @@ BEGIN TRY
 			CODE_SET_GROUP_ID, 
 			DATAMART_COLUMN_NM, 
 			CASE 
-				WHEN CODE_SET_GROUP_ID = '' 
+				WHEN COALESCE(CODE_SET_GROUP_ID, '') = ''  
 					AND CODE_SET_NM NOT IN ('STATE_CCD', 'COUNTY_CCD', 'PSL_CNTRY', 'S_JURDIC_C', 'S_PROGRA_C') 
 				THEN ANSWER_TXT
 				WHEN CODE_SET_NM NOT IN ('STATE_CCD', 'COUNTY_CCD', 'PSL_CNTRY', 'S_JURDIC_C', 'S_PROGRA_C')
@@ -803,11 +803,11 @@ BEGIN TRY
 
 		;WITH 
 		CTE_INVESTIGATION_BATCH_ID AS (
-				SELECT 
+				SELECT DISTINCT
 					public_health_case_uid,
 					batch_id
 				FROM [dbo].nrt_investigation I WITH (NOLOCK) 
-				INNER JOIN  (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
+				INNER JOIN  (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu on nu.value = I.public_health_case_uid  
 			),
 		CTE_DISEASE_SITE_SET AS (
 			SELECT  

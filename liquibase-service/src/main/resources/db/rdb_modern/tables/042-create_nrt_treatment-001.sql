@@ -233,4 +233,24 @@ IF EXISTS (SELECT 1
             BEGIN
                 EXEC sp_rename 'nrt_treatment.VERSION_CTRL_NBR', 'version_control_number', 'COLUMN';
             END;
+
+-- CNDE-2512
+        IF NOT EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'associated_phc_uids'
+                        AND Object_ID = Object_ID(N'nrt_treatment'))
+            BEGIN
+                ALTER TABLE dbo.nrt_treatment
+                    ADD associated_phc_uids nvarchar(max);
+            END;
+
+-- CNDE-2536
+        IF EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'public_health_case_uid'
+                        AND Object_ID = Object_ID(N'nrt_treatment'))
+            BEGIN
+                ALTER TABLE dbo.nrt_treatment
+                    DROP COLUMN public_health_case_uid;
+            END;
     END;

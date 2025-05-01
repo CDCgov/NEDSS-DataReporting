@@ -73,6 +73,7 @@ public class TestUtils {
         reporting.setInvestigatorId(32143250L);         // PersonParticipations.json, entity_id for type_cd=InvestgrOfPHC
         reporting.setPhysicianId(14253651L);            // PersonParticipations.json, entity_id for type_cd=PhysicianOfPHC
         reporting.setPatientId(321432537L);             // PersonParticipations.json, entity_id for type_cd=SubjOfPHC
+        reporting.setPersonAsReporterUid(10003004L);    // PersonParticipations.json, entity_id for type_cd=PerAsReporterOfPHC
         reporting.setOrganizationId(34865315L);         // OrganizationParticipations.json, entity_id for type_cd=OrgAsReporterOfPHC
         reporting.setHospitalUid(30303034L);            // OrganizationParticipations.json, entity_id for type_cd=HospOfADT
         reporting.setChronicCareFacUid(31096761L);      // OrganizationParticipations.json, entity_id for type_cd=ChronicCareFac
@@ -375,7 +376,6 @@ public class TestUtils {
     public static Treatment constructTreatment(Long treatmentUid) {
         Treatment treatment = new Treatment();
         treatment.setTreatmentUid(String.valueOf(treatmentUid));
-        treatment.setPublicHealthCaseUid("12345");
         treatment.setOrganizationUid("67890");
         treatment.setProviderUid("11111");
         treatment.setPatientTreatmentUid("22222");
@@ -400,6 +400,7 @@ public class TestUtils {
         treatment.setLastChangeTime("2024-01-01T10:00:00");
         treatment.setLastChangeUserId("55555");
         treatment.setVersionControlNumber("1");
+        treatment.setAssociatedPhcUids("123456,123457");
         return treatment;
     }
 }

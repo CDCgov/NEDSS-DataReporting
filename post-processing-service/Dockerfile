@@ -1,5 +1,7 @@
 FROM amazoncorretto:21 as builder
 
+RUN yum update -y && yum clean all
+
 #Copy project config
 COPY gradle /usr/src/gradle
 COPY gradlew /usr/src/gradlew
@@ -15,6 +17,7 @@ WORKDIR /usr/src/
 #Build post-processing service along with any required libraries
 RUN ./gradlew :post-processing-service:buildNeeded -x test --no-daemon
 FROM amazoncorretto:21
+RUN yum update -y && yum clean all
 COPY --from=builder /usr/src/post-processing-service/build/libs/post-processing-service*.jar post-processing-service.jar
 
 # Run jar

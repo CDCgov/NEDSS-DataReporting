@@ -35,20 +35,14 @@ BEGIN
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
-        BEGIN TRANSACTION;
-
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT],[msg_description1])
         VALUES(@BATCH_ID, @Dataflow_Name, @Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO, LEFT(@pMorbidityIdList, 500));
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating #nrt_morbidity_observation';
-
 
         --List of new observation_uids for Morbidity Report from nrt_observation.
         SELECT
@@ -102,19 +96,16 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
 
-
         select obstxt.*
         into #tmp_nrt_observation_txt
         from #morb_obs_reference obs
-                 inner join dbo.nrt_observation_txt obstxt on obs.observation_uid = obstxt.observation_uid
+        inner join dbo.nrt_observation_txt obstxt on obs.observation_uid = obstxt.observation_uid
         where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1);
 
 
@@ -127,19 +118,16 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_coded';
 
-
         select obscoded.*
         into #tmp_nrt_observation_coded
         from #morb_obs_reference obs
-                 inner join dbo.nrt_observation_coded obscoded  WITH (NOLOCK) on obs.observation_uid = obscoded.observation_uid
+        inner join dbo.nrt_observation_coded obscoded  WITH (NOLOCK) on obs.observation_uid = obscoded.observation_uid
         where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1);
 
 
@@ -152,25 +140,20 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION;
 
-        BEGIN TRANSACTION;
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_investigation_observation';
+            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_date';
 
-        select invobs.*
-        into #tmp_nrt_investigation_observation
-        from #morb_obs_reference obsref
-                 left join dbo.nrt_investigation_observation invobs  WITH (NOLOCK) on obsref.observation_uid = invobs.observation_id
-                 left outer join dbo.nrt_investigation inv
-                                 on inv.public_health_case_uid = invobs.public_health_case_uid
-        where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1);
+        select obsdate.*
+        into #tmp_nrt_observation_date
+        from #morb_obs_reference obs
+        inner join dbo.nrt_observation_date obsdate WITH (NOLOCK) on obs.observation_uid = obsdate.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obsdate.batch_id,1);
 
 
-
-        if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_nrt_investigation_observation;
+        if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_nrt_observation_date;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -179,17 +162,21 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION;
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating  tmp_morb_root';
 
-
         IF OBJECT_ID('#tmp_morb_root', 'U') IS NOT NULL
             DROP TABLE #tmp_morb_root ;
 
+        /*
+            Note regarding associated_phc_uids column for morbs:
 
+            associated_phc_uids is a comma separated list of phc's that are
+            associated with a LabReport or a MorbReport. For MorbReport observations,
+            there can only be one associated investigation. For that reason,
+            we can use it as if it were not a comma separated list.
+        */
         CREATE TABLE #tmp_morb_root(
                                        [morb_rpt_local_id] [varchar](50) NULL,
                                        [morb_rpt_share_ind] [char](1) NOT NULL,
@@ -208,6 +195,7 @@ BEGIN
                                        [record_status_cd] [varchar](20) NULL,
                                        [PROCESSING_DECISION_CD] [varchar](20) NULL,
                                        [PROCESSING_DECISION_DESC] [varchar](25) NULL,
+                                       [associated_phc_uids] [nvarchar](max) NULL,
                                        [PROVIDER_KEY] [numeric](18, 0) NULL,
                                        morb_rpt_KEY int
 
@@ -231,6 +219,7 @@ BEGIN
                                   ,[record_status_cd]
                                   ,[PROCESSING_DECISION_CD]
                                   ,[PROCESSING_DECISION_DESC]
+                                  ,[associated_phc_uids]
         )
         SELECT 	obs.local_id				 AS morb_rpt_local_id,
                   obs.shared_ind				 AS morb_rpt_share_ind,
@@ -252,7 +241,8 @@ BEGIN
                       ELSE obs.[record_status_cd]
                       END AS record_status_cd,
                   obs.PROCESSING_DECISION_CD ,
-                  substring(cvg.Code_short_desc_txt,1,25)
+                  substring(cvg.Code_short_desc_txt,1,25) AS PROCESSING_DECISION_DESC,
+                  obs.associated_phc_uids
         FROM #nrt_morbidity_observation AS updated_lab
                  INNER JOIN dbo.nrt_observation obs  WITH (NOLOCK) ON updated_lab.observation_uid = obs.observation_uid
                  LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg ON cvg.code_set_nm = 'STD_NBS_PROCESSING_DECISION_ALL'
@@ -264,7 +254,7 @@ BEGIN
         UPDATE #tmp_morb_root
         SET jurisdiction_nm = (
             SELECT code_short_desc_txt
-            FROM NBS_SRTE.dbo.jurisdiction_code WHERE code= #tmp_morb_root.Jurisdiction_cd and code_set_nm = 'S_JURDIC_C'
+            FROM dbo.nrt_srte_Jurisdiction_code WHERE code= #tmp_morb_root.Jurisdiction_cd and code_set_nm = 'S_JURDIC_C'
         )
         WHERE Jurisdiction_cd IS NOT NULL;
 
@@ -311,9 +301,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating #tmp_MorbFrmQ';
@@ -343,9 +330,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating  #tmp_MorbFrmQCoded';
@@ -354,12 +338,11 @@ BEGIN
             DROP TABLE #tmp_MorbFrmQCoded ;
 
         SELECT 	oq.*,
-                  ob.ovc_code AS [code]
+                ob.ovc_code AS [code]
         INTO #tmp_MorbFrmQCoded
-        FROM #tmp_MorbFrmQ					AS oq
-                 INNER JOIN #tmp_nrt_observation_coded AS ob  WITH (NOLOCK)
-                            ON oq.observation_uid = ob.observation_uid
-                                AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
+        FROM #tmp_MorbFrmQ					  AS oq
+        INNER JOIN #tmp_nrt_observation_coded AS ob
+            ON oq.observation_uid = ob.observation_uid AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
 
         if @debug = 'true' SELECT 'DEBUG: tmp_MorbFrmQCoded', * FROM #tmp_MorbFrmQCoded;
 
@@ -369,9 +352,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating #tmp_MorbFrmQDate';
@@ -380,12 +360,11 @@ BEGIN
             DROP TABLE #tmp_MorbFrmQDate;
 
         SELECT 	oq.*,
-                  ob.ovd_FROM_date AS [FROM_time]
+                ob.ovd_FROM_date AS [FROM_time]
         INTO #tmp_MorbFrmQDate
-        FROM	#tmp_MorbFrmQ					AS oq
-                    INNER JOIN  dbo.nrt_observation_date AS ob  WITH (NOLOCK) ON
-            oq.observation_uid = ob.observation_uid
-        ;
+        FROM #tmp_MorbFrmQ				     AS oq
+        INNER JOIN #tmp_nrt_observation_date AS ob
+            ON oq.observation_uid = ob.observation_uid AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -393,9 +372,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating #tmp_MorbFrmQTxt';
@@ -407,8 +383,8 @@ BEGIN
                   REPLACE(REPLACE(ob.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')	as VALUE_TXT
         INTO #tmp_MorbFrmQTxt
         FROM #tmp_MorbFrmQ					AS oq
-                 INNER JOIN #tmp_nrt_observation_txt AS ob  WITH (NOLOCK) ON oq.observation_uid = ob.observation_uid
-            AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
+        INNER JOIN #tmp_nrt_observation_txt AS ob WITH (NOLOCK)
+            ON oq.observation_uid = ob.observation_uid AND isnull(oq.batch_id,1) = isnull(ob.batch_id,1);
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -417,9 +393,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_MorbFrmQCoded2';
@@ -467,9 +440,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_MorbFrmQDate2';
@@ -515,9 +485,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_MorbFrmQTxt2';
@@ -560,9 +527,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_MorbFrmQCoded2';
@@ -587,9 +551,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_MorbFrmQDate2';
@@ -613,9 +574,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_MorbFrmQTxt2';
@@ -639,9 +597,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_Morbidity_Report';
@@ -674,7 +629,8 @@ BEGIN
 					WHEN rtrim(mr.[PROCESSING_DECISION_CD])  = '''' THEN NULL
 					ELSE mr.[PROCESSING_DECISION_CD]
 				  END AS PROCESSING_DECISION_CD,
-               mr.[PROCESSING_DECISION_DESC],
+               mr.[PROCESSING_DECISION_DESC], 
+               mr.[associated_phc_uids], 
 			   mr.[record_status_cd], --Updated in #tmp_morb_root
 			   tmc2.*, tmd2.*,tmt2.*,
                Cast( NULL AS datetime) AS TEMP_ILLNESS_ONSET_DT_KEY,
@@ -760,11 +716,6 @@ BEGIN
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
-
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##SAS_morb_Rpt_User_Comment';
 
@@ -803,9 +754,6 @@ BEGIN
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_morb_Rpt_User_Comment';
@@ -914,9 +862,6 @@ BEGIN
         VALUES
             (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating ##tmp_MORBIDITY_REPORT_Event_Final';
@@ -965,11 +910,7 @@ BEGIN
             /*ILLNESS_ONSET_DT_KEY*/
                  left join dbo.rdb_date	as dt4 WITH (NOLOCK) ON rpt.temp_illness_onset_dt_key = dt4.date_mm_dd_yyyy
             /* INVESTIGATION_KEY  */
-                 left join (select distinct public_health_case_uid, observation_id
-                 			from
-                 			#tmp_nrt_investigation_observation
-                 			) ninv ON rpt.morb_rpt_uid = ninv.observation_id
-                 left join dbo.Investigation inv WITH (NOLOCK) ON ninv.public_health_case_uid = inv.case_uid
+                 left join dbo.Investigation inv WITH (NOLOCK) ON rpt.associated_phc_uids = inv.case_uid
             /*MORB_RPT_CREATE_DT_KEY*/
                  left join dbo.rdb_date AS dt5 WITH (NOLOCK) ON CAST(CONVERT(VARCHAR,rpt.morb_RPT_Created_DT,102) AS DATETIME)  = dt5.DATE_MM_DD_YYYY
             /*MORB_RPT_DT_KEY*/
@@ -993,8 +934,6 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES 		(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
 
 
         BEGIN TRANSACTION;

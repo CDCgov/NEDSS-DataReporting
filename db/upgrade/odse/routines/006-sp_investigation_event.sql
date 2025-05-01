@@ -159,7 +159,8 @@ BEGIN
                results.investigation_case_management,
                results.investigation_notifications,
                results.investigation_case_count,
-               con.investigation_form_cd
+               con.investigation_form_cd,
+               nt.phc_notes
         -- ,results.investigation_act_entity
         -- ,results.ldf_public_health_case
         -- into dbo.Investigation_Dim_Event
@@ -377,14 +378,16 @@ BEGIN
                                                                 then (select * from dbo.fn_get_user_name(act.last_chg_user_id))
                                                             end              as last_chg_user_name,
                                                         act.last_chg_time    as act_last_chg_time,
-                                                        act1.target_Act_uid  as root_uid,
-                                                        act1.source_act_uid  as branch_uid,
-                                                        act1.target_class_cd as root_source_class_cd,
-                                                        act1.source_class_cd as branch_source_class_cd,
-                                                        act1.type_cd         as branch_type_cd
+                                                        COALESCE(root.target_act_uid, branch.target_act_uid) AS root_uid,
+                                                        branch.source_act_uid  as branch_uid,
+                                                        branch.target_class_cd as root_source_class_cd,
+                                                        branch.source_class_cd as branch_source_class_cd,
+                                                        branch.type_cd         as branch_type_cd
                                                  FROM dbo.act_relationship act WITH (NOLOCK)
-                                                          left join dbo.act_relationship act1 WITH (NOLOCK)
-                                                                    on act.source_act_uid = act1.target_act_uid
+                                                 left join dbo.act_relationship branch WITH (NOLOCK)
+                                                     on act.source_act_uid = branch.target_act_uid
+                                                 left join dbo.act_relationship AS root WITH (NOLOCK)
+                                                     on branch.source_act_uid = root.source_act_uid and root.type_cd = 'ItemToRow'
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
                                         -- act_ids associated with public health case
@@ -409,7 +412,7 @@ BEGIN
                                                         cm.confirmation_method_time,
                                                         phc1.last_chg_time      as phc_last_chg_time
                                                  from dbo.Confirmation_method cm
-                                                          join nbs_srte.dbo.Code_value_general cvg WITH (NOLOCK)
+                                                          left join nbs_srte.dbo.Code_value_general cvg WITH (NOLOCK)
                                                                on cvg.code = cm.confirmation_method_cd and cvg.code_set_nm = 'PHC_CONF_M'
                                                           join dbo.Public_health_case phc1 WITH (NOLOCK)
                                                                on cm.public_health_case_uid = phc1.public_health_case_uid
@@ -443,7 +446,9 @@ BEGIN
                                                         datamart_column_nm,
                                                         seq_nbr,
                                                         ldf_status_cd,
-                                                        nbs_ui_component_uid
+                                                        nbs_ui_component_uid,
+                                                        nca_add_time,
+                                                        nuim_record_status_cd
                                                  FROM (SELECT *,
                                                               ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt
                                                                   order by
@@ -477,7 +482,9 @@ BEGIN
                                                                              null as datamart_column_nm,
                                                                              pa.seq_nbr,
                                                                              nuim.ldf_status_cd,
-                                                                             nuim.nbs_ui_component_uid
+                                                                             nuim.nbs_ui_component_uid,
+                                                                             pa.add_time as nca_add_time,
+                                                                             nuim.record_status_cd as nuim_record_status_cd
                                                              from nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
                                                                       inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
                                                                                  on
@@ -507,7 +514,7 @@ BEGIN
                                                                  pa.answer_txt,
                                                                  pa.answer_group_seq_nbr,
                                                                  nuim.nbs_ui_metadata_uid,
-                                                                 nuim.code_set_group_id,
+                                                                 pq.code_set_group_id,
                                                                  nuim.nbs_question_uid,
                                                                  nuim.investigation_form_cd,
                                                                  nuim.unit_value,
@@ -528,7 +535,9 @@ BEGIN
                                                                  pq.datamart_column_nm,
                                                                  pa.seq_nbr,
                                                                  nuim.ldf_status_cd,
-                                                                 nuim.nbs_ui_component_uid
+                                                                 nuim.nbs_ui_component_uid,
+                                                                 pa.add_time as nca_add_time,
+                                                                 nuim.record_status_cd as nuim_record_status_cd
                                                              from nbs_odse.dbo.nbs_question pq with (nolock)
                                                                       join nbs_odse.dbo.nbs_case_answer pa with (nolock)
                                                                            on pq.nbs_question_uid = pa.nbs_question_uid
@@ -814,7 +823,19 @@ BEGIN
               FROM nbs_act_entity nac WITH (NOLOCK)
               GROUP BY act_uid) AS investigation_act_entity
              ON investigation_act_entity.nac_page_case_uid = results.public_health_case_uid
-                 LEFT JOIN nbs_srte.dbo.condition_code con on results.cd = con.condition_cd;
+                 LEFT JOIN nbs_srte.dbo.condition_code con on results.cd = con.condition_cd
+                 LEFT JOIN  (SELECT
+                    note_parent_uid,
+                    STUFF(
+                            (
+                        SELECT '; ' + CAST(add_time AS VARCHAR(20)) + '^' + replace(replace(replace(note, CHAR(0x0002), ''), CHAR(0x0001), ''), CHAR(0x0000), '')
+                        FROM nbs_odse.dbo.NBS_Note nbsNote
+                        WHERE note_parent_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','))
+                            and nbsNote.note_parent_uid = NBS_NOTE.note_parent_uid FOR XML PATH, TYPE, BINARY BASE64
+                    ).value('.[1]', 'varchar(max)'), 1, 2, '') PHC_NOTES
+                    FROM nbs_odse.dbo.NBS_NOTE WITH(NOLOCK)
+                    GROUP BY note_parent_uid
+                  ) nt on nt.note_parent_uid = results.public_health_case_uid;
 
         -- select * from dbo.Investigation_Dim_Event;
 

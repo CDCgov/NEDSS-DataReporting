@@ -1,21 +1,21 @@
 CREATE or ALTER PROCEDURE [dbo].[sp_f_std_page_case_postprocessing] @phc_id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
-BEGIN TRY
+    BEGIN TRY
 
-   declare @rowcount_no bigint;
-   declare @proc_step_no float = 0;
-   declare @proc_step_name varchar(200) = '';
-   declare @batch_id bigint;
-   declare @create_dttm datetime2(7) = current_timestamp;
-   declare @update_dttm datetime2(7) = current_timestamp;
-   declare @dataflow_name varchar(200) = 'F_STD_PAGE_CASE';
-   declare @package_name varchar(200) = 'F_STD_PAGE_CASE';
+        declare @rowcount_no bigint;
+        declare @proc_step_no float = 0;
+        declare @proc_step_name varchar(200) = '';
+        declare @batch_id bigint;
+        declare @create_dttm datetime2(7) = current_timestamp;
+        declare @update_dttm datetime2(7) = current_timestamp;
+        declare @dataflow_name varchar(200) = 'F_STD_PAGE_CASE';
+        declare @package_name varchar(200) = 'F_STD_PAGE_CASE';
 
-   SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
+        SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id
         ,[create_dttm]
         ,[update_dttm]
         ,[Dataflow_Name]
@@ -25,29 +25,29 @@ BEGIN TRY
         ,[step_name]
         ,[msg_description1]
         ,[row_count])
-    VALUES (@batch_id
-            ,@create_dttm
-            ,@update_dttm
-            ,@dataflow_name
-            ,@package_name
-            ,'START'
-            ,0
-            ,'SP_Start'
-            ,LEFT(@phc_id_list, 500)
-            ,0);
+        VALUES (@batch_id
+               ,@create_dttm
+               ,@update_dttm
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,0
+               ,'SP_Start'
+               ,LEFT(@phc_id_list, 500)
+               ,0);
 
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
         SET @proc_step_no = 1;
         SET @proc_step_name = ' Generating PHC_UIDS_ALL';
 
         IF OBJECT_ID('#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
             drop table #PHC_CASE_UIDS_ALL
-        ;
+            ;
 
         SELECT
             ni.public_health_case_uid  'PAGE_CASE_UID',
-                nicm.CASE_MANAGEMENT_UID,
+            nicm.CASE_MANAGEMENT_UID,
             ni.INVESTIGATION_FORM_CD,
             ni.CD,
             ni.LAST_CHG_TIME,
@@ -80,11 +80,11 @@ BEGIN TRY
         FROM
             dbo.nrt_investigation  ni
                 LEFT OUTER JOIN dbo.nrt_investigation_case_management nicm ON	ni.public_health_case_uid = nicm.public_health_case_uid
-                LEFT OUTER JOIN NBS_SRTE.dbo.CONDITION_CODE cc with(nolock) ON 	cc.CONDITION_CD= ni.CD AND	cc.INVESTIGATION_FORM_CD
-            NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
+                LEFT OUTER JOIN dbo.nrt_srte_Condition_code cc with(nolock) ON 	cc.CONDITION_CD= ni.CD AND	cc.INVESTIGATION_FORM_CD
+                NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
         where
             ni.public_health_case_uid in (
-            SELECT value FROM STRING_SPLIT(@phc_id_list, ',')
+                SELECT value FROM STRING_SPLIT(@phc_id_list, ',')
             ) and
             nicm.CASE_MANAGEMENT_UID is not null;
 
@@ -93,11 +93,11 @@ BEGIN TRY
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    if @debug = 'true' select '#PHC_CASE_UIDS_ALL', * from #PHC_CASE_UIDS_ALL;
+        if @debug = 'true' select '#PHC_CASE_UIDS_ALL', * from #PHC_CASE_UIDS_ALL;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1; --2
         SET @PROC_STEP_NAME = ' Generating PHC_UIDS';
@@ -105,56 +105,56 @@ BEGIN TRY
 
         IF OBJECT_ID('#PHC_UIDS', 'U') IS NOT NULL
             drop table #PHC_UIDS
-        ;
+            ;
 
 
-    SELECT ni.public_health_case_uid page_case_uid,
-           ni.CASE_MANAGEMENT_UID,
-           ni.INVESTIGATION_FORM_CD,
-           ni.CD,
-           ni.LAST_CHG_TIME,
-           ni.ADD_TIME,
-           ni.investigator_id,
-           ni.physician_id,
-           ni.patient_id,
-           ni.person_as_reporter_uid,
-           ni.hospital_uid,
-           ni.ordering_facility_uid,
-           ni.ca_supervisor_of_phc_uid,
-           ni.closure_investgr_of_phc_uid,
-           ni.dispo_fld_fupinvestgr_of_phc_uid,
-           ni.fld_fup_investgr_of_phc_uid,
-           ni.fld_fup_prov_of_phc_uid,
-           ni.fld_fup_supervisor_of_phc_uid,
-           ni.init_fld_fup_investgr_of_phc_uid,
-           ni.init_fup_investgr_of_phc_uid,
-           ni.init_interviewer_of_phc_uid,
-           ni.interviewer_of_phc_uid,
-           ni.surv_investgr_of_phc_uid,
-           ni.fld_fup_facility_of_phc_uid,
-           ni.org_as_hospital_of_delivery_uid,
-           ni.per_as_provider_of_delivery_uid,
-           ni.per_as_provider_of_obgyn_uid,
-           ni.per_as_provider_of_pediatrics_uid,
-           ni.org_as_reporter_uid
-    INTO
-        #PHC_UIDS
-    FROM dbo.nrt_investigation ni
-    WHERE ni.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) and
-        INVESTIGATION_FORM_CD  NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
-                                        'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
-                                        'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
-      and CASE_MANAGEMENT_UID IS NOT NULL;
+        SELECT ni.public_health_case_uid page_case_uid,
+               ni.CASE_MANAGEMENT_UID,
+               ni.INVESTIGATION_FORM_CD,
+               ni.CD,
+               ni.LAST_CHG_TIME,
+               ni.ADD_TIME,
+               ni.investigator_id,
+               ni.physician_id,
+               ni.patient_id,
+               ni.person_as_reporter_uid,
+               ni.hospital_uid,
+               ni.ordering_facility_uid,
+               ni.ca_supervisor_of_phc_uid,
+               ni.closure_investgr_of_phc_uid,
+               ni.dispo_fld_fupinvestgr_of_phc_uid,
+               ni.fld_fup_investgr_of_phc_uid,
+               ni.fld_fup_prov_of_phc_uid,
+               ni.fld_fup_supervisor_of_phc_uid,
+               ni.init_fld_fup_investgr_of_phc_uid,
+               ni.init_fup_investgr_of_phc_uid,
+               ni.init_interviewer_of_phc_uid,
+               ni.interviewer_of_phc_uid,
+               ni.surv_investgr_of_phc_uid,
+               ni.fld_fup_facility_of_phc_uid,
+               ni.org_as_hospital_of_delivery_uid,
+               ni.per_as_provider_of_delivery_uid,
+               ni.per_as_provider_of_obgyn_uid,
+               ni.per_as_provider_of_pediatrics_uid,
+               ni.org_as_reporter_uid
+        INTO
+            #PHC_UIDS
+        FROM dbo.nrt_investigation ni
+        WHERE ni.public_health_case_uid IN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) and
+            INVESTIGATION_FORM_CD  NOT IN ( 'INV_FORM_BMDGAS','INV_FORM_BMDGBS','INV_FORM_BMDGEN',
+                                            'INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV',
+                                            'INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
+          and CASE_MANAGEMENT_UID IS NOT NULL;
 
-    SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-    INSERT INTO dbo.[JOB_FLOW_LOG]
-    (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
-    VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO dbo.[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1; --3
         SET @PROC_STEP_NAME = ' Generating ENTITY_KEYSTORE_STD';
@@ -162,7 +162,7 @@ BEGIN TRY
 
         IF OBJECT_ID('#ENTITY_KEYSTORE_STD', 'U') IS NOT NULL
             drop table #ENTITY_KEYSTORE_STD
-        ;
+            ;
 
 
         SELECT
@@ -203,35 +203,35 @@ BEGIN TRY
             COALESCE(PEDIATRICIAN.PROVIDER_KEY, 1) AS PEDIATRICIAN_KEY
         into #ENTITY_KEYSTORE_STD
         FROM #PHC_CASE_UIDS_ALL   FSSHC
-            LEFT OUTER JOIN dbo.CONDITION CONDITION with(nolock) ON FSSHC.CD= CONDITION.CONDITION_CD
-            LEFT OUTER JOIN dbo.D_PATIENT PATIENT	with(nolock) ON fsshc.PATIENT_ID= PATIENT.PATIENT_UID
-            LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPITAL with(nolock) ON fsshc.HOSPITAL_UID= HOSPITAL.ORGANIZATION_UID
-            LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPDELIVERY with(nolock) ON fsshc.ORG_AS_HOSPITAL_OF_DELIVERY_UID= HOSPDELIVERY.ORGANIZATION_UID
-            LEFT OUTER JOIN dbo.D_ORGANIZATION REPORTERORG with(nolock) ON fsshc.ORG_AS_REPORTER_UID= REPORTERORG.ORGANIZATION_UID
-            LEFT OUTER JOIN dbo.D_ORGANIZATION FACILITYORG with(nolock) ON fsshc.ORDERING_FACILITY_UID= FACILITYORG.ORGANIZATION_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER PERSONREPORTER with(nolock) ON  fsshc.PERSON_AS_REPORTER_UID= PERSONREPORTER.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER PROVDELIVERY with(nolock) ON fsshc.PER_AS_PROVIDER_OF_DELIVERY_UID= PROVDELIVERY.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER MOTHEROBGYN with(nolock) ON fsshc.PER_AS_PROVIDER_OF_OBGYN_UID= MOTHEROBGYN.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER PEDIATRICIAN with(nolock) ON fsshc.PER_AS_PROVIDER_OF_PEDIATRICS_UID= PEDIATRICIAN.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER PROVIDER with(nolock) ON fsshc.INVESTIGATOR_ID= PROVIDER.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER PHYSICIAN with(nolock) ON fsshc.PHYSICIAN_ID= PHYSICIAN.PROVIDER_UID
-            LEFT OUTER JOIN dbo.INVESTIGATION  INVESTIGATION with(nolock) ON fsshc.PAGE_CASE_UID= INVESTIGATION.CASE_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER CL with(nolock) ON fsshc.CLOSURE_INVESTGR_OF_PHC_UID= CL.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER DISP with(nolock) ON fsshc.DISPO_FLD_FUPINVESTGR_OF_PHC_UID= DISP.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_ORGANIZATION  FACILITY with(nolock) ON fsshc.FLD_FUP_FACILITY_OF_PHC_UID= FACILITY.ORGANIZATION_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER FLD_FUP_INVESTGTR with(nolock) ON fsshc.FLD_FUP_INVESTGR_OF_PHC_UID= FLD_FUP_INVESTGTR.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER PROVIDER_FLD_FUP with(nolock) ON fsshc.FLD_FUP_PROV_OF_PHC_UID= PROVIDER_FLD_FUP.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER SUPRVSR_FLD_FUP with(nolock) ON fsshc.FLD_FUP_SUPERVISOR_OF_PHC_UID= SUPRVSR_FLD_FUP.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER INIT_FLD_FUP with(nolock) ON fsshc.INIT_FLD_FUP_INVESTGR_OF_PHC_UID= INIT_FLD_FUP.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER INIT_INVSTGR_PHC with(nolock) ON fsshc.INIT_FUP_INVESTGR_OF_PHC_UID= INIT_INVSTGR_PHC.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER INIT_INTERVIEWER with(nolock) ON fsshc.INIT_INTERVIEWER_OF_PHC_UID= INIT_INTERVIEWER.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER INTERVIEWER with(nolock) ON fsshc.INTERVIEWER_OF_PHC_UID= INTERVIEWER.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER SURV with(nolock) ON fsshc.SURV_INVESTGR_OF_PHC_UID= SURV.PROVIDER_UID
-            LEFT OUTER JOIN dbo.D_PROVIDER CA with(nolock) ON fsshc.CA_SUPERVISOR_OF_PHC_UID= CA.PROVIDER_UID
-            LEFT JOIN dbo.GEOCODING_LOCATION AS LOC with(nolock) ON LOC.ENTITY_UID = PATIENT.PATIENT_UID
+                 LEFT OUTER JOIN dbo.v_condition_dim CONDITION with(nolock) ON FSSHC.CD= CONDITION.CONDITION_CD
+                 LEFT OUTER JOIN dbo.D_PATIENT PATIENT	with(nolock) ON fsshc.PATIENT_ID= PATIENT.PATIENT_UID
+                 LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPITAL with(nolock) ON fsshc.HOSPITAL_UID= HOSPITAL.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPDELIVERY with(nolock) ON fsshc.ORG_AS_HOSPITAL_OF_DELIVERY_UID= HOSPDELIVERY.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.D_ORGANIZATION REPORTERORG with(nolock) ON fsshc.ORG_AS_REPORTER_UID= REPORTERORG.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.D_ORGANIZATION FACILITYORG with(nolock) ON fsshc.ORDERING_FACILITY_UID= FACILITYORG.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PERSONREPORTER with(nolock) ON  fsshc.PERSON_AS_REPORTER_UID= PERSONREPORTER.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PROVDELIVERY with(nolock) ON fsshc.PER_AS_PROVIDER_OF_DELIVERY_UID= PROVDELIVERY.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER MOTHEROBGYN with(nolock) ON fsshc.PER_AS_PROVIDER_OF_OBGYN_UID= MOTHEROBGYN.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PEDIATRICIAN with(nolock) ON fsshc.PER_AS_PROVIDER_OF_PEDIATRICS_UID= PEDIATRICIAN.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PROVIDER with(nolock) ON fsshc.INVESTIGATOR_ID= PROVIDER.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PHYSICIAN with(nolock) ON fsshc.PHYSICIAN_ID= PHYSICIAN.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.INVESTIGATION  INVESTIGATION with(nolock) ON fsshc.PAGE_CASE_UID= INVESTIGATION.CASE_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER CL with(nolock) ON fsshc.CLOSURE_INVESTGR_OF_PHC_UID= CL.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER DISP with(nolock) ON fsshc.DISPO_FLD_FUPINVESTGR_OF_PHC_UID= DISP.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_ORGANIZATION  FACILITY with(nolock) ON fsshc.FLD_FUP_FACILITY_OF_PHC_UID= FACILITY.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER FLD_FUP_INVESTGTR with(nolock) ON fsshc.FLD_FUP_INVESTGR_OF_PHC_UID= FLD_FUP_INVESTGTR.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER PROVIDER_FLD_FUP with(nolock) ON fsshc.FLD_FUP_PROV_OF_PHC_UID= PROVIDER_FLD_FUP.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER SUPRVSR_FLD_FUP with(nolock) ON fsshc.FLD_FUP_SUPERVISOR_OF_PHC_UID= SUPRVSR_FLD_FUP.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER INIT_FLD_FUP with(nolock) ON fsshc.INIT_FLD_FUP_INVESTGR_OF_PHC_UID= INIT_FLD_FUP.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER INIT_INVSTGR_PHC with(nolock) ON fsshc.INIT_FUP_INVESTGR_OF_PHC_UID= INIT_INVSTGR_PHC.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER INIT_INTERVIEWER with(nolock) ON fsshc.INIT_INTERVIEWER_OF_PHC_UID= INIT_INTERVIEWER.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER INTERVIEWER with(nolock) ON fsshc.INTERVIEWER_OF_PHC_UID= INTERVIEWER.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER SURV with(nolock) ON fsshc.SURV_INVESTGR_OF_PHC_UID= SURV.PROVIDER_UID
+                 LEFT OUTER JOIN dbo.D_PROVIDER CA with(nolock) ON fsshc.CA_SUPERVISOR_OF_PHC_UID= CA.PROVIDER_UID
+                 LEFT JOIN dbo.GEOCODING_LOCATION AS LOC with(nolock) ON LOC.ENTITY_UID = PATIENT.PATIENT_UID
         where  PAGE_CASE_UID IN (
             SELECT PAGE_CASE_UID FROM #PHC_UIDS
-            )
+        )
         ;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -239,12 +239,12 @@ BEGIN TRY
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    if @debug = 'true' select '##ENTITY_KEYSTORE_STD', * from #ENTITY_KEYSTORE_STD;
+        if @debug = 'true' select '##ENTITY_KEYSTORE_STD', * from #ENTITY_KEYSTORE_STD;
 
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1; --5
         SET @PROC_STEP_NAME = ' Generating #DIMENSIONAL_KEYS';
@@ -252,59 +252,59 @@ BEGIN TRY
 
         IF OBJECT_ID('#DIMENSIONAL_KEYS', 'U') IS NOT NULL
             drop table #DIMENSIONAL_KEYS
-        ;
+            ;
 
         select  dimc.page_case_uid,
-            COALESCE(ladmin.D_INV_ADMINISTRATIVE_KEY , 1) AS 	D_INV_ADMINISTRATIVE_KEY ,
-            COALESCE(licl.D_INV_CLINICAL_KEY , 1) AS 	D_INV_CLINICAL_KEY ,
-            COALESCE(licomp.D_INV_COMPLICATION_KEY , 1) AS 	D_INV_COMPLICATION_KEY ,
-            COALESCE(licon.D_INV_CONTACT_KEY , 1) AS 	D_INV_CONTACT_KEY ,
-            COALESCE(lid.D_INV_DEATH_KEY , 1) AS 	D_INV_DEATH_KEY ,
-            COALESCE(lie.D_INV_EPIDEMIOLOGY_KEY , 1) AS 	D_INV_EPIDEMIOLOGY_KEY ,
-            COALESCE(lihiv.D_INV_HIV_KEY , 1) AS 	D_INV_HIV_KEY ,
-            COALESCE(lipo.D_INV_PATIENT_OBS_KEY , 1) AS 	D_INV_PATIENT_OBS_KEY ,
-            COALESCE(liit.D_INV_ISOLATE_TRACKING_KEY , 1) AS 	D_INV_ISOLATE_TRACKING_KEY ,
-            COALESCE(lilf.D_INV_LAB_FINDING_KEY , 1) AS 	D_INV_LAB_FINDING_KEY ,
-            COALESCE(limh.D_INV_MEDICAL_HISTORY_KEY , 1) AS 	D_INV_MEDICAL_HISTORY_KEY ,
-            COALESCE(lim.D_INV_MOTHER_KEY , 1) AS 	D_INV_MOTHER_KEY ,
-            COALESCE(liot.D_INV_OTHER_KEY , 1) AS 	D_INV_OTHER_KEY ,
-            COALESCE(lipb.D_INV_PREGNANCY_BIRTH_KEY , 1) AS 	D_INV_PREGNANCY_BIRTH_KEY ,
-            COALESCE(lirs.D_INV_RESIDENCY_KEY , 1) AS 	D_INV_RESIDENCY_KEY ,
-            COALESCE(lirf.D_INV_RISK_FACTOR_KEY , 1) AS 	D_INV_RISK_FACTOR_KEY ,
-            COALESCE(lish.D_INV_SOCIAL_HISTORY_KEY , 1) AS 	D_INV_SOCIAL_HISTORY_KEY ,
-            COALESCE(lis.D_INV_SYMPTOM_KEY , 1) AS 	D_INV_SYMPTOM_KEY ,
-            COALESCE(litr.D_INV_TREATMENT_KEY , 1) AS 	D_INV_TREATMENT_KEY ,
-            COALESCE(litl.D_INV_TRAVEL_KEY , 1) AS 	D_INV_TRAVEL_KEY ,
-            COALESCE(liuc.D_INV_UNDER_CONDITION_KEY , 1) AS 	D_INV_UNDER_CONDITION_KEY ,
-            COALESCE(liv.D_INV_VACCINATION_KEY , 1) AS 	D_INV_VACCINATION_KEY ,
-            COALESCE(lir.D_INVESTIGATION_REPEAT_KEY , 1 ) AS	D_INVESTIGATION_REPEAT_KEY,
-            COALESCE(lipr.D_INV_PLACE_REPEAT_KEY , 1 ) AS	D_INV_PLACE_REPEAT_KEY
+                COALESCE(ladmin.D_INV_ADMINISTRATIVE_KEY , 1) AS 	D_INV_ADMINISTRATIVE_KEY ,
+                COALESCE(licl.D_INV_CLINICAL_KEY , 1) AS 	D_INV_CLINICAL_KEY ,
+                COALESCE(licomp.D_INV_COMPLICATION_KEY , 1) AS 	D_INV_COMPLICATION_KEY ,
+                COALESCE(licon.D_INV_CONTACT_KEY , 1) AS 	D_INV_CONTACT_KEY ,
+                COALESCE(lid.D_INV_DEATH_KEY , 1) AS 	D_INV_DEATH_KEY ,
+                COALESCE(lie.D_INV_EPIDEMIOLOGY_KEY , 1) AS 	D_INV_EPIDEMIOLOGY_KEY ,
+                COALESCE(lihiv.D_INV_HIV_KEY , 1) AS 	D_INV_HIV_KEY ,
+                COALESCE(lipo.D_INV_PATIENT_OBS_KEY , 1) AS 	D_INV_PATIENT_OBS_KEY ,
+                COALESCE(liit.D_INV_ISOLATE_TRACKING_KEY , 1) AS 	D_INV_ISOLATE_TRACKING_KEY ,
+                COALESCE(lilf.D_INV_LAB_FINDING_KEY , 1) AS 	D_INV_LAB_FINDING_KEY ,
+                COALESCE(limh.D_INV_MEDICAL_HISTORY_KEY , 1) AS 	D_INV_MEDICAL_HISTORY_KEY ,
+                COALESCE(lim.D_INV_MOTHER_KEY , 1) AS 	D_INV_MOTHER_KEY ,
+                COALESCE(liot.D_INV_OTHER_KEY , 1) AS 	D_INV_OTHER_KEY ,
+                COALESCE(lipb.D_INV_PREGNANCY_BIRTH_KEY , 1) AS 	D_INV_PREGNANCY_BIRTH_KEY ,
+                COALESCE(lirs.D_INV_RESIDENCY_KEY , 1) AS 	D_INV_RESIDENCY_KEY ,
+                COALESCE(lirf.D_INV_RISK_FACTOR_KEY , 1) AS 	D_INV_RISK_FACTOR_KEY ,
+                COALESCE(lish.D_INV_SOCIAL_HISTORY_KEY , 1) AS 	D_INV_SOCIAL_HISTORY_KEY ,
+                COALESCE(lis.D_INV_SYMPTOM_KEY , 1) AS 	D_INV_SYMPTOM_KEY ,
+                COALESCE(litr.D_INV_TREATMENT_KEY , 1) AS 	D_INV_TREATMENT_KEY ,
+                COALESCE(litl.D_INV_TRAVEL_KEY , 1) AS 	D_INV_TRAVEL_KEY ,
+                COALESCE(liuc.D_INV_UNDER_CONDITION_KEY , 1) AS 	D_INV_UNDER_CONDITION_KEY ,
+                COALESCE(liv.D_INV_VACCINATION_KEY , 1) AS 	D_INV_VACCINATION_KEY ,
+                COALESCE(lir.D_INVESTIGATION_REPEAT_KEY , 1 ) AS	D_INVESTIGATION_REPEAT_KEY,
+                COALESCE(lipr.D_INV_PLACE_REPEAT_KEY , 1 ) AS	D_INV_PLACE_REPEAT_KEY
         into #DIMENSIONAL_KEYS
         from  #ENTITY_KEYSTORE_STD dimc
-             LEFT OUTER JOIN   dbo.L_INV_ADMINISTRATIVE ladmin  with(nolock) ON  ladmin.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_CLINICAL licl  with(nolock) ON  licl.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_COMPLICATION licomp  with(nolock) ON  licomp.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_CONTACT licon  with(nolock) ON  licon.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_DEATH lid  with(nolock) ON  lid.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_EPIDEMIOLOGY lie  with(nolock) ON  lie.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_HIV lihiv  with(nolock) ON  lihiv.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_ISOLATE_TRACKING liit  with(nolock) ON  liit.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_LAB_FINDING lilf  with(nolock) ON  lilf.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_MEDICAL_HISTORY limh  with(nolock) ON  limh.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_MOTHER lim  with(nolock) ON  lim.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_OTHER liot  with(nolock) ON  liot.PAGE_CASE_UID = dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_PATIENT_OBS lipo  with(nolock) ON  lipo.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_PREGNANCY_BIRTH lipb  with(nolock) ON  lipb.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_RESIDENCY lirs  with(nolock) ON  lirs.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_RISK_FACTOR lirf  with(nolock) ON  lirf.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_SOCIAL_HISTORY lish  with(nolock) ON  lish.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_SYMPTOM lis  with(nolock) ON  lis.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_TRAVEL litl  with(nolock) ON  litl.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_TREATMENT litr  with(nolock) ON  litr.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_UNDER_CONDITION liuc  with(nolock) ON liuc.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_VACCINATION liv  with(nolock) ON  liv.PAGE_CASE_UID  =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INVESTIGATION_REPEAT lir  with(nolock) ON lir.PAGE_CASE_UID =  dimc.page_case_uid
-             LEFT OUTER JOIN   dbo.L_INV_PLACE_REPEAT lipr  with(nolock) ON  lipr.PAGE_CASE_UID =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_ADMINISTRATIVE ladmin  with(nolock) ON  ladmin.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_CLINICAL licl  with(nolock) ON  licl.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_COMPLICATION licomp  with(nolock) ON  licomp.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_CONTACT licon  with(nolock) ON  licon.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_DEATH lid  with(nolock) ON  lid.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_EPIDEMIOLOGY lie  with(nolock) ON  lie.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_HIV lihiv  with(nolock) ON  lihiv.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_ISOLATE_TRACKING liit  with(nolock) ON  liit.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_LAB_FINDING lilf  with(nolock) ON  lilf.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_MEDICAL_HISTORY limh  with(nolock) ON  limh.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_MOTHER lim  with(nolock) ON  lim.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_OTHER liot  with(nolock) ON  liot.PAGE_CASE_UID = dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_PATIENT_OBS lipo  with(nolock) ON  lipo.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_PREGNANCY_BIRTH lipb  with(nolock) ON  lipb.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_RESIDENCY lirs  with(nolock) ON  lirs.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_RISK_FACTOR lirf  with(nolock) ON  lirf.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_SOCIAL_HISTORY lish  with(nolock) ON  lish.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_SYMPTOM lis  with(nolock) ON  lis.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_TRAVEL litl  with(nolock) ON  litl.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_TREATMENT litr  with(nolock) ON  litr.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_UNDER_CONDITION liuc  with(nolock) ON liuc.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_VACCINATION liv  with(nolock) ON  liv.PAGE_CASE_UID  =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INVESTIGATION_REPEAT lir  with(nolock) ON lir.PAGE_CASE_UID =  dimc.page_case_uid
+                  LEFT OUTER JOIN   dbo.L_INV_PLACE_REPEAT lipr  with(nolock) ON  lipr.PAGE_CASE_UID =  dimc.page_case_uid
         ;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -312,18 +312,18 @@ BEGIN TRY
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    if @debug = 'true' select '###DIMENSIONAL_KEYS', * from #DIMENSIONAL_KEYS;
+        if @debug = 'true' select '###DIMENSIONAL_KEYS', * from #DIMENSIONAL_KEYS;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1; --6
         SET @PROC_STEP_NAME = ' Generating #F_STD_PAGE_CASE_TEMP_INC';
 
         IF OBJECT_ID('#F_STD_PAGE_CASE_TEMP_INC', 'U') IS NOT NULL
             drop table #F_STD_PAGE_CASE_TEMP_INC
-        ;
+            ;
 
         SELECT
             DIM_KEYS.*,
@@ -363,9 +363,9 @@ BEGIN TRY
                  INNER JOIN #ENTITY_KEYSTORE_STD AS KEYSTORE
                             ON DIM_KEYS.PAGE_CASE_UID = KEYSTORE.PAGE_CASE_UID
                  LEFT OUTER JOIN dbo.RDB_DATE DATE1 with(nolock)
-        ON cast(DATE1.DATE_MM_DD_YYYY as date) = cast(KEYSTORE.ADD_TIME as date)
-            LEFT OUTER JOIN dbo.RDB_DATE DATE2 with(nolock)
-        ON cast(DATE2.DATE_MM_DD_YYYY as date) = cast(KEYSTORE.LAST_CHG_TIME as date)
+                                 ON cast(DATE1.DATE_MM_DD_YYYY as date) = cast(KEYSTORE.ADD_TIME as date)
+                 LEFT OUTER JOIN dbo.RDB_DATE DATE2 with(nolock)
+                                 ON cast(DATE2.DATE_MM_DD_YYYY as date) = cast(KEYSTORE.LAST_CHG_TIME as date)
         ;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -373,11 +373,11 @@ BEGIN TRY
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    if @debug = 'true' select '##F_STD_PAGE_CASE_TEMP_INC-1', * from #F_STD_PAGE_CASE_TEMP_INC;
+        if @debug = 'true' select '##F_STD_PAGE_CASE_TEMP_INC-1', * from #F_STD_PAGE_CASE_TEMP_INC;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         insert into dbo.ETL_DQ_LOG (
             EVENT_TYPE,EVENT_UID,EVENT_LOCAL_ID,DQ_ISSUE_CD,DQ_ISSUE_DESC_TXT,DQ_ISSUE_QUESTION_IDENTIFIER,DQ_ISSUE_ANSWER_TXT,
@@ -397,12 +397,12 @@ BEGIN TRY
             pti.Patient_KEY
         FROM #F_STD_PAGE_CASE_TEMP_INC pti
                  inner join dbo.INVESTIGATION inv with(nolock) on inv.INVESTIGATION_KEY = pti.INVESTIGATION_KEY
-            inner join dbo.D_PATIENT pt with(nolock) on pt.PATIENT_KEY = pti.PATIENT_KEY
-            inner join dbo.CONDITION cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
+                 inner join dbo.D_PATIENT pt with(nolock) on pt.PATIENT_KEY = pti.PATIENT_KEY
+                 inner join dbo.v_condition_dim cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
         where pti.INVESTIGATION_KEY in ( select INVESTIGATION_KEY
-            FROM #F_STD_PAGE_CASE_TEMP_INC pti
-            group by INVESTIGATION_KEY, PATIENT_KEY having count(*) > 1
-            )
+                                         FROM #F_STD_PAGE_CASE_TEMP_INC pti
+                                         group by INVESTIGATION_KEY, PATIENT_KEY having count(*) > 1
+        )
         ;
 
         insert into dbo.ETL_DQ_LOG ( EVENT_TYPE,EVENT_UID,EVENT_LOCAL_ID,DQ_ISSUE_CD,DQ_ISSUE_DESC_TXT,DQ_ISSUE_QUESTION_IDENTIFIER,DQ_ISSUE_ANSWER_TXT,
@@ -422,28 +422,28 @@ BEGIN TRY
             pti.Patient_KEY
         FROM #F_STD_PAGE_CASE_TEMP_INC pti
                  inner join dbo.INVESTIGATION inv with(nolock) on inv.INVESTIGATION_KEY = pti.INVESTIGATION_KEY
-            inner join dbo.D_PATIENT pt with(nolock) on pt.PATIENT_KEY = pti.PATIENT_KEY
-            inner join dbo.CONDITION cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
+                 inner join dbo.D_PATIENT pt with(nolock) on pt.PATIENT_KEY = pti.PATIENT_KEY
+                 inner join dbo.v_condition_dim cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
         where pti.INVESTIGATION_KEY  in ( select INVESTIGATION_KEY
-            FROM #F_STD_PAGE_CASE_TEMP_INC pti
-            group by INVESTIGATION_KEY having count(*) > 1
-            )
+                                          FROM #F_STD_PAGE_CASE_TEMP_INC pti
+                                          group by INVESTIGATION_KEY having count(*) > 1
+        )
         ;
 
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
-    if @debug = 'true' select '#F_STD_PAGE_CASE_TEMP_INC-2', * from #F_STD_PAGE_CASE_TEMP_INC;
+        if @debug = 'true' select '#F_STD_PAGE_CASE_TEMP_INC-2', * from #F_STD_PAGE_CASE_TEMP_INC;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' Generating F_STD_PAGE_CASE';
 
-      DELETE fstdcase
+        DELETE fstdcase
         FROM dbo.F_STD_PAGE_CASE fstdcase
-        JOIN #F_STD_PAGE_CASE_TEMP_INC fstdcaseinc ON fstdcase.investigation_key=fstdcaseinc.investigation_key;
+                 JOIN #F_STD_PAGE_CASE_TEMP_INC fstdcaseinc ON fstdcase.investigation_key=fstdcaseinc.investigation_key;
 
         INSERT INTO dbo.F_STD_PAGE_CASE (
             D_INV_ADMINISTRATIVE_KEY,
@@ -580,60 +580,59 @@ BEGIN TRY
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@dataflow_name,@package_name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
-    SET @PROC_STEP_NO =  999 ;
-            SET @Proc_Step_Name = 'SP_COMPLETE';
+        SET @PROC_STEP_NO =  999 ;
+        SET @Proc_Step_Name = 'SP_COMPLETE';
 
-    INSERT INTO dbo.[job_flow_log]
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type] ,[step_number],[step_name],[row_count])
-    VALUES
-        (@batch_id,@dataflow_name,@package_name,'COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
-
-
-
-END TRY
-
-BEGIN CATCH
-
-IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
-
-    -- Construct the error message string with all details:
-    DECLARE @FullErrorMessage VARCHAR(8000) =
-        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
-        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
-        'Error Message: ' + ERROR_MESSAGE();
+        INSERT INTO dbo.[job_flow_log]
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type] ,[step_number],[step_name],[row_count])
+        VALUES
+            (@batch_id,@dataflow_name,@package_name,'COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
 
 
-INSERT INTO dbo.[job_flow_log] (
-                                 batch_id
-    ,[Dataflow_Name]
-    ,[package_Name]
-    ,[Status_Type]
-    ,[step_number]
-    ,[step_name]
-    ,[Error_Description]
-    ,[row_count]
-)
-VALUES
-    (
-    @batch_id
-        ,'Case Count'
-        ,'Case Count'
-        ,'ERROR'
-        ,@Proc_Step_no
-        ,@Proc_Step_name
-        , @FullErrorMessage
-        ,0
-    );
+
+    END TRY
+
+    BEGIN CATCH
+
+        IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+
+        -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
 
-return -1 ;
+        INSERT INTO dbo.[job_flow_log] (
+                                         batch_id
+                                       ,[Dataflow_Name]
+                                       ,[package_Name]
+                                       ,[Status_Type]
+                                       ,[step_number]
+                                       ,[step_name]
+                                       ,[Error_Description]
+                                       ,[row_count]
+        )
+        VALUES
+            (
+              @batch_id
+            ,'Case Count'
+            ,'Case Count'
+            ,'ERROR'
+            ,@Proc_Step_no
+            ,@Proc_Step_name
+            , @FullErrorMessage
+            ,0
+            );
 
-END CATCH
 
-END
-;
+        return -1 ;
+
+    END CATCH
+
+END;

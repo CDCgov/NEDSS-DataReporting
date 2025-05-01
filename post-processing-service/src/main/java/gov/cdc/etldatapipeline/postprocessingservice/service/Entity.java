@@ -29,6 +29,7 @@ enum Entity {
     CASE_COUNT(0, "case count", Constants.PHC_UID, "sp_nrt_case_count_postprocessing"),
     D_TB_PAM(0, "d_tb_pam", Constants.PHC_UID, "sp_nrt_d_tb_pam_postprocessing"),
     D_VAR_PAM(0, "var pam", Constants.PHC_UID, "sp_nrt_d_var_pam_postprocessing"),
+    D_RASH_LOC_GEN(0, "rash loc gen", Constants.PHC_UID, "sp_nrt_d_rash_loc_gen_postprocessing"),
     SUMMARY_REPORT_CASE(0, "Summary_Report_Case", Constants.PHC_UID, "sp_summary_report_case_postprocessing"),
     SR100_DATAMART(0, "SR100_Datamart", Constants.PHC_UID, "sp_sr100_datamart_postprocessing"),
     AGGREGATE_REPORT_DATAMART(0, "Aggregate_Report_Datamart", Constants.PHC_UID, "sp_aggregate_report_datamart_postprocessing"),
@@ -51,7 +52,20 @@ enum Entity {
     D_SMR_EXAM_TY(0, "d_smr_exam_ty", Constants.PHC_UID, "sp_nrt_d_smr_exam_ty_postprocessing"),
     F_TB_PAM(0, "f_tb_pam", Constants.PHC_UID, "sp_f_tb_pam_postprocessing"),    
     TB_PAM_LDF(0, "tb_pam_ldf", Constants.PHC_UID, "sp_nrt_tb_pam_ldf_postprocessing"),
-    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
+    VAR_PAM_LDF(0, "var_pam_ldf", Constants.PHC_UID, "sp_nrt_var_pam_ldf_postprocessing"),
+    D_PCR_SOURCE(0, "d_pcr_source", Constants.PHC_UID, "sp_nrt_d_pcr_source_postprocessing"),
+    F_VAR_PAM(0, "f_var_pam", Constants.PHC_UID, "sp_f_var_pam_postprocessing"),
+    TB_DATAMART(0, "tb_datamart", Constants.PHC_UID, "sp_tb_datamart_postprocessing"),    
+    TB_HIV_DATAMART(0, "tb_hiv_datamart", Constants.PHC_UID, "sp_tb_hiv_datamart_postprocessing"),
+    VAR_DATAMART(0, "var_datamart", Constants.PHC_UID, "sp_var_datamart_postprocessing"),
+    LDF_DIMENSIONAL_DATA(0, "ldf_dimensional_data", Constants.PHC_UID, "sp_nrt_ldf_dimensional_data_postprocessing"),
+    LDF_GENERIC(0, "LDF_GENERIC", Constants.PHC_UID, "sp_ldf_generic_datamart_postprocessing"),
+    LDF_BMIRD(0, "LDF_BMIRD", Constants.PHC_UID, "sp_ldf_bmird_datamart_postprocessing"),
+    LDF_FOODBORNE(0, "LDF_FOODBORNE", Constants.PHC_UID, "sp_ldf_foodborne_datamart_postprocessing"),
+    LDF_MUMPS(0, "LDF_MUMPS", Constants.PHC_UID, "sp_ldf_mumps_datamart_postprocessing"),
+    LDF_TETANUS(0, "LDF_TETANUS", Constants.PHC_UID, "sp_ldf_tetanus_datamart_postprocessing"),
+    LDF_VACCINE_PREVENT_DISEASES(0, "LDF_VACCINE_PREVENT_DISEASES", Constants.PHC_UID, "sp_ldf_vaccine_prevent_diseases_datamart_postprocessing"),
+    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
 
     private final int priority;
     private final String entityName;

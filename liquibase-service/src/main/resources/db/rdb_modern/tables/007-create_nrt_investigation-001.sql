@@ -299,4 +299,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation' and xtype =
                 ALTER TABLE dbo.nrt_investigation
                     ADD rpt_cnty_cd varchar(20);
             END;
+--CNDE-2498
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'notes' AND Object_ID = Object_ID(N'nrt_investigation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_investigation
+                    ADD notes varchar(max);
+            END;
     END;

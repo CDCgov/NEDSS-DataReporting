@@ -168,6 +168,16 @@
         "field": "alias_nickname"
       },
       {
+        "type":"string",
+        "optional":true,
+        "field":"nm_use_cd"
+      },
+      {
+        "type":"string",
+        "optional":true,
+        "field":"status_name_cd"
+      },
+      {
         "type": "string",
         "optional": true,
         "field": "street_address_1"
@@ -448,6 +458,8 @@
     "last_name": "Singgh",
     "name_suffix": "Jr",
     "alias_nickname": null,
+    "nm_use_cd":"L",
+    "status_name_cd":null,
     "street_address_1": "123 Main St.",
     "street_address_2": "",
     "city": "Atlanta",

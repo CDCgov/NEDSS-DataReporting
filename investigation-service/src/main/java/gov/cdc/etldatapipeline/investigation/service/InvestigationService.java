@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.investigation.service;
 
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.investigation.repository.*;
@@ -44,7 +45,7 @@ public class InvestigationService {
     private static int nProc = Runtime.getRuntime().availableProcessors();
 
     private static final Logger logger = LoggerFactory.getLogger(InvestigationService.class);
-    private final ExecutorService phcExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("phc-"));
+    private ExecutorService phcExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("phc-"));
 
     @Value("${spring.kafka.input.topic-name-phc}")
     private String investigationTopic;
@@ -63,6 +64,9 @@ public class InvestigationService {
 
     @Value("${spring.kafka.input.topic-name-tmt}")
     private String treatmentTopic;
+
+    @Value("${spring.kafka.input.topic-name-ar}")
+    private String actRelationshipTopic;
 
     @Value("${spring.kafka.output.topic-name-treatment}")
     private String treatmentOutputTopicName;
@@ -123,7 +127,8 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-int}",
                     "${spring.kafka.input.topic-name-ctr}",
                     "${spring.kafka.input.topic-name-vac}",
-                    "${spring.kafka.input.topic-name-tmt}"
+                    "${spring.kafka.input.topic-name-tmt}",
+                    "${spring.kafka.input.topic-name-ar}"
             }
     )
     public void processMessage(ConsumerRecord<String, String> rec,
@@ -143,9 +148,11 @@ public class InvestigationService {
         } else if (topic.equals(contactTopic) && contactRecordEnable) {
             processContact(message);
         } else if (topic.equals(vaccinationTopic)) {
-            processVaccination(message);
+            processVaccination(message, true, "");
         } else if (topic.equals(treatmentTopic) && treatmentEnable) {
-            processTreatment(message);
+            processTreatment(message, true, "");
+        } else if (topic.equals(actRelationshipTopic) && message != null) {
+            processActRelationship(message);
         }
         consumer.commitSync();
     }
@@ -185,7 +192,36 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Investigation", publicHealthCaseUid, e), e);
+            throw new DataProcessingException(errorMessage("Investigation", publicHealthCaseUid, e), e);
+        }
+    }
+
+    private void processActRelationship(String value) {
+        String sourceActUid = "";
+
+        try {
+            String typeCd;
+            String operationType = extractChangeDataCaptureOperation(value);
+
+            if (operationType.equals("d")) {
+                sourceActUid = extractUid(value, "source_act_uid", "before");
+                typeCd = extractValue(value, "type_cd", "before");
+            }
+            else {
+                sourceActUid = extractUid(value, "source_act_uid");
+                typeCd = extractValue(value, "type_cd");
+            }
+
+            logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
+
+            if (typeCd.equals("1180")) {
+                processVaccination(value, false, sourceActUid);
+            }
+            if ((typeCd.equals("TreatmentToPHC") || typeCd.equals("TreatmentToMorb")) && treatmentEnable) {
+                processTreatment(value, false, sourceActUid);
+            }
+        } catch (Exception e) {
+            throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
         }
     }
 
@@ -205,7 +241,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Notification", notificationUid, e), e);
+            throw new DataProcessingException(errorMessage("Notification", notificationUid, e), e);
         }
     }
 
@@ -228,7 +264,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Interview", interviewUid, e), e);
+            throw new DataProcessingException(errorMessage("Interview", interviewUid, e), e);
         }
     }
 
@@ -249,16 +285,24 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Contact", contactUid, e), e);
+            throw new DataProcessingException(errorMessage("Contact", contactUid, e), e);
         }
     }
 
-    private void processVaccination(String value) {
+    private void processVaccination(String value, boolean isFromVaccinationTopic, String actRelationshipSourceActUid) {
         String vaccinationUid = "";
+        String topic = (isFromVaccinationTopic) ? vaccinationTopic : actRelationshipTopic;
         try {
-            vaccinationUid = extractUid(value, "intervention_uid");
-
-            logger.info(topicDebugLog, "Vaccination", vaccinationUid, vaccinationTopic);
+            String operationType = extractChangeDataCaptureOperation(value);
+            if(isFromVaccinationTopic) {
+                vaccinationUid = extractUid(value, "intervention_uid");
+            } else {
+                if (!operationType.equals("u")) {
+                    return;
+                }
+                vaccinationUid = actRelationshipSourceActUid;
+            }
+            logger.info(topicDebugLog, "Vaccination", vaccinationUid, topic);
             Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
             if(vacData.isPresent()) {
                 Vaccination vaccination = vacData.get();
@@ -270,16 +314,31 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Vaccination", vaccinationUid, e), e);
+            throw new DataProcessingException(errorMessage("Vaccination", vaccinationUid, e), e);
         }
     }
 
-    private void processTreatment(String value) {
+    private void processTreatment(String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
         String treatmentUid = "";
-        try {
-            treatmentUid = extractUid(value, "treatment_uid");
+        String topic = (isFromTreatmentTopic) ? treatmentTopic : actRelationshipTopic;
 
-            logger.info(topicDebugLog, "Treatment", treatmentUid, treatmentTopic);
+        try {
+            String operationType = extractChangeDataCaptureOperation(value);
+
+            // Treatment cannot be created without an association to Investigation by default
+            // Therefore, if the message comes from the treatment topic, only process if it is an update
+            if (isFromTreatmentTopic) {
+                if (!operationType.equals("u")) {
+                    return;
+                }
+                treatmentUid = extractUid(value, "treatment_uid");
+            }
+            else {
+                treatmentUid = actRelationshipSourceActUid;
+            }
+
+
+            logger.info(topicDebugLog, "Treatment", treatmentUid, topic);
             Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
             if(treatmentData.isPresent()) {
                 Treatment treatment = treatmentData.get();
@@ -299,7 +358,7 @@ public class InvestigationService {
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException(errorMessage("Treatment", treatmentUid, e), e);
+            throw new DataProcessingException(errorMessage("Treatment", treatmentUid, e), e);
         }
     }
 
@@ -325,14 +384,17 @@ public class InvestigationService {
         reportingModel.setInvestigationCount(investigationTransformed.getInvestigationCount());
         reportingModel.setInvestigatorAssignedDatetime(investigationTransformed.getInvestigatorAssignedDatetime());
 
-        // only set hospitalUid from participation if it has not already been set from the event payload
+        // Set hospitalUid from participation if it has not already been set from the event payload
         Optional.ofNullable(reportingModel.getHospitalUid()).ifPresentOrElse(
                 uid -> {}, () -> reportingModel.setHospitalUid(investigationTransformed.getHospitalUid()));
+        // Set PerAsReporterOfPHC from participation if it has not already been set from the event payload
+        Optional.ofNullable(reportingModel.getPersonAsReporterUid()).ifPresentOrElse(
+                uid -> {}, () -> reportingModel.setPersonAsReporterUid(investigationTransformed.getPersonAsReporterUid()));
         reportingModel.setDaycareFacUid(investigationTransformed.getDaycareFacUid());
         reportingModel.setChronicCareFacUid(investigationTransformed.getChronicCareFacUid());
 
         reportingModel.setBatchId(investigationTransformed.getBatchId());
-
+        reportingModel.setNotes(investigation.getPhcNotes());
         return reportingModel;
     }
 }

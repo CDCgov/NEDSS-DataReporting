@@ -1,4 +1,4 @@
-FROM liquibase/liquibase:4.29.2-alpine
+FROM liquibase/liquibase:4.31.1-alpine
 
 USER root
 
@@ -27,12 +27,6 @@ COPY liquibase-service/src/main/resources/db/rdb_modern/views /liquibase/changel
 #rdb
 COPY liquibase-service/src/main/resources/db/rdb /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/rdb/tables /liquibase/changelog
-# data_ingest
-COPY liquibase-service/src/main/resources/db/data_ingest /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/data_ingest/tables /liquibase/changelog
-# msgoute
-COPY liquibase-service/src/main/resources/db/msgoute /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/msgoute/routines /liquibase/changelog
 # srte
 COPY liquibase-service/src/main/resources/db/srte /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/srte/tables /liquibase/changelog
