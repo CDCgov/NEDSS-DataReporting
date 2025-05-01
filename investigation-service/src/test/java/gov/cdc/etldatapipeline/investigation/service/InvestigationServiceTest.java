@@ -432,7 +432,7 @@ class InvestigationServiceTest {
         // Create a ConsumerRecord object
         ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
 
-        if (typeCd.equals("OTHER") || !op.equals("u")) {
+        if (typeCd.equals("OTHER") || op.equals("u")) {
             investigationService.processMessage(rec, consumer);
             verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
         } else {
