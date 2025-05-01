@@ -25,6 +25,7 @@ public class Name implements ExtendPerson {
     private String nmUseCd;
     @JsonProperty("status_name_cd")
     private String statusNameCd;
+    @JsonProperty("name_suffix")
     private String nmSuffix;
     private String nmPrefix;
     private String nmDegree;
