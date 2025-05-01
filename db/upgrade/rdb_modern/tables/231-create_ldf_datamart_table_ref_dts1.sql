@@ -153,4 +153,23 @@ BEGIN
     ('50265','Salmonellosis (excluding S. typhi/paratyphi)',3,'LDF_FOODBORNE','GENERIC_CASE',null),
     ('50266','Salmonella Paratyphi A/B/C',3,'LDF_FOODBORNE','GENERIC_CASE',null),
     ('50267','Typhoid Fever (S. typhi)',3,'LDF_FOODBORNE','GENERIC_CASE',null);
+
+    delete ldf from dbo.LDF_DATAMART_TABLE_REF ldf with (nolock)
+    left join dbo.nrt_datamart_metadata d with (nolock)
+        on ldf.CONDITION_CD = d.condition_cd
+    where d.condition_cd is null;
+
+    /* Insert Tetanus & Mumps into LDF_DATAMART_TABLE_REF for testing*/
+    INSERT INTO [dbo].[LDF_DATAMART_TABLE_REF](
+        CONDITION_CD,
+        CONDITION_DESC,
+        LDF_GROUP_ID,
+        DATAMART_NAME,
+        LINKED_FACT_TABLE,
+        ENTITY_DESC
+    )
+    VALUES
+        ('10210','Tetanus',7,'LDF_TETANUS','GENERIC_CASE',null),
+            ('10180','Mumps',6,'LDF_MUMPS','GENERIC_CASE',null);
+
 END
