@@ -10,6 +10,13 @@ BEGIN
 
     BEGIN TRY
 
+        /**
+         * OUTPUT TABLES:
+         * tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC_<DATAMART_NAME>_<batch_id>
+         * tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_<DATAMART_NAME>_<batch_id>
+         * */
+
+
         DECLARE @RowCount_no INT ;
         DECLARE @Proc_Step_no FLOAT = 0 ;
         DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
@@ -68,7 +75,7 @@ BEGIN
         FROM dbo.V_NRT_NBS_REPEATNUMERIC_RDB_TABLE_METADATA meta
         WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd
           and (code_set_group_id < 0
-            OR data_type in ( 'Numeric','NUMERIC') )
+            OR data_type in ( 'Numeric','NUMERIC'))
         ORDER BY RDB_COLUMN_NM;
 
         if @debug = 'true'
@@ -95,6 +102,8 @@ BEGIN
         FROM dbo.V_NRT_NBS_REPEATNUMERIC_RDB_TABLE_METADATA meta
         WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd
           AND UNIT_TYPE_CD='CODED'
+          AND DATA_TYPE IN ('Numeric','NUMERIC')
+          AND CODE_SET_GROUP_ID IS NULL
           AND MASK IS NOT NULL;
 
         if @debug = 'true'
@@ -225,7 +234,7 @@ BEGIN
         ;
 
         if @debug = 'true'
-            select 'tmp_DynDm_METADATA_OUT',* from #tmp_DynDm_METADATA_OUT;
+            select @Proc_Step_Name,* from #tmp_DynDm_METADATA_OUT;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -249,6 +258,9 @@ BEGIN
             COL1 is not NULL
           and LTRIM( RTRIM(COL1)) <> '';
 
+        if @debug = 'true' select @Proc_Step_Name, * from #tmp_DynDm_METADATA_OUT_TMP;
+
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
         VALUES ( @batch_id ,@Dataflow_Name ,@package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
@@ -266,6 +278,9 @@ BEGIN
             #tmp_DynDm_METADATA_OUT_TMP
         WHERE
             BLOCK_NM IS NOT NULL;
+
+        if @debug = 'true' select @Proc_Step_Name, * from #tmp_DynDm_METADATA_OUT1;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -293,8 +308,7 @@ BEGIN
             ANSWER_GROUP_SEQ_NBR = CAST(RIGHT(COL1, 1) AS INT)
         where 1=1;
 
-        if @debug = 'true'
-            select * from #tmp_DynDm_METADATA_OUT_final;
+        if @debug = 'true' select @Proc_Step_Name, * from #tmp_DynDm_METADATA_OUT_final;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -544,7 +558,7 @@ BEGIN
         EXEC sp_executesql @sql;
 
         if @debug = 'true'
-            select 'tmp_DynDm_REPEAT_BLOCK_OUT',* from #tmp_DynDm_REPEAT_BLOCK_OUT;
+            select @Proc_Step_Name,* from #tmp_DynDm_REPEAT_BLOCK_OUT;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -564,12 +578,16 @@ BEGIN
         into
             #tmp_DynDm_BLOCK_DATA_UNIT
         FROM
-            dbo.V_NRT_D_INV_REPEAT_BLOCKDATA
+            dbo.v_nrt_nbs_repeatnumeric_rdb_table_metadata
         WHERE
             INVESTIGATION_FORM_CD = @nbs_page_form_cd
         ORDER BY
             RDB_COLUMN_NM,
             BLOCK_NM;
+
+        if @debug = 'true'
+            select  @Proc_Step_Name,* from #tmp_DynDm_BLOCK_DATA_UNIT;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -586,12 +604,15 @@ BEGIN
         into
             #tmp_DynDm_BLOCK_DATA_OTH
         FROM
-            dbo.V_NRT_D_INV_REPEAT_BLOCKDATA
+            dbo.v_nrt_nbs_repeatnumeric_rdb_table_metadata
         WHERE
             INVESTIGATION_FORM_CD = @nbs_page_form_cd
         ORDER BY
             RDB_COLUMN_NM,
             BLOCK_NM;
+
+        if @debug = 'true'
+            select  @Proc_Step_Name,* from #tmp_DynDm_BLOCK_DATA_OTH;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -612,6 +633,9 @@ BEGIN
         FROM
             #tmp_DynDm_BLOCK_DATA_OTH;
 
+        if @debug = 'true'
+            select  @Proc_Step_Name,* from #tmp_DynDm_BLOCK_DATA;
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
         VALUES ( @batch_id ,@Dataflow_Name ,@package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
@@ -631,6 +655,9 @@ BEGIN
                 bo.BLOCK_NM_REPEAT_BLOCK_OUT = bd.BLOCK_NM
                     AND UPPER(bo.RDB_COLUMN_NM_REPEAT_BLOCK_OUT)= UPPER(bd.RDB_COLUMN_NM)
         ;
+
+        if @debug = 'true'
+            select  @Proc_Step_Name,* from #tmp_DynDm_REPEAT_BLOCK_OUT_BASE;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -673,6 +700,10 @@ BEGIN
             ANSWER_DESC21 = substring(ANSWER_DESC21,3, len(ANSWER_DESC21))
         where 1=1;
 
+        if @debug = 'true'
+            select  @Proc_Step_Name,* from #tmp_DynDm_REPEAT_BLOCK_OUT_ALL;
+
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
         VALUES ( @batch_id ,@Dataflow_Name ,@package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
@@ -703,8 +734,7 @@ BEGIN
                     AND tdof.ANSWER_GROUP_SEQ_NBR = trbb.ANSWER_GROUP_SEQ_NBR_REPEAT_BLOCK_OUT
                     AND tdof.BLOCK_NM = trbb.BLOCK_NM_REPEAT_BLOCK_OUT ;
 
-        if @debug = 'true'
-            select 'tmp_DynDm_METADATA_MERGED_INIT',* from #tmp_DynDm_METADATA_MERGED_INIT;
+        if @debug = 'true' select @Proc_Step_Name,* from #tmp_DynDm_METADATA_MERGED_INIT;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -712,7 +742,7 @@ BEGIN
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-        begin transaction;
+        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = ' GENERATING tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC';
 
@@ -754,12 +784,13 @@ BEGIN
                 EXEC sp_executesql @sql;
             end
 
-        commit transaction;
+        if @debug = 'true' PRINT @sql;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
         VALUES ( @batch_id ,@Dataflow_Name ,@package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
-
+        COMMIT TRANSACTION;
 --------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -773,7 +804,7 @@ BEGIN
         FROM
             #tmp_DynDm_D_INV_REPEAT_METADATA;
 
-        if @debug = 'true' print 'completed #tmp_DynDm_INVESTIGATION_REPEAT_ALL';
+        if @debug = 'true' select @Proc_Step_Name, * from #tmp_DynDm_INVESTIGATION_REPEAT_ALL ;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
@@ -798,12 +829,11 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
         VALUES ( @batch_id ,@Dataflow_Name ,@package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
 
-        if @debug = 'true'
-            select '#tmp_DynDm_REPEAT_BLOCK_METADATA_OUT',* from #tmp_DynDm_REPEAT_BLOCK_METADATA_OUT;
+        if @debug = 'true' select @Proc_Step_Name,* from #tmp_DynDm_REPEAT_BLOCK_METADATA_OUT;
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-        begin transaction;
+        BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = ' GENERATING '+@tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL;
 
@@ -841,12 +871,12 @@ BEGIN
         if @debug = 'true'
             exec('select * from '+@tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL);
 
-        commit transaction;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
         VALUES ( @batch_id ,@Dataflow_Name ,@package_Name ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
-
+        COMMIT TRANSACTION;
 --------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;

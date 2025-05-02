@@ -384,10 +384,10 @@ BEGIN
                                                         branch.source_class_cd as branch_source_class_cd,
                                                         branch.type_cd         as branch_type_cd
                                                  FROM dbo.act_relationship act WITH (NOLOCK)
-                                                 left join dbo.act_relationship branch WITH (NOLOCK)
-                                                     on act.source_act_uid = branch.target_act_uid
-                                                 left join dbo.act_relationship AS root WITH (NOLOCK)
-                                                     on branch.source_act_uid = root.source_act_uid and root.type_cd = 'ItemToRow'
+                                                          left join dbo.act_relationship branch WITH (NOLOCK)
+                                                                    on act.source_act_uid = branch.target_act_uid
+                                                          left join dbo.act_relationship AS root WITH (NOLOCK)
+                                                                    on branch.source_act_uid = root.source_act_uid and root.type_cd = 'ItemToRow'
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
                                         -- act_ids associated with public health case
@@ -413,7 +413,7 @@ BEGIN
                                                         phc1.last_chg_time      as phc_last_chg_time
                                                  from dbo.Confirmation_method cm
                                                           left join nbs_srte.dbo.Code_value_general cvg WITH (NOLOCK)
-                                                               on cvg.code = cm.confirmation_method_cd and cvg.code_set_nm = 'PHC_CONF_M'
+                                                                    on cvg.code = cm.confirmation_method_cd and cvg.code_set_nm = 'PHC_CONF_M'
                                                           join dbo.Public_health_case phc1 WITH (NOLOCK)
                                                                on cm.public_health_case_uid = phc1.public_health_case_uid
                                                  WHERE cm.public_health_case_uid = phc.public_health_case_uid
@@ -450,7 +450,7 @@ BEGIN
                                                         nca_add_time,
                                                         nuim_record_status_cd
                                                  FROM (SELECT *,
-                                                              ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt
+                                                              ROW_NUMBER() OVER (PARTITION BY NBS_QUESTION_UID, answer_txt, answer_group_seq_nbr
                                                                   order by
                                                                       NBS_QUESTION_UID,
                                                                       other_value_ind_cd desc) rowid
@@ -563,12 +563,12 @@ BEGIN
                                                               nq.data_type,
                                                               ntm.datamart_column_nm
                                                        from dbo.NBS_case_answer na with (nolock )
-                                                       join dbo.NBS_table_metadata ntm with (nolock)
-                                                           on ntm.nbs_table_metadata_uid = na.nbs_table_metadata_uid
-                                                       join dbo.NBS_question nq with (nolock)
-                                                            on nq.nbs_question_uid = na.nbs_question_uid
+                                                                join dbo.NBS_table_metadata ntm with (nolock)
+                                                                     on ntm.nbs_table_metadata_uid = na.nbs_table_metadata_uid
+                                                                join dbo.NBS_question nq with (nolock)
+                                                                     on nq.nbs_question_uid = na.nbs_question_uid
                                                        WHERE na.nbs_table_metadata_uid is not null
-                                                           and na.act_uid = phc.public_health_case_uid
+                                                         and na.act_uid = phc.public_health_case_uid
                                                        union
                                                        select na.act_uid,
                                                               na.nbs_case_answer_uid,
@@ -577,11 +577,11 @@ BEGIN
                                                               nq.data_type,
                                                               nq.datamart_column_nm
                                                        from dbo.NBS_case_answer na with (nolock )
-                                                       join dbo.NBS_question nq with (nolock)
-                                                           on nq.nbs_question_uid = na.nbs_question_uid
+                                                                join dbo.NBS_question nq with (nolock)
+                                                                     on nq.nbs_question_uid = na.nbs_question_uid
                                                        WHERE na.nbs_table_metadata_uid is null
-                                                           and na.act_uid = phc.public_health_case_uid
-                                                       ) as agg_rep
+                                                         and na.act_uid = phc.public_health_case_uid
+                                                      ) as agg_rep
                                                  WHERE phc.case_type_cd = 'A' /* Aggregate Report */
                                                  FOR json path,INCLUDE_NULL_VALUES) as investigation_aggregate) as investigation_aggregate,
                                         -- get associated case management
@@ -825,17 +825,17 @@ BEGIN
              ON investigation_act_entity.nac_page_case_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.condition_code con on results.cd = con.condition_cd
                  LEFT JOIN  (SELECT
-                    note_parent_uid,
-                    STUFF(
-                            (
-                        SELECT '; ' + CAST(add_time AS VARCHAR(20)) + '^' + replace(replace(replace(note, CHAR(0x0002), ''), CHAR(0x0001), ''), CHAR(0x0000), '')
-                        FROM nbs_odse.dbo.NBS_Note nbsNote
-                        WHERE note_parent_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','))
-                            and nbsNote.note_parent_uid = NBS_NOTE.note_parent_uid FOR XML PATH, TYPE, BINARY BASE64
-                    ).value('.[1]', 'varchar(max)'), 1, 2, '') PHC_NOTES
-                    FROM nbs_odse.dbo.NBS_NOTE WITH(NOLOCK)
-                    GROUP BY note_parent_uid
-                  ) nt on nt.note_parent_uid = results.public_health_case_uid;
+                                 note_parent_uid,
+                                 STUFF(
+                                         (
+                                             SELECT '; ' + CAST(add_time AS VARCHAR(20)) + '^' + replace(replace(replace(note, CHAR(0x0002), ''), CHAR(0x0001), ''), CHAR(0x0000), '')
+                                             FROM nbs_odse.dbo.NBS_Note nbsNote
+                                             WHERE note_parent_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','))
+                                               and nbsNote.note_parent_uid = NBS_NOTE.note_parent_uid FOR XML PATH, TYPE, BINARY BASE64
+                                         ).value('.[1]', 'varchar(max)'), 1, 2, '') PHC_NOTES
+                             FROM nbs_odse.dbo.NBS_NOTE WITH(NOLOCK)
+                             GROUP BY note_parent_uid
+        ) nt on nt.note_parent_uid = results.public_health_case_uid;
 
         -- select * from dbo.Investigation_Dim_Event;
 
@@ -863,7 +863,7 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-                        -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
