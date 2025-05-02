@@ -25,6 +25,7 @@ BEGIN
         DECLARE @tmp_DynDm_INV_SUMM_DATAMART VARCHAR(200) = 'dbo.tmp_DynDm_INV_SUMM_DATAMART_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
         DECLARE @tmp_DynDm_PATIENT_DATA VARCHAR(200) = 'dbo.tmp_DynDm_Patient_Data_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
         DECLARE @tmp_DynDm_INVESTIGATION_DATA VARCHAR(200) = 'dbo.tmp_DynDm_Investigation_Data_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
+        DECLARE @tmp_DynDm_INACTIVE_INVESTIGATIONS VARCHAR(200) = 'dbo.tmp_DynDm_Inactive_Investigations_'+@DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50));
 
         DECLARE @temp_sql nvarchar(max);
 
@@ -65,13 +66,48 @@ BEGIN
 -------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
+        SET @Proc_Step_Name = ' GENERATING  '+ @tmp_DynDm_INACTIVE_INVESTIGATIONS;
+
+
+
+        IF OBJECT_ID(@tmp_DynDm_INACTIVE_INVESTIGATIONS, 'U') IS NOT NULL
+            exec ('drop table '+ @tmp_DynDm_INACTIVE_INVESTIGATIONS);
+
+        if len(@phc_id_list) > 1
+            BEGIN
+                SET @temp_sql = '
+                SELECT  inv.INVESTIGATION_KEY 
+                into '+@tmp_DynDm_INACTIVE_INVESTIGATIONS+' 
+                FROM 
+                    dbo.INVESTIGATION inv with ( nolock) 
+                WHERE inv.RECORD_STATUS_CD = ''INACTIVE'' AND inv.CASE_UID IN (' + @phc_id_list + ') ';
+
+
+            if @debug = 'true'
+            select @temp_sql;
+
+            exec sp_executesql @temp_sql;
+
+            if @debug = 'true'
+                exec('select * from '+@tmp_DynDm_INACTIVE_INVESTIGATIONS);
+            END
+
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
+        VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = ' GENERATING  '+ @tmp_DynDm_INVESTIGATION_DATA;
 
 
         DECLARE @listStr VARCHAR(MAX);
 
         SELECT @listStr = COALESCE(@listStr+',' ,'') + RDB_COLUMN_NM  + ' '+ coalesce(USER_DEFINED_COLUMN_NM,'')
-        FROM  dbo.V_NRT_NBS_INVESTIGATION_RDB_TABLE_METADATA
+        FROM  dbo.V_NRT_NBS_INVESTIGATION_RDB_TABLE_METADATA 
         WHERE INVESTIGATION_FORM_CD = @nbs_page_form_cd;
 
         if @debug = 'true'

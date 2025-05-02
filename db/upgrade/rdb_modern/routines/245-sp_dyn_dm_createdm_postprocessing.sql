@@ -21,6 +21,7 @@ BEGIN
         DECLARE @datamart_suffix varchar(100) = @DATAMART_NAME+'_'+CAST(@batch_id AS varchar(50))
 
         DECLARE @tmp_DynDm_INCOMING_DATA varchar(200) = 'tmp_DynDm_INCOMING_DATA_'+@datamart_suffix;
+        DECLARE @tmp_DynDm_INACTIVE_INVESTIGATIONS VARCHAR(200) = 'dbo.tmp_DynDm_Inactive_Investigations_'+@datamart_suffix;
 
 
     DECLARE @tgt_table_nm NVARCHAR(200) = 'DM_INV_' + @DATAMART_NAME;
@@ -274,6 +275,33 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
             END;
 
             COMMIT TRANSACTION;
+
+
+            IF OBJECT_ID('dbo.tmp_DynDm_Inactive_Investigations_'+@datamart_suffix, 'U') IS NOT NULL
+            BEGIN
+
+            BEGIN TRANSACTION
+
+                SET @Proc_Step_no = @Proc_Step_no + 1;
+                SET @Proc_Step_Name = 'DELETING INACTIVE RECORDS FROM ' + @tgt_table_nm;
+
+                set @temp_sql = '
+                DELETE inv 
+                FROM dbo.' + @tgt_table_nm + ' inv 
+                INNER JOIN ' + @tmp_DynDm_INACTIVE_INVESTIGATIONS + ' del_inv 
+                    ON inv.INVESTIGATION_KEY = del_inv.INVESTIGATION_KEY ';
+
+
+
+            if @debug = 'true'
+            select @Proc_Step_Name, @temp_sql;
+
+            exec sp_executesql @temp_sql;
+
+            COMMIT TRANSACTION;
+                
+            END
+            
 
             BEGIN TRANSACTION
 
