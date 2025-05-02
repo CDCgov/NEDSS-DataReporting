@@ -452,42 +452,43 @@ public class PostProcessingService {
 
     private void processByInvFormCode(List<DatamartData> dmData, String keyTopic) {
 
-        Set<Long> pamUids = dmData.stream()
-        .filter(d -> "INV_FORM_RVCT".equals(d.getInvestigationFormCd()))
-        .map(DatamartData::getPublicHealthCaseUid)
-        .collect(Collectors.toSet());
-        
-        if(dTbHivEnable && !pamUids.isEmpty()){
+        if(dTbHivEnable){
+            Set<Long> pamUids = dmData.stream()
+            .filter(d -> "INV_FORM_RVCT".equals(d.getInvestigationFormCd()))
+            .map(DatamartData::getPublicHealthCaseUid)
+            .collect(Collectors.toSet());
+            
+            if(!pamUids.isEmpty()){
+                //TB
+                processTopic(keyTopic, D_TB_PAM, pamUids, investigationRepository::executeStoredProcForDTbPam);
+                processTopic(keyTopic, D_ADDL_RISK, pamUids, investigationRepository::executeStoredProcForDAddlRisk);
+                processTopic(keyTopic, D_DISEASE_SITE, pamUids, investigationRepository::executeStoredProcForDDiseaseSite);
+                processTopic(keyTopic, D_TB_HIV, pamUids, investigationRepository::executeStoredProcForDTbHiv);
+                processTopic(keyTopic, D_GT_12_REAS, pamUids, investigationRepository::executeStoredProcForDGt12Reas);
+                processTopic(keyTopic, D_MOVE_CNTRY, pamUids, investigationRepository::executeStoredProcForDMoveCntry);
+                processTopic(keyTopic, D_MOVE_CNTY, pamUids, investigationRepository::executeStoredProcForDMoveCnty);
+                processTopic(keyTopic, D_MOVE_STATE, pamUids, investigationRepository::executeStoredProcForDMoveState);
+                processTopic(keyTopic, D_MOVED_WHERE, pamUids, investigationRepository::executeStoredProcForDMovedWhere);
+                processTopic(keyTopic, D_HC_PROV_TY_3, pamUids, investigationRepository::executeStoredProcForDHcProvTy3);
+                processTopic(keyTopic, D_OUT_OF_CNTRY, pamUids, investigationRepository::executeStoredProcForDOutOfCntry);
+                processTopic(keyTopic, D_SMR_EXAM_TY, pamUids, investigationRepository::executeStoredProcForDSmrExamTy);
+                processTopic(keyTopic, F_TB_PAM, pamUids, investigationRepository::executeStoredProcForFTbPam);
+                processTopic(keyTopic, TB_PAM_LDF, pamUids, investigationRepository::executeStoredProcForTbPamLdf);
+            }
 
-            //TB
-            processTopic(keyTopic, D_TB_PAM, pamUids, investigationRepository::executeStoredProcForDTbPam);
-            processTopic(keyTopic, D_ADDL_RISK, pamUids, investigationRepository::executeStoredProcForDAddlRisk);
-            processTopic(keyTopic, D_DISEASE_SITE, pamUids, investigationRepository::executeStoredProcForDDiseaseSite);
-            processTopic(keyTopic, D_TB_HIV, pamUids, investigationRepository::executeStoredProcForDTbHiv);
-            processTopic(keyTopic, D_GT_12_REAS, pamUids, investigationRepository::executeStoredProcForDGt12Reas);
-            processTopic(keyTopic, D_MOVE_CNTRY, pamUids, investigationRepository::executeStoredProcForDMoveCntry);
-            processTopic(keyTopic, D_MOVE_CNTY, pamUids, investigationRepository::executeStoredProcForDMoveCnty);
-            processTopic(keyTopic, D_MOVE_STATE, pamUids, investigationRepository::executeStoredProcForDMoveState);
-            processTopic(keyTopic, D_MOVED_WHERE, pamUids, investigationRepository::executeStoredProcForDMovedWhere);
-            processTopic(keyTopic, D_HC_PROV_TY_3, pamUids, investigationRepository::executeStoredProcForDHcProvTy3);
-            processTopic(keyTopic, D_OUT_OF_CNTRY, pamUids, investigationRepository::executeStoredProcForDOutOfCntry);
-            processTopic(keyTopic, D_SMR_EXAM_TY, pamUids, investigationRepository::executeStoredProcForDSmrExamTy);
-            processTopic(keyTopic, F_TB_PAM, pamUids, investigationRepository::executeStoredProcForFTbPam);
-            processTopic(keyTopic, TB_PAM_LDF, pamUids, investigationRepository::executeStoredProcForTbPamLdf);
-        
-        }
-        //VAR
-        pamUids = dmData.stream()
-        .filter(d -> "INV_FORM_VAR".equals(d.getInvestigationFormCd()))
-        .map(DatamartData::getPublicHealthCaseUid)
-        .collect(Collectors.toSet());
+            //VAR
+            pamUids = dmData.stream()
+            .filter(d -> "INV_FORM_VAR".equals(d.getInvestigationFormCd()))
+            .map(DatamartData::getPublicHealthCaseUid)
+            .collect(Collectors.toSet());
 
-        if(dTbHivEnable && !pamUids.isEmpty()){
-            processTopic(keyTopic, D_VAR_PAM, pamUids, investigationRepository::executeStoredProcForDVarPam);
-            processTopic(keyTopic, D_RASH_LOC_GEN, pamUids, investigationRepository::executeStoredProcForDRashLocGen);
-            processTopic(keyTopic, D_PCR_SOURCE, pamUids, investigationRepository::executeStoredProcForDPcrSource);
-            processTopic(keyTopic, F_VAR_PAM, pamUids, investigationRepository::executeStoredProcForFVarPam);
-            processTopic(keyTopic, VAR_PAM_LDF, pamUids, investigationRepository::executeStoredProcForVarPamLdf);
+            if(!pamUids.isEmpty()){
+                processTopic(keyTopic, D_VAR_PAM, pamUids, investigationRepository::executeStoredProcForDVarPam);
+                processTopic(keyTopic, D_RASH_LOC_GEN, pamUids, investigationRepository::executeStoredProcForDRashLocGen);
+                processTopic(keyTopic, D_PCR_SOURCE, pamUids, investigationRepository::executeStoredProcForDPcrSource);
+                processTopic(keyTopic, F_VAR_PAM, pamUids, investigationRepository::executeStoredProcForFVarPam);
+                processTopic(keyTopic, VAR_PAM_LDF, pamUids, investigationRepository::executeStoredProcForVarPamLdf);
+            }
         }
     }
 
