@@ -52,7 +52,14 @@ public class DataPostProcessor {
                             .stream()
                             .filter(pName -> !ObjectUtils.isEmpty(pName.getPersonNmSeq()))
                             // Get the entry with the max Person Name Sequence
-                            .max(Comparator.comparing(Name::getPersonNmSeq))
+                            .max(Comparator.comparing(n -> {
+                                try {
+                                    return Integer.parseInt(n.getPersonNmSeq());
+                                } catch (NumberFormatException e) {
+                                    log.warn("Invalid person name sequence number: {}", n.getPersonNmSeq());
+                                    return 0; 
+                                }
+                            }))
                             .ifPresent(n -> n.updatePerson(pf, cd.getVal()));
                 }
             });

@@ -61,6 +61,7 @@ class PersonDataPostProcessingTests {
                 .middleNm("amy")
                 .firstNm("beans")
                 .nmSuffix("Sr")
+                .nameSuffix("Sr")
                 .nmUseCd("L")
                 .build();
         name.updatePerson(expected);
@@ -86,6 +87,7 @@ class PersonDataPostProcessingTests {
                 .middleNm("amy")
                 .firstNm("beans")
                 .nmSuffix("Sr")
+                .nameSuffix("Sr")
                 .nmDegree("MD")
                 .build();
         name.updatePerson(expected);

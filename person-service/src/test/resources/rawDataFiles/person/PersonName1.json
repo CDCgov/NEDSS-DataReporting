@@ -92,7 +92,7 @@
     "firstNmSndx": "C414",
     "nm_use_cd": "L",
     "nmSuffix": "Jr",
-    "name_suffix": null,
+    "name_suffix": "Jr",
     "nmDegree": "MS",
     "pn_person_name_seq": 7,
     "pn_last_chg_time": "2024-05-03T21:47:11.907"
@@ -106,7 +106,7 @@
     "firstNmSndx": "B520",
     "nm_use_cd": "L",
     "nmSuffix": "Sr",
-    "name_suffix": null,
+    "name_suffix": "Sr",
     "nmDegree": "MD",
     "pn_person_name_seq": 8,
     "pn_last_chg_time": "2024-05-03T21:57:11.920"

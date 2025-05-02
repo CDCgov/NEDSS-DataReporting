@@ -102,6 +102,7 @@ class PersonDetailsDeserializationTests {
                 .firstNmSndx("S750")
                 .nmUseCd("L")
                 .nmSuffix("Jr")
+                .nameSuffix("Jr")
                 .nmDegree("MD")
                 .personUid(10000009L)
                 .personNmSeq("2")
