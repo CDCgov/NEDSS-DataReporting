@@ -33,7 +33,7 @@ public class Name implements ExtendPerson {
     @JsonProperty("pn_person_uid")
     private Long personUid;
     @JsonProperty("pn_person_name_seq")
-    private Integer personNmSeq;
+    private String personNmSeq;
     @JsonProperty("pn_last_chg_time")
     private String lastChgTime;
 

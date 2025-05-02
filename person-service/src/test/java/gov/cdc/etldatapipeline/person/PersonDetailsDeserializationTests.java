@@ -105,7 +105,7 @@ class PersonDetailsDeserializationTests {
                 .nameSuffix("Jr")
                 .nmDegree("MD")
                 .personUid(10000009L)
-                .personNmSeq(2)
+                .personNmSeq("2")
                 .build();
 
         assertNotNull(name);

@@ -5,7 +5,7 @@ public interface PersonExtendedProps {
     default void setPnPersonUid(Long personUid) {
     }
 
-    default void setPersonNmSeq(Integer personNameSeq) {
+    default void setPersonNmSeq(String personNameSeq) {
     }
 
     default void setNmUseCd(String personNameSeq) {
