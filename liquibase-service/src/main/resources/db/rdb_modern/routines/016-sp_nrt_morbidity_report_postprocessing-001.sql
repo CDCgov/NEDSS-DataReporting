@@ -629,8 +629,8 @@ BEGIN
 					WHEN rtrim(mr.[PROCESSING_DECISION_CD])  = '''' THEN NULL
 					ELSE mr.[PROCESSING_DECISION_CD]
 				  END AS PROCESSING_DECISION_CD,
-               mr.[PROCESSING_DECISION_DESC], 
-               mr.[associated_phc_uids], 
+               mr.[PROCESSING_DECISION_DESC],
+               mr.[associated_phc_uids],
 			   mr.[record_status_cd], --Updated in #tmp_morb_root
 			   tmc2.*, tmd2.*,tmt2.*,
                Cast( NULL AS datetime) AS TEMP_ILLNESS_ONSET_DT_KEY,
@@ -1332,7 +1332,8 @@ BEGIN
                pat.PATIENT_UID                  AS patient_uid,
                dtm.Datamart                     AS datamart,
                c.CONDITION_CD                   AS condition_cd,
-               dtm.Stored_Procedure             AS stored_procedure
+               dtm.Stored_Procedure             AS stored_procedure,
+               null                             AS investigation_form_cd
         FROM #nrt_morbidity_observation nrt
                  INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
                  INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
@@ -1347,7 +1348,8 @@ BEGIN
                pat.PATIENT_UID                  AS patient_uid,
                dtm.Datamart                     AS datamart,
                null                             AS condition_cd,
-               dtm.Stored_Procedure             AS stored_procedure
+               dtm.Stored_Procedure             AS stored_procedure,
+               null                             AS investigation_form_cd
         FROM #nrt_morbidity_observation nrt
                  INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
                  INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY

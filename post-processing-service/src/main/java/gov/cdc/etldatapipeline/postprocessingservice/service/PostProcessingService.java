@@ -359,6 +359,7 @@ public class PostProcessingService {
                     case INVESTIGATION:
                         dmData = processInvestigation(keyTopic, entity, ids, idValsSnapshot);
                         newDmMulti.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                        processByInvFormCode(dmData);
                         break;
                     case CONTACT:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
@@ -407,7 +408,6 @@ public class PostProcessingService {
             // process METRIC_EVENT datamart since multiple datamarts depend on it
             processMetricEventDatamart(newDmMulti);
             processSummaryCases();
-            processByInvFormCode(dmData);
             datamartProcessor.process(dmData);
 
             // merge entity IDs collections from temporary map `newDmMulti` into main datamart cache
