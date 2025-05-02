@@ -73,6 +73,12 @@ BEGIN
         IF OBJECT_ID(@tmp_DynDm_INACTIVE_INVESTIGATIONS, 'U') IS NOT NULL
             exec ('drop table '+ @tmp_DynDm_INACTIVE_INVESTIGATIONS);
 
+        /*
+            The following if statement is here to prevent syntax errors when @phc_id_list
+            is an empty string. In the future, if we are to update the schemas of the 
+            dynamic datamarts based only on metadata changes, then we will need to be able
+            to run the procedures without a list of phc uids.
+        */
         if len(@phc_id_list) > 1
             BEGIN
                 SET @temp_sql = '
