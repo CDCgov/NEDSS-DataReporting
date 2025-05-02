@@ -824,7 +824,8 @@ BEGIN
                nrt.patient_id                                   AS patient_uid,
                CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
                nrt.cd                                           AS condition_cd,
-               dtm.Stored_Procedure                             AS stored_procedure
+               dtm.Stored_Procedure                             AS stored_procedure,
+               nrt.investigation_form_cd                        AS investigation_form_cd
         FROM #temp_inv_table nrt
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
@@ -835,7 +836,8 @@ BEGIN
                nrt.patient_id                                   AS patient_uid,
                dtm.Datamart                                     AS datamart,
                null                                             AS condition_cd,
-               dtm.Stored_Procedure                             AS stored_procedure
+               dtm.Stored_Procedure                             AS stored_procedure,
+               nrt.investigation_form_cd                        AS investigation_form_cd
         FROM #temp_inv_table nrt
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id

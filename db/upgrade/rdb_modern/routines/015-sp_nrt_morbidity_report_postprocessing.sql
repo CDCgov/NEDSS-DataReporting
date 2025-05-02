@@ -1332,7 +1332,8 @@ BEGIN
                pat.PATIENT_UID                  AS patient_uid,
                dtm.Datamart                     AS datamart,
                c.CONDITION_CD                   AS condition_cd,
-               dtm.Stored_Procedure             AS stored_procedure
+               dtm.Stored_Procedure             AS stored_procedure,
+               null                             AS investigation_form_cd
         FROM #nrt_morbidity_observation nrt
                  INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
                  INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
@@ -1347,7 +1348,8 @@ BEGIN
                pat.PATIENT_UID                  AS patient_uid,
                dtm.Datamart                     AS datamart,
                null                             AS condition_cd,
-               dtm.Stored_Procedure             AS stored_procedure
+               dtm.Stored_Procedure             AS stored_procedure,
+               null                             AS investigation_form_cd
         FROM #nrt_morbidity_observation nrt
                  INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
                  INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY

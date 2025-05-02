@@ -1181,7 +1181,8 @@ BEGIN
             inv_meta.DATAMART_NM as datamart,
             c.CONDITION_CD as condition_cd,
             null as patient_uid,
-            null as stored_procedure
+            null as stored_procedure,
+            null as investigation_form_cd
         from
         dbo.INVESTIGATION inv  with ( nolock)
         inner join dbo.INV_SUMM_DATAMART isd with ( nolock) on isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY

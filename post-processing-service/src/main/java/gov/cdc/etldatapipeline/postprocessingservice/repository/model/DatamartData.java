@@ -31,4 +31,8 @@ public class DatamartData {
     @Column(name = "stored_procedure")
     @EqualsAndHashCode.Exclude
     private String storedProcedure;
+
+    @Column(name = "investigation_form_cd")
+    @EqualsAndHashCode.Exclude
+    private String investigationFormCd;
 }

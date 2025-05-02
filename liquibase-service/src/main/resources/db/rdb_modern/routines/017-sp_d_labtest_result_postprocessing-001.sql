@@ -1506,7 +1506,8 @@ BEGIN
                pat.PATIENT_UID                  AS patient_uid,
                dtm.Datamart                     AS datamart,
                c.CONDITION_CD                   AS condition_cd,
-               dtm.Stored_Procedure             AS stored_procedure
+               dtm.Stored_Procedure             AS stored_procedure,
+               null                             AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
                  INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
@@ -1520,7 +1521,8 @@ BEGIN
                pat.PATIENT_UID                  AS patient_uid,
                dtm.Datamart                     AS datamart,
                null                             AS condition_cd,
-               dtm.Stored_Procedure             AS stored_procedure
+               dtm.Stored_Procedure             AS stored_procedure,
+               null                             AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
                  INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY

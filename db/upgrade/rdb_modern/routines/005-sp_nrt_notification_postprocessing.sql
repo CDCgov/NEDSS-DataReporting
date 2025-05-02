@@ -318,7 +318,8 @@ BEGIN
                pat.PATIENT_UID                    AS patient_uid,
                dtm.Datamart                       AS datamart,
                c.CONDITION_CD                     AS condition_cd,
-               dtm.Stored_Procedure               AS stored_procedure
+               dtm.Stored_Procedure               AS stored_procedure,
+               null                               AS investigation_form_cd
         FROM #temp_ntf_event_table ntf
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ntf.INVESTIGATION_KEY
                  LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = ntf.CONDITION_KEY
