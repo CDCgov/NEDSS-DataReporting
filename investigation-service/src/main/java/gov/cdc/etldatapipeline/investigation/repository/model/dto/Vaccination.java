@@ -99,4 +99,7 @@ public class Vaccination {
     @Column(name="answers")
     private String answers;
 
+    @Column(name="material_cd")
+    private String materialCd;
+
 }

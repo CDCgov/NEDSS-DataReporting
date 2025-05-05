@@ -1185,6 +1185,7 @@ BEGIN
         ix.PROG_AREA_CD,
         ix.JURISDICTION_CD,
         ix.PROGRAM_JURISDICTION_OID,
+        ix.MATERIAL_CD,
 		prov.PROVIDER_UID,
 		org.ORGANIZATION_UID,
 		cas.PHC_UID,

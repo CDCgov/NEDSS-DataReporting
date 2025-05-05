@@ -672,6 +672,7 @@ public class ProcessInvestigationDataUtil {
         vaccinationReporting.setPhcUid(vaccination.getPhcUid());
         vaccinationReporting.setOrganizationUid(vaccination.getOrganizationUid());
         vaccinationReporting.setPatientUid(vaccination.getPatientUid());
+        vaccinationReporting.setMaterialCd(vaccination.getMaterialCd());
         return vaccinationReporting;
     }
 

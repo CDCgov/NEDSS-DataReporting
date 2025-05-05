@@ -38,4 +38,5 @@ public class VaccinationReporting {
     private Long organizationUid;
     private Long phcUid;
     private Long patientUid;
+    private String materialCd;
 }

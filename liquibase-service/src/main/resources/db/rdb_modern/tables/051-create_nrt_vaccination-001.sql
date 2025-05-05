@@ -70,6 +70,16 @@ IF EXISTS (SELECT 1
                 ALTER TABLE dbo.nrt_vaccination
                     ADD program_jurisdiction_oid bigint;
             END;
+
+        --CNDE-2526
+        IF NOT EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'material_cd'
+                        AND Object_ID = Object_ID(N'nrt_vaccination'))
+            BEGIN
+                ALTER TABLE dbo.nrt_vaccination
+                    ADD material_cd varchar(20);
+            END;
         
     END;
 
