@@ -550,7 +550,7 @@ BEGIN
 		page_set.ldf_page_id =a.ldf_page_id 
 		LEFT JOIN [dbo].nrt_srte_Codeset c WITH (NOLOCK) 
 			ON a.code_set_nm = c.code_set_nm
-        inner join dbo.nrt_INVESTIGATION inv
+        INNER JOIN [dbo].nrt_INVESTIGATION inv WITH (NOLOCK) 
             on a.business_object_uid = inv.public_health_case_uid
 		INNER JOIN [dbo].LDF_DATAMART_TABLE_REF b WITH (NOLOCK) 
 			ON inv.cd = b.condition_cd
