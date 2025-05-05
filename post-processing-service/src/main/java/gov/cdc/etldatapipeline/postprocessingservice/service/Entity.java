@@ -65,6 +65,7 @@ enum Entity {
     LDF_MUMPS(0, "LDF_MUMPS", Constants.PHC_UID, "sp_ldf_mumps_datamart_postprocessing"),
     LDF_TETANUS(0, "LDF_TETANUS", Constants.PHC_UID, "sp_ldf_tetanus_datamart_postprocessing"),
     LDF_VACCINE_PREVENT_DISEASES(0, "LDF_VACCINE_PREVENT_DISEASES", Constants.PHC_UID, "sp_ldf_vaccine_prevent_diseases_datamart_postprocessing"),
+    LDF_HEPATITIS(0, "LDF_HEPATITIS", Constants.PHC_UID, "sp_ldf_hepatitis_datamart_postprocessing"),
     UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
 
     private final int priority;

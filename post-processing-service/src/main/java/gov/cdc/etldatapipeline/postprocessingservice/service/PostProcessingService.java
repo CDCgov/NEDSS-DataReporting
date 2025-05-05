@@ -580,6 +580,11 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForCaseLabDatamart, cases);
                         executeDatamartProc(HEPATITIS_DATAMART,
                                 investigationRepository::executeStoredProcForHepDatamart, cases);
+                        
+                        if (ldfType.equalsIgnoreCase(LDF_HEPATITIS.getEntityName())) {
+                            executeDatamartProc(LDF_HEPATITIS,
+                            investigationRepository::executeStoredProcForLdfHepatitisDatamart, cases);
+                        }        
                         break;
                     case STD_HIV_DATAMART:
                         executeDatamartProc(STD_HIV_DATAMART,
@@ -616,7 +621,7 @@ public class PostProcessingService {
                     case CRS_CASE:
                         executeDatamartProc(CRS_CASE,
                                 investigationRepository::executeStoredProcForCRSCaseDatamart, cases);
-                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                        if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
                             executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
                             investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
                         }
@@ -624,7 +629,7 @@ public class PostProcessingService {
                     case RUBELLA_CASE:
                         executeDatamartProc(RUBELLA_CASE,
                                 investigationRepository::executeStoredProcForRubellaCaseDatamart, cases);
-                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                        if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
                             executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
                             investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
                         }
@@ -632,7 +637,7 @@ public class PostProcessingService {
                     case MEASLES_CASE:
                         executeDatamartProc(MEASLES_CASE,
                                 investigationRepository::executeStoredProcForMeaslesCaseDatamart, cases);
-                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                        if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
                             executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
                             investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
                         }
@@ -645,7 +650,7 @@ public class PostProcessingService {
                         executeDatamartProc(BMIRD_CASE,
                                 investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
                         
-                        if(ldfEnable && ldfType.equalsIgnoreCase("LDF_BMIRD")){
+                        if(ldfType.equalsIgnoreCase(LDF_BMIRD.getEntityName())){
                             executeDatamartProc(LDF_BMIRD,
                             investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
                         }
@@ -661,7 +666,7 @@ public class PostProcessingService {
                     case PERTUSSIS_CASE:
                         executeDatamartProc(PERTUSSIS_CASE,
                                 investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
-                        if (ldfEnable && ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                        if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
                             executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
                             investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
                         }

@@ -1029,6 +1029,14 @@ class PostProcessingServiceTest {
                         HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), 5,
                         (repo, uid) -> verify(repo).executeStoredProcForHepDatamart(uid)),
                 new DatamartTestCase(
+                    "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                            "\"datamart\":\"Hepatitis_Datamart,LDF_HEPATITIS\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}",
+                    "Hepatitis_Datamart,LDF_HEPATITIS", LDF_HEPATITIS.getStoredProcedure(), 7,
+                    (repo, uid) -> {
+                        verify(repo).executeStoredProcForHepDatamart(uid);
+                        verify(repo).executeStoredProcForLdfHepatitisDatamart(uid);
+                    }),        
+                new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}",
                         STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), 3,
