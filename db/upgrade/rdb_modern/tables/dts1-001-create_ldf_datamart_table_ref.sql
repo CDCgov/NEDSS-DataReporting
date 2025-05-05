@@ -172,4 +172,15 @@ BEGIN
         ('10210','Tetanus',7,'LDF_TETANUS','GENERIC_CASE',null),
             ('10180','Mumps',6,'LDF_MUMPS','GENERIC_CASE',null);
 
+    INSERT INTO [dbo].[LDF_DATAMART_TABLE_REF](
+        CONDITION_CD,
+        CONDITION_DESC,
+        LDF_GROUP_ID,
+        DATAMART_NAME,
+        LINKED_FACT_TABLE,
+        ENTITY_DESC
+    )
+    VALUES
+        ('999999','Hepatitis',2,'LDF_HEPATITIS','HEPATITIS_CASE',null)
+
 END
