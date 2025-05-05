@@ -15,8 +15,6 @@ BEGIN
     DECLARE @Proc_Step_no FLOAT = 0;
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
 
-    DECLARE @conditionCd VARCHAR(200);
-    SET @conditionCd = '11065'; -- COVID-19
 
     DECLARE @Dataflow_Name VARCHAR(200) = 'COVID DATAMART Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_covid_vaccination_datamart_postprocessing';
@@ -101,6 +99,8 @@ BEGIN TRY
 
     --Step 4: Insert into table
 
+	BEGIN TRANSACTION;
+
    with UID_CTE as (
     select
         nrtVac.phc_uid as public_health_case_uid,
@@ -111,13 +111,13 @@ BEGIN TRY
         nrtVac.vaccination_uid as VACCINATION_UID,
         nrtVac.add_time as ADD_TIME,
         COALESCE(nrtinv.activity_from_time, nrtinv.add_time) AS INVESTIGATION_DT
-    from nrt_vaccination nrtVac
+    from dbo.NRT_VACCINATION nrtVac
     inner join #VAC_LIST vacList on nrtVac.vaccination_uid = vacList.vaccination_uid
     left outer join
         dbo.NRT_INVESTIGATION nrtinv
             on nrtVac.phc_uid = nrtinv.public_health_case_uid
     )
-    INSERT INTO rdb_modern.dbo.COVID_VACCINATION_DATAMART
+    INSERT INTO dbo.COVID_VACCINATION_DATAMART
 	SELECT DISTINCT
 	        CONCAT(CONCAT(cte.vaccination_uid, cte.public_health_Case_uid), RIGHT(YEAR(cte.add_time), 2)) AS COVID_VACCINATION_DATAMART_KEY,
 	        cte.local_id AS INVESTIGATION_LOCAL_ID,
@@ -180,12 +180,13 @@ BEGIN TRY
 	        dvac.LAST_CHG_TIME AS LAST_CHG_TIME,
 	        dvac.LAST_CHG_USER_ID AS LAST_CHG_USER_ID
 	FROM UID_CTE cte
-	inner join rdb_modern.dbo.D_VACCINATION dVac WITH(NOLOCK) ON cte.VACCINATION_UID = dVac.VACCINATION_UID
+	inner join dbo.D_VACCINATION dVac WITH(NOLOCK) ON cte.VACCINATION_UID = dVac.VACCINATION_UID
 	left outer join dbo.D_PATIENT patient WITH (NOLOCK) ON cte.PATIENT_UID= patient.PATIENT_UID
 	left outer join dbo.D_ORGANIZATION org WITH (NOLOCK) ON cte.ORGANIZATION_UID= org.ORGANIZATION_UID
 	left outer join dbo.D_PROVIDER provider WITH (NOLOCK) ON cte.PROVIDER_UID= provider.PROVIDER_UID
 	;
 
+	COMMIT TRANSACTION;
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [DBO].[JOB_FLOW_LOG]
@@ -203,7 +204,7 @@ BEGIN TRY
     END TRY
     BEGIN CATCH
 
-		IF @@TRANCOUNT > 0 COMMIT TRANSACTION;
+		IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 	     -- Construct the error message string with all details:
 	    DECLARE @FullErrorMessage VARCHAR(8000) =
