@@ -181,6 +181,6 @@ BEGIN
         ENTITY_DESC
     )
     VALUES
-        ('999999','Hepatitis',2,'LDF_HEPATITIS','HEPATITIS_CASE',null)
+        ('999999','Hepatitis',2,'LDF_HEPATITIS','HEPATITIS_CASE',null);
 
 END
