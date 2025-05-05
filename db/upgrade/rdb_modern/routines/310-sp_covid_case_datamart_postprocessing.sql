@@ -1067,6 +1067,8 @@ BEGIN TRY
    	exec('select '''+@Proc_Step_Name+'''  as step,* from '+@tmp_COVID_CASE_RPT_DATA_3);
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
+    BEGIN TRANSACTION;
+
     DECLARE @insert_query NVARCHAR(MAX);
     SET @insert_query =
     (
@@ -1182,6 +1184,8 @@ BEGIN TRY
 	    select @insert_query as insert_query;
     EXEC sp_executesql @insert_query;
 
+    COMMIT TRANSACTION;
+
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [DBO].[JOB_FLOW_LOG]
     (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
@@ -1209,7 +1213,7 @@ BEGIN TRY
     END TRY
     BEGIN CATCH
 
-		IF @@TRANCOUNT > 0 COMMIT TRANSACTION;
+		IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 		IF OBJECT_ID('tempdb..' +@tmp_COVID_CASE_DISCRETE_DATA, 'U') IS NOT NULL
 	        exec ('drop table '+@tmp_COVID_CASE_DISCRETE_DATA);
