@@ -581,10 +581,6 @@ public class PostProcessingService {
                         executeDatamartProc(HEPATITIS_DATAMART,
                                 investigationRepository::executeStoredProcForHepDatamart, cases);
                         
-                        if (ldfType.equalsIgnoreCase(LDF_HEPATITIS.getEntityName())) {
-                            executeDatamartProc(LDF_HEPATITIS,
-                            investigationRepository::executeStoredProcForLdfHepatitisDatamart, cases);
-                        }        
                         break;
                     case STD_HIV_DATAMART:
                         executeDatamartProc(STD_HIV_DATAMART,
@@ -662,6 +658,10 @@ public class PostProcessingService {
                     case HEPATITIS_CASE:
                         executeDatamartProc(HEPATITIS_CASE,
                                 investigationRepository::executeStoredProcForHepatitisCaseDatamart, cases);
+                        if (ldfType.equalsIgnoreCase(LDF_HEPATITIS.getEntityName())) {
+                            executeDatamartProc(LDF_HEPATITIS,
+                            investigationRepository::executeStoredProcForLdfHepatitisDatamart, cases);
+                        }  
                         break;
                     case PERTUSSIS_CASE:
                         executeDatamartProc(PERTUSSIS_CASE,
