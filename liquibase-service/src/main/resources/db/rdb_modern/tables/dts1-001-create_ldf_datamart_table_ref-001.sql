@@ -183,4 +183,16 @@ BEGIN
     VALUES
         ('999999','Hepatitis',2,'LDF_HEPATITIS','HEPATITIS_CASE',null);
 
+    
+    /* Added this new CC for BMIRD specifically for the INT1 Environment.*/
+    INSERT INTO [dbo].[LDF_DATAMART_TABLE_REF](
+        CONDITION_CD,
+        CONDITION_DESC,
+        LDF_GROUP_ID,
+        DATAMART_NAME,
+        LINKED_FACT_TABLE,
+        ENTITY_DESC
+    )
+    VALUES
+        ('11723','Streptococcus pneumoniae, invasive disease (IPD) (all ages)',1,'LDF_BMIRD','BMIRD_CASE',null);
 END
