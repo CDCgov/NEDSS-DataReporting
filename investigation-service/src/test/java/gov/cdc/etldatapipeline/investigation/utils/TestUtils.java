@@ -346,6 +346,7 @@ public class TestUtils {
         vaccination.setVaccineExpirationDt("2024-02-06T08:00:00");
         vaccination.setVaccinationAnatomicalSite("");
         vaccination.setVaccineManufacturerNm("test");
+        vaccination.setMaterialCd("102");
         return vaccination;
     }
 
@@ -370,6 +371,7 @@ public class TestUtils {
         vaccinationReporting.setVaccineExpirationDt("2024-02-06T08:00:00");
         vaccinationReporting.setVaccinationAnatomicalSite("");
         vaccinationReporting.setVaccineManufacturerNm("test");
+        vaccinationReporting.setMaterialCd("102");
         return vaccinationReporting;
     }
 

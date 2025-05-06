@@ -117,7 +117,7 @@ BEGIN
     END TRY
     BEGIN CATCH
 
-        IF @@TRANCOUNT > 0   COMMIT TRANSACTION;
+        IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
         -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
