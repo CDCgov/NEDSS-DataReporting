@@ -2569,4 +2569,20 @@ databaseChangeLog:
         - sqlFile:
             path: 320-sp_covid_vaccination_datamart_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 850
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 245-create_ldf_hepatitis-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 855
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 320-sp_ldf_hepatitis_datamart_postprocessing-001.sql
+            splitStatements: false            
     

@@ -537,19 +537,25 @@ BEGIN
 			a.custom_subform_metadata_uid,
 			a.business_object_uid,
 			a.ldf_value,
-			a.condition_desc_txt AS page_set,
-			a.condition_cd AS phc_cd,
+			page_set.code_short_desc_txt AS page_set,
+			inv.cd AS phc_cd,
 			a.data_type,
 			a.Field_size,
 			c.class_cd AS data_source
 		INTO #LDF_DATA
-		FROM [dbo].nrt_ldf_data a WITH (NOLOCK) 
+		FROM [dbo].nrt_ldf_data a WITH (NOLOCK)
+		INNER JOIN 
+		dbo.nrt_srte_LDF_PAGE_SET page_set WITH ( NOLOCK) 
+		ON  
+		page_set.ldf_page_id =a.ldf_page_id 
 		LEFT JOIN [dbo].nrt_srte_Codeset c WITH (NOLOCK) 
 			ON a.code_set_nm = c.code_set_nm
+        INNER JOIN [dbo].nrt_INVESTIGATION inv WITH (NOLOCK) 
+            on a.business_object_uid = inv.public_health_case_uid
 		INNER JOIN [dbo].LDF_DATAMART_TABLE_REF b WITH (NOLOCK) 
-			ON b.condition_cd = a.condition_cd
+			ON inv.cd = b.condition_cd
 		INNER JOIN #LDF_UID_LIST l 
-			ON l.ldf_uid = a.ldf_uid		
+			ON l.ldf_uid = a.ldf_uid	
 				
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
