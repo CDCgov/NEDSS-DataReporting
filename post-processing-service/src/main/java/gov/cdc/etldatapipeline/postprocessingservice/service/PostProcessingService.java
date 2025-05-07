@@ -74,7 +74,8 @@ public class PostProcessingService {
     static final String PAYLOAD = "payload";
     static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
     static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG = "Processing {} message topic. Calling stored proc: {} '{}'";
-    static final String MULTIID = "MultiId_Datamart";
+    static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG_2 = "Processing {} message topic. Calling stored proc: {} '{}', '{}";
+    static final String MULTI_ID_DATAMART = "MultiId_Datamart";
 
     static final String MORB_REPORT = "MorbReport";
     static final String LAB_REPORT = "LabReport";
@@ -265,9 +266,10 @@ public class PostProcessingService {
                 logger.info("For payload: {} DataMart object is null. Skipping further processing", payloadNode);
                 return;
             }
-            if (Objects.isNull(dmData.getPublicHealthCaseUid()) || Objects.isNull(dmData.getPatientUid())) {
+            if ((Objects.isNull(dmData.getPublicHealthCaseUid()) && Objects.isNull(dmData.getVaccinationUid())) ||
+                    Objects.isNull(dmData.getPatientUid())) {
                 logger.info(
-                        "For payload: {} DataMart Public Health Case/Patient Id is null. Skipping further processing",
+                        "For payload: {} DataMart Public Health Case/Patient/Vaccination Id is null. Skipping further processing",
                         payloadNode);
                 return;
             }
@@ -277,8 +279,15 @@ public class PostProcessingService {
             }
 
             Map<String, Queue<Long>> dmMap = dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
-            dmMap.computeIfAbsent(INVESTIGATION.getEntityName(),
-                    k -> new ConcurrentLinkedQueue<>()).add(dmData.getPublicHealthCaseUid());
+
+            Optional.ofNullable(dmData.getPublicHealthCaseUid()).ifPresent(uid ->
+                    dmMap.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).add(uid));
+
+            Optional.ofNullable(dmData.getPatientUid()).ifPresent(uid ->
+                    dmMap.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).add(uid));
+
+            Optional.ofNullable(dmData.getVaccinationUid()).ifPresent(uid ->
+                    dmMap.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).add(uid));
 
         } catch (Exception e) {
             String msg = "Error processing datamart message: " + e.getMessage();
@@ -412,7 +421,7 @@ public class PostProcessingService {
 
             // merge entity IDs collections from temporary map `newDmMulti` into main datamart cache
             synchronized (cacheLock) {
-                Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTIID, k -> new ConcurrentHashMap<>());
+                Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTI_ID_DATAMART, k -> new ConcurrentHashMap<>());
                 newDmMulti.forEach((key, queue) ->
                         dmMulti.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
             }
@@ -557,7 +566,7 @@ public class PostProcessingService {
                 String dmKey = entry.getKey();
 
                 // skip multi ID processing here, it should after this processing
-                if (MULTIID.equals(dmKey)) {
+                if (MULTI_ID_DATAMART.equals(dmKey)) {
                     continue;
                 }
 
@@ -567,10 +576,15 @@ public class PostProcessingService {
                 String ldfType = (ldfEnable && dmTypes.length > 1) ? dmTypes[1] : "UNKNOWN" ;
 
                 Queue<Long> uids = entry.getValue().get(INVESTIGATION.getEntityName());
+                Queue<Long> vacUids = entry.getValue().get(VACCINATION.getEntityName());
+                Queue<Long> patUids = entry.getValue().get(PATIENT.getEntityName());
+
+
                 dmCache.put(dmKey, new ConcurrentHashMap<>());
 
                 // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
-                String cases = uids.stream().map(String::valueOf).collect(Collectors.joining(","));
+                // can be null for COVID_VAC_DATAMART, in which vacUids are used as primary input
+                String cases = uids != null ? uids.stream().map(String::valueOf).collect(Collectors.joining(",")) : "";
 
                 // make sure the entity names for datamart enum values follows the same naming
                 // as the enum itself
@@ -686,6 +700,25 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForVarDatamart, cases);
                         }
                         break;
+                    case COVID_CASE_DATAMART:
+                        executeDatamartProc(COVID_CASE_DATAMART,
+                                investigationRepository::executeStoredProcForCovidCaseDatamart, cases);
+                        break;
+                    case COVID_CONTACT_DATAMART:
+                        executeDatamartProc(COVID_CONTACT_DATAMART,
+                                investigationRepository::executeStoredProcForCovidContactDatamart, cases);
+                        break;
+                    case COVID_VAC_DATAMART:
+                        String vacs = vacUids.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.joining(","));
+                        String pats = patUids.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.joining(","));
+
+                        executeDatamartProc(COVID_VAC_DATAMART,
+                                investigationRepository::executeStoredProcForCovidVacDatamart, vacs, pats);
+                        break;
+                    case COVID_LAB_DATAMART:
+                        executeDatamartProc(COVID_LAB_DATAMART,
+                                investigationRepository::executeStoredProcForCovidLabDatamart, cases);
+                        break;
                     default:
                         logger.info("No associated datamart processing logic found for the key: {} ", dmType);
                 }
@@ -694,8 +727,8 @@ public class PostProcessingService {
             }
         }
 
-        Optional.ofNullable(dmCache.get(MULTIID)).ifPresent(multi -> {
-            dmCache.put(MULTIID, new ConcurrentHashMap<>());
+        Optional.ofNullable(dmCache.get(MULTI_ID_DATAMART)).ifPresent(multi -> {
+            dmCache.put(MULTI_ID_DATAMART, new ConcurrentHashMap<>());
             processMultiIdDatamart(multi);
         });
     }
@@ -703,6 +736,12 @@ public class PostProcessingService {
     private void executeDatamartProc(Entity dmEntity, Consumer<String> repositoryMethod, String ids) {
         logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmEntity.getEntityName(), dmEntity.getStoredProcedure(), ids);
         repositoryMethod.accept(ids);
+        completeLog(dmEntity.getStoredProcedure());
+    }
+
+    private void executeDatamartProc(Entity dmEntity, BiConsumer<String, String> repositoryMethod, String ids, String pids) {
+        logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG_2, dmEntity.getEntityName(), dmEntity.getStoredProcedure(), ids, pids);
+        repositoryMethod.accept(ids, pids);
         completeLog(dmEntity.getStoredProcedure());
     }
 
