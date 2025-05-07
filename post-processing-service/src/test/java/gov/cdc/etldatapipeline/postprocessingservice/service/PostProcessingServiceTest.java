@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
@@ -1013,7 +1013,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.setLdfEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
-        testCase.verificationStep.accept(investigationRepositoryMock, "123");
+        testCase.verificationStep.accept(investigationRepositoryMock);
         assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(testCase.logSize, logs.size());
@@ -1027,72 +1027,92 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}",
                         HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), 5,
-                        (repo, uid) -> verify(repo).executeStoredProcForHepDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForHepDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}",
                         STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForStdHIVDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForStdHIVDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}",
                         GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForGenericCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForGenericCaseDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case,LDF_GENERIC\",\"stored_procedure\":\"sp_ldf_generic_datamart_postprocessing\"}}",
                         "Generic_Case,LDF_GENERIC", LDF_GENERIC.getStoredProcedure(), 5,
-                        (repo, uid) -> {
-                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
-                            verify(repo).executeStoredProcForLdfGenericDatamart(uid);
+                        repo -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfGenericDatamart("123");
                         }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case,LDF_MUMPS\",\"stored_procedure\":\"sp_ldf_mumps_datamart_postprocessing\"}}",
                         "Generic_Case,LDF_MUMPS", LDF_MUMPS.getStoredProcedure(), 5,
-                        (repo, uid) -> {
-                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
-                            verify(repo).executeStoredProcForLdfMumpsDatamart(uid);
+                        repo -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfMumpsDatamart("123");
                             }
                         ),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_crs_case_datamart_postprocessing\"}}",
                                     CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForCRSCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForCRSCaseDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
                                 "\"datamart\":\"Rubella_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
                         RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForRubellaCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForRubellaCaseDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
                                 "\"datamart\":\"Measles_Case\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}",
                         MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForMeaslesCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForMeaslesCaseDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null," +
                                 "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
                         CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForCaseLabDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
                         HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForHepatitisCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForHepatitisCaseDatamart("123")),
                     new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Hepatitis_Case,LDF_HEPATITIS\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
                         "Hepatitis_Case,LDF_HEPATITIS", LDF_HEPATITIS.getStoredProcedure(), 5,
-                        (repo, uid) -> {
-                            verify(repo).executeStoredProcForHepatitisCaseDatamart(uid);
-                            verify(repo).executeStoredProcForLdfHepatitisDatamart(uid);
+                        repo -> {
+                            verify(repo).executeStoredProcForHepatitisCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfHepatitisDatamart("123");
                         }), 
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)));
+                        repo -> verify(repo).executeStoredProcForPertussisCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Case_Datamart\",\"stored_procedure\":\"sp_covid_case_datamart_postprocessing\"}}",
+                        COVID_CASE_DATAMART.getEntityName(), COVID_CASE_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Contact_Datamart\",\"stored_procedure\":\"sp_covid_contact_datamart_postprocessing\"}}",
+                        COVID_CONTACT_DATAMART.getEntityName(), COVID_CONTACT_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidContactDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"vaccination_uid\":123,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Vac_Datamart\",\"stored_procedure\":\"sp_covid_vaccination_datamart_postprocessing\"}}",
+                        COVID_VAC_DATAMART.getEntityName(), COVID_VAC_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidVacDatamart("123", "456")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Lab_Datamart\",\"stored_procedure\":\"sp_covid_lab_datamart_postprocessing\"}}",
+                        COVID_LAB_DATAMART.getEntityName(), COVID_LAB_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidLabDatamart("123")));
     }
 
     @Test
@@ -1534,7 +1554,10 @@ class PostProcessingServiceTest {
             "'{\"payload\":{}}'",
             "'{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
             "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":null,\"datamart\":\"dummy\"}}'",
-            "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'"
+            "'{\"payload\":{\"vaccination_uid\":123,\"patient_uid\":null,\"datamart\":null}}'",
+            "'{\"payload\":{\"public_health_case_uid\":null,\"vaccination_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
+            "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'",
+
     })
     void testPostProcessDatamartIncompleteData(String msg) {
         String topic = "dummy_datamart";
@@ -1636,10 +1659,10 @@ class PostProcessingServiceTest {
         String datamartEntityName;
         String storedProcedure;
         int logSize;
-        BiConsumer<InvestigationRepository, String> verificationStep;
+        Consumer<InvestigationRepository> verificationStep;
 
         DatamartTestCase(String msg, String datamartEntityName, String storedProcedure,
-                int logSize, BiConsumer<InvestigationRepository, String> verificationStep) {
+                int logSize, Consumer<InvestigationRepository> verificationStep) {
             this.msg = msg;
             this.datamartEntityName = datamartEntityName;
             this.storedProcedure = storedProcedure;
