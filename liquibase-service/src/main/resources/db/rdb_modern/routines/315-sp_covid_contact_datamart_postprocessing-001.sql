@@ -1,4 +1,6 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_covid_contact_datamart_postprocessing] @id_list nvarchar(max) = NULL, @debug bit = 'false'
+CREATE OR ALTER PROCEDURE [dbo].[sp_covid_contact_datamart_postprocessing]
+    @phcid_list nvarchar(max) = NULL,
+    @debug bit = 'false'
 AS
 BEGIN
     BEGIN TRY
@@ -16,24 +18,12 @@ BEGIN
 
         -- Initialize logging
         INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[msg_description1]
-                                         ,[row_count]
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [msg_description1], [row_count]
         )
         VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,0
-               ,'SP_Start'
-               ,LEFT(ISNULL(@id_list, 'NULL'),500)
-               ,0
+                   @batch_id, @dataflow_name, @package_name, 'START',
+                   0, 'SP_Start', LEFT(ISNULL(@phcid_list, 'NULL'),500), 0
                );
 
         SET @proc_step_name = 'Create COVID_CONTACT_DATAMART Temp table';
@@ -44,23 +34,23 @@ BEGIN
             DROP TABLE #COVID_CONTACT_DATAMART;
 
         SELECT DISTINCT
-            -- SRC: patient (using nrt_patient instead of person)
-            pat.first_name AS 'SRC_PATIENT_FIRST_NAME',
-            pat.middle_name AS 'SRC_PATIENT_MIDDLE_NAME',
-            pat.last_name AS 'SRC_PATIENT_LAST_NAME',
-            pat.dob AS 'SRC_PATIENT_DOB',
-            pat.age_reported AS 'SRC_PATIENT_AGE_REPORTED',
-            pat.age_reported_unit AS 'SRC_PATIENT_AGE_RPTD_UNIT',
-            pat.current_sex AS 'SRC_PATIENT_CURRENT_SEX',
-            pat.deceased_indicator AS 'SRC_PATIENT_DECEASED_IND',
-            pat.deceased_date AS 'SRC_PATIENT_DECEASED_DT',
-            pat.street_address_1 AS 'SRC_PATIENT_STREET_ADDR_1',
-            pat.street_address_2 AS 'SRC_PATIENT_STREET_ADDR_2',
-            pat.city AS 'SRC_PATIENT_CITY',
-            pat.state_code AS 'SRC_PATIENT_STATE',
-            pat.zip AS 'SRC_PATIENT_ZIP',
-            pat.county_code AS 'SRC_PATIENT_COUNTY',
-            pat.country AS 'SRC_PATIENT_COUNTRY',
+            -- SRC: patient (using D_PATIENT dimension table directly)
+            pat.PATIENT_FIRST_NAME AS 'SRC_PATIENT_FIRST_NAME',
+            pat.PATIENT_MIDDLE_NAME AS 'SRC_PATIENT_MIDDLE_NAME',
+            pat.PATIENT_LAST_NAME AS 'SRC_PATIENT_LAST_NAME',
+            pat.PATIENT_DOB AS 'SRC_PATIENT_DOB',
+            pat.PATIENT_AGE_REPORTED AS 'SRC_PATIENT_AGE_REPORTED',
+            pat.PATIENT_AGE_REPORTED_UNIT AS 'SRC_PATIENT_AGE_RPTD_UNIT',
+            pat.PATIENT_CURRENT_SEX AS 'SRC_PATIENT_CURRENT_SEX',
+            pat.PATIENT_DECEASED_INDICATOR AS 'SRC_PATIENT_DECEASED_IND',
+            pat.PATIENT_DECEASED_DATE AS 'SRC_PATIENT_DECEASED_DT',
+            pat.PATIENT_STREET_ADDRESS_1 AS 'SRC_PATIENT_STREET_ADDR_1',
+            pat.PATIENT_STREET_ADDRESS_2 AS 'SRC_PATIENT_STREET_ADDR_2',
+            pat.PATIENT_CITY AS 'SRC_PATIENT_CITY',
+            pat.PATIENT_STATE AS 'SRC_PATIENT_STATE',
+            pat.PATIENT_ZIP AS 'SRC_PATIENT_ZIP',
+            pat.PATIENT_COUNTY AS 'SRC_PATIENT_COUNTY',
+            pat.PATIENT_COUNTRY AS 'SRC_PATIENT_COUNTRY',
             j_inv.code_desc_txt AS 'SRC_INV_JURISDICTION_NM',
             inv.activity_from_time AS 'SRC_INV_START_DT',
             inv.investigation_status_cd AS 'SRC_INV_STATUS',
@@ -86,15 +76,17 @@ BEGIN
             con.CTT_JURISDICTION_NM AS 'CR_JURISDICTION_NM',
             con.CTT_STATUS AS 'CR_STATUS',
             con.CTT_PRIORITY AS 'CR_PRIORITY',
-            -- Investigator information
-            pat_inv.first_name AS 'CR_INV_FIRST_NAME',
-            pat_inv.last_name AS 'CR_INV_LAST_NAME',
+
+            -- Investigator information (using D_PROVIDER dimension table)
+            pat_inv.PROVIDER_FIRST_NAME AS 'CR_INV_FIRST_NAME',
+            pat_inv.PROVIDER_LAST_NAME AS 'CR_INV_LAST_NAME',
             con.CTT_INV_ASSIGNED_DT AS 'CR_INV_ASSIGNED_DT',
             con.CTT_DISPOSITION AS 'CR_DISPOSITION',
             con.CTT_DISPO_DT AS 'CR_DISPO_DT',
             con.CTT_NAMED_ON_DT AS 'CR_NAMED_ON_DT',
             con.CTT_RELATIONSHIP AS 'CR_RELATIONSHIP',
             con.CTT_HEALTH_STATUS AS 'CR_HEALTH_STATUS',
+
             -- These match CT_CONTACT_ANSWER with different question identifiers
             con_ans1.answer_val AS 'CR_EXPOSURE_TYPE',
             con_ans2.answer_val AS 'CR_EXPOSURE_SITE_TY',
@@ -109,109 +101,110 @@ BEGIN
             REPLACE(con.CTT_EVAL_NOTES, CHAR(13) + CHAR(10), ' ') AS 'CR_EVAL_NOTES',
 
             -- CTT: if there's a contact investigation, get demographics from investigation, if not, get demographics from contact record
+            -- Using dimension tables with verified column names
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.first_name
-                ELSE ctt_pat_con.first_name
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_FIRST_NAME
+                ELSE ctt_pat_con.PATIENT_FIRST_NAME
                 END AS 'CTT_PATIENT_FIRST_NAME',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.middle_name
-                ELSE ctt_pat_con.middle_name
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_MIDDLE_NAME
+                ELSE ctt_pat_con.PATIENT_MIDDLE_NAME
                 END AS 'CTT_PATIENT_MIDDLE_NAME',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.last_name
-                ELSE ctt_pat_con.last_name
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_LAST_NAME
+                ELSE ctt_pat_con.PATIENT_LAST_NAME
                 END AS 'CTT_PATIENT_LAST_NAME',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.dob
-                ELSE ctt_pat_con.dob
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_DOB
+                ELSE ctt_pat_con.PATIENT_DOB
                 END AS 'CTT_PATIENT_DOB',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.age_reported
-                ELSE ctt_pat_con.age_reported
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_AGE_REPORTED
+                ELSE ctt_pat_con.PATIENT_AGE_REPORTED
                 END AS 'CTT_PATIENT_AGE_REPORTED',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.age_reported_unit
-                ELSE ctt_pat_con.age_reported_unit
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_AGE_REPORTED_UNIT
+                ELSE ctt_pat_con.PATIENT_AGE_REPORTED_UNIT
                 END AS 'CTT_PATIENT_AGE_RPTD_UNIT',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.current_sex
-                ELSE ctt_pat_con.current_sex
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_CURRENT_SEX
+                ELSE ctt_pat_con.PATIENT_CURRENT_SEX
                 END AS 'CTT_PATIENT_CURRENT_SEX',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.deceased_indicator
-                ELSE ctt_pat_con.deceased_indicator
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_DECEASED_INDICATOR
+                ELSE ctt_pat_con.PATIENT_DECEASED_INDICATOR
                 END AS 'CTT_PATIENT_DECEASED_IND',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.deceased_date
-                ELSE ctt_pat_con.deceased_date
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_DECEASED_DATE
+                ELSE ctt_pat_con.PATIENT_DECEASED_DATE
                 END AS 'CTT_PATIENT_DECEASED_DT',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.street_address_1
-                ELSE ctt_pat_con.street_address_1
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_STREET_ADDRESS_1
+                ELSE ctt_pat_con.PATIENT_STREET_ADDRESS_1
                 END AS 'CTT_PATIENT_STREET_ADDR_1',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.street_address_2
-                ELSE ctt_pat_con.street_address_2
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_STREET_ADDRESS_2
+                ELSE ctt_pat_con.PATIENT_STREET_ADDRESS_2
                 END AS 'CTT_PATIENT_STREET_ADDR_2',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.city
-                ELSE ctt_pat_con.city
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_CITY
+                ELSE ctt_pat_con.PATIENT_CITY
                 END AS 'CTT_PATIENT_CITY',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.state_code
-                ELSE ctt_pat_con.state_code
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_STATE
+                ELSE ctt_pat_con.PATIENT_STATE
                 END AS 'CTT_PATIENT_STATE',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.zip
-                ELSE ctt_pat_con.zip
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_ZIP
+                ELSE ctt_pat_con.PATIENT_ZIP
                 END AS 'CTT_PATIENT_ZIP',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.county_code
-                ELSE ctt_pat_con.county_code
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_COUNTY
+                ELSE ctt_pat_con.PATIENT_COUNTY
                 END AS 'CTT_PATIENT_COUNTY',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.country
-                ELSE ctt_pat_con.country
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_COUNTRY
+                ELSE ctt_pat_con.PATIENT_COUNTRY
                 END AS 'CTT_PATIENT_COUNTRY',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.phone_home
-                ELSE ctt_pat_con.phone_home
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_PHONE_HOME
+                ELSE ctt_pat_con.PATIENT_PHONE_HOME
                 END AS 'CTT_PATIENT_TEL_HOME',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.phone_work
-                ELSE ctt_pat_con.phone_work
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_PHONE_WORK
+                ELSE ctt_pat_con.PATIENT_PHONE_WORK
                 END AS 'CTT_PATIENT_PHONE_WORK',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.phone_ext_work
-                ELSE ctt_pat_con.phone_ext_work
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_PHONE_EXT_WORK
+                ELSE ctt_pat_con.PATIENT_PHONE_EXT_WORK
                 END AS 'CTT_PATIENT_PHONE_EXT_WORK',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.phone_cell
-                ELSE ctt_pat_con.phone_cell
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_PHONE_CELL
+                ELSE ctt_pat_con.PATIENT_PHONE_CELL
                 END AS 'CTT_PATIENT_TEL_CELL',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.email
-                ELSE ctt_pat_con.email
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_EMAIL
+                ELSE ctt_pat_con.PATIENT_EMAIL
                 END AS 'CTT_PATIENT_EMAIL',
 
             j_con_inv.code_desc_txt AS 'CTT_INV_JURISDICTION_NM',
@@ -226,7 +219,6 @@ BEGIN
             con_inv.deceased_time AS 'CTT_INV_DEATH_DT',
             con_inv.case_class_cd AS 'CTT_INV_CASE_STATUS',
             con_inv_obs3.observation_id AS 'CTT_INV_SYMPTOMATIC',
-
             con_inv.effective_from_time AS 'CTT_INV_ILLNESS_ONSET_DT',
             con_inv.effective_to_time AS 'CTT_INV_ILLNESS_END_DT',
             con_inv_obs4.observation_id AS 'CTT_INV_SYMPTOM_STATUS',
@@ -240,9 +232,9 @@ BEGIN
                             ON con.SUBJECT_ENTITY_PHC_UID = inv.public_health_case_uid
                                 AND con.RECORD_STATUS_CD <> 'LOG_DEL'
 
-            -- SRC: Index patient (replaces the person table in original)
-                 LEFT OUTER JOIN dbo.nrt_patient pat WITH (NOLOCK)
-                                 ON pat.patient_uid = inv.patient_id
+            -- SRC: Index patient (use D_PATIENT dimension table directly)
+                 LEFT OUTER JOIN dbo.D_PATIENT pat WITH (NOLOCK)
+                                 ON pat.PATIENT_UID = inv.patient_id
 
             -- These replace CT_CONTACT_ANSWER joins in original with corresponding question identifiers
                  LEFT OUTER JOIN dbo.nrt_contact_answer con_ans1 WITH (NOLOCK)
@@ -261,7 +253,7 @@ BEGIN
                                  ON con_ans4.contact_uid = con.CONTACT_UID
                                      AND con_ans4.rdb_column_nm = 'CON108' -- Last Exposure Date with Contact
 
-            -- These replace NBS_CASE_ANSWER joins with investigation_observation
+            -- These replace NBS_CASE_ANSWER joins with investigation_observation and include batch_id matching
                  LEFT OUTER JOIN dbo.nrt_investigation_observation inv_obs1 WITH (NOLOCK)
                                  ON inv_obs1.public_health_case_uid = inv.public_health_case_uid
                                      AND inv_obs1.root_type_cd = 'NBS547' -- CDC-Assigned Case ID
@@ -286,9 +278,9 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_inv WITH (NOLOCK)
                                  ON inv.jurisdiction_cd = j_inv.CODE
 
-            -- Investigator information
-                 LEFT OUTER JOIN dbo.nrt_provider pat_inv WITH (NOLOCK)
-                                 ON pat_inv.provider_uid = inv.investigator_id
+            -- Investigator information (use D_PROVIDER dimension table directly)
+                 LEFT OUTER JOIN dbo.D_PROVIDER pat_inv WITH (NOLOCK)
+                                 ON pat_inv.PROVIDER_UID = inv.investigator_id
 
             -- Contact investigation (maps to original's contactInvestigation join)
                  LEFT OUTER JOIN dbo.nrt_investigation con_inv WITH (NOLOCK)
@@ -298,7 +290,7 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_con_inv WITH (NOLOCK)
                                  ON con_inv.jurisdiction_cd = j_con_inv.CODE
 
-            -- Contact investigation observations
+            -- Contact investigation observations with batch_id matching
                  LEFT OUTER JOIN dbo.nrt_investigation_observation con_inv_obs1 WITH (NOLOCK)
                                  ON con_inv_obs1.public_health_case_uid = con_inv.public_health_case_uid
                                      AND con_inv_obs1.root_type_cd = 'NBS547' -- CDC-Assigned Case ID
@@ -319,41 +311,29 @@ BEGIN
                                      AND con_inv_obs4.root_type_cd = 'NBS555' -- Symptomatic status
                                      AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_obs4.batch_id,1)
 
-            -- CTT records from investigation
-                 LEFT OUTER JOIN dbo.nrt_patient ctt_pat_inv WITH (NOLOCK)
-                                 ON ctt_pat_inv.patient_uid = con_inv.patient_id
+            -- CTT records from investigation (use D_PATIENT dimension table directly)
+                 LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_inv WITH (NOLOCK)
+                                 ON ctt_pat_inv.PATIENT_UID = con_inv.patient_id
 
-            -- CTT records from contact
-                 LEFT OUTER JOIN dbo.nrt_patient ctt_pat_con WITH (NOLOCK)
-                                 ON ctt_pat_con.patient_uid = con.CONTACT_ENTITY_UID
+            -- CTT records from contact (use D_PATIENT dimension table directly)
+                 LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_con WITH (NOLOCK)
+                                 ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
 
         WHERE inv.cd = @conditionCd
-          AND (@id_list IS NULL OR con.CONTACT_UID IN (
+          AND (@phcid_list IS NULL OR inv.public_health_case_uid IN (
             SELECT TRY_CAST(value AS BIGINT)
-            FROM STRING_SPLIT(@id_list, ',')
+            FROM STRING_SPLIT(@phcid_list, ',')
         ));
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
         )
         VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'PROCESSING'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@id_list, 'NULL'),500)
+                   @batch_id, @dataflow_name, @package_name, 'PROCESSING',
+                   @proc_step_no, @proc_step_name, @rowcount, LEFT(ISNULL(@phcid_list, 'NULL'),500)
                );
 
         /* Debug output if requested */
@@ -363,259 +343,51 @@ BEGIN
         SET @proc_step_name = 'Update COVID_CONTACT_DATAMART';
         SET @proc_step_no = 2;
 
-        /* Start transaction for the delete and insert operations only */
+        /* Start transaction for the delete and insert operations */
         BEGIN TRANSACTION;
 
-        /* Remove existing records for these contacts */
+        /* Improved deletion logic - Delete records first, then filter LOG_DEL records */
         DELETE FROM dbo.COVID_CONTACT_DATAMART
-        WHERE CONTACT_UID IN (SELECT CONTACT_UID FROM #COVID_CONTACT_DATAMART);
+        WHERE CONTACT_UID IN (
+            SELECT CONTACT_UID FROM dbo.nrt_contact WITH (NOLOCK)
+            WHERE SUBJECT_ENTITY_PHC_UID IN (
+                SELECT TRY_CAST(value AS BIGINT)
+                FROM STRING_SPLIT(@phcid_list, ',')
+            )
+              AND RECORD_STATUS_CD <> 'LOG_DEL'
+        );
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
         )
         VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'PROCESSING'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@id_list, 'NULL'),500)
+                   @batch_id, @dataflow_name, @package_name, 'PROCESSING',
+                   @proc_step_no, @proc_step_name, @rowcount, LEFT(ISNULL(@phcid_list, 'NULL'),500)
                );
 
         /* Insert updated records */
-        INSERT INTO dbo.COVID_CONTACT_DATAMART (
-            SRC_PATIENT_FIRST_NAME,
-            SRC_PATIENT_MIDDLE_NAME,
-            SRC_PATIENT_LAST_NAME,
-            SRC_PATIENT_DOB,
-            SRC_PATIENT_AGE_REPORTED,
-            SRC_PATIENT_AGE_RPTD_UNIT,
-            SRC_PATIENT_CURRENT_SEX,
-            SRC_PATIENT_DECEASED_IND,
-            SRC_PATIENT_DECEASED_DT,
-            SRC_PATIENT_STREET_ADDR_1,
-            SRC_PATIENT_STREET_ADDR_2,
-            SRC_PATIENT_CITY,
-            SRC_PATIENT_STATE,
-            SRC_PATIENT_ZIP,
-            SRC_PATIENT_COUNTY,
-            SRC_PATIENT_COUNTRY,
-            SRC_INV_JURISDICTION_NM,
-            SRC_INV_START_DT,
-            SRC_INV_STATUS,
-            SRC_INV_STATE_CASE_ID,
-            SRC_INV_LEGACY_CASE_ID,
-            SRC_INV_CDC_ASSIGNED_ID,
-            SRC_INV_RPTNG_CNTY,
-            SRC_INV_HSPTLIZD_IND,
-            SRC_INV_DIE_FRM_ILLNESS_IND,
-            SRC_INV_DEATH_DT,
-            SRC_INV_CASE_STATUS,
-            SRC_INV_SYMPTOMATIC,
-            SRC_INV_ILLNESS_ONSET_DT,
-            SRC_INV_ILLNESS_END_DT,
-            SRC_INV_SYMPTOM_STATUS,
-            SRC_CTT_INV_PRIORITY,
-            SRC_CTT_INV_INFECTIOUS_FRM_DT,
-            SRC_CTT_INV_INFECTIOUS_TO_DT,
-            SRC_CTT_INV_STATUS,
-            SRC_CTT_INV_COMMENTS,
-            CR_JURISDICTION_NM,
-            CR_STATUS,
-            CR_PRIORITY,
-            CR_INV_FIRST_NAME,
-            CR_INV_LAST_NAME,
-            CR_INV_ASSIGNED_DT,
-            CR_DISPOSITION,
-            CR_DISPO_DT,
-            CR_NAMED_ON_DT,
-            CR_RELATIONSHIP,
-            CR_HEALTH_STATUS,
-            CR_EXPOSURE_TYPE,
-            CR_EXPOSURE_SITE_TY,
-            CR_FIRST_EXPOSURE_DT,
-            CR_LAST_EXPOSURE_DT,
-            CR_SYMP_IND,
-            CR_SYMP_ONSET_DT,
-            CR_RISK_IND,
-            CR_RISK_NOTES,
-            CR_EVAL_COMPLETED,
-            CR_EVAL_DT,
-            CR_EVAL_NOTES,
-            CTT_PATIENT_FIRST_NAME,
-            CTT_PATIENT_MIDDLE_NAME,
-            CTT_PATIENT_LAST_NAME,
-            CTT_PATIENT_DOB,
-            CTT_PATIENT_AGE_REPORTED,
-            CTT_PATIENT_AGE_RPTD_UNIT,
-            CTT_PATIENT_CURRENT_SEX,
-            CTT_PATIENT_DECEASED_IND,
-            CTT_PATIENT_DECEASED_DT,
-            CTT_PATIENT_STREET_ADDR_1,
-            CTT_PATIENT_STREET_ADDR_2,
-            CTT_PATIENT_CITY,
-            CTT_PATIENT_STATE,
-            CTT_PATIENT_ZIP,
-            CTT_PATIENT_COUNTY,
-            CTT_PATIENT_COUNTRY,
-            CTT_PATIENT_TEL_HOME,
-            CTT_PATIENT_PHONE_WORK,
-            CTT_PATIENT_PHONE_EXT_WORK,
-            CTT_PATIENT_TEL_CELL,
-            CTT_PATIENT_EMAIL,
-            CTT_INV_JURISDICTION_NM,
-            CTT_INV_START_DT,
-            CTT_INV_STATUS,
-            CTT_INV_STATE_CASE_ID,
-            CTT_INV_LEGACY_CASE_ID,
-            CTT_INV_CDC_ASSIGNED_ID,
-            CTT_INV_RPTNG_CNTY,
-            CTT_INV_HSPTLIZD_IND,
-            CTT_INV_DIE_FRM_ILLNESS_IND,
-            CTT_INV_DEATH_DT,
-            CTT_INV_CASE_STATUS,
-            CTT_INV_SYMPTOMATIC,
-            CTT_INV_ILLNESS_ONSET_DT,
-            CTT_INV_ILLNESS_END_DT,
-            CTT_INV_SYMPTOM_STATUS,
-            CONTACT_UID
-        )
-        SELECT
-            SRC_PATIENT_FIRST_NAME,
-            SRC_PATIENT_MIDDLE_NAME,
-            SRC_PATIENT_LAST_NAME,
-            SRC_PATIENT_DOB,
-            SRC_PATIENT_AGE_REPORTED,
-            SRC_PATIENT_AGE_RPTD_UNIT,
-            SRC_PATIENT_CURRENT_SEX,
-            SRC_PATIENT_DECEASED_IND,
-            SRC_PATIENT_DECEASED_DT,
-            SRC_PATIENT_STREET_ADDR_1,
-            SRC_PATIENT_STREET_ADDR_2,
-            SRC_PATIENT_CITY,
-            SRC_PATIENT_STATE,
-            SRC_PATIENT_ZIP,
-            SRC_PATIENT_COUNTY,
-            SRC_PATIENT_COUNTRY,
-            SRC_INV_JURISDICTION_NM,
-            SRC_INV_START_DT,
-            SRC_INV_STATUS,
-            SRC_INV_STATE_CASE_ID,
-            SRC_INV_LEGACY_CASE_ID,
-            SRC_INV_CDC_ASSIGNED_ID,
-            SRC_INV_RPTNG_CNTY,
-            SRC_INV_HSPTLIZD_IND,
-            SRC_INV_DIE_FRM_ILLNESS_IND,
-            SRC_INV_DEATH_DT,
-            SRC_INV_CASE_STATUS,
-            SRC_INV_SYMPTOMATIC,
-            SRC_INV_ILLNESS_ONSET_DT,
-            SRC_INV_ILLNESS_END_DT,
-            SRC_INV_SYMPTOM_STATUS,
-            SRC_CTT_INV_PRIORITY,
-            SRC_CTT_INV_INFECTIOUS_FRM_DT,
-            SRC_CTT_INV_INFECTIOUS_TO_DT,
-            SRC_CTT_INV_STATUS,
-            SRC_CTT_INV_COMMENTS,
-            CR_JURISDICTION_NM,
-            CR_STATUS,
-            CR_PRIORITY,
-            CR_INV_FIRST_NAME,
-            CR_INV_LAST_NAME,
-            CR_INV_ASSIGNED_DT,
-            CR_DISPOSITION,
-            CR_DISPO_DT,
-            CR_NAMED_ON_DT,
-            CR_RELATIONSHIP,
-            CR_HEALTH_STATUS,
-            CR_EXPOSURE_TYPE,
-            CR_EXPOSURE_SITE_TY,
-            CR_FIRST_EXPOSURE_DT,
-            CR_LAST_EXPOSURE_DT,
-            CR_SYMP_IND,
-            CR_SYMP_ONSET_DT,
-            CR_RISK_IND,
-            CR_RISK_NOTES,
-            CR_EVAL_COMPLETED,
-            CR_EVAL_DT,
-            CR_EVAL_NOTES,
-            CTT_PATIENT_FIRST_NAME,
-            CTT_PATIENT_MIDDLE_NAME,
-            CTT_PATIENT_LAST_NAME,
-            CTT_PATIENT_DOB,
-            CTT_PATIENT_AGE_REPORTED,
-            CTT_PATIENT_AGE_RPTD_UNIT,
-            CTT_PATIENT_CURRENT_SEX,
-            CTT_PATIENT_DECEASED_IND,
-            CTT_PATIENT_DECEASED_DT,
-            CTT_PATIENT_STREET_ADDR_1,
-            CTT_PATIENT_STREET_ADDR_2,
-            CTT_PATIENT_CITY,
-            CTT_PATIENT_STATE,
-            CTT_PATIENT_ZIP,
-            CTT_PATIENT_COUNTY,
-            CTT_PATIENT_COUNTRY,
-            CTT_PATIENT_TEL_HOME,
-            CTT_PATIENT_PHONE_WORK,
-            CTT_PATIENT_PHONE_EXT_WORK,
-            CTT_PATIENT_TEL_CELL,
-            CTT_PATIENT_EMAIL,
-            CTT_INV_JURISDICTION_NM,
-            CTT_INV_START_DT,
-            CTT_INV_STATUS,
-            CTT_INV_STATE_CASE_ID,
-            CTT_INV_LEGACY_CASE_ID,
-            CTT_INV_CDC_ASSIGNED_ID,
-            CTT_INV_RPTNG_CNTY,
-            CTT_INV_HSPTLIZD_IND,
-            CTT_INV_DIE_FRM_ILLNESS_IND,
-            CTT_INV_DEATH_DT,
-            CTT_INV_CASE_STATUS,
-            CTT_INV_SYMPTOMATIC,
-            CTT_INV_ILLNESS_ONSET_DT,
-            CTT_INV_ILLNESS_END_DT,
-            CTT_INV_SYMPTOM_STATUS,
-            CONTACT_UID
-        FROM #COVID_CONTACT_DATAMART;
+        INSERT INTO dbo.COVID_CONTACT_DATAMART
+        SELECT * FROM #COVID_CONTACT_DATAMART;
 
         /* Logging for insert operation */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
         )
         VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'PROCESSING'
-               ,@proc_step_no + 0.1
-               ,@proc_step_name + ' - Insert'
-               ,@rowcount
-               ,LEFT(ISNULL(@id_list, 'NULL'),500)
+                   @batch_id, @dataflow_name, @package_name, 'PROCESSING',
+                   @proc_step_no + 0.1, @proc_step_name + ' - Insert', @rowcount,
+                   LEFT(ISNULL(@phcid_list, 'NULL'),500)
                );
 
-        /* Commit the transaction that wrapped the delete and insert */
+        /* Commit the transaction */
         COMMIT TRANSACTION;
 
-        /* Clean up temporary table - wrap in IF EXISTS check as suggested */
+        /* Clean up temporary table */
         IF OBJECT_ID('tempdb..#COVID_CONTACT_DATAMART', 'U') IS NOT NULL
             DROP TABLE #COVID_CONTACT_DATAMART;
 
@@ -624,24 +396,12 @@ BEGIN
         SET @proc_step_no = 3;
 
         INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
         )
         VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'COMPLETE'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,0
-               ,LEFT(ISNULL(@id_list, 'NULL'),500)
+                   @batch_id, @dataflow_name, @package_name, 'COMPLETE',
+                   @proc_step_no, @proc_step_name, 0, LEFT(ISNULL(@phcid_list, 'NULL'),500)
                );
 
         SELECT 'Success' AS Result;
@@ -660,26 +420,12 @@ BEGIN
 
         /* Logging */
         INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-                                         ,[Error_Description]
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1], [Error_Description]
         )
         VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'ERROR'
-               ,@proc_Step_no
-               ,@proc_step_name
-               ,0
-               ,LEFT(ISNULL(@id_list, 'NULL'),500)
-               ,@FullErrorMessage
+                   @batch_id, @dataflow_name, @package_name, 'ERROR',
+                   @proc_Step_no, @proc_step_name, 0, LEFT(ISNULL(@phcid_list, 'NULL'),500), @FullErrorMessage
                );
 
         RETURN ERROR_NUMBER();
