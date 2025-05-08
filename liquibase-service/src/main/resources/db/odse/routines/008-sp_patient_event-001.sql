@@ -231,7 +231,7 @@ BEGIN
                                                     LEFT OUTER JOIN nbs_srte.dbo.State_code sc with (NOLOCK) ON sc.state_cd = pl.state_cd
                                                     LEFT OUTER JOIN nbs_srte.dbo.State_county_code_value scc with (NOLOCK)
                                                                     ON scc.code = pl.cnty_cd
-                                                    LEFT OUTTER JOIN nbs_srte.dbo.Country_CODE cc with (nolock) ON cc.code = pl.cntry_cd 
+                                                    LEFT OUTER JOIN nbs_srte.dbo.Country_CODE cc with (nolock) ON cc.code = pl.cntry_cd 
                                            WHERE elp.entity_uid = p.person_uid
                                              AND elp.class_cd = 'PST'
                                              AND elp.use_cd IN ('H', 'BIR')
