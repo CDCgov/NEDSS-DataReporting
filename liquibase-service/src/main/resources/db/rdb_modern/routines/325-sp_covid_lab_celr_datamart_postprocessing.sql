@@ -585,14 +585,8 @@ AS
       SET @Proc_Step_no = @PROC_STEP_NO + 1;
       SET @Proc_Step_Name = 'INSERT DATA INTO COVID_LAB_CELR_DATAMART';
 
-        IF NOT EXISTS (SELECT 1 FROM #COVID_LAB_CELR_DATAMART)
-    BEGIN
-        if @debug='true'
-            PRINT 'No rows found in #COVID_LAB_CELR_DATAMART. Exiting procedure.';
-        RETURN;
-    END
 
-    INSERT INTO COVID_LAB_CELR_DATAMART
+    INSERT INTO dbo.COVID_LAB_CELR_DATAMART
     SELECT * FROM #COVID_LAB_CELR_DATAMART
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -603,7 +597,7 @@ AS
 
 
       SET @Proc_Step_no = @Proc_Step_no + 1;
-      SET @Proc_Step_Name = 'SP_COMPLETE';
+      SET @Proc_Step_Name = '999';
       INSERT INTO dbo.job_flow_log
                   (
                               batch_id,
