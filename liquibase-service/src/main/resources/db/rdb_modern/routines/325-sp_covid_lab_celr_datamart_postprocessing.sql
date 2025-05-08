@@ -18,7 +18,7 @@ AS
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
 
 
-    DECLARE @Dataflow_Name  VARCHAR(200) = 'COVID lab celr DATAMART Post-Processing Event';
+    DECLARE @Dataflow_Name  VARCHAR(200) = 'COVID DATAMART Post-Processing Event';
     DECLARE @Package_Name   VARCHAR(200) = 'sp_covid_lab_celr_datamart_postprocessing';
 
     BEGIN try

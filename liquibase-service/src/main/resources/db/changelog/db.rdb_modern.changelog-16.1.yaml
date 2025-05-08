@@ -2593,4 +2593,11 @@ databaseChangeLog:
         - sqlFile:
             path: 325-sp_covid_lab_celr_datamart_postprocessing.sql
             splitStatements: false
-
+  - changeSet:
+      id: 865
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 246-create_covid_lab_celr_datamart.sql
+            splitStatements: false
