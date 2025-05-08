@@ -235,7 +235,7 @@ BEGIN
                                                select tmp.code, tmp.code_short_desc_txt from (
                                                                                                  -- ranking added to pick the latest valid short desc
                                                                                                  select code, code_short_desc_txt, rank () OVER (PARTITION BY code order by nbs_uid desc) rnk
-                                                                                                 from nbs_srte.dbo.CODE_VALUE_GENERAL with (nolock) where CODE_SET_NM in( 'PHVS_BIRTHCOUNTRY_CDC', 'PHVS_TB_BIRTH_CNTRY', 'PSL_CNTRY')
+                                                                                                 from nbs_srte.dbo.Country_CODE with (nolock) where CODE_SET_NM in( 'PHVS_BIRTHCOUNTRY_CDC', 'PHVS_TB_BIRTH_CNTRY', 'PSL_CNTRY')
                                                                                              ) tmp where rnk=1
                                            ) cc ON cc.code = pl.cntry_cd
                                            WHERE elp.entity_uid = p.person_uid
