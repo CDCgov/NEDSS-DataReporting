@@ -847,30 +847,6 @@ BEGIN
 
 ----------------------------------------------------------------------------
 
-
-        BEGIN TRANSACTION;
-
-        SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @PROC_STEP_NAME = 'Updating Additional values in dbo.INV_SUMM_DATAMART';
-
-
-        DELETE inv
-        FROM dbo.INV_SUMM_DATAMART INV
-                 INNER JOIN [dbo].[INVESTIGATION] I ON I.[INVESTIGATION_KEY] = INV.INVESTIGATION_KEY
-        WHERE I.CASE_TYPE = 'I'
-          AND I.RECORD_STATUS_CD = 'INACTIVE';
-
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-----------------------------------------------------------------------------
-
         BEGIN TRANSACTION;
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Inserting new records into dbo.INV_SUMM_DATAMART';
@@ -1002,6 +978,54 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+----------------------------------------------------------------------------
+
+        SET @Proc_Step_no = @Proc_Step_no + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #INV_SUMM_RETURN';
+
+        /* 
+            The return values for sp_inv_summ_datamart_postprocessing 
+            must come before the delete step, otherwise deleted records
+            will not be processed for the dynamic datamarts.
+        */
+        select
+            distinct inv.CASE_UID as public_health_case_uid,
+            inv_meta.DATAMART_NM as datamart,
+            c.CONDITION_CD as condition_cd,
+            null as patient_uid,
+            null as stored_procedure,
+            null as investigation_form_cd
+        INTO #INV_SUMM_RETURN
+        from
+        dbo.INVESTIGATION inv  with ( nolock)
+        inner join dbo.INV_SUMM_DATAMART isd with ( nolock) on isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
+        INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD
+        inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on c.DISEASE_GRP_CD =  inv_meta.FORM_CD
+        where inv.CASE_UID in (SELECT value FROM STRING_SPLIT(@phc_uids, ','));
+
+----------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @Proc_Step_no = @Proc_Step_no + 1;
+        SET @PROC_STEP_NAME = 'Updating Additional values in dbo.INV_SUMM_DATAMART';
+
+
+        DELETE inv
+        FROM dbo.INV_SUMM_DATAMART INV
+                 INNER JOIN [dbo].[INVESTIGATION] I ON I.[INVESTIGATION_KEY] = INV.INVESTIGATION_KEY
+        WHERE I.CASE_TYPE = 'I'
+          AND I.RECORD_STATUS_CD = 'INACTIVE';
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
@@ -1175,20 +1199,15 @@ BEGIN
                , @RowCount_no);
 
 
-
+        -- return values for datamart processing
         select
-            distinct inv.CASE_UID as public_health_case_uid,
-            inv_meta.DATAMART_NM as datamart,
-            c.CONDITION_CD as condition_cd,
-            null as patient_uid,
-            null as stored_procedure,
-            null as investigation_form_cd
-        from
-        dbo.INVESTIGATION inv  with ( nolock)
-        inner join dbo.INV_SUMM_DATAMART isd with ( nolock) on isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
-        INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD
-        inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on c.DISEASE_GRP_CD =  inv_meta.FORM_CD
-        where inv.CASE_UID in (SELECT value FROM STRING_SPLIT(@phc_uids, ','));
+            public_health_case_uid,
+            datamart,
+            condition_cd,
+            patient_uid,
+            stored_procedure,
+            investigation_form_cd
+        from #INV_SUMM_RETURN;
 
     END TRY
     BEGIN CATCH
