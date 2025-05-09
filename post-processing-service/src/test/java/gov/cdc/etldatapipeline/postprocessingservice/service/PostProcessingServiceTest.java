@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
@@ -638,27 +638,6 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessBmirdCase() {
-        
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
-    }
-
-    @Test
     void testPostProcessBmirdCaseNegativeLdf() {
         
         postProcessingServiceMock.setLdfEnable(false);
@@ -783,166 +762,6 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessCrsCaseLdfVaccinePreventDiseasesDatamartNegative() {  
-        
-        postProcessingServiceMock.setLdfEnable(false);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
-                "\"datamart\":\"CRS_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForCRSCaseDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(CRS_CASE.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessCrsCaseLdfVaccinePreventDiseasesDatamart() {
-
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
-                "\"datamart\":\"CRS_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForCRSCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForLdfVaccinePreventDiseasesDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(CRS_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessRubellaCaseLdfVaccinePreventDiseasesDatamartNegative() { 
-        
-        postProcessingServiceMock.setLdfEnable(false);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
-                "\"datamart\":\"Rubella_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForRubellaCaseDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(RUBELLA_CASE.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessRubellaCaseLdfVaccinePreventDiseasesDatamart() {
-
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
-                "\"datamart\":\"Rubella_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForRubellaCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForLdfVaccinePreventDiseasesDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(RUBELLA_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessMeaslesCaseLdfVaccinePreventDiseasesDatamartNegative() {  
-        
-        postProcessingServiceMock.setLdfEnable(false);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
-                "\"datamart\":\"Measles_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForMeaslesCaseDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(MEASLES_CASE.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessMeaslesCaseLdfVaccinePreventDiseasesDatamart() {
-
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
-                "\"datamart\":\"Measles_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForMeaslesCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForLdfVaccinePreventDiseasesDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(MEASLES_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessPertussisCaseLdfVaccinePreventDiseasesDatamartNegative() {  
-        
-        postProcessingServiceMock.setLdfEnable(false);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                "\"datamart\":\"Pertussis_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForPertussisCaseDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PERTUSSIS_CASE.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessPertussisCaseLdfVaccinePreventDiseasesDatamart() {
-
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                "\"datamart\":\"Pertussis_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForPertussisCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForLdfVaccinePreventDiseasesDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(PERTUSSIS_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure()));
-    }
-
-    @Test
     void testPostProcessTBDatamart() {
         String topic = "tb_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
@@ -1013,7 +832,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.setLdfEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
-        testCase.verificationStep.accept(investigationRepositoryMock, "123");
+        testCase.verificationStep.accept(investigationRepositoryMock);
         assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(testCase.logSize, logs.size());
@@ -1027,72 +846,113 @@ class PostProcessingServiceTest {
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}",
                         HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), 5,
-                        (repo, uid) -> verify(repo).executeStoredProcForHepDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForHepDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}",
                         STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForStdHIVDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForStdHIVDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}",
                         GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForGenericCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForGenericCaseDatamart("123")),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case,LDF_GENERIC\",\"stored_procedure\":\"sp_ldf_generic_datamart_postprocessing\"}}",
                         "Generic_Case,LDF_GENERIC", LDF_GENERIC.getStoredProcedure(), 5,
-                        (repo, uid) -> {
-                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
-                            verify(repo).executeStoredProcForLdfGenericDatamart(uid);
+                        repo -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfGenericDatamart("123");
                         }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Generic_Case,LDF_MUMPS\",\"stored_procedure\":\"sp_ldf_mumps_datamart_postprocessing\"}}",
                         "Generic_Case,LDF_MUMPS", LDF_MUMPS.getStoredProcedure(), 5,
-                        (repo, uid) -> {
-                            verify(repo).executeStoredProcForGenericCaseDatamart(uid);
-                            verify(repo).executeStoredProcForLdfMumpsDatamart(uid);
+                        repo -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfMumpsDatamart("123");
                             }
                         ),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_crs_case_datamart_postprocessing\"}}",
                                     CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForCRSCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForCRSCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
+                                "\"datamart\":\"CRS_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_crs_case_datamart_postprocessing\"}}",
+                        "CRS_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForCRSCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfVacPreventDiseasesDatamart("123");
+                        }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
                                 "\"datamart\":\"Rubella_Case\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
                         RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForRubellaCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForRubellaCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
+                                "\"datamart\":\"Rubella_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}",
+                        "Rubella_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForRubellaCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfVacPreventDiseasesDatamart("123");
+                        }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
                                 "\"datamart\":\"Measles_Case\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}",
                         MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForMeaslesCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForMeaslesCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10140\"," +
+                                "\"datamart\":\"Measles_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_measles_case_datamart_postprocessing\"}}",
+                        "Measles_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForMeaslesCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfVacPreventDiseasesDatamart("123");
+                        }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null," +
                                 "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
                         CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForCaseLabDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForCaseLabDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                                "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
+                        BMIRD_CASE.getEntityName(), BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForBmirdCaseDatamart("123");
+                            verify(repo).executeStoredProcForBmirdStrepPneumoDatamart("123");
+                        }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
                         HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForHepatitisCaseDatamart(uid)),
+                        repo -> verify(repo).executeStoredProcForHepatitisCaseDatamart("123")),
                     new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Hepatitis_Case,LDF_HEPATITIS\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
                         "Hepatitis_Case,LDF_HEPATITIS", LDF_HEPATITIS.getStoredProcedure(), 5,
-                        (repo, uid) -> {
-                            verify(repo).executeStoredProcForHepatitisCaseDatamart(uid);
-                            verify(repo).executeStoredProcForLdfHepatitisDatamart(uid);
+                        repo -> {
+                            verify(repo).executeStoredProcForHepatitisCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfHepatitisDatamart("123");
                         }), 
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Pertussis_Case\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
                         PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), 3,
-                        (repo, uid) -> verify(repo).executeStoredProcForPertussisCaseDatamart(uid)));
+                        repo -> verify(repo).executeStoredProcForPertussisCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Pertussis_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_pertussis_case_datamart_postprocessing\"}}",
+                        "Pertussis_Case,LDF_VACCINE_PREVENT_DISEASES", LDF_VACCINE_PREVENT_DISEASES.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForPertussisCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfVacPreventDiseasesDatamart("123");
+                        })
+        );
     }
 
     @Test
@@ -1616,7 +1476,6 @@ class PostProcessingServiceTest {
         return datamartDataLst;
     }
 
-
     private List<DatamartData> getVarDatamart(Long phcUid, Long patientUid, String... dmVar) {
         List<DatamartData> datamartDataLst = new ArrayList<>();
         DatamartData datamartData = new DatamartData();
@@ -1630,21 +1489,19 @@ class PostProcessingServiceTest {
         return datamartDataLst;
     }
 
-
     static class DatamartTestCase {
         String msg;
         String datamartEntityName;
         String storedProcedure;
         int logSize;
-        BiConsumer<InvestigationRepository, String> verificationStep;
+        Consumer<InvestigationRepository> verificationStep;
 
         DatamartTestCase(String msg, String datamartEntityName, String storedProcedure,
-                int logSize, BiConsumer<InvestigationRepository, String> verificationStep) {
+                int logSize, Consumer<InvestigationRepository> verificationStep) {
             this.msg = msg;
             this.datamartEntityName = datamartEntityName;
             this.storedProcedure = storedProcedure;
             this.logSize = logSize;
             this.verificationStep = verificationStep;
         }
-    }
-}
+    }}
