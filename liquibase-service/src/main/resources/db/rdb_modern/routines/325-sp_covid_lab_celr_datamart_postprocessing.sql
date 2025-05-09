@@ -79,21 +79,23 @@ AS
 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
-    SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-    SET @PROC_STEP_NAME = ' DELETING FROM COVID_LAB_CELR_DATAMART';
-
-    --Step 2: Delete records from COVID_CASE_DATAMART where PHC data is going to be inserted
-	DELETE FROM dbo.COVID_LAB_CELR_DATAMART
-	WHERE COVID_LAB_DATAMART_KEY IN (SELECT COVID_LAB_DATAMART_KEY FROM #LAB_LIST);
 
 
-    -- Step 3: Check if there are no rows in #LAB_LIST
+    -- Step 2: Check if there are no rows in #LAB_LIST
     IF NOT EXISTS (SELECT 1 FROM #LAB_LIST)
     BEGIN
         if @debug='true'
             PRINT 'No rows found in #TempTable. Exiting procedure.';
         RETURN;
     END
+
+
+    SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+    SET @PROC_STEP_NAME = ' DELETING FROM COVID_LAB_CELR_DATAMART';
+
+    --Step 3: Delete records from COVID_CASE_DATAMART where PHC data is going to be inserted
+	DELETE FROM dbo.COVID_LAB_CELR_DATAMART
+	WHERE COVID_LAB_DATAMART_KEY IN (SELECT COVID_LAB_DATAMART_KEY FROM #LAB_LIST);
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [DBO].[JOB_FLOW_LOG]
@@ -204,7 +206,7 @@ AS
                                                    covid_lab_datamart.birth_dt                                   AS patient_dob,
                                                    covid_lab_datamart.current_sex_cd                             AS patient_gender,
                                                    CONVERT(VARCHAR(max), covid_lab_datamart.patient_race_calc)   AS patient_race,
-                                                   covid_lab_datamart.city                                       AS patient_city,
+                        covid_lab_datamart.city                                       AS patient_city,
                                                    COALESCE(COALESCE(
                                                                       (
                                                                       SELECT state_nm
@@ -253,7 +255,7 @@ AS
                                                                         covid_lab_datamart.specimen_desc = ''
                                                                  OR     covid_lab_datamart.specimen_desc IS NULL)
                                                           AND    (
-                                                                        covid_lab_datamart.specimen_type_free_text = ''
+          covid_lab_datamart.specimen_type_free_text = ''
                                                                  OR     covid_lab_datamart.specimen_type_free_text IS NULL)
                                                           AND    (
                                                                         covid_lab_datamart.specimen_cd = ''
@@ -292,7 +294,7 @@ AS
                                                    END                                                                              AS specimen_type_code_system,
                                                    dbo.Escapespecialcharacters(covid_lab_datamart.specimen_type_free_text)          AS specimen_type_free_text,
                                                    COALESCE(CONVERT(VARCHAR(23), covid_lab_datamart.specimen_coll_dt, 121), '0000') AS specimen_collection_date_time,
-                                                   NULL                                                                             AS specimen_received_date_time,
+                                     NULL                                                                AS specimen_received_date_time,
                                                    'NULL'                                                                           AS ordering_entity_name,
                                                    covid_lab_datamart.ordering_provider_last_name                                   AS ordering_provider_last_name,
                                                    covid_lab_datamart.ordering_provider_first_name                                  AS ordering_provider_first_name,
@@ -324,8 +326,8 @@ AS
                                                           WHEN (
                                                                         covid_lab_datamart.ordering_facility_address_one IS NOT NULL
                                                                  AND    covid_lab_datamart.ordering_facility_address_one <> ''
-                                                                 AND    covid_lab_datamart.ordering_facility_address_two IS NOT NULL
-                                                                 AND    covid_lab_datamart.ordering_facility_address_two <> '') THEN Concat(covid_lab_datamart.ordering_facility_address_one, '; ', covid_lab_datamart.ordering_facility_address_two)
+                    AND    covid_lab_datamart.ordering_facility_address_two IS NOT NULL
+                                                      AND    covid_lab_datamart.ordering_facility_address_two <> '') THEN Concat(covid_lab_datamart.ordering_facility_address_one, '; ', covid_lab_datamart.ordering_facility_address_two)
                                                           WHEN (
                                                                         covid_lab_datamart.ordering_facility_address_one IS NOT NULL
                                                                  AND    covid_lab_datamart.ordering_facility_address_one <> '')
@@ -383,7 +385,7 @@ AS
                                                    END                                                                     AS 'Reference_range',
                                                    COALESCE(NULLIF(Trim(covid_lab_datamart.interpretation_desc), ''), 'F') AS abnormal_flag,
               NULL                                                                    AS test_method_description,
-                                                   COALESCE(covid_lab_datamart.test_result_status, 'NULL')                 AS test_result_status,
+                                                   COALESCE(covid_lab_datamart.test_result_status, 'NULL')     AS test_result_status,
                                                    covid_lab_datamart.lab_report_dt                                        AS test_date,
                                                    covid_lab_datamart.reporting_facility_name                              AS reporting_facility_name,
                                                    covid_lab_datamart.reporting_facility_clia                              AS reporting_facility_id,
@@ -442,7 +444,7 @@ AS
                                                           AND    Len(covid_lab_datamart.ordering_facility_county)= 4 THEN Concat('0', covid_lab_datamart.ordering_facility_county)
                                                           ELSE covid_lab_datamart.ordering_facility_county
                                                    END AS ordering_facility_county,
-                                                   CASE
+                               CASE
                                                           WHEN Isnumeric(covid_lab_datamart.ordering_provider_county)= 1
                                                           AND    Len(covid_lab_datamart.ordering_provider_county)= 4 THEN Concat('0', covid_lab_datamart.ordering_provider_county)
                                                           ELSE covid_lab_datamart.ordering_provider_county
@@ -512,7 +514,7 @@ AS
 													ELSE NULL
 													END AS Device_instance_ID_1,
 													*/
-                                                   device_instance_id_2 AS device_instance_id_2,
+                           device_instance_id_2 AS device_instance_id_2,
                                                    /*
 													CASE
 													WHEN (SELECT COUNT(*) FROM SYS.COLUMNS WHERE NAME = N'DEVICE_INSTANCE_ID_2' AND OBJECT_ID = OBJECT_ID(N'COVID_LAB_DATAMART'))=1
