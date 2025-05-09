@@ -64,7 +64,7 @@ AS
     into #LAB_LIST
     from dbo.covid_lab_datamart cld
     inner join (SELECT value FROM STRING_SPLIT(@lab_uids, ',')) labList
-    on cld.COVID_LAB_DATAMART_KEY = labList.value ;
+    on cld.Observation_Uid = labList.value ;
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [DBO].[JOB_FLOW_LOG]

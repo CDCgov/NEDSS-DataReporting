@@ -1,7 +1,6 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'COVID_LAB_CELR_DATAMART' and xtype = 'U')
 BEGIN
     CREATE TABLE [dbo].[COVID_LAB_CELR_DATAMART](
-            COVID_LAB_DATAMART_KEY bigint NOT NULL,
         	Testing_lab_accession_number varchar(199) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
         	Testing_lab_specimen_ID varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
         	Submitter_unique_sample_ID int NULL,

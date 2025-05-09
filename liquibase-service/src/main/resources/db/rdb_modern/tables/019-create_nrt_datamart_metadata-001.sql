@@ -286,7 +286,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                     WHERE NOT EXISTS
                             (SELECT 1
                             FROM dbo.nrt_datamart_metadata ndm
-                            WHERE ndm.condition_cd = hep_codes.condition_cd);
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Case_Datamart');
             END;
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Lab_Datamart')
             BEGIN
@@ -303,7 +303,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                     WHERE NOT EXISTS
                             (SELECT 1
                             FROM dbo.nrt_datamart_metadata ndm
-                            WHERE ndm.condition_cd = hep_codes.condition_cd);
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Lab_Datamart');
             END;
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Contact_Datamart')
             BEGIN
@@ -320,14 +320,14 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                     WHERE NOT EXISTS
                             (SELECT 1
                             FROM dbo.nrt_datamart_metadata ndm
-                            WHERE ndm.condition_cd = hep_codes.condition_cd);
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Contact_Datamart');
             END;
-        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Vac_Datamart')
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Vaccination_Datamart')
             BEGIN
                 INSERT INTO dbo.nrt_datamart_metadata
                 SELECT condition_cd,
                         condition_desc_txt,
-                        'Covid_Vac_Datamart',
+                        'Covid_Vaccination_Datamart',
                         'sp_covid_vaccination_datamart_postprocessing'
                 FROM
                     (SELECT distinct cc.condition_cd, cc.condition_desc_txt
@@ -337,6 +337,6 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                     WHERE NOT EXISTS
                             (SELECT 1
                             FROM dbo.nrt_datamart_metadata ndm
-                            WHERE ndm.condition_cd = hep_codes.condition_cd);
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Vaccination_Datamart');
             END;
     END;
