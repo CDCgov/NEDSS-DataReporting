@@ -224,14 +224,21 @@ BEGIN
                                                       when elp.use_cd = 'H'
                                                           then coalesce(cc.code_short_desc_txt, pl.cntry_cd)
                                                       else null end                                                      AS [home_country],
-                                                  case when elp.use_cd = 'BIR' then cc.code_short_desc_txt else null end AS [birth_country]
+                                                  case when elp.use_cd = 'BIR' then cvg.code_short_desc_txt else null end AS [birth_country]
                                            FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
                                                     LEFT OUTER JOIN nbs_odse.dbo.Postal_locator pl WITH (NOLOCK)
                                                                     ON elp.locator_uid = pl.postal_locator_uid
                                                     LEFT OUTER JOIN nbs_srte.dbo.State_code sc with (NOLOCK) ON sc.state_cd = pl.state_cd
                                                     LEFT OUTER JOIN nbs_srte.dbo.State_county_code_value scc with (NOLOCK)
                                                                     ON scc.code = pl.cnty_cd
-                                                    LEFT OUTER JOIN nbs_srte.dbo.Country_CODE cc with (nolock) ON cc.code = pl.cntry_cd 
+                                                    LEFT OUTER JOIN nbs_srte.dbo.Country_CODE cc with (nolock) ON cc.code = pl.cntry_cd
+                                                    LEFT OUTER JOIN (
+                                                        select tmp.code, tmp.code_short_desc_txt from (
+                                                            -- ranking added to pick the latest valid short desc
+                                                            select code, code_short_desc_txt, rank () OVER (PARTITION BY code order by nbs_uid desc) rnk
+                                                            from nbs_srte.dbo.CODE_VALUE_GENERAL with (nolock) where CODE_SET_NM in( 'PHVS_BIRTHCOUNTRY_CDC', 'PHVS_TB_BIRTH_CNTRY', 'PSL_CNTRY')
+                                                        ) tmp where rnk=1
+                                                    ) cvg ON cvg.code = pl.cntry_cd
                                            WHERE elp.entity_uid = p.person_uid
                                              AND elp.class_cd = 'PST'
                                              AND elp.use_cd IN ('H', 'BIR')
