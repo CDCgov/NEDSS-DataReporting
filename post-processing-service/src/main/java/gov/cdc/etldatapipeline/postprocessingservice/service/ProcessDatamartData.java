@@ -2,6 +2,7 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 
 import com.google.common.base.Strings;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.CASE_LAB_DATAMART;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.HEPATITIS_DATAMART;
@@ -42,17 +44,25 @@ public class ProcessDatamartData {
                         continue; // skipping now for empty datamart or unprocessed patients
                     }
 
-                    Datamart dmart = modelMapper.map(datamartData, Datamart.class);
-                    DatamartKey dmKey = new DatamartKey();
-                    dmKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
-                    String jsonKey = jsonGenerator.generateStringJson(dmKey);
-                    String jsonMessage = jsonGenerator.generateStringJson(dmart);
+                    Long entityUid = Optional
+                            .ofNullable(datamartData.getPublicHealthCaseUid())
+                            .orElseGet(datamartData::getVaccinationUid);
 
-                    kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
-                    logger.info("Datamart data: PHC uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
+                    if (Objects.nonNull(entityUid)) {
+                        Datamart dmart = modelMapper.map(datamartData, Datamart.class);
+                        DatamartKey dmKey = new DatamartKey();
+                        dmKey.setEntityUid(entityUid);
+                        String jsonKey = jsonGenerator.generateStringJson(dmKey);
+                        String jsonMessage = jsonGenerator.generateStringJson(dmart);
+
+                        kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
+                        logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
+                    } else {
+                        throw new NoDataException("Both case and vaccination ID are null in " + datamartData.getDatamart() + " JSON");
+                    }
                 }
             } catch (Exception e) {
-                String msg = "Error processing Datamart JSON array from investigation result data: " + e.getMessage();
+                String msg = "Error processing Datamart JSON array from datamart data: " + e.getMessage();
                 throw new DataProcessingException(msg, e);
             }
         }

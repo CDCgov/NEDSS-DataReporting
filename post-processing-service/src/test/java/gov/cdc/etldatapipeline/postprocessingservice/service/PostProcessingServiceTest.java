@@ -951,8 +951,27 @@ class PostProcessingServiceTest {
                         repo -> {
                             verify(repo).executeStoredProcForPertussisCaseDatamart("123");
                             verify(repo).executeStoredProcForLdfVacPreventDiseasesDatamart("123");
-                        })
-        );
+                        }),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Case_Datamart\",\"stored_procedure\":\"sp_covid_case_datamart_postprocessing\"}}",
+                        COVID_CASE_DATAMART.getEntityName(), COVID_CASE_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Contact_Datamart\",\"stored_procedure\":\"sp_covid_contact_datamart_postprocessing\"}}",
+                        COVID_CONTACT_DATAMART.getEntityName(), COVID_CONTACT_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidContactDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"vaccination_uid\":123,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Vac_Datamart\",\"stored_procedure\":\"sp_covid_vaccination_datamart_postprocessing\"}}",
+                        COVID_VAC_DATAMART.getEntityName(), COVID_VAC_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidVacDatamart("123", "456")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Lab_Datamart\",\"stored_procedure\":\"sp_covid_lab_datamart_postprocessing\"}}",
+                        COVID_LAB_DATAMART.getEntityName(), COVID_LAB_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidLabDatamart("123")));
     }
 
     @Test
@@ -1394,7 +1413,10 @@ class PostProcessingServiceTest {
             "'{\"payload\":{}}'",
             "'{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
             "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":null,\"datamart\":\"dummy\"}}'",
-            "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'"
+            "'{\"payload\":{\"vaccination_uid\":123,\"patient_uid\":null,\"datamart\":null}}'",
+            "'{\"payload\":{\"public_health_case_uid\":null,\"vaccination_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
+            "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'",
+
     })
     void testPostProcessDatamartIncompleteData(String msg) {
         String topic = "dummy_datamart";

@@ -9,6 +9,6 @@ import lombok.NonNull;
 @NoArgsConstructor
 public class DatamartKey {
     @NonNull
-    @JsonProperty("public_health_case_uid")
-    private Long publicHealthCaseUid;
+    @JsonProperty("entity_uid")
+    private Long entityUid;
 }
