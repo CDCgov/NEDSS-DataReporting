@@ -561,6 +561,7 @@ public class PostProcessingService {
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
     protected void processDatamartIds() {
+        List<Long> ldfUids = new ArrayList<>();
         for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 String dmKey = entry.getKey();
@@ -584,7 +585,7 @@ public class PostProcessingService {
 
                 // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
                 // can be null for COVID_VAC_DATAMART, in which vacUids are used as primary input
-                String cases = uids != null ? uids.stream().map(String::valueOf).collect(Collectors.joining(",")) : "";
+                String cases = uids != null ? uids.stream().distinct().map(String::valueOf).collect(Collectors.joining(",")) : "";
 
                 // make sure the entity names for datamart enum values follows the same naming
                 // as the enum itself
@@ -632,24 +633,21 @@ public class PostProcessingService {
                         executeDatamartProc(CRS_CASE,
                                 investigationRepository::executeStoredProcForCRSCaseDatamart, cases);
                         if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
-                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
-                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                            ldfUids.addAll(uids);
                         }
                         break;
                     case RUBELLA_CASE:
                         executeDatamartProc(RUBELLA_CASE,
                                 investigationRepository::executeStoredProcForRubellaCaseDatamart, cases);
                         if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
-                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
-                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                            ldfUids.addAll(uids);
                         }
                         break;
                     case MEASLES_CASE:
                         executeDatamartProc(MEASLES_CASE,
                                 investigationRepository::executeStoredProcForMeaslesCaseDatamart, cases);
                         if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
-                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
-                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                            ldfUids.addAll(uids);
                         }
                         break;
                     case CASE_LAB_DATAMART:
@@ -659,15 +657,12 @@ public class PostProcessingService {
                     case BMIRD_CASE:
                         executeDatamartProc(BMIRD_CASE,
                                 investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
-                        
                         if(ldfType.equalsIgnoreCase(LDF_BMIRD.getEntityName())){
                             executeDatamartProc(LDF_BMIRD,
                             investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
                         }
-
                         executeDatamartProc(BMIRD_STREP_PNEUMO_DATAMART,
                                 investigationRepository::executeStoredProcForBmirdStrepPneumoDatamart, cases);
-
                         break;
                     case HEPATITIS_CASE:
                         executeDatamartProc(HEPATITIS_CASE,
@@ -681,8 +676,7 @@ public class PostProcessingService {
                         executeDatamartProc(PERTUSSIS_CASE,
                                 investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
                         if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
-                            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
-                            investigationRepository::executeStoredProcForLdfVaccinePreventDiseasesDatamart, cases);
+                            ldfUids.addAll(uids);
                         }
                         break;
                     case TB_DATAMART:
@@ -725,6 +719,12 @@ public class PostProcessingService {
             } else {
                 logger.info("No data to process from the datamart topics.");
             }
+        }
+
+        if (!ldfUids.isEmpty()) {
+            String cases = ldfUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
+            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
+                    investigationRepository::executeStoredProcForLdfVacPreventDiseasesDatamart, cases);
         }
 
         Optional.ofNullable(dmCache.get(MULTI_ID_DATAMART)).ifPresent(multi -> {
