@@ -516,7 +516,7 @@ BEGIN
 		SET 
 			@PROC_STEP_NAME = 'Generate Delete from #LDF_DATA'; 
 
-				-- Create table ldf_data
+		-- Create table LDF_DATA_DEL
 		IF OBJECT_ID('#LDF_DATA_DEL', 'U') IS NOT NULL  
 			DROP TABLE #LDF_DATA_DEL;
 
