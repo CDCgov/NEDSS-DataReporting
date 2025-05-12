@@ -1,4 +1,4 @@
-CREATE OR ALTER view dbo.v_nrt_d_inv_repeat_blockdata AS
+CREATE OR ALTER VIEW dbo.v_nrt_d_inv_repeat_blockdata AS
 SELECT
 	BLOCK_NM,
 	RDB_COLUMN_NM,

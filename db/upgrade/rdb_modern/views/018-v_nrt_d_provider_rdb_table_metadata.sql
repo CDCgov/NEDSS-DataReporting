@@ -1,5 +1,5 @@
 
-CREATE OR ALTER view dbo.v_nrt_d_provider_rdb_table_metadata AS
+CREATE OR ALTER VIEW dbo.v_nrt_d_provider_rdb_table_metadata AS
 SELECT DISTINCT 
 	RDB_COLUMN_NM, 
 	user_defined_column_nm, 
