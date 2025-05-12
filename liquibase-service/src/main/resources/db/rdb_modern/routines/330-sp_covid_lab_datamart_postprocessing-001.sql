@@ -296,8 +296,8 @@ BEGIN
             DROP TABLE #COVID_LAB_RSLT_TYPE;
 
         SELECT
-            #COVID_LAB_CORE_DATA.Observation_UID AS 'RT_Observation_UID',
-            #COVID_LAB_CORE_DATA.Result AS 'RT_Result',
+            #COVID_LAB_CORE_DATA.Observation_UID AS RT_Observation_UID,
+            #COVID_LAB_CORE_DATA.Result AS RT_Result,
             CASE
                 -- Modify the logic (add additional variables) to determine negative labs
                 WHEN Result IN('NEGATIVE', 'Negative: SARS-CoV-2 virus is NOT detected', 'PAN SARS RNA: NEGATIVE', 'PRESUMPTIVE NEGATIVE', 'SARS COV 2 RNA: NEGATIVE', 'Not Detected', 'Not detected (qualifier value)', 'OVERALL RESULT: NOT DETECTED', 'Undetected', 'SARS-CoV-2 RNA was not present in the specimen')
@@ -945,5 +945,3 @@ BEGIN
         RETURN ERROR_NUMBER();
     END CATCH;
 END;
-
---
