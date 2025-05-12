@@ -11,6 +11,9 @@ public class Datamart {
     @JsonProperty("patient_uid")
     private Long patientUid;
 
+    @JsonProperty("observation_uid")
+    private Long observationUid;
+
     @JsonProperty("vaccination_uid")
     private Long vaccinationUid;
 

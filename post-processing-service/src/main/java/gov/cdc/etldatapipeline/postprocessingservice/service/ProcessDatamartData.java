@@ -8,6 +8,7 @@ import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartDa
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.CASE_
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.HEPATITIS_DATAMART;
 
 @Component
-@RequiredArgsConstructor
+@RequiredArgsConstructor @Setter
 public class ProcessDatamartData {
     private static final Logger logger = LoggerFactory.getLogger(ProcessDatamartData.class);
 
@@ -34,31 +35,38 @@ public class ProcessDatamartData {
     @Value("${spring.kafka.topic.datamart}")
     public String datamartTopic;
 
+    @Value("${featureFlag.covid-dm-enable}")
+    private boolean covidDmEnable;
+
     public void process(List<DatamartData> data) {
         if (Objects.nonNull(data) && !data.isEmpty()) {
             data = reduce(data);
             try {
                 for (DatamartData datamartData : data) {
-                    if (Strings.isNullOrEmpty(datamartData.getDatamart())
-                            || Objects.isNull(datamartData.getPatientUid())) {
-                        continue; // skipping now for empty datamart or unprocessed patients
-                    }
+                    // check feature flag to prevent Covid dm submission
+                    if (covidDmEnable || !datamartData.getDatamart().startsWith("Covid")) {
 
-                    Long entityUid = Optional
-                            .ofNullable(datamartData.getPublicHealthCaseUid())
-                            .orElseGet(datamartData::getVaccinationUid);
+                        if (Strings.isNullOrEmpty(datamartData.getDatamart())
+                                || Objects.isNull(datamartData.getPatientUid())) {
+                            continue; // skipping now for empty datamart or unprocessed patients
+                        }
 
-                    if (Objects.nonNull(entityUid)) {
-                        Datamart dmart = modelMapper.map(datamartData, Datamart.class);
-                        DatamartKey dmKey = new DatamartKey();
-                        dmKey.setEntityUid(entityUid);
-                        String jsonKey = jsonGenerator.generateStringJson(dmKey);
-                        String jsonMessage = jsonGenerator.generateStringJson(dmart);
+                        Long entityUid = Optional
+                                .ofNullable(datamartData.getPublicHealthCaseUid())
+                                .orElseGet(datamartData::getVaccinationUid);
 
-                        kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
-                        logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
-                    } else {
-                        throw new NoDataException("Both case and vaccination ID are null in " + datamartData.getDatamart() + " JSON");
+                        if (Objects.nonNull(entityUid)) {
+                            Datamart dmart = modelMapper.map(datamartData, Datamart.class);
+                            DatamartKey dmKey = new DatamartKey();
+                            dmKey.setEntityUid(entityUid);
+                            String jsonKey = jsonGenerator.generateStringJson(dmKey);
+                            String jsonMessage = jsonGenerator.generateStringJson(dmart);
+
+                            kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
+                            logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
+                        } else {
+                            throw new NoDataException("Both case and vaccination ID are null in " + datamartData.getDatamart() + " JSON");
+                        }
                     }
                 }
             } catch (Exception e) {

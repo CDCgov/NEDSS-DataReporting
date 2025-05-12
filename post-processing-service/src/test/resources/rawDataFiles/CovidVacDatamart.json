@@ -39,7 +39,7 @@
     "patient_uid": 456,
     "vaccination_uid": 789,
     "condition_cd": "11065",
-    "datamart": "Covid_Vac_Datamart",
+    "datamart": "Covid_Vaccination_Datamart",
     "stored_procedure": "sp_covid_vaccination_datamart_postprocessing"
   }
 }

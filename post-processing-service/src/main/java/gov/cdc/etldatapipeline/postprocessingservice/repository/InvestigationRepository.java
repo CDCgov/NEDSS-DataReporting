@@ -153,7 +153,6 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_ldf_mumps_datamart_postprocessing")
     void executeStoredProcForLdfMumpsDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    
     @Procedure("sp_ldf_tetanus_datamart_postprocessing")
     void executeStoredProcForLdfTetanusDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
@@ -172,6 +171,9 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_covid_vaccination_datamart_postprocessing")
     void executeStoredProcForCovidVacDatamart(@Param("vacUids") String vacUids, @Param("patientUids") String patientUids);
 
-    @Procedure("sp_covid_lav_datamart_postprocessing")
-    void executeStoredProcForCovidLabDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Procedure("sp_covid_lab_datamart_postprocessing")
+    void executeStoredProcForCovidLabDatamart(@Param("observationUids") String observationUids);
+
+    @Procedure("sp_covid_lab_celr_datamart_postprocessing")
+    void executeStoredProcForCovidLabCelrDatamart(@Param("observationUids") String observationUids);
 }
