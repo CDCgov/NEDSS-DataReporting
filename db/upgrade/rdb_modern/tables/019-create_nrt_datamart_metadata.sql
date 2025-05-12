@@ -4,8 +4,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and
         (
             condition_cd       varchar(20)  NOT NULL,
             condition_desc_txt varchar(300) NULL,
-            Datamart           varchar(18)  NOT NULL,
-            Stored_Procedure   varchar(36)  NOT NULL
+            Datamart           varchar(20)  NOT NULL,
+            Stored_Procedure   varchar(200)  NOT NULL
         );
     END;
 
@@ -64,13 +64,6 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                            FROM dbo.nrt_datamart_metadata ndm
                            WHERE ndm.condition_cd = std_hiv_codes.condition_cd);
             END;
-
-        --Increase varchar length according to accommodate data
-        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = object_id('nrt_datamart_metadata') AND name='Stored_Procedure' AND max_length=36)
-            BEGIN
-                ALTER TABLE dbo.nrt_datamart_metadata
-                    ALTER COLUMN Stored_Procedure VARCHAR(200)
-            END
 
         /*CNDE-2046: Generic_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Generic_Case')
