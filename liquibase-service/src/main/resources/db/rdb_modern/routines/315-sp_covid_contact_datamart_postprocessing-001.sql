@@ -320,10 +320,10 @@ BEGIN
                                  ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
 
         WHERE inv.cd = @conditionCd
-          AND (@phcid_list IS NULL OR inv.public_health_case_uid IN (
+          AND inv.public_health_case_uid IN (
             SELECT TRY_CAST(value AS BIGINT)
             FROM STRING_SPLIT(@phcid_list, ',')
-        ));
+        );
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
