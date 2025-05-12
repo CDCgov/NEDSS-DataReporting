@@ -1,4 +1,4 @@
-create or alter  view dbo.v_nrt_nbs_repeatnumeric_rdb_table_metadata AS
+CREATE OR ALTER VIEW dbo.v_nrt_nbs_repeatnumeric_rdb_table_metadata AS
 SELECT
     page.FORM_CD,
     page.DATAMART_NM,
@@ -15,11 +15,13 @@ SELECT
     data_type,
     code_set_group_id
 FROM
-    dbo.v_nrt_nbs_page page WITH (NOLOCK)
-        INNER JOIN NBS_ODSE..NBS_UI_METADATA ui_meta ON ui_meta.INVESTIGATION_FORM_CD = page.FORM_CD
-        INNER JOIN NBS_ODSE..NBS_RDB_METADATA rdb_meta ON rdb_meta.NBS_UI_METADATA_UID = ui_meta.NBS_UI_METADATA_UID
+    dbo.v_nrt_nbs_page page WITH(NOLOCK)
+    INNER JOIN [dbo].nrt_odse_NBS_ui_metadata ui_meta WITH(NOLOCK)
+		ON ui_meta.INVESTIGATION_FORM_CD = page.FORM_CD
+    INNER JOIN [dbo].nrt_odse_NBS_rdb_metadata rdb_meta WITH(NOLOCK)
+		ON rdb_meta.NBS_UI_METADATA_UID = ui_meta.NBS_UI_METADATA_UID
 WHERE
-    rdb_meta.USER_DEFINED_COLUMN_NM <> '' AND rdb_meta.USER_DEFINED_COLUMN_NM IS NOT NULL
+  rdb_meta.USER_DEFINED_COLUMN_NM <> '' 
+  AND rdb_meta.USER_DEFINED_COLUMN_NM IS NOT NULL
   AND rdb_meta.RDB_TABLE_NM = 'D_INVESTIGATION_REPEAT'
-  AND (code_set_group_id < 0 OR code_set_group_id IS NULL OR data_type in ('Numeric','NUMERIC'))
-;
+  AND (code_set_group_id < 0 OR code_set_group_id IS NULL OR data_type in ('Numeric','NUMERIC'));
