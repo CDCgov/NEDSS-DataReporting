@@ -8,22 +8,11 @@ BEGIN
     DECLARE @proc_step_no float = 0;
     DECLARE @proc_step_name varchar(200) = '';
     DECLARE @batch_id bigint;
-    DECLARE @dataflow_name varchar(200) = 'sp_covid_lab_datamart_postprocessing';
+    DECLARE @dataflow_name varchar(200) = 'COVID LAB DATAMART Post-Processing Event';
     DECLARE @package_name varchar(200) = 'sp_covid_lab_datamart_postprocessing';
     DECLARE @conditionCd VARCHAR(200);
 
-    -- Get the COVID-19 condition code from metadata table
-    -- TODO: Confirm the exact condition_desc_txt value for COVID-19 in your environment
-    SELECT @conditionCd = condition_cd
-    FROM dbo.nrt_datamart_metadata
-    WHERE condition_desc_txt LIKE '%COVID%' OR condition_desc_txt LIKE '%SARS-CoV-2%';
-
-    -- Raise error if condition code not found - no hardcoding allowed
-    IF @conditionCd IS NULL
-        BEGIN
-            RAISERROR('COVID-19 condition code not found in nrt_datamart_metadata table. Please configure the metadata table properly.', 16, 1);
-            RETURN;
-        END
+    SET @conditionCd = '11065'; -- COVID-19 condition code
 
     SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
@@ -567,6 +556,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         /* Delete existing records for these observations */
+        -- Modified as per review comments to filter LOG_DEL records upfront
         DELETE FROM dbo.COVID_LAB_DATAMART
         WHERE Observation_uid IN (SELECT Observation_UID FROM #COVID_LAB_CORE_DATA);
 
@@ -955,3 +945,5 @@ BEGIN
         RETURN ERROR_NUMBER();
     END CATCH;
 END;
+
+--
