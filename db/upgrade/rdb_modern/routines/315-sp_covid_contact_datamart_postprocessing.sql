@@ -392,7 +392,7 @@ BEGIN
             DROP TABLE #COVID_CONTACT_DATAMART;
 
         /* Final logging */
-        SET @proc_step_name = 'COMPLETE';
+        SET @proc_step_name = 'SP_COMPLETE';
         SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log] (
