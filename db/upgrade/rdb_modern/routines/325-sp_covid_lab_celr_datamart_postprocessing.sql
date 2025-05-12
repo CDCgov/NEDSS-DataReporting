@@ -1,5 +1,5 @@
 CREATE OR ALTER PROCEDURE [dbo].[sp_covid_lab_celr_datamart_postprocessing](
-@patient_uids NVARCHAR(MAX),
+@obs_uids NVARCHAR(MAX),
 @debug BIT = 'false'
 )
 AS
@@ -63,8 +63,8 @@ AS
     select  cld.Patient_Local_ID , cld.COVID_LAB_DATAMART_KEY
     into #Patient_LIST
     from dbo.covid_lab_datamart cld
-    inner join (SELECT value FROM STRING_SPLIT(@patient_uids, ',')) patientList
-    on cld.Patient_Local_ID = PatientList.value ;
+    inner join (SELECT value FROM STRING_SPLIT(@obs_uids, ',')) obsList
+    on cld.Observation_Uid = obsList.value ;
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
     INSERT INTO [DBO].[JOB_FLOW_LOG]
@@ -94,7 +94,7 @@ AS
     SET @PROC_STEP_NAME = ' DELETING FROM COVID_LAB_CELR_DATAMART';
 
     --Step 3: Delete records from COVID_CASE_DATAMART where PHC data is going to be inserted
-	DELETE FROM dbo.COVID_LAB_CELR_DATAMART
+       DELETE FROM dbo.COVID_LAB_CELR_DATAMART
 	WHERE Patient_id IN (SELECT Patient_Local_ID FROM #Patient_LIST);
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
