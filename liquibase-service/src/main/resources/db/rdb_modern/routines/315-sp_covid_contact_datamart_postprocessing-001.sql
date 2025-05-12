@@ -354,7 +354,6 @@ BEGIN
                 SELECT TRY_CAST(value AS BIGINT)
                 FROM STRING_SPLIT(@phcid_list, ',')
             )
-              AND RECORD_STATUS_CD <> 'LOG_DEL'
         );
 
         /* Logging */
