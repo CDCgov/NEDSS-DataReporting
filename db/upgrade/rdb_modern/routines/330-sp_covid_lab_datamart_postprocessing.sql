@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE [dbo].[sp_covid_lab_datamart_postprocessing]
-    @observation_id nvarchar(max) = NULL,
-    @debug bit = 'false'
+    @observation_id_list nvarchar(max),       -- List of observation IDs to process (comma-separated)
+    @debug bit = 'false'                       -- Flag to enable debug output
 AS
 BEGIN
     /* Logging and initialization variables */
@@ -12,7 +12,19 @@ BEGIN
     DECLARE @package_name varchar(200) = 'sp_covid_lab_datamart_postprocessing';
     DECLARE @conditionCd VARCHAR(200);
 
-    SET @conditionCd = '11065'; -- COVID-19 condition code
+    -- Get the COVID-19 condition code from metadata table
+    -- TODO: Confirm the exact condition_desc_txt value for COVID-19 in your environment
+    SELECT @conditionCd = condition_cd
+    FROM dbo.nrt_datamart_metadata
+    WHERE condition_desc_txt LIKE '%COVID%' OR condition_desc_txt LIKE '%SARS-CoV-2%';
+
+    -- Raise error if condition code not found - no hardcoding allowed
+    IF @conditionCd IS NULL
+        BEGIN
+            RAISERROR('COVID-19 condition code not found in nrt_datamart_metadata table. Please configure the metadata table properly.', 16, 1);
+            RETURN;
+        END
+
     SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
     -- Initialize logging
@@ -33,11 +45,12 @@ BEGIN
            ,'START'
            ,0
            ,'SP_Start'
-           ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+           ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
            ,0
            );
 
     BEGIN TRY
+
         SET @proc_step_name = 'Create COVID_LAB_TEMP_DATA';
         SET @proc_step_no = 1;
 
@@ -51,27 +64,20 @@ BEGIN
         );
 
         /* Determine which observations to process */
-        IF @observation_id IS NULL
+        IF @observation_id_list = ''
             BEGIN
-                -- If no specific IDs provided, get observations from the current condition code
-                INSERT INTO #COVID_OBSERVATIONS_TO_PROCESS (observation_uid)
-                SELECT o.observation_uid
-                FROM dbo.nrt_observation o WITH(NOLOCK)
-                         INNER JOIN dbo.nrt_investigation_observation io WITH(NOLOCK)
-                                    ON o.observation_uid = io.observation_id
-                WHERE o.cd IN (
-                    SELECT loinc_cd
-                    FROM dbo.nrt_srte_Loinc_condition
-                    WHERE condition_cd = @conditionCd
-                )
-                  AND o.record_status_cd <> 'LOG_DEL';
+                RAISERROR('observation_id_list parameter cannot be empty. Please provide at least one observation ID.', 16, 1);
+                RETURN;
             END
         ELSE
             BEGIN
-                -- Process only the specific observations in the ID list
+                -- Process the specific observations in the ID list
+                -- And filter out LOG_DEL records upfront
                 INSERT INTO #COVID_OBSERVATIONS_TO_PROCESS (observation_uid)
-                SELECT TRY_CAST(value AS BIGINT)
-                FROM STRING_SPLIT(@observation_id, ',');
+                SELECT obs.observation_uid
+                FROM STRING_SPLIT(@observation_id_list, ',') split_ids
+                         INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON TRY_CAST(split_ids.value AS BIGINT) = obs.observation_uid
+                WHERE obs.record_status_cd <> 'LOG_DEL';
             END
 
         /* Logging */
@@ -94,7 +100,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Debug output if requested */
@@ -149,7 +155,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Debug output if requested */
@@ -261,6 +267,7 @@ BEGIN
             AND eii2.type_cd = 'EII'
             AND eii2.act_id_seq = 4
                  LEFT OUTER JOIN dbo.nrt_organization org_perform WITH(NOLOCK) ON o1.performing_organization_id = org_perform.organization_uid
+                 LEFT OUTER JOIN dbo.D_Organization d_org_perform WITH(NOLOCK) ON org_perform.organization_uid = d_org_perform.organization_id
                  LEFT OUTER JOIN dbo.nrt_place place_perform WITH(NOLOCK) ON org_perform.organization_uid = place_perform.place_uid
                  LEFT OUTER JOIN dbo.nrt_srte_State_county_code_value county WITH(NOLOCK) ON county.code = place_perform.place_county_code
                  LEFT OUTER JOIN dbo.nrt_srte_State_code state WITH(NOLOCK) ON state.state_cd = place_perform.place_state_code;
@@ -285,7 +292,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Debug output if requested */
@@ -355,7 +362,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Create patient data */
@@ -393,6 +400,7 @@ BEGIN
         FROM #COVID_LAB_CORE_DATA o
                  INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.Observation_UID = obs.observation_uid
                  INNER JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
+                 LEFT JOIN dbo.D_Patient d_patient WITH(NOLOCK) ON p.patient_uid = d_patient.PATIENT_MPR_UID
                  LEFT OUTER JOIN dbo.nrt_srte_State_county_code_value county ON county.code = p.county_code
                  LEFT OUTER JOIN dbo.nrt_srte_State_code state ON state.state_cd = p.state_code;
 
@@ -416,7 +424,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Create entities data */
@@ -472,12 +480,14 @@ BEGIN
         FROM #COVID_LAB_CORE_DATA o
                  LEFT JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.Observation_UID = obs.observation_uid
                  LEFT JOIN dbo.nrt_organization org_author WITH(NOLOCK) ON obs.author_organization_id = org_author.organization_uid
+                 LEFT JOIN dbo.D_Organization d_org_author WITH(NOLOCK) ON org_author.organization_uid = d_org_author.organization_id
                  LEFT JOIN dbo.nrt_place place_author WITH(NOLOCK) ON org_author.organization_uid = place_author.place_uid
                  LEFT JOIN dbo.nrt_srte_State_county_code_value county_author ON county_author.code = place_author.place_county_code
                  LEFT JOIN dbo.nrt_srte_State_code state_author ON state_author.state_cd = place_author.place_state_code
                  LEFT JOIN dbo.nrt_place_tele tele_author WITH(NOLOCK) ON org_author.organization_uid = tele_author.place_uid
             AND tele_author.place_tele_use = 'WP'
                  LEFT JOIN dbo.nrt_organization org_order WITH(NOLOCK) ON obs.ordering_organization_id = org_order.organization_uid
+                 LEFT JOIN dbo.D_Organization d_org_order WITH(NOLOCK) ON org_order.organization_uid = d_org_order.ORGANIZATION_UID
                  LEFT JOIN dbo.nrt_place place_order WITH(NOLOCK) ON org_order.organization_uid = place_order.place_uid
                  LEFT JOIN dbo.nrt_srte_State_county_code_value county_order ON county_order.code = place_order.place_county_code
                  LEFT JOIN dbo.nrt_srte_State_code state_order ON state_order.state_cd = place_order.place_state_code
@@ -510,7 +520,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Create associations data */
@@ -547,7 +557,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Start transaction for the actual update to the datamart */
@@ -558,8 +568,7 @@ BEGIN
 
         /* Delete existing records for these observations */
         DELETE FROM dbo.COVID_LAB_DATAMART
-        WHERE Observation_uid IN (SELECT Observation_UID FROM #COVID_LAB_CORE_DATA)
-          AND Observation_uid NOT IN (SELECT Observation_UID FROM #COVID_LAB_CORE_DATA WHERE record_status_cd = 'LOG_DEL');
+        WHERE Observation_uid IN (SELECT Observation_UID FROM #COVID_LAB_CORE_DATA);
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
@@ -581,7 +590,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name + ' - Delete'
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Insert updated records */
@@ -833,7 +842,8 @@ BEGIN
                  LEFT JOIN #COVID_LAB_PATIENT_DATA pat ON core.Observation_UID = pat.Pat_Observation_UID
                  LEFT JOIN #COVID_LAB_ENTITIES_DATA ent ON core.Observation_UID = ent.Entity_Observation_uid
                  LEFT JOIN #COVID_LAB_ASSOCIATIONS assoc ON core.Observation_UID = assoc.ASSOC_OBSERVATION_UID
-        WHERE core.record_status_cd <> 'LOG_DEL';
+        -- Removed WHERE clause that filtered LOG_DEL records as we're now doing it upfront
+        -- WHERE core.record_status_cd <> 'LOG_DEL';
 
         /* Logging for insert operation */
         SET @rowcount = @@ROWCOUNT;
@@ -855,7 +865,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name + ' - Insert'
                ,@rowcount
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Commit the transaction */
@@ -899,13 +909,12 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,0
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
         /* Return processed observation IDs */
         SELECT DISTINCT Observation_UID as observation_id
-        FROM #COVID_LAB_CORE_DATA
-        WHERE record_status_cd <> 'LOG_DEL';
+        FROM #COVID_LAB_CORE_DATA;
 
     END TRY
     BEGIN CATCH
@@ -939,7 +948,7 @@ BEGIN
                ,@proc_Step_no
                ,@proc_step_name
                ,0
-               ,LEFT(ISNULL(@observation_id, 'NULL'),500)
+               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                ,@FullErrorMessage
                );
 
