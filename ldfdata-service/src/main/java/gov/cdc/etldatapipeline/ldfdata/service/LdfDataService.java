@@ -13,6 +13,8 @@ import gov.cdc.etldatapipeline.ldfdata.repository.LdfDataRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +24,13 @@ import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractChangeDataCaptureOperation;
 
 @Service
 @Setter
@@ -71,10 +72,17 @@ public class LdfDataService {
     @KafkaListener(
             topics = "${spring.kafka.input.topic-name}"
     )
-    public void processMessage(String message,
-                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+    public void processMessage(ConsumerRecord<String, String> rec,
+                               Consumer<?,?> consumer) {
+        String topic = rec.topic();
+        String message = rec.value();
         logger.debug(topicDebugLog, message, topic);
-        processLdfData(message);
+        if (message == null || message.isBlank()) {
+            logger.warn("Received null or empty message on topic: {}", topic);
+        } else {
+            processLdfData(message);
+        }
+        consumer.commitSync();
     }
 
     public void processLdfData(String value) {
@@ -83,20 +91,34 @@ public class LdfDataService {
         String busObjUid = "";
         try {
             JsonNode jsonNode = objectMapper.readTree(value);
-            JsonNode payloadNode = jsonNode.get("payload").path("after");
-            ldfUid = extractUid(value);
+            String operationType = extractChangeDataCaptureOperation(value);
+            JsonNode payloadNode = operationType.equals("d")? jsonNode.get("payload").path("before"): jsonNode.get("payload").path("after");
+            ldfUid = extractUid(value, operationType);
             busObjNm = payloadNode.get("business_object_nm").asText();
             busObjUid = payloadNode.get("business_object_uid").asText();
+            
+            Optional<LdfData> ldfData;
 
             logger.info(topicDebugLog, busObjNm, ldfUid, busObjUid, ldfDataTopic);
-            Optional<LdfData> ldfData = ldfDataRepository.computeLdfData(busObjNm, ldfUid, busObjUid);
-            if (ldfData.isPresent()) {
+
+            if (operationType.equals("d")){
+                LdfData CustLdfData = initializeBean(ldfUid, busObjUid, busObjNm, payloadNode);
                 ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
+                ldfData =  Optional.of(CustLdfData);
                 pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
                 logger.info("LDF data (uid={}) sent to {}", ldfUid, ldfDataTopicReporting);
-            }
-            else {
-                throw new EntityNotFoundException("Unable to find LDF data with id: " + ldfUid);
+
+            } else {
+                
+                ldfData = ldfDataRepository.computeLdfData(busObjNm, ldfUid, busObjUid);
+                if (ldfData.isPresent()) {
+                    ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
+                    pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
+                    logger.info("LDF data (uid={}) sent to {}", ldfUid, ldfDataTopicReporting);
+                }
+                else {
+                    throw new EntityNotFoundException("Unable to find LDF data with id: " + ldfUid);
+                }
             }
         } catch (EntityNotFoundException ex) {
             throw new NoDataException(ex.getMessage(), ex);
@@ -110,15 +132,24 @@ public class LdfDataService {
         }
     }
 
+    private LdfData initializeBean(String ldfUid, String busObjUid, String busObjNm, JsonNode payloadNode) {
+
+        LdfData ldf_data = new LdfData();
+        ldf_data.setBusinessObjectUid(Long.valueOf(busObjUid));
+        ldf_data.setLdfUid(Long.valueOf(ldfUid));
+        ldf_data.setLdfFieldDataBusinessObjectNm(busObjNm);
+        return ldf_data;
+    }
+
     private void pushKeyValuePairToKafka(LdfDataKey ldfDataKey, Object model, String topicName) {
         String jsonKey = jsonGenerator.generateStringJson(ldfDataKey);
         String jsonValue = jsonGenerator.generateStringJson(model);
         kafkaTemplate.send(topicName, jsonKey, jsonValue);
     }
 
-    private String extractUid(String value) throws JsonProcessingException {
+    private String extractUid(String value, String operationType) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(value);
-        JsonNode payloadNode = jsonNode.get("payload").path("after");
+        JsonNode payloadNode = operationType.equals("d")? jsonNode.get("payload").path("before") : jsonNode.get("payload").path("after");
         if (!payloadNode.isMissingNode()
                 && payloadNode.has("business_object_nm")
                 && payloadNode.has("ldf_uid")

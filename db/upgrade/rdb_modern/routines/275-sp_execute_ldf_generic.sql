@@ -57,6 +57,9 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
  	BEGIN TRY 
 
 		---CREATE TABLE BASE_GENERIC AS  
+		/* THIS IS EXISTING CODE IN RDB. WHEN THERE IS NO RECORD IN LDF_DIMENSIONAL, THE SP WILL NOT EXECUTE. 
+		HENCE COMMENTING THIS LINE TO ENSURE ALL THE RECORDS ARE PROCESSED
+
 		SET @count = 
 		( 
 			SELECT COUNT(1) 
@@ -68,544 +71,586 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
 		);	 
 
 		IF (@count > 0) 
+		*/
 		BEGIN 
-	
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'LDF_UID_LIST';  
+
+			--------- Create #LDF_UID_LIST table 
+
+			IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL   
+				DROP TABLE #LDF_UID_LIST; 
+
+			SELECT distinct TRIM(value) AS value into #LDF_UID_LIST FROM STRING_SPLIT(@phc_uids, ',')		
+
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #LDF_UID_LIST;
+
+			SELECT @RowCount_no = @@ROWCOUNT;
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+							
+	--------------------------------------------------------------------------------------------------------
 			--------- Create #LDF_GENERIC1 table 
 	
-				SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-				SET @PROC_STEP_NAME = ' GENERATING TMP_BASE_GENERIC';  
-	
-				--------- Create #TMP_BASE_GENERIC table 
-	
-				IF OBJECT_ID('#TMP_BASE_GENERIC', 'U') IS NOT NULL   
-						DROP TABLE #TMP_BASE_GENERIC; 
-			
-				SELECT LDA.* 
-								INTO #TMP_BASE_GENERIC 
-								FROM dbo.LDF_DIMENSIONAL_DATA LDA 
-									INNER JOIN dbo.LDF_DATAMART_TABLE_REF with (nolock)
-										ON PHC_CD = LDF_DATAMART_TABLE_REF.CONDITION_CD 
-										AND DATAMART_NAME = upper(@target_table_name)
-									INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ',')) phc								
-									on LDA.INVESTIGATION_UID = phc.value 												
-					
-				SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_BASE_GENERIC';  
 
+			--------- Create #TMP_BASE_GENERIC table 
+
+			IF OBJECT_ID('#TMP_BASE_GENERIC', 'U') IS NOT NULL   
+					DROP TABLE #TMP_BASE_GENERIC; 
+		
+			SELECT LDA.* 
+							INTO #TMP_BASE_GENERIC 
+							FROM dbo.LDF_DIMENSIONAL_DATA LDA 
+								INNER JOIN dbo.LDF_DATAMART_TABLE_REF with (nolock)
+									ON PHC_CD = LDF_DATAMART_TABLE_REF.CONDITION_CD 
+									AND DATAMART_NAME = upper(@target_table_name)
+								INNER JOIN 	#LDF_UID_LIST phc
+								on LDA.INVESTIGATION_UID = phc.value 												
+				
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+				
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_BASE_GENERIC;
+
+			SELECT @RowCount_no = @@ROWCOUNT;
+		
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+		
+--------------------------------------------------------------------------------------------------------				
+			--- CREATE TABLE LINKED_GENERIC AS  
+		
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_GENERIC';  
+
+			IF OBJECT_ID('#TMP_LINKED_GENERIC', 'U') IS NOT NULL   
+					DROP TABLE #TMP_LINKED_GENERIC; 
+
+			SELECT GEN_LDF.*,  
+				INV.INVESTIGATION_KEY,  
+				INV.INV_LOCAL_ID 'INVESTIGATION_LOCAL_ID',  
+				INV.CASE_OID 'PROGRAM_JURISDICTION_OID', 
+				GEN.PATIENT_KEY, 
+				PATIENT.PATIENT_LOCAL_ID 'PATIENT_LOCAL_ID', 
+				CONDITION.CONDITION_SHORT_NM 'DISEASE_NAME' 
+			INTO  #TMP_LINKED_GENERIC 
+			FROM 
+				#TMP_BASE_GENERIC GEN_LDF
+				INNER JOIN  dbo.INVESTIGATION INV with (nolock) 
+			ON   
+				GEN_LDF.INVESTIGATION_UID=INV.CASE_UID  
+			INNER JOIN dbo.GENERIC_CASE GEN  with (nolock) 
+			ON  
+				GEN.INVESTIGATION_KEY=INV.INVESTIGATION_KEY 
+			INNER JOIN dbo.CONDITION  with (nolock) 
+			ON  
+				CONDITION.CONDITION_KEY= GEN.CONDITION_KEY 
+			INNER JOIN dbo.D_PATIENT PATIENT  with (nolock) 
+			ON  
+				PATIENT.PATIENT_KEY=GEN.PATIENT_KEY;
+
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_LINKED_GENERIC;	
+				
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+
+--------------------------------------------------------------------------------------------------------				
+		
+				----- CREATE TABLE ALL_GENERIC AS  
+		
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_GENERIC';  
+
+			IF OBJECT_ID('#TMP_ALL_GENERIC', 'U') IS NOT NULL   
+				DROP TABLE #TMP_ALL_GENERIC; 
+
+			SELECT A.*,  
+			B.DATAMART_COLUMN_NM 'DM', 
+			CASE WHEN  DATALENGTH(REPLACE(A.CONDITION_CD, ' ', ''))>1 THEN A.CONDITION_CD
+			ELSE A.phc_cd END AS DISEASE_CD, 
+			A.page_set AS DISEASE_NM
+			INTO #TMP_ALL_GENERIC 
+			FROM 	dbo.LDF_DATAMART_COLUMN_REF  B with (nolock) 
+			INNER JOIN #TMP_LINKED_GENERIC A with (nolock) 
+			ON A.LDF_UID= B.LDF_UID WHERE 
+			( 
+				B.LDF_PAGE_SET ='OTHER' 
+				OR B.CONDITION_CD IN (SELECT CONDITION_CD FROM  
+				dbo.LDF_DATAMART_TABLE_REF WHERE DATAMART_NAME = upper(@target_table_name)) 
+			);
+
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_ALL_GENERIC;	
+				
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+
+	--------------------------------------------------------------------------------------------------------				
+				
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_GENERIC_SHORT_COL';  
+	
+			IF OBJECT_ID('#TMP_ALL_GENERIC_SHORT_COL', 'U') IS NOT NULL   
+				DROP TABLE #TMP_ALL_GENERIC_SHORT_COL; 
+				
+			SELECT INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						SUBSTRING(COL1, 1, 8000) as ANSWERCOL
+			INTO #TMP_ALL_GENERIC_SHORT_COL 
+			FROM #TMP_ALL_GENERIC
+			WHERE data_type IN ('CV', 'ST');  
+				
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_ALL_GENERIC;	
+			
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
+	
+	--------------------------------------------------------------------------------------------------------				
+		
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_GENERIC_TA';  
+
+			IF OBJECT_ID('#TMP_ALL_GENERIC_TA', 'U') IS NOT NULL   
+				DROP TABLE #TMP_ALL_GENERIC_TA; 
+			
+			SELECT INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						SUBSTRING(COL1, 1, 8000) as ANSWERCOL  
+			INTO #TMP_ALL_GENERIC_TA 
+			FROM #TMP_ALL_GENERIC
+			WHERE data_type IN ('LIST_ST'); 
+
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #TMP_ALL_GENERIC_TA;	
+			
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
+
+	--------------------------------------------------------------------------------------------------------		 
+	
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_TA';  
+			set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_TA) 
+			IF @count > 0 
+			BEGIN 
+				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_ta +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic_ta +';
+				END;')
+
+				--DECLARE @cols  AS NVARCHAR(MAX)=''; 
+				--DECLARE @query AS NVARCHAR(MAX)=''; 
+				SET @cols=''; 
+				SET @query=''; 
+
+				SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_GENERIC_TA ) as tmp 
+				select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
+
+				--PRINT CAST(@cols AS NVARCHAR(3000)) 
+				set @query =  
+				'SELECT * 
+				INTO ' + @global_tmp_generic_ta +'
+				fROM 
+				(  
+				SELECT     INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						ANSWERCOL 
 					
+				FROM #TMP_ALL_GENERIC_TA ) 
+				as A  
+
+				PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
+				execute(@query) 
+
 				if
 				@debug = 'true'
 				select @Proc_Step_Name as step, *
-				from #TMP_BASE_GENERIC;
-		
-				SELECT @RowCount_no = @@ROWCOUNT;
+				from #TMP_ALL_GENERIC_TA;	
 			
+				SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+			
+			END 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+	--------------------------------------------------------------------------------------------------------
+					
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_TA';  
+
+			-- If data does not exist create TMP_GENERIC_TA table same as TMP_ALL_GENERIC_TA, which will be used while merging table in step 9 
+			set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_TA) 
+			IF @count = 0 
+			
+			BEGIN 
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_ta +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic_ta +';
+				END;')
+
+			set @query =  
+				'SELECT INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD 
+					INTO '+ @global_tmp_generic_ta + '
+					FROM #TMP_ALL_GENERIC_TA with (nolock);';
+			
+			execute(@query) ;
+
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+					
+			END	 
+	--------------------------------------------------------------------------------------------------------
+						
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_SHORT_COL';  
+			set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_SHORT_COL) 
+			IF @count > 0 
+			BEGIN 
+			
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_short_col +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic_short_col +';
+				END;')
+
+
+				--DECLARE @cols  AS NVARCHAR(MAX)=''; 
+				--DECLARE @query AS NVARCHAR(MAX)=''; 
+				SET @cols=''; 
+				SET @query=''; 
+					
+				SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_GENERIC_SHORT_COL ) as tmp 
+				select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
+				
+				set @query =  
+				'SELECT * 
+				INTO ' + @global_tmp_generic_short_col +'
+				FROM 
+				(  
+				SELECT     INVESTIGATION_KEY, 
+						INVESTIGATION_LOCAL_ID, 
+						PROGRAM_JURISDICTION_OID, 
+						PATIENT_KEY, 
+						PATIENT_LOCAL_ID, 
+						DISEASE_NAME, 
+						DISEASE_CD, 
+						DATAMART_COLUMN_NM, 
+						ANSWERCOL 
+					
+				FROM #TMP_ALL_GENERIC_SHORT_COL ) 
+				as A  
+
+				PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
+				execute(@query) 
+			
+			END 
+			
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
+	------------------------------------------------------------------------------------------------
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_SHORT_COL';  
+
+			-- If data does not exist create TMP_GENERIC_SHORT_COL table same as TMP_ALL_GENERIC_SHORT_COL, which will be used while merging table in step 9 
+			set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_SHORT_COL) 
+			IF @count = 0 
+			BEGIN 
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_short_col +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic_short_col +';
+				END;')
+
+				set @query =  
+					'SELECT INVESTIGATION_KEY, 
+					INVESTIGATION_LOCAL_ID, 
+					PROGRAM_JURISDICTION_OID, 
+					PATIENT_KEY, 
+					PATIENT_LOCAL_ID, 
+					DISEASE_NAME, 
+					DISEASE_CD 
+					INTO ' +  @global_tmp_generic_short_col + '
+					FROM #TMP_ALL_GENERIC_SHORT_COL; '; 
+					execute(@query) 
+
+			END 
+
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);   
+------------------------------------------------------------------------------------------------                            
+			
+			--- MERGE  GENERIC_SHORT_COL GENERIC_TA; 
+			
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC';  
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic +';
+				END;')
+
+			EXECUTE  [dbo].[sp_MERGE_TABLES]  
+				@INPUT_TABLE1= @global_tmp_generic_short_col
+				,@INPUT_TABLE2= @global_tmp_generic_ta
+				,@OUTPUT_TABLE= @global_tmp_generic
+				,@JOIN_ON_COLUMN='INVESTIGATION_KEY'
+				,@batch_id = @batch_id
+				,@target_table_name = @target_table_name;
+
+			set @query =  
+				'DELETE FROM '+ @global_tmp_generic +' WHERE INVESTIGATION_KEY IS NULL;'; 
+				execute(@query) 
+			
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no); 
+	
+------------------------------------------------------------------------------------------------				
+			
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'GENERATING '+@target_table_name;  
+
+			--- If the TMP_GENERIC has additional columns compare to LDF_GENERIC, add these additional columns in LDF_GENERIC table. 
+			BEGIN TRANSACTION; 
+				SET @Alterdynamiccolumnlist=''; 
+				SET @dynamiccolumnUpdate=''; 
+				
+				SELECT   @Alterdynamiccolumnlist  = @Alterdynamiccolumnlist+ 'ALTER TABLE dbo.'+@target_table_name+' ADD [' + name   +  '] varchar(4000) ', 
+					@dynamiccolumnUpdate= @dynamiccolumnUpdate + @target_table_name+'.[' +  name  + ']='  + ''+  @global_tmp_generic +'.['  +name  + '] ,' 
+				FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_generic +'') 
+				AND name NOT IN  ( SELECT name FROM  Sys.Columns WHERE Object_ID = Object_ID(@target_table_name)) 
+				
+				--PRINT '@@Alterdynamiccolumnlist -----------	'+CAST(@Alterdynamiccolumnlist AS NVARCHAR(max)) 
+				--PRINT '@@@@dynamiccolumnUpdate -----------	'+CAST(@dynamiccolumnUpdate AS NVARCHAR(max)) 
+
+				IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
+				BEGIN 
+					EXEC(  @Alterdynamiccolumnlist) 
+				END
+
+				SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
 				INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
 				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
 						@RowCount_no);  
-		
---------------------------------------------------------------------------------------------------------				
-					--- CREATE TABLE LINKED_GENERIC AS  
-				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_GENERIC';  
-	
-					IF OBJECT_ID('#TMP_LINKED_GENERIC', 'U') IS NOT NULL   
-							DROP TABLE #TMP_LINKED_GENERIC; 
-	
-	
-						SELECT GEN_LDF.*,  
-							INV.INVESTIGATION_KEY,  
-							INV.INV_LOCAL_ID 'INVESTIGATION_LOCAL_ID',  
-							INV.CASE_OID 'PROGRAM_JURISDICTION_OID', 
-							GEN.PATIENT_KEY, 
-							PATIENT.PATIENT_LOCAL_ID 'PATIENT_LOCAL_ID', 
-							CONDITION.CONDITION_SHORT_NM 'DISEASE_NAME' 
-						INTO  #TMP_LINKED_GENERIC 
-						FROM 
-							#TMP_BASE_GENERIC GEN_LDF
-							INNER JOIN  dbo.INVESTIGATION INV with (nolock) 
-						ON   
-							GEN_LDF.INVESTIGATION_UID=INV.CASE_UID  
-						INNER JOIN dbo.GENERIC_CASE GEN  with (nolock) 
-						ON  
-							GEN.INVESTIGATION_KEY=INV.INVESTIGATION_KEY 
-						INNER JOIN dbo.CONDITION  with (nolock) 
-						ON  
-							CONDITION.CONDITION_KEY= GEN.CONDITION_KEY 
-						INNER JOIN dbo.D_PATIENT PATIENT  with (nolock) 
-						ON  
-							PATIENT.PATIENT_KEY=GEN.PATIENT_KEY;
 
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_LINKED_GENERIC;	
-						
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-
-	--------------------------------------------------------------------------------------------------------				
-			
-					----- CREATE TABLE ALL_GENERIC AS  
-				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_GENERIC';  
-	
-				IF OBJECT_ID('#TMP_ALL_GENERIC', 'U') IS NOT NULL   
-					DROP TABLE #TMP_ALL_GENERIC; 
-	
-					SELECT A.*,  
-					B.DATAMART_COLUMN_NM 'DM', 
-					CASE WHEN  DATALENGTH(REPLACE(A.CONDITION_CD, ' ', ''))>1 THEN A.CONDITION_CD
-					ELSE A.phc_cd END AS DISEASE_CD, 
-					A.page_set AS DISEASE_NM
-					INTO #TMP_ALL_GENERIC 
-					FROM 	dbo.LDF_DATAMART_COLUMN_REF  B with (nolock) 
-					INNER JOIN #TMP_LINKED_GENERIC A with (nolock) 
-					ON A.LDF_UID= B.LDF_UID WHERE 
-					( 
-						B.LDF_PAGE_SET ='OTHER' 
-						OR B.CONDITION_CD IN (SELECT CONDITION_CD FROM  
-						dbo.LDF_DATAMART_TABLE_REF WHERE DATAMART_NAME = upper(@target_table_name)) 
-					);
-
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_GENERIC;	
-						
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-
-	--------------------------------------------------------------------------------------------------------				
-				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_GENERIC_SHORT_COL';  
-	
-				IF OBJECT_ID('#TMP_ALL_GENERIC_SHORT_COL', 'U') IS NOT NULL   
-						DROP TABLE #TMP_ALL_GENERIC_SHORT_COL; 
-					
-						SELECT INVESTIGATION_KEY, 
-									INVESTIGATION_LOCAL_ID, 
-									PROGRAM_JURISDICTION_OID, 
-									PATIENT_KEY, 
-									PATIENT_LOCAL_ID, 
-									DISEASE_NAME, 
-									DISEASE_CD, 
-									DATAMART_COLUMN_NM, 
-									SUBSTRING(COL1, 1, 8000) as ANSWERCOL
-						INTO #TMP_ALL_GENERIC_SHORT_COL 
-						FROM #TMP_ALL_GENERIC
-						WHERE data_type IN ('CV', 'ST');  
-					
-					
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_GENERIC;	
-                    
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
-	
-	--------------------------------------------------------------------------------------------------------				
-				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_GENERIC_TA';  
-	
-				IF OBJECT_ID('#TMP_ALL_GENERIC_TA', 'U') IS NOT NULL   
-						DROP TABLE #TMP_ALL_GENERIC_TA; 
-					
-						SELECT INVESTIGATION_KEY, 
-									INVESTIGATION_LOCAL_ID, 
-									PROGRAM_JURISDICTION_OID, 
-									PATIENT_KEY, 
-									PATIENT_LOCAL_ID, 
-									DISEASE_NAME, 
-									DISEASE_CD, 
-									DATAMART_COLUMN_NM, 
-									SUBSTRING(COL1, 1, 8000) as ANSWERCOL  
-						INTO #TMP_ALL_GENERIC_TA 
-						FROM #TMP_ALL_GENERIC
-						WHERE data_type IN ('LIST_ST'); 
-
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_GENERIC_TA;	
-					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
-	
-	--------------------------------------------------------------------------------------------------------		 
-	
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_TA';  
-					set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_TA) 
-					IF @count > 0 
-					BEGIN 
-						EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_ta +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_generic_ta +';
-						END;')
-	
-						--DECLARE @cols  AS NVARCHAR(MAX)=''; 
-						--DECLARE @query AS NVARCHAR(MAX)=''; 
-						SET @cols=''; 
-						SET @query=''; 
-	
-						SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_GENERIC_TA ) as tmp 
-						select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
-	
-						--PRINT CAST(@cols AS NVARCHAR(3000)) 
-						set @query =  
-						'SELECT * 
-						INTO ' + @global_tmp_generic_ta +'
-						fROM 
-						(  
-						SELECT     INVESTIGATION_KEY, 
-								INVESTIGATION_LOCAL_ID, 
-								PROGRAM_JURISDICTION_OID, 
-								PATIENT_KEY, 
-								PATIENT_LOCAL_ID, 
-								DISEASE_NAME, 
-								DISEASE_CD, 
-								DATAMART_COLUMN_NM, 
-								ANSWERCOL 
-							
-						FROM #TMP_ALL_GENERIC_TA ) 
-						as A  
-	
-						PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
-						execute(@query) 
-
-                    if
-                    @debug = 'true'
-                    select @Proc_Step_Name as step, *
-                    from #TMP_ALL_GENERIC_TA;	
-					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-					
-					END 
-
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-
-
-	--------------------------------------------------------------------------------------------------------
-					
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_TA';  
-
-                    -- If data does not exist create TMP_GENERIC_TA table same as TMP_ALL_GENERIC_TA, which will be used while merging table in step 9 
-					set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_TA) 
-					IF @count = 0 
-					
-                    BEGIN 
-
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_ta +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_generic_ta +';
-						END;')
-
-					set @query =  
-						'SELECT INVESTIGATION_KEY, 
-								INVESTIGATION_LOCAL_ID, 
-								PROGRAM_JURISDICTION_OID, 
-								PATIENT_KEY, 
-								PATIENT_LOCAL_ID, 
-								DISEASE_NAME, 
-								DISEASE_CD 
-							INTO '+ @global_tmp_generic_ta + '
-							FROM #TMP_ALL_GENERIC_TA with (nolock);';
-					
-					execute(@query) ;
-
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-                    INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-							
-					END	 
-
-	--------------------------------------------------------------------------------------------------------
-						
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_SHORT_COL';  
-					set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_SHORT_COL) 
-					IF @count > 0 
-					BEGIN 
-					
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_short_col +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_generic_short_col +';
-						END;')
-
-	
-						--DECLARE @cols  AS NVARCHAR(MAX)=''; 
-						--DECLARE @query AS NVARCHAR(MAX)=''; 
-						SET @cols=''; 
-						SET @query=''; 
-							
-							SELECT @cols = @cols + QUOTENAME(DATAMART_COLUMN_NM) + ',' FROM (select distinct DATAMART_COLUMN_NM from #TMP_ALL_GENERIC_SHORT_COL ) as tmp 
-							select @cols = substring(@cols, 0, len(@cols)) --trim "," at end 
-							
-							set @query =  
-							'SELECT * 
-							INTO ' + @global_tmp_generic_short_col +'
-							FROM 
-							(  
-							SELECT     INVESTIGATION_KEY, 
-									INVESTIGATION_LOCAL_ID, 
-									PROGRAM_JURISDICTION_OID, 
-									PATIENT_KEY, 
-									PATIENT_LOCAL_ID, 
-									DISEASE_NAME, 
-									DISEASE_CD, 
-									DATAMART_COLUMN_NM, 
-									ANSWERCOL 
-								
-							FROM #TMP_ALL_GENERIC_SHORT_COL ) 
-							as A  
-	
-							PIVOT ( MAX([ANSWERCOL]) FOR DATAMART_COLUMN_NM   IN (' + @cols + ')) AS PivotTable'; 
-							execute(@query) 
-						
-					END 
-					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
-	
-
-	------------------------------------------------------------------------------------------------
-
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC_SHORT_COL';  
-
-					-- If data does not exist create TMP_GENERIC_SHORT_COL table same as TMP_ALL_GENERIC_SHORT_COL, which will be used while merging table in step 9 
-					set @count = (SELECT count(*) FROM #TMP_ALL_GENERIC_SHORT_COL) 
-					IF @count = 0 
-					BEGIN 
-
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_short_col +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_generic_short_col +';
-						END;')
-
-						set @query =  
-							'SELECT INVESTIGATION_KEY, 
-							INVESTIGATION_LOCAL_ID, 
-							PROGRAM_JURISDICTION_OID, 
-							PATIENT_KEY, 
-							PATIENT_LOCAL_ID, 
-							DISEASE_NAME, 
-							DISEASE_CD 
-							INTO ' +  @global_tmp_generic_short_col + '
-							FROM #TMP_ALL_GENERIC_SHORT_COL; '; 
-							execute(@query) 
-
-					END 
-
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);   
-------------------------------------------------------------------------------------------------                            
-					
-					--- MERGE  GENERIC_SHORT_COL GENERIC_TA; 
-					
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = ' GENERATING TMP_GENERIC';  
-	
-					EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic +''', ''U'')  IS NOT NULL
-						BEGIN
-							DROP TABLE ' + @global_tmp_generic +';
-						END;')
-
-	
-						EXECUTE  [dbo].[sp_MERGE_TABLES]  
-							@INPUT_TABLE1= @global_tmp_generic_short_col
-							,@INPUT_TABLE2= @global_tmp_generic_ta
-							,@OUTPUT_TABLE= @global_tmp_generic
-							,@JOIN_ON_COLUMN='INVESTIGATION_KEY'
-							,@batch_id = @batch_id
-							,@target_table_name = @target_table_name;
-
-						set @query =  
-							'DELETE FROM '+ @global_tmp_generic +' WHERE INVESTIGATION_KEY IS NULL;'; 
-							execute(@query) 
-					
-					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-	
-					INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no); 
-	
-------------------------------------------------------------------------------------------------				
-			
-				
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'GENERATING '+@target_table_name;  
-	
-
-						--- If the TMP_GENERIC has additional columns compare to LDF_GENERIC, add these additional columns in LDF_GENERIC table. 
-						BEGIN TRANSACTION; 
-							SET @Alterdynamiccolumnlist=''; 
-							SET @dynamiccolumnUpdate=''; 
-							
-							SELECT   @Alterdynamiccolumnlist  = @Alterdynamiccolumnlist+ 'ALTER TABLE dbo.'+@target_table_name+' ADD [' + name   +  '] varchar(4000) ', 
-								@dynamiccolumnUpdate= @dynamiccolumnUpdate + @target_table_name+'.[' +  name  + ']='  + ''+  @global_tmp_generic +'.['  +name  + '] ,' 
-							FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_generic +'') 
-							AND name NOT IN  ( SELECT name FROM  Sys.Columns WHERE Object_ID = Object_ID(@target_table_name)) 
-							
-							
-							--PRINT '@@Alterdynamiccolumnlist -----------	'+CAST(@Alterdynamiccolumnlist AS NVARCHAR(max)) 
-							--PRINT '@@@@dynamiccolumnUpdate -----------	'+CAST(@dynamiccolumnUpdate AS NVARCHAR(max)) 
-	
-							IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
-							BEGIN 
-	
-								EXEC(  @Alterdynamiccolumnlist) 
-
-                            END
-
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-
-                    INSERT INTO [dbo].[job_flow_log]
-					(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-
-                    COMMIT TRANSACTION; 
+			COMMIT TRANSACTION; 
 ------------------------------------------------------------------------------------------------
                     
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = 'Update '+@target_table_name;  
-	
-	
-                    BEGIN TRANSACTION; 
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'Update '+@target_table_name;  
 
-                    IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
-						
-                        BEGIN 
-                        
-                        SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
 
-                        EXEC ('update  dbo.'+ @target_table_name +'  SET ' +   @dynamiccolumnUpdate + ' FROM '+@global_tmp_generic +'      
-                        inner join  dbo.'+@target_table_name+'  on  ' + @global_tmp_generic +'.INVESTIGATION_LOCAL_ID =  dbo.'+@target_table_name+'.INVESTIGATION_LOCAL_ID') 
+			BEGIN TRANSACTION; 
 
-						END 
+			IF @Alterdynamiccolumnlist IS NOT NULL AND @Alterdynamiccolumnlist!='' 
+				
+				BEGIN 
+				
+				SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
 
-                    SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+				EXEC ('update  dbo.'+ @target_table_name +'  SET ' +   @dynamiccolumnUpdate + ' FROM '+@global_tmp_generic +'      
+				inner join  dbo.'+@target_table_name+'  on  ' + @global_tmp_generic +'.INVESTIGATION_LOCAL_ID =  dbo.'+@target_table_name+'.INVESTIGATION_LOCAL_ID') 
 
-                    INSERT INTO [dbo].[job_flow_log]
-					    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					    VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
-					
-					COMMIT TRANSACTION; 
+				END 
+
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+			INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+			
+			COMMIT TRANSACTION; 
 ------------------------------------------------------------------------------------------------
 					
-                    BEGIN TRANSACTION; 
+			BEGIN TRANSACTION; 
 
-                    SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-					SET @PROC_STEP_NAME = 'Delete Existing to '+@target_table_name;  
-						--In case of updates, delete the existing ones and insert updated ones in LDF_GENERIC 
-						EXEC ('DELETE FROM dbo.'+@target_table_name+' WHERE INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY FROM ' + @global_tmp_generic +' );');
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'Delete Existing to '+@target_table_name;  
+				--In case of updates, delete the existing ones and insert updated ones in LDF_GENERIC 
+				EXEC ('DELETE FROM dbo.'+@target_table_name+' WHERE INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY FROM ' + @global_tmp_generic +' );');
 
-                        INSERT INTO [dbo].[job_flow_log]
-					    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					    VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-							@RowCount_no);  
+				INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
 
-                    COMMIT TRANSACTION; 
+			COMMIT TRANSACTION; 
 
 ------------------------------------------------------------------------------------------------                            
 					
-					SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-					SET @PROC_STEP_NAME = 'Insert to '+@target_table_name;  
-                        
-                        BEGIN TRANSACTION; 
-					
-						--- During update if TMP_GENERIC has 4 columns updated only and the LDF_GENERIC has 7 columns then get column name dynamically from TMP_GENERIC and populate them. 
-					
-							SET @dynamiccolumnList ='' 
-							SELECT @dynamiccolumnList= @dynamiccolumnList +'['+ name +'],' FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_generic) 
-							SET  @dynamiccolumnList=substring(@dynamiccolumnList,1,len(@dynamiccolumnList)-1) 
-	
-							--PRINT '@@@@@dynamiccolumnList -----------	'+CAST(@dynamiccolumnList AS NVARCHAR(max)) 
-	
-							EXEC ('INSERT INTO dbo.'+@target_table_name+' ('+@dynamiccolumnList+') 
-							SELECT '+@dynamiccolumnList +' 
-							FROM '+ @global_tmp_generic+';'); 
-	
-							SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-                        
-                        INSERT INTO [dbo].[job_flow_log]
-		    			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-					    VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
-						@RowCount_no);  
-							
-						COMMIT TRANSACTION; 
-								
-------------------------------------------------------------------------------------------------
-					
-				SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-				SET @PROC_STEP_NAME = 'DELETE global temp tables'; 
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'Insert to '+@target_table_name;  
+				
+				BEGIN TRANSACTION; 
+			
+				--- During update if TMP_GENERIC has 4 columns updated only and the LDF_GENERIC has 7 columns then get column name dynamically from TMP_GENERIC and populate them. 
+			
+					SET @dynamiccolumnList ='' 
+					SELECT @dynamiccolumnList= @dynamiccolumnList +'['+ name +'],' FROM  tempdb.Sys.Columns WHERE Object_ID = Object_ID('tempdb..'+ @global_tmp_generic) 
+					SET  @dynamiccolumnList=substring(@dynamiccolumnList,1,len(@dynamiccolumnList)-1) 
 
-				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_short_col +''', ''U'')  IS NOT NULL
-					BEGIN
-						DROP TABLE ' + @global_tmp_generic_short_col +';
-					END;')
+					--PRINT '@@@@@dynamiccolumnList -----------	'+CAST(@dynamiccolumnList AS NVARCHAR(max)) 
 
+					EXEC ('INSERT INTO dbo.'+@target_table_name+' ('+@dynamiccolumnList+') 
+					SELECT '+@dynamiccolumnList +' 
+					FROM '+ @global_tmp_generic+';'); 
 
-				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_ta +''', ''U'')  IS NOT NULL
-					BEGIN
-						DROP TABLE ' + @global_tmp_generic_ta +';
-					END;')
-
-
-				EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic +''', ''U'')  IS NOT NULL
-					BEGIN
-						DROP TABLE ' + @global_tmp_generic +';
-					END;') 
-
+					SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+				
 				INSERT INTO [dbo].[job_flow_log]
 				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
 				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
 				@RowCount_no);  
+					
+				COMMIT TRANSACTION; 
+								
+------------------------------------------------------------------------------------------------
+					
+					--UPDATE LDF DM TO NULLS WHEN THERE IS NO RECORD IN LDF_DIMENSTIONAL
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'UPDATE LDF_GENERIC when there is no record in the LDF_DIMENSIONAL_DATA';  
+				
+			BEGIN TRANSACTION; 
+
+			SET @dynamiccolumnUpdate=''; 
+				
+			SELECT   @dynamiccolumnUpdate= @dynamiccolumnUpdate + 'TBL.[' +  COLUMN_NAME  + '] = NULL ,' 
+			FROM  INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'LDF_GENERIC'
+				AND COLUMN_NAME NOT IN  ('INVESTIGATION_KEY', 'INVESTIGATION_LOCAL_ID', 'PROGRAM_JURISDICTION_OID', 'PATIENT_KEY', 'PATIENT_LOCAL_ID', 'DISEASE_NAME', 'DISEASE_CD')
+				
+			SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
+
+				EXEC ('update TBL SET ' +   @dynamiccolumnUpdate + ' FROM  
+				dbo.LDF_GENERIC TBL inner join  
+				dbo.INVESTIGATION INV with (nolock) 
+				ON TBL.INVESTIGATION_KEY = INV.INVESTIGATION_KEY
+				INNER JOIN #LDF_UID_LIST LDF_UID_LIST ON 
+				LDF_UID_LIST.VALUE = INV.CASE_UID
+				LEFT JOIN (SELECT DISTINCT INVESTIGATION_UID FROM DBO.LDF_DIMENSIONAL_DATA WITH (NOLOCK)) LDF_DIMENSIONAL_DATA 
+				ON LDF_DIMENSIONAL_DATA.INVESTIGATION_UID = INV.CASE_UID
+			WHERE LDF_DIMENSIONAL_DATA.INVESTIGATION_UID IS NULL;
+				');
+
+			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+			
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+			@RowCount_no);  
+				
+			COMMIT TRANSACTION; 
+------------------------------------------------------------------------------------------------
+
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'DELETE global temp tables'; 
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_short_col +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic_short_col +';
+				END;')
+
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic_ta +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic_ta +';
+				END;')
+
+
+			EXEC ('IF OBJECT_ID(''tempdb..' + @global_tmp_generic +''', ''U'')  IS NOT NULL
+				BEGIN
+					DROP TABLE ' + @global_tmp_generic +';
+				END;') 
+
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+			@RowCount_no);  
 
 ------------------------------------------------------------------------------------------------
-			
-			END
-
+		END
 	END TRY
 
     BEGIN CATCH
@@ -647,7 +692,6 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic]
         return -1 ;
 
     END CATCH
-
 END;
 
 ------------------------------------------------------------------------------------------------------
