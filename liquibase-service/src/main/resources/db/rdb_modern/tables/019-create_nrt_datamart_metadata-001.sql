@@ -275,7 +275,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = object_id('nrt_datamart_metadata') AND name='Datamart' AND max_length=18)
             BEGIN
                 ALTER TABLE dbo.nrt_datamart_metadata
-                    ALTER COLUMN Datamart VARCHAR(20)
+                    ALTER COLUMN Datamart VARCHAR(30)
             END
 
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Case_Datamart')
@@ -331,7 +331,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                             FROM dbo.nrt_datamart_metadata ndm
                             WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Contact_Datamart');
             END;
-            
+
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Vaccination_Datamart')
             BEGIN
                 INSERT INTO dbo.nrt_datamart_metadata

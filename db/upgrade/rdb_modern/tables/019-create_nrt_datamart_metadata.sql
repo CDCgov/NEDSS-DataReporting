@@ -4,7 +4,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and
         (
             condition_cd       varchar(20)  NOT NULL,
             condition_desc_txt varchar(300) NULL,
-            Datamart           varchar(20)  NOT NULL,
+            Datamart           varchar(30)  NOT NULL,
             Stored_Procedure   varchar(200)  NOT NULL
         );
     END;
