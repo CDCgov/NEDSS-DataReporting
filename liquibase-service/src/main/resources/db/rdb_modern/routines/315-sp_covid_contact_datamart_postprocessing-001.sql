@@ -1,5 +1,5 @@
 CREATE OR ALTER PROCEDURE [dbo].[sp_covid_contact_datamart_postprocessing]
-    @phcid_list nvarchar(max) = NULL,
+    @phcid_list nvarchar(max), -- Removed default NULL value to make it required
     @debug bit = 'false'
 AS
 BEGIN
@@ -320,7 +320,7 @@ BEGIN
                                  ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
 
         WHERE inv.cd = @conditionCd
-          AND inv.public_health_case_uid IN (
+          AND inv.public_health_case_uid IN (  -- Removed NULL check for @phcid_list
             SELECT TRY_CAST(value AS BIGINT)
             FROM STRING_SPLIT(@phcid_list, ',')
         );
@@ -346,7 +346,7 @@ BEGIN
         /* Start transaction for the delete and insert operations */
         BEGIN TRANSACTION;
 
-        /* Improved deletion logic - Delete records first, then filter LOG_DEL records */
+        /* Delete ALL records from datamart matching the provided PHC IDs */
         DELETE FROM dbo.COVID_CONTACT_DATAMART
         WHERE CONTACT_UID IN (
             SELECT CONTACT_UID FROM dbo.nrt_contact WITH (NOLOCK)
@@ -354,7 +354,7 @@ BEGIN
                 SELECT TRY_CAST(value AS BIGINT)
                 FROM STRING_SPLIT(@phcid_list, ',')
             )
-              AND RECORD_STATUS_CD <> 'LOG_DEL'
+            -- Removed RECORD_STATUS_CD <> 'LOG_DEL' filter to delete ALL matching records
         );
 
         /* Logging */
