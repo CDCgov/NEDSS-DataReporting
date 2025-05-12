@@ -2584,5 +2584,12 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 320-sp_ldf_hepatitis_datamart_postprocessing-001.sql
-            splitStatements: false            
-    
+            splitStatements: false
+  - changeSet:
+      id: 860
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 330-sp_covid_lab_datamart_postprocessing-001.sql
+            splitStatements: false
