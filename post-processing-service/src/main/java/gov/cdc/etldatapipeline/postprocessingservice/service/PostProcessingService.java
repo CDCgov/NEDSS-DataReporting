@@ -314,6 +314,8 @@ public class PostProcessingService {
 
             // list to store details of datamarts and the associated ids that needs to be hydrated downstream
             List<DatamartData> dmData = new ArrayList<>();
+            // list to keep volatile datamart data to be merged into dmData
+            List<DatamartData> dmDataSp;
 
             // Isolated temporary map to accumulate entity ID collections by entity type.
             // After processing, it is merged into dmCache for multi-ID datamarts invocation.
@@ -337,7 +339,8 @@ public class PostProcessingService {
                         newDmMulti.computeIfAbsent(PROVIDER.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case PATIENT:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case AUTH_USER:
@@ -347,20 +350,21 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace);
                         break;
                     case INVESTIGATION:
-                        dmData = processInvestigation(keyTopic, entity, ids, idValsSnapshot);
+                        dmDataSp = processInvestigation(keyTopic, entity, ids, idValsSnapshot);
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         processByInvFormCode(dmData, keyTopic);
                         break;
                     case CONTACT:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFContactRecordCase,
                                 "sp_f_contact_record_case_postprocessing");
                         newDmMulti.computeIfAbsent(CONTACT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case NOTIFICATION:
-                        List<DatamartData> dmDataN = processTopic(keyTopic, entity, ids,
-                                investigationRepository::executeStoredProcForNotificationIds);
-                        dmData = Stream.concat(dmData.stream(), dmDataN.stream()).distinct().toList();
+                        dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds);
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case TREATMENT:
@@ -385,7 +389,8 @@ public class PostProcessingService {
                         newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case VACCINATION:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFVaccination,
                                 "sp_f_vaccination_postprocessing");
                         newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);

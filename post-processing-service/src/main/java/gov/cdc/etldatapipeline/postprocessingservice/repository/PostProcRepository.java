@@ -17,8 +17,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_nrt_provider_postprocessing")
     void executeStoredProcForProviderIds(@Param("providerUids") String providerUids);
 
-    @Procedure("sp_nrt_patient_postprocessing")
-    void executeStoredProcForPatientIds(@Param("patientUids") String patientUids);
+    @Query(value = "EXEC sp_nrt_patient_postprocessing :patientUids", nativeQuery = true)
+    List<DatamartData>  executeStoredProcForPatientIds(@Param("patientUids") String patientUids);
 
     @Procedure("sp_nrt_ldf_postprocessing")
     void executeStoredProcForLdfIds(@Param("ldfUids") String ldfUids);
@@ -50,8 +50,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_user_profile_postprocessing")
     void executeStoredProcForUserProfile(@Param("userProfileUids") String userProfileUids);
 
-    @Procedure("sp_d_contact_record_postprocessing")
-    void executeStoredProcForDContactRecord(@Param("contactUids") String contactUids);
+    @Query(value = "EXEC sp_d_contact_record_postprocessing :contactUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDContactRecord(@Param("contactUids") String contactUids);
 
     @Procedure("sp_event_metric_datamart_postprocessing")
     void executeStoredProcForEventMetric(
@@ -74,11 +74,11 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_nrt_treatment_postprocessing")
     void executeStoredProcForTreatment(@Param("treatmentUids") String treatmentUids);
 
-    @Procedure("sp_d_vaccination_postprocessing")
-    void executeStoredProcForDVaccination(@Param("vaccinationUids") String vaccinationUids);
+    @Query(value = "exec sp_d_vaccination_postprocessing :vaccinationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDVaccination(@Param("vaccinationUids") String vaccinationUids);
 
     @Query(value = "exec sp_inv_summary_datamart_postprocessing :publicHealthCaseUids, :notificationUids, :observationUids", nativeQuery = true)
-    List<DatamartData>  executeStoredProcForInvSummaryDatamart(
+    List<DatamartData> executeStoredProcForInvSummaryDatamart(
             @Param("publicHealthCaseUids") String publicHealthCaseUids,
             @Param("notificationUids") String notificationUids,
             @Param("observationUids") String observationUids
