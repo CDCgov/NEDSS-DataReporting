@@ -271,4 +271,82 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                   AND EXISTS (SELECT 1 FROM NBS_SRTE.dbo.Condition_code WHERE nnd_entity_identifier= 'STD_Case_Map_v1.0'
                                                                           and port_req_ind_cd ='F');
             END;
+        --Increase varchar length for covid datamarts
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = object_id('nrt_datamart_metadata') AND name='Datamart' AND max_length=18)
+            BEGIN
+                ALTER TABLE dbo.nrt_datamart_metadata
+                    ALTER COLUMN Datamart VARCHAR(30)
+            END
+
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Case_Datamart')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT condition_cd,
+                        condition_desc_txt,
+                        'Covid_Case_Datamart',
+                        'sp_covid_case_datamart_postprocessing'
+                FROM
+                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
+                    FROM NBS_SRTE.[dbo].[Condition_code] cc WITH (NOLOCK)
+                    WHERE CONDITION_CD IN ( '11065')
+                    ) hep_codes
+                    WHERE NOT EXISTS
+                            (SELECT 1
+                            FROM dbo.nrt_datamart_metadata ndm
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Case_Datamart');
+            END;
+
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Lab_Datamart')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT condition_cd,
+                        condition_desc_txt,
+                        'Covid_Lab_Datamart',
+                        'sp_covid_lab_celr_datamart_postprocessing'
+                FROM
+                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
+                    FROM NBS_SRTE.[dbo].[Condition_code] cc WITH (NOLOCK)
+                    WHERE CONDITION_CD IN ( '11065')
+                    ) hep_codes
+                    WHERE NOT EXISTS
+                            (SELECT 1
+                            FROM dbo.nrt_datamart_metadata ndm
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Lab_Datamart');
+            END;
+
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Contact_Datamart')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT condition_cd,
+                        condition_desc_txt,
+                        'Covid_Contact_Datamart',
+                        'sp_covid_contact_datamart_postprocessing'
+                FROM
+                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
+                    FROM NBS_SRTE.[dbo].[Condition_code] cc WITH (NOLOCK)
+                    WHERE CONDITION_CD IN ( '11065')
+                    ) hep_codes
+                    WHERE NOT EXISTS
+                            (SELECT 1
+                            FROM dbo.nrt_datamart_metadata ndm
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Contact_Datamart');
+            END;
+
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Vaccination_Datamart')
+            BEGIN
+                INSERT INTO dbo.nrt_datamart_metadata
+                SELECT condition_cd,
+                        condition_desc_txt,
+                        'Covid_Vaccination_Datamart',
+                        'sp_covid_vaccination_datamart_postprocessing'
+                FROM
+                    (SELECT distinct cc.condition_cd, cc.condition_desc_txt
+                    FROM NBS_SRTE.[dbo].[Condition_code] cc WITH (NOLOCK)
+                    WHERE CONDITION_CD IN ( '11065')
+                    ) hep_codes
+                    WHERE NOT EXISTS
+                            (SELECT 1
+                            FROM dbo.nrt_datamart_metadata ndm
+                            WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Vaccination_Datamart');
+            END;
     END;

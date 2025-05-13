@@ -155,7 +155,7 @@ BEGIN
 		VALUES( @Batch_id, 'INV_'+@category, 'L_'+@category, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
 		if @debug = 'true'
-			select * from #LOOKUP_TABLE1_INV_CAT
+			exec ('select * from '+@LOOKUP_TABLE1_CAT_TABLE_NAME+';')
 			
 		COMMIT TRANSACTION;
 

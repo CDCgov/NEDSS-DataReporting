@@ -79,7 +79,7 @@ BEGIN
                NULLIF(results.imported_country_cd, '')                              as imported_country_cd,
                NULLIF(results.imported_state_cd, '')                                as imported_state_cd,
                NULLIF(results.imported_county_cd, '')                               as imported_county_cd,
-               results.imported_from_country,
+               dbo.fn_get_value_to_pascal_case(results.imported_from_country)       as imported_from_country,
                sc.state_nm                                                          as imported_from_state,
                sccv.code_desc_txt                                                   as imported_from_county,
                NULLIF(results.imported_city_desc_txt, '')                           as imported_city_desc_txt,

@@ -22,10 +22,6 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        SELECT @batch_start_time = batch_start_dttm, @batch_end_time = batch_end_dttm
-        FROM [dbo].[job_batch_log]
-        WHERE status_type = 'start' AND
-            type_code = 'MasterETL';
 
         ---******************************************************************
         ---** START PROCESSING TEXT BASED QUESTIONS AND ANSWERS *************
@@ -515,6 +511,7 @@ BEGIN
                 METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID AND
                 METADATA.CODE = CODED.ANSWER_TXT_CODE
         ORDER BY NBS_CASE_ANSWER_UID, RDB_COLUMN_NM;
+
         SELECT @RowCount_no = @@ROWCOUNT;
         UPDATE #CODED_TABLE_SNTEMP_TRANS_A_INV SET ANSWER_VALUE=NULL WHERE  ISNUMERIC(ANSWER_VALUE)!=1;
         UPDATE #CODED_TABLE_SNTEMP_TRANS_A_INV
@@ -542,9 +539,11 @@ BEGIN
         UPDATE #CODED_TABLE_SNTEMP_TRANS_A_INV
         SET ANSWER_TXT = REPLACE(ANSWER_VALUE, ' ', '')
         WHERE LEN(mask) > 0;
+
         UPDATE #CODED_TABLE_SNTEMP_TRANS_A_INV
         SET ANSWER_TXT = REPLACE(ANSWER_VALUE, ' ', '') + ' ' + REPLACE(ANSWER_TXT2, ' ', '')
         WHERE LEN(mask) = 0;
+
         SELECT @RowCount_no = -1;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
         VALUES( @Batch_id, @category, 'S_'+@category, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
@@ -962,12 +961,7 @@ BEGIN
           AND CODE IN( 'Numeric', 'NUMERIC' )
           AND nrt_page.RDB_TABLE_NM = @rdb_table_name AND
             nrt_page.QUESTION_GROUP_SEQ_NBR IS NULL AND
-            nrt_page.DATA_TYPE IN( 'Numeric', 'NUMERIC' ) AND
-            nrt_page.nbs_question_uid NOT IN
-            (
-                SELECT nbs_question_uid
-                FROM #CODED_TABLE_SNTEMP_TRANS_A_INV
-            )
+            nrt_page.DATA_TYPE IN( 'Numeric', 'NUMERIC' )
         ORDER BY ACT_UID, NBS_CASE_ANSWER_UID, nrt_page.CODE_SET_GROUP_ID;
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
@@ -994,6 +988,7 @@ BEGIN
         UPDATE #NUMERIC_BASE_DATA_INV_CAT
         SET RDB_COLUMN_NM2 = SUBSTRING(RTRIM(RDB_COLUMN_NM), 1, 25) + ' UNIT'
         WHERE LEN(RTRIM(ANSWER_CODED)) > 0;
+
         IF OBJECT_ID('#NUMERIC_DATA_2_INV_CAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_2_INV_CAT;
@@ -1045,22 +1040,25 @@ BEGIN
 
         SELECT PAGE_CASE_UID, NBS_QUESTION_UID, NBS_CASE_ANSWER_UID, ANSWER_UNIT, ANSWER_CODED, CVG.CODE_SET_NM, RDB_COLUMN_NM, ANSWER_TXT, CODE, CODE_SHORT_DESC_TXT AS UNIT, CAST(NULL AS [varchar](2000)) AS ANSWER_TXT_F
         INTO #NUMERIC_DATA_TRANS_INV_CAT
-        FROM #NUMERIC_DATA_MERGED_INV_CAT AS CODED WITH(NOLOCK) LEFT
-                                                                    JOIN
+        FROM #NUMERIC_DATA_MERGED_INV_CAT AS CODED WITH(NOLOCK)
+        LEFT JOIN
              dbo.nrt_srte_Codeset_Group_Metadata AS METADATA WITH(NOLOCK)
-             ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID LEFT
-                                                                    JOIN
+             ON METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID
+        LEFT JOIN
              dbo.nrt_srte_Code_value_general AS CVG WITH(NOLOCK)
              ON CVG.CODE_SET_NM = METADATA.CODE_SET_NM
         WHERE CVG.CODE = CODED.ANSWER_CODED OR
             ANSWER_CODED IS NULL
         ORDER BY PAGE_CASE_UID;
+
         UPDATE #NUMERIC_DATA_TRANS_INV_CAT
-        SET PAGE_CASE_UID = COALESCE(PAGE_CASE_UID, 1), ANSWER_TXT_F = CASE
-                                                                           WHEN COALESCE(RTRIM(UNIT), '') = '' THEN ANSWER_TXT
-                                                                           WHEN CHARINDEX(' UNIT', RDB_COLUMN_NM) > 0 THEN UNIT
-                                                                           ELSE ANSWER_UNIT
-            END;
+        SET
+        PAGE_CASE_UID = COALESCE(PAGE_CASE_UID, 1),
+        ANSWER_TXT_F = CASE
+                         WHEN COALESCE(RTRIM(UNIT), '') = '' THEN ANSWER_TXT
+                         WHEN CHARINDEX(' UNIT', RDB_COLUMN_NM) > 0 THEN UNIT
+                         ELSE ANSWER_UNIT
+            		   END;
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )

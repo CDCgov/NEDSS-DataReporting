@@ -439,7 +439,22 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_CASE_LAB_DATAMART';
 
-        SELECT distinct INVESTIGATION_KEY,
+        ;WITH computed_min_date AS (
+        SELECT 
+                (SELECT	MIN(col_value) 
+                        FROM ( VALUES 
+                                (COALESCE(EARLIEST_RPT_TO_CNTY_DT, '9999-12-31')), 
+                                (COALESCE(EARLIEST_RPT_TO_STATE_DT, '9999-12-31')), 
+                                (COALESCE(INV_RPT_DT, '9999-12-31')), 
+                                (COALESCE(INV_START_DT, '9999-12-31')), 
+                                (COALESCE(CONFIRMATION_DT, '9999-12-31')),
+                                (COALESCE(HSPTL_ADMISSION_DT, '9999-12-31')), 
+                                (COALESCE(HSPTL_DISCHARGE_DT, '9999-12-31'))
+                ) AS vals(col_value)) AS min_date,
+                INVESTIGATION_KEY
+                FROM #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND
+        )
+        SELECT DISTINCT t.INVESTIGATION_KEY,
                         PATIENT_LOCAL_ID,
                         INV_LOCAL_ID               AS INVESTIGATION_LOCAL_ID,
                         PATIENT_FIRST_NM,
@@ -481,23 +496,7 @@ BEGIN
                                     CONFIRMATION_DT,
                                     HSPTL_ADMISSION_DT,
                                     HSPTL_DISCHARGE_DT
-                                 ) IS NOT NULL THEN (
-                                SELECT TOP 1 dt FROM (
-                                                         SELECT COALESCE(EARLIEST_RPT_TO_CNTY_DT, '9999-12-31') AS dt
-                                                         UNION ALL
-                                                         SELECT COALESCE(EARLIEST_RPT_TO_STATE_DT, '9999-12-31')
-                                                         UNION ALL
-                                                         SELECT COALESCE(INV_RPT_DT, '9999-12-31')
-                                                         UNION ALL
-                                                         SELECT COALESCE(INV_START_DT, '9999-12-31')
-                                                         UNION ALL
-                                                         SELECT COALESCE(CONFIRMATION_DT, '9999-12-31')
-                                                         UNION ALL
-                                                         SELECT COALESCE(HSPTL_ADMISSION_DT, '9999-12-31')
-                                                         UNION ALL
-                                                         SELECT COALESCE(HSPTL_DISCHARGE_DT, '9999-12-31')
-                                                     ) AS dtlist ORDER BY dt ASC
-                            )
+                                 ) IS NOT NULL THEN cmd.min_date
                             ELSE NULL
                             END AS EVENT_DATE,
                         CASE
@@ -511,33 +510,21 @@ BEGIN
                                     HSPTL_ADMISSION_DT,
                                     HSPTL_DISCHARGE_DT
                                  ) IS NOT NULL THEN (
-                                SELECT TOP 1 dt_type FROM (
-                                                              SELECT COALESCE(EARLIEST_RPT_TO_CNTY_DT, '9999-12-31') AS dt,
-                                                                     'Earliest date received by the county/local health department' AS dt_type
-                                                              UNION ALL
-                                                              SELECT COALESCE(EARLIEST_RPT_TO_STATE_DT, '9999-12-31'),
-                                                                     'Earliest date received by the state health department'
-                                                              UNION ALL
-                                                              SELECT COALESCE(INV_RPT_DT, '9999-12-31'),
-                                                                     'Date of Report'
-                                                              UNION ALL
-                                                              SELECT COALESCE(INV_START_DT, '9999-12-31'),
-                                                                     'Investigation Start Date'
-                                                              UNION ALL
-                                                              SELECT COALESCE(CONFIRMATION_DT, '9999-12-31'),
-                                                                     'Confirmation Date'
-                                                              UNION ALL
-                                                              SELECT COALESCE(HSPTL_ADMISSION_DT, '9999-12-31'),
-                                                                     'Hospitalization Admit Date'
-                                                              UNION ALL
-                                                              SELECT COALESCE(HSPTL_DISCHARGE_DT, '9999-12-31'),
-                                                                     'Hospitalization Discharge Date'
-                                                          ) AS dtlist ORDER BY dt ASC
+                                CASE 
+                                        WHEN EARLIEST_RPT_TO_CNTY_DT = cmd.min_date	THEN 'Earliest date received by the county/local health department'
+                                        WHEN EARLIEST_RPT_TO_STATE_DT = cmd.min_date	THEN 'EarliEarliest date received by the state health department'
+                                        WHEN INV_RPT_DT = cmd.min_date			THEN 'Date of Report'
+                                        WHEN INV_START_DT = cmd.min_date		THEN 'Investigation Start Date'
+                                        WHEN CONFIRMATION_DT = cmd.min_date		THEN 'Confirmation Date'
+                                        WHEN HSPTL_ADMISSION_DT = cmd.min_date		THEN 'Hospitalization Admit Date'
+                                        WHEN HSPTL_DISCHARGE_DT = cmd.min_date		THEN 'Hospitalization Discharge Date'
+                                END 
                             )
                             ELSE NULL
                             END AS EVENT_DATE_TYPE
         INTO #TMP_CLDM_CASE_LAB_DATAMART
-        FROM #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND with (nolock);
+        FROM #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND t with (nolock)
+        INNER JOIN computed_min_date cmd ON cmd.INVESTIGATION_KEY = t.INVESTIGATION_KEY;
 
         if @debug = 'true' select '#TMP_CLDM_CASE_LAB_DATAMART', * from #TMP_CLDM_CASE_LAB_DATAMART;
 

@@ -2592,5 +2592,28 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 320-sp_ldf_hepatitis_datamart_postprocessing-001.sql
-            splitStatements: false  
-    
+            splitStatements: false
+  - changeSet:
+      id: 860
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 246-create_covid_lab_celr_datamart-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 865
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 325-sp_covid_lab_celr_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 870
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 330-sp_covid_lab_datamart_postprocessing-001.sql
+            splitStatements: false
