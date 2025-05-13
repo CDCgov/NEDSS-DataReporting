@@ -104,12 +104,7 @@ class LdfDataServiceTest {
                 "\"ldf_uid\": \"" + ldfUid + "\"," +
                 "\"business_object_uid\": \"" + busObjUid + "\"}, \"op\":\"d\"}}";
         final LdfData ldfData = constructLdfData(busObjNm, ldfUid, busObjUid);
-        // when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
-        //         .thenReturn(Optional.of(ldfData));
-
         validateData(ldfTopic, ldfTopicOutput, payload, ldfData);
-        // verify(ldfDataRepository).computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid));
-    
     }
 
     @Test
@@ -143,31 +138,13 @@ class LdfDataServiceTest {
         String ldfTopic = "LdfData";
         String ldfTopicOutput = "LdfDataOutput";
         String invalidPayload = null;
-        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
-        final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        ldfDataService.processMessage(rec, consumer);
-        List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(0).getFormattedMessage().contains("Received null or empty message on topic: "+ldfTopic));
+        String emptyPayload = "";
+        testEmptyMessage(ldfTopic, ldfTopicOutput, invalidPayload);
+        testEmptyMessage(ldfTopic, ldfTopicOutput, emptyPayload);
     }
 
-    @Test
-    void testDeleteOperation() {
-        String ldfTopic = "LdfData";
-        String ldfTopicOutput = "LdfDataOutput";
-        String invalidPayload = null;
-        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
-        final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        ldfDataService.processMessage(rec, consumer);
-        List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(0).getFormattedMessage().contains("Received null or empty message on topic: "+ldfTopic));
-    }
-
-    @Test
-    void testProcessBlankMessage() {
-        String ldfTopic = "LdfData";
-        String ldfTopicOutput = "LdfDataOutput";
-        String invalidPayload = "";
-        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
+    private void testEmptyMessage(String ldfTopic, String ldfTopicOutput, String payload){
+        ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
         ldfDataService.processMessage(rec, consumer);
         List<ILoggingEvent> logs = listAppender.list;
