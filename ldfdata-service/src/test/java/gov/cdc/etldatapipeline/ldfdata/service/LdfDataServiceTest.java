@@ -5,6 +5,7 @@ import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.ldfdata.repository.LdfDataRepository;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfData;
 import gov.cdc.etldatapipeline.ldfdata.model.dto.LdfDataKey;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,9 +19,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.apache.kafka.clients.consumer.MockConsumer;
 
 class LdfDataServiceTest {
 
@@ -29,6 +28,9 @@ class LdfDataServiceTest {
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
+
+    @Mock
+    MockConsumer<String, String> consumer;
 
     @Captor
     private ArgumentCaptor<String> topicCaptor;
@@ -81,7 +83,7 @@ class LdfDataServiceTest {
         String invalidPayload = "{\"payload\": {\"after\": }}";
 
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(invalidPayload, ldfTopic));
+        assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(getRecord(invalidPayload, ldfTopic), consumer));
     }
 
     @Test
@@ -100,7 +102,7 @@ class LdfDataServiceTest {
         when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
                 .thenReturn(Optional.empty());
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        assertThrows(NoDataException.class, () -> ldfDataService.processMessage(payload, ldfTopic));
+        assertThrows(NoDataException.class, () -> ldfDataService.processMessage(getRecord(payload, ldfTopic), consumer));
     }
 
     @ParameterizedTest
@@ -116,14 +118,14 @@ class LdfDataServiceTest {
 
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> ldfDataService.processMessage(payload, ldfTopic));
+                () -> ldfDataService.processMessage(getRecord(payload, ldfTopic), consumer));
         assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     private void validateData(String inputTopicName, String outputTopicName,
                               String payload, LdfData ldfData) {
         final var ldfDataService = getInvestigationService(inputTopicName, outputTopicName);
-        ldfDataService.processMessage(payload, inputTopicName);
+        ldfDataService.processMessage(getRecord(payload, inputTopicName), consumer);
 
         LdfDataKey ldfDataKey = new LdfDataKey();
         ldfDataKey.setLdfUid(ldfData.getLdfUid());
@@ -152,5 +154,9 @@ class LdfDataServiceTest {
         ldfData.setBusinessObjectUid(busObjUid);
         ldfData.setLdfUid(ldfUid);
         return ldfData;
+    }
+
+    private ConsumerRecord<String, String> getRecord(String payload, String topic) {
+        return new ConsumerRecord<>(topic, 0, 11L, null, payload);
     }
 }
