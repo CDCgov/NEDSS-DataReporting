@@ -365,5 +365,14 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
                     ADD associated_phc_uids NVARCHAR(MAX);
             END;
 
+--CNDE-2548
+        IF EXISTS(SELECT 1 FROM sys.columns col JOIN sys.types t on col.user_type_id = t.user_type_id
+                  WHERE col.name = N'ordering_person_id' AND t.name = 'bigint' AND col.object_id = Object_ID(N'nrt_observation'))
+           BEGIN
+                ALTER TABLE dbo.nrt_observation
+                ALTER COLUMN ordering_person_id NVARCHAR(max)
+            END;
     END;
+
+
 

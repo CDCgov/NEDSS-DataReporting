@@ -9,7 +9,7 @@ page.FORM_CD,
     ui_meta.INVESTIGATION_FORM_CD,
     ui_meta.BLOCK_NM ,
     OTHER_VALUE_IND_CD,
-    COALESCE(rdb_meta.RDB_COLUMN_NM,',' ,'')  + ', '+ coalesce(rdb_meta.USER_DEFINED_COLUMN_NM ,'') as rdb_column_nm_list,
+    COALESCE(rdb_meta.RDB_COLUMN_NM,',' A'')  + ', '+ coalesce(rdb_meta.USER_DEFINED_COLUMN_NM ,'') as rdb_column_nm_list,
     data_type,
     code_set_group_id
 FROM
