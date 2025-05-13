@@ -36,5 +36,10 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_state_defined_fie
             [ldf_uid] ASC
         )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
         ) ON [PRIMARY]
-        
+
    END;
+
+IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_STATE_DEFINED_FIELD_METADATA_052025_01' AND object_id = OBJECT_ID('dbo.nrt_odse_state_defined_field_metadata'))
+BEGIN
+	CREATE INDEX idx_STATE_DEFINED_FIELD_METADATA_052025_01 ON dbo.nrt_odse_state_defined_field_metadata (ldf_uid);
+END
