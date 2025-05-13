@@ -1504,6 +1504,8 @@ BEGIN
 
         SELECT inv.CASE_UID                     AS public_health_case_uid,
                pat.PATIENT_UID                  AS patient_uid,
+               tmp.lab_test_uid                 AS observation_uid,
+               null                             AS vaccination_uid,
                dtm.Datamart                     AS datamart,
                c.CONDITION_CD                   AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure,
@@ -1515,10 +1517,12 @@ BEGIN
                  LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
                  JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
-        WHERE ltr.INVESTIGATION_KEY <> 1
+        WHERE ltr.INVESTIGATION_KEY <> 1 AND dtm.Datamart NOT IN ('Covid_Case_Datamart','Covid_Contact_Datamart','Covid_Vaccination_Datamart')
         UNION
         SELECT inv.CASE_UID                     AS public_health_case_uid,
                pat.PATIENT_UID                  AS patient_uid,
+               null                             AS observation_uid,
+               null                             AS vaccination_uid,
                dtm.Datamart                     AS datamart,
                null                             AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure,

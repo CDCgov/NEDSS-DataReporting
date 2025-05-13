@@ -1202,9 +1202,11 @@ BEGIN
         -- return values for datamart processing
         select
             public_health_case_uid,
+            patient_uid,
+            null    AS observation_uid,
+            null    AS vaccination_uid,
             datamart,
             condition_cd,
-            patient_uid,
             stored_procedure,
             investigation_form_cd
         from #INV_SUMM_RETURN;
