@@ -2601,19 +2601,3 @@ databaseChangeLog:
         - sqlFile:
             path: 325-sp_covid_lab_celr_datamart_postprocessing-001.sql
             splitStatements: false
-  - changeSet:
-      id: 870
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 025-v_nrt_nbs_rdb_metadata-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 875
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 026-v_nrt_nbs_ui_metadata-001.sql
-            splitStatements: false            
