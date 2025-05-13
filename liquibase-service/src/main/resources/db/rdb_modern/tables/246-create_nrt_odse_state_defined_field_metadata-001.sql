@@ -31,7 +31,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_state_defined_fie
         [ldf_oid] [varchar](50) NULL,
         [version_ctrl_nbr] [smallint] NULL,
         [NBS_QUESTION_UID] [bigint] NULL,
-        CONSTRAINT [PK_state_defined_field_ldf_uid] PRIMARY KEY CLUSTERED 
+        CONSTRAINT [PK_state_defined_field] PRIMARY KEY CLUSTERED 
         (
             [ldf_uid] ASC
         )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
