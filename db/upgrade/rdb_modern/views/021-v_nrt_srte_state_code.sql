@@ -26,4 +26,4 @@ SELECT
     state_cd AS concept_code,
     code_desc_txt AS concept_preferred_nm,
     code_desc_txt AS concept_nm
-FROM dbo.nrt_srte_State_code;
+FROM dbo.nrt_srte_State_code WITH(NOLOCK);

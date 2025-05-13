@@ -160,6 +160,14 @@ databaseChangeLog:
             path: 230-create_organization_ldf_group-001.sql
             splitStatements: false
   - changeSet:
+      id: 15.06
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 246-create_nrt_odse_state_defined_field_metadata-001.sql
+            splitStatements: false    
+  - changeSet:
       id: 16
       author: liquibase
       runOnChange: true
@@ -2600,4 +2608,12 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 325-sp_covid_lab_celr_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 870
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 330-sp_covid_lab_datamart_postprocessing-001.sql
             splitStatements: false

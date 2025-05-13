@@ -21,6 +21,9 @@ BEGIN
     DECLARE @ldf_columns NVARCHAR(MAX) = '';
     DECLARE @count BIGINT;
 
+    DECLARE  @dynamiccolumnUpdate varchar(max)='' 
+
+
     SET @global_temp_foodborne_ta = '##FOODBORNE_TA' + '_' + CAST(@Batch_id as varchar(50)); 
     SET @global_temp_foodborne_short_col = '##FOODBORNE_SHORT_COL' + '_' + CAST(@Batch_id as varchar(50)); 
     SET @global_temp_foodborne = '##FOODBORNE' + '_' + CAST(@Batch_id as varchar(50)); 
@@ -48,7 +51,29 @@ BEGIN
             , LEFT('ID List-' + @phc_id_list, 500));
 
 
-		------------------------------------------------------------------------------------------------------------------------------------------
+        ------------------------------------------------------------------------------------------------------------------------------------------
+		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+		SET @PROC_STEP_NAME = 'LDF_UID_LIST';  
+	
+		--------- Create #LDF_UID_LIST table 
+        IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL   
+            DROP TABLE #LDF_UID_LIST; 
+    
+        SELECT distinct TRIM(value) AS value into #LDF_UID_LIST FROM STRING_SPLIT(@phc_id_list, ',')		
+
+        if
+        @debug = 'true'
+        select @Proc_Step_Name as step, *
+        from #LDF_UID_LIST;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+    
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);  
+                            
+	--------------------------------------------------------------------------------------------------------
 
         SET
 			@PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -66,10 +91,9 @@ BEGIN
 		FROM [dbo].LDF_DIMENSIONAL_DATA s WITH (NOLOCK) 
         INNER JOIN [dbo].INVESTIGATION inv WITH (NOLOCK) 
             ON inv.CASE_UID = s.INVESTIGATION_UID
-		INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) nu 
+		INNER JOIN #LDF_UID_LIST nu 
             ON nu.value = s.INVESTIGATION_UID 
 			
-
 		SELECT @RowCount_no = @@ROWCOUNT;
 
 		IF
@@ -82,9 +106,11 @@ BEGIN
 		VALUES 	
 			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-
         ------------------------------------------------------------------------------------------------------------------------------------------
 
+		/* THIS IS EXISTING CODE IN RDB. WHEN THERE IS NO RECORD IN LDF_DIMENSIONAL, THE SP WILL NOT EXECUTE. 
+		HENCE COMMENTING THIS LINE TO ENSURE ALL THE RECORDS ARE PROCESSED
+        
         SET @count =
         (
             SELECT COUNT(1)
@@ -96,10 +122,8 @@ BEGIN
         );	
             
         IF (@count > 0)
-
+        */
         BEGIN
-
-            ------------------------------------------------------------------------------------------------------------------------------------------
 
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -845,7 +869,43 @@ BEGIN
 
         END
         ------------------------------------------------------------------------------------------------------------------------------------------
+        
+        --UPDATE LDF DM TO NULLS WHEN THERE IS NO RECORD IN LDF_DIMENSTIONAL
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+        SET @PROC_STEP_NAME = 'UPDATE LDF_FOODBORNE when there is no record in the LDF_DIMENSIONAL_DATA';  
+            
+        BEGIN TRANSACTION; 
 
+        SET @dynamiccolumnUpdate=''; 
+            
+        SELECT   @dynamiccolumnUpdate= @dynamiccolumnUpdate + 'TBL.[' +  COLUMN_NAME  + '] = NULL ,' 
+        FROM  INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'LDF_FOODBORNE'
+            AND COLUMN_NAME NOT IN  ('INVESTIGATION_KEY', 'INVESTIGATION_LOCAL_ID', 'PROGRAM_JURISDICTION_OID', 'PATIENT_KEY', 'PATIENT_LOCAL_ID', 'DISEASE_NAME', 'DISEASE_CD')
+            
+        SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
+
+
+            EXEC ('update TBL SET ' +   @dynamiccolumnUpdate + ' FROM  
+            dbo.LDF_FOODBORNE TBL inner join  
+            dbo.INVESTIGATION INV with (nolock) 
+            ON TBL.INVESTIGATION_KEY = INV.INVESTIGATION_KEY
+            INNER JOIN #LDF_UID_LIST LDF_UID_LIST ON 
+            LDF_UID_LIST.VALUE = INV.CASE_UID
+            LEFT JOIN (SELECT DISTINCT INVESTIGATION_UID FROM DBO.LDF_DIMENSIONAL_DATA WITH (NOLOCK)) LDF_DIMENSIONAL_DATA 
+            ON LDF_DIMENSIONAL_DATA.INVESTIGATION_UID = INV.CASE_UID
+            WHERE LDF_DIMENSIONAL_DATA.INVESTIGATION_UID IS NULL;
+        ');
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+        
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+        @RowCount_no);  
+            
+        COMMIT TRANSACTION; 
+
+------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
