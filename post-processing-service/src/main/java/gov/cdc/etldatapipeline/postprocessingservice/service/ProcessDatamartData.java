@@ -2,7 +2,6 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 
 import com.google.common.base.Strings;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
-import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
@@ -55,18 +54,14 @@ public class ProcessDatamartData {
                                 .ofNullable(datamartData.getPublicHealthCaseUid())
                                 .orElseGet(datamartData::getVaccinationUid);
 
-                        if (Objects.nonNull(entityUid)) {
-                            Datamart dmart = modelMapper.map(datamartData, Datamart.class);
-                            DatamartKey dmKey = new DatamartKey();
-                            dmKey.setEntityUid(entityUid);
-                            String jsonKey = jsonGenerator.generateStringJson(dmKey);
-                            String jsonMessage = jsonGenerator.generateStringJson(dmart);
+                        Datamart dmart = modelMapper.map(datamartData, Datamart.class);
+                        DatamartKey dmKey = new DatamartKey();
+                        dmKey.setEntityUid(entityUid);
+                        String jsonKey = jsonGenerator.generateStringJson(dmKey);
+                        String jsonMessage = jsonGenerator.generateStringJson(dmart);
 
-                            kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
-                            logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
-                        } else {
-                            throw new NoDataException("Both case and vaccination ID are null in " + datamartData.getDatamart() + " JSON");
-                        }
+                        kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
+                        logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
                     }
                 }
             } catch (Exception e) {
