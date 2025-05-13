@@ -66,9 +66,9 @@ BEGIN
                 FROM STRING_SPLIT(@observation_id_list, ',') split_ids
                          INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON TRY_CAST(split_ids.value AS BIGINT) = obs.observation_uid
                          LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
-                         LEFT JOIN dbo.D_Patient dp WITH(NOLOCK) ON p.patient_uid = dp.PATIENT_MPR_UID
+                         LEFT JOIN dbo.D_Patient dp WITH(NOLOCK) ON p.patient_uid = dp.PATIENT_UID
                 WHERE obs.record_status_cd <> 'LOG_DEL'
-                  AND COALESCE(p.patient_uid, dp.PATIENT_MPR_UID) IS NOT NULL;
+                  AND COALESCE(p.patient_uid, dp.PATIENT_UID) IS NOT NULL;
             END
 
         /* Logging */
@@ -391,7 +391,7 @@ BEGIN
         FROM #COVID_LAB_CORE_DATA o
                  INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.Observation_UID = obs.observation_uid
                  INNER JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
-                 LEFT JOIN dbo.D_Patient d_patient WITH(NOLOCK) ON p.patient_uid = d_patient.PATIENT_MPR_UID
+                 LEFT JOIN dbo.D_Patient d_patient WITH(NOLOCK) ON p.patient_uid = d_patient.PATIENT_UID
                  LEFT OUTER JOIN dbo.nrt_srte_State_county_code_value county ON county.code = p.county_code
                  LEFT OUTER JOIN dbo.nrt_srte_State_code state ON state.state_cd = p.state_code;
 
