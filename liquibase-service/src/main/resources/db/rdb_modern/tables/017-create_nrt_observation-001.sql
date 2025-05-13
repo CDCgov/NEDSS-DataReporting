@@ -373,6 +373,3 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
                 ALTER COLUMN ordering_person_id NVARCHAR(max)
             END;
     END;
-
-
-
