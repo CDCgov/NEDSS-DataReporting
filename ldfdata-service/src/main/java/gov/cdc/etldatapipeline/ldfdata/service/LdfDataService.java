@@ -92,8 +92,9 @@ public class LdfDataService {
         try {
             JsonNode jsonNode = objectMapper.readTree(value);
             String operationType = extractChangeDataCaptureOperation(value);
-            JsonNode payloadNode = operationType.equals("d")? jsonNode.get("payload").path("before"): jsonNode.get("payload").path("after");
-            ldfUid = extractUid(value, operationType);
+            String payloadString = "payload";
+            JsonNode payloadNode = operationType.equals("d")? jsonNode.get(payloadString).path("before"): jsonNode.get(payloadString).path("after");
+            ldfUid = extractUid(payloadNode);
             busObjNm = payloadNode.get("business_object_nm").asText();
             busObjUid = payloadNode.get("business_object_uid").asText();
             
@@ -102,9 +103,9 @@ public class LdfDataService {
             logger.info(topicDebugLog, busObjNm, ldfUid, busObjUid, ldfDataTopic);
 
             if (operationType.equals("d")){
-                LdfData CustLdfData = initializeBean(ldfUid, busObjUid, busObjNm, payloadNode);
+                LdfData custLdfData = initializeBean(ldfUid, busObjUid, busObjNm);
                 ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
-                ldfData =  Optional.of(CustLdfData);
+                ldfData =  Optional.of(custLdfData);
                 pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
                 logger.info("LDF data (uid={}) sent to {}", ldfUid, ldfDataTopicReporting);
 
@@ -132,13 +133,13 @@ public class LdfDataService {
         }
     }
 
-    private LdfData initializeBean(String ldfUid, String busObjUid, String busObjNm, JsonNode payloadNode) {
+    private LdfData initializeBean(String ldfUid, String busObjUid, String busObjNm) {
 
-        LdfData ldf_data = new LdfData();
-        ldf_data.setBusinessObjectUid(Long.valueOf(busObjUid));
-        ldf_data.setLdfUid(Long.valueOf(ldfUid));
-        ldf_data.setLdfFieldDataBusinessObjectNm(busObjNm);
-        return ldf_data;
+        LdfData ldfData = new LdfData();
+        ldfData.setBusinessObjectUid(Long.valueOf(busObjUid));
+        ldfData.setLdfUid(Long.valueOf(ldfUid));
+        ldfData.setLdfFieldDataBusinessObjectNm(busObjNm);
+        return ldfData;
     }
 
     private void pushKeyValuePairToKafka(LdfDataKey ldfDataKey, Object model, String topicName) {
@@ -147,9 +148,7 @@ public class LdfDataService {
         kafkaTemplate.send(topicName, jsonKey, jsonValue);
     }
 
-    private String extractUid(String value, String operationType) throws JsonProcessingException {
-        JsonNode jsonNode = objectMapper.readTree(value);
-        JsonNode payloadNode = operationType.equals("d")? jsonNode.get("payload").path("before") : jsonNode.get("payload").path("after");
+    private String extractUid(JsonNode payloadNode) throws JsonProcessingException {
         if (!payloadNode.isMissingNode()
                 && payloadNode.has("business_object_nm")
                 && payloadNode.has("ldf_uid")

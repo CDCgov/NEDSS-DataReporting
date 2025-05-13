@@ -16,8 +16,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -47,10 +53,16 @@ class LdfDataServiceTest {
 
     private AutoCloseable closeable;
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
+    private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+
 
     @BeforeEach
     void setUp() {
         closeable=MockitoAnnotations.openMocks(this);
+
+        Logger logger = (Logger) LoggerFactory.getLogger(LdfDataService.class);
+        listAppender.start();
+        logger.addAppender(listAppender);
     }
 
     @AfterEach
@@ -79,15 +91,87 @@ class LdfDataServiceTest {
 
         verify(ldfDataRepository).computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid));
     }
+    @Test
+    void testProcessDeleteMessage() {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+
+        String busObjNm = "PHC";
+        long ldfUid = 100000001L;
+        long busObjUid = 100000010L;
+        String payload = "{\"payload\": {\"before\": {" +
+                "\"business_object_nm\": \"" + busObjNm + "\"," +
+                "\"ldf_uid\": \"" + ldfUid + "\"," +
+                "\"business_object_uid\": \"" + busObjUid + "\"}, \"op\":\"d\"}}";
+        final LdfData ldfData = constructLdfData(busObjNm, ldfUid, busObjUid);
+        // when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
+        //         .thenReturn(Optional.of(ldfData));
+
+        validateData(ldfTopic, ldfTopicOutput, payload, ldfData);
+        // verify(ldfDataRepository).computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid));
+    
+    }
 
     @Test
     void testProcessMessageException() {
         String ldfTopic = "LdfData";
         String ldfTopicOutput = "LdfDataOutput";
         String invalidPayload = "{\"payload\": {\"after\": }}";
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
+        var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(rec, consumer));
+    
 
+    }
+    @Test
+    void testNonNullBusObNmEmptyMessageException() {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+        String busObjNm = "PHC";
+        long ldfUid = 100000001L;
+        String invalidPayload = "{\"payload\": {\"after\": {" +
+                "\"business_object_nm\": \"" + busObjNm + "\"," +
+                "\"ldf_uid\": \"" + ldfUid + "\"}}}";
+
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
+        var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(rec, consumer));
+    }
+
+    @Test
+    void testProcessEmptyMessage() {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+        String invalidPayload = null;
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(getRecord(invalidPayload, ldfTopic), consumer));
+        ldfDataService.processMessage(rec, consumer);
+        List<ILoggingEvent> logs = listAppender.list;
+        assertTrue(logs.get(0).getFormattedMessage().contains("Received null or empty message on topic: "+ldfTopic));
+    }
+
+    @Test
+    void testDeleteOperation() {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+        String invalidPayload = null;
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
+        final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        ldfDataService.processMessage(rec, consumer);
+        List<ILoggingEvent> logs = listAppender.list;
+        assertTrue(logs.get(0).getFormattedMessage().contains("Received null or empty message on topic: "+ldfTopic));
+    }
+
+    @Test
+    void testProcessBlankMessage() {
+        String ldfTopic = "LdfData";
+        String ldfTopicOutput = "LdfDataOutput";
+        String invalidPayload = "";
+        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
+        final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        ldfDataService.processMessage(rec, consumer);
+        List<ILoggingEvent> logs = listAppender.list;
+        assertTrue(logs.get(0).getFormattedMessage().contains("Received null or empty message on topic: "+ldfTopic));
     }
 
     @Test
@@ -106,7 +190,8 @@ class LdfDataServiceTest {
         when(ldfDataRepository.computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
                 .thenReturn(Optional.empty());
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        assertThrows(NoDataException.class, () -> ldfDataService.processMessage(getRecord(payload, ldfTopic), consumer));
+        ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
+        assertThrows(NoDataException.class, () -> ldfDataService.processMessage(rec, consumer));
     }
 
     @ParameterizedTest
@@ -121,15 +206,17 @@ class LdfDataServiceTest {
         String ldfTopicOutput = "LdfDataOutput";
 
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
+        ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> ldfDataService.processMessage(getRecord(payload, ldfTopic), consumer));
+                () -> ldfDataService.processMessage(rec, consumer));
         assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
     }
 
     private void validateData(String inputTopicName, String outputTopicName,
                               String payload, LdfData ldfData) {
         final var ldfDataService = getInvestigationService(inputTopicName, outputTopicName);
-        ldfDataService.processMessage(getRecord(payload, inputTopicName), consumer);
+        ConsumerRecord<String, String> rec = getRecord(payload, inputTopicName);
+        ldfDataService.processMessage(rec, consumer);
 
         LdfDataKey ldfDataKey = new LdfDataKey();
         ldfDataKey.setLdfUid(ldfData.getLdfUid());
