@@ -148,13 +148,19 @@ public class LdfDataService {
         kafkaTemplate.send(topicName, jsonKey, jsonValue);
     }
 
-    private String extractUid(JsonNode payloadNode) throws JsonProcessingException {
-        if (!payloadNode.isMissingNode()
-                && payloadNode.has("business_object_nm")
-                && payloadNode.has("ldf_uid")
-                && payloadNode.has("business_object_uid")) {
-            return payloadNode.get("ldf_uid").asText();
-        } else {
+    private String extractUid(JsonNode payloadNode) {
+        try {
+            if (!payloadNode.isMissingNode()
+                    && payloadNode.has("business_object_nm")
+                    && payloadNode.has("ldf_uid")
+                    && payloadNode.has("business_object_uid")) {
+                return payloadNode.get("ldf_uid").asText();
+
+            } else {
+                throw new NoSuchElementException("The LDF data is missing in the message payload.");
+            }
+        } catch (Exception ex) {
+            logger.error("JsonProcessingException: ", ex);
             throw new NoSuchElementException("The LDF data is missing in the message payload.");
         }
     }
