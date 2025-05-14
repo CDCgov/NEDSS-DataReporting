@@ -826,7 +826,7 @@ class PostProcessingServiceTest {
                         COVID_CONTACT_DATAMART.getEntityName(), COVID_CONTACT_DATAMART.getStoredProcedure(), 3,
                         repo -> verify(repo).executeStoredProcForCovidContactDatamart("123")),
                 new DatamartTestCase(
-                        "{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"vaccination_uid\":123,\"condition_cd\":\"11065\"," +
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
                                 "\"datamart\":\"Covid_Vaccination_Datamart\",\"stored_procedure\":\"sp_covid_vaccination_datamart_postprocessing\"}}",
                         COVID_VACCINATION_DATAMART.getEntityName(), COVID_VACCINATION_DATAMART.getStoredProcedure(), 3,
                         repo -> verify(repo).executeStoredProcForCovidVacDatamart("123", "456")),
@@ -1275,8 +1275,6 @@ class PostProcessingServiceTest {
             "'{\"payload\":{}}'",
             "'{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
             "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":null,\"datamart\":\"dummy\"}}'",
-            "'{\"payload\":{\"vaccination_uid\":123,\"patient_uid\":null,\"datamart\":null}}'",
-            "'{\"payload\":{\"public_health_case_uid\":null,\"vaccination_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
             "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'",
 
     })

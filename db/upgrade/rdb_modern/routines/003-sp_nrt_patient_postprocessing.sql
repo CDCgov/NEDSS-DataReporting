@@ -521,7 +521,6 @@ BEGIN
         SELECT nri.public_health_case_uid                       AS public_health_case_uid,
                nrt.PATIENT_UID                                  AS patient_uid,
                null                                             AS observation_uid,
-               null                                             AS vaccination_uid,
                CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
                nri.cd                                           AS condition_cd,
                dtm.Stored_Procedure                             AS stored_procedure,
@@ -533,10 +532,9 @@ BEGIN
             LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nri.cd
         UNION
         SELECT
-            null                                                AS public_health_case_uid,
+            vac.vaccination_uid                                 AS public_health_case_uid,
             vac.patient_uid                                     AS patient_uid,
             null                                                AS observation_uid,
-            vac.vaccination_uid                                 AS vaccination_uid,
             dtm.Datamart                                        AS datamart,
             dtm.condition_cd                                    AS condition_cd,
             dtm.Stored_Procedure                                AS stored_procedure,

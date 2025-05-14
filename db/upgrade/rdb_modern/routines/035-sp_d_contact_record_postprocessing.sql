@@ -498,7 +498,6 @@ BEGIN
         SELECT inv.public_health_case_uid         AS public_health_case_uid,
                inv.patient_id                     AS patient_uid,
                null                               AS observation_uid,
-               null                               AS vaccination_uid,
                dtm.Datamart                       AS datamart,
                inv.cd                             AS condition_cd,
                dtm.Stored_Procedure               AS stored_procedure,
