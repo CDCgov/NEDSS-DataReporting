@@ -104,14 +104,14 @@ class ObservationDataProcessTests {
         ObservationTransformed observationTransformed = transformer.transformObservationData(observation, BATCH_ID);
 
         Long patId = observationTransformed.getPatientId();
-        Long ordererId = observationTransformed.getOrderingPersonId();
+        String ordererId = observationTransformed.getOrderingPersonId();
         Long authorOrgId = observationTransformed.getAuthorOrganizationId();
         Long ordererOrgId = observationTransformed.getOrderingOrganizationId();
         Long performerOrgId = observationTransformed.getPerformingOrganizationId();
         Long materialId = observationTransformed.getMaterialId();
         String resultObsUid = observationTransformed.getResultObservationUid();
 
-        Assertions.assertEquals(10000055L, ordererId);
+        Assertions.assertEquals("10000055", ordererId);
         Assertions.assertEquals(10000066L, patId);
         Assertions.assertEquals(34567890L, authorOrgId);
         Assertions.assertEquals(23456789L, ordererOrgId);
@@ -445,7 +445,7 @@ class ObservationDataProcessTests {
         expected.setObservationUid(100000001L);
         expected.setReportObservationUid(100000001L);
         expected.setPatientId(10000066L);
-        expected.setOrderingPersonId(10000055L);
+        expected.setOrderingPersonId("10000055");
         expected.setAssistantInterpreterId(10000077L);
         expected.setAssistantInterpreterVal("22582");
         expected.setAssistantInterpreterFirstNm("Cara");
