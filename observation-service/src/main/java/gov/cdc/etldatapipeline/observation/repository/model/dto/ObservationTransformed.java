@@ -12,7 +12,7 @@ public class ObservationTransformed {
     private String followUpObservationUid;
 
     private Long patientId;
-    private Long orderingPersonId;
+    private String orderingPersonId;
     private Long morbPhysicianId;
     private Long morbReporterId;
     private Long morbHospReporterId;

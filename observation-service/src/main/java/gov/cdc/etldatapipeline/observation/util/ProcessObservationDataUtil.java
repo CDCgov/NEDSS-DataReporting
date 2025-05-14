@@ -89,6 +89,7 @@ public class ProcessObservationDataUtil {
         try {
             JsonNode personParticipationsJsonArray = parseJsonArray(personParticipations);
 
+            List<String> orderers = new ArrayList<>();
             for (JsonNode jsonNode : personParticipationsJsonArray) {
                 assertDomainCdMatches(obsDomainCdSt1, ORDER, RESULT);
 
@@ -104,7 +105,7 @@ public class ProcessObservationDataUtil {
                     if ("PSN".equals(subjectClassCd)) {
                         switch (typeCd) {
                             case "ORD":
-                                observationTransformed.setOrderingPersonId(entityId);
+                                orderers.add(String.valueOf(entityId));
                                 break;
                             case "PATSBJ", "SubjOfMorbReport":
                                 observationTransformed.setPatientId(entityId);
@@ -151,6 +152,9 @@ public class ProcessObservationDataUtil {
                         }
                     }
                 }
+            }
+            if(!orderers.isEmpty()) {
+                observationTransformed.setOrderingPersonId(String.join(",", orderers));
             }
         } catch (IllegalArgumentException ex) {
             logger.info(ex.getMessage(), "PersonParticipations", personParticipations);

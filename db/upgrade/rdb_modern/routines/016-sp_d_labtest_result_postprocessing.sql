@@ -191,10 +191,6 @@ BEGIN
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result1 ';
 
 
-        IF OBJECT_ID('#TMP_Lab_Test_Result1', 'U') IS NOT NULL
-            DROP TABLE  #TMP_Lab_Test_Result1;
-
-
         SELECT
             tst.lab_test_key,
             tst.root_ordered_test_pntr,
@@ -236,13 +232,19 @@ BEGIN
             /*get lab_test_technician: Associated to Root Order*/
                  LEFT JOIN dbo.d_provider AS per6 with (nolock)
                            ON no3.lab_test_technician_id = per6.provider_uid
-            /* Ordering Provider */
+            /* Ordering Provider
+             * CNDE-2548: Account for Multiple ORD associated to a lab
+             * */
                  LEFT JOIN	dbo.d_provider 	AS prv with (nolock)
-                              ON no2.ordering_person_id = prv.provider_uid
+                              ON EXISTS (SELECT 1 FROM STRING_SPLIT(no2.ordering_person_id, ',') nprv
+                                         WHERE cast(nprv.value as bigint) = prv.provider_uid)
+
+            --ON no2.ordering_person_id = prv.provider_uid
             /* Reporting_Lab*/
                  LEFT JOIN dbo.d_Organization	AS org with (nolock)
                            ON no2.author_organization_id = org.Organization_uid
-            /* Ordering Facility */
+            /* Ordering Facility*/
+
                  LEFT JOIN dbo.d_Organization	AS org2 with (nolock)
                            ON no2.ordering_organization_id = org2.Organization_uid
 
@@ -267,7 +269,7 @@ BEGIN
             EXISTS (SELECT 1 FROM STRING_SPLIT(tst.associated_phc_uids, ',') i
                     WHERE cast(i.value as bigint) = inv.case_uid);
 
-        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Test_Result1',* FROM #TMP_Lab_Test_Result1;
+        IF @pDebug = 'true' SELECT @PROC_STEP_NAME,* FROM #TMP_Lab_Test_Result1;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;

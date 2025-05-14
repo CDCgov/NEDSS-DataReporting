@@ -147,7 +147,6 @@ BEGIN
 
         SELECT
             t.treatment_uid,
-            t.public_health_case_uid,
             t.organization_uid,
             t.provider_uid,
             t.patient_treatment_uid,
@@ -207,7 +206,6 @@ BEGIN
 
         SELECT
             t.treatment_uid,
-            t.public_health_case_uid,
             t.organization_uid,
             t.provider_uid,
             t.morbidity_uid,

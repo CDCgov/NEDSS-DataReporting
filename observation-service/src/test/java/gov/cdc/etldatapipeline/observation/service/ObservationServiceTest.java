@@ -231,7 +231,7 @@ class ObservationServiceTest {
         observation.setClassCd("OBS");
         observation.setMoodCd("ENV");
         observation.setLocalId("OBS10003388MA01");
-        observation.setOrderingPersonId(10000055L);
+        observation.setOrderingPersonId("10000055");
         observation.setPatientId(10000066L);
         observation.setPerformingOrganizationId(null);      // not null when obsDomainCdSt1=Result
         observation.setAuthorOrganizationId(34567890L);     // null when obsDomainCdSt1=Result
