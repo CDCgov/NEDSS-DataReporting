@@ -255,30 +255,30 @@ BEGIN
         into #DIMENSIONAL_KEYS
         from #PHC_UIDS phc
                  LEFT OUTER JOIN  #DIMENSION_KEYS_PAGECASEID DIMC ON DIMC.PAGE_CASE_UID = phc.PAGE_CASE_UID
-                 LEFT OUTER JOIN   dbo.L_INV_ADMINISTRATIVE ON  L_INV_ADMINISTRATIVE.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_CLINICAL ON  L_INV_CLINICAL.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_COMPLICATION ON  L_INV_COMPLICATION.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_CONTACT ON  L_INV_CONTACT.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_DEATH ON  L_INV_DEATH.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_EPIDEMIOLOGY ON  L_INV_EPIDEMIOLOGY.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_HIV ON  L_INV_HIV.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_ISOLATE_TRACKING ON  L_INV_ISOLATE_TRACKING.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_LAB_FINDING ON  L_INV_LAB_FINDING.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_MEDICAL_HISTORY ON  L_INV_MEDICAL_HISTORY.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_MOTHER ON  L_INV_MOTHER.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_OTHER ON  L_INV_OTHER.PAGE_CASE_UID = dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_PATIENT_OBS ON  L_INV_PATIENT_OBS.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_PREGNANCY_BIRTH ON  L_INV_PREGNANCY_BIRTH.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_RESIDENCY ON  L_INV_RESIDENCY.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_RISK_FACTOR ON  L_INV_RISK_FACTOR.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_SOCIAL_HISTORY ON  L_INV_SOCIAL_HISTORY.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_SYMPTOM ON  L_INV_SYMPTOM.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_TRAVEL ON  L_INV_TRAVEL.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_TREATMENT ON   L_INV_TREATMENT.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_UNDER_CONDITION ON   L_INV_UNDER_CONDITION.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_VACCINATION ON  L_INV_VACCINATION.PAGE_CASE_UID  =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INVESTIGATION_REPEAT ON  L_INVESTIGATION_REPEAT.PAGE_CASE_UID =  dimc.page_case_uid
-                 LEFT OUTER JOIN   dbo.L_INV_PLACE_REPEAT ON  L_INV_PLACE_REPEAT.PAGE_CASE_UID =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_ADMINISTRATIVE with (nolock) ON  L_INV_ADMINISTRATIVE.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_CLINICAL with (nolock) ON  L_INV_CLINICAL.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_COMPLICATION with (nolock) ON  L_INV_COMPLICATION.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_CONTACT with (nolock) ON  L_INV_CONTACT.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_DEATH with (nolock) ON  L_INV_DEATH.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_EPIDEMIOLOGY with (nolock) ON  L_INV_EPIDEMIOLOGY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_HIV with (nolock) ON  L_INV_HIV.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_ISOLATE_TRACKING with (nolock) ON  L_INV_ISOLATE_TRACKING.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_LAB_FINDING with (nolock) ON  L_INV_LAB_FINDING.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_MEDICAL_HISTORY with (nolock) ON  L_INV_MEDICAL_HISTORY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_MOTHER with (nolock) ON  L_INV_MOTHER.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_OTHER with (nolock) ON  L_INV_OTHER.PAGE_CASE_UID = dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_PATIENT_OBS with (nolock) ON  L_INV_PATIENT_OBS.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_PREGNANCY_BIRTH with (nolock) ON  L_INV_PREGNANCY_BIRTH.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_RESIDENCY with (nolock) ON  L_INV_RESIDENCY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_RISK_FACTOR with (nolock) ON  L_INV_RISK_FACTOR.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_SOCIAL_HISTORY with (nolock) ON  L_INV_SOCIAL_HISTORY.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_SYMPTOM with (nolock) ON  L_INV_SYMPTOM.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_TRAVEL with (nolock) ON  L_INV_TRAVEL.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_TREATMENT with (nolock) ON   L_INV_TREATMENT.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_UNDER_CONDITION with (nolock) ON   L_INV_UNDER_CONDITION.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_VACCINATION with (nolock) ON  L_INV_VACCINATION.PAGE_CASE_UID  =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INVESTIGATION_REPEAT with (nolock) ON  L_INVESTIGATION_REPEAT.PAGE_CASE_UID =  dimc.page_case_uid
+                 LEFT OUTER JOIN   dbo.L_INV_PLACE_REPEAT with (nolock) ON  L_INV_PLACE_REPEAT.PAGE_CASE_UID =  dimc.page_case_uid
         ;
 
         if @debug  = 'true' select * from #DIMENSIONAL_KEYS;
@@ -336,10 +336,11 @@ BEGIN
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
 
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 8;
         SET @Proc_Step_Name = ' Generating DROP COLUMNS';
+
+        BEGIN TRANSACTION;
 
         -- DROP COLUMN PAGE_CASE_UID;
         ALTER TABLE  #F_PAGE_CASE_TEMP_INC DROP COLUMN PAGE_CASE_UID ;
@@ -379,12 +380,14 @@ BEGIN
         DELETE FROM [DBO].F_PAGE_CASE WHERE INVESTIGATION_KEY IN (SELECT INVESTIGATION_KEY FROM dbo.F_PAGE_CASE
                                                                   GROUP BY INVESTIGATION_KEY HAVING COUNT(INVESTIGATION_KEY)>1) AND PATIENT_KEY =1
 
+        COMMIT TRANSACTION;
+
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES(@batch_id,'F_PAGE_CASE','F_PAGE_CASE','START',@Proc_Step_no,@Proc_Step_Name,@RowCount_no);
 
 
-        COMMIT TRANSACTION;
+
 
 
         SET @Proc_Step_no = 999;

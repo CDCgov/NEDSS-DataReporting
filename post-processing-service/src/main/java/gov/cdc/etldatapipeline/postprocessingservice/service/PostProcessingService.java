@@ -498,12 +498,26 @@ public class PostProcessingService {
         dmData = processTopic(keyTopic, entity, ids,
                 investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
-        ids.stream().filter(idValsSnapshot::containsKey)
-                .forEach(id -> processTopic(keyTopic, CASE_ANSWERS, id, idValsSnapshot.get(id),
-                        investigationRepository::executeStoredProcForPageBuilder));
 
-            processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
-            processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
+        // Step 1: Build the reverse mapping (value -> list of ids)
+        Map<String, List<Long>> valueToIds = ids.stream()
+                .filter(idValsSnapshot::containsKey)
+                .flatMap(id -> Arrays.stream(idValsSnapshot.get(id).split(","))
+                        .map(String::trim)
+                        .map(val -> new AbstractMap.SimpleEntry<>(val, id)))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                ));
+
+        // Step 2: Process each group
+        valueToIds.forEach((val, idList) -> {
+             processTopic(keyTopic, CASE_ANSWERS, idList, val,
+                    investigationRepository::executeStoredProcForPageBuilder);
+        });
+
+        processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
+        processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
                                        
         return dmData;
     }
@@ -838,13 +852,14 @@ public class PostProcessingService {
         return result;
     }
 
-    private void processTopic(String keyTopic, Entity entity, Long id, String vals,
-            BiConsumer<Long, String> repositoryMethod) {
+    private void processTopic(String keyTopic, Entity entity,  Collection<Long> ids, String vals,
+                              BiConsumer<String, String> repositoryMethod) {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
+        String idsString = prepareAndLog(keyTopic, ids, entity.getEntityName(), name);
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", name, keyTopic,
-                entity.getStoredProcedure(), id, vals);
-        repositoryMethod.accept(id, vals);
+                entity.getStoredProcedure(), idsString, vals);
+        repositoryMethod.accept(idsString, vals);
         completeLog(entity.getStoredProcedure());
     }
 

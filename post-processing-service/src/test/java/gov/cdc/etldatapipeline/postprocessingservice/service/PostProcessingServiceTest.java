@@ -154,7 +154,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyString(), anyString());
         verify(investigationRepositoryMock, never()).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
@@ -325,10 +325,10 @@ class PostProcessingServiceTest {
     void testPostProcessPageBuilder() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123, \"rdb_table_name_list\":\"D_INV_CLINICAL," +
+        String msg = "{\"payload\":{\"public_health_case_uid\":123, \"rdb_table_name\":\"D_INV_CLINICAL," +
                 "D_INV_ADMINISTRATIVE\"}}";
 
-        Long expectedPublicHealthCaseId = 123L;
+        String expectedPublicHealthCaseId = "123";
         String expectedRdbTableNames = "D_INV_CLINICAL,D_INV_ADMINISTRATIVE";
         postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, msg);
@@ -1348,7 +1348,7 @@ class PostProcessingServiceTest {
         assertFalse(postProcessingServiceMock.idVals.containsKey(123L));
 
         postProcessingServiceMock.processCachedIds();
-        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyString(), anyString());
     }
 
     @Test

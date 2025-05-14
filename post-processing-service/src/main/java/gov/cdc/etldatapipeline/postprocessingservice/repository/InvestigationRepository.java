@@ -19,7 +19,8 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     List<DatamartData> executeStoredProcForNotificationIds(@Param("notificationUids") String notificationUids);
 
     @Procedure("sp_page_builder_postprocessing")
-    void executeStoredProcForPageBuilder(@Param("phcUid") Long phcUid, @Param("rdbTableNmLst") String rdbTableNmLst);
+    void executeStoredProcForPageBuilder(@Param("phc_ids") String phcUids, @Param("rdbTableNm") String rdbTableNm);
+
 
     @Procedure("sp_f_page_case_postprocessing")
     void executeStoredProcForFPageCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
@@ -162,5 +163,5 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
 
     @Procedure("sp_ldf_hepatitis_datamart_postprocessing")
     void executeStoredProcForLdfHepatitisDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
-    
+
 }

@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.sp_l_pagebuilder_postprocessing
 	@Batch_id bigint, 
-	@phc_id bigint,
+	@phc_id_list nvarchar(max),
 	@rdb_TABLE_NAME varchar(250),
 	@category varchar(250),
 	@debug bit = 'false' 
@@ -10,8 +10,6 @@ BEGIN
 	DECLARE @RowCount_no int;
 	DECLARE @Proc_Step_no float= 0;
 	DECLARE @Proc_Step_Name varchar(200)= '';
-	DECLARE @batch_start_time datetime2(7)= NULL;
-	DECLARE @batch_end_time datetime2(7)= NULL;
 
 	BEGIN TRY
 
@@ -57,7 +55,8 @@ BEGIN
 		INSERT INTO #PHC_UIDS
 			SELECT inv.public_health_case_uid page_case_uid 
 			FROM dbo.nrt_investigation inv
-		WHERE inv.public_health_case_uid = @phc_id
+			INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu
+			on inv.public_health_case_uid = nu.value;
 
 		
 		SET @exec_sql ='IF OBJECT_ID(''dbo.'+@S_CAT_TABLE_NAME+''', ''U'') IS NULL
