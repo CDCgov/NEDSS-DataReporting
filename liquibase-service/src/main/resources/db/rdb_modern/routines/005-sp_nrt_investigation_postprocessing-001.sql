@@ -822,6 +822,8 @@ BEGIN
 
         SELECT nrt.CASE_UID                                     AS public_health_case_uid,
                nrt.patient_id                                   AS patient_uid,
+               null                                             AS observation_uid,
+               null                                             AS vaccination_uid,
                CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
                nrt.cd                                           AS condition_cd,
                dtm.Stored_Procedure                             AS stored_procedure,
@@ -831,9 +833,12 @@ BEGIN
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
                  INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nrt.cd
                  LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nrt.cd
+        WHERE dtm.Datamart NOT IN ('Covid_Contact_Datamart','Covid_Lab_Datamart','Covid_Vaccination_Datamart')
         UNION
         SELECT nrt.CASE_UID                                     AS public_health_case_uid,
                nrt.patient_id                                   AS patient_uid,
+               null                                             AS observation_uid,
+               null                                             AS vaccination_uid,
                dtm.Datamart                                     AS datamart,
                null                                             AS condition_cd,
                dtm.Stored_Procedure                             AS stored_procedure,

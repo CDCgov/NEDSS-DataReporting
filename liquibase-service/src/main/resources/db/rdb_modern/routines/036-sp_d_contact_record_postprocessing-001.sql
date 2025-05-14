@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.sp_d_contact_record_postprocessing(
+CREATE OR ALTER PROCEDURE dbo.sp_d_contact_record_postprocessing (
     @contact_uids NVARCHAR(MAX),
     @debug bit = 'false')
 as
@@ -158,6 +158,7 @@ BEGIN
             CTT_TRT_COMPLETE_IND,
             CTT_HEALTH_STATUS,
             CTT_REFERRAL_BASIS,
+            SUBJECT_ENTITY_PHC_UID,
             VERSION_CTRL_NBR
         INTO #CONTACT_INIT
         FROM dbo.NRT_CONTACT ix
@@ -494,6 +495,19 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id,@Dataflow_Name,@Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
 
+        SELECT inv.public_health_case_uid         AS public_health_case_uid,
+               inv.patient_id                     AS patient_uid,
+               null                               AS observation_uid,
+               null                               AS vaccination_uid,
+               dtm.Datamart                       AS datamart,
+               inv.cd                             AS condition_cd,
+               dtm.Stored_Procedure               AS stored_procedure,
+               null                               AS investigation_form_cd
+        FROM #CONTACT_INIT con
+            INNER JOIN dbo.nrt_investigation inv with (nolock) ON inv.public_health_case_uid = con.SUBJECT_ENTITY_PHC_UID
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = inv.cd AND dtm.Datamart = 'Covid_Contact_Datamart'
+
+
     END TRY
     BEGIN CATCH
 
@@ -531,6 +545,4 @@ BEGIN
 
     END CATCH
 
-END
-
-    ;
+END;

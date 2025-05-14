@@ -496,6 +496,30 @@ databaseChangeLog:
             path: 003-sp_nrt_provider_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 22.01
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 051-create_nrt_vaccination-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 22.02
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 052-create_nrt_vaccination_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 22.03
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 053-create_nrt_vaccination_answer-001.sql
+            splitStatements: false
+  - changeSet:
       id: 23
       author: liquibase
       runOnChange: true
@@ -1166,30 +1190,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 036-sp_d_contact_record_postprocessing-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 116.1
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 051-create_nrt_vaccination-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 116.2
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 052-create_nrt_vaccination_key-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 116.3
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 053-create_nrt_vaccination_answer-001.sql
             splitStatements: false
   - changeSet:
       id: 117
