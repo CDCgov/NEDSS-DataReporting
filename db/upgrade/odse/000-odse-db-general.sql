@@ -30,3 +30,8 @@ IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'NBS_rdb_metadata')
     BEGIN
         EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'NBS_rdb_metadata',@role_name = NULL;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'State_Defined_Field_Metadata' AND is_tracked_by_cdc = 1)
+    BEGIN
+        EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'State_Defined_Field_Metadata',@role_name = NULL;
+    END;

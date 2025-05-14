@@ -989,8 +989,8 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @PROC_STEP_NAME = 'GENERATING #INV_SUMM_RETURN';
 
-        /* 
-            The return values for sp_inv_summ_datamart_postprocessing 
+        /*
+            The return values for sp_inv_summ_datamart_postprocessing
             must come before the delete step, otherwise deleted records
             will not be processed for the dynamic datamarts.
         */
@@ -1202,9 +1202,11 @@ BEGIN
         -- return values for datamart processing
         select
             public_health_case_uid,
+            patient_uid,
+            null    AS observation_uid,
+            null    AS vaccination_uid,
             datamart,
             condition_cd,
-            patient_uid,
             stored_procedure,
             investigation_form_cd
         from #INV_SUMM_RETURN;

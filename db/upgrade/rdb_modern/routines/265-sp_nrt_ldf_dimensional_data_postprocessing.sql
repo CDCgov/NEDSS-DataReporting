@@ -46,16 +46,10 @@ BEGIN
 		IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL
 			DROP TABLE #LDF_UID_LIST;
 
-		SELECT 
-			a.ldf_uid
+		SELECT distinct TRIM(value) AS ldf_uid 
 		INTO  #LDF_UID_LIST
-		FROM [dbo].nrt_ldf_data a WITH (NOLOCK) 
-		INNER JOIN (SELECT TRIM(value) AS value FROM STRING_SPLIT(@ldf_id_list, ',')) nu 
-			ON nu.value = a.ldf_uid 
-		WHERE
-			a.ldf_meta_data_business_object_nm IN ('PHC', 'BMD', 'NIP', 'HEP')
-			AND a.data_type IN ('ST', 'CV', 'LIST_ST')
-			
+		FROM STRING_SPLIT(@ldf_id_list, ',')
+		
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -68,10 +62,8 @@ BEGIN
 			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
 		VALUES 	
 			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
-
-		------------------------------------------------------------------------------------------------------------------------------------------
 		
+		------------------------------------------------------------------------------------------------------------------------------------------	
 
 		SET 
 			@PROC_STEP_NO =  @PROC_STEP_NO + 1;
@@ -85,7 +77,7 @@ BEGIN
 		SELECT 
 			a.ldf_uid,
 			a.active_ind,
-			a.ldf_meta_data_business_object_nm AS business_object_nm,
+			a.business_object_nm,
 			a.cdc_national_id,
 			a.class_cd,
 			a.code_set_nm,
@@ -93,25 +85,31 @@ BEGIN
 			TRIM(a.label_txt) AS label_txt,
 			a.state_cd,
 			a.custom_subform_metadata_uid,
-			a.condition_desc_txt AS page_set,
+			page_set.code_short_desc_txt AS page_set,
 			a.data_type,
 			a.Field_size,
 			CASE 
-				WHEN a.ldf_meta_data_business_object_nm = 'BMD' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'BMIRD'
-				WHEN a.ldf_meta_data_business_object_nm = 'NIP' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'VPD'
-				WHEN a.ldf_meta_data_business_object_nm = 'PHC' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'OTHER'
-				WHEN a.ldf_meta_data_business_object_nm = 'HEP' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'HEP'
+				WHEN a.business_object_nm = 'BMD' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'BMIRD'
+				WHEN a.business_object_nm = 'NIP' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'VPD'
+				WHEN a.business_object_nm = 'PHC' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'OTHER'
+				WHEN a.business_object_nm = 'HEP' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'HEP'
 				ELSE a.condition_desc_txt
 			END AS LDF_PAGE_SET
 		INTO #LDF_META_DATA
-		FROM [dbo].nrt_ldf_data a WITH (NOLOCK)
+		FROM [dbo].nrt_odse_state_defined_field_metadata a WITH ( NOLOCK) 
+				LEFT OUTER JOIN 
+					dbo.nrt_srte_ldf_page_set page_set WITH ( NOLOCK) 
+				ON  
+					page_set.ldf_page_id = a.ldf_page_id 
 		INNER JOIN #LDF_UID_LIST l 
 			ON l.ldf_uid = a.ldf_uid
 		WHERE 
 			(
 				a.condition_cd IN (SELECT condition_cd FROM [dbo].LDF_DATAMART_TABLE_REF WITH (NOLOCK)) 
 				OR a.condition_cd IS NULL
-			);
+			) and
+		a.business_object_nm IN ('PHC', 'BMD', 'NIP', 'HEP')
+		AND a.data_type IN ('ST', 'CV', 'LIST_ST');
 				
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -513,6 +511,61 @@ BEGIN
 			
 
 		------------------------------------------------------------------------------------------------------------------------------------------
+		SET 
+			@PROC_STEP_NO =  @PROC_STEP_NO + 1;
+		SET 
+			@PROC_STEP_NAME = 'Generate Delete from #LDF_DATA'; 
+
+		-- Create table LDF_DATA_DEL
+		IF OBJECT_ID('#LDF_DATA_DEL', 'U') IS NOT NULL  
+			DROP TABLE #LDF_DATA_DEL;
+
+		SELECT LDA.LDF_UID INTO 
+		#LDF_DATA_DEL
+		FROM DBO.LDF_DIMENSIONAL_DATA LDA with (nolock)
+		INNER JOIN #LDF_UID_LIST LL
+			ON LDA.LDF_UID = LL.LDF_UID
+		LEFT JOIN dbo.nrt_ldf_data NRT_LDF_DATA with (nolock)
+			ON LDA.LDF_UID = NRT_LDF_DATA.LDF_UID And 
+			LDA.investigation_uid = NRT_LDF_DATA.business_object_uid
+		where NRT_LDF_DATA.ldf_meta_data_business_object_nm is null 
+			and NRT_LDF_DATA.ldf_meta_data_add_time is null;
+
+
+		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+		IF
+			@debug = 'true'
+			SELECT @Proc_Step_Name AS step, *
+			FROM #LDF_DATA_DEL;
+
+		INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		VALUES 
+			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);  
+
+		------------------------------------------------------------------------------------------------------------------------------------------
+		BEGIN TRANSACTION
+
+		SET 
+			@PROC_STEP_NO =  @PROC_STEP_NO + 1;
+		SET 
+			@PROC_STEP_NAME = 'Delete from #LDF_DATA'; 
+
+		DELETE LDA
+		FROM DBO.LDF_DIMENSIONAL_DATA LDA with (nolock)
+		INNER JOIN #LDF_DATA_DEL LDF_DATA_DEL
+			ON LDA.LDF_UID = LDF_DATA_DEL.LDF_UID;
+
+
+		INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+		VALUES 
+			(@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);  
+
+		COMMIT TRANSACTION; 
+
+		------------------------------------------------------------------------------------------------------------------------------------------
 
 
 		SET 
@@ -859,9 +912,10 @@ BEGIN
 				b.data_type, 
 				b.Field_size
 			INTO #LDF_TRANSLATED_DATA 
-			FROM #LDF_BASE_COUNTRY_TRANSLATED_FINAL a
-			INNER JOIN [dbo].D_LDF_META_DATA b WITH (NOLOCk)
-				ON a.ldf_uid= b.ldf_uid
+			FROM [dbo].D_LDF_META_DATA b WITH (NOLOCK)
+			RIGHT OUTER JOIN #LDF_BASE_COUNTRY_TRANSLATED_FINAL a
+				ON a.ldf_uid= b.ldf_uid 
+				AND b.ldf_uid IS NOT NULL 
 					
 			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 

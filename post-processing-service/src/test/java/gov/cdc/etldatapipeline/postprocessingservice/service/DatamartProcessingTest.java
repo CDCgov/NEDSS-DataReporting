@@ -19,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
@@ -50,6 +51,7 @@ class DatamartProcessingTest {
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+        datamartProcessor.setCovidDmEnable(true);
     }
 
     @AfterEach
@@ -68,7 +70,7 @@ class DatamartProcessingTest {
 
         Datamart datamart = getDatamart(dmJson);
         DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
+        datamartKey.setEntityUid(Optional.ofNullable(datamartData.getPublicHealthCaseUid()).orElseGet(datamartData::getVaccinationUid));
 
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
@@ -96,7 +98,8 @@ class DatamartProcessingTest {
                 Arguments.of(null, CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), "CaseLabDatamart.json"),
                 Arguments.of("10160", BMIRD_CASE.getEntityName(), BMIRD_CASE.getStoredProcedure(), "BMIRDCaseDatamart.json"),
                 Arguments.of("10140", HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), "HepatitisCaseDatamart.json"),
-                Arguments.of("10190", PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), "PertussisCaseDatamart.json")
+                Arguments.of("10190", PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), "PertussisCaseDatamart.json"),
+                Arguments.of("11065", COVID_VACCINATION_DATAMART.getEntityName(), COVID_VACCINATION_DATAMART.getStoredProcedure(), "CovidVacDatamart.json")
         );
     }
 
@@ -111,7 +114,7 @@ class DatamartProcessingTest {
 
         Datamart datamart = getDatamart("HepDatamart.json");
         DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setPublicHealthCaseUid(datamartDataHep.getPublicHealthCaseUid());
+        datamartKey.setEntityUid(datamartDataHep.getPublicHealthCaseUid());
 
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
@@ -143,7 +146,13 @@ class DatamartProcessingTest {
 
     private DatamartData getDatamartData(String conditionCd, String entityName, String storedProcedure) {
         DatamartData datamartData = new DatamartData();
-        datamartData.setPublicHealthCaseUid(123L);
+
+        if (COVID_VACCINATION_DATAMART.getEntityName().equals(entityName)) {
+            datamartData.setVaccinationUid(789L);
+        } else {
+            datamartData.setPublicHealthCaseUid(123L);
+        }
+
         datamartData.setPatientUid(456L);
         datamartData.setConditionCd(conditionCd);
         datamartData.setDatamart(entityName);
