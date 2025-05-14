@@ -153,7 +153,6 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_ldf_mumps_datamart_postprocessing")
     void executeStoredProcForLdfMumpsDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    
     @Procedure("sp_ldf_tetanus_datamart_postprocessing")
     void executeStoredProcForLdfTetanusDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
@@ -162,5 +161,19 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
 
     @Procedure("sp_ldf_hepatitis_datamart_postprocessing")
     void executeStoredProcForLdfHepatitisDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
-    
+
+    @Procedure("sp_covid_case_datamart_postprocessing")
+    void executeStoredProcForCovidCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_covid_contact_datamart_postprocessing")
+    void executeStoredProcForCovidContactDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Procedure("sp_covid_vaccination_datamart_postprocessing")
+    void executeStoredProcForCovidVacDatamart(@Param("vacUids") String vacUids, @Param("patientUids") String patientUids);
+
+    @Procedure("sp_covid_lab_datamart_postprocessing")
+    void executeStoredProcForCovidLabDatamart(@Param("observationUids") String observationUids);
+
+    @Procedure("sp_covid_lab_celr_datamart_postprocessing")
+    void executeStoredProcForCovidLabCelrDatamart(@Param("observationUids") String observationUids);
 }

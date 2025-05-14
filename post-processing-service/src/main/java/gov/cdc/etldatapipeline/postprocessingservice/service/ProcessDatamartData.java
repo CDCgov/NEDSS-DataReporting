@@ -7,6 +7,7 @@ import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartDa
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +17,13 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.CASE_LAB_DATAMART;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.HEPATITIS_DATAMART;
 
 @Component
-@RequiredArgsConstructor
+@RequiredArgsConstructor @Setter
 public class ProcessDatamartData {
     private static final Logger logger = LoggerFactory.getLogger(ProcessDatamartData.class);
 
@@ -32,27 +34,38 @@ public class ProcessDatamartData {
     @Value("${spring.kafka.topic.datamart}")
     public String datamartTopic;
 
+    @Value("${featureFlag.covid-dm-enable}")
+    private boolean covidDmEnable;
+
     public void process(List<DatamartData> data) {
         if (Objects.nonNull(data) && !data.isEmpty()) {
             data = reduce(data);
             try {
                 for (DatamartData datamartData : data) {
-                    if (Strings.isNullOrEmpty(datamartData.getDatamart())
-                            || Objects.isNull(datamartData.getPatientUid())) {
-                        continue; // skipping now for empty datamart or unprocessed patients
+                    // check feature flag to prevent Covid dm submission
+                    if (covidDmEnable || !datamartData.getDatamart().startsWith("Covid")) {
+
+                        if (Strings.isNullOrEmpty(datamartData.getDatamart())
+                                || Objects.isNull(datamartData.getPatientUid())) {
+                            continue; // skipping now for empty datamart or unprocessed patients
+                        }
+
+                        Long entityUid = Optional
+                                .ofNullable(datamartData.getPublicHealthCaseUid())
+                                .orElseGet(datamartData::getVaccinationUid);
+
+                        Datamart dmart = modelMapper.map(datamartData, Datamart.class);
+                        DatamartKey dmKey = new DatamartKey();
+                        dmKey.setEntityUid(entityUid);
+                        String jsonKey = jsonGenerator.generateStringJson(dmKey);
+                        String jsonMessage = jsonGenerator.generateStringJson(dmart);
+
+                        kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
+                        logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
                     }
-
-                    Datamart dmart = modelMapper.map(datamartData, Datamart.class);
-                    DatamartKey dmKey = new DatamartKey();
-                    dmKey.setPublicHealthCaseUid(datamartData.getPublicHealthCaseUid());
-                    String jsonKey = jsonGenerator.generateStringJson(dmKey);
-                    String jsonMessage = jsonGenerator.generateStringJson(dmart);
-
-                    kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
-                    logger.info("Datamart data: PHC uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
                 }
             } catch (Exception e) {
-                String msg = "Error processing Datamart JSON array from investigation result data: " + e.getMessage();
+                String msg = "Error processing Datamart JSON array from datamart data: " + e.getMessage();
                 throw new DataProcessingException(msg, e);
             }
         }
