@@ -19,7 +19,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
@@ -70,7 +69,7 @@ class DatamartProcessingTest {
 
         Datamart datamart = getDatamart(dmJson);
         DatamartKey datamartKey = new DatamartKey();
-        datamartKey.setEntityUid(Optional.ofNullable(datamartData.getPublicHealthCaseUid()).orElseGet(datamartData::getVaccinationUid));
+        datamartKey.setEntityUid(datamartData.getPublicHealthCaseUid());
 
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
 
@@ -147,11 +146,7 @@ class DatamartProcessingTest {
     private DatamartData getDatamartData(String conditionCd, String entityName, String storedProcedure) {
         DatamartData datamartData = new DatamartData();
 
-        if (COVID_VACCINATION_DATAMART.getEntityName().equals(entityName)) {
-            datamartData.setVaccinationUid(789L);
-        } else {
-            datamartData.setPublicHealthCaseUid(123L);
-        }
+        datamartData.setPublicHealthCaseUid(123L);
 
         datamartData.setPatientUid(456L);
         datamartData.setConditionCd(conditionCd);

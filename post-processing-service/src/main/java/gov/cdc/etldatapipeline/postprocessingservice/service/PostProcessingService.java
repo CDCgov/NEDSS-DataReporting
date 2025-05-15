@@ -244,11 +244,9 @@ public class PostProcessingService {
                 logger.info("For payload: {} DataMart object is null. Skipping further processing", payloadNode);
                 return;
             }
-            if ((Objects.isNull(dmData.getPublicHealthCaseUid()) && Objects.isNull(dmData.getVaccinationUid())) ||
-                    Objects.isNull(dmData.getPatientUid())) {
+            if (Objects.isNull(dmData.getPublicHealthCaseUid()) || Objects.isNull(dmData.getPatientUid())) {
                 logger.info(
-                        "For payload: {} DataMart Public Health Case/Patient/Vaccination Id is null. Skipping further processing",
-                        payloadNode);
+                        "For payload: {} DataMart Case/Patient Id is null. Skipping further processing", payloadNode);
                 return;
             }
             if (Objects.isNull(dmData.getDatamart())) {
@@ -258,17 +256,14 @@ public class PostProcessingService {
 
             Map<String, Queue<Long>> dmMap = dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
 
-            Optional.ofNullable(dmData.getPublicHealthCaseUid()).ifPresent(uid ->
-                    dmMap.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).add(uid));
+            dmMap.computeIfAbsent(INVESTIGATION.getEntityName(),
+                    k -> new ConcurrentLinkedQueue<>()).add(dmData.getPublicHealthCaseUid());
 
             Optional.ofNullable(dmData.getPatientUid()).ifPresent(uid ->
                     dmMap.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).add(uid));
 
             Optional.ofNullable(dmData.getObservationUid()).ifPresent(uid ->
                     dmMap.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).add(uid));
-
-            Optional.ofNullable(dmData.getVaccinationUid()).ifPresent(uid ->
-                    dmMap.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).add(uid));
 
         } catch (Exception e) {
             String msg = "Error processing datamart message: " + e.getMessage();
@@ -559,9 +554,6 @@ public class PostProcessingService {
                 List<Long> uids = Optional.ofNullable(entry.getValue().get(INVESTIGATION.getEntityName()))
                         .map(ArrayList::new).orElseGet(ArrayList::new);
 
-                List<Long> vacUids = Optional.ofNullable(entry.getValue().get(VACCINATION.getEntityName()))
-                        .map(ArrayList::new).orElseGet(ArrayList::new);
-
                 List<Long> patUids = Optional.ofNullable(entry.getValue().get(PATIENT.getEntityName()))
                         .map(ArrayList::new).orElseGet(ArrayList::new);
 
@@ -575,7 +567,7 @@ public class PostProcessingService {
                 dmCache.put(dmKey, new ConcurrentHashMap<>());
 
                 // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
-                // can be null for COVID_VAC_DATAMART, in which vacUids are used as primary input
+                // for COVID_VAC_DATAMART it actually contains vaccination uids
                 String cases = uids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
 
                 // make sure the entity names for datamart enum values follows the same naming
@@ -678,11 +670,10 @@ public class PostProcessingService {
                                 investigationRepository::executeStoredProcForCovidContactDatamart, cases);
                         break;
                     case COVID_VACCINATION_DATAMART:
-                        String vacs = vacUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
                         String pats = patUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
 
                         executeDatamartProc(COVID_VACCINATION_DATAMART,
-                                investigationRepository::executeStoredProcForCovidVacDatamart, vacs, pats);
+                                investigationRepository::executeStoredProcForCovidVacDatamart, cases, pats);
                         break;
                     case COVID_LAB_DATAMART:
                         String labs = obsUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));

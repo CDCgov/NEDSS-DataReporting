@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.CASE_LAB_DATAMART;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.HEPATITIS_DATAMART;
@@ -50,13 +49,9 @@ public class ProcessDatamartData {
                             continue; // skipping now for empty datamart or unprocessed patients
                         }
 
-                        Long entityUid = Optional
-                                .ofNullable(datamartData.getPublicHealthCaseUid())
-                                .orElseGet(datamartData::getVaccinationUid);
-
                         Datamart dmart = modelMapper.map(datamartData, Datamart.class);
                         DatamartKey dmKey = new DatamartKey();
-                        dmKey.setEntityUid(entityUid);
+                        dmKey.setEntityUid(datamartData.getPublicHealthCaseUid());
                         String jsonKey = jsonGenerator.generateStringJson(dmKey);
                         String jsonMessage = jsonGenerator.generateStringJson(dmart);
 
