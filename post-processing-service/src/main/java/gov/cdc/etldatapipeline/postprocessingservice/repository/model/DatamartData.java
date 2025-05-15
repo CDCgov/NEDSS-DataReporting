@@ -24,6 +24,10 @@ public class DatamartData {
     @EqualsAndHashCode.Exclude
     private Long patientUid;
 
+    @Column(name = "observation_uid")
+    @EqualsAndHashCode.Exclude
+    private Long observationUid;
+
     @Column(name = "condition_cd")
     @EqualsAndHashCode.Exclude
     private String conditionCd;

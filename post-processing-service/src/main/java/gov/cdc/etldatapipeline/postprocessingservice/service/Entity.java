@@ -66,7 +66,12 @@ enum Entity {
     LDF_TETANUS(0, "LDF_TETANUS", Constants.PHC_UID, "sp_ldf_tetanus_datamart_postprocessing"),
     LDF_VACCINE_PREVENT_DISEASES(0, "LDF_VACCINE_PREVENT_DISEASES", Constants.PHC_UID, "sp_ldf_vaccine_prevent_diseases_datamart_postprocessing"),
     LDF_HEPATITIS(0, "LDF_HEPATITIS", Constants.PHC_UID, "sp_ldf_hepatitis_datamart_postprocessing"),
-    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing"); 
+    COVID_CASE_DATAMART(0, "Covid_Case_Datamart", Constants.PHC_UID, "sp_covid_case_datamart_postprocessing"),
+    COVID_CONTACT_DATAMART(0, "Covid_Contact_Datamart", Constants.PHC_UID, "sp_covid_contact_datamart_postprocessing"),
+    COVID_VACCINATION_DATAMART(0, "Covid_Vaccination_Datamart", "vaccination_uid", "sp_covid_vaccination_datamart_postprocessing"),
+    COVID_LAB_DATAMART(0, "Covid_Lab_Datamart", Constants.PHC_UID, "sp_covid_lab_datamart_postprocessing"),
+    COVID_LAB_CELR_DATAMART(0, "Covid_Lab_Celr_Datamart", Constants.PHC_UID, "sp_covid_lab_celr_datamart_postprocessing"),
+    UNKNOWN(-1, "unknown", "unknown_uid", "sp_nrt_unknown_postprocessing");
 
     private final int priority;
     private final String entityName;

@@ -42,6 +42,9 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 				@RowCount_no, LEFT (@phc_uids, 199)); 
 --------------------------------------------------------------------------------------------------------
 
+		/* THIS IS EXISTING CODE IN RDB. WHEN THERE IS NO RECORD IN LDF_DIMENSIONAL, THE SP WILL NOT EXECUTE. 
+		HENCE COMMENTING THIS LINE TO ENSURE ALL THE RECORDS ARE PROCESSED
+		
 		SET @count = 
 		( 
 			SELECT COUNT(1) 
@@ -53,8 +56,33 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 		);	 
 
 		IF (@count > 0) 
+		*/
+
 		BEGIN 
 			--------- Create #LDF_MUMPS table 
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+			SET @PROC_STEP_NAME = 'LDF_UID_LIST';  
+
+			--------- Create #LDF_UID_LIST table 
+
+			IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL   
+				DROP TABLE #LDF_UID_LIST; 
+		
+			SELECT distinct TRIM(value) AS value into #LDF_UID_LIST FROM STRING_SPLIT(@phc_uids, ',')		
+
+			if
+			@debug = 'true'
+			select @Proc_Step_Name as step, *
+			from #LDF_UID_LIST;
+	
+			SELECT @RowCount_no = @@ROWCOUNT;
+		
+			INSERT INTO [dbo].[job_flow_log]
+			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+			VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+					@RowCount_no);  
+								
+	--------------------------------------------------------------------------------------------------------
 	
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = ' GENERATING TMP_BASE_MUMPS';  
@@ -69,7 +97,7 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 							FROM dbo.LDF_DIMENSIONAL_DATA LDA 
 								INNER JOIN dbo.LDF_DATAMART_TABLE_REF ON PHC_CD = LDF_DATAMART_TABLE_REF.CONDITION_CD 
 																			AND DATAMART_NAME = upper('LDF_MUMPS')
-								INNER JOIN 	(SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@phc_uids, ',')) phc									
+								INNER JOIN 	#LDF_UID_LIST phc									
 								on LDA.INVESTIGATION_UID = phc.value;				
 				
 			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
@@ -575,6 +603,43 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 			@RowCount_no);  
 
 ------------------------------------------------------------------------------------------------
+			
+			--UPDATE LDF DM TO NULLS WHEN THERE IS NO RECORD IN LDF_DIMENSTIONAL
+			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
+			SET @PROC_STEP_NAME = 'UPDATE LDF_MUMPS when there is no record in the LDF_DIMENSIONAL_DATA';  
+				
+			BEGIN TRANSACTION; 
+
+			SET @dynamiccolumnUpdate=''; 
+				
+			SELECT   @dynamiccolumnUpdate= @dynamiccolumnUpdate + 'TBL.[' +  COLUMN_NAME  + '] = NULL ,' 
+			FROM  INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'LDF_MUMPS'
+				AND COLUMN_NAME NOT IN  ('INVESTIGATION_KEY', 'INVESTIGATION_LOCAL_ID', 'PROGRAM_JURISDICTION_OID', 'PATIENT_KEY', 'PATIENT_LOCAL_ID', 'DISEASE_NAME', 'DISEASE_CD')
+				
+			SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
+
+
+				EXEC ('update TBL SET ' +   @dynamiccolumnUpdate + ' FROM  
+				dbo.LDF_MUMPS TBL inner join dbo.INVESTIGATION INV with (nolock) 
+					ON TBL.INVESTIGATION_KEY = INV.INVESTIGATION_KEY
+				INNER JOIN #LDF_UID_LIST LDF_UID_LIST ON 
+					LDF_UID_LIST.VALUE = INV.CASE_UID
+				LEFT JOIN (SELECT DISTINCT INVESTIGATION_UID FROM DBO.LDF_DIMENSIONAL_DATA WITH (NOLOCK)) LDF_DIMENSIONAL_DATA 
+					ON LDF_DIMENSIONAL_DATA.INVESTIGATION_UID = INV.CASE_UID
+				WHERE LDF_DIMENSIONAL_DATA.INVESTIGATION_UID IS NULL;
+			');
+
+				SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+				
+				INSERT INTO [dbo].[job_flow_log]
+				(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+				VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+				@RowCount_no);  
+					
+				COMMIT TRANSACTION; 
+
+------------------------------------------------------------------------------------------------
+
 		END	
 		
 		SET @Proc_Step_no = 999; 

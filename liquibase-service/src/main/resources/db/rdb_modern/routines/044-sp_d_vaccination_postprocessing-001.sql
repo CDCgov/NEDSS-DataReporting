@@ -393,6 +393,18 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id,@Dataflow_Name,@Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
 
+        SELECT
+            nrt.vaccination_uid                                 AS public_health_case_uid,
+            nrt.patient_uid                                     AS patient_uid,
+            null                                                AS observation_uid,
+            dtm.Datamart                                        AS datamart,
+            dtm.condition_cd                                    AS condition_cd,
+            dtm.Stored_Procedure                                AS stored_procedure,
+            null                                                AS investigation_form_cd
+        FROM #D_VACCINATION_INIT v
+            INNER JOIN dbo.nrt_vaccination nrt with (nolock) ON v.VACCINATION_UID = nrt.vaccination_uid
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Vaccination_Datamart'-- replace with 'Covid_Vaccination_Datamart'
+        WHERE nrt.material_cd IN('207', '208', '213');
 
 	END TRY
 

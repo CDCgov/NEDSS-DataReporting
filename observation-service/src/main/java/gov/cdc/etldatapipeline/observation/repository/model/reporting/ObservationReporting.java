@@ -58,7 +58,7 @@ public class ObservationReporting {
     private String followupObservationUid;
 
     private Long patientId;
-    private Long orderingPersonId;
+    private String orderingPersonId;
     private Long morbPhysicianId;
     private Long morbReporterId;
     private Long morbHospReporterId;

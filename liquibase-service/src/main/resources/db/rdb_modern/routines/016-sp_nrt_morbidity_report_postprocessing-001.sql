@@ -1330,6 +1330,7 @@ BEGIN
 
         SELECT inv.CASE_UID                     AS public_health_case_uid,
                pat.PATIENT_UID                  AS patient_uid,
+               null                             AS observation_uid,
                dtm.Datamart                     AS datamart,
                c.CONDITION_CD                   AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure,
@@ -1346,6 +1347,7 @@ BEGIN
         UNION
         SELECT inv.CASE_UID                     AS public_health_case_uid,
                pat.PATIENT_UID                  AS patient_uid,
+               null                             AS observation_uid,
                dtm.Datamart                     AS datamart,
                null                             AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure,

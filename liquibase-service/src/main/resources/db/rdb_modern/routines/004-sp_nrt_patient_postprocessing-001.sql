@@ -487,8 +487,6 @@ BEGIN
                ,LEFT(@id_list,500)
                );
 
-        SELECT 'Success';
-
         COMMIT TRANSACTION;
 
         SET @proc_step_name='SP_COMPLETE';
@@ -518,6 +516,34 @@ BEGIN
                ,0
                ,LEFT(@id_list,500)
                );
+
+
+        SELECT nri.public_health_case_uid                       AS public_health_case_uid,
+               nrt.PATIENT_UID                                  AS patient_uid,
+               null                                             AS observation_uid,
+               CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
+               nri.cd                                           AS condition_cd,
+               dtm.Stored_Procedure                             AS stored_procedure,
+               nri.investigation_form_cd                        AS investigation_form_cd
+        FROM #temp_patient_table nrt
+            INNER JOIN dbo.nrt_investigation nri with (nolock) ON nrt.PATIENT_UID = nri.patient_id
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.PATIENT_UID
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nri.cd AND dtm.Datamart = 'Covid_Case_Datamart'
+            LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nri.cd
+        UNION
+        SELECT
+            vac.vaccination_uid                                 AS public_health_case_uid,
+            vac.patient_uid                                     AS patient_uid,
+            null                                                AS observation_uid,
+            dtm.Datamart                                        AS datamart,
+            dtm.condition_cd                                    AS condition_cd,
+            dtm.Stored_Procedure                                AS stored_procedure,
+            null                                                AS investigation_form_cd
+        FROM #temp_patient_table nrt with (nolock)
+            INNER JOIN dbo.nrt_vaccination vac with (nolock) on nrt.patient_uid = vac.patient_uid
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Vaccination_Datamart'
+        WHERE vac.material_cd IN('207', '208', '213');
+
 
     END TRY
 

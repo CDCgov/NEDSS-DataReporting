@@ -112,8 +112,6 @@ class PostProcessingServiceTest {
     void testPostProcessProviderMessage() {
         String topic = "dummy_provider";
         String key = "{\"payload\":{\"provider_uid\":123}}";
-        postProcessingServiceMock.setDTbHivEnable(true);
-        postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
@@ -146,7 +144,6 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -170,7 +167,6 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationTBMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":12}}";
-        postProcessingServiceMock.setDTbHivEnable(true);
 
         List<DatamartData> masterData = getTBDatamart(123L, 201L);
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
@@ -203,7 +199,6 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationVARMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":12}}";
-        postProcessingServiceMock.setDTbHivEnable(true);
 
         List<DatamartData> masterData = getVarDatamart(123L, 201L);
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
@@ -228,8 +223,6 @@ class PostProcessingServiceTest {
     void testPostProcessSummaryMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"S\"}}";
-        postProcessingServiceMock.setDTbHivEnable(true);
-        postProcessingServiceMock.setSummaryReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -247,8 +240,6 @@ class PostProcessingServiceTest {
     void testPostProcessAggregateMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"A\"}}";
-        postProcessingServiceMock.setDTbHivEnable(true);
-        postProcessingServiceMock.setAggregateReportEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -282,9 +273,6 @@ class PostProcessingServiceTest {
     void testPostProcessSummaryNotificationMessage() {
         String topic = "dummy_notification";
         String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123,\"act_type_cd\":\"SummaryNotification\"}}";
-
-        postProcessingServiceMock.setSummaryReportEnable(true);
-        postProcessingServiceMock.setAggregateReportEnable(true);
 
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
@@ -330,7 +318,6 @@ class PostProcessingServiceTest {
 
         String expectedPublicHealthCaseId = "123";
         String expectedRdbTableNames = "D_INV_CLINICAL,D_INV_ADMINISTRATIVE";
-        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessMessage(topic, key, msg);
         assertTrue(postProcessingServiceMock.idVals.containsKey(expectedPublicHealthCaseId));
         assertTrue(postProcessingServiceMock.idVals.containsValue(expectedRdbTableNames));
@@ -638,136 +625,11 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessBmirdCaseNegativeLdf() {
-        
-        postProcessingServiceMock.setLdfEnable(false);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"BMIRD_Case,LDF_BMIRD\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessBmirdLDFCase() {
-
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"BMIRD_Case,LDF_BMIRD\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForBmirdCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForBmirdStrepPneumoDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForLdfBmirdDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(7, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(BMIRD_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_BMIRD.getStoredProcedure()));
-        assertTrue(logs.get(6).getFormattedMessage().contains(BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure()));
-    }
-    
-    @Test
-    void testPostProcessGenericCaseLdfFoodBorneDatamartNegative() {
-        
-        postProcessingServiceMock.setLdfEnable(false);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessGenericCaseLdfFoodBorneDatamart() {
-
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForLdfFoodBorneDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_FOODBORNE.getStoredProcedure()));
-    }
-   
-    @Test
-    void testPostProcessGenericCaseLdfTetanusDatamartNegative() {
-        
-        postProcessingServiceMock.setLdfEnable(false);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(3, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
-    }
-
-    @Test
-    void testPostProcessGenericCaseLdfTetanusDatamart() {
-
-        postProcessingServiceMock.setLdfEnable(true);
-        String topic = "dummy_datamart";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
-                "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
-        postProcessingServiceMock.processDatamartIds();
-
-        String id = "123";
-        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(id);
-        verify(investigationRepositoryMock).executeStoredProcForLdfTetanusDatamart(id);
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
-        assertTrue(logs.get(2).getFormattedMessage().contains(GENERIC_CASE.getStoredProcedure()));
-        assertTrue(logs.get(4).getFormattedMessage().contains(LDF_TETANUS.getStoredProcedure()));
-    }
-
-    @Test
     void testPostProcessTBDatamart() {
         String topic = "tb_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"\"}}";
 
-        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
@@ -783,35 +645,11 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessDatamartNegative() {
-        String tbDatamartTopic = "tb_datamart";
-        String tbHivDatamartTopic = "tb_hiv_datamart";
-        String varDatamartTopic = "var_datamart";
-        String tbDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-                "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"\"}}";
-        String tbHivDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-        "\"datamart\":\"tb_hiv_datamart\",\"stored_procedure\":\"\"}}";
-
-        String varDatamartMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
-        "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
-
-        postProcessingServiceMock.setDTbHivEnable(false);
-        postProcessingServiceMock.postProcessDatamart(tbDatamartTopic, tbDatamartMsg);
-        postProcessingServiceMock.postProcessDatamart(tbHivDatamartTopic, tbHivDatamartMsg);
-        postProcessingServiceMock.postProcessDatamart(varDatamartTopic, varDatamartMsg);
-        postProcessingServiceMock.processDatamartIds();
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(4, logs.size());
-    }
-
-    @Test
     void testPostProcessVarDatamart() {
         String topic = "var_datamart";
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
 
-        postProcessingServiceMock.setDTbHivEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
@@ -828,8 +666,6 @@ class PostProcessingServiceTest {
     @MethodSource("datamartTestData")
     void testPostProcessDatamart(DatamartTestCase testCase) {
         String topic = "dummy_datamart";
-        postProcessingServiceMock.setDTbHivEnable(true);
-        postProcessingServiceMock.setLdfEnable(true);
         postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock);
@@ -874,6 +710,24 @@ class PostProcessingServiceTest {
                             verify(repo).executeStoredProcForLdfMumpsDatamart("123");
                             }
                         ),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Generic_Case,LDF_FOODBORNE\",\"stored_procedure\":\"sp_ldf_mumps_datamart_postprocessing\"}}",
+                        "Generic_Case,LDF_FOODBORNE", LDF_FOODBORNE.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfFoodBorneDatamart("123");
+                        }
+                ),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                                "\"datamart\":\"Generic_Case,LDF_TETANUS\",\"stored_procedure\":\"sp_ldf_mumps_datamart_postprocessing\"}}",
+                        "Generic_Case,LDF_TETANUS", LDF_TETANUS.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForGenericCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfTetanusDatamart("123");
+                        }
+                ),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                                 "\"datamart\":\"CRS_Case\",\"stored_procedure\":\"sp_crs_case_datamart_postprocessing\"}}",
@@ -927,6 +781,15 @@ class PostProcessingServiceTest {
                             verify(repo).executeStoredProcForBmirdStrepPneumoDatamart("123");
                         }),
                 new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
+                                "\"datamart\":\"BMIRD_Case,LDF_BMIRD\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
+                        "BMIRD_Case,LDF_BMIRD", BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(), 7,
+                        repo -> {
+                            verify(repo).executeStoredProcForBmirdCaseDatamart("123");
+                            verify(repo).executeStoredProcForLdfBmirdDatamart("123");
+                            verify(repo).executeStoredProcForBmirdStrepPneumoDatamart("123");
+                        }),
+                new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
                         HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), 3,
@@ -951,6 +814,29 @@ class PostProcessingServiceTest {
                         repo -> {
                             verify(repo).executeStoredProcForPertussisCaseDatamart("123");
                             verify(repo).executeStoredProcForLdfVacPreventDiseasesDatamart("123");
+                        }),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Case_Datamart\",\"stored_procedure\":\"sp_covid_case_datamart_postprocessing\"}}",
+                        COVID_CASE_DATAMART.getEntityName(), COVID_CASE_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidCaseDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Contact_Datamart\",\"stored_procedure\":\"sp_covid_contact_datamart_postprocessing\"}}",
+                        COVID_CONTACT_DATAMART.getEntityName(), COVID_CONTACT_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidContactDatamart("123")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Vaccination_Datamart\",\"stored_procedure\":\"sp_covid_vaccination_datamart_postprocessing\"}}",
+                        COVID_VACCINATION_DATAMART.getEntityName(), COVID_VACCINATION_DATAMART.getStoredProcedure(), 3,
+                        repo -> verify(repo).executeStoredProcForCovidVacDatamart("123", "456")),
+                new DatamartTestCase(
+                        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"observation_uid\":789,\"condition_cd\":\"11065\"," +
+                                "\"datamart\":\"Covid_Lab_Datamart\",\"stored_procedure\":\"sp_covid_lab_datamart_postprocessing\"}}",
+                        COVID_LAB_DATAMART.getEntityName(), COVID_LAB_CELR_DATAMART.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForCovidLabDatamart("789");
+                            verify(repo).executeStoredProcForCovidLabCelrDatamart("789");
                         })
         );
     }
@@ -1110,7 +996,6 @@ class PostProcessingServiceTest {
         String notTopic = "dummy_notification";
         String obsTopic = "dummy_observation";
 
-        postProcessingServiceMock.setInvSummaryDmEnable(true);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);
@@ -1127,7 +1012,6 @@ class PostProcessingServiceTest {
         String contactKey = "{\"payload\":{\"contact_uid\":123}}";
         String crTopic = "dummy_contact";
 
-        postProcessingServiceMock.setInvSummaryDmEnable(true);
         postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
@@ -1169,7 +1053,6 @@ class PostProcessingServiceTest {
         String orgTopic = "dummy_organization";
         String obsTopic = "dummy_observation";
 
-        postProcessingServiceMock.setMorbReportDmEnable(true);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey2, investigationKey2);
         postProcessingServiceMock.postProcessMessage(patTopic, patientKey, patientKey);
@@ -1194,8 +1077,6 @@ class PostProcessingServiceTest {
         String notTopic = "dummy_notification";
         String obsTopic = "dummy_observation";
 
-        postProcessingServiceMock.setInvSummaryDmEnable(true);
-        postProcessingServiceMock.setDynDmEnable(true);
         postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
         postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
         postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);
@@ -1394,7 +1275,8 @@ class PostProcessingServiceTest {
             "'{\"payload\":{}}'",
             "'{\"payload\":{\"public_health_case_uid\":null,\"patient_uid\":456,\"datamart\":\"dummy\"}}'",
             "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":null,\"datamart\":\"dummy\"}}'",
-            "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'"
+            "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'",
+
     })
     void testPostProcessDatamartIncompleteData(String msg) {
         String topic = "dummy_datamart";
