@@ -999,6 +999,7 @@ BEGIN
             inv_meta.DATAMART_NM as datamart,
             c.CONDITION_CD as condition_cd,
             null as patient_uid,
+            null as observation_uid,
             null as stored_procedure,
             null as investigation_form_cd
         INTO #INV_SUMM_RETURN
@@ -1203,8 +1204,7 @@ BEGIN
         select
             public_health_case_uid,
             patient_uid,
-            null    AS observation_uid,
-            null    AS vaccination_uid,
+            observation_uid,
             datamart,
             condition_cd,
             stored_procedure,

@@ -394,10 +394,9 @@ BEGIN
         VALUES (@batch_id,@Dataflow_Name,@Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
 
         SELECT
-            null                                                AS public_health_case_uid,
+            nrt.vaccination_uid                                 AS public_health_case_uid,
             nrt.patient_uid                                     AS patient_uid,
             null                                                AS observation_uid,
-            nrt.vaccination_uid                                 AS vaccination_uid,
             dtm.Datamart                                        AS datamart,
             dtm.condition_cd                                    AS condition_cd,
             dtm.Stored_Procedure                                AS stored_procedure,

@@ -14,9 +14,6 @@ public class Datamart {
     @JsonProperty("observation_uid")
     private Long observationUid;
 
-    @JsonProperty("vaccination_uid")
-    private Long vaccinationUid;
-
     @JsonProperty("condition_cd")
     private String conditionCd;
 

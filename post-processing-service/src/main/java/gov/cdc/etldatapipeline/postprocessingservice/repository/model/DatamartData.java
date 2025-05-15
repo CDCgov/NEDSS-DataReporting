@@ -28,10 +28,6 @@ public class DatamartData {
     @EqualsAndHashCode.Exclude
     private Long observationUid;
 
-    @Column(name = "vaccination_uid")
-    @EqualsAndHashCode.Exclude
-    private Long vaccinationUid;
-
     @Column(name = "condition_cd")
     @EqualsAndHashCode.Exclude
     private String conditionCd;
