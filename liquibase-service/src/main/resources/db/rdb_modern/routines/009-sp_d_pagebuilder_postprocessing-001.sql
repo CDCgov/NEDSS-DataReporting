@@ -2,8 +2,8 @@ CREATE OR ALTER PROCEDURE dbo.sp_d_pagebuilder_postprocessing
 	   	@Batch_id bigint,
 	   	@phc_id_list nvarchar(max),
 	   	@rdb_table_name varchar(250) = 'D_INV_ADMINISTRATIVE',
-	 	@category varchar(250) = 'INV_ADMINISTRATIVE',		
-		@debug bit = 'false' 
+	 	@category varchar(250) = 'INV_ADMINISTRATIVE',
+		@debug bit = 'false'
 AS
 BEGIN
 	DECLARE @RowCount_no int;
@@ -18,18 +18,18 @@ BEGIN
 		SET @Proc_Step_Name = 'SP_Start';
 
 		BEGIN TRANSACTION;
-	
+
 		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
 		VALUES( @Batch_id, @category, '' + @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, 0 );
 
-			
+
 		SET @Proc_Step_no = 2;
 		SET @Proc_Step_Name = ' Add new columns to table ' + @rdb_table_name;
 
-		-- create table rdb_ui_metadata_INV_ADMINISTRATIVE as 
+		-- create table rdb_ui_metadata_INV_ADMINISTRATIVE as
 
-		Create Table #Temp_Query_Table 
-		( 
+		Create Table #Temp_Query_Table
+		(
 			ID int IDENTITY(1, 1), QUERY_stmt varchar(5000)
 		);
 		DECLARE @column_query varchar(5000);
@@ -46,18 +46,18 @@ BEGIN
 																									  ELSE ' NULL'
 																									  END
 			   FROM INFORMATION_SCHEMA.COLUMNS AS c
-			   WHERE TABLE_NAME = 'S_' + @category AND 
+			   WHERE TABLE_NAME = 'S_' + @category AND
 					 NOT EXISTS
 			   (
 				   SELECT 1
 				   FROM INFORMATION_SCHEMA.COLUMNS
-				   WHERE TABLE_NAME = @rdb_table_name AND 
+				   WHERE TABLE_NAME = @rdb_table_name AND
 						 COLUMN_NAME = c.COLUMN_NAME
-			   ) AND 
+			   ) AND
 					 LOWER(COLUMN_NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' );
 
 		if @debug  = 'true' select * from #Temp_Query_Table;
-	
+
 		SET @Max_Query_No =
 		(
 			SELECT MAX(ID)
@@ -90,7 +90,7 @@ BEGIN
 		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
 		VALUES( @Batch_id, @category, '' + @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
-		
+
 		SET @Proc_Step_no = 3;
 		SET @Proc_Step_Name = ' Inserting data in to ' + @rdb_table_name;
 
@@ -112,7 +112,7 @@ BEGIN
 		EXEC sp_executesql @check_query;
 
 		-- SELECT @RowCount_no = @@ROWCOUNT;
-	
+
 		DECLARE @insert_query nvarchar(max);
 
 		SET @insert_query =
@@ -142,14 +142,14 @@ BEGIN
 		if @debug = 'true'  SELECT @insert_query;
 
 		EXEC sp_executesql @insert_query;
-		
+
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
 		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
 		VALUES( @Batch_id, @category + '-' + cast(@phc_id as varchar(20)), @rdb_table_name + '-' + cast(@phc_id as varchar(20)), 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
-		
+
 		SET @Proc_Step_no = 999;
 		SET @Proc_Step_Name = 'SP_COMPLETE';
 

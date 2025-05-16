@@ -647,4 +647,4 @@ BEGIN
 
     END CATCH
 
-END
+END;
