@@ -1,3350 +1,1597 @@
-CREATE OR ALTER PROCEDURE dbo.sp_d_lab_test_postprocessing @obs_ids nvarchar(max),
-                                                             @debug bit = 'false'
+CREATE OR ALTER PROCEDURE [dbo].[sp_d_labtest_result_postprocessing]
+(@pLabResultList nvarchar(max)
+, @pDebug bit = 'false')
+
 AS
 
 BEGIN
     /*
      * [Description]
-     * This stored procedure processes event based updates to LAB_TEST and associated tables.
+     * This stored procedure processes event based updates to LAB_TEST_RESULT and associated tables.
      * 1. Receives input list of Lab Report based observations from Observation Service.
-     * 2. Performs necessary transformations for domains: 'Order', 'Result', 'R_Order', 'R_Result',
-     * 	'I_Order', 'I_Result', 'Order_rslt'
+     * 2. Gets list of records from LAB TEST.
      * 3. Updates and inserts records into target dimensions.
      *
      * [Target Dimensions]
-     * 1. LAB_TEST
-     * 2. LAB_RPT_USER_COMMENT
+     * 1. LAB_TEST_RESULT
+     * 2. TEST_RESULT_GROUPING
+     * 3. RESULT_COMMENT_GROUP
+     * 4. LAB_RESULT_VAL
+     * 5. LAB_RESULT_COMMENT
      */
 
-
-    DECLARE @RowCount_no INT;
-    DECLARE @Proc_Step_no FLOAT = 0;
-    DECLARE @Proc_Step_Name VARCHAR(200) = '';
-    DECLARE @batch_id BIGINT;
-    SET @batch_id = CAST((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
-
-    DECLARE
-        @Dataflow_Name VARCHAR(200) = 'D_LAB_TEST Post-Processing Event';
-    DECLARE
-        @Package_Name VARCHAR(200) = 'sp_d_lab_test_postprocessing';
+    DECLARE @batch_id bigint;
+    SET @batch_id = CAST((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
+    DECLARE @RowCount_no INT ;
+    DECLARE @Proc_Step_no FLOAT = 0 ;
+    DECLARE @Proc_Step_Name VARCHAR(200) = '' ;
+    DECLARE @Dataflow_Name VARCHAR(200) = 'D_LABTEST_RESULTS Post-Processing Event';
+    DECLARE @Package_Name VARCHAR(200) = 'sp_d_labtest_result_postprocessing';
 
     BEGIN TRY
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
-        BEGIN TRANSACTION;
 
-        INSERT INTO dbo.job_flow_log ( batch_id
-                                     , [Dataflow_Name]
-                                     , [package_Name]
-                                     , [Status_Type]
-                                     , [step_number]
-                                     , [step_name]
-                                     , [row_count]
-                                     , [Msg_Description1])
-        VALUES ( @batch_id
-               , @Dataflow_Name
-               , @Package_Name
-               , 'START'
-               , @Proc_Step_no
-               , @Proc_Step_Name
-               , 0
-               , LEFT('ID List-' + @obs_ids, 500));
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT],[Msg_Description1])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO,LEFT(@pLabResultList,500));
 
-        COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_lab_test_resultInit ';
 
 
-        BEGIN TRANSACTION;
+        IF OBJECT_ID('#TMP_lab_test_resultInit', 'U') IS NOT NULL
+            DROP TABLE #TMP_lab_test_resultInit ;
+
+
+        --List of new Observations for Lab Test Result
+        SELECT lab_test_key,
+               root_ordered_test_pntr,
+               lab_test_uid,
+               record_status_cd,
+               lab_rpt_created_dt,
+               lab_test_type, -- for TMP_Result_And_R_Result
+               elr_ind -- for TMP_Result_And_R_Result
+        INTO #TMP_D_LAB_TEST_N
+        FROM dbo.LAB_TEST with (nolock)
+        WHERE lab_test_uid IN (SELECT value FROM string_split(@pLabResultList, ','))
+
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_D_LAB_TEST_N',* FROM #TMP_D_LAB_TEST_N;
+
+
+        --Get morbidity reports associated to lab
+        SELECT
+            tst.lab_test_key,
+            tst.root_ordered_test_pntr,
+            tst.lab_test_uid,
+            tst.record_status_cd,
+            tst.Root_Ordered_Test_Pntr AS Root_Ordered_Test_Pntr2 ,
+            tst.lab_rpt_created_dt,
+            no2.associated_phc_uids,
+            COALESCE(morb.morb_rpt_key,1) 'MORB_RPT_KEY',
+            morb_event.PATIENT_KEY AS morb_patient_key,
+            morb_event.Condition_Key AS morb_Condition_Key,
+            morb_event.Investigation_Key AS morb_Investigation_Key,
+            morb_event.MORB_RPT_SRC_ORG_KEY AS MORB_RPT_SRC_ORG_KEY
+        INTO #TMP_lab_test_resultInit
+        FROM #TMP_D_LAB_TEST_N AS tst
+                 /* Morb report */
+                 LEFT JOIN dbo.nrt_observation no2 with (nolock) ON tst.lab_test_uid = no2.observation_uid
+                 LEFT JOIN dbo.Morbidity_Report as morb with (nolock)
+                           ON no2.report_observation_uid = morb.morb_rpt_uid
+                 LEFT JOIN dbo.Morbidity_Report_Event morb_event with (nolock) on
+            morb_event.morb_rpt_key= morb.morb_rpt_key;
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_lab_test_resultInit',* FROM #TMP_lab_test_resultInit;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'GENERATING #s_edx_document1 ';
-
-
-        IF OBJECT_ID('#s_edx_document1', 'U') IS NOT NULL
-            drop table #s_edx_document1;
-
-        select EDX_Document_uid, edx_act_uid, edx_add_time
-        into #s_edx_document1
-        from (select EDX_Document_uid,
-                     edx_act_uid,
-                     edx_add_time,
-                     ROW_NUMBER() OVER (PARTITION BY edx_act_uid ORDER BY edx_add_time DESC) rankno
-              from dbo.nrt_observation_edx edx
-              where edx.edx_act_uid IN (SELECT value FROM STRING_SPLIT(@obs_ids, ','))) edx_lst
-        where edx_lst.rankno = 1;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #LAB_TESTinit_a ';
-
-
-        IF OBJECT_ID('#LAB_TESTinit_a', 'U') IS NOT NULL
-            drop table #LAB_TESTinit_a;
-
-
-        select distinct obs.observation_uid          as LAB_TEST_uid_Test,
-                        cast(1 as bigint)            as parent_test_pntr,
-                        obs.observation_uid          as LAB_TEST_pntr,
-                        obs.activity_to_time         as LAB_TEST_dt,
-                        obs.method_cd                as test_method_cd,
-                        cast(1 as bigint)            as root_ordered_test_pntr,
-                        obs.method_desc_txt          as test_method_cd_desc,
-                        obs.priority_cd              as priority_cd,
-                        obs.target_site_cd           as specimen_site,
-                        obs.target_site_desc_txt     as SPECIMEN_SITE_desc,
-                        obs.txt                      as Clinical_information,
-                        obs.obs_domain_cd_st_1       as LAB_TEST_Type,
-                        obs.cd                       as LAB_TEST_cd,
-                        obs.cd_desc_txt              as LAB_TEST_cd_desc,
-                        obs.Cd_system_cd             as LAB_TEST_cd_sys_cd,
-                        obs.Cd_system_desc_txt       as LAB_TEST_cd_sys_nm,
-                        obs.Alt_cd                   as Alt_LAB_TEST_cd,
-                        obs.Alt_cd_desc_txt          as Alt_LAB_TEST_cd_desc,
-                        obs.Alt_cd_system_cd         as Alt_LAB_TEST_cd_sys_cd,
-                        obs.Alt_cd_system_desc_txt   as Alt_LAB_TEST_cd_sys_nm,
-                        obs.effective_from_time      as specimen_collection_dt,
-                        obs.local_id                 as lab_rpt_local_id,
-                        obs.shared_ind               as lab_rpt_share_ind,
-                        obs.PROGRAM_JURISDICTION_OID as oid,
-                        obs.record_status_cd         as record_status_cd,
-                        obs.record_status_cd         as record_status_cd_for_result,
-                        obs.STATUS_CD                as lab_rpt_status,
-                        obs.ADD_TIME                 as LAB_RPT_CREATED_DT,
-                        obs.ADD_USER_ID              as LAB_RPT_CREATED_BY,
-                        obs.rpt_to_state_time        as LAB_RPT_RECEIVED_BY_PH_DT,
-                        obs.LAST_CHG_TIME            as LAB_RPT_LAST_UPDATE_DT,
-                        obs.LAST_CHG_USER_ID         as LAB_RPT_LAST_UPDATE_BY,
-                        obs.electronic_ind           as ELR_IND,
-                        obs.jurisdiction_cd          as Jurisdiction_cd,
-                        CASE
-                            WHEN jurisdiction_cd IS NOT NULL THEN jc.code_desc_txt
-                            ELSE cast(null as [varchar](50))
-                            END                      as JURISDICTION_NM,
-                        obs.observation_uid          as Lab_Rpt_Uid,
-                        obs.activity_to_time         as resulted_lab_report_date,
-                        obs.activity_to_time         as sus_lab_report_date,
-                        obs.report_observation_uid,
-                        obs.report_refr_uid,
-                        obs.report_sprt_uid,
-                        obs.followup_observation_uid,
-                        obs.accession_number,
-                        obs.morb_hosp_id,
-                        obs.transcriptionist_auth_type,
-                        obs.assistant_interpreter_auth_type,
-                        obs.morb_physician_id,
-                        obs.morb_reporter_id,
-                        obs.transcriptionist_val,
-                        obs.transcriptionist_first_nm,
-                        obs.transcriptionist_last_nm,
-                        obs.assistant_interpreter_val,
-                        obs.assistant_interpreter_first_nm,
-                        obs.assistant_interpreter_last_nm,
-                        obs.result_interpreter_id,
-                        obs.transcriptionist_id_assign_auth,
-                        obs.assistant_interpreter_id_assign_auth,
-                        obs.interpretation_cd,
-                        loinc_con.condition_cd       as condition_cd,
-                        cvg.code_short_desc_txt      as LAB_TEST_status,
-                        obs.PROCESSING_DECISION_CD
-        into #LAB_TESTinit_a
-        from dbo.nrt_observation obs
-                 left join dbo.nrt_srte_Loinc_condition as loinc_con on obs.cd = loinc_con.loinc_cd
-                 left join dbo.nrt_srte_Code_value_general as cvg
-                           on obs.status_cd = cvg.code
-                               and cvg.code_set_nm = 'ACT_OBJ_ST'
-                 left join dbo.nrt_srte_Jurisdiction_code jc
-                           on obs.jurisdiction_cd = jc.code
-                               and jc.code_set_nm = 'S_JURDIC_C'
-        where obs.obs_domain_cd_st_1 in ('Order', 'Result', 'R_Order', 'R_Result', 'I_Order', 'I_Result', 'Order_rslt')
-          and (obs.CTRL_CD_DISPLAY_FORM = 'LabReport' or obs.CTRL_CD_DISPLAY_FORM = 'LabReportMorb' or
-               obs.CTRL_CD_DISPLAY_FORM is null)
-          and obs.observation_uid in (SELECT value FROM STRING_SPLIT(@obs_ids, ','));
-
-
-        if
-            @debug = 'true'
-            select @Proc_Step_Name as step, *
-            from #LAB_TESTinit_a;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-        SET
-        @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
+        SET @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
 
 
         select obstxt.*
         into #tmp_nrt_observation_txt
         from (
-             select *
-             from dbo.nrt_observation_txt
-             where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
-         ) obstxt
-         left outer join dbo.nrt_observation obs
-          on obs.observation_uid = obstxt.observation_uid
-          where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
-        ;
+                 select *
+                 from dbo.nrt_observation_txt
+                 where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
+             ) obstxt
+                 left outer join dbo.nrt_observation obs
+                                 on obs.observation_uid = obstxt.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1);
 
         SELECT @RowCount_no = @@ROWCOUNT;
-
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-        SET
-        @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_reason';
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        select obsres.*
-        into #tmp_nrt_observation_reason
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_coded';
+
+        select obscoded.*
+        into #tmp_nrt_observation_coded
         from (
-             select *
-             from dbo.nrt_observation_reason
-             where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
-         ) obsres
-         left outer join dbo.nrt_observation obs
-          on obs.observation_uid = obsres.observation_uid
-          where isnull(obs.batch_id,1) = isnull(obsres.batch_id,1)
-        ;
+                 select *
+                 from dbo.nrt_observation_coded
+                 where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
+             ) obscoded
+                 left outer join dbo.nrt_observation obs
+                                 on obs.observation_uid = obscoded.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obscoded.batch_id,1);
 
         SELECT @RowCount_no = @@ROWCOUNT;
-
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #s_edx_document ';
+--------------------------------------------------------------------------------------------------------------------------------
 
 
-        IF
-            OBJECT_ID('#s_edx_document', 'U') IS NOT NULL
-            drop table #s_edx_document;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_numeric';
 
-        WITH edx_prep AS (select EDX_Document_uid,
-                                 edx_act_uid,
-                                 edx_add_time,
-                                 CONVERT(varchar, edx_add_time, 101) as add_timeSt
-                          from #s_edx_document1)
-        select EDX_Document_uid,
-               edx_act_uid,
-               edx_add_time,
-               add_timeSt,
-               document_link = ('<a href="#" ' +
-                                replace(
-                                        ('onClick="window.open(''/nbs/viewELRDocument.do?method=viewELRDocument&documentUid='
-                                            + cast(EDX_Document_uid as varchar) + ' &dateReceivedHidden=' + add_timeSt + ''' ,''DocumentViewer'',''width=900,height=800,left=0,top=0,
-						menubar=no,titlebar=no,toolbar=no,scrollbars=yes,location=no'');">View Lab Document</a>'), ' ',
-                                        ''))
-        into #s_edx_document
-        from edx_prep;
-
+        select obsnum.*
+        into #tmp_nrt_observation_numeric
+        from (
+                 select *
+                 from dbo.nrt_observation_numeric
+                 where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
+             ) obsnum
+                 left outer join dbo.nrt_observation obs
+                                 on obs.observation_uid = obsnum.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obsnum.batch_id,1);
 
         SELECT @RowCount_no = @@ROWCOUNT;
-
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TESTinit ';
+--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        IF
-            OBJECT_ID('#LAB_TESTinit', 'U') IS NOT NULL
-            drop table #LAB_TESTinit;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_date';
 
-        select distinct a.LAB_TEST_uid_Test,
-                        a.parent_test_pntr,
-                        a.LAB_TEST_pntr,
-                        a.LAB_TEST_dt,
-                        a.test_method_cd,
-                        a.root_ordered_test_pntr,
-                        a.test_method_cd_desc,
-                        a.priority_cd,
-                        a.specimen_site,
-                        a.SPECIMEN_SITE_desc,
-                        a.Clinical_information,
-                        a.LAB_TEST_Type,
-                        a.LAB_TEST_cd,
-                        a.LAB_TEST_cd_desc,
-                        a.LAB_TEST_cd_sys_cd,
-                        a.LAB_TEST_cd_sys_nm,
-                        a.Alt_LAB_TEST_cd,
-                        a.Alt_LAB_TEST_cd_desc,
-                        a.Alt_LAB_TEST_cd_sys_cd,
-                        a.Alt_LAB_TEST_cd_sys_nm,
-                        a.specimen_collection_dt,
-                        a.lab_rpt_local_id,
-                        a.lab_rpt_share_ind,
-                        a.oid,
-                        a.record_status_cd,
-                        a.record_status_cd_for_result,
-                        a.lab_rpt_status,
-                        a.LAB_RPT_CREATED_DT,
-                        a.LAB_RPT_CREATED_BY,
-                        a.LAB_RPT_RECEIVED_BY_PH_DT,
-                        a.LAB_RPT_LAST_UPDATE_DT,
-                        a.LAB_RPT_LAST_UPDATE_BY,
-                        a.ELR_IND,
-                        a.Jurisdiction_cd,
-                        a.JURISDICTION_NM,
-                        a.Lab_Rpt_Uid,
-                        a.resulted_lab_report_date,
-                        a.sus_lab_report_date,
-                        a.report_observation_uid,
-                        a.report_refr_uid,
-                        a.report_sprt_uid,
-                        a.followup_observation_uid,
-                        a.accession_number,
-                        a.morb_hosp_id,
-                        a.transcriptionist_auth_type,
-                        a.assistant_interpreter_auth_type,
-                        a.morb_physician_id,
-                        a.morb_reporter_id,
-                        a.transcriptionist_val,
-                        a.transcriptionist_first_nm,
-                        a.transcriptionist_last_nm,
-                        a.assistant_interpreter_val,
-                        a.assistant_interpreter_first_nm,
-                        a.assistant_interpreter_last_nm,
-                        a.result_interpreter_id,
-                        a.transcriptionist_id_assign_auth,
-                        a.assistant_interpreter_id_assign_auth,
-                        a.interpretation_cd,
-                        a.condition_cd,
-                        a.LAB_TEST_status,
-                        a.PROCESSING_DECISION_CD,
-                        b.document_link
-        into #LAB_TESTinit
-        from #LAB_TESTinit_a a
-                 left outer join #s_edx_document b on a.LAB_TEST_uid_test = b.edx_act_uid;
+        select obsdate.*
+        into #tmp_nrt_observation_date
+        from (
+                 select *
+                 from dbo.nrt_observation_date
+                 where observation_uid in (select value from STRING_SPLIT(@pLabResultList, ',') )
+             ) obsdate
+                 left outer join dbo.nrt_observation obs
+                                 on obs.observation_uid = obsdate.observation_uid
+        where isnull(obs.batch_id,1) = isnull(obsdate.batch_id,1);
 
         SELECT @RowCount_no = @@ROWCOUNT;
-
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST_mat_init ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST_mat_init', 'U') IS NOT NULL
-            drop table #LAB_TEST_mat_init;
-
-        with ordered_mat as (select mat.act_uid,
-                                    mat.material_cd,
-                                    mat.material_nm,
-                                    mat.material_details,
-                                    mat.material_collection_vol,
-                                    mat.material_collection_vol_unit,
-                                    mat.material_desc,
-                                    mat.risk_cd,
-                                    mat.risk_desc_txt,
-                                    ROW_NUMBER() OVER (PARTITION BY act_uid order by last_chg_time desc) as row_num
-                             from dbo.nrt_observation_material mat
-                             where mat.act_uid in (SELECT value FROM STRING_SPLIT(@obs_ids, ',')))
-        select mat.act_uid                      as LAB_TEST_uid_mat,
-               mat.material_cd                  as specimen_src,
-               mat.material_nm                  as specimen_nm,
-               mat.material_details             as Specimen_details,
-               mat.material_collection_vol      as Specimen_collection_vol,
-               mat.material_collection_vol_unit as Specimen_collection_vol_unit,
-               mat.material_desc                as Specimen_desc,
-               mat.risk_cd                      as Danger_cd,
-               mat.risk_desc_txt                as Danger_cd_desc
-        into #LAB_TEST_mat_init
-        from ordered_mat mat
-        where row_num = 1;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #OBS_REASON ';
-
-
-        IF
-            OBJECT_ID('#OBS_REASON', 'U') IS NOT NULL
-            drop table #OBS_REASON;
-
-        select obs.lab_test_uid_test       as observation_uid,
-               rsn.reason_desc_txt,
-               rsn.reason_cd,
-               cast(null as varchar(4000)) as REASON_FOR_TEST_DESC,
-               cast(null as varchar(2000)) as REASON_FOR_TEST_CD
-        into #OBS_REASON
-        from #LAB_TESTinit_a obs
-                 left join #tmp_nrt_observation_reason rsn
-                           on obs.lab_test_uid_test = rsn.observation_uid
-        -- where rsn.observation_uid in (SELECT value FROM STRING_SPLIT(@obs_ids, ','));
-        if
-            @debug = 'true'
-            select @Proc_Step_Name as step, *
-            from #OBS_REASON;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #OBS_REASON_FINAL ';
-
-
-        IF
-            OBJECT_ID('#OBS_REASON_FINAL', 'U') IS NOT NULL
-            drop table #OBS_REASON_FINAL;
-
-
-        SELECT DISTINCT LRV.observation_uid,
-                        SUBSTRING(
-                                (SELECT '|' + coalesce(ST1.reason_cd + '(' + reason_desc_txt + ')', '') AS [text()]
-                                 FROM #OBS_REASON ST1
-                                 WHERE ST1.observation_uid = LRV.observation_uid
-                                 ORDER BY ST1.observation_uid
-                                 FOR XML PATH ('')), 2, 1000) REASON_FOR_TEST_DESC,
-                        SUBSTRING(
-                                (SELECT '|' + ST1.reason_cd AS [text()]
-                                 FROM #OBS_REASON ST1
-                                 WHERE ST1.observation_uid = LRV.observation_uid
-                                 ORDER BY ST1.observation_uid
-                                 FOR XML PATH ('')), 2, 1000) REASON_FOR_TEST_CD
-        into #OBS_REASON_FINAL
-        FROM #OBS_REASON LRV;
-
-        if
-            @debug = 'true'
-            select @Proc_Step_Name as step, *
-            from #OBS_REASON_FINAL;
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST_oth ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST_oth', 'U') IS NOT NULL
-            drop table #LAB_TEST_oth;
-
-        select obs.observation_uid                                    as LAB_TEST_uid_oth,
-               lti.interpretation_cd                                  as interpretation_flg,
-               lti.accession_number                                   as ACCESSION_NBR,
-               (REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(obs.REASON_FOR_TEST_DESC,
-                                                                        '&#x09;', CHAR(9)),
-                                                                '&#x0A;', CHAR(10)),
-                                                        '&#x0D;', CHAR(13)),
-                                                '&#x20;', CHAR(32)),
-                                        '&amp;', CHAR(38)),
-                                '&lt;', CHAR(60)),
-                        '&gt;', CHAR(62)))                               REASON_FOR_TEST_DESC,
-               obs.REASON_FOR_TEST_CD,
-               rtrim(lti.transcriptionist_first_nm) + ' ' +
-               rtrim(lti.transcriptionist_last_nm)                    as transcriptionist_name,
-               lti.transcriptionist_id_assign_auth                    as transcriptionist_ass_auth_cd,
-               lti.transcriptionist_auth_type                         as Transcriptionist_Ass_Auth_Type,
-               lti.transcriptionist_val                               as transcriptionist_id,
-               rtrim(lti.assistant_interpreter_first_nm) + ' ' +
-               rtrim(lti.assistant_interpreter_last_nm)               as Assistant_Interpreter_Name,
-               lti.assistant_interpreter_id_assign_auth               as Assistant_inter_ass_auth_cd,
-               lti.assistant_interpreter_auth_type                    as Assistant_inter_ass_auth_type,
-               lti.assistant_interpreter_val                          as Assistant_interpreter_id,
-               rtrim(nprov.first_name) + ' ' + rtrim(nprov.last_name) as result_interpreter_name
-        into #LAB_TEST_oth
-        from #OBS_REASON_FINAL obs
-                 left join #LAB_TESTinit_a lti
-                           on obs.observation_uid = lti.LAB_TEST_uid_Test
-                 left join dbo.nrt_provider as nprov on lti.result_interpreter_id = nprov.provider_uid;
-
-        if
-            @debug = 'true'
-            select @Proc_Step_Name as step, *
-            from #LAB_TEST_oth;
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_uid ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_uid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_uid;
-
-        select LAB_TEST_uid_OTH AS LAB_TEST_uid
-        into #LAB_TEST1_uid
-        from #LAB_TEST_oth
-        union
-        select LAB_TEST_uid_mat
-        from #LAB_TEST_mat_init
-        union
-        select LAB_TEST_uid_test
-        from #LAB_TESTinit;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_TMP ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_TMP', 'U') IS NOT NULL
-            drop table #LAB_TEST1_TMP;
-
-
-        select lt1.LAB_TEST_uid,
-               lto.LAB_TEST_uid_oth,
-               lto.interpretation_flg,
-               lto.ACCESSION_NBR,
-               lto.REASON_FOR_TEST_DESC,
-               lto.REASON_FOR_TEST_CD,
-               lto.transcriptionist_name,
-               lto.transcriptionist_ass_auth_cd,
-               lto.Transcriptionist_Ass_Auth_Type,
-               lto.transcriptionist_id,
-               lto.Assistant_Interpreter_Name,
-               lto.Assistant_inter_ass_auth_cd,
-               lto.Assistant_inter_ass_auth_type,
-               lto.Assistant_interpreter_id,
-               lto.result_interpreter_name,
-               ltmi.specimen_src,
-               ltmi.specimen_nm,
-               ltmi.Specimen_details,
-               ltmi.Specimen_collection_vol,
-               ltmi.Specimen_collection_vol_unit,
-               ltmi.Specimen_desc,
-               ltmi.Danger_cd,
-               ltmi.Danger_cd_desc,
-               lti.parent_test_pntr,
-               lti.LAB_TEST_pntr,
-               lti.LAB_TEST_dt,
-               lti.test_method_cd,
-               lti.root_ordered_test_pntr,
-               lti.test_method_cd_desc,
-               lti.priority_cd,
-               lti.specimen_site,
-               lti.SPECIMEN_SITE_desc,
-               lti.Clinical_information,
-               lti.LAB_TEST_Type,
-               lti.LAB_TEST_cd,
-               lti.LAB_TEST_cd_desc,
-               lti.LAB_TEST_cd_sys_cd,
-               lti.LAB_TEST_cd_sys_nm,
-               lti.Alt_LAB_TEST_cd,
-               lti.Alt_LAB_TEST_cd_desc,
-               lti.Alt_LAB_TEST_cd_sys_cd,
-               lti.Alt_LAB_TEST_cd_sys_nm,
-               lti.specimen_collection_dt,
-               lti.lab_rpt_local_id,
-               lti.lab_rpt_share_ind,
-               lti.oid,
-               lti.record_status_cd,
-               lti.record_status_cd_for_result,
-               lti.lab_rpt_status,
-               lti.LAB_RPT_CREATED_DT,
-               lti.LAB_RPT_CREATED_BY,
-               lti.LAB_RPT_RECEIVED_BY_PH_DT,
-               lti.LAB_RPT_LAST_UPDATE_DT,
-               lti.LAB_RPT_LAST_UPDATE_BY,
-               lti.ELR_IND,
-               lti.Jurisdiction_cd,
-               lti.JURISDICTION_NM,
-               lti.resulted_lab_report_date,
-               lti.sus_lab_report_date,
-               lti.report_observation_uid,
-               lti.report_refr_uid,
-               lti.report_sprt_uid,
-               lti.followup_observation_uid,
-               lti.accession_number,
-               lti.morb_hosp_id,
-               lti.transcriptionist_auth_type,
-               lti.assistant_interpreter_auth_type,
-               lti.morb_physician_id,
-               lti.morb_reporter_id,
-               lti.transcriptionist_val,
-               lti.transcriptionist_first_nm,
-               lti.transcriptionist_last_nm,
-               lti.assistant_interpreter_val,
-               lti.assistant_interpreter_first_nm,
-               lti.assistant_interpreter_last_nm,
-               lti.result_interpreter_id,
-               lti.transcriptionist_id_assign_auth,
-               lti.assistant_interpreter_id_assign_auth,
-               lti.interpretation_cd,
-               lti.condition_cd,
-               lti.LAB_TEST_status,
-               lti.processing_decision_cd,
-               lti.document_link,
-               lti.Lab_Rpt_Uid as Lab_Rpt_Uid_Test1
-        into #LAB_TEST1_TMP
-        from #LAB_TEST1_uid lt1
-                 left outer join #LAB_TEST_oth lto on lt1.LAB_TEST_uid = lto.LAB_TEST_uid_oth
-                 left outer join #LAB_TEST_mat_init ltmi on lt1.LAB_TEST_uid = ltmi.LAB_TEST_uid_mat
-                 left outer join #LAB_TESTinit lti on lt1.LAB_TEST_uid = lti.LAB_TEST_uid_Test;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LabReportMorb ';
-
-
-        IF
-            OBJECT_ID('#LabReportMorb', 'U') IS NOT NULL
-            drop table #LabReportMorb;
-
-
-        select LAB_TEST_uid,
-               LAB_TEST_uid_oth,
-               Lab_Rpt_Uid_Test1,
-               report_observation_uid
-        into #LabReportMorb
-        from #LAB_TEST1_TMP
-        where LAB_TEST_type in ('Order', 'Result', 'Order_rslt')
-          and oid = 4;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #Morb_OID ';
-
-
-        IF
-            OBJECT_ID('#Morb_OID', 'U') IS NOT NULL
-            drop table #Morb_OID;
-
-        select o.PROGRAM_JURISDICTION_OID as Morb_oid,
-               l.Lab_Rpt_Uid_Test1        as Lab_Rpt_Uid_Mor,
-               l.LAB_TEST_uid             as LAB_TEST_uid_mor,
-               l.LAB_TEST_uid_oth         as LAB_TEST_uid_oth_mor
-        into #Morb_OID
-        from #LabReportMorb l,
-             dbo.nrt_observation l_extension,
-             dbo.nrt_observation o
-        where l.Lab_Rpt_Uid_Test1 = l_extension.observation_uid
-          and o.observation_uid = l_extension.report_observation_uid
-          and o.CTRL_CD_DISPLAY_FORM = 'MorbReport';
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_uid2 ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_uid2', 'U') IS NOT NULL
-            drop table #LAB_TEST1_uid2;
-
-        select lab_rpt_uid_mor as lab_rpt_uid
-        into #LAB_TEST1_uid2
-        from #Morb_OID
-        union
-        select Lab_Rpt_Uid_Test1
-        from #LAB_TEST1_TMP;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1 ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1', 'U') IS NOT NULL
-            drop table #LAB_TEST1;
-
-        select lt1.lab_rpt_uid,
-               lto.LAB_TEST_uid,
-               lto.LAB_TEST_uid_oth,
-               lto.interpretation_flg,
-               lto.ACCESSION_NBR,
-               lto.REASON_FOR_TEST_DESC,
-               lto.REASON_FOR_TEST_CD,
-               lto.transcriptionist_name,
-               lto.transcriptionist_ass_auth_cd,
-               lto.Transcriptionist_Ass_Auth_Type,
-               lto.transcriptionist_id,
-               lto.Assistant_Interpreter_Name,
-               lto.Assistant_inter_ass_auth_cd,
-               lto.Assistant_inter_ass_auth_type,
-               lto.Assistant_interpreter_id,
-               lto.result_interpreter_name,
-               lto.specimen_src,
-               lto.specimen_nm,
-               lto.Specimen_details,
-               lto.Specimen_collection_vol,
-               lto.Specimen_collection_vol_unit,
-               lto.Specimen_desc,
-               lto.Danger_cd,
-               lto.Danger_cd_desc,
-               lto.parent_test_pntr,
-               lto.LAB_TEST_pntr,
-               lto.LAB_TEST_dt,
-               lto.test_method_cd,
-               lto.root_ordered_test_pntr,
-               lto.test_method_cd_desc,
-               lto.priority_cd,
-               lto.specimen_site,
-               lto.SPECIMEN_SITE_desc,
-               lto.Clinical_information,
-               lto.LAB_TEST_Type,
-               lto.LAB_TEST_cd,
-               lto.LAB_TEST_cd_desc,
-               lto.LAB_TEST_cd_sys_cd,
-               lto.LAB_TEST_cd_sys_nm,
-               lto.Alt_LAB_TEST_cd,
-               lto.Alt_LAB_TEST_cd_desc,
-               lto.Alt_LAB_TEST_cd_sys_cd,
-               lto.Alt_LAB_TEST_cd_sys_nm,
-               lto.specimen_collection_dt,
-               lto.lab_rpt_local_id,
-               lto.lab_rpt_share_ind,
-               CASE
-                   WHEN rtrim(tmo.morb_oid) IS NOT NULL THEN tmo.morb_oid
-                   ELSE lto.oid
-                   END AS oid,
-               lto.record_status_cd,
-               lto.record_status_cd_for_result,
-               lto.lab_rpt_status,
-               lto.LAB_RPT_CREATED_DT,
-               lto.LAB_RPT_CREATED_BY,
-               lto.LAB_RPT_RECEIVED_BY_PH_DT,
-               lto.LAB_RPT_LAST_UPDATE_DT,
-               lto.LAB_RPT_LAST_UPDATE_BY,
-               lto.ELR_IND,
-               lto.Jurisdiction_cd,
-               lto.JURISDICTION_NM,
-               lto.resulted_lab_report_date,
-               lto.sus_lab_report_date,
-               lto.report_observation_uid,
-               lto.report_refr_uid,
-               lto.report_sprt_uid,
-               lto.followup_observation_uid,
-               lto.accession_number,
-               lto.morb_hosp_id,
-               lto.transcriptionist_auth_type,
-               lto.assistant_interpreter_auth_type,
-               lto.morb_physician_id,
-               lto.morb_reporter_id,
-               lto.transcriptionist_val,
-               lto.transcriptionist_first_nm,
-               lto.transcriptionist_last_nm,
-               lto.assistant_interpreter_val,
-               lto.assistant_interpreter_first_nm,
-               lto.assistant_interpreter_last_nm,
-               lto.result_interpreter_id,
-               lto.transcriptionist_id_assign_auth,
-               lto.assistant_interpreter_id_assign_auth,
-               lto.interpretation_cd,
-               lto.condition_cd,
-               lto.LAB_TEST_status,
-               lto.processing_decision_cd,
-               lto.document_link,
-               lto.Lab_Rpt_Uid_Test1,
-               tmo.Morb_oid,
-               CASE
-                   WHEN cvg.code_short_desc_txt IS NULL AND lto.processing_decision_cd IS NOT NULL
-                       THEN lto.processing_decision_cd
-                   ELSE cvg.code_short_desc_txt
-                   END as PROCESSING_DECISION_DESC
-        into #LAB_TEST1
-        from #LAB_TEST1_uid2 lt1
-                 left outer join #LAB_TEST1_TMP lto on lt1.lab_rpt_uid = lto.Lab_Rpt_Uid_Test1
-                 left outer join #Morb_OID tmo on lt1.lab_rpt_uid = tmo.lab_rpt_uid_mor
-                 left join dbo.nrt_srte_Code_value_general cvg
-                           on lto.processing_decision_cd = cvg.code
-                               and lto.processing_decision_cd is not null
-                               and cvg.code_set_nm = 'STD_NBS_PROCESSING_DECISION_ALL';
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #R_Result_to_R_Order ';
-
-
-        -- verified same as classic process join with act_uid
-        IF
-            OBJECT_ID('#R_Result_to_R_Order', 'U') IS NOT NULL
-            drop table #R_Result_to_R_Order;
-
-
-        -- create table R_Result_to_R_Order as
--- is source the lab_test_uid
-        select tst.LAB_TEST_uid           'LAB_TEST_uid',    --as LAB_TEST_uid label='R_Result_uid',
-
-               tst.report_observation_uid 'parent_test_pntr' -- is target going to be our report_observation_id
-        into #R_Result_to_R_Order
-        from #LAB_TEST1 as tst
-        where tst.LAB_TEST_type IN ('R_Result', 'I_Result');
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result1 ';
+
+
+        SELECT
+            tst.lab_test_key,
+            tst.root_ordered_test_pntr,
+            tst.lab_test_uid,
+            tst.record_status_cd,
+            tst.Root_Ordered_Test_Pntr AS Root_Ordered_Test_Pntr2,
+            tst.lab_rpt_created_dt,
+            morb_rpt_key,
+            tst.morb_patient_key,
+            tst.morb_Condition_Key,
+            tst.morb_Investigation_Key,
+            tst.MORB_RPT_SRC_ORG_KEY,
+            /*per1.person_key AS Transcriptionist_Key,*/
+            /*per2.person_key AS Assistant_Interpreter_Key,*/
+            /*per3.person_key AS Result_Interpreter_Key,*/
+            COALESCE(per4.provider_key,1) AS Specimen_Collector_Key,
+            COALESCE(per5.provider_key,1) AS Copy_To_Provider_Key,
+            COALESCE(per6.provider_key,1) AS Lab_Test_Technician_key,
+            COALESCE(org.Organization_key,1)		'REPORTING_LAB_KEY'  , -- AS Reporting_Lab_Key,
+            COALESCE(prv.provider_key,1) 'ORDERING_PROVIDER_KEY'  , -- AS Ordering_provider_key,
+            COALESCE(org2.Organization_key,1)	'ORDERING_ORG_KEY'  , -- AS Ordering_org_key,
+            COALESCE(con.condition_key,1) 'CONDITION_KEY'  , -- AS condition_key,
+            COALESCE(dat.Date_key,1) 						AS LAB_RPT_DT_KEY,
+
+            COALESCE(inv.Investigation_key,1) 	'INVESTIGATION_KEY'  , -- AS Investigation_key,
+            COALESCE(ldf_g.ldf_group_key,1)			AS LDF_GROUP_KEY,
+            tst.record_status_cd AS record_status_cd2,
+            cast ( NULL AS  bigint) RESULT_COMMENT_GRP_KEY
+        INTO #TMP_Lab_Test_Result1
+        FROM #TMP_lab_test_resultInit AS tst with (nolock)
+                 LEFT JOIN dbo.nrt_observation AS no2 with (nolock) ON tst.lab_test_uid = no2.observation_uid
+                 LEFT JOIN dbo.nrt_observation AS no3 with (nolock) ON tst.Root_Ordered_Test_Pntr = no3.observation_uid
+            /*get specimen collector: Associated to Root Order*/
+                 LEFT JOIN dbo.d_provider AS per4 with (nolock)
+                           ON no3.specimen_collector_id = per4.provider_uid
+            /*get copy_to_provider key: Associated to Root Order*/
+                 LEFT JOIN dbo.d_provider AS per5 with (nolock)
+                           ON no3.specimen_collector_id = per5.provider_uid
+            /*get lab_test_technician: Associated to Root Order*/
+                 LEFT JOIN dbo.d_provider AS per6 with (nolock)
+                           ON no3.lab_test_technician_id = per6.provider_uid
+            /* Ordering Provider
+             * CNDE-2548: Account for Multiple ORD associated to a lab
+             * */
+                 LEFT JOIN	dbo.d_provider 	AS prv with (nolock)
+                              ON EXISTS (SELECT 1 FROM STRING_SPLIT(no2.ordering_person_id, ',') nprv
+                                         WHERE cast(nprv.value as bigint) = prv.provider_uid)
+
+            --ON no2.ordering_person_id = prv.provider_uid
+            /* Reporting_Lab*/
+                 LEFT JOIN dbo.d_Organization	AS org with (nolock)
+                           ON no2.author_organization_id = org.Organization_uid
+            /* Ordering Facility*/
+
+                 LEFT JOIN dbo.d_Organization	AS org2 with (nolock)
+                           ON no2.ordering_organization_id = org2.Organization_uid
+
+            /* Condition it's just program area */
+
+            /*IF we add a program area to the Lab_Report Dimension we probably don't
+               even need a condition dimension.  Even though it's OK with the Dimension Modeling
+               principle for adding a prog_area_cd row to the condition, it sure will cause
+               some confusion among users.  There's no "disease" ON the input.
+               */
+                 LEFT JOIN dbo.v_condition_dim	AS con with (nolock)
+                           ON	no2.prog_area_cd  = con.program_area_cd
+                               AND con.condition_cd IS NULL
+            /*LDF_GRP_KEY*/
+            --LEFT JOIN ldf_group AS ldf_g 	ON tst.Lab_test_UID = ldf_g.business_object_uid --VS
+                 LEFT JOIN dbo.ldf_group AS ldf_g  with (nolock)	ON tst.Lab_test_UID = ldf_g.ldf_group_key
+
+            /* Lab_Rpt_Dt */ --VS	LEFT JOIN rdb_datetable 		as dat
+                 LEFT JOIN dbo.rdb_date AS dat  with (nolock)	ON  DATEADD(d,0,DATEDIFF(d,0,[lab_rpt_created_dt])) = dat.DATE_MM_DD_YYYY
+            /* PHC: Using nrt_observation's associated_phc_uids which captures observation-investigation mapping  */
+                 LEFT JOIN dbo.investigation AS inv with (nolock) ON
+            EXISTS (SELECT 1 FROM STRING_SPLIT(tst.associated_phc_uids, ',') i
+                    WHERE cast(i.value as bigint) = inv.case_uid);
+
+        IF @pDebug = 'true' SELECT @PROC_STEP_NAME,* FROM #TMP_Lab_Test_Result1;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #R_Result_to_R_Order_to_Order ';
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Result_And_R_Result ';
 
 
-        -- this step gets the parent to R_Order records
-        -- the highest level parent for R_Order is an Order, and that is the root record
-        IF
-            OBJECT_ID('#R_Result_to_R_Order_to_Order', 'U') IS NOT NULL
-            drop table #R_Result_to_R_Order_to_Order;
+        IF OBJECT_ID('#TMP_Result_And_R_Result', 'U') IS NOT NULL
+            DROP TABLE  #TMP_Result_And_R_Result;
 
 
--- create table R_Result_to_R_Order_to_Order as
-        select tst.LAB_TEST_UID,
-               tst.parent_test_pntr,
-               coalesce(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd)
-                                           as record_status_cd_for_result_drug,
-               parent_test.report_sprt_uid as root_thru_srpt,
-               parent_test.report_refr_uid as root_thru_refr,
-               coalesce(parent_test.report_sprt_uid, parent_test.report_observation_uid)
-                                           as root_ordered_test_pntr
-        into #R_Result_to_R_Order_to_Order
-        from #R_Result_to_R_Order as tst
-                 left join dbo.nrt_observation as parent_test
-                           on parent_test.observation_uid = tst.parent_test_pntr
-                 left join dbo.nrt_observation as tst2
-                           on parent_test.report_sprt_uid = tst2.observation_uid
-                 left join dbo.nrt_observation as tst3
-                           on parent_test.report_refr_uid = tst3.observation_uid
-                 left join dbo.nrt_observation as tst4
-                           on parent_test.report_observation_uid = tst4.observation_uid;
+        SELECT *
+        INTO #TMP_Result_And_R_Result
+        FROM #TMP_D_LAB_TEST_N --dbo.LAB_TEST
+        WHERE
+            (Lab_Test_Type = 'Result' OR  Lab_Test_Type IN ('R_Result', 'I_Result', 'Order_rslt'));
 
-        if @debug = 'true'
-            select 'r_result_to_r_order_to_order' as nm, *
-            from #R_Result_to_R_Order_to_Order;
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Result_And_R_Result',* FROM #TMP_Result_And_R_Result;
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        COMMIT TRANSACTION;
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Comment ';
 
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_testuid ';
+        IF OBJECT_ID('#TMP_Lab_Result_Comment', 'U') IS NOT NULL
+            DROP TABLE #TMP_Lab_Result_Comment ;
+
+        /*Notes: Inner Join specified*/
+        SELECT
+            lab104.lab_test_uid,
+            REPLACE(REPLACE(ovt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')	'LAB_RESULT_COMMENTS'  , -- asLab_Result_Comments,
+            ovt.ovt_seq	'LAB_RESULT_TXT_SEQ'  , -- AS Lab_Result_Txt_Seq,
+            lab104.record_status_cd
+        INTO #TMP_Lab_Result_Comment
+        FROM
+            #TMP_Result_And_R_Result		AS lab104
+                INNER JOIN #tmp_nrt_observation_txt AS ovt ON ovt.observation_uid =  lab104.lab_test_uid
+        WHERE 	ovt.ovt_value_txt IS NOT NULL
+          AND ovt.ovt_txt_type_cd = 'N'
+          AND ovt.ovt_seq <>  0;
 
 
-        IF
-            OBJECT_ID('#LAB_TEST1_testuid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_testuid;
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Result_Comment',* FROM #TMP_Lab_Result_Comment;
 
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        select lt1.LAB_TEST_uid
-        into #LAB_TEST1_testuid
-        from #LAB_TEST1 lt1
-        union
-        select rrr.LAB_TEST_uid
-        from #R_Result_to_R_Order_to_Order rrr;
+        --------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Comment ';
+
+        IF OBJECT_ID('#TMP_New_Lab_Result_Comment', 'U') IS NOT NULL
+            DROP TABLE #TMP_New_Lab_Result_Comment;
+
+        SELECT *,
+               cast( NULL AS varchar(2000)) AS v_lab_result_val_comments
+        INTO #TMP_New_Lab_Result_Comment
+        FROM #TMP_Lab_Result_Comment;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_final ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final;
-
-        select dimc.LAB_TEST_uid                                                 as LAB_TEST_uid_final,
-               tlt1.lab_rpt_uid,
-               tlt1.LAB_TEST_uid,
-               tlt1.LAB_TEST_uid_oth,
-               tlt1.interpretation_flg,
-               tlt1.ACCESSION_NBR,
-               tlt1.REASON_FOR_TEST_DESC,
-               tlt1.REASON_FOR_TEST_CD,
-               tlt1.transcriptionist_name,
-               tlt1.transcriptionist_ass_auth_cd,
-               tlt1.Transcriptionist_Ass_Auth_Type,
-               tlt1.transcriptionist_id,
-               tlt1.Assistant_Interpreter_Name,
-               tlt1.Assistant_inter_ass_auth_cd,
-               tlt1.Assistant_inter_ass_auth_type,
-               tlt1.Assistant_interpreter_id,
-               tlt1.result_interpreter_name,
-               tlt1.specimen_src,
-               tlt1.specimen_nm,
-               tlt1.Specimen_details,
-               tlt1.Specimen_collection_vol,
-               tlt1.Specimen_collection_vol_unit,
-               tlt1.Specimen_desc,
-               tlt1.Danger_cd,
-               tlt1.Danger_cd_desc,
-               coalesce(trr.parent_test_pntr, tlt1.parent_test_pntr)             as parent_test_pntr,
-               tlt1.LAB_TEST_pntr,
-               tlt1.LAB_TEST_dt,
-               tlt1.test_method_cd,
-               coalesce(trr.root_ordered_test_pntr, tlt1.root_ordered_test_pntr) as root_ordered_test_pntr,
-               tlt1.test_method_cd_desc,
-               tlt1.priority_cd,
-               tlt1.specimen_site,
-               tlt1.SPECIMEN_SITE_desc,
-               tlt1.Clinical_information,
-               tlt1.LAB_TEST_Type,
-               tlt1.LAB_TEST_cd,
-               tlt1.LAB_TEST_cd_desc,
-               tlt1.LAB_TEST_cd_sys_cd,
-               tlt1.LAB_TEST_cd_sys_nm,
-               tlt1.Alt_LAB_TEST_cd,
-               tlt1.Alt_LAB_TEST_cd_desc,
-               tlt1.Alt_LAB_TEST_cd_sys_cd,
-               tlt1.Alt_LAB_TEST_cd_sys_nm,
-               tlt1.specimen_collection_dt,
-               tlt1.lab_rpt_local_id,
-               tlt1.lab_rpt_share_ind,
-               tlt1.oid,
-               tlt1.record_status_cd,
-               tlt1.record_status_cd_for_result,
-               tlt1.lab_rpt_status,
-               tlt1.LAB_RPT_CREATED_DT,
-               tlt1.LAB_RPT_CREATED_BY,
-               tlt1.LAB_RPT_RECEIVED_BY_PH_DT,
-               tlt1.LAB_RPT_LAST_UPDATE_DT,
-               tlt1.LAB_RPT_LAST_UPDATE_BY,
-               tlt1.ELR_IND,
-               tlt1.Jurisdiction_cd,
-               tlt1.JURISDICTION_NM,
-               tlt1.resulted_lab_report_date,
-               tlt1.sus_lab_report_date,
-               tlt1.report_observation_uid,
-               tlt1.report_refr_uid,
-               tlt1.report_sprt_uid,
-               tlt1.followup_observation_uid,
-               tlt1.accession_number,
-               tlt1.morb_hosp_id,
-               tlt1.transcriptionist_auth_type,
-               tlt1.assistant_interpreter_auth_type,
-               tlt1.morb_physician_id,
-               tlt1.morb_reporter_id,
-               tlt1.transcriptionist_val,
-               tlt1.transcriptionist_first_nm,
-               tlt1.transcriptionist_last_nm,
-               tlt1.assistant_interpreter_val,
-               tlt1.assistant_interpreter_first_nm,
-               tlt1.assistant_interpreter_last_nm,
-               tlt1.result_interpreter_id,
-               tlt1.transcriptionist_id_assign_auth,
-               tlt1.assistant_interpreter_id_assign_auth,
-               tlt1.interpretation_cd,
-               tlt1.condition_cd,
-               tlt1.LAB_TEST_status,
-               tlt1.processing_decision_cd,
-               tlt1.document_link,
-               tlt1.Lab_Rpt_Uid_Test1,
-               tlt1.Morb_oid,
-               tlt1.PROCESSING_DECISION_DESC,
-               trr.[record_status_cd_for_result_drug],
-               trr.[root_thru_srpt],
-               trr.[root_thru_refr]
-        into #LAB_TEST1_final
-        from #LAB_TEST1_testuid DIMC
-                 LEFT OUTER JOIN #LAB_TEST1 tlt1 ON tlt1.LAB_TEST_uid = dimc.LAB_TEST_uid
-                 LEFT OUTER JOIN #R_Result_to_R_Order_to_Order trr ON trr.LAB_TEST_uid = dimc.LAB_TEST_uid;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #R_Order_to_Result ';
-
-
-        IF
-            OBJECT_ID('#R_Order_to_Result', 'U') IS NOT NULL
-            drop table #R_Order_to_Result;
-
-        select tst.LAB_TEST_uid      as LAB_TEST_uid,
-               tst.report_refr_uid   as parent_test_pntr,
-               tst2.observation_uid  as root_ordered_test_pntr,
-               tst2.record_status_cd as record_status_cd
-        into #R_Order_to_Result
-        from #LAB_TEST1_final as tst
-                 LEFT JOIN dbo.nrt_observation obs2
-                           ON tst.report_refr_uid = obs2.observation_uid
-                 LEFT JOIN dbo.nrt_observation tst2
-                           ON obs2.report_observation_uid = tst2.observation_uid
-        where tst.LAB_TEST_type IN ('R_Order', 'I_Order');
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_final_testuid ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_testuid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final_testuid;
-
-
-        select lt1.LAB_TEST_uid
-        into #LAB_TEST1_final_testuid
-        from #LAB_TEST1_final lt1
-        union
-        select rrr.LAB_TEST_uid
-        from #R_Order_to_Result rrr;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_final_result ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_result', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final_result;
-
-
-        select dimc.LAB_TEST_uid                                                 as LAB_TEST_uid_final_result,
-               tlt1.LAB_TEST_uid_final,
-               tlt1.lab_rpt_uid,
-               tlt1.LAB_TEST_uid,
-               tlt1.LAB_TEST_uid_oth,
-               tlt1.interpretation_flg,
-               tlt1.ACCESSION_NBR,
-               tlt1.REASON_FOR_TEST_DESC,
-               tlt1.REASON_FOR_TEST_CD,
-               tlt1.transcriptionist_name,
-               tlt1.transcriptionist_ass_auth_cd,
-               tlt1.Transcriptionist_Ass_Auth_Type,
-               tlt1.transcriptionist_id,
-               tlt1.Assistant_Interpreter_Name,
-               tlt1.Assistant_inter_ass_auth_cd,
-               tlt1.Assistant_inter_ass_auth_type,
-               tlt1.Assistant_interpreter_id,
-               tlt1.result_interpreter_name,
-               tlt1.specimen_src,
-               tlt1.specimen_nm,
-               tlt1.Specimen_details,
-               tlt1.Specimen_collection_vol,
-               tlt1.Specimen_collection_vol_unit,
-               tlt1.Specimen_desc,
-               tlt1.Danger_cd,
-               tlt1.Danger_cd_desc,
-               coalesce(trr.parent_test_pntr, tlt1.parent_test_pntr)             as parent_test_pntr,
-               tlt1.LAB_TEST_pntr,
-               tlt1.LAB_TEST_dt,
-               tlt1.test_method_cd,
-               coalesce(trr.root_ordered_test_pntr, tlt1.root_ordered_test_pntr) as root_ordered_test_pntr,
-               tlt1.test_method_cd_desc,
-               tlt1.priority_cd,
-               tlt1.specimen_site,
-               tlt1.SPECIMEN_SITE_desc,
-               tlt1.Clinical_information,
-               tlt1.LAB_TEST_Type,
-               tlt1.LAB_TEST_cd,
-               tlt1.LAB_TEST_cd_desc,
-               tlt1.LAB_TEST_cd_sys_cd,
-               tlt1.LAB_TEST_cd_sys_nm,
-               tlt1.Alt_LAB_TEST_cd,
-               tlt1.Alt_LAB_TEST_cd_desc,
-               tlt1.Alt_LAB_TEST_cd_sys_cd,
-               tlt1.Alt_LAB_TEST_cd_sys_nm,
-               tlt1.specimen_collection_dt,
-               tlt1.lab_rpt_local_id,
-               tlt1.lab_rpt_share_ind,
-               tlt1.oid,
-               coalesce(trr.[record_status_cd], tlt1.[record_status_cd])         as record_status_cd,
-               tlt1.record_status_cd_for_result,
-               tlt1.lab_rpt_status,
-               tlt1.LAB_RPT_CREATED_DT,
-               tlt1.LAB_RPT_CREATED_BY,
-               tlt1.LAB_RPT_RECEIVED_BY_PH_DT,
-               tlt1.LAB_RPT_LAST_UPDATE_DT,
-               tlt1.LAB_RPT_LAST_UPDATE_BY,
-               tlt1.ELR_IND,
-               tlt1.Jurisdiction_cd,
-               tlt1.JURISDICTION_NM,
-               tlt1.resulted_lab_report_date,
-               tlt1.sus_lab_report_date,
-               tlt1.report_observation_uid,
-               tlt1.report_refr_uid,
-               tlt1.report_sprt_uid,
-               tlt1.followup_observation_uid,
-               tlt1.accession_number,
-               tlt1.morb_hosp_id,
-               tlt1.transcriptionist_auth_type,
-               tlt1.assistant_interpreter_auth_type,
-               tlt1.morb_physician_id,
-               tlt1.morb_reporter_id,
-               tlt1.transcriptionist_val,
-               tlt1.transcriptionist_first_nm,
-               tlt1.transcriptionist_last_nm,
-               tlt1.assistant_interpreter_val,
-               tlt1.assistant_interpreter_first_nm,
-               tlt1.assistant_interpreter_last_nm,
-               tlt1.result_interpreter_id,
-               tlt1.transcriptionist_id_assign_auth,
-               tlt1.assistant_interpreter_id_assign_auth,
-               tlt1.interpretation_cd,
-               tlt1.condition_cd,
-               tlt1.LAB_TEST_status,
-               tlt1.processing_decision_cd,
-               tlt1.document_link,
-               tlt1.Lab_Rpt_Uid_Test1,
-               tlt1.Morb_oid,
-               tlt1.PROCESSING_DECISION_DESC,
-               tlt1.[record_status_cd_for_result_drug],
-               tlt1.[root_thru_srpt],
-               tlt1.[root_thru_refr]
-        into #LAB_TEST1_final_result
-        from #LAB_TEST1_final_testuid DIMC
-                 LEFT OUTER JOIN #LAB_TEST1_final tlt1 ON tlt1.LAB_TEST_uid = dimc.LAB_TEST_uid
-                 LEFT OUTER JOIN #R_Order_to_Result trr ON trr.LAB_TEST_uid = dimc.LAB_TEST_uid;
-
--- create table Result_to_Order as
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #Result_to_Order ';
-
-
-        -- gets the order (parent, also happens to be the root parents) for a record with type 'Result'
-        IF
-            OBJECT_ID('#Result_to_Order', 'U') IS NOT NULL
-            drop table #Result_to_Order;
-
-        select tst.LAB_TEST_uid           as LAB_TEST_uid,
-               tst.report_observation_uid as parent_test_pntr,
-               tst.report_observation_uid as root_ordered_test_pntr,
-               tst2.record_status_cd      as record_status_cd
-        into #Result_to_Order
-        from #LAB_TEST1_final_result as tst,
-             dbo.nrt_observation as tst2
-        where tst.LAB_TEST_type in ('Result', 'Order_rslt')
-          and tst2.observation_uid = tst.report_observation_uid
-          and tst.lab_test_uid != tst.report_observation_uid;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST1_final_orderuid ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_orderuid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final_orderuid;
-
-
-        select lt1.LAB_TEST_uid
-        into #LAB_TEST1_final_orderuid
-        from #LAB_TEST1_final_result lt1
-        union
-        select rrr.LAB_TEST_uid
-        from #Result_to_Order rrr;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING TMP_LAB_TEST1_final_order ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_order', 'U') IS NOT NULL
-            drop table r#LAB_TEST1_final_order;
-
-        select distinct dimc.LAB_TEST_uid                                         as LAB_TEST_uid_final_order,
-                        tlt1.LAB_TEST_uid_final_result,
-                        tlt1.LAB_TEST_uid_final,
-                        tlt1.lab_rpt_uid,
-                        tlt1.LAB_TEST_uid,
-                        tlt1.LAB_TEST_uid_oth,
-                        tlt1.interpretation_flg,
-                        tlt1.ACCESSION_NBR,
-                        tlt1.REASON_FOR_TEST_DESC,
-                        tlt1.REASON_FOR_TEST_CD,
-                        tlt1.transcriptionist_name,
-                        tlt1.transcriptionist_ass_auth_cd,
-                        tlt1.Transcriptionist_Ass_Auth_Type,
-                        tlt1.transcriptionist_id,
-                        tlt1.Assistant_Interpreter_Name,
-                        tlt1.Assistant_inter_ass_auth_cd,
-                        tlt1.Assistant_inter_ass_auth_type,
-                        tlt1.Assistant_interpreter_id,
-                        tlt1.result_interpreter_name,
-                        tlt1.specimen_src,
-                        tlt1.specimen_nm,
-                        tlt1.Specimen_details,
-                        tlt1.Specimen_collection_vol,
-                        tlt1.Specimen_collection_vol_unit,
-                        tlt1.Specimen_desc,
-                        tlt1.Danger_cd,
-                        tlt1.Danger_cd_desc,
-                        CASE
-                            WHEN LAB_TEST_TYPE = 'Order' THEN LAB_TEST_pntr
-                            ELSE coalesce(trr.parent_test_pntr, tlt1.parent_test_pntr)
-                            end                                                   as parent_test_pntr,
-                        tlt1.LAB_TEST_pntr,
-                        tlt1.LAB_TEST_dt,
-                        tlt1.test_method_cd,
-                        CASE
-                            WHEN LAB_TEST_TYPE = 'Order' THEN LAB_TEST_pntr
-                            else coalesce(trr.root_ordered_test_pntr, tlt1.root_ordered_test_pntr)
-                            end                                                   as root_ordered_test_pntr,
-                        tlt1.test_method_cd_desc,
-                        tlt1.priority_cd,
-                        tlt1.specimen_site,
-                        tlt1.SPECIMEN_SITE_desc,
-                        tlt1.Clinical_information,
-                        tlt1.LAB_TEST_Type,
-                        tlt1.LAB_TEST_cd,
-                        tlt1.LAB_TEST_cd_desc,
-                        tlt1.LAB_TEST_cd_sys_cd,
-                        tlt1.LAB_TEST_cd_sys_nm,
-                        tlt1.Alt_LAB_TEST_cd,
-                        tlt1.Alt_LAB_TEST_cd_desc,
-                        tlt1.Alt_LAB_TEST_cd_sys_cd,
-                        tlt1.Alt_LAB_TEST_cd_sys_nm,
-                        tlt1.specimen_collection_dt,
-                        tlt1.lab_rpt_local_id,
-                        tlt1.lab_rpt_share_ind,
-                        tlt1.oid,
-                        coalesce(trr.[record_status_cd], tlt1.[record_status_cd]) as record_status_cd,
-                        tlt1.record_status_cd_for_result,
-                        tlt1.lab_rpt_status,
-                        tlt1.LAB_RPT_CREATED_DT,
-                        tlt1.LAB_RPT_CREATED_BY,
-                        tlt1.LAB_RPT_RECEIVED_BY_PH_DT,
-                        tlt1.LAB_RPT_LAST_UPDATE_DT,
-                        tlt1.LAB_RPT_LAST_UPDATE_BY,
-                        tlt1.ELR_IND,
-                        tlt1.Jurisdiction_cd,
-                        tlt1.JURISDICTION_NM,
-                        tlt1.resulted_lab_report_date,
-                        tlt1.sus_lab_report_date,
-                        tlt1.report_observation_uid,
-                        tlt1.report_refr_uid,
-                        tlt1.report_sprt_uid,
-                        tlt1.followup_observation_uid,
-                        tlt1.accession_number,
-                        tlt1.morb_hosp_id,
-                        tlt1.transcriptionist_auth_type,
-                        tlt1.assistant_interpreter_auth_type,
-                        tlt1.morb_physician_id,
-                        tlt1.morb_reporter_id,
-                        tlt1.transcriptionist_val,
-                        tlt1.transcriptionist_first_nm,
-                        tlt1.transcriptionist_last_nm,
-                        tlt1.assistant_interpreter_val,
-                        tlt1.assistant_interpreter_first_nm,
-                        tlt1.assistant_interpreter_last_nm,
-                        tlt1.result_interpreter_id,
-                        tlt1.transcriptionist_id_assign_auth,
-                        tlt1.assistant_interpreter_id_assign_auth,
-                        tlt1.interpretation_cd,
-                        tlt1.condition_cd,
-                        tlt1.LAB_TEST_status,
-                        tlt1.processing_decision_cd,
-                        tlt1.document_link,
-                        tlt1.Lab_Rpt_Uid_Test1,
-                        tlt1.Morb_oid,
-                        tlt1.PROCESSING_DECISION_DESC,
-                        tlt1.[record_status_cd_for_result_drug],
-                        tlt1.[root_thru_srpt],
-                        tlt1.[root_thru_refr]
-        into #LAB_TEST1_final_order
-        from #LAB_TEST1_final_orderuid DIMC
-                 LEFT OUTER JOIN #LAB_TEST1_final_result tlt1 ON tlt1.LAB_TEST_uid = dimc.LAB_TEST_uid
-                 LEFT OUTER JOIN #Result_to_Order trr ON trr.LAB_TEST_uid = dimc.LAB_TEST_uid;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST2 ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST2', 'U') IS NOT NULL
-            drop table #LAB_TEST2;
-
-
-        select tst.LAB_TEST_uid_final_order,
-               tst.LAB_TEST_uid_final_result,
-               tst.LAB_TEST_uid_final,
-               tst.lab_rpt_uid,
-               tst.LAB_TEST_uid,
-               tst.LAB_TEST_uid_oth,
-               tst.interpretation_flg,
-               tst.ACCESSION_NBR,
-               tst.REASON_FOR_TEST_DESC,
-               tst.REASON_FOR_TEST_CD,
-               tst.transcriptionist_name,
-               tst.transcriptionist_ass_auth_cd,
-               tst.Transcriptionist_Ass_Auth_Type,
-               tst.transcriptionist_id,
-               tst.Assistant_Interpreter_Name,
-               tst.Assistant_inter_ass_auth_cd,
-               tst.Assistant_inter_ass_auth_type,
-               tst.Assistant_interpreter_id,
-               tst.result_interpreter_name,
-               tst.specimen_src,
-               tst.specimen_nm,
-               tst.Specimen_details,
-               tst.Specimen_collection_vol,
-               tst.Specimen_collection_vol_unit,
-               tst.Specimen_desc,
-               tst.Danger_cd,
-               tst.Danger_cd_desc,
-               tst.parent_test_pntr,
-               tst.LAB_TEST_pntr,
-               tst.LAB_TEST_dt,
-               tst.test_method_cd,
-               tst.root_ordered_test_pntr,
-               tst.test_method_cd_desc,
-               tst.priority_cd,
-               tst.specimen_site,
-               tst.SPECIMEN_SITE_desc,
-               tst.Clinical_information,
-               tst.LAB_TEST_Type,
-               tst.LAB_TEST_cd,
-               tst.LAB_TEST_cd_desc,
-               tst.LAB_TEST_cd_sys_cd,
-               tst.LAB_TEST_cd_sys_nm,
-               tst.Alt_LAB_TEST_cd,
-               tst.Alt_LAB_TEST_cd_desc,
-               tst.Alt_LAB_TEST_cd_sys_cd,
-               tst.Alt_LAB_TEST_cd_sys_nm,
-               tst.specimen_collection_dt,
-               tst.lab_rpt_local_id,
-               tst.lab_rpt_share_ind,
-               tst.oid,
-               tst.record_status_cd,
-               tst.record_status_cd_for_result,
-               tst.lab_rpt_status,
-               tst.LAB_RPT_CREATED_DT,
-               tst.LAB_RPT_CREATED_BY,
-               tst.LAB_RPT_RECEIVED_BY_PH_DT,
-               tst.LAB_RPT_LAST_UPDATE_DT,
-               tst.LAB_RPT_LAST_UPDATE_BY,
-               tst.ELR_IND,
-               tst.Jurisdiction_cd,
-               tst.JURISDICTION_NM,
-               tst.resulted_lab_report_date,
-               tst.sus_lab_report_date,
-               tst.report_observation_uid,
-               tst.report_refr_uid,
-               tst.report_sprt_uid,
-               tst.followup_observation_uid,
-               tst.accession_number,
-               tst.morb_hosp_id,
-               tst.transcriptionist_auth_type,
-               tst.assistant_interpreter_auth_type,
-               tst.morb_physician_id,
-               tst.morb_reporter_id,
-               tst.transcriptionist_val,
-               tst.transcriptionist_first_nm,
-               tst.transcriptionist_last_nm,
-               tst.assistant_interpreter_val,
-               tst.assistant_interpreter_first_nm,
-               tst.assistant_interpreter_last_nm,
-               tst.result_interpreter_id,
-               tst.transcriptionist_id_assign_auth,
-               tst.assistant_interpreter_id_assign_auth,
-               tst.interpretation_cd,
-               tst.condition_cd,
-               tst.LAB_TEST_status,
-               tst.processing_decision_cd,
-               tst.document_link,
-               tst.Lab_Rpt_Uid_Test1,
-               tst.Morb_oid,
-               tst.PROCESSING_DECISION_DESC,
-               tst.record_status_cd_for_result_drug,
-               tst.root_thru_srpt,
-               tst.root_thru_refr,
-               obs.cd_desc_txt 'Root_Ordered_Test_Nm'
-        into #LAB_TEST2
-        from #LAB_TEST1_final_order as tst
-                 left outer join dbo.nrt_observation as obs on tst.root_ordered_test_pntr = obs.observation_uid;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING TMP_LAB_TEST3 ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST3', 'U') IS NOT NULL
-            drop table #LAB_TEST3;
-
-        select tst.LAB_TEST_uid_final_order,
-               tst.LAB_TEST_uid_final_result,
-               tst.LAB_TEST_uid_final,
-               tst.lab_rpt_uid,
-               tst.LAB_TEST_uid,
-               tst.LAB_TEST_uid_oth,
-               tst.interpretation_flg,
-               tst.ACCESSION_NBR,
-               tst.REASON_FOR_TEST_DESC,
-               tst.REASON_FOR_TEST_CD,
-               tst.transcriptionist_name,
-               tst.transcriptionist_ass_auth_cd,
-               tst.Transcriptionist_Ass_Auth_Type,
-               tst.transcriptionist_id,
-               tst.Assistant_Interpreter_Name,
-               tst.Assistant_inter_ass_auth_cd,
-               tst.Assistant_inter_ass_auth_type,
-               tst.Assistant_interpreter_id,
-               tst.result_interpreter_name,
-               tst.specimen_src,
-               tst.specimen_nm,
-               tst.Specimen_details,
-               tst.Specimen_collection_vol,
-               tst.Specimen_collection_vol_unit,
-               tst.Specimen_desc,
-               tst.Danger_cd,
-               tst.Danger_cd_desc,
-               tst.parent_test_pntr,
-               tst.LAB_TEST_pntr,
-               tst.LAB_TEST_dt,
-               tst.test_method_cd,
-               tst.root_ordered_test_pntr,
-               tst.test_method_cd_desc,
-               tst.priority_cd,
-               tst.specimen_site,
-               tst.SPECIMEN_SITE_desc,
-               tst.Clinical_information,
-               tst.LAB_TEST_Type,
-               tst.LAB_TEST_cd,
-               tst.LAB_TEST_cd_desc,
-               tst.LAB_TEST_cd_sys_cd,
-               tst.LAB_TEST_cd_sys_nm,
-               tst.Alt_LAB_TEST_cd,
-               tst.Alt_LAB_TEST_cd_desc,
-               tst.Alt_LAB_TEST_cd_sys_cd,
-               tst.Alt_LAB_TEST_cd_sys_nm,
-               tst.specimen_collection_dt,
-               tst.lab_rpt_local_id,
-               tst.lab_rpt_share_ind,
-               tst.oid,
-               tst.record_status_cd,
-               tst.record_status_cd_for_result,
-               tst.lab_rpt_status,
-               tst.LAB_RPT_CREATED_DT,
-               tst.LAB_RPT_CREATED_BY,
-               tst.LAB_RPT_RECEIVED_BY_PH_DT,
-               tst.LAB_RPT_LAST_UPDATE_DT,
-               tst.LAB_RPT_LAST_UPDATE_BY,
-               tst.ELR_IND,
-               tst.Jurisdiction_cd,
-               tst.JURISDICTION_NM,
-               tst.resulted_lab_report_date,
-               tst.sus_lab_report_date,
-               tst.report_observation_uid,
-               tst.report_refr_uid,
-               tst.report_sprt_uid,
-               tst.followup_observation_uid,
-               tst.accession_number,
-               tst.morb_hosp_id,
-               tst.transcriptionist_auth_type,
-               tst.assistant_interpreter_auth_type,
-               tst.morb_physician_id,
-               tst.morb_reporter_id,
-               tst.transcriptionist_val,
-               tst.transcriptionist_first_nm,
-               tst.transcriptionist_last_nm,
-               tst.assistant_interpreter_val,
-               tst.assistant_interpreter_first_nm,
-               tst.assistant_interpreter_last_nm,
-               tst.result_interpreter_id,
-               tst.transcriptionist_id_assign_auth,
-               tst.assistant_interpreter_id_assign_auth,
-               tst.interpretation_cd,
-               tst.condition_cd,
-               tst.LAB_TEST_status,
-               tst.processing_decision_cd,
-               tst.document_link,
-               tst.Lab_Rpt_Uid_Test1,
-               tst.Morb_oid,
-               tst.PROCESSING_DECISION_DESC,
-               tst.record_status_cd_for_result_drug,
-               tst.root_thru_srpt,
-               tst.root_thru_refr,
-               tst.Root_Ordered_Test_Nm,
-               obs.cd_desc_txt 'Parent_Test_Nm'
-        into #LAB_TEST3
-        from #LAB_TEST2 as tst
-                 left outer join dbo.nrt_observation as obs on tst.parent_test_pntr = obs.observation_uid;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST4 ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST4', 'U') IS NOT NULL
-            drop table #LAB_TEST4;
-
-
-        select tst.LAB_TEST_uid_final_order,
-               tst.LAB_TEST_uid_final_result,
-               tst.LAB_TEST_uid_final,
-               tst.lab_rpt_uid,
-               tst.LAB_TEST_uid,
-               tst.LAB_TEST_uid_oth,
-               tst.interpretation_flg,
-               tst.ACCESSION_NBR,
-               tst.REASON_FOR_TEST_DESC,
-               tst.REASON_FOR_TEST_CD,
-               tst.transcriptionist_name,
-               tst.transcriptionist_ass_auth_cd,
-               tst.Transcriptionist_Ass_Auth_Type,
-               tst.transcriptionist_id,
-               tst.Assistant_Interpreter_Name,
-               tst.Assistant_inter_ass_auth_cd,
-               tst.Assistant_inter_ass_auth_type,
-               tst.Assistant_interpreter_id,
-               tst.result_interpreter_name,
-               tst.specimen_src,
-               tst.specimen_nm,
-               tst.Specimen_details,
-               tst.Specimen_collection_vol,
-               tst.Specimen_collection_vol_unit,
-               tst.Specimen_desc,
-               tst.Danger_cd,
-               tst.Danger_cd_desc,
-               tst.parent_test_pntr,
-               tst.LAB_TEST_pntr,
-               tst.LAB_TEST_dt,
-               tst.test_method_cd,
-               tst.root_ordered_test_pntr,
-               tst.test_method_cd_desc,
-               tst.priority_cd,
-               tst.specimen_site,
-               tst.SPECIMEN_SITE_desc,
-               tst.Clinical_information,
-               tst.LAB_TEST_Type,
-               tst.LAB_TEST_cd,
-               tst.LAB_TEST_cd_desc,
-               tst.LAB_TEST_cd_sys_cd,
-               tst.LAB_TEST_cd_sys_nm,
-               tst.Alt_LAB_TEST_cd,
-               tst.Alt_LAB_TEST_cd_desc,
-               tst.Alt_LAB_TEST_cd_sys_cd,
-               tst.Alt_LAB_TEST_cd_sys_nm,
-               tst.specimen_collection_dt,
-               tst.lab_rpt_local_id,
-               tst.lab_rpt_share_ind,
-               tst.oid,
-               case
-                   when tst.record_status_cd = '' then tst.record_status_cd_for_result_drug
-                   else tst.record_status_cd
-                   end            as record_status_cd,
-               tst.record_status_cd_for_result,
-               tst.lab_rpt_status,
-               tst.LAB_RPT_CREATED_DT,
-               tst.LAB_RPT_CREATED_BY,
-               tst.LAB_RPT_RECEIVED_BY_PH_DT,
-               tst.LAB_RPT_LAST_UPDATE_DT,
-               tst.LAB_RPT_LAST_UPDATE_BY,
-               tst.ELR_IND,
-               tst.Jurisdiction_cd,
-               tst.JURISDICTION_NM,
-               tst.resulted_lab_report_date,
-               tst.sus_lab_report_date,
-               tst.report_observation_uid,
-               tst.report_refr_uid,
-               tst.report_sprt_uid,
-               tst.followup_observation_uid,
-               tst.accession_number,
-               tst.morb_hosp_id,
-               tst.transcriptionist_auth_type,
-               tst.assistant_interpreter_auth_type,
-               tst.morb_physician_id,
-               tst.morb_reporter_id,
-               tst.transcriptionist_val,
-               tst.transcriptionist_first_nm,
-               tst.transcriptionist_last_nm,
-               tst.assistant_interpreter_val,
-               tst.assistant_interpreter_first_nm,
-               tst.assistant_interpreter_last_nm,
-               tst.result_interpreter_id,
-               tst.transcriptionist_id_assign_auth,
-               tst.assistant_interpreter_id_assign_auth,
-               tst.interpretation_cd,
-               tst.condition_cd,
-               tst.LAB_TEST_status,
-               tst.processing_decision_cd,
-               tst.document_link,
-               tst.Lab_Rpt_Uid_Test1,
-               tst.Morb_oid,
-               tst.PROCESSING_DECISION_DESC,
-               tst.record_status_cd_for_result_drug,
-               tst.root_thru_srpt,
-               tst.root_thru_refr,
-               tst.Root_Ordered_Test_Nm,
-               tst.Parent_Test_Nm,
-               obs.add_time       as SPECIMEN_ADD_TIME,
-               obs1.last_chg_time as SPECIMEN_LAST_CHANGE_TIME
-        into #LAB_TEST4
-        from #LAB_TEST3 as tst
-                 left join dbo.nrt_observation as obs on tst.LAB_TEST_uid = obs.observation_uid
-            and obs.obs_domain_cd_st_1 = 'Order'
-                 left join dbo.nrt_observation as obs1 on tst.LAB_TEST_uid = obs1.observation_uid
-            and obs1.obs_domain_cd_st_1 = 'Order';
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING TMP_order_test ';
-
-
-        IF
-            OBJECT_ID('#order_test', 'U') IS NOT NULL
-            drop table #order_test;
-
-
-        select oid,
-               root_ordered_test_pntr
-        into #order_test
-        from #LAB_TEST4
-        where LAB_TEST_Type = 'Order'
-          and oid <> 4;
-
-        alter table #LAB_TEST4
-            drop column oid;
-
-
-/*note: When the OID is null that means this lab report is needing assignment of jurisdiction*/
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING TMP_LAB_TEST ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST', 'U') IS NOT NULL
-            drop table #LAB_TEST;
-
-
-        select distinct lab.LAB_TEST_uid_final_order,
-                        lab.LAB_TEST_uid_final_result,
-                        lab.LAB_TEST_uid_final,
-                        lab.lab_rpt_uid,
-                        lab.LAB_TEST_uid,
-                        lab.LAB_TEST_uid_oth,
-                        lab.interpretation_flg,
-                        lab.ACCESSION_NBR,
-                        lab.REASON_FOR_TEST_DESC,
-                        lab.REASON_FOR_TEST_CD,
-                        lab.transcriptionist_name,
-                        lab.transcriptionist_ass_auth_cd,
-                        lab.Transcriptionist_Ass_Auth_Type,
-                        lab.transcriptionist_id,
-                        lab.Assistant_Interpreter_Name,
-                        lab.Assistant_inter_ass_auth_cd,
-                        lab.Assistant_inter_ass_auth_type,
-                        lab.Assistant_interpreter_id,
-                        lab.result_interpreter_name,
-                        lab.specimen_src,
-                        lab.specimen_nm,
-                        lab.Specimen_details,
-                        lab.Specimen_collection_vol,
-                        lab.Specimen_collection_vol_unit,
-                        lab.Specimen_desc,
-                        lab.Danger_cd,
-                        lab.Danger_cd_desc,
-                        lab.parent_test_pntr,
-                        lab.LAB_TEST_pntr,
-                        CASE
-                            WHEN lab.LAB_TEST_TYPE = 'Result' then lab.resulted_lab_report_date
-                            WHEN lab.LAB_TEST_TYPE = 'Order_rslt' then lab.sus_lab_report_date
-                            ELSE lab.LAB_TEST_dt
-                            END AS LAB_TEST_DT,
-                        lab.test_method_cd,
-                        lab.root_ordered_test_pntr,
-                        CASE
-                            WHEN rtrim(lab.test_method_cd_desc) = '' THEN NULL
-                            ELSE lab.test_method_cd_desc
-                            END AS test_method_cd_desc,
-                        lab.priority_cd,
-                        lab.specimen_site,
-                        lab.SPECIMEN_SITE_desc,
-                        lab.Clinical_information,
-                        lab.LAB_TEST_Type,
-                        lab.LAB_TEST_cd,
-                        lab.LAB_TEST_cd_desc,
-                        lab.LAB_TEST_cd_sys_cd,
-                        lab.LAB_TEST_cd_sys_nm,
-                        lab.Alt_LAB_TEST_cd,
-                        lab.Alt_LAB_TEST_cd_desc,
-                        lab.Alt_LAB_TEST_cd_sys_cd,
-                        lab.Alt_LAB_TEST_cd_sys_nm,
-                        lab.specimen_collection_dt,
-                        lab.lab_rpt_local_id,
-                        lab.lab_rpt_share_ind,
-                        CASE
-                            WHEN lab.record_status_cd IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED') or
-                                 lab.record_status_cd is null then 'ACTIVE'
-                            WHEN lab.record_status_cd = 'INACTIVE' THEN 'LOG_DEL'
-                            ELSE lab.record_status_cd
-                            END as record_status_cd,
-                        lab.record_status_cd_for_result,
-                        lab.lab_rpt_status,
-                        lab.LAB_RPT_CREATED_DT,
-                        lab.LAB_RPT_CREATED_BY,
-                        lab.LAB_RPT_RECEIVED_BY_PH_DT,
-                        lab.LAB_RPT_LAST_UPDATE_DT,
-                        lab.LAB_RPT_LAST_UPDATE_BY,
-                        lab.ELR_IND,
-                        lab.Jurisdiction_cd,
-                        lab.JURISDICTION_NM,
-                        lab.resulted_lab_report_date,
-                        lab.sus_lab_report_date,
-                        lab.report_observation_uid,
-                        lab.report_refr_uid,
-                        lab.report_sprt_uid,
-                        lab.followup_observation_uid,
-                        lab.accession_number,
-                        lab.morb_hosp_id,
-                        lab.transcriptionist_auth_type,
-                        lab.assistant_interpreter_auth_type,
-                        lab.morb_physician_id,
-                        lab.morb_reporter_id,
-                        lab.transcriptionist_val,
-                        lab.transcriptionist_first_nm,
-                        lab.transcriptionist_last_nm,
-                        lab.assistant_interpreter_val,
-                        lab.assistant_interpreter_first_nm,
-                        lab.assistant_interpreter_last_nm,
-                        lab.result_interpreter_id,
-                        lab.transcriptionist_id_assign_auth,
-                        lab.assistant_interpreter_id_assign_auth,
-                        lab.interpretation_cd,
-                        lab.condition_cd,
-                        lab.LAB_TEST_status,
-                        lab.processing_decision_cd,
-                        lab.document_link,
-                        lab.Lab_Rpt_Uid_Test1,
-                        lab.Morb_oid,
-                        lab.PROCESSING_DECISION_DESC,
-                        lab.record_status_cd_for_result_drug,
-                        lab.root_thru_srpt,
-                        lab.root_thru_refr,
-                        lab.Root_Ordered_Test_Nm,
-                        lab.Parent_Test_Nm,
-                        lab.SPECIMEN_ADD_TIME,
-                        lab.SPECIMEN_LAST_CHANGE_TIME,
-                        ord.oid as order_oid
-        into #LAB_TEST
-        from #LAB_TEST4 lab
-                 left join #order_test ord on lab.root_ordered_test_pntr = ord.root_ordered_test_pntr;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #Merge_Order ';
-
-
-        IF
-            OBJECT_ID('#Merge_Order', 'U') IS NOT NULL
-            drop table #Merge_Order;
-
-        with ordered_mat as (select act_uid,
-                                    material_cd,
-                                    material_desc,
-                                    ROW_NUMBER() OVER (PARTITION BY act_uid order by last_chg_time desc) as row_num
-                             from dbo.nrt_observation_material
-                             where act_uid in (SELECT root_ordered_Test_pntr from #LAB_TEST))
-        select lt.root_ordered_test_pntr                                                                        as root_ordered_test_pntr_merge,
-               obs.accession_number                                                                             as ACCESSION_NBR_merge,
-               obs.add_user_id                                                                                  as LAB_RPT_CREATED_BY_merge,
-               obs.ADD_TIME                                                                                     as LAB_RPT_CREATED_DT,
-               obs.JURISDICTION_CD,
-               CASE
-                   WHEN obs.jurisdiction_cd IS NOT NULL THEN jc.code_short_desc_txt
-                   else CAST(NULL AS varchar(50)) end                                                           as JURISDICTION_NM,
-               obs.activity_to_time                                                             as LAB_TEST_dt,
-               obs.effective_from_time                                                                          as specimen_collection_dt,
-               obs.rpt_to_state_time                                                                            as LAB_RPT_RECEIVED_BY_PH_DT,
-               obs.LAST_CHG_TIME                                                                                as LAB_RPT_LAST_UPDATE_DT,
-               obs.LAST_CHG_USER_ID                                                                             as LAB_RPT_LAST_UPDATE_BY,
-               obs.electronic_ind                                                                               as ELR_IND1,
-               mat.material_cd                                                                                  as specimen_src,
-               obs.target_site_cd                                                                               as specimen_site,
-               mat.material_desc                                                                                as Specimen_desc,
-               obs.target_site_desc_txt                                                                         as SPECIMEN_SITE_desc,
-               obs.local_id                                                                                     as lab_rpt_local_id,
-               CASE
-                   WHEN obs.record_status_cd IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED') THEN 'ACTIVE'
-                   WHEN obs.record_status_cd = 'LOG_DEL' THEN 'INACTIVE'
-                   ELSE obs.record_status_cd
-                   END                                                                                          as record_status_cd_merge,
-               CASE
-                   WHEN COALESCE(obs2.program_jurisdiction_oid, obs.program_jurisdiction_oid, lt.order_oid) = 4
-                       THEN NULL
-                   ELSE COALESCE(obs2.program_jurisdiction_oid, obs.program_jurisdiction_oid,
-                                 lt.order_oid) END                                                              as order_oid
-        into #Merge_Order
-        from #LAB_TEST lt
-                 left join dbo.nrt_observation obs
-                           on lt.root_ordered_test_pntr = obs.observation_uid
-                 left join dbo.nrt_observation obs2
-                           on obs.report_observation_uid = obs2.observation_uid and
-                              obs.ctrl_cd_display_form = 'LabReportMorb'
-                 left join (select act_uid,
-                                   material_cd,
-                                   material_desc
-                            FROM ordered_mat
-                            where row_num = 1) mat
-                           on obs.observation_uid = mat.act_uid
-                 left join dbo.nrt_srte_Jurisdiction_code jc
-                           on obs.jurisdiction_cd = jc.code
-                               and jc.code_set_nm = 'S_JURDIC_C';
-
-        if
-            @debug = 'true'
-            SELECT 'lab_test' as nm, *
-            FROM #LAB_TEST;
-        if
-            @debug = 'true'
-            SELECT 'merge_order' as nm, *
-            FROM #Merge_Order;
-
-
-        alter table #LAB_TEST
-            drop
-                column
-                    ACCESSION_NBR,
-                LAB_RPT_CREATED_BY,
-                LAB_RPT_CREATED_DT,
-                JURISDICTION_CD,
-                JURISDICTION_NM,
-                LAB_TEST_dt,
-                specimen_collection_dt,
-                LAB_RPT_RECEIVED_BY_PH_DT,
-                LAB_RPT_LAST_UPDATE_DT,
-                LAB_RPT_LAST_UPDATE_BY,
-                --	ELR_IND	,
-                resulted_lab_report_date,
-                sus_lab_report_date,
-                specimen_src,
-                specimen_site,
-                Specimen_desc,
-                SPECIMEN_SITE_desc,
-                LAB_RPT_LOCAL_ID,
-                record_status_cd_for_result,
-                record_status_cd_for_result_drug,
-                order_oid;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST_final_root_ordered_test_pntr ';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST_final_root_ordered_test_pntr', 'U') IS NOT NULL
-            drop table #LAB_TEST_final_root_ordered_test_pntr;
-
-        select root_ordered_test_pntr AS LAB_TEST_ptnr
-        into #LAB_TEST_final_root_ordered_test_pntr
-        from #LAB_TEST
-        union
-        select root_ordered_test_pntr_merge
-        from #Merge_Order;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #LAB_TEST_final';
-
-
-        IF
-            OBJECT_ID('#LAB_TEST_final', 'U') IS NOT NULL
-            drop table #LAB_TEST_final;
-
-
-        select lt1.LAB_TEST_ptnr,
-               lto.LAB_TEST_uid_final_order,
-               lto.LAB_TEST_uid_final_result,
-               lto.LAB_TEST_uid_final,
-               lto.lab_rpt_uid,
-               lto.LAB_TEST_uid,
-               lto.LAB_TEST_uid_oth,
-               lto.interpretation_flg,
-               CASE
-                   WHEN lto.REASON_FOR_TEST_DESC = '' THEN NULL
-                   ELSE lto.REASON_FOR_TEST_DESC
-                   END AS REASON_FOR_TEST_DESC,
-               CASE
-                   WHEN lto.REASON_FOR_TEST_CD = '' THEN NULL
-                   ELSE lto.REASON_FOR_TEST_CD
-                   END AS REASON_FOR_TEST_CD,
-               lto.transcriptionist_name,
-               lto.transcriptionist_ass_auth_cd,
-               lto.Transcriptionist_Ass_Auth_Type,
-               lto.transcriptionist_id,
-               lto.Assistant_Interpreter_Name,
-               lto.Assistant_inter_ass_auth_cd,
-               lto.Assistant_inter_ass_auth_type,
-               lto.Assistant_interpreter_id,
-               lto.result_interpreter_name,
-               lto.specimen_nm,
-               lto.Specimen_details,
-               lto.Specimen_collection_vol,
-               lto.Specimen_collection_vol_unit,
-               lto.Danger_cd,
-               lto.Danger_cd_desc,
-               lto.parent_test_pntr,
-               lto.LAB_TEST_pntr,
-               lto.test_method_cd,
-               lto.root_ordered_test_pntr,
-               lto.test_method_cd_desc,
-               lto.priority_cd,
-               CASE
-                   WHEN lto.CLINICAL_INFORMATION = '' THEN NULL
-                   ELSE lto.CLINICAL_INFORMATION
-                   END AS CLINICAL_INFORMATION,
-               lto.LAB_TEST_Type,
-               lto.LAB_TEST_cd,
-               lto.LAB_TEST_cd_desc,
-               lto.LAB_TEST_cd_sys_cd,
-               lto.LAB_TEST_cd_sys_nm,
-               lto.Alt_LAB_TEST_cd,
-               lto.Alt_LAB_TEST_cd_desc,
-               lto.Alt_LAB_TEST_cd_sys_cd,
-               lto.Alt_LAB_TEST_cd_sys_nm,
-               lto.lab_rpt_share_ind,
-               CASE
-                   WHEN ltmi.record_status_cd_merge IS NOT NULL THEN ltmi.record_status_cd_merge
-                   ELSE lto.record_status_cd
-                   END AS record_status_cd,
-               lto.lab_rpt_status,
-               lto.report_observation_uid,
-               lto.report_refr_uid,
-               lto.report_sprt_uid,
-               lto.followup_observation_uid,
-               lto.accession_number,
-               lto.morb_hosp_id,
-               lto.transcriptionist_auth_type,
-               lto.assistant_interpreter_auth_type,
-               lto.morb_physician_id,
-               lto.morb_reporter_id,
-               lto.transcriptionist_val,
-               lto.transcriptionist_first_nm,
-               lto.transcriptionist_last_nm,
-               lto.assistant_interpreter_val,
-               lto.assistant_interpreter_first_nm,
-               lto.assistant_interpreter_last_nm,
-               lto.result_interpreter_id,
-               lto.transcriptionist_id_assign_auth,
-               lto.assistant_interpreter_id_assign_auth,
-               lto.interpretation_cd,
-               lto.condition_cd,
-               lto.LAB_TEST_status,
-               lto.processing_decision_cd,
-               lto.document_link,
-               lto.Lab_Rpt_Uid_Test1,
-               lto.Morb_oid,
-               lto.PROCESSING_DECISION_DESC,
-               lto.root_thru_srpt,
-               lto.root_thru_refr,
-               lto.Root_Ordered_Test_Nm,
-               lto.Parent_Test_Nm,
-               lto.SPECIMEN_ADD_TIME,
-               lto.SPECIMEN_LAST_CHANGE_TIME,
-               case
-                   when ltmi.ELR_IND1 IS NOT NULL THEN ltmi.ELR_IND1
-                   ELSE lto.ELR_IND
-                   END AS ELR_IND,
-               CASE
-                   WHEN ltmi.ACCESSION_NBR_merge = '' THEN NULL
-                   ELSE ltmi.ACCESSION_NBR_merge
-                   END AS ACCESSION_NBR_merge,
-               ltmi.LAB_RPT_CREATED_BY_merge,
-               ltmi.LAB_RPT_CREATED_DT,
-               ltmi.jurisdiction_cd,
-               CASE
-                   WHEN ltmi.JURISDICTION_NM = '' THEN NULL
-                   ELSE ltmi.JURISDICTION_NM
-                   END AS JURISDICTION_NM,
-               ltmi.LAB_TEST_dt,
-               ltmi.specimen_collection_dt,
-               ltmi.LAB_RPT_RECEIVED_BY_PH_DT,
-               ltmi.LAB_RPT_LAST_UPDATE_DT,
-               ltmi.LAB_RPT_LAST_UPDATE_BY,
-               CASE
-                   WHEN ltmi.SPECIMEN_SRC = '' THEN NULL
-                   ELSE ltmi.SPECIMEN_SRC
-                   END AS SPECIMEN_SRC,
-               ltmi.specimen_site,
-               CASE
-                   WHEN ltmi.SPECIMEN_DESC = '' THEN NULL
-                   ELSE ltmi.SPECIMEN_DESC
-                   END AS SPECIMEN_DESC,
-               ltmi.SPECIMEN_SITE_desc,
-               ltmi.lab_rpt_local_id,
-               ltmi.order_oid
-        into #LAB_TEST_final
-        from #LAB_TEST_final_root_ordered_test_pntr lt1
-                 left outer join #LAB_TEST lto on lt1.LAB_TEST_ptnr = lto.root_ordered_test_pntr
-                 left outer join #Merge_Order ltmi on lt1.LAB_TEST_ptnr = ltmi.root_ordered_test_pntr_merge;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #L_LAB_TEST_N ';
-
-
-        IF
-            OBJECT_ID('#L_LAB_TEST_N', 'U') IS NOT NULL
-            drop table #L_LAB_TEST_N;
-
-
-        CREATE TABLE #L_LAB_TEST_N
-        (
-            [LAB_TEST_id]  [int] IDENTITY
-                (
-                1,
-                1
-                )               NOT NULL,
-            [LAB_TEST_UID] [numeric](20, 0) NULL,
-            [LAB_TEST_KEY] [numeric](18, 0) NULL
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Comment_grouped ';
+
+
+--        create index idx_TMP_New_Lab_Result_Comment_uid ON  #TMP_New_Lab_Result_Comment (lab_test_uid);
+
+
+        IF OBJECT_ID('#TMP_New_Lab_Result_Comment_grouped', 'U') IS NOT NULL
+            DROP TABLE  #TMP_New_Lab_Result_Comment_grouped;
+
+
+        SELECT DISTINCT LRV.lab_test_uid,
+                        SUBSTRING(
+                                (
+                                    SELECT ' '+ST1.lab_result_comments  AS [text()]
+                                    FROM #TMP_New_Lab_Result_Comment ST1
+                                    WHERE ST1.lab_test_uid = LRV.lab_test_uid
+                                    ORDER BY ST1.lab_test_uid,ST1.lab_result_txt_seq
+                                    FOR XML PATH ('')
+                                ), 2, 2000) v_lab_result_val_txt
+        INTO #TMP_New_Lab_Result_Comment_grouped
+        FROM #TMP_New_Lab_Result_Comment LRV;
+
+
+        UPDATE #TMP_New_Lab_Result_Comment
+        SET lab_result_comments = ( SELECT CASE WHEN v_lab_result_val_txt = '#x20;' THEN NULL
+                                                ELSE v_lab_result_val_txt END AS v_lab_result_val_txt
+                                    FROM  #TMP_New_Lab_Result_Comment_grouped tnl
+                                    WHERE tnl.lab_test_uid = #TMP_New_Lab_Result_Comment.lab_test_uid);
+
+
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_New_Lab_Result_Comment_grouped', * FROM #TMP_New_Lab_Result_Comment_grouped;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Comment_FINAL ';
+
+        IF OBJECT_ID('#TMP_New_Lab_Result_Comment_FINAL', 'U') IS NOT NULL
+            DROP TABLE  #TMP_New_Lab_Result_Comment_FINAL;
+
+        CREATE TABLE #TMP_New_Lab_Result_Comment_FINAL(
+                                                          [LAB_TEST_UID] [bigint] NULL,
+                                                          [LAB_RESULT_COMMENT_KEY] [bigint]  NULL,
+                                                          [LAB_RESULT_COMMENTS] [varchar](2000) NULL,
+                                                          [RESULT_COMMENT_GRP_KEY] [bigint]  NULL,
+                                                          [RECORD_STATUS_CD] [varchar](8)  NULL,
+                                                          [RDB_LAST_REFRESH_TIME] [datetime] NULL
+        );
+
+
+        INSERT INTO #TMP_New_Lab_Result_Comment_FINAL
+        SELECT distinct [lab_test_uid]
+                      ,NULL
+                      ,CASE WHEN [LAB_RESULT_COMMENTS] LIKE  '%.&#x20;%' THEN REPLACE([LAB_RESULT_COMMENTS],'&#x20;',' ')
+                            ELSE  [LAB_RESULT_COMMENTS]
+            END AS LAB_RESULT_COMMENTS
+                      ,NULL
+                      ,CASE WHEN record_status_cd = 'LOG_DEL' THEN 'INACTIVE'
+                            WHEN record_status_cd IN ('', 'UNPROCESSED', 'PROCESSED') THEN 'ACTIVE'
+                            ELSE 'ACTIVE'
+            END AS record_status_cd
+                      ,GETDATE()
+        FROM #TMP_New_Lab_Result_Comment;
+
+
+        /*Key generation*/
+
+        UPDATE tmp_val
+        SET tmp_val.Lab_Result_Comment_Key = lrc.Lab_Result_Comment_Key
+        FROM #TMP_New_Lab_Result_Comment_FINAL tmp_val
+                 INNER JOIN Lab_Result_Comment lrc ON lrc.lab_test_uid = tmp_val.lab_test_uid;
+
+        CREATE TABLE #tmp_id_assignment_comment(
+                                                   Lab_Result_Comment_Key_id [int] IDENTITY(1,1) NOT NULL,
+                                                   [lab_test_uid] [bigint] NOT NULL
+        )
+        INSERT INTO #tmp_id_assignment_comment
+        SELECT rslt.lab_test_uid
+        FROM #TMP_New_Lab_Result_Comment_FINAL rslt
+                 LEFT JOIN Lab_Result_Comment lrc ON lrc.lab_test_uid = rslt.lab_test_uid
+        WHERE lrc.lab_test_uid IS NULL;
+
+
+        UPDATE tmp_val
+        SET tmp_val.LAB_RESULT_COMMENT_KEY =
+                Lab_Result_Comment_Key_id + COALESCE((SELECT MAX(Lab_Result_Comment_Key) FROM Lab_Result_Comment),1)
+        FROM #TMP_New_Lab_Result_Comment_FINAL tmp_val
+                 LEFT JOIN #tmp_id_assignment_comment id ON tmp_val.lab_test_uid = id.lab_test_uid
+        WHERE tmp_val.Lab_Result_Comment_Key IS NULL;
+
+
+
+        UPDATE #TMP_New_Lab_Result_Comment_FINAL
+        SET Result_Comment_Grp_Key = [LAB_RESULT_COMMENT_KEY];
+
+
+        UPDATE #TMP_New_Lab_Result_Comment_FINAL
+        SET [LAB_RESULT_COMMENTS] = (REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE([LAB_RESULT_COMMENTS],
+                                                                                             '&#x09;', CHAR(9)),
+                                                                                     '&#x0A;', CHAR(10)),
+                                                                             '&#x0D;', CHAR(13)),
+                                                                     '&#x20;', CHAR(32)),
+                                                             '&amp;', CHAR(38)),
+                                                     '&lt;', CHAR(60)),
+                                             '&gt;', CHAR(62)));
+
+
+
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_New_Lab_Result_Comment', * FROM #TMP_New_Lab_Result_Comment;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Result_Comment_Group ';
+
+        IF OBJECT_ID('#TMP_Result_Comment_Group', 'U') IS NOT NULL
+            DROP TABLE  #TMP_Result_Comment_Group;
+
+
+        SELECT
+            DISTINCT rcg.Lab_Result_Comment_Key AS [RESULT_COMMENT_GRP_KEY]
+                   , rcg.[LAB_TEST_UID]
+        INTO #tmp_Result_Comment_Group
+        FROM  #TMP_New_Lab_Result_Comment_FINAL  rcg
+        --WHERE  rcg.Lab_Result_Comment_Key <> 1 AND rcg.Lab_Result_Comment_Key IS not NULL
+        ORDER BY rcg.Lab_Result_Comment_Key;
+
+
+        IF NOT EXISTS (SELECT * FROM Result_Comment_Group WHERE [RESULT_COMMENT_GRP_KEY]=1)
+            INSERT INTO #tmp_Result_Comment_Group values ( 1,NULL);
+
+        IF @pDebug = 'true' SELECT 'DEBUG: tmp_Result_Comment_Group',* FROM #tmp_Result_Comment_Group;
+
+
+        UPDATE #TMP_lab_test_result1
+        SET [RESULT_COMMENT_GRP_KEY] = ( SELECT [RESULT_COMMENT_GRP_KEY]
+                                         FROM #tmp_Result_Comment_Group trcg
+                                         WHERE trcg.lab_test_uid = #tmp_lab_test_result1.lab_test_uid);
+
+
+        UPDATE #TMP_lab_test_result1
+        SET [RESULT_COMMENT_GRP_KEY] = 1
+        WHERE [RESULT_COMMENT_GRP_KEY] IS NULL;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        --------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        /*-------------------------------------------------------
+
+		Lab_Result_Val Dimension
+		Test_Result_Grouping Dimension
+
+		---------------------------------------------------------*/
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Val ';
+
+        IF OBJECT_ID('#TMP_Lab_Result_Val', 'U') IS NOT NULL
+            DROP TABLE   #TMP_Lab_Result_Val;
+
+
+        CREATE TABLE #TMP_LAB_RESULT_VAL(
+                                            [lab_test_uid] [bigint] NULL,
+                                            [LAB_RESULT_TXT_VAL] [varchar](8000) NULL,
+                                            [LAB_RESULT_TXT_SEQ] [smallint] NULL,
+                                            [COMPARATOR_CD_1] [varchar](10) NULL,
+                                            [NUMERIC_VALUE_1] [numeric](15, 5) NULL,
+                                            [separator_cd] [varchar](10) NULL,
+                                            [NUMERIC_VALUE_2] [numeric](15, 5) NULL,
+                                            [Result_Units] [varchar](20) NULL,
+                                            [REF_RANGE_FRM] [varchar](20) NULL,
+                                            [REF_RANGE_TO] [varchar](20) NULL,
+                                            [TEST_RESULT_VAL_CD] [varchar](20) NULL,
+                                            [TEST_RESULT_VAL_CD_DESC] [varchar](300) NULL,
+                                            [TEST_RESULT_VAL_CD_SYS_CD] [varchar](300) NULL,
+                                            [TEST_RESULT_VAL_CD_SYS_NM] [varchar](100) NULL,
+                                            [ALT_RESULT_VAL_CD] [varchar](50) NULL,
+                                            [ALT_RESULT_VAL_CD_DESC] [varchar](100) NULL,
+                                            [ALT_RESULT_VAL_CD_SYS_CD] [varchar](300) NULL,
+                                            [ALT_RESULT_VAL_CD_SYSTEM_NM] [varchar](100) NULL,
+                                            [FROM_TIME] [datetime] NULL,
+                                            [TO_TIME] [datetime] NULL,
+                                            [record_status_cd] [varchar](8) NOT NULL,
+                                            test_result_grp_key [bigint]  NULL,
+                                            Numeric_Result varchar(50),
+                                            Test_Result_Val_Key [bigint]  NULL,
+                                            lab_result_txt_val1 varchar(2000)
         ) ON [PRIMARY];
 
+        INSERT INTO #TMP_Lab_Result_Val
+        SELECT
+            rslt.lab_test_uid,
+            NULLIF(trim(REPLACE(REPLACE(otxt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')), '') AS 'LAB_RESULT_TXT_VAL',
+            otxt.ovt_seq			'LAB_RESULT_TXT_SEQ'  , -- AS Lab_Result_Txt_Seq,
+            onum.ovn_comparator_cd_1,
+            onum.ovn_numeric_value_1,
+            onum.ovn_separator_cd,
+            onum.ovn_numeric_value_2,
+            CASE WHEN rtrim(onum.ovn_numeric_unit_cd) = '' THEN NULL
+                 ELSE onum.ovn_numeric_unit_cd  END AS 'Result_Units',  -- as Result_Units,
+            SUBSTRING(onum.ovn_low_range,1,20)					'REF_RANGE_FRM'  , -- AS Ref_Range_Frm,
+            SUBSTRING(onum.ovn_high_range,1,20)				'REF_RANGE_TO'  , -- AS Ref_Range_To,
+            CASE WHEN rtrim(code.ovc_code) = '' THEN NULL
+                 ELSE code.ovc_code END AS 'TEST_RESULT_VAL_CD', -- AS Test_result_val_cd,
+            CASE WHEN rtrim(code.ovc_display_name) = '' THEN NULL
+                 ELSE code.ovc_display_name END AS 'TEST_RESULT_VAL_CD_DESC', -- AS Test_result_val_cd_desc,
+            code.ovc_CODE_SYSTEM_CD			'TEST_RESULT_VAL_CD_SYS_CD'  , -- AS Test_result_val_cd_sys_cd,
+            code.ovc_CODE_SYSTEM_DESC_TXT	'TEST_RESULT_VAL_CD_SYS_NM'  , -- AS Test_result_val_cd_sys_nm,
+            code.ovc_ALT_CD						'ALT_RESULT_VAL_CD'  , -- AS Alt_result_val_cd,
+            code.ovc_ALT_CD_DESC_TXT			'ALT_RESULT_VAL_CD_DESC'  , -- AS Alt_result_val_cd_desc,
+            code.ovc_ALT_CD_SYSTEM_CD		'ALT_RESULT_VAL_CD_SYS_CD'  , -- AS Alt_result_val_cd_sys_cd,
+            code.ovc_ALT_CD_SYSTEM_DESC_TXT	'ALT_RESULT_VAL_CD_SYSTEM_NM'  , -- AS Alt_result_val_cd_sys_nm,
+            ndate.ovd_from_date 'FROM_TIME'  , -- AS from_time,
+            ndate.ovd_to_date 'TO_TIME'  , -- AS to_time,
+            CASE WHEN record_status_cd = 'LOG_DEL' THEN 'INACTIVE'
+                 WHEN record_status_cd IN ('', 'UNPROCESSED', 'PROCESSED') THEN 'ACTIVE'
+                 ELSE 'ACTIVE'
+                END AS record_status_cd,
+            NULL, --test_result_grp_key
+            CASE WHEN onum.ovn_numeric_value_1 IS NOT NULL AND onum.ovn_numeric_value_2 IS NULL THEN rtrim(COALESCE(onum.ovn_comparator_cd_1,''))+rtrim(format(ovn_numeric_value_1,'0.#########'))
+                 WHEN onum.ovn_numeric_value_1 IS NOT NULL AND onum.ovn_numeric_value_2 IS NOT NULL THEN rtrim(COALESCE(rtrim(COALESCE(onum.ovn_comparator_cd_1,''))+rtrim(format(ovn_numeric_value_1,'0.#########')),'')) + rtrim((COALESCE(onum.ovn_separator_cd,''))) + rtrim(format(onum.ovn_numeric_value_2,'0.#########'))
+                 WHEN onum.ovn_numeric_value_1 IS NULL AND onum.ovn_numeric_value_2 IS NOT NULL THEN rtrim(COALESCE(NULL,'')) + rtrim((COALESCE(onum.ovn_separator_cd,''))) + rtrim(format(onum.ovn_numeric_value_2,'0.#########'))
+                 ELSE NULL END AS Numeric_Result,
+            NULL, --Test_Result_Val_Key
+            NULL --lab_result_txt_val1
+        FROM #TMP_Result_And_R_Result		as rslt
+                 LEFT JOIN #tmp_nrt_observation_txt	as otxt	ON rslt.lab_test_uid = otxt.observation_uid
+            AND ((otxt.ovt_txt_type_cd IS NULL) OR (rslt.ELR_IND = 'Y' AND otxt.ovt_txt_type_cd <>  'N'))
+            --AND otxt.OBS_VALUE_TXT_SEQ =1
+            /*
+            Commented out because an ELR Test Result can have zero to many text result values
+            AND otxt.OBS_VALUE_TXT_SEQ =1
+            */
+                 LEFT JOIN #tmp_nrt_observation_numeric	as onum  ON rslt.lab_test_uid = onum.observation_uid
+                 LEFT JOIN #tmp_nrt_observation_coded	as code	 ON rslt.lab_test_uid = code.observation_uid
+                 LEFT JOIN #tmp_nrt_observation_date	as ndate ON rslt.lab_test_uid = ndate.observation_uid
 
--- REMOVES VALUES THAT ARE ALREADY IN LAB_TEST
-        insert into #L_LAB_TEST_N ([LAB_TEST_UID])
-        SELECT DISTINCT tlt.LAB_TEST_UID
-        FROM #LAB_TEST_final tlt
-        EXCEPT
-        SELECT lt.LAB_TEST_UID
-        FROM dbo.L_LAB_TEST lt;
+        --LEFT JOIN (SELECT *, ROW_NUMBER() OVER (PARTITION BY observation_uid ORDER BY refresh_datetime DESC) AS cr
+        --	FROM nrt_observation_coded with (nolock)) code on rslt.lab_test_uid = code.observation_uid and code.cr=1;
 
-        UPDATE #L_LAB_TEST_N
-        SET LAB_TEST_KEY = LAB_TEST_ID + coalesce((SELECT MAX(LAB_TEST_KEY) FROM dbo.L_LAB_TEST), 0)
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Result_Val',* FROM #TMP_Lab_Result_Val;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'UPDATE #TMP_Lab_Result_Val ';
+
+        /*Key Generation: TEST_RESULT_GROUPING */
+        UPDATE tmp_val
+        SET tmp_val.test_result_grp_key = trg.test_result_grp_key
+        FROM #TMP_Lab_Result_Val tmp_val
+                 INNER JOIN TEST_RESULT_GROUPING trg ON trg.lab_test_uid = tmp_val.lab_test_uid;
+
+
+        CREATE TABLE #tmp_id_assignment(
+                                           test_result_grp_id [int] IDENTITY(1,1) NOT NULL,
+                                           [lab_test_uid] [bigint] NOT NULL
+        )
+        INSERT INTO #tmp_id_assignment
+        SELECT rslt.lab_test_uid
+        FROM #TMP_Lab_Result_Val rslt
+                 LEFT JOIN TEST_RESULT_GROUPING trg ON trg.lab_test_uid = rslt.lab_test_uid
+        WHERE trg.lab_test_uid IS NULL;
+
+
+        UPDATE tmp_val
+        SET tmp_val.test_result_grp_key =
+                test_result_grp_id + COALESCE((SELECT MAX(test_result_grp_key) FROM TEST_RESULT_GROUPING),1)
+        FROM #TMP_Lab_Result_Val tmp_val
+                 LEFT JOIN #tmp_id_assignment id ON tmp_val.lab_test_uid = id.lab_test_uid
+        WHERE tmp_val.test_result_grp_key IS NULL;
+
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Result_Val GROUP KEY',* FROM #TMP_Lab_Result_Val;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_TEST_RESULT_GROUPING ';
+
+        IF OBJECT_ID('#TMP_TEST_RESULT_GROUPING', 'U') IS NOT NULL
+            DROP TABLE   #TMP_TEST_RESULT_GROUPING;
+
+
+        SELECT distinct [TEST_RESULT_GRP_KEY]
+                      ,[LAB_TEST_UID]
+        --,[RDB_LAST_REFRESH_TIME]
+        INTO #TMP_TEST_RESULT_GROUPING
+        FROM #TMP_Lab_Result_Val;
+
+
+        UPDATE #TMP_Lab_Result_Val
+        SET Test_Result_Val_Key = Test_Result_Grp_Key
+        WHERE Test_Result_Grp_Key IS NOT NULL;
+
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Val ';
+
+        IF OBJECT_ID('#TMP_New_Lab_Result_Val', 'U') IS NOT NULL
+            DROP TABLE  #TMP_New_Lab_Result_Val;
+
+
+        SELECT DISTINCT LRV.lab_test_uid,
+                        SUBSTRING(
+                                (
+                                    SELECT ' '+ST1.lab_result_txt_val  AS [text()]
+                                    FROM #TMP_Lab_Result_Val ST1
+                                    WHERE ST1.lab_test_uid = LRV.lab_test_uid
+                                    ORDER BY ST1.lab_test_uid,ST1.lab_result_txt_seq
+                                    FOR XML PATH ('')
+                                ), 2, 2000) v_lab_result_val_txt
+        INTO #TMP_New_Lab_Result_Val
+        FROM #TMP_Lab_Result_Val LRV;
+
+
+        UPDATE #TMP_Lab_Result_Val
+        SET lab_result_txt_val = ( SELECT NULLIF(v_lab_result_val_txt,'') AS v_lab_result_val_txt
+                                   FROM  #TMP_New_Lab_Result_Val tnl
+                                   WHERE tnl.lab_test_uid = #TMP_Lab_Result_Val.lab_test_uid);
+
 
 
         DELETE
-        FROM #L_LAB_TEST_N
-        WHERE LAB_TEST_UID IS NULL;
+        FROM #TMP_Lab_Result_Val
+        WHERE Test_Result_Val_Key = 1;
 
 
-        SELECT @RowCount_no = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        --------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Val_Final ';
+
+        IF OBJECT_ID('#TMP_Lab_Result_Val_Final', 'U') IS NOT NULL
+            DROP TABLE  #TMP_Lab_Result_Val_Final;
+
+        SELECT MIN([TEST_RESULT_GRP_KEY]) AS TEST_RESULT_GRP_KEY
+             ,[NUMERIC_RESULT]
+             ,[RESULT_UNITS]
+             --,[LAB_RESULT_TXT_VAL]
+             ,(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(lab_result_txt_val,
+                                                                       '&#x09;', CHAR(9)),
+                                                               '&#x0A;', CHAR(10)),
+                                                       '&#x0D;', CHAR(13)),
+                                               '&#x20;', CHAR(32)),
+                                       '&amp;', CHAR(38)),
+                               '&lt;', CHAR(60)),
+                       '&gt;', CHAR(62))) AS LAB_RESULT_TXT_VAL
+             ,[REF_RANGE_FRM]
+             ,[REF_RANGE_TO]
+             ,[TEST_RESULT_VAL_CD]
+             ,rtrim([TEST_RESULT_VAL_CD_DESC]) AS [TEST_RESULT_VAL_CD_DESC]
+             ,[TEST_RESULT_VAL_CD_SYS_CD]
+             ,[TEST_RESULT_VAL_CD_SYS_NM]
+             ,[ALT_RESULT_VAL_CD]
+             ,rtrim([ALT_RESULT_VAL_CD_DESC]) AS [ALT_RESULT_VAL_CD_DESC]
+             ,[ALT_RESULT_VAL_CD_SYS_CD]
+             ,[ALT_RESULT_VAL_CD_SYSTEM_NM]
+             ,MIN([TEST_RESULT_VAL_KEY]) AS TEST_RESULT_VAL_KEY
+             ,[RECORD_STATUS_CD]
+             ,[FROM_TIME]
+             ,[TO_TIME]
+             ,[LAB_TEST_UID]
+        --, GETDATE()
+        INTO  #TMP_Lab_Result_Val_Final
+        FROM #TMP_LAB_RESULT_VAL
+        GROUP BY
+            [NUMERIC_RESULT]
+               ,[RESULT_UNITS]
+               ,[LAB_RESULT_TXT_VAL]
+               ,[REF_RANGE_FRM]
+               ,[REF_RANGE_TO]
+               ,[TEST_RESULT_VAL_CD]
+               ,rtrim([TEST_RESULT_VAL_CD_DESC])
+               ,[TEST_RESULT_VAL_CD_SYS_CD]
+               ,[TEST_RESULT_VAL_CD_SYS_NM]
+               ,[ALT_RESULT_VAL_CD]
+               ,rtrim([ALT_RESULT_VAL_CD_DESC])
+               ,[ALT_RESULT_VAL_CD_SYS_CD]
+               ,[ALT_RESULT_VAL_CD_SYSTEM_NM]
+               ,[RECORD_STATUS_CD]
+               ,[FROM_TIME]
+               ,[TO_TIME]
+               ,[LAB_TEST_UID];
+
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Result_Val_Final',* FROM #TMP_Lab_Result_Val_Final;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result2 ';
+
+        IF OBJECT_ID('#TMP_Lab_Test_Result2', 'U') IS NOT NULL
+            DROP TABLE  #TMP_Lab_Test_Result2;
+
+        SELECT 	tst.*,
+                  COALESCE(lrv.Test_Result_Grp_Key,1) AS Test_Result_Grp_Key
+        INTO #TMP_Lab_Test_Result2
+        from
+            #TMP_Lab_Test_Result1 AS tst
+                LEFT JOIN #TMP_Lab_Result_Val_FINAL AS lrv	ON tst.Lab_test_uid = lrv.Lab_test_uid
+                AND lrv.Test_Result_Grp_Key <> 1;
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Test_Result2',* FROM #TMP_Lab_Test_Result2;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result3 ';
+
+        IF OBJECT_ID('#TMP_Lab_Test_Result3', 'U') IS NOT NULL
+            DROP TABLE   #TMP_Lab_Test_Result3;
+
+
+        SELECT 	tst.*,
+                  COALESCE(psn.patient_key,1) AS patient_key
+        INTO #TMP_Lab_Test_Result3
+        FROM 	#TMP_Lab_Test_Result2 AS tst
+                    /*Get patient id for root observation ids*/
+                    LEFT JOIN dbo.nrt_observation no2 with (nolock) ON no2.observation_uid = tst.root_ordered_test_pntr
+                    LEFT JOIN dbo.d_patient AS psn with (nolock)
+                              ON no2.patient_id = psn.patient_uid
+                                  AND psn.patient_key <> 1;
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_Lab_Test_Result3',* FROM #TMP_Lab_Test_Result3;
+
+
+        UPDATE #TMP_Lab_Test_Result3
+        SET
+            PATIENT_KEY = morb_patient_key,
+            Condition_Key = morb_Condition_Key,
+            Investigation_Key = morb_Investigation_Key,
+            REPORTING_LAB_KEY = MORB_RPT_SRC_ORG_KEY
+        WHERE morb_rpt_key>1;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result ';
+
+        IF OBJECT_ID('#TMP_Lab_Test_Result', 'U') IS NOT NULL
+            DROP TABLE  #TMP_Lab_Test_Result;
+
+
+        SELECT DISTINCT tst.*,
+                        COALESCE(org.Organization_key,1) AS Performing_lab_key
+        INTO    #TMP_Lab_Test_Result
+        FROM 	#TMP_Lab_Test_Result3 AS tst
+                    LEFT JOIN dbo.nrt_observation AS no2 with (nolock) ON no2.observation_uid= tst.lab_test_uid
+                    LEFT JOIN dbo.d_Organization  AS org with (nolock)
+                              ON no2.performing_organization_id = org.Organization_uid
+                                  AND org.Organization_key <> 1;
+
+
+        IF @pDebug = 'true' SELECT @PROC_STEP_NAME, * FROM #TMP_Lab_Test_Result;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETING #TMP_TEST_RESULT_GROUPING ';
+
+
+        DELETE FROM #TMP_TEST_RESULT_GROUPING WHERE test_result_grp_key=1;
+        DELETE FROM #TMP_TEST_RESULT_GROUPING WHERE test_result_grp_key IS NULL;
+        DELETE FROM #TMP_TEST_RESULT_GROUPING
+        WHERE TEST_RESULT_GRP_KEY NOT IN (SELECT TEST_RESULT_GRP_KEY FROM #TMP_LAB_RESULT_VAL);
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+
+        COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'UPDATE LAB_RESULT_VAL ';
+
+
+        UPDATE dbo.LAB_RESULT_VAL
+        SET
+            [NUMERIC_RESULT]	 = 	SUBSTRING(tmp.NUMERIC_RESULT ,1,50),
+            [RESULT_UNITS]	 = 	 SUBSTRING(tmp.RESULT_UNITS ,1,50)	,
+            [LAB_RESULT_TXT_VAL]	 = 	rtrim(ltrim(SUBSTRING(tmp.LAB_RESULT_TXT_VAL ,1,2000))),
+            [REF_RANGE_FRM]	 = 	SUBSTRING(tmp.REF_RANGE_FRM ,1,20),
+            [REF_RANGE_TO]	 = 	 SUBSTRING(tmp.REF_RANGE_TO ,1,20),
+            [TEST_RESULT_VAL_CD]	 = 	SUBSTRING(tmp.TEST_RESULT_VAL_CD ,1,20),
+            [TEST_RESULT_VAL_CD_DESC]	 = 	SUBSTRING(rtrim(tmp.TEST_RESULT_VAL_CD_DESC) ,1,300),
+            [TEST_RESULT_VAL_CD_SYS_CD]	 = 	SUBSTRING(tmp.TEST_RESULT_VAL_CD_SYS_CD ,1,100),
+            [TEST_RESULT_VAL_CD_SYS_NM]	 = 	 SUBSTRING(tmp.TEST_RESULT_VAL_CD_SYS_NM ,1,100),
+            [ALT_RESULT_VAL_CD]	 = 	 SUBSTRING(tmp.ALT_RESULT_VAL_CD ,1,50),
+            [ALT_RESULT_VAL_CD_DESC]	 = 	 SUBSTRING(rtrim(tmp.ALT_RESULT_VAL_CD_DESC) ,1,100),
+            [ALT_RESULT_VAL_CD_SYS_CD]	 = 	 SUBSTRING(tmp.ALT_RESULT_VAL_CD_SYS_CD ,1,50),
+            [ALT_RESULT_VAL_CD_SYS_NM]	 = 	 SUBSTRING(tmp.ALT_RESULT_VAL_CD_SYSTEM_NM ,1,100),
+            [TEST_RESULT_VAL_KEY]	 = 	tmp.TEST_RESULT_VAL_KEY,
+            [RECORD_STATUS_CD]	 = 	SUBSTRING(tmp.RECORD_STATUS_CD, 1, 8),
+            [FROM_TIME]	 = 	tmp.FROM_TIME,
+            [TO_TIME]	 = tmp.TO_TIME,
+            [LAB_TEST_UID]	 = 	tmp.LAB_TEST_UID,
+            [RDB_LAST_REFRESH_TIME]	 = 	GETDATE()
+        FROM #TMP_LAB_RESULT_VAL_FINAL tmp
+                 INNER JOIN dbo.LAB_RESULT_VAL val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+            AND val.TEST_RESULT_GRP_KEY = tmp.TEST_RESULT_GRP_KEY
+            AND val.TEST_RESULT_VAL_KEY = val.TEST_RESULT_VAL_KEY;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
 
-        BEGIN
-            TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'UPDATE TEST_RESULT_GROUPING';
+
+        --No downstream update of RDB_LAST_REFRESH_TIME.
+        UPDATE dbo.TEST_RESULT_GROUPING
         SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'INSERTING INTO L_LAB_TEST';
+            [TEST_RESULT_GRP_KEY] = tmp.TEST_RESULT_GRP_KEY,
+            [LAB_TEST_UID] = tmp.LAB_TEST_UID,
+            [RDB_LAST_REFRESH_TIME] = CAST( NULL AS datetime)
+        FROM #TMP_TEST_RESULT_GROUPING tmp
+                 INNER JOIN dbo.TEST_RESULT_GROUPING g with (nolock) ON g.LAB_TEST_UID = tmp.LAB_TEST_UID
+            AND g.TEST_RESULT_GRP_KEY = tmp.TEST_RESULT_GRP_KEY;
 
 
-        INSERT INTO dbo.L_LAB_TEST
-        ( [LAB_TEST_KEY]
-        , [LAB_TEST_UID])
-        SELECT [LAB_TEST_KEY], [LAB_TEST_UID]
-        FROM #L_LAB_TEST_N;
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_TEST_RESULT_GROUPING',* FROM #TMP_TEST_RESULT_GROUPING;
 
 
-        SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #D_LAB_TEST_N ';
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'GENERATING TEST_RESULT_GROUPING ';
+
+        --No downstream update of RDB_LAST_REFRESH_TIME.
+        INSERT INTO dbo.TEST_RESULT_GROUPING
+        ([TEST_RESULT_GRP_KEY]
+        ,[LAB_TEST_UID]
+        ,[RDB_LAST_REFRESH_TIME])
+        SELECT tmp.[TEST_RESULT_GRP_KEY]
+                ,tmp.[LAB_TEST_UID],
+               CAST( NULL AS datetime) AS [RDB_LAST_REFRESH_TIME]
+        FROM #TMP_TEST_RESULT_GROUPING tmp
+                 LEFT JOIN dbo.TEST_RESULT_GROUPING g with (nolock) ON g.LAB_TEST_UID = tmp.LAB_TEST_UID
+        WHERE g.LAB_TEST_UID IS NULL AND g.TEST_RESULT_GRP_KEY IS NULL;
 
 
-        IF
-            OBJECT_ID('#D_LAB_TEST_N', 'U') IS NOT NULL
-            drop table #D_LAB_TEST_N;
-
-
-        SELECT distinct lt.LAB_TEST_ptnr,
-                        lt.LAB_TEST_uid_final_order,
-                        lt.LAB_TEST_uid_final_result,
-                        lt.LAB_TEST_uid_final,
-                        lt.lab_rpt_uid,
-                        lt.LAB_TEST_uid,
-                        lt.LAB_TEST_uid_oth,
-                        lt.interpretation_flg,
-                        lt.REASON_FOR_TEST_DESC,
-                        lt.REASON_FOR_TEST_CD,
-                        lt.transcriptionist_name,
-                        lt.transcriptionist_ass_auth_cd,
-                        lt.Transcriptionist_Ass_Auth_Type,
-                        lt.transcriptionist_id,
-                        lt.Assistant_Interpreter_Name,
-                        lt.Assistant_inter_ass_auth_cd,
-                        lt.Assistant_inter_ass_auth_type,
-                        lt.Assistant_interpreter_id,
-                        lt.result_interpreter_name,
-                        lt.specimen_nm,
-                        lt.Specimen_details,
-                        lt.Specimen_collection_vol,
-                        lt.Specimen_collection_vol_unit,
-                        lt.Danger_cd,
-                        lt.Danger_cd_desc,
-                        lt.parent_test_pntr,
-                        lt.LAB_TEST_pntr,
-                        lt.test_method_cd,
-                        lt.root_ordered_test_pntr,
-                        lt.test_method_cd_desc,
-                        lt.priority_cd,
-                        lt.CLINICAL_INFORMATION,
-                        lt.LAB_TEST_Type,
-                        lt.LAB_TEST_cd,
-                        lt.LAB_TEST_cd_desc,
-                        lt.LAB_TEST_cd_sys_cd,
-                        lt.LAB_TEST_cd_sys_nm,
-                        lt.Alt_LAB_TEST_cd,
-                        lt.Alt_LAB_TEST_cd_desc,
-                        lt.Alt_LAB_TEST_cd_sys_cd,
-                        lt.Alt_LAB_TEST_cd_sys_nm,
-                        lt.lab_rpt_share_ind,
-                        lt.record_status_cd,
-                        lt.lab_rpt_status,
-                        lt.report_observation_uid,
-                        lt.report_refr_uid,
-                        lt.report_sprt_uid,
-                        lt.followup_observation_uid,
-                        lt.accession_number,
-                        lt.morb_hosp_id,
-                        lt.transcriptionist_auth_type,
-                        lt.assistant_interpreter_auth_type,
-                        lt.morb_physician_id,
-                        lt.morb_reporter_id,
-                        lt.transcriptionist_val,
-                        lt.transcriptionist_first_nm,
-                        lt.transcriptionist_last_nm,
-                        lt.assistant_interpreter_val,
-                        lt.assistant_interpreter_first_nm,
-                        lt.assistant_interpreter_last_nm,
-                        lt.result_interpreter_id,
-                        lt.transcriptionist_id_assign_auth,
-                        lt.assistant_interpreter_id_assign_auth,
-                        lt.interpretation_cd,
-                        lt.condition_cd,
-                        lt.LAB_TEST_status,
-                        lt.processing_decision_cd,
-                        lt.document_link,
-                        lt.Lab_Rpt_Uid_Test1,
-                        lt.Morb_oid,
-                        lt.PROCESSING_DECISION_DESC,
-                        lt.root_thru_srpt,
-                        lt.root_thru_refr,
-                        lt.Root_Ordered_Test_Nm,
-                        lt.Parent_Test_Nm,
-                        lt.SPECIMEN_ADD_TIME,
-                        lt.SPECIMEN_LAST_CHANGE_TIME,
-                        lt.ELR_IND,
-                        lt.ACCESSION_NBR_merge,
-                        lt.LAB_RPT_CREATED_BY_merge,
-                        lt.LAB_RPT_CREATED_DT,
-                        lt.jurisdiction_cd,
-                        lt.JURISDICTION_NM,
-                        lt.LAB_TEST_dt,
-                        lt.specimen_collection_dt,
-                        lt.LAB_RPT_RECEIVED_BY_PH_DT,
-                        lt.LAB_RPT_LAST_UPDATE_DT,
-                        lt.LAB_RPT_LAST_UPDATE_BY,
-                        lt.SPECIMEN_SRC,
-                        lt.specimen_site,
-                        lt.SPECIMEN_DESC,
-                        lt.SPECIMEN_SITE_desc,
-                        lt.lab_rpt_local_id,
-                        lt.order_oid,
-                        ltn.[LAB_TEST_KEY]
-        INTO #D_LAB_TEST_N
-        FROM #LAB_TEST_final lt,
-             #L_LAB_TEST_N ltn
-        WHERE lt.LAB_TEST_UID = ltn.LAB_TEST_UID;
-
-        if
-            @debug = 'true'
-            SELECT 'lab_test_n' as nm, *
-            FROM #D_LAB_TEST_N
-            order by lab_test_key;
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = ' GENERATING #D_LAB_TEST_U ';
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'INSERTING INTO LAB_RESULT_VAL ';
 
 
-        IF
-            OBJECT_ID('#D_LAB_TEST_U', 'U') IS NOT NULL
-            drop table #D_LAB_TEST_U;
-
-
-        SELECT distinct lt.LAB_TEST_ptnr,
-                        lt.LAB_TEST_uid_final_order,
-                        lt.LAB_TEST_uid_final_result,
-                        lt.LAB_TEST_uid_final,
-                        lt.lab_rpt_uid,
-                        lt.LAB_TEST_uid,
-                        lt.LAB_TEST_uid_oth,
-                        lt.interpretation_flg,
-                        lt.REASON_FOR_TEST_DESC,
-                        lt.REASON_FOR_TEST_CD,
-                        lt.transcriptionist_name,
-                        lt.transcriptionist_ass_auth_cd,
-                        lt.Transcriptionist_Ass_Auth_Type,
-                        lt.transcriptionist_id,
-                        lt.Assistant_Interpreter_Name,
-                        lt.Assistant_inter_ass_auth_cd,
-                        lt.Assistant_inter_ass_auth_type,
-                        lt.Assistant_interpreter_id,
-                        lt.result_interpreter_name,
-                        lt.specimen_nm,
-                        lt.Specimen_details,
-                        lt.Specimen_collection_vol,
-                        lt.Specimen_collection_vol_unit,
-                        lt.Danger_cd,
-                        lt.Danger_cd_desc,
-                        lt.parent_test_pntr,
-                        lt.LAB_TEST_pntr,
-                        lt.test_method_cd,
-                        lt.root_ordered_test_pntr,
-                        lt.test_method_cd_desc,
-                        lt.priority_cd,
-                        lt.CLINICAL_INFORMATION,
-                        lt.LAB_TEST_Type,
-                        lt.LAB_TEST_cd,
-                        lt.LAB_TEST_cd_desc,
-                        lt.LAB_TEST_cd_sys_cd,
-                        lt.LAB_TEST_cd_sys_nm,
-                        lt.Alt_LAB_TEST_cd,
-                        lt.Alt_LAB_TEST_cd_desc,
-                        lt.Alt_LAB_TEST_cd_sys_cd,
-                        lt.Alt_LAB_TEST_cd_sys_nm,
-                        lt.lab_rpt_share_ind,
-                        lt.record_status_cd,
-                        lt.lab_rpt_status,
-                        lt.report_observation_uid,
-                        lt.report_refr_uid,
-                        lt.report_sprt_uid,
-                        lt.followup_observation_uid,
-                        lt.accession_number,
-                        lt.morb_hosp_id,
-                        lt.transcriptionist_auth_type,
-                        lt.assistant_interpreter_auth_type,
-                        lt.morb_physician_id,
-                        lt.morb_reporter_id,
-                        lt.transcriptionist_val,
-                        lt.transcriptionist_first_nm,
-                        lt.transcriptionist_last_nm,
-                        lt.assistant_interpreter_val,
-                        lt.assistant_interpreter_first_nm,
-                        lt.assistant_interpreter_last_nm,
-                        lt.result_interpreter_id,
-                        lt.transcriptionist_id_assign_auth,
-                        lt.assistant_interpreter_id_assign_auth,
-                        lt.interpretation_cd,
-                        lt.condition_cd,
-                        lt.LAB_TEST_status,
-                        lt.processing_decision_cd,
-                        lt.document_link,
-                        lt.Lab_Rpt_Uid_Test1,
-                        lt.Morb_oid,
-                        lt.PROCESSING_DECISION_DESC,
-                        lt.root_thru_srpt,
-                        lt.root_thru_refr,
-                        lt.Root_Ordered_Test_Nm,
-                        lt.Parent_Test_Nm,
-                        lt.SPECIMEN_ADD_TIME,
-                        lt.SPECIMEN_LAST_CHANGE_TIME,
-                        lt.ELR_IND,
-                        lt.ACCESSION_NBR_merge,
-                        lt.LAB_RPT_CREATED_BY_merge,
-                        lt.LAB_RPT_CREATED_DT,
-                        lt.jurisdiction_cd,
-                        lt.JURISDICTION_NM,
-                        lt.LAB_TEST_dt,
-                        lt.specimen_collection_dt,
-                        lt.LAB_RPT_RECEIVED_BY_PH_DT,
-                        lt.LAB_RPT_LAST_UPDATE_DT,
-                        lt.LAB_RPT_LAST_UPDATE_BY,
-                        lt.SPECIMEN_SRC,
-                        lt.specimen_site,
-                        lt.SPECIMEN_DESC,
-                        lt.SPECIMEN_SITE_desc,
-                        lt.lab_rpt_local_id,
-                        lt.order_oid
-        INTO #D_LAB_TEST_U
-        FROM #LAB_TEST_final lt
-        WHERE lt.LAB_TEST_UID IN (select LAB_TEST_UID FROM dbo.LAB_TEST);
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'insert into dbo.LAB_TEST';
-
-
-        insert into dbo.LAB_TEST
-        ( [LAB_TEST_STATUS]
-        , [LAB_TEST_KEY]
-        , [LAB_RPT_LOCAL_ID]
-        , [TEST_METHOD_CD]
-        , [TEST_METHOD_CD_DESC]
-        , [LAB_RPT_SHARE_IND]
-        , [LAB_TEST_CD]
-        , [ELR_IND]
-        , [LAB_RPT_UID]
-        , [LAB_TEST_CD_DESC]
-        , [INTERPRETATION_FLG]
-        , [LAB_RPT_RECEIVED_BY_PH_DT]
-        , [LAB_RPT_CREATED_BY]
-        , [REASON_FOR_TEST_DESC]
-        , [REASON_FOR_TEST_CD]
-        , [LAB_RPT_LAST_UPDATE_BY]
-        , [LAB_TEST_DT]
-        , [LAB_RPT_CREATED_DT]
-        , [LAB_TEST_TYPE]
-        , [LAB_RPT_LAST_UPDATE_DT]
-        , [JURISDICTION_CD]
-        , [LAB_TEST_CD_SYS_CD]
-        , [LAB_TEST_CD_SYS_NM]
-        , [JURISDICTION_NM]
-        , [OID]
-        , [ALT_LAB_TEST_CD]
-        , [LAB_RPT_STATUS]
-        , [DANGER_CD_DESC]
-        , ALT_LAB_TEST_CD_DESC
-        , [ACCESSION_NBR]
-        , [SPECIMEN_SRC]
-        , [PRIORITY_CD]
-        , [ALT_LAB_TEST_CD_SYS_CD]
-        , [ALT_LAB_TEST_CD_SYS_NM]
-        , [SPECIMEN_SITE]
-        , [SPECIMEN_DETAILS]
-        , [DANGER_CD]
-        , [SPECIMEN_COLLECTION_VOL]
-        , [SPECIMEN_COLLECTION_VOL_UNIT]
-        , [SPECIMEN_DESC]
-        , [SPECIMEN_SITE_DESC]
-        , [CLINICAL_INFORMATION]
-        , [LAB_TEST_UID]
-        , [ROOT_ORDERED_TEST_PNTR]
-        , [PARENT_TEST_PNTR]
-        , [LAB_TEST_PNTR]
-        , [SPECIMEN_ADD_TIME]
-        , [SPECIMEN_LAST_CHANGE_TIME]
-        , [SPECIMEN_COLLECTION_DT]
-        , [SPECIMEN_NM]
-        , [ROOT_ORDERED_TEST_NM]
-        , [PARENT_TEST_NM]
-        , [TRANSCRIPTIONIST_NAME]
-        , [TRANSCRIPTIONIST_ID]
-        , [TRANSCRIPTIONIST_ASS_AUTH_CD]
-        , [TRANSCRIPTIONIST_ASS_AUTH_TYPE]
-        , [ASSISTANT_INTERPRETER_NAME]
-        , [ASSISTANT_INTERPRETER_ID]
-        , [ASSISTANT_INTER_ASS_AUTH_CD]
-        , [ASSISTANT_INTER_ASS_AUTH_TYPE]
-        , [RESULT_INTERPRETER_NAME]
-        , [RECORD_STATUS_CD]
-        , [RDB_LAST_REFRESH_TIME]
-        , [CONDITION_CD]
-        , [PROCESSING_DECISION_CD]
-        , [PROCESSING_DECISION_DESC])
-        select rtrim(cast(LAB_TEST_STATUS AS varchar(50)))
-             , [LAB_TEST_KEY]
-             , rtrim(cast(LAB_RPT_LOCAL_ID AS varchar(50)))
-             , rtrim(cast(TEST_METHOD_CD AS varchar(199)))
-             , rtrim(cast(TEST_METHOD_CD_DESC AS varchar(199)))
-             , rtrim(cast(LAB_RPT_SHARE_IND AS varchar(50)))
-             , rtrim(cast(LAB_TEST_CD AS varchar(1000)))
-             , rtrim(cast(ELR_IND AS varchar(50)))
-             , [LAB_RPT_UID]
-             , rtrim(cast(LAB_TEST_CD_DESC AS varchar(2000)))
-             , rtrim(cast(INTERPRETATION_CD AS varchar(20)))
-             , [LAB_RPT_RECEIVED_BY_PH_DT]
-             , [LAB_RPT_CREATED_BY_MERGE]
-             , rtrim(cast(REASON_FOR_TEST_DESC AS varchar(4000)))
-             , rtrim(cast(REASON_FOR_TEST_CD AS varchar(4000)))
-             , [LAB_RPT_LAST_UPDATE_BY]
-             , [LAB_TEST_DT]
-             , [LAB_RPT_CREATED_DT]
-             , rtrim(cast(LAB_TEST_TYPE AS varchar(50)))
-             , [LAB_RPT_LAST_UPDATE_DT]
-             , rtrim(cast(JURISDICTION_CD AS varchar(20)))
-             , rtrim(cast(LAB_TEST_CD_SYS_CD AS varchar(50)))
-             , rtrim(cast(LAB_TEST_CD_SYS_NM AS varchar(100)))
-             , rtrim(cast(JURISDICTION_NM AS varchar(50)))
-             , order_OID
-             , rtrim(cast(ALT_LAB_TEST_CD AS varchar(50)))
-             , cast(LAB_RPT_STATUS AS char(1))
-             , rtrim(cast(DANGER_CD_DESC AS varchar(100)))
-             , rtrim(cast(ALT_LAB_TEST_CD_DESC AS varchar(1000)))
-             , rtrim(cast(ACCESSION_NBR_MERGE AS varchar(199)))
-             , rtrim(cast(SPECIMEN_SRC AS varchar(50)))
-             , rtrim(cast(PRIORITY_CD AS varchar(20)))
-             , rtrim(cast(ALT_LAB_TEST_CD_SYS_CD AS varchar(50)))
-             , rtrim(cast(ALT_LAB_TEST_CD_SYS_NM AS varchar(100)))
-             , rtrim(cast(SPECIMEN_SITE AS varchar(20)))
-             , rtrim(cast(SPECIMEN_DETAILS AS varchar(1000)))
-             , rtrim(cast(DANGER_CD AS varchar(20)))
-             , rtrim(cast(SPECIMEN_COLLECTION_VOL AS varchar(20)))
-             , rtrim(cast(SPECIMEN_COLLECTION_VOL_UNIT AS varchar(50)))
-             , rtrim(cast(SPECIMEN_DESC AS varchar(1000)))
-             , rtrim(cast(SPECIMEN_SITE_DESC AS varchar(100)))
-             , rtrim(cast(CLINICAL_INFORMATION AS varchar(1000)))
-             , [LAB_TEST_UID]
-             , [ROOT_ORDERED_TEST_PNTR]
-             , [PARENT_TEST_PNTR]
-             , [LAB_TEST_PNTR]
-             , [SPECIMEN_ADD_TIME]
-             , [SPECIMEN_LAST_CHANGE_TIME]
-             , [SPECIMEN_COLLECTION_DT]
-             , rtrim(cast(SPECIMEN_NM AS varchar(100)))
-             , rtrim(cast(ROOT_ORDERED_TEST_NM AS varchar(1000)))
-             , rtrim(cast(PARENT_TEST_NM AS varchar(1000)))
-             , rtrim(cast(TRANSCRIPTIONIST_NAME AS varchar(300)))
-             , rtrim(cast(TRANSCRIPTIONIST_ID AS varchar(100)))
-             , rtrim(cast(TRANSCRIPTIONIST_ASS_AUTH_CD AS varchar(199)))
-             , rtrim(cast(TRANSCRIPTIONIST_ASS_AUTH_TYPE AS varchar(100)))
-             , rtrim(cast(ASSISTANT_INTERPRETER_NAME AS varchar(300)))
-             , rtrim(cast(ASSISTANT_INTERPRETER_ID AS varchar(100)))
-             , rtrim(cast(ASSISTANT_INTER_ASS_AUTH_CD AS varchar(199)))
-             , rtrim(cast(ASSISTANT_INTER_ASS_AUTH_TYPE AS varchar(100)))
-             , rtrim(cast(RESULT_INTERPRETER_NAME AS varchar(300)))
-             , rtrim(cast(RECORD_STATUS_CD AS varchar(8)))
+        INSERT INTO dbo.LAB_RESULT_VAL
+        ([TEST_RESULT_GRP_KEY]
+        ,[NUMERIC_RESULT]
+        ,[RESULT_UNITS]
+        ,[LAB_RESULT_TXT_VAL]
+        ,[REF_RANGE_FRM]
+        ,[REF_RANGE_TO]
+        ,[TEST_RESULT_VAL_CD]
+        ,[TEST_RESULT_VAL_CD_DESC]
+        ,[TEST_RESULT_VAL_CD_SYS_CD]
+        ,[TEST_RESULT_VAL_CD_SYS_NM]
+        ,[ALT_RESULT_VAL_CD]
+        ,[ALT_RESULT_VAL_CD_DESC]
+        ,[ALT_RESULT_VAL_CD_SYS_CD]
+        ,[ALT_RESULT_VAL_CD_SYS_NM]
+        ,[TEST_RESULT_VAL_KEY]
+        ,[RECORD_STATUS_CD]
+        ,[FROM_TIME]
+        ,[TO_TIME]
+        ,[LAB_TEST_UID]
+        ,[RDB_LAST_REFRESH_TIME]
+        )
+        SELECT tmp.TEST_RESULT_GRP_KEY
+             , SUBSTRING(tmp.NUMERIC_RESULT ,1,50)
+             , SUBSTRING(tmp.RESULT_UNITS ,1,50)
+             , rtrim(ltrim(SUBSTRING(tmp.LAB_RESULT_TXT_VAL ,1,2000)))
+             , SUBSTRING(tmp.REF_RANGE_FRM ,1,20)
+             , SUBSTRING(tmp.REF_RANGE_TO ,1,20)
+             , SUBSTRING(tmp.TEST_RESULT_VAL_CD ,1,20)
+             , SUBSTRING(rtrim(tmp.TEST_RESULT_VAL_CD_DESC) ,1,300)
+             , SUBSTRING(tmp.TEST_RESULT_VAL_CD_SYS_CD ,1,100)
+             , SUBSTRING(tmp.TEST_RESULT_VAL_CD_SYS_NM ,1,100)
+             , SUBSTRING(tmp.ALT_RESULT_VAL_CD ,1,50)
+             , SUBSTRING(rtrim(tmp.ALT_RESULT_VAL_CD_DESC) ,1,100)
+             , SUBSTRING(tmp.ALT_RESULT_VAL_CD_SYS_CD ,1,50)
+             , SUBSTRING(tmp.ALT_RESULT_VAL_CD_SYSTEM_NM ,1,100)
+             ,tmp.TEST_RESULT_VAL_KEY
+             , SUBSTRING(tmp.RECORD_STATUS_CD ,1,8)
+             ,tmp.FROM_TIME
+             ,tmp.TO_TIME
+             ,tmp.LAB_TEST_UID
              , GETDATE()
-             , rtrim(cast(CONDITION_CD AS varchar(20)))
-             , rtrim(cast(PROCESSING_DECISION_CD AS varchar(50)))
-             , rtrim(cast(PROCESSING_DECISION_DESC AS varchar(50)))
-        FROM #D_LAB_TEST_N;
+        FROM #TMP_LAB_RESULT_VAL_FINAL tmp
+                 LEFT JOIN dbo.LAB_RESULT_VAL val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+        WHERE val.LAB_TEST_UID IS NULL and val.TEST_RESULT_VAL_KEY IS NULL;
 
 
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'UPDATE RESULT_COMMENT_GROUP ';
+
+
+        UPDATE dbo.RESULT_COMMENT_GROUP
         SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'Update dbo.LAB_TEST';
+            [RESULT_COMMENT_GRP_KEY] = tmp.RESULT_COMMENT_GRP_KEY,
+            [LAB_TEST_UID] = tmp.LAB_TEST_UID,
+            [RDB_LAST_REFRESH_TIME] = GETDATE()
+        FROM #TMP_RESULT_COMMENT_GROUP tmp
+                 INNER JOIN dbo.RESULT_COMMENT_GROUP val ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+            AND val.RESULT_COMMENT_GRP_KEY = tmp.RESULT_COMMENT_GRP_KEY;
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_RESULT_COMMENT_GROUP Update', * FROM #TMP_RESULT_COMMENT_GROUP;
 
 
-        UPDATE
-            lt
-        SET lt.[LAB_TEST_STATUS]                = rtrim(cast(dltu.LAB_TEST_STATUS AS varchar(50)))
-          , lt.[LAB_RPT_LOCAL_ID]               = rtrim(cast(dltu.LAB_RPT_LOCAL_ID AS varchar(50)))
-          , lt.[TEST_METHOD_CD]                 = rtrim(cast(dltu.TEST_METHOD_CD AS varchar(199)))
-          , lt.[TEST_METHOD_CD_DESC]            = rtrim(cast(dltu.TEST_METHOD_CD_DESC AS varchar(199)))
-          , lt.[LAB_RPT_SHARE_IND]              = rtrim(cast(dltu.LAB_RPT_SHARE_IND AS varchar(50)))
-          , lt.[LAB_TEST_CD]                    = rtrim(cast(dltu.LAB_TEST_CD AS varchar(1000)))
-          , lt.[ELR_IND]                        = rtrim(cast(dltu.ELR_IND AS varchar(50)))
-          , lt.[LAB_RPT_UID]                    = dltu.LAB_RPT_UID
-          , lt.[LAB_TEST_CD_DESC]               = rtrim(cast(dltu.LAB_TEST_CD_DESC AS varchar(2000)))
-          , lt.[INTERPRETATION_FLG]             = rtrim(cast(dltu.INTERPRETATION_CD AS varchar(20)))
-          , lt.[LAB_RPT_RECEIVED_BY_PH_DT]      = dltu.LAB_RPT_RECEIVED_BY_PH_DT
-          , lt.[LAB_RPT_CREATED_BY]             = dltu.LAB_RPT_CREATED_BY_MERGE
-          , lt.[REASON_FOR_TEST_DESC]           = rtrim(cast(dltu.REASON_FOR_TEST_DESC AS varchar(4000)))
-          , lt.[REASON_FOR_TEST_CD]             = rtrim(cast(dltu.REASON_FOR_TEST_CD AS varchar(4000)))
-          , lt.[LAB_RPT_LAST_UPDATE_BY]         = dltu.LAB_RPT_LAST_UPDATE_BY
-          , lt.[LAB_TEST_DT]                    = dltu.LAB_TEST_DT
-          , lt.[LAB_RPT_CREATED_DT]             = dltu.LAB_RPT_CREATED_DT
-          , lt.[LAB_TEST_TYPE]                  = rtrim(cast(dltu.LAB_TEST_TYPE AS varchar(50)))
-          , lt.[LAB_RPT_LAST_UPDATE_DT]         = dltu.LAB_RPT_LAST_UPDATE_DT
-          , lt.[JURISDICTION_CD]                = rtrim(cast(dltu.JURISDICTION_CD AS varchar(20)))
-          , lt.[LAB_TEST_CD_SYS_CD]             = rtrim(cast(dltu.LAB_TEST_CD_SYS_CD AS varchar(50)))
-          , lt.[LAB_TEST_CD_SYS_NM]             = rtrim(cast(dltu.LAB_TEST_CD_SYS_NM AS varchar(100)))
-          , lt.[JURISDICTION_NM]                = rtrim(cast(dltu.JURISDICTION_NM AS varchar(50)))
-          , lt.[OID]                            = dltu.order_OID
-          , lt.[ALT_LAB_TEST_CD]                = rtrim(cast(dltu.ALT_LAB_TEST_CD AS varchar(50)))
-          , lt.[LAB_RPT_STATUS]                 = cast(dltu.LAB_RPT_STATUS AS char(1))
-          , lt.[DANGER_CD_DESC]                 = rtrim(cast(dltu.DANGER_CD_DESC AS varchar(100)))
-          , lt.ALT_LAB_TEST_CD_DESC             = rtrim(cast(dltu.ALT_LAB_TEST_CD_DESC AS varchar(1000)))
-          , lt.[ACCESSION_NBR]                  = rtrim(cast(dltu.ACCESSION_NBR_MERGE AS varchar(199)))
-          , lt.[SPECIMEN_SRC]                   = rtrim(cast(dltu.SPECIMEN_SRC AS varchar(50)))
-          , lt.[PRIORITY_CD]                    = rtrim(cast(dltu.PRIORITY_CD AS varchar(20)))
-          , lt.[ALT_LAB_TEST_CD_SYS_CD]         = rtrim(cast(dltu.ALT_LAB_TEST_CD_SYS_CD AS varchar(50)))
-          , lt.[ALT_LAB_TEST_CD_SYS_NM]         = rtrim(cast(dltu.ALT_LAB_TEST_CD_SYS_NM AS varchar(100)))
-          , lt.[SPECIMEN_SITE]                  = rtrim(cast(dltu.SPECIMEN_SITE AS varchar(20)))
-          , lt.[SPECIMEN_DETAILS]               = rtrim(cast(dltu.SPECIMEN_DETAILS AS varchar(1000)))
-          , lt.[DANGER_CD]                      = rtrim(cast(dltu.DANGER_CD AS varchar(20)))
-          , lt.[SPECIMEN_COLLECTION_VOL]        = rtrim(cast(dltu.SPECIMEN_COLLECTION_VOL AS varchar(20)))
-          , lt.[SPECIMEN_COLLECTION_VOL_UNIT]   = rtrim(cast(dltu.SPECIMEN_COLLECTION_VOL_UNIT AS varchar(50)))
-          , lt.[SPECIMEN_DESC]                  = rtrim(cast(dltu.SPECIMEN_DESC AS varchar(1000)))
-          , lt.[SPECIMEN_SITE_DESC]             = rtrim(cast(dltu.SPECIMEN_SITE_DESC AS varchar(100)))
-          , lt.[CLINICAL_INFORMATION]           = rtrim(cast(dltu.CLINICAL_INFORMATION AS varchar(1000)))
-          , lt.[ROOT_ORDERED_TEST_PNTR]         = dltu.ROOT_ORDERED_TEST_PNTR
-          , lt.[PARENT_TEST_PNTR]               = dltu.PARENT_TEST_PNTR
-          , lt.[LAB_TEST_PNTR]                  = dltu.LAB_TEST_PNTR
-          , lt.[SPECIMEN_ADD_TIME]              = dltu.SPECIMEN_ADD_TIME
-          , lt.[SPECIMEN_LAST_CHANGE_TIME]      = dltu.SPECIMEN_LAST_CHANGE_TIME
-          , lt.[SPECIMEN_COLLECTION_DT]         = dltu.SPECIMEN_COLLECTION_DT
-          , lt.[SPECIMEN_NM]                    = rtrim(cast(dltu.SPECIMEN_NM AS varchar(100)))
-          , lt.[ROOT_ORDERED_TEST_NM]           = rtrim(cast(dltu.ROOT_ORDERED_TEST_NM AS varchar(1000)))
-          , lt.[PARENT_TEST_NM]                 = rtrim(cast(dltu.PARENT_TEST_NM AS varchar(1000)))
-          , lt.[TRANSCRIPTIONIST_NAME]          = rtrim(cast(dltu.TRANSCRIPTIONIST_NAME AS varchar(300)))
-          , lt.[TRANSCRIPTIONIST_ID]            = rtrim(cast(dltu.TRANSCRIPTIONIST_ID AS varchar(100)))
-          , lt.[TRANSCRIPTIONIST_ASS_AUTH_CD]   = rtrim(cast(dltu.TRANSCRIPTIONIST_ASS_AUTH_CD AS varchar(199)))
-          , lt.[TRANSCRIPTIONIST_ASS_AUTH_TYPE] = rtrim(cast(dltu.TRANSCRIPTIONIST_ASS_AUTH_TYPE AS varchar(100)))
-          , lt.[ASSISTANT_INTERPRETER_NAME]     = rtrim(cast(dltu.ASSISTANT_INTERPRETER_NAME AS varchar(300)))
-          , lt.[ASSISTANT_INTERPRETER_ID]       = rtrim(cast(dltu.ASSISTANT_INTERPRETER_ID AS varchar(100)))
-          , lt.[ASSISTANT_INTER_ASS_AUTH_CD]    = rtrim(cast(dltu.ASSISTANT_INTER_ASS_AUTH_CD AS varchar(199)))
-          , lt.[ASSISTANT_INTER_ASS_AUTH_TYPE]  = rtrim(cast(dltu.ASSISTANT_INTER_ASS_AUTH_TYPE AS varchar(100)))
-          , lt.[RESULT_INTERPRETER_NAME]        = rtrim(cast(dltu.RESULT_INTERPRETER_NAME AS varchar(300)))
-          , lt.[RECORD_STATUS_CD]               = rtrim(cast(dltu.RECORD_STATUS_CD AS varchar(8)))
-          , lt.[RDB_LAST_REFRESH_TIME]          = GETDATE()
-          , lt.[CONDITION_CD]                   = rtrim(cast(dltu.CONDITION_CD AS varchar(20)))
-          , lt.[PROCESSING_DECISION_CD]         = rtrim(cast(dltu.PROCESSING_DECISION_CD AS varchar(50)))
-          , lt.[PROCESSING_DECISION_DESC]       = rtrim(cast(dltu.PROCESSING_DECISION_DESC AS varchar(50)))
-        FROM dbo.LAB_TEST lt,
-             #D_LAB_TEST_U dltu
-        WHERE lt.lab_test_uid = dltu.lab_test_uid;
-
-
-/*-------------------------------------------------------
-
-    Lab_Report_User_Comment Dimension
-
-    Note: Comments under the Order Test object (LAB214)
----------------------------------------------------------*/
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 
         COMMIT TRANSACTION;
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'INSERTING INTO RESULT_COMMENT_GROUP ';
+
+
+        INSERT INTO  dbo.RESULT_COMMENT_GROUP
+        ([RESULT_COMMENT_GRP_KEY]
+        ,[LAB_TEST_UID]
+        ,[RDB_LAST_REFRESH_TIME]
+        )
+        SELECT tmp.[RESULT_COMMENT_GRP_KEY]
+             , tmp.[LAB_TEST_UID]
+             , GETDATE()
+        FROM #TMP_RESULT_COMMENT_GROUP tmp
+                 LEFT JOIN dbo.RESULT_COMMENT_GROUP val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+        WHERE val.LAB_TEST_UID IS NULL and val.RESULT_COMMENT_GRP_KEY IS NULL;
+
+
+        IF @pDebug = 'true' SELECT 'DEBUG: TMP_RESULT_COMMENT_GROUP', * FROM #TMP_RESULT_COMMENT_GROUP;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE LAB_RESULT_COMMENT ';
+
+        DELETE lrc
+        FROM dbo.LAB_RESULT_COMMENT lrc
+                 INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = lrc.lab_test_uid
+                 LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = lrc.lab_test_uid
+        WHERE tcg.lab_test_uid IS NULL;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE RESULT_COMMENT_GROUP ';
+
+        DELETE rcg
+        FROM dbo.RESULT_COMMENT_GROUP rcg
+                 INNER JOIN #TMP_LAB_TEST_RESULT ltr ON ltr.lab_test_uid = rcg.lab_test_uid
+                 LEFT JOIN #TMP_RESULT_COMMENT_GROUP tcg ON tcg.lab_test_uid = rcg.lab_test_uid
+        WHERE tcg.lab_test_uid IS NULL;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'UPDATE LAB_RESULT_COMMENT ';
+
+
+        UPDATE dbo.Lab_Result_Comment
+        SET
+            [LAB_RESULT_COMMENTS] = SUBSTRING(tmp.LAB_RESULT_COMMENTS ,1,2000),
+            [RESULT_COMMENT_GRP_KEY] = tmp.RESULT_COMMENT_GRP_KEY,
+            [RECORD_STATUS_CD] = SUBSTRING(tmp.RECORD_STATUS_CD ,1,8),
+            [RDB_LAST_REFRESH_TIME] = tmp.[RDB_LAST_REFRESH_TIME]
+        FROM #TMP_New_Lab_Result_Comment_FINAL tmp
+                 INNER JOIN dbo.Lab_Result_Comment val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+            AND val.LAB_RESULT_COMMENT_KEY = tmp.LAB_RESULT_COMMENT_KEY;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+
+        COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'INSERTING INTO LAB_RESULT_COMMENT ';
+
+
+        INSERT INTO dbo.Lab_Result_Comment
+        ([LAB_TEST_UID]
+        ,[LAB_RESULT_COMMENT_KEY]
+        ,[LAB_RESULT_COMMENTS]
+        ,[RESULT_COMMENT_GRP_KEY]
+        ,[RECORD_STATUS_CD]
+        ,[RDB_LAST_REFRESH_TIME]
+        )
+        SELECT tmp.LAB_TEST_UID
+             , tmp.LAB_RESULT_COMMENT_KEY
+             , SUBSTRING(tmp.LAB_RESULT_COMMENTS ,1,2000)
+             , tmp.RESULT_COMMENT_GRP_KEY
+             , SUBSTRING(tmp.RECORD_STATUS_CD ,1,8)
+             , tmp.[RDB_LAST_REFRESH_TIME]
+        FROM #TMP_New_Lab_Result_Comment_FINAL tmp
+                 LEFT JOIN dbo.Lab_Result_Comment val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+        WHERE val.LAB_TEST_UID IS NULL AND val.LAB_RESULT_COMMENT_KEY IS NULL;
+
+
+        DELETE FROM #TMP_Lab_Test_Result WHERE lab_test_key IS NULL;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+
+        COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'UPDATE LAB_TEST_RESULT';
+
+        IF @pDebug = 'true' SELECT @PROC_STEP_NAME, * FROM #TMP_LAB_TEST_RESULT tmp
+                                                               INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+            AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY
+            AND val.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+            AND val.ORDERING_PROVIDER_KEY = tmp.ORDERING_PROVIDER_KEY;
+
+        /*CNDE-2510: Bug fix to handle multiple Investigation and Ordering providers to Lab Test inserts.
+         * This join will be revisited as more usage is reviewed.
+         * To maintain history, Investigation_key=1, the record is not being deleted. */
+
+        UPDATE dbo.LAB_TEST_RESULT
+        SET
+            [RESULT_COMMENT_GRP_KEY]	 =	tmp.[RESULT_COMMENT_GRP_KEY],
+            [TEST_RESULT_GRP_KEY]	 =	tmp.[TEST_RESULT_GRP_KEY],
+            [PERFORMING_LAB_KEY]	 =	tmp.[PERFORMING_LAB_KEY],
+            [PATIENT_KEY]	 =	COALESCE(tmp.[PATIENT_KEY],''),
+            [COPY_TO_PROVIDER_KEY]	 =	COALESCE(tmp.[COPY_TO_PROVIDER_KEY],''),
+            [LAB_TEST_TECHNICIAN_KEY]	 =	COALESCE(tmp.[LAB_TEST_TECHNICIAN_KEY],''),
+            [SPECIMEN_COLLECTOR_KEY]	 =	COALESCE(tmp.[SPECIMEN_COLLECTOR_KEY],''),
+            [ORDERING_ORG_KEY]	 =	COALESCE(tmp.[ORDERING_ORG_KEY],''),
+            [REPORTING_LAB_KEY]	 =	COALESCE(tmp.[REPORTING_LAB_KEY],''),
+            [CONDITION_KEY]	 =	COALESCE(tmp.[CONDITION_KEY],''),
+            [LAB_RPT_DT_KEY]	 =	COALESCE(tmp.[LAB_RPT_DT_KEY],''),
+            [MORB_RPT_KEY]	 =	COALESCE(tmp.[MORB_RPT_KEY],''),
+            [INVESTIGATION_KEY]	 =	COALESCE(tmp.[INVESTIGATION_KEY],''),
+            [LDF_GROUP_KEY]	 =	COALESCE(tmp.[LDF_GROUP_KEY],''),
+            [ORDERING_PROVIDER_KEY]	 =	COALESCE(tmp.[ORDERING_PROVIDER_KEY],''),
+            [RECORD_STATUS_CD]	 =	SUBSTRING(tmp.RECORD_STATUS_CD ,1,8),
+            [RDB_LAST_REFRESH_TIME]	 =	GETDATE()
+        FROM #TMP_LAB_TEST_RESULT tmp
+                 INNER JOIN dbo.LAB_TEST_RESULT val with (nolock) ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+            AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY
+            AND val.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+            AND val.ORDERING_PROVIDER_KEY = tmp.ORDERING_PROVIDER_KEY;;
+
+
+        -- IF @pDebug = 'true' SELECT @PROC_STEP_NAME, * FROM #TMP_LAB_TEST_RESULT;
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+
+        COMMIT TRANSACTION;
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'INSERTING INTO LAB_TEST_RESULT';
+
+        IF @pDebug = 'true'  SELECT  @PROC_STEP_NAME, tmp.[LAB_TEST_KEY]
+                                  ,tmp.[LAB_TEST_UID]
+                                  ,tmp.[RESULT_COMMENT_GRP_KEY]
+                                  ,tmp.[TEST_RESULT_GRP_KEY]
+                                  ,tmp.[PERFORMING_LAB_KEY]
+                                  ,COALESCE(tmp.[PATIENT_KEY],'')
+                                  ,COALESCE(tmp.[COPY_TO_PROVIDER_KEY],'')
+                                  ,COALESCE(tmp.[LAB_TEST_TECHNICIAN_KEY],'')
+                                  ,COALESCE(tmp.[SPECIMEN_COLLECTOR_KEY],'')
+                                  ,COALESCE(tmp.[ORDERING_ORG_KEY],'')
+                                  ,COALESCE(tmp.[REPORTING_LAB_KEY],'')
+                                  ,COALESCE(tmp.[CONDITION_KEY],'')
+                                  ,COALESCE(tmp.[LAB_RPT_DT_KEY],'')
+                                  ,COALESCE(tmp.[MORB_RPT_KEY],'')
+                                  ,COALESCE(tmp.[INVESTIGATION_KEY],'')
+                                  ,COALESCE(tmp.[LDF_GROUP_KEY],'')
+                                  ,COALESCE(tmp.[ORDERING_PROVIDER_KEY],'')
+                                  , SUBSTRING(tmp.RECORD_STATUS_CD ,1,8)
+                                  , GETDATE() AS [RDB_LAST_REFRESH_TIME]
+                             FROM #TMP_LAB_TEST_RESULT tmp
+                                      LEFT JOIN dbo.LAB_TEST_RESULT val with (nolock)
+                                                ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                                                    AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY
+                                                    AND val.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+                                                    AND val.ORDERING_PROVIDER_KEY = tmp.ORDERING_PROVIDER_KEY
+                             WHERE
+                                 (val.LAB_TEST_UID IS NULL
+                                     AND val.LAB_TEST_KEY IS NULL)
+                                OR
+                                 (val.INVESTIGATION_KEY IS NULL
+                                     OR val.ORDERING_PROVIDER_KEY IS NULL);
+
+        /*CNDE-2510: Bug fix to handle multiple Investigation and Ordering providers to Lab Test inserts.
+         * This join will be revisited as more usage is reviewed.*/
+
+
+        INSERT INTO dbo.LAB_TEST_RESULT
+        ([LAB_TEST_KEY]
+        ,[LAB_TEST_UID]
+        ,[RESULT_COMMENT_GRP_KEY]
+        ,[TEST_RESULT_GRP_KEY]
+        ,[PERFORMING_LAB_KEY]
+        ,[PATIENT_KEY]
+        ,[COPY_TO_PROVIDER_KEY]
+        ,[LAB_TEST_TECHNICIAN_KEY]
+        ,[SPECIMEN_COLLECTOR_KEY]
+        ,[ORDERING_ORG_KEY]
+        ,[REPORTING_LAB_KEY]
+        ,[CONDITION_KEY]
+        ,[LAB_RPT_DT_KEY]
+        ,[MORB_RPT_KEY]
+        ,[INVESTIGATION_KEY]
+        ,[LDF_GROUP_KEY]
+        ,[ORDERING_PROVIDER_KEY]
+        ,[RECORD_STATUS_CD]
+        ,[RDB_LAST_REFRESH_TIME]
+        )
+        SELECT tmp.[LAB_TEST_KEY]
+             ,tmp.[LAB_TEST_UID]
+             ,tmp.[RESULT_COMMENT_GRP_KEY]
+             ,tmp.[TEST_RESULT_GRP_KEY]
+             ,tmp.[PERFORMING_LAB_KEY]
+             ,COALESCE(tmp.[PATIENT_KEY],'')
+             ,COALESCE(tmp.[COPY_TO_PROVIDER_KEY],'')
+             ,COALESCE(tmp.[LAB_TEST_TECHNICIAN_KEY],'')
+             ,COALESCE(tmp.[SPECIMEN_COLLECTOR_KEY],'')
+             ,COALESCE(tmp.[ORDERING_ORG_KEY],'')
+             ,COALESCE(tmp.[REPORTING_LAB_KEY],'')
+             ,COALESCE(tmp.[CONDITION_KEY],'')
+             ,COALESCE(tmp.[LAB_RPT_DT_KEY],'')
+             ,COALESCE(tmp.[MORB_RPT_KEY],'')
+             ,COALESCE(tmp.[INVESTIGATION_KEY],'')
+             ,COALESCE(tmp.[LDF_GROUP_KEY],'')
+             ,COALESCE(tmp.[ORDERING_PROVIDER_KEY],'')
+             , SUBSTRING(tmp.RECORD_STATUS_CD ,1,8)
+             , GETDATE() AS [RDB_LAST_REFRESH_TIME]
+        FROM #TMP_LAB_TEST_RESULT tmp
+                 LEFT JOIN dbo.LAB_TEST_RESULT val with (nolock)
+                           ON val.LAB_TEST_UID = tmp.LAB_TEST_UID
+                               AND val.LAB_TEST_KEY = tmp.LAB_TEST_KEY
+                               AND val.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+                               AND val.ORDERING_PROVIDER_KEY = tmp.ORDERING_PROVIDER_KEY
+        WHERE
+            (val.LAB_TEST_UID IS NULL
+                AND val.LAB_TEST_KEY IS NULL)
+           OR
+            (val.INVESTIGATION_KEY IS NULL
+                OR val.ORDERING_PROVIDER_KEY IS NULL);
+
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        COMMIT TRANSACTION;
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION;
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #Lab_Rpt_User_Comment_N ';
+        SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST_RESULT Records';
 
 
-        IF OBJECT_ID('#Lab_Rpt_User_Comment_N', 'U') IS NOT NULL
-            drop table #Lab_Rpt_User_Comment_N;
+        /* Update record status for Inactive Orders and associated observations. */
+        SELECT ltr.LAB_TEST_UID
+        INTO #Inactive_Obs
+        FROM  dbo.LAB_TEST lt
+                  INNER JOIN dbo.LAB_TEST_RESULT ltr on ltr.LAB_TEST_UID = lt.LAB_TEST_UID
+        WHERE ROOT_ORDERED_TEST_PNTR IN
+              (SELECT ROOT_ORDERED_TEST_PNTR
+               FROM dbo.LAB_TEST ltr
+               WHERE LAB_TEST_TYPE = 'Order'
+                 AND RECORD_STATUS_CD = 'INACTIVE'
+              )
+          AND ltr.RECORD_STATUS_CD <> 'INACTIVE';
 
-        CREATE TABLE #Lab_Rpt_User_Comment_N
-        (
-            [LAB_COMMENT_id]          [int] IDENTITY
-                (
-                1,
-                1
-                )                                     NOT NULL,
-            [LAB_TEST_Key]            [bigint]        NULL,
-            [LAB_TEST_uid]            [bigint]        NULL,
-            [COMMENTS_FOR_ELR_DT]     [datetime]      NULL,
-            [USER_COMMENT_CREATED_BY] [bigint]        NULL,
-            [USER_RPT_COMMENTS]       [varchar](8000) NULL,
-            [RECORD_STATUS_CD]        [varchar](8)    NOT NULL,
-            [observation_uid]         [bigint]        NOT NULL,
-            USER_COMMENT_KEY          [bigint],
-            [RDB_LAST_REFRESH_TIME]   [datetime]      NULL
-        ) ON [PRIMARY];
+        UPDATE lrc
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_RESULT_COMMENT lrc
+                 INNER JOIN dbo.RESULT_COMMENT_GROUP g ON lrc.RESULT_COMMENT_GRP_KEY = g.RESULT_COMMENT_GRP_KEY
+                 INNER JOIN dbo.LAB_TEST_RESULT R ON R.RESULT_COMMENT_GRP_KEY = g.RESULT_COMMENT_GRP_KEY
+                 INNER JOIN #INACTIVE_OBS io ON io.LAB_TEST_UID = lrc.LAB_TEST_UID
+            AND lrc.RECORD_STATUS_CD <> 'INACTIVE';
 
-
-        INSERT INTO #Lab_Rpt_User_Comment_N
-        select distinct tdltn.LAB_TEST_Key,
-                        tdltn.lab_rpt_uid as    LAB_TEST_uid,
-                        lab214.activity_to_time 'COMMENTS_FOR_ELR_DT',
-                        lab214.add_user_id      'USER_COMMENT_CREATED_BY',
-                        CASE
-                            WHEN REPLACE(REPLACE(ovt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ') = '' THEN NULL
-                            ELSE REPLACE(REPLACE(ovt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')
-                            END           AS    USER_RPT_COMMENTS,
-                        tdltn.record_status_cd  'RECORD_STATUS_CD',
-                        lab214.observation_uid,
-                        NULL              AS    USER_COMMENT_KEY,
-                        getdate()         AS    RDB_LAST_REFRESH_TIME
-        from #D_LAB_TEST_N as tdltn,
-             dbo.nrt_observation as obs,
-             dbo.nrt_observation as lab214,
-             #tmp_nrt_observation_txt as ovt
-        where ovt.ovt_value_txt is not null
-          and obs.observation_uid IN (SELECT value FROM STRING_SPLIT(tdltn.followup_observation_uid, ','))
-          and obs.obs_domain_cd_st_1 = 'C_Order'
-          and lab214.observation_uid IN (SELECT value FROM STRING_SPLIT(tdltn.followup_observation_uid, ','))
-          and lab214.obs_domain_cd_st_1 = 'C_Result'
-          and tdltn.followup_observation_uid is not null
-          and lab214.observation_uid = ovt.observation_uid
-          and tdltn.LAB_TEST_KEY IS NOT NULL;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        UPDATE #Lab_Rpt_User_Comment_N
-        SET USER_COMMENT_KEY= [LAB_COMMENT_id] +
-                              coalesce((SELECT MAX(USER_COMMENT_KEY) FROM dbo.Lab_Rpt_User_Comment), 1)
-
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'INSERTING INTO dbo.Lab_Rpt_User_Comment';
-
-
-        insert into dbo.Lab_Rpt_User_Comment
-        ( [USER_COMMENT_KEY]
-        , [USER_RPT_COMMENTS]
-        , [COMMENTS_FOR_ELR_DT]
-        , [USER_COMMENT_CREATED_BY]
-        , [LAB_TEST_KEY]
-        , [RECORD_STATUS_CD]
-        , [LAB_TEST_UID]
-        , [RDB_LAST_REFRESH_TIME])
-        select [USER_COMMENT_KEY]
-             , rtrim(cast([USER_RPT_COMMENTS] AS varchar(2000)))
-             , [COMMENTS_FOR_ELR_DT]
-             , [USER_COMMENT_CREATED_BY]
-             , [LAB_TEST_KEY]
-             , rtrim(cast([RECORD_STATUS_CD] AS varchar(8)))
-             , [LAB_TEST_UID]
-             , [RDB_LAST_REFRESH_TIME]
-        FROM #LAB_RPT_USER_COMMENT_N;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #Lab_Rpt_User_Comment_U ';
-
-
-        IF OBJECT_ID('#Lab_Rpt_User_Comment_U', 'U') IS NOT NULL
-            drop table #Lab_Rpt_User_Comment_U;
-
-        CREATE TABLE #Lab_Rpt_User_Comment_U
-        (
-            [
-            LAB_COMMENT_id]           [int] IDENTITY
-                (
-                1,
-                1
-                )                                     NOT NULL,
-            [LAB_TEST_uid]            [bigint]        NULL,
-            [COMMENTS_FOR_ELR_DT] [datetime]      NULL,
-            [USER_COMMENT_CREATED_BY] [bigint]        NULL,
-            [USER_RPT_COMMENTS]       [varchar](8000) NULL,
-            [RECORD_STATUS_CD]        [varchar](8)    NOT NULL,
-            [observation_uid]         [bigint]        NOT NULL,
-            [RDB_LAST_REFRESH_TIME]   [datetime]      NULL
-        ) ON [PRIMARY];
-
-
-        INSERT INTO #Lab_Rpt_User_Comment_U
-        select distinct tdltn.lab_rpt_uid as    LAB_TEST_uid,
-                        lab214.activity_to_time 'COMMENTS_FOR_ELR_DT',
-                        lab214.add_user_id      'USER_COMMENT_CREATED_BY',
-                        CASE
-                            WHEN REPLACE(REPLACE(ovt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ') = '' THEN NULL
-                            ELSE REPLACE(REPLACE(ovt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ')
-                            END           AS    USER_RPT_COMMENTS,
-                        tdltn.record_status_cd  'RECORD_STATUS_CD',
-                        lab214.observation_uid,
-                        getdate()
-        from #D_LAB_TEST_U as tdltn,
-             dbo.nrt_observation as obs,
-             dbo.nrt_observation as lab214,
-             #tmp_nrt_observation_txt as ovt
-        where ovt.ovt_value_txt is not null
-          and obs.observation_uid IN (SELECT value FROM STRING_SPLIT(tdltn.followup_observation_uid, ','))
-          and obs.obs_domain_cd_st_1 = 'C_Order'
-          and lab214.observation_uid IN (SELECT value FROM STRING_SPLIT(tdltn.followup_observation_uid, ','))
-          and lab214.obs_domain_cd_st_1 = 'C_Result'
-          and tdltn.followup_observation_uid is not null
-          and lab214.observation_uid = ovt.observation_uid;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'UPDATING dbo.Lab_Rpt_User_Comment';
-
-
-        UPDATE
-            lruc
-        SET lruc.[USER_RPT_COMMENTS]       = rtrim(cast(lrucu.USER_RPT_COMMENTS AS varchar(2000)))
-          , lruc.[COMMENTS_FOR_ELR_DT]     = lrucu.COMMENTS_FOR_ELR_DT
-          , lruc.[USER_COMMENT_CREATED_BY] = lrucu.USER_COMMENT_CREATED_BY
-          , lruc.[RECORD_STATUS_CD]        = rtrim(cast(lrucu.RECORD_STATUS_CD AS varchar(8)))
-          , lruc.[LAB_TEST_UID]            = lrucu.LAB_TEST_UID
-          , lruc.[RDB_LAST_REFRESH_TIME]   = lrucu.RDB_LAST_REFRESH_TIME
-        FROM dbo.Lab_Rpt_User_Comment lruc,
-             #LAB_RPT_USER_COMMENT_U lrucu
-        WHERE lruc.lab_test_uid = lrucu.lab_test_uid;
-
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST Records';
-
-
-        /* Update records associated to Inactive Orders using Root Order UID. */
+        UPDATE lrv
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_RESULT_VAL lrv
+                 INNER JOIN dbo.TEST_RESULT_GROUPING R ON R.TEST_RESULT_GRP_KEY = lrv.TEST_RESULT_GRP_KEY
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr ON R.TEST_RESULT_GRP_KEY = ltr.TEST_RESULT_GRP_KEY
+                 INNER JOIN #INACTIVE_OBS io ON io.LAB_TEST_UID = lrv.LAB_TEST_UID
+            AND lrv.RECORD_STATUS_CD <> 'INACTIVE';
 
         UPDATE lt
-        SET record_status_cd = 'INACTIVE'
-        FROM
-            dbo.LAB_TEST lt
-        WHERE
-            root_ordered_test_pntr IN
-            (
-                SELECT l.root_ordered_test_pntr
-                FROM dbo.LAB_TEST l
-                WHERE l.lab_test_type = 'Order'
-                  AND l.record_status_cd = 'INACTIVE')
-          AND record_status_cd <> 'INACTIVE';
+        SET RECORD_STATUS_CD = 'INACTIVE'
+        FROM dbo.LAB_TEST_RESULT lt
+                 INNER JOIN #Inactive_Obs io ON io.LAB_TEST_UID = lt.LAB_TEST_UID
+            AND lt.RECORD_STATUS_CD <> 'INACTIVE';
 
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
-        SELECT @RowCount_no = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 
         BEGIN TRANSACTION;
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'Remove LAB_TEST Results';
 
-        /* Remove records associated to Deleted Results. */
-        IF EXISTS (SELECT 1 FROM dbo.LAB_TEST WHERE ROOT_ORDERED_TEST_PNTR = 1)
-            BEGIN
-                WITH removed_obs as (
-                    select LAB_TEST_UID,
-                           PARENT_TEST_PNTR,
-                           ROOT_ORDERED_TEST_PNTR from dbo.LAB_TEST
-                    where ROOT_ORDERED_TEST_PNTR = 1
+        SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
+        SET @PROC_STEP_NAME = 'DELETE FROM LAB_TEST_RESULT';
 
-                    UNION ALL
+        /* Remove lab_test_uids from LAB_TEST_RESULT that no longer exist in LAB_TEST. */
+        SELECT DISTINCT ltr.LAB_TEST_UID
+        INTO #Removed_Obs
+        FROM dbo.LAB_TEST_RESULT ltr
+        EXCEPT
+        SELECT lt.LAB_TEST_UID
+        FROM dbo.LAB_TEST lt;
 
-                    select lt.LAB_TEST_UID,
-                           lt.PARENT_TEST_PNTR,
-                           lt.ROOT_ORDERED_TEST_PNTR
-                    from dbo.LAB_TEST lt
-                             inner join removed_obs o on lt.PARENT_TEST_PNTR = o.LAB_TEST_UID
-                )
-                DELETE FROM dbo.LAB_TEST WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM removed_obs);
-            END
+        DELETE FROM dbo.LAB_RESULT_COMMENT WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.RESULT_COMMENT_GROUP WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.LAB_RESULT_VAL WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
+        DELETE FROM dbo.LAB_TEST_RESULT WHERE LAB_TEST_UID IN (SELECT LAB_TEST_UID FROM #Removed_Obs);
 
-
-        SELECT @RowCount_no = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
+        VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START',  @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
 
-        IF
-            OBJECT_ID('#s_edx_document1', 'U') IS NOT NULL
-            drop table #s_edx_document1;
-
-        IF
-            OBJECT_ID('#LAB_TESTinit_a', 'U') IS NOT NULL
-            drop table #LAB_TESTinit_a;
-
-        IF
-            OBJECT_ID('#s_edx_document', 'U') IS NOT NULL
-            drop table #s_edx_document;
-
-        IF
-            OBJECT_ID('#LAB_TESTinit', 'U') IS NOT NULL
-            drop table #LAB_TESTinit;
-
-        IF
-            OBJECT_ID('#LAB_TEST_mat_init', 'U') IS NOT NULL
-            drop table #LAB_TEST_mat_init;
-
-        IF
-            OBJECT_ID('#OBS_REASON', 'U') IS NOT NULL
-            drop table #OBS_REASON;
-
-        IF
-            OBJECT_ID('#OBS_REASON_FINAL', 'U') IS NOT NULL
-            drop table #OBS_REASON_FINAL;
-
-        IF
-            OBJECT_ID('#LAB_TEST_oth', 'U') IS NOT NULL
-            drop table #LAB_TEST_oth;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_uid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_uid;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_TMP', 'U') IS NOT NULL
-            drop table #LAB_TEST1_TMP;
-
-        IF
-            OBJECT_ID('#LabReportMorb', 'U') IS NOT NULL
-            drop table #LabReportMorb;
-
-        IF
-            OBJECT_ID('#Morb_OID', 'U') IS NOT NULL
-            drop table #Morb_OID;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_uid2', 'U') IS NOT NULL
-            drop table #LAB_TEST1_uid2;
-
-        IF
-            OBJECT_ID('#LAB_TEST1', 'U') IS NOT NULL
-            drop table #LAB_TEST1;
-
-        IF
-            OBJECT_ID('#R_Result_to_R_Order', 'U') IS NOT NULL
-            drop table #R_Result_to_R_Order;
-
-        IF
-            OBJECT_ID('#R_Result_to_R_Order_to_Order', 'U') IS NOT NULL
-            drop table #R_Result_to_R_Order_to_Order;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_testuid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_testuid;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final;
-
-        IF
-            OBJECT_ID('#R_Order_to_Result', 'U') IS NOT NULL
-            drop table #R_Order_to_Result;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_testuid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final_testuid;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_result', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final_result;
-
-        IF
-            OBJECT_ID('#Result_to_Order', 'U') IS NOT NULL
-            drop table #Result_to_Order;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_orderuid', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final_orderuid;
-
-        IF
-            OBJECT_ID('#LAB_TEST1_final_order', 'U') IS NOT NULL
-            drop table #LAB_TEST1_final_order;
-
-        IF
-            OBJECT_ID('#LAB_TEST2', 'U') IS NOT NULL
-            drop table #LAB_TEST2;
-
-        IF
-            OBJECT_ID('#LAB_TEST3', 'U') IS NOT NULL
-            drop table #LAB_TEST3;
-
-        IF
-            OBJECT_ID('#LAB_TEST4', 'U') IS NOT NULL
-            drop table #LAB_TEST4;
-
-        IF
-            OBJECT_ID('#order_test', 'U') IS NOT NULL
-            drop table #order_test;
-
-        IF
-            OBJECT_ID('#LAB_TEST', 'U') IS NOT NULL
-            drop table #LAB_TEST;
-
-        IF
-            OBJECT_ID('#Merge_Order', 'U') IS NOT NULL
-            drop table #Merge_Order;
-
-        IF
-            OBJECT_ID('#LAB_TEST_final_root_ordered_test_pntr', 'U') IS NOT NULL
-            drop table #LAB_TEST_final_root_ordered_test_pntr;
-
-        IF
-            OBJECT_ID('#LAB_TEST_final', 'U') IS NOT NULL
-            drop table #LAB_TEST_final;
-
-        IF
-            OBJECT_ID('#L_LAB_TEST_N', 'U') IS NOT NULL
-            drop table #L_LAB_TEST_N;
-
-        IF
-            OBJECT_ID('#Lab_Rpt_User_Comment', 'U') IS NOT NULL
-            drop table #Lab_Rpt_User_Comment;
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-        BEGIN
-            TRANSACTION;
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-
-        SET
-            @Proc_Step_Name = 'SP_COMPLETE';
+        SET @PROC_STEP_NO = 999;
+        SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
-        INSERT INTO [dbo].[job_flow_log] ( batch_id
-                                         , [Dataflow_Name]
-                                         , [package_Name]
-                                         , [Status_Type]
-                                         , [step_number]
-                                         , [step_name]
-                                         , [row_count])
-        VALUES ( @batch_id
-        		, @Dataflow_Name
-               , @Package_Name
-               , 'COMPLETE'
-               , @Proc_Step_no
-               , @Proc_Step_name
-               , @RowCount_no);
+        INSERT INTO [dbo].[job_flow_log] (
+                                           batch_id
+                                         ,[Dataflow_Name]
+                                         ,[package_Name]
+                                         ,[Status_Type]
+                                         ,[step_number]
+                                         ,[step_name]
+                                         ,[row_count]
+        )
+        VALUES
+            (
+              @batch_id,
+              @Dataflow_Name
+            ,@Package_Name
+            ,'COMPLETE'
+            ,@Proc_Step_no
+            ,@Proc_Step_name
+            ,@RowCount_no
+            );
 
 
-        COMMIT TRANSACTION;
+        --------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        /* Notes: Multiple lab report dependent datapoints are returned to the postprocessing service.
+         * Case 1: Return distinct Investigations associated to labs.
+         * This excludes covid related datamarts that have a different set of requirements.
+         * */
+
+        SELECT inv.CASE_UID                     AS public_health_case_uid,
+               pat.PATIENT_UID                  AS patient_uid,
+               null                 AS observation_uid,
+               dtm.Datamart                     AS datamart,
+               c.CONDITION_CD                   AS condition_cd,
+               dtm.Stored_Procedure             AS stored_procedure,
+               null                             AS investigation_form_cd
+        FROM #TMP_D_LAB_TEST_N tmp
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+                 JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                 LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
+        WHERE ltr.INVESTIGATION_KEY <> 1 AND dtm.Datamart NOT IN ('Covid_Case_Datamart','Covid_Contact_Datamart',
+                                                                  'Covid_Vaccination_Datamart', 'Covid_Lab_Datamart')
+        /* Case 2: Return Investigations for case_lab_datamart update.*/
+        UNION
+        SELECT DISTINCT inv.CASE_UID                     AS public_health_case_uid,
+                        pat.PATIENT_UID                  AS patient_uid,
+                        null                             AS observation_uid,
+                        dtm.Datamart                     AS datamart,
+                        null                             AS condition_cd,
+                        dtm.Stored_Procedure             AS stored_procedure,
+                        null                             AS investigation_form_cd
+        FROM #TMP_D_LAB_TEST_N tmp
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+                 JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                 LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
+        WHERE ltr.INVESTIGATION_KEY <> 1
+        /*Case 3: Return distinct Investigations for to covid case and covid lab datamart postprocessing.
+         * Covid vaccination and contact are excluded as they can be independently associated to an
+         * investigation. */
+        UNION
+        SELECT	DISTINCT inv.CASE_UID                     AS public_health_case_uid,
+                           pat.PATIENT_UID                  AS patient_uid,
+                           tmp.LAB_TEST_UID                 AS observation_uid,
+                           dtm.Datamart                     AS datamart,
+                           null                             AS condition_cd,
+                           dtm.Stored_Procedure             AS stored_procedure,
+                           null                             AS investigation_form_cd,
+                           lc.condition_cd
+                ,lc.*
+        FROM #TMP_D_LAB_TEST_N tmp
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+                 INNER JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                 LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD --For other Investigations
+        WHERE dtm.Datamart IN ('Covid_Case_Datamart', 'Covid_Lab_Datamart')
+          AND ltr.INVESTIGATION_KEY <> 1
+        /*CASE 4: Return covid labs that are not associated to any investigations. The phc_uid and observation_uid
+         * are in this instance are the same and reconciled within the post-processing service. */
+        UNION
+        SELECT 	DISTINCT  tmp.LAB_TEST_UID                    AS public_health_case_uid,
+                            pat.PATIENT_UID                  AS patient_uid,
+                            tmp.LAB_TEST_UID                 AS observation_uid,
+                            dtm.Datamart                     AS datamart,
+                            dtm.condition_cd                 AS condition_cd,
+                            dtm.Stored_Procedure             AS stored_procedure,
+                            null                             AS investigation_form_cd
+        FROM #TMP_D_LAB_TEST_N tmp
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 LEFT JOIN dbo.nrt_srte_Loinc_condition lc with (nolock) ON lc.loinc_cd = tmp.LAB_TEST_CD
+                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Lab_Datamart'--For other Investigations
+        WHERE tmp.LAB_TEST_TYPE = 'Result'
+          AND lc.condition_cd = dtm.condition_cd ;
+
 
     END TRY
+
+
     BEGIN CATCH
 
 
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
 
-         -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
@@ -3353,25 +1600,30 @@ BEGIN
             'Error Message: ' + ERROR_MESSAGE();
 
 
-        INSERT INTO [dbo].[job_flow_log] ( batch_id
-                                         , [Dataflow_Name]
-                                         , [package_Name]
-                                         , [Status_Type]
-                                         , [step_number]
-                                         , [step_name]
-                                         , [Error_Description]
-                                         , [row_count])
-        VALUES ( @batch_id
-               , @Dataflow_Name
-               , @Package_Name
-               , 'ERROR'
-               , @Proc_Step_no
-               , @Proc_Step_name
-               , @FullErrorMessage
-               , 0);
+        INSERT INTO [dbo].[job_flow_log] (
+                                           batch_id
+                                         ,[Dataflow_Name]
+                                         ,[package_Name]
+                                         ,[Status_Type]
+                                         ,[step_number]
+                                         ,[step_name]
+                                         ,[Error_Description]
+                                         ,[row_count]
+        )
+        VALUES
+            (
+              @batch_id
+            ,@Dataflow_Name
+            ,@Package_Name
+            ,'ERROR'
+            ,@Proc_Step_no
+            ,@Proc_Step_name
+            , @FullErrorMessage
+            ,0
+            );
 
 
-        return -1;
+        RETURN -1 ;
 
     END CATCH
 
