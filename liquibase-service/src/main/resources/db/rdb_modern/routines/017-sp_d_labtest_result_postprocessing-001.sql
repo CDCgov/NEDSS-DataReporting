@@ -251,10 +251,10 @@ BEGIN
             /* Condition it's just program area */
 
             /*IF we add a program area to the Lab_Report Dimension we probably don't
-            even need a condition dimension.  Even though it's OK with the Dimension Modeling
-            principle for adding a prog_area_cd row to the condition, it sure will cause
-            some confusion among users.  There's no "disease" ON the input.
-            */
+               even need a condition dimension.  Even though it's OK with the Dimension Modeling
+               principle for adding a prog_area_cd row to the condition, it sure will cause
+               some confusion among users.  There's no "disease" ON the input.
+               */
                  LEFT JOIN dbo.v_condition_dim	AS con with (nolock)
                            ON	no2.prog_area_cd  = con.program_area_cd
                                AND con.condition_cd IS NULL
@@ -1501,12 +1501,17 @@ BEGIN
             );
 
 
---------------------------------------------------------------------------------------------------------------------------------------------
+        --------------------------------------------------------------------------------------------------------------------------------------------
 
+
+        /* Notes: Multiple lab report dependent datapoints are returned to the postprocessing service.
+         * Case 1: Return distinct Investigations associated to labs.
+         * This excludes covid related datamarts that have a different set of requirements.
+         * */
 
         SELECT inv.CASE_UID                     AS public_health_case_uid,
                pat.PATIENT_UID                  AS patient_uid,
-               tmp.lab_test_uid                 AS observation_uid,
+               null                 AS observation_uid,
                dtm.Datamart                     AS datamart,
                c.CONDITION_CD                   AS condition_cd,
                dtm.Stored_Procedure             AS stored_procedure,
@@ -1518,15 +1523,17 @@ BEGIN
                  LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
                  JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
-        WHERE ltr.INVESTIGATION_KEY <> 1 AND dtm.Datamart NOT IN ('Covid_Case_Datamart','Covid_Contact_Datamart','Covid_Vaccination_Datamart')
+        WHERE ltr.INVESTIGATION_KEY <> 1 AND dtm.Datamart NOT IN ('Covid_Case_Datamart','Covid_Contact_Datamart',
+                                                                  'Covid_Vaccination_Datamart', 'Covid_Lab_Datamart')
+        /* Case 2: Return Investigations for case_lab_datamart update.*/
         UNION
-        SELECT inv.CASE_UID                     AS public_health_case_uid,
-               pat.PATIENT_UID                  AS patient_uid,
-               null                             AS observation_uid,
-               dtm.Datamart                     AS datamart,
-               null                             AS condition_cd,
-               dtm.Stored_Procedure             AS stored_procedure,
-               null                             AS investigation_form_cd
+        SELECT DISTINCT inv.CASE_UID                     AS public_health_case_uid,
+                        pat.PATIENT_UID                  AS patient_uid,
+                        null                             AS observation_uid,
+                        dtm.Datamart                     AS datamart,
+                        null                             AS condition_cd,
+                        dtm.Stored_Procedure             AS stored_procedure,
+                        null                             AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
                  INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
@@ -1534,7 +1541,46 @@ BEGIN
                  LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
                  JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
-        WHERE ltr.INVESTIGATION_KEY <> 1;
+        WHERE ltr.INVESTIGATION_KEY <> 1
+        /*Case 3: Return distinct Investigations for to covid case and covid lab datamart postprocessing.
+         * Covid vaccination and contact are excluded as they can be independently associated to an
+         * investigation. */
+        UNION
+        SELECT	DISTINCT inv.CASE_UID                     AS public_health_case_uid,
+                           pat.PATIENT_UID                  AS patient_uid,
+                           tmp.LAB_TEST_UID                 AS observation_uid,
+                           dtm.Datamart                     AS datamart,
+                           null                             AS condition_cd,
+                           dtm.Stored_Procedure             AS stored_procedure,
+                           null                             AS investigation_form_cd,
+                           lc.condition_cd
+                ,lc.*
+        FROM #TMP_D_LAB_TEST_N tmp
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+                 INNER JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                 LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD --For other Investigations
+        WHERE dtm.Datamart IN ('Covid_Case_Datamart', 'Covid_Lab_Datamart')
+          AND ltr.INVESTIGATION_KEY <> 1
+        /*CASE 4: Return covid labs that are not associated to any investigations. The phc_uid and observation_uid
+         * are in this instance are the same and reconciled within the post-processing service. */
+        UNION
+        SELECT 	DISTINCT  tmp.LAB_TEST_UID                    AS public_health_case_uid,
+                            pat.PATIENT_UID                  AS patient_uid,
+                            tmp.LAB_TEST_UID                 AS observation_uid,
+                            dtm.Datamart                     AS datamart,
+                            dtm.condition_cd                 AS condition_cd,
+                            dtm.Stored_Procedure             AS stored_procedure,
+                            null                             AS investigation_form_cd
+        FROM #TMP_D_LAB_TEST_N tmp
+                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+                 LEFT JOIN dbo.nrt_srte_Loinc_condition lc with (nolock) ON lc.loinc_cd = tmp.LAB_TEST_CD
+                 LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Lab_Datamart'--For other Investigations
+        WHERE tmp.LAB_TEST_TYPE = 'Result'
+          AND lc.condition_cd = dtm.condition_cd ;
+
 
     END TRY
 

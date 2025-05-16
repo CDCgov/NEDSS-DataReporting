@@ -42,14 +42,6 @@ BEGIN
         SET @proc_step_name = 'Create COVID_LAB_TEMP_DATA';
         SET @proc_step_no = 1;
 
-        /* Create session table for observations to process */
-        IF OBJECT_ID('tempdb..#COVID_OBSERVATIONS_TO_PROCESS', 'U') IS NOT NULL
-            DROP TABLE #COVID_OBSERVATIONS_TO_PROCESS;
-
-        /* Create a table with the observations we need to process */
-        CREATE TABLE #COVID_OBSERVATIONS_TO_PROCESS (
-                                                        observation_uid bigint
-        );
 
         /* Determine which observations to process */
         IF @observation_id_list = ''
@@ -61,14 +53,14 @@ BEGIN
             BEGIN
                 -- Process the specific observations in the ID list
                 -- And filter out LOG_DEL records upfront
-                INSERT INTO #COVID_OBSERVATIONS_TO_PROCESS (observation_uid)
                 SELECT obs.observation_uid
+                INTO #COVID_OBSERVATIONS_TO_PROCESS
                 FROM STRING_SPLIT(@observation_id_list, ',') split_ids
                          INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON TRY_CAST(split_ids.value AS BIGINT) = obs.observation_uid
-                         LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
-                         LEFT JOIN dbo.D_Patient dp WITH(NOLOCK) ON p.patient_uid = dp.PATIENT_UID
-                WHERE obs.record_status_cd <> 'LOG_DEL'
-                  AND COALESCE(p.patient_uid, dp.PATIENT_UID) IS NOT NULL;
+                --                         LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
+--                         LEFT JOIN dbo.D_Patient dp WITH(NOLOCK) ON p.patient_uid = dp.PATIENT_UID
+                WHERE COALESCE(obs.record_status_cd, '') <> 'LOG_DEL'
+-- AND COALESCE(p.patient_uid, dp.PATIENT_UID) IS NOT NULL;
             END
 
         /* Logging */
@@ -94,11 +86,11 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Debug output if requested */
+/* Debug output if requested */
         IF @debug = 'true'
             SELECT * FROM #COVID_OBSERVATIONS_TO_PROCESS;
 
-        /* Create the next session table to hold text results */
+/* Create the next session table to hold text results */
         SET @proc_step_name = 'Extract Text Results';
         SET @proc_step_no = 2;
 
@@ -126,7 +118,7 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_observation_txt otxt_comment WITH(NOLOCK) ON o_result.observation_uid = otxt_comment.observation_uid
             AND otxt_comment.ovt_txt_type_cd = 'N';
 
-        /* Logging */
+/* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -149,11 +141,11 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Debug output if requested */
+/* Debug output if requested */
         IF @debug = 'true'
             SELECT * FROM #COVID_TEXT_RESULT_LIST;
 
-        /* Create the core lab data table */
+/* Create the core lab data table */
         SET @proc_step_name = 'Create COVID_LAB_CORE_DATA';
         SET @proc_step_no = 3;
 
@@ -172,7 +164,8 @@ BEGIN
             o.jurisdiction_cd AS Jurisdiction_Cd,
             o.activity_to_time AS Lab_Report_Dt,
             o.rpt_to_state_time AS Lab_Rpt_Received_By_PH_Dt,
-            o.activity_from_time AS ORDER_TEST_DATE,
+            --o.activity_from_time AS ORDER_TEST_DATE, --Add to nrt_obs
+            NULL AS ORDER_TEST_DATE,
             o.target_site_cd AS SPECIMEN_SOURCE_SITE_CD,
             o.target_site_desc_txt AS SPECIMEN_SOURCE_SITE_DESC,
             cvg1.code_short_desc_txt AS Order_result_status,
@@ -181,16 +174,16 @@ BEGIN
             mat.material_nm AS Specimen_Desc,
             mat.material_desc AS Specimen_type_free_text,
             CASE
-                WHEN act_id.root_extension_txt IS NULL
-                    OR act_id.root_extension_txt = ''
+                WHEN o.accession_number IS NULL
+                    OR o.accession_number = ''
                     THEN o.local_id
-                ELSE act_id.root_extension_txt
+                ELSE o.accession_number
                 END AS Specimen_Id,
             CASE
-                WHEN act_id.root_extension_txt IS NULL
-                    OR act_id.root_extension_txt = ''
+                WHEN o.accession_number IS NULL
+                    OR o.accession_number = ''
                     THEN o.local_id
-                ELSE act_id.root_extension_txt
+                ELSE o.accession_number
                 END AS Testing_Lab_Accession_Number,
             o.add_time AS Lab_Added_Dt,
             o.last_chg_time AS Lab_Update_Dt,
@@ -249,12 +242,11 @@ BEGIN
             AND cvg2.code_set_nm = 'ACT_OBJ_ST'
                  LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(NOLOCK) ON o1.observation_uid = ovn.observation_uid
                  LEFT OUTER JOIN dbo.nrt_observation_material mat WITH(NOLOCK) ON o.material_id = mat.material_id
-                 LEFT OUTER JOIN dbo.nrt_act_id act_id WITH(NOLOCK) ON o.observation_uid = act_id.act_uid
-            AND act_id.type_cd = 'FN'
-                 LEFT OUTER JOIN dbo.nrt_act_id eii WITH(NOLOCK) ON o1.observation_uid = eii.act_uid
+
+                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii WITH(NOLOCK) ON o1.observation_uid = eii.act_uid
             AND eii.type_cd = 'EII'
             AND eii.act_id_seq = 3
-                 LEFT OUTER JOIN dbo.nrt_act_id eii2 WITH(NOLOCK) ON o1.observation_uid = eii2.act_uid
+                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii2 WITH(NOLOCK) ON o1.observation_uid = eii2.act_uid
             AND eii2.type_cd = 'EII'
             AND eii2.act_id_seq = 4
                  LEFT OUTER JOIN dbo.nrt_organization org_perform WITH(NOLOCK) ON o1.performing_organization_id = org_perform.organization_uid
@@ -286,16 +278,13 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Debug output if requested */
+/* Debug output if requested */
         IF @debug = 'true'
             SELECT * FROM #COVID_LAB_CORE_DATA;
 
-        /* Create result type classification */
+/* Create result type classification */
         SET @proc_step_name = 'Create COVID_LAB_RSLT_TYPE';
         SET @proc_step_no = 4;
-
-        IF OBJECT_ID('tempdb..#COVID_LAB_RSLT_TYPE', 'U') IS NOT NULL
-            DROP TABLE #COVID_LAB_RSLT_TYPE;
 
         SELECT
             #COVID_LAB_CORE_DATA.Observation_UID AS RT_Observation_UID,
@@ -333,7 +322,7 @@ BEGIN
         FROM #COVID_LAB_CORE_DATA
         WHERE Result != '';
 
-        /* Logging */
+/* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -356,14 +345,14 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Create patient data */
+/* Create patient data */
         SET @proc_step_name = 'Create COVID_LAB_PATIENT_DATA';
         SET @proc_step_no = 5;
 
         IF OBJECT_ID('tempdb..#COVID_LAB_PATIENT_DATA', 'U') IS NOT NULL
             DROP TABLE #COVID_LAB_PATIENT_DATA;
 
-        -- Patient Data
+-- Patient Data
         SELECT DISTINCT
             o.Observation_uid AS Pat_Observation_UID,
             COALESCE(p.last_name, d_patient.PATIENT_LAST_NAME) AS Last_Name,
@@ -395,7 +384,7 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_srte_State_county_code_value county ON county.code = p.county_code
                  LEFT OUTER JOIN dbo.nrt_srte_State_code state ON state.state_cd = p.state_code;
 
-        /* Logging */
+/* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -418,14 +407,14 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Create entities data */
+/* Create entities data */
         SET @proc_step_name = 'Create COVID_LAB_ENTITIES_DATA';
         SET @proc_step_no = 6;
 
         IF OBJECT_ID('tempdb..#COVID_LAB_ENTITIES_DATA', 'U') IS NOT NULL
             DROP TABLE #COVID_LAB_ENTITIES_DATA;
 
-        -- Lab Entities Data
+-- Lab Entities Data
         SELECT DISTINCT
             o.Observation_UID AS Entity_Observation_uid,
             COALESCE(org_author.organization_name, d_org_author.ORGANIZATION_NAME) AS Reporting_Facility_Name,
@@ -453,20 +442,20 @@ BEGIN
             COALESCE(place_order.place_zip, d_org_order.ORGANIZATION_ZIP) AS Ordering_Facility_Zip_Cd,
             COALESCE(tele_order.place_phone, d_org_order.ORGANIZATION_PHONE_WORK) AS Ordering_Facility_Phone_Nbr,
             COALESCE(tele_order.place_phone_ext, d_org_order.ORGANIZATION_PHONE_EXT_WORK) AS Ordering_Facility_Phone_Ext,
-            provider_order.first_name AS Ordering_Provider_First_Name,
-            provider_order.last_name AS Ordering_Provider_Last_Name,
-            provider_place.place_street_address_1 AS Ordering_Provider_Address_One,
-            provider_place.place_street_address_2 AS Ordering_Provider_Address_Two,
-            provider_place.place_country AS Ordering_Provider_Country,
-            provider_place.place_county_code AS Ordering_Provider_County,
-            county_provider.code_desc_txt AS Ordering_Provider_County_Desc,
-            provider_place.place_city AS Ordering_Provider_City,
-            provider_place.place_state_code AS Ordering_Provider_State_Cd,
-            state_provider.state_NM AS Ordering_Provider_State,
-            provider_place.place_zip AS Ordering_Provider_Zip_Cd,
-            provider_tele.place_phone AS Ordering_Provider_Phone_Nbr,
-            provider_tele.place_phone_ext AS Ordering_Provider_Phone_Ext,
-            provider_order.local_id AS ORDERING_PROVIDER_ID
+            d_provider_order.PROVIDER_FIRST_NAME AS Ordering_Provider_First_Name,
+            d_provider_order.PROVIDER_LAST_NAME AS Ordering_Provider_Last_Name,
+            d_provider_order.PROVIDER_STREET_ADDRESS_1 AS Ordering_Provider_Address_One,
+            d_provider_order.PROVIDER_STREET_ADDRESS_2 AS Ordering_Provider_Address_Two,
+            d_provider_order.PROVIDER_COUNTRY AS Ordering_Provider_Country,
+            d_provider_order.PROVIDER_COUNTY_CODE AS Ordering_Provider_County,
+            d_provider_order.PROVIDER_COUNTY AS Ordering_Provider_County_Desc,
+            d_provider_order.PROVIDER_CITY AS Ordering_Provider_City,
+            d_provider_order.PROVIDER_STATE_CODE AS Ordering_Provider_State_Cd,
+            d_provider_order.PROVIDER_STATE AS Ordering_Provider_State,
+            d_provider_order.PROVIDER_ZIP AS Ordering_Provider_Zip_Cd,
+            d_provider_order.PROVIDER_PHONE_WORK AS Ordering_Provider_Phone_Nbr,
+            d_provider_order.PROVIDER_PHONE_EXT_WORK AS Ordering_Provider_Phone_Ext,
+            d_provider_order.PROVIDER_LOCAL_ID AS ORDERING_PROVIDER_ID
         INTO #COVID_LAB_ENTITIES_DATA
         FROM #COVID_LAB_CORE_DATA o
                  LEFT JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.Observation_UID = obs.observation_uid
@@ -484,14 +473,13 @@ BEGIN
                  LEFT JOIN dbo.nrt_srte_State_code state_order ON state_order.state_cd = place_order.place_state_code
                  LEFT JOIN dbo.nrt_place_tele tele_order WITH(NOLOCK) ON org_order.organization_uid = tele_order.place_uid
             AND tele_order.place_tele_use = 'WP'
-                 LEFT JOIN dbo.nrt_provider provider_order WITH(NOLOCK) ON obs.ordering_person_id = provider_order.provider_uid
-                 LEFT JOIN dbo.nrt_place provider_place WITH(NOLOCK) ON provider_order.provider_uid = provider_place.place_uid
-                 LEFT JOIN dbo.nrt_srte_State_county_code_value county_provider ON county_provider.code = provider_place.place_county_code
-                 LEFT JOIN dbo.nrt_srte_State_code state_provider ON state_provider.state_cd = provider_place.place_state_code
-                 LEFT JOIN dbo.nrt_place_tele provider_tele WITH(NOLOCK) ON provider_order.provider_uid = provider_tele.place_uid
-            AND provider_tele.place_tele_use = 'WP';
+                 LEFT JOIN dbo.nrt_provider 	AS provider_order with (nolock)
+                           ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv
+                                      WHERE cast(nprv.value as bigint) = provider_order.provider_uid)
+                 LEFT JOIN dbo.D_PROVIDER 	AS d_provider_order with (nolock)  ON provider_order.provider_uid = d_provider_order.provider_uid
+        ;
 
-        /* Logging */
+/* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -514,7 +502,7 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Create associations data */
+/* Create associations data */
         SET @proc_step_name = 'Create COVID_LAB_ASSOCIATIONS';
         SET @proc_step_no = 7;
 
@@ -528,7 +516,7 @@ BEGIN
         FROM #COVID_LAB_CORE_DATA
                  INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON o.observation_uid = #COVID_LAB_CORE_DATA.Observation_UID;
 
-        /* Logging */
+/* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -551,7 +539,7 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Start transaction for the actual update to the datamart */
+/* Start transaction for the actual update to the datamart */
         SET @proc_step_name = 'Update COVID_LAB_DATAMART';
         SET @proc_step_no = 8;
 
@@ -561,7 +549,7 @@ BEGIN
         DELETE FROM dbo.COVID_LAB_DATAMART
         WHERE Observation_uid IN (SELECT Observation_UID FROM #COVID_LAB_CORE_DATA);
 
-        /* Logging */
+/* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -584,7 +572,7 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Insert updated records */
+/* Insert updated records */
         INSERT INTO dbo.COVID_LAB_DATAMART (
             Observation_UID,
             Lab_Local_ID,
@@ -834,7 +822,7 @@ BEGIN
                  LEFT JOIN #COVID_LAB_ENTITIES_DATA ent ON core.Observation_UID = ent.Entity_Observation_uid
                  LEFT JOIN #COVID_LAB_ASSOCIATIONS assoc ON core.Observation_UID = assoc.ASSOC_OBSERVATION_UID;
 
-        /* Logging for insert operation */
+/* Logging for insert operation */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -857,10 +845,10 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
-        /* Commit the transaction */
+/* Commit the transaction */
         COMMIT TRANSACTION;
 
-        /* Clean up temporary tables */
+/* Clean up temporary tables */
         IF OBJECT_ID('tempdb..#COVID_OBSERVATIONS_TO_PROCESS', 'U') IS NOT NULL
             DROP TABLE #COVID_OBSERVATIONS_TO_PROCESS;
         IF OBJECT_ID('tempdb..#COVID_TEXT_RESULT_LIST', 'U') IS NOT NULL
@@ -876,7 +864,7 @@ BEGIN
         IF OBJECT_ID('tempdb..#COVID_LAB_ASSOCIATIONS', 'U') IS NOT NULL
             DROP TABLE #COVID_LAB_ASSOCIATIONS;
 
-        /* Final logging */
+/* Final logging */
         SET @proc_step_name = 'SP_COMPLETE';
         SET @proc_step_no = 999;
 
