@@ -24,12 +24,10 @@ begin
             begin
                 set @category = trim(SUBSTRING(@rdb_table_name, 3, LEN(@rdb_table_name)));
 
-                set @step_name = @rdb_table_name + '-' + cast(@phc_id_list as varchar(20))
-                print @batch_id;print @phc_id_list;print @rdb_table_name;print @category;
+                set @step_name = @rdb_table_name;
 
-
-                INSERT INTO [dbo].[job_flow_log](batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-                VALUES( @batch_id, 'Page builder staging  process', @rdb_table_name , 'START', 0,'Step - ' + @step_name , 0 );
+                INSERT INTO [dbo].[job_flow_log](batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1] )
+                VALUES( @batch_id, 'Page builder staging process', @rdb_table_name , 'START', 0,'Step - ' + @step_name , 0, LEFT(@phc_id_list, 500) );
 
                 execute dbo.sp_s_pagebuilder_postprocessing @batch_id, @phc_id_list, @rdb_table_name, @category;
 

@@ -19,8 +19,8 @@ BEGIN
 
 		BEGIN TRANSACTION;
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-		VALUES( @Batch_id, @category, '' + @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, 0 );
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1] )
+		VALUES( @Batch_id, @category, '' + @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, 0, LEFT(@phc_id_list, 500));
 
 
 		SET @Proc_Step_no = 2;
@@ -146,16 +146,16 @@ BEGIN
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-		VALUES( @Batch_id, @category + '-' + cast(@phc_id as varchar(20)), @rdb_table_name + '-' + cast(@phc_id as varchar(20)), 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1] )
+		VALUES( @Batch_id, @category, @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no, LEFT(@phc_id_list, 500));
 
 
 		SET @Proc_Step_no = 999;
 		SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-		VALUES( @Batch_id, @category + '-' + cast(@phc_id_list as varchar(20)), @rdb_table_name + '-' + cast(@phc_id as varchar(20)), 'COMPLETE', @Proc_Step_no, @Proc_Step_name, @RowCount_no );
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1])
+		VALUES( @Batch_id, @category, @rdb_table_name, 'COMPLETE', @Proc_Step_no, @Proc_Step_name, @RowCount_no, LEFT(@phc_id_list, 500));
 
 		COMMIT TRANSACTION;
 	END TRY
@@ -174,7 +174,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count], [msg_description1] )
 		VALUES( @Batch_id
 		  , @category + '-' + cast(@phc_id_list as varchar(20))
 		  , @rdb_table_name + '-' + cast(@phc_id_list as varchar(20))
@@ -182,7 +182,8 @@ BEGIN
 		  , @Proc_Step_no
 		  , @Proc_Step_Name
 		  , @FullErrorMessage
-		  , 0 );
+		  , 0
+          , LEFT(@phc_id_list, 500) );
 
 		RETURN -1;
 	END CATCH;

@@ -30,9 +30,9 @@ BEGIN
                , 0
                , 'SP_Start'
                , 0
-               ,LEFT(CAST(@phc_id_list AS VARCHAR(10)), 500));
+               ,LEFT(@phc_id_list, 500));
 
-        SET @proc_step_name = 'Create PLACE_INIT_OUT Temp table -' + CAST(@phc_id_list AS VARCHAR(10));
+        SET @proc_step_name = 'Create PLACE_INIT_OUT Temp table';
         SET @proc_step_no = 1;
 
         SELECT
