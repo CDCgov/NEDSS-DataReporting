@@ -28,7 +28,7 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 2;
-        SET @Proc_Step_Name = ' Creating nrt_page temporary table to hold latest answers for act_uid: '+cast(@phc_id_list as VARCHAR(50));
+        SET @Proc_Step_Name = ' Creating #NRT_PAGE temporary table to hold latest answers for act_uids';
 
         IF OBJECT_ID('#NRT_PAGE', 'U') IS NOT NULL
             BEGIN
