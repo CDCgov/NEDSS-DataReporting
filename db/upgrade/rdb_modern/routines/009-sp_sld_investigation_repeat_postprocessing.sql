@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.sp_sld_investigation_repeat_postprocessing
     @Batch_id bigint,
-    @phc_id bigint,
+    @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
 BEGIN
@@ -73,8 +73,11 @@ BEGIN
         SELECT inv.PUBLIC_HEALTH_CASE_UID AS 'PAGE_CASE_UID', INVESTIGATION_FORM_CD, CD, LAST_CHG_TIME
         INTO #phc_uids_REPT
         FROM dbo.nrt_investigation as inv WITH(NOLOCK)
-        WHERE inv.public_health_case_uid = @phc_id
-          AND INVESTIGATION_FORM_CD NOT IN ( 'INV_FORM_BMDGAS', 'INV_FORM_BMDGBS', 'INV_FORM_BMDGEN', 'INV_FORM_BMDNM', 'INV_FORM_BMDSP', 'INV_FORM_GEN', 'INV_FORM_HEPA', 'INV_FORM_HEPBV', 'INV_FORM_HEPCV', 'INV_FORM_HEPGEN', 'INV_FORM_MEA', 'INV_FORM_PER', 'INV_FORM_RUB', 'INV_FORM_RVCT', 'INV_FORM_VAR' );
+        INNER JOIN
+        	(SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu
+            ON nu.value = inv.public_health_case_uid
+        WHERE
+          INVESTIGATION_FORM_CD NOT IN ( 'INV_FORM_BMDGAS', 'INV_FORM_BMDGBS', 'INV_FORM_BMDGEN', 'INV_FORM_BMDNM', 'INV_FORM_BMDSP', 'INV_FORM_GEN', 'INV_FORM_HEPA', 'INV_FORM_HEPBV', 'INV_FORM_HEPCV', 'INV_FORM_HEPGEN', 'INV_FORM_MEA', 'INV_FORM_PER', 'INV_FORM_RUB', 'INV_FORM_RVCT', 'INV_FORM_VAR' );
 
         if @debug = 'true'
             select * from #phc_uids_REPT;
@@ -90,7 +93,7 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 3;
-        SET @Proc_Step_Name = ' Creating nrt_page temporary table to hold latest answers for act_uid: '+cast(@phc_id as VARCHAR(50));
+        SET @Proc_Step_Name = ' Creating nrt_page temporary table to hold latest answers for act_uid: '+cast(@phc_id_list as VARCHAR(50));
 
         IF OBJECT_ID('#NRT_PAGE', 'U') IS NOT NULL
             BEGIN
@@ -127,9 +130,10 @@ BEGIN
         dbo.NRT_PAGE_CASE_ANSWER nrt_pca with(nolock)
         left outer join dbo.NRT_INVESTIGATION inv with(nolock)
         on nrt_pca.act_uid = inv.public_health_case_uid
+        INNER JOIN
+        	(SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu
+            ON nu.value = nrt_pca.act_uid
         where isnull(nrt_pca.batch_id, 1) = isnull(inv.batch_id, 1)
-        and
-            nrt_pca.act_uid = @phc_id
         ;
 
         COMMIT TRANSACTION;

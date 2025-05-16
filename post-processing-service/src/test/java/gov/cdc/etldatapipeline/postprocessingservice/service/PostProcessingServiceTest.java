@@ -23,9 +23,10 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.LAB_REPORT;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.MORB_REPORT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -151,7 +152,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForPublicHealthCaseIds(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForFPageCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock).executeStoredProcForCaseCount(expectedPublicHealthCaseIdsString);
-        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyString(), anyString());
         verify(investigationRepositoryMock, never()).executeStoredProcForSummaryReportCase(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForSR100Datamart(expectedPublicHealthCaseIdsString);
         verify(investigationRepositoryMock, never()).executeStoredProcForAggregateReport(expectedPublicHealthCaseIdsString);
@@ -312,24 +313,28 @@ class PostProcessingServiceTest {
     @Test
     void testPostProcessPageBuilder() {
         String topic = "dummy_investigation";
-        String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        String msg = "{\"payload\":{\"public_health_case_uid\":123, \"rdb_table_name_list\":\"D_INV_CLINICAL," +
-                "D_INV_ADMINISTRATIVE\"}}";
+        String key1 = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String key2 = "{\"payload\":{\"public_health_case_uid\":124}}";
+        String msg1 = "{\"payload\":{\"public_health_case_uid\":123, \"rdb_table_name_list\":\"D_INV_CLINICAL,D_INV_ADMINISTRATIVE\"}}";
+        String msg2 = "{\"payload\":{\"public_health_case_uid\":124, \"rdb_table_name_list\":\"D_INV_ADMINISTRATIVE\"}}";
 
         Long expectedPublicHealthCaseId = 123L;
-        String expectedRdbTableNames = "D_INV_CLINICAL,D_INV_ADMINISTRATIVE";
-        postProcessingServiceMock.postProcessMessage(topic, key, msg);
-        assertTrue(postProcessingServiceMock.idVals.containsKey(expectedPublicHealthCaseId));
-        assertTrue(postProcessingServiceMock.idVals.containsValue(expectedRdbTableNames));
+        String expectedRdbTableName = "D_INV_CLINICAL";
+
+        postProcessingServiceMock.postProcessMessage(topic, key1, msg1);
+        assertTrue(postProcessingServiceMock.pbCache.containsKey(expectedRdbTableName));
+        assertTrue(postProcessingServiceMock.pbCache.get(expectedRdbTableName).contains(expectedPublicHealthCaseId));
+
+        postProcessingServiceMock.postProcessMessage(topic, key2, msg2);
 
         postProcessingServiceMock.processCachedIds();
-        assertFalse(postProcessingServiceMock.idVals.containsKey(expectedPublicHealthCaseId));
-        verify(investigationRepositoryMock).executeStoredProcForPageBuilder(expectedPublicHealthCaseId,
-                expectedRdbTableNames);
+        assertTrue(postProcessingServiceMock.pbCache.isEmpty());
+        verify(investigationRepositoryMock).executeStoredProcForPageBuilder("123", "D_INV_CLINICAL");
+        verify(investigationRepositoryMock).executeStoredProcForPageBuilder("123,124", "D_INV_ADMINISTRATIVE");
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(10, logs.size());
-        assertTrue(logs.get(7).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+        assertEquals(15, logs.size());
+        assertTrue(logs.getLast().getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
     @Test
@@ -383,10 +388,12 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(topic, key, msg);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
-        assertTrue(postProcessingServiceMock.idVals.containsKey(123L));
-        assertTrue(postProcessingServiceMock.idVals.containsValue(PostProcessingService.MORB_REPORT));
+
+        assertTrue(postProcessingServiceMock.obsCache.containsKey(MORB_REPORT));
+        assertTrue(postProcessingServiceMock.obsCache.get(MORB_REPORT).contains(123L));
 
         postProcessingServiceMock.processCachedIds();
+        assertTrue(postProcessingServiceMock.obsCache.isEmpty());
 
         String expectedObsIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForMorbReport(expectedObsIdsString);
@@ -414,8 +421,9 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(topic, key, payload);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
-        assertTrue(postProcessingServiceMock.idVals.containsKey(123L));
-        assertTrue(postProcessingServiceMock.idVals.containsValue(PostProcessingService.LAB_REPORT));
+
+        assertTrue(postProcessingServiceMock.obsCache.containsKey(LAB_REPORT));
+        assertTrue(postProcessingServiceMock.obsCache.get(LAB_REPORT).contains(123L));
 
         postProcessingServiceMock.processCachedIds();
 
@@ -446,7 +454,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(topic, key, payload);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
-        assertTrue(postProcessingServiceMock.idVals.isEmpty());
+        assertTrue(postProcessingServiceMock.obsCache.isEmpty());
 
         postProcessingServiceMock.processCachedIds();
 
@@ -1221,15 +1229,15 @@ class PostProcessingServiceTest {
             "'{\"payload\":{\"patient_uid\":123}}'",
             "'{\"payload\":{invalid}'"
     })
-    void testPostProcessNoIdValOrInvalidPayload(String payload) {
+    void testPostProcessNoTablesOrInvalidPayload(String payload) {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
 
         postProcessingServiceMock.postProcessMessage(topic, key, payload);
-        assertFalse(postProcessingServiceMock.idVals.containsKey(123L));
+        assertTrue(postProcessingServiceMock.pbCache.isEmpty());
 
         postProcessingServiceMock.processCachedIds();
-        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyLong(), anyString());
+        verify(investigationRepositoryMock, never()).executeStoredProcForPageBuilder(anyString(), anyString());
     }
 
     @Test

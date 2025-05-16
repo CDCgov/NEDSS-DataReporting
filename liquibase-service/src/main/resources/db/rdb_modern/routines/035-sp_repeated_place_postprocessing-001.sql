@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.sp_repeated_place_postprocessing
     @Batch_id bigint,
-    @phc_id bigint,
+    @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
 
@@ -30,9 +30,9 @@ BEGIN
                , 0
                , 'SP_Start'
                , 0
-               ,LEFT(CAST(@phc_id AS VARCHAR(10)), 500));
+               ,LEFT(CAST(@phc_id_list AS VARCHAR(10)), 500));
 
-        SET @proc_step_name = 'Create PLACE_INIT_OUT Temp table -' + CAST(@phc_id AS VARCHAR(10));
+        SET @proc_step_name = 'Create PLACE_INIT_OUT Temp table -' + CAST(@phc_id_list AS VARCHAR(10));
         SET @proc_step_no = 1;
 
         SELECT
@@ -49,8 +49,10 @@ BEGIN
             dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
             left outer join dbo.NRT_INVESTIGATION inv with(nolock)
             on pca.act_uid = inv.public_health_case_uid
+            INNER JOIN
+        	(SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu
+            ON nu.value = pca.act_uid
             where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
-         and act_uid = @phc_id
           AND PART_TYPE_CD IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC')
         ORDER BY
             ACT_UID,
@@ -645,4 +647,4 @@ BEGIN
 
     END CATCH
 
-END
+END;

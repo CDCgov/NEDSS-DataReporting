@@ -373,7 +373,7 @@ public class ProcessInvestigationDataUtil {
             }
 
             String rdbTblNms = String.join(",", pageCaseAnswerList.stream()
-                    .map(PageCaseAnswer::getRdbTableNm).collect(Collectors.toSet()));
+                    .map(PageCaseAnswer::getRdbTableNm).filter(Objects::nonNull).collect(Collectors.toSet()));
             if (!rdbTblNms.isEmpty()) {
                 investigationTransformed.setRdbTableNameList(rdbTblNms);
             }

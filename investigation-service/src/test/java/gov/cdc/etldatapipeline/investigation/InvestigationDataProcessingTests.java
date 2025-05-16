@@ -348,6 +348,9 @@ class InvestigationDataProcessingTests {
     void testProcessInterviewsError(){
 
         Interview interview = new Interview();
+        transformer.processInterview(interview, BATCH_ID);
+        verify(kafkaTemplate, never()).send(eq(INTERVIEW_TOPIC), anyString(), anyString());
+
         interview.setInterviewUid(INTERVIEW_UID);
 
         interview.setAnswers(INVALID_JSON);
@@ -690,6 +693,7 @@ class InvestigationDataProcessingTests {
         transformer.investigationCaseManagementTopicName = CASE_MANAGEMENT_TOPIC;
         transformer.processInvestigationCaseManagement(null);
         transformer.processInvestigationCaseManagement("{\"foo\":\"bar\"}");
+        transformer.processInvestigationCaseManagement("{\"investigation_case_management\":}");
         verify(kafkaTemplate, never()).send(eq(CASE_MANAGEMENT_TOPIC), anyString(), anyString());
     }
 
