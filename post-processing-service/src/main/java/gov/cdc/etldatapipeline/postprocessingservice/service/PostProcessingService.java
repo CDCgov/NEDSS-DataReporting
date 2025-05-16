@@ -55,9 +55,11 @@ public class PostProcessingService {
     // a map of case type (sum/agg) and its associated ids
     final Map<String, Queue<Long>> sumCache = new ConcurrentHashMap<>();
 
-    // cache to store ids and additional information specific to those IDs like page case information
-    // a map of ids (phc_ids as of now) and a comma seperated string of information
-    final Map<Long, String> idVals = new ConcurrentHashMap<>();
+    // cache to store rdb_table -> phc uids mapping for page_builder post-processing
+    final Map<String, Queue<Long>> pbCache = new ConcurrentHashMap<>();
+
+    // cache to store report_type -> obs uids mapping for morb report and lab test post-processing
+    final Map<String, Queue<Long>> obsCache = new ConcurrentHashMap<>();
 
     // cache to store ids that needs to be processed for datamarts
     // a map of datamart names and the needed ids
@@ -141,8 +143,7 @@ public class PostProcessingService {
 
         Long id = extractIdFromMessage(topic, key);
         idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-        Optional<String> val = Optional.ofNullable(extractValFromMessage(id, topic, payload));
-        val.ifPresent(v -> idVals.put(id, v));
+        extractValFromMessage(id, topic, payload);
     }
 
     /**
@@ -174,7 +175,7 @@ public class PostProcessingService {
      * @param payload
      * @return String
      */
-    private String extractValFromMessage(Long uid, String topic, String payload) {
+    private void extractValFromMessage(Long uid, String topic, String payload) {
         try {
             JsonNode payloadNode = objectMapper.readTree(payload).get(PAYLOAD);
             if (topic.endsWith(INVESTIGATION.getEntityName())) {
@@ -182,7 +183,9 @@ public class PostProcessingService {
 
                 JsonNode tblNode = payloadNode.path("rdb_table_name_list");
                 if (!tblNode.isMissingNode() && !tblNode.isNull()) {
-                    return tblNode.asText();
+                    Arrays.stream(tblNode.asText().split(",")).map(String::trim).forEach(tbl ->
+                        pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
+
                 }
             } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
                 String actTypeCd = payloadNode.path("act_type_cd").asText();
@@ -196,18 +199,17 @@ public class PostProcessingService {
 
                 if (MORB_REPORT.equals(ctrlCd)) {
                     if ("Order".equals(domainCd)) {
-                        return ctrlCd;
+                        obsCache.computeIfAbsent(MORB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
                     }
                 } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null) &&
                         assertMatches(domainCd, "Order", "Result", "R_Order", "R_Result", "I_Order", "I_Result",
                                 "Order_rslt")) {
-                    return LAB_REPORT;
+                    obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
                 }
             }
         } catch (Exception ex) {
             logger.warn("Error processing ID values for the {} message: {}", topic, ex.getMessage());
         }
-        return null;
     }
 
     private void extractSummaryCase(Long uid, String caseType) {
@@ -290,16 +292,11 @@ public class PostProcessingService {
         // Making cache snapshot preventing out-of-sequence ids processing
         // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
         final Map<String, List<Long>> idCacheSnapshot;
-        final Map<Long, String> idValsSnapshot;
 
         synchronized (cacheLock) {
             idCacheSnapshot = idCache.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
             idCache.clear();
-
-            idValsSnapshot = idVals.entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            idVals.clear();
         }
 
         if (!idCacheSnapshot.isEmpty()) {
@@ -345,7 +342,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace);
                         break;
                     case INVESTIGATION:
-                        dmDataSp = processInvestigation(keyTopic, entity, ids, idValsSnapshot);
+                        dmDataSp = processInvestigation(keyTopic, entity, ids);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         processByInvFormCode(dmData, keyTopic);
@@ -380,7 +377,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
                         break;
                     case OBSERVATION:
-                        dmData = processObservation(idValsSnapshot, keyTopic, entity, dmData);
+                        dmData = processObservation(keyTopic, entity, dmData);
                         newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case VACCINATION:
@@ -476,29 +473,19 @@ public class PostProcessingService {
         }
     }
 
-    private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids,
-            Map<Long, String> idValsSnapshot) {
+    private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids) {
         List<DatamartData> dmData;
-        dmData = processTopic(keyTopic, entity, ids,
-                investigationRepository::executeStoredProcForPublicHealthCaseIds);
+        dmData = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
+        Map<String, List<Long>> pbCacheSnapshot;
+        synchronized (cacheLock) {
+            pbCacheSnapshot = pbCache.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+            pbCache.clear();
+        }
 
-        // Step 1: Build the reverse mapping (value -> list of ids)
-        Map<String, List<Long>> valueToIds = ids.stream()
-                .filter(idValsSnapshot::containsKey)
-                .flatMap(id -> Arrays.stream(idValsSnapshot.get(id).split(","))
-                        .map(String::trim)
-                        .map(val -> new AbstractMap.SimpleEntry<>(val, id)))
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
-                ));
-
-        // Step 2: Process each group
-        valueToIds.forEach((val, idList) -> {
-             processTopic(keyTopic, CASE_ANSWERS, idList, val,
-                    investigationRepository::executeStoredProcForPageBuilder);
-        });
+        pbCacheSnapshot.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
+                investigationRepository::executeStoredProcForPageBuilder));
 
         processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
         processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
@@ -506,15 +493,14 @@ public class PostProcessingService {
         return dmData;
     }
 
-    private List<DatamartData> processObservation(Map<Long, String> idValsSnapshot, String keyTopic, Entity entity,
-            List<DatamartData> dmData) {
+    private List<DatamartData> processObservation(String keyTopic, Entity entity, List<DatamartData> dmData) {
         final List<Long> morbIds;
         final List<Long> labIds;
+
         synchronized (cacheLock) {
-            morbIds = idValsSnapshot.entrySet().stream()
-                    .filter(e -> e.getValue().equals(MORB_REPORT)).map(Entry::getKey).toList();
-            labIds = idValsSnapshot.entrySet().stream()
-                    .filter(e -> e.getValue().equals(LAB_REPORT)).map(Entry::getKey).toList();
+            morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
+            labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
+            obsCache.clear();
         }
 
         if (!morbIds.isEmpty()) {
@@ -877,7 +863,7 @@ public class PostProcessingService {
     }
 
     private String prepareAndLog(String keyTopic, Collection<Long> ids, String name, String spName) {
-        String idsString = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
+        String idsString = ids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}'", name, keyTopic,
                 spName, idsString);
