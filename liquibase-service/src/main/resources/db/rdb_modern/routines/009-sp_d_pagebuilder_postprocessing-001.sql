@@ -117,24 +117,24 @@ BEGIN
 
 		SET @insert_query =
 		'INSERT INTO  [dbo].' + @rdb_table_name + '( [D_' + @category + '_KEY] ,'+STUFF(
-							  (
-								  SELECT ', ['+name+']'
-								  FROM syscolumns
-								  WHERE id = OBJECT_ID('S_' + @category) AND
-										LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
-								  FOR XML PATH('')
-							  ), 1, 1, '')+' ) select [D_' + @category + '_KEY] , '+STUFF(
-                              (
-                                  SELECT ', ['+name+']'
-                                  FROM syscolumns
-                                  WHERE id = OBJECT_ID('S_' + @category ) AND
-                                        LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
-                                  FOR XML PATH('')
-                             ), 1, 1, '')+'
-	  			 FROM  dbo.L_' + @category + '_INC LINV
+                (
+                    SELECT ', ['+name+']'
+					FROM syscolumns
+					WHERE id = OBJECT_ID('S_' + @category) AND
+						LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
+					FOR XML PATH('')
+				), 1, 1, '')+' ) select [D_' + @category + '_KEY] , '+STUFF(
+                (
+                    SELECT ', ['+name+']'
+                    FROM syscolumns
+                    WHERE id = OBJECT_ID('S_' + @category ) AND
+                        LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
+                    FOR XML PATH('')
+                ), 1, 1, '')+'
+	  			FROM  dbo.L_' + @category + '_INC LINV
 	   			INNER JOIN dbo.S_' + @category + ' SINV ON SINV.PAGE_CASE_UID=LINV.PAGE_CASE_UID
 				INNER JOIN
-                (SELECT value FROM STRING_SPLIT('+@phc_id_list+', '','')) nu
+                (SELECT value FROM STRING_SPLIT('''+@phc_id_list+''', '','')) nu
                 ON SINV.PAGE_CASE_UID = nu.value and LINV.PAGE_CASE_UID = nu.value'
 							+ ' where linv.D_' + @category + '_KEY != 1'
 		;
