@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.sp_d_pagebuilder_postprocessing
 	   	@Batch_id bigint,
-	   	@phc_id bigint,
+	   	@phc_id_list nvarchar(max),
 	   	@rdb_table_name varchar(250) = 'D_INV_ADMINISTRATIVE',
 	 	@category varchar(250) = 'INV_ADMINISTRATIVE',
 		@debug bit = 'false'
@@ -19,8 +19,8 @@ BEGIN
 
 		BEGIN TRANSACTION;
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-		VALUES( @Batch_id, @category, '' + @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, 0 );
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1] )
+		VALUES( @Batch_id, @category, '' + @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, 0, LEFT(@phc_id_list, 500));
 
 
 		SET @Proc_Step_no = 2;
@@ -116,27 +116,28 @@ BEGIN
 		DECLARE @insert_query nvarchar(max);
 
 		SET @insert_query =
-		(
-			SELECT 'INSERT INTO  [dbo].' + @rdb_table_name + '( [D_' + @category + '_KEY] ,'+STUFF(
-							  (
-								  SELECT ', ['+name+']'
-								  FROM syscolumns
-								  WHERE id = OBJECT_ID('S_' + @category) AND
-										LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
-								  FOR XML PATH('')
-							  ), 1, 1, '')+' ) select [D_' + @category + '_KEY] , '+STUFF(
-											  (
-												  SELECT ', ['+name+']'
-												  FROM syscolumns
-												  WHERE id = OBJECT_ID('S_' + @category ) AND
-														LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
-												  FOR XML PATH('')
-																																				  ), 1, 1, '')+'
-	  			 FROM  dbo.L_' + @category + '_INC LINV
+		'INSERT INTO  [dbo].' + @rdb_table_name + '( [D_' + @category + '_KEY] ,'+STUFF(
+                (
+                    SELECT ', ['+name+']'
+					FROM syscolumns
+					WHERE id = OBJECT_ID('S_' + @category) AND
+						LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
+					FOR XML PATH('')
+				), 1, 1, '')+' ) select [D_' + @category + '_KEY] , '+STUFF(
+                (
+                    SELECT ', ['+name+']'
+                    FROM syscolumns
+                    WHERE id = OBJECT_ID('S_' + @category ) AND
+                        LOWER(NAME) NOT IN( LOWER('PAGE_CASE_UID'), 'last_chg_time' )
+                    FOR XML PATH('')
+                ), 1, 1, '')+'
+	  			FROM  dbo.L_' + @category + '_INC LINV
 	   			INNER JOIN dbo.S_' + @category + ' SINV ON SINV.PAGE_CASE_UID=LINV.PAGE_CASE_UID
-							and SINV.PAGE_CASE_UID = ' + CAST(@phc_id AS NVARCHAR(10)) + ' and LINV.PAGE_CASE_UID = ' + CAST(@phc_id AS NVARCHAR(10))
+				INNER JOIN
+                (SELECT value FROM STRING_SPLIT('''+@phc_id_list+''', '','')) nu
+                ON SINV.PAGE_CASE_UID = nu.value and LINV.PAGE_CASE_UID = nu.value'
 							+ ' where linv.D_' + @category + '_KEY != 1'
-		);
+		;
 
 		if @debug = 'true'  SELECT @insert_query;
 
@@ -145,16 +146,16 @@ BEGIN
 
 		SELECT @RowCount_no = @@ROWCOUNT;
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-		VALUES( @Batch_id, @category + '-' + cast(@phc_id as varchar(20)), @rdb_table_name + '-' + cast(@phc_id as varchar(20)), 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1] )
+		VALUES( @Batch_id, @category, @rdb_table_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no, LEFT(@phc_id_list, 500));
 
 
 		SET @Proc_Step_no = 999;
 		SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-		VALUES( @Batch_id, @category + '-' + cast(@phc_id as varchar(20)), @rdb_table_name + '-' + cast(@phc_id as varchar(20)), 'COMPLETE', @Proc_Step_no, @Proc_Step_name, @RowCount_no );
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1])
+		VALUES( @Batch_id, @category, @rdb_table_name, 'COMPLETE', @Proc_Step_no, @Proc_Step_name, @RowCount_no, LEFT(@phc_id_list, 500));
 
 		COMMIT TRANSACTION;
 	END TRY
@@ -173,15 +174,16 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
+		INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count], [msg_description1] )
 		VALUES( @Batch_id
-		  , @category + '-' + cast(@phc_id as varchar(20))
-		  , @rdb_table_name + '-' + cast(@phc_id as varchar(20))
+		  , @category + '-' + cast(@phc_id_list as varchar(20))
+		  , @rdb_table_name + '-' + cast(@phc_id_list as varchar(20))
 		  , 'ERROR'
 		  , @Proc_Step_no
 		  , @Proc_Step_Name
 		  , @FullErrorMessage
-		  , 0 );
+		  , 0
+          , LEFT(@phc_id_list, 500) );
 
 		RETURN -1;
 	END CATCH;

@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.sp_s_pagebuilder_postprocessing
     @Batch_id bigint,
-    @phc_id bigint,
+    @phc_id_list nvarchar(max),
     @rdb_table_name varchar(250) = 'D_INV_ADMINISTRATIVE',
     @category varchar(250) = 'INV_ADMINISTRATIVE',
     @debug bit = 'false'
@@ -28,7 +28,7 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 2;
-        SET @Proc_Step_Name = ' Creating nrt_page temporary table to hold latest answers for act_uid: '+cast(@phc_id as VARCHAR(50));
+        SET @Proc_Step_Name = ' Creating #NRT_PAGE temporary table to hold latest answers for act_uids';
 
         IF OBJECT_ID('#NRT_PAGE', 'U') IS NOT NULL
             BEGIN
@@ -65,8 +65,9 @@ BEGIN
             dbo.NRT_PAGE_CASE_ANSWER nrt_pca with(nolock)
             left outer join dbo.NRT_INVESTIGATION inv with(nolock)
             on nrt_pca.act_uid = inv.public_health_case_uid
+            INNER JOIN (SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu
+            ON nu.value = nrt_pca.act_uid
             where isnull(nrt_pca.batch_id, 1) = isnull(inv.batch_id, 1)
-            and nrt_pca.act_uid = @phc_id
            ;
         COMMIT TRANSACTION;
 
@@ -371,9 +372,8 @@ BEGIN
         SELECT DISTINCT
             CODED.CODE_SET_GROUP_ID, PAGE_CASE_UID, coded.NBS_QUESTION_UID, NBS_CASE_ANSWER_UID, ANSWER_TXT, METADATA.CODE_SET_NM, RDB_COLUMN_NM, ANSWER_OTH, METADATA.CODE, CODE_SHORT_DESC_TXT AS ANSWER_TXT1
         INTO #CODED_TABLE_STD_INV
-        FROM #coded_table_INV AS CODED WITH(NOLOCK) LEFT
-                                                        OUTER JOIN
-             REF_FORMCODE_TRANSLATION AS METADATA WITH(NOLOCK)
+        FROM #coded_table_INV AS CODED WITH(NOLOCK)
+        LEFT OUTER JOIN [dbo].v_nrt_ref_formcode_translation AS METADATA WITH(NOLOCK)
              ON METADATA.INVESTIGATION_FORM_CD = CODED.INVESTIGATION_FORM_CD AND
                 METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID AND
                 METADATA.CODE = CODED.ANSWER_TXT and METADATA.NBS_QUESTION_UID=coded.NBS_QUESTION_UID
@@ -504,9 +504,8 @@ BEGIN
             --CODED.CODE_SET_GROUP_ID,
             PAGE_CASE_UID, ANSWER_TXT_CODE, ANSWER_VALUE, NBS_CASE_ANSWER_UID, METADATA.CODE_SET_NM, RDB_COLUMN_NM, METADATA.CODE, CODE_SHORT_DESC_TXT AS 'ANSWER_TXT2', MASK, coded.NBS_QUESTION_UID, CAST(NULL AS varchar(2000)) AS ANSWER_TXT, METADATA.INVESTIGATION_FORM_CD
         INTO #CODED_TABLE_SNTEMP_TRANS_A_INV
-        FROM #CODED_TABLE_SNTEMP_INV AS CODED WITH(NOLOCK) LEFT
-                                                               JOIN
-             REF_FORMCODE_TRANSLATION AS METADATA WITH(NOLOCK)
+        FROM #CODED_TABLE_SNTEMP_INV AS CODED WITH(NOLOCK)
+        LEFT JOIN [dbo].v_nrt_ref_formcode_translation AS METADATA WITH(NOLOCK)
              ON METADATA.INVESTIGATION_FORM_CD = CODED.INVESTIGATION_FORM_CD AND
                 METADATA.CODE_SET_GROUP_ID = CODED.CODE_SET_GROUP_ID AND
                 METADATA.CODE = CODED.ANSWER_TXT_CODE

@@ -43,8 +43,693 @@ BEGIN
                ,0
                );
 
+--------------------------------------------------------------------------------------------------------
+        SET @proc_step_name='Create #LDF_LIST Table';
+        SET @proc_step_no = @proc_step_no +1;
+
+        IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL
+			    DROP TABLE #LDF_UID_LIST;
+
+        SELECT distinct TRIM(value) AS value  
+        INTO  #LDF_UID_LIST
+        FROM STRING_SPLIT(@ldf_uid_list, ',')
+
+        if @debug = 'true' select * from #LDF_UID_LIST;
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+        SET @proc_step_name='Create #DEL_LDF_DATA_KEY';
+        SET @proc_step_no = @proc_step_no +1;
+
+        IF OBJECT_ID('#DEL_LDF_DATA_KEY', 'U') IS NOT NULL
+          DROP TABLE #DEL_LDF_DATA_KEY;
+
+        select distinct ld.LDF_DATA_KEY, ld.LDF_GROUP_KEY
+        into #DEL_LDF_DATA_KEY
+        from dbo.ldf_data ld with (nolock)
+        inner join dbo.nrt_ldf_data_key nld with (nolock)
+          on nld.d_ldf_data_key = ld.LDF_DATA_KEY
+        inner join #LDF_UID_LIST ldf_uid_list with (nolock) 
+          on ldf_uid_list.value = nld.ldf_uid
+        inner join dbo.nrt_ldf_data nrt_ldf_data with (nolock) 
+          on nrt_ldf_data.ldf_uid = nld.ldf_uid and 
+          nrt_ldf_data.business_object_uid = nld.business_object_uid
+        inner join dbo.nrt_odse_state_defined_field_metadata sdfmd with (nolock) 
+          on sdfmd.ldf_uid = nld.ldf_uid
+        where nrt_ldf_data.RECORD_STATUS_CD is null
+        or sdfmd.active_ind = 'N';
+
+        if @debug = 'true' select * from #DEL_LDF_DATA_KEY;
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+               
+------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Delete Records from nrt_ldf_data_key';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        delete T 
+        from dbo.nrt_ldf_data_key T with (nolock)
+        inner join #DEL_LDF_DATA_KEY dldk
+          on dldk.LDF_DATA_KEY = T.d_ldf_data_key
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Delete Records from ldf_data';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        delete T 
+        from dbo.ldf_data T with (nolock)
+        inner join #DEL_LDF_DATA_KEY dldk
+          on dldk.LDF_DATA_KEY = T.LDF_DATA_KEY
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+        SET @proc_step_name='Create #DEL_GROUP_KEY';
+        SET @proc_step_no = @proc_step_no +1;
+
+        
+        IF OBJECT_ID('#DEL_GROUP_KEY', 'U') IS NOT NULL
+          DROP TABLE #DEL_GROUP_KEY;
+
+        select distinct lg.ldf_group_key 
+        into #DEL_GROUP_KEY
+        from dbo.ldf_group lg with (nolock)
+        left join (select distinct ldf_group_key from dbo.LDF_DATA with (nolock)) nld
+          on nld.ldf_group_key = lg.ldf_group_key
+        where nld.LDF_GROUP_KEY is null;
+
+        if @debug = 'true' select * from #DEL_GROUP_KEY;
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Delete Records from nrt_ldf_group_key';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        delete T from 
+        dbo.nrt_ldf_group_key T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.d_ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Delete Records from PATIENT_LDF_GROUP';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        delete T from 
+        dbo.PATIENT_LDF_GROUP T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Delete Records from ORGANIZATION_LDF_GROUP';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        delete T from 
+        dbo.ORGANIZATION_LDF_GROUP T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Delete Records from PROVIDER_LDF_GROUP';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        delete T from 
+        dbo.PROVIDER_LDF_GROUP T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+/* Handling Updates in the DM tables when there is a delete in the group */
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Update BMIRD_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.BMIRD_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Update CRS_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.CRS_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Update GENERIC_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.GENERIC_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Update HEPATITIS_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.HEPATITIS_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Update MEASLES_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.MEASLES_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Update RUBELLA_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.RUBELLA_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Update PERTUSSIS_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.PERTUSSIS_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+--------------------------------------------------------------------------------------------------------
+        SET @proc_step_name='Update SUMMARY_REPORT_CASE';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        update T 
+        set ldf_group_key = 1
+        from dbo.SUMMARY_REPORT_CASE T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+--------------------------------------------------------------------------------------------------------
+
+        SET @proc_step_name='Delete Records from ldf_group';
+        SET @proc_step_no = @proc_step_no +1;
+
+        BEGIN TRANSACTION
+
+        delete T from 
+        dbo.ldf_group T with (nolock)
+        inner join  #DEL_GROUP_KEY dldk
+        on T.ldf_group_key = dldk.ldf_group_key;
+        
+        COMMIT TRANSACTION;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+--------------------------------------------------------------------------------------------------------              
+        
         SET @proc_step_name='Create LDF_DATA Temp tables-'+ LEFT(@ldf_uid_list,105);
         SET @proc_step_no = @proc_step_no +1;
+
+        IF OBJECT_ID('#tmp_ldf_data', 'U') IS NOT NULL
+          DROP TABLE #tmp_ldf_data;
+
 
         /**Create temp table for LDF_DATA */
         select
@@ -68,10 +753,15 @@ BEGIN
             ld.metadata_record_status_cd
         into #tmp_ldf_data
         from dbo.nrt_ldf_data ld
-                 left join dbo.nrt_ldf_data_key nldk with (nolock) ON ld.ldf_uid = nldk.ldf_uid
+                 left join dbo.nrt_ldf_data_key nldk with (nolock) ON ld.ldf_uid = nldk.ldf_uid and ld.business_object_uid = nldk.business_object_uid
                  left join dbo.ldf_data ldf with (nolock) ON nldk.d_ldf_data_key = ldf.ldf_data_key
             and nldk.d_ldf_group_key = ldf.ldf_group_key
-        where ld.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
+        inner join dbo.nrt_odse_state_defined_field_metadata sdfmd with (nolock) 
+          on sdfmd.ldf_uid = ld.ldf_uid
+        inner join #LDF_UID_LIST ldf_uid_list 
+          on ldf_uid_list.value = ld.ldf_uid
+        where ld.RECORD_STATUS_CD is not null
+        and sdfmd.active_ind <> 'N';
         --and ld.business_object_uid  in (SELECT value FROM STRING_SPLIT(@bus_obj_uid_list, ','))
         ;
 
@@ -180,7 +870,7 @@ BEGIN
         select distinct lg.d_ldf_group_key, lg.business_object_uid, ld.ldf_uid
     from #tmp_ldf_data ld
                  left join dbo.nrt_ldf_group_key lg with (nolock) on ld.business_object_uid = lg.business_object_uid
-                 left join dbo.nrt_ldf_data_key nldk with (nolock) on ld.ldf_uid = nldk.ldf_uid
+                 left join dbo.nrt_ldf_data_key nldk with (nolock) on ld.ldf_uid = nldk.ldf_uid and ld.business_object_uid = nldk.business_object_uid
         where nldk.d_ldf_data_key is null and nldk.d_ldf_group_key is null;
 
         COMMIT TRANSACTION;
@@ -290,26 +980,25 @@ BEGIN
        	UPDATE
 	       	dbo.PATIENT_LDF_GROUP
 	       	SET
-	       	PATIENT_KEY =  d.patient_key,
-	       	LDF_GROUP_KEY = ldf.d_ldf_group_key,
 	       	RECORD_STATUS_CD = d.patient_record_status
-	        from dbo.nrt_ldf_data_key ldf
-	           inner join dbo.d_patient d with (nolock) on ldf.ldf_uid = d.patient_uid
-	        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
-
+	        from dbo.ldf_group ldf with (nolock)
+	        inner join dbo.d_patient d with (nolock) on ldf.business_object_uid = d.patient_uid
+        	inner join (select distinct business_object_uid from #tmp_ldf_data) ld on ldf.business_object_uid = ld.business_object_uid
+          inner join dbo.PATIENT_LDF_GROUP plg with (nolock) on plg.patient_key = d.patient_key and plg.LDF_GROUP_KEY = ldf.ldf_group_key; --join on UID with nrt_ldf_data_key
 
         SET @proc_step_name='Insert into PATIENT_LDF_GROUP Dimension';
         SET @proc_step_no = @proc_step_no +1;
 
         insert into dbo.PATIENT_LDF_GROUP
         (PATIENT_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-        select d.patient_key, ldf.d_ldf_group_key, d.patient_record_status
-        from dbo.nrt_ldf_data_key ldf
-        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
-            left join dbo.d_patient d with (nolock) on ldf.ldf_uid = d.patient_uid
-        where
-         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
-  and d.patient_record_status <> 'INACTIVE';
+        select distinct d.patient_key, ldf.ldf_group_key, d.patient_record_status
+        from dbo.ldf_group ldf
+        	inner join (select distinct business_object_uid from #tmp_ldf_data) ld on ldf.business_object_uid = ld.business_object_uid --join on UID with nrt_ldf_data_key
+          inner join dbo.d_patient d with (nolock) on ldf.business_object_uid = d.patient_uid
+          left join dbo.PATIENT_LDF_GROUP plg with (nolock)
+            on plg.patient_key = d.patient_key
+            and plg.LDF_GROUP_KEY = ldf.ldf_group_key
+        where plg.patient_key is null and plg.LDF_GROUP_KEY is null;
 
         COMMIT TRANSACTION;
 
@@ -345,12 +1034,11 @@ BEGIN
         UPDATE
 	       	dbo.PROVIDER_LDF_GROUP
 	       	SET
-	       	PROVIDER_KEY =  d.provider_key,
-	       	LDF_GROUP_KEY = ldf.d_ldf_group_key,
 	       	RECORD_STATUS_CD = d.provider_record_status
-	        from dbo.nrt_ldf_data_key ldf
-	           inner join dbo.d_provider d with (nolock) on ldf.ldf_uid = d.provider_uid
-	        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
+	       from dbo.ldf_group ldf with (nolock)
+	        inner join dbo.d_provider d with (nolock) on ldf.business_object_uid = d.provider_uid
+        	inner join (select distinct business_object_uid from #tmp_ldf_data) ld on ldf.business_object_uid = ld.business_object_uid
+          inner join dbo.PROVIDER_LDF_GROUP plg with (nolock) on plg.provider_key = d.provider_key and plg.LDF_GROUP_KEY = ldf.ldf_group_key; --join on UID with nrt_ldf_data_key
 
 
         SET @proc_step_name='Insert into PROVIDER_LDF_GROUP Dimension';
@@ -358,13 +1046,14 @@ BEGIN
 
         insert into dbo.PROVIDER_LDF_GROUP
         (PROVIDER_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-        select d.provider_key, ldf.d_ldf_group_key, d.provider_record_status
-        from dbo.nrt_ldf_data_key ldf
-        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
-            left join dbo.d_provider d with (nolock) on ldf.ldf_uid = d.provider_uid
-        where
-         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
-        and d.provider_record_status <> 'INACTIVE';
+        select distinct d.provider_key, ldf.ldf_group_key, d.provider_record_status
+        from dbo.ldf_group ldf
+        	inner join (select distinct business_object_uid from #tmp_ldf_data) ld on ldf.business_object_uid = ld.business_object_uid --join on UID with nrt_ldf_data_key
+          inner join dbo.d_provider d with (nolock) on ldf.business_object_uid = d.provider_uid
+          left join dbo.PROVIDER_LDF_GROUP plg with (nolock)
+            on plg.provider_key = d.provider_key
+            and plg.LDF_GROUP_KEY = ldf.ldf_group_key
+        where plg.provider_key is null and plg.LDF_GROUP_KEY is null;
 
         COMMIT TRANSACTION;
 
@@ -400,26 +1089,26 @@ BEGIN
         UPDATE
 	       	dbo.ORGANIZATION_LDF_GROUP
 	       	SET
-	       	ORGANIZATION_KEY =  d.organization_key,
-	       	LDF_GROUP_KEY = ldf.d_ldf_group_key,
 	       	RECORD_STATUS_CD = d.organization_record_status
-	        from dbo.nrt_ldf_data_key ldf
-	           inner join dbo.d_organization d with (nolock) on ldf.ldf_uid = d.organization_uid
-	        where ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
+	        from dbo.ldf_group ldf with (nolock)
+	        inner join dbo.d_organization d with (nolock) on ldf.business_object_uid = d.organization_uid
+        	inner join (select distinct business_object_uid from #tmp_ldf_data) ld on ldf.business_object_uid = ld.business_object_uid
+          inner join dbo.ORGANIZATION_LDF_GROUP plg with (nolock) on plg.organization_key = d.organization_key and plg.LDF_GROUP_KEY = ldf.ldf_group_key; --join on UID with nrt_ldf_data_key
 
-
+	      
         SET @proc_step_name='Insert into ORGANIZATION_LDF_GROUP Dimension';
         SET @proc_step_no = @proc_step_no +1;
 
         insert into dbo.ORGANIZATION_LDF_GROUP
         (ORGANIZATION_KEY, LDF_GROUP_KEY, RECORD_STATUS_CD)
-        select d.organization_key, ldf.d_ldf_group_key, d.organization_record_status
-        from dbo.nrt_ldf_data_key ldf
-        	inner join #tmp_ldf_data ld on ldf.ldf_uid = ld.ldf_uid --join on UID with nrt_ldf_data_key
-            left join dbo.d_organization d with (nolock) on ldf.ldf_uid = d.organization_uid
-        where
-         ld.business_object_uid is null and ld.LDF_GROUP_KEY is null
-        and d.organization_record_status <> 'INACTIVE';
+        select d.organization_key, ldf.ldf_group_key, d.organization_record_status
+        from dbo.ldf_group ldf
+        	inner join (select distinct business_object_uid from #tmp_ldf_data) ld on ldf.business_object_uid = ld.business_object_uid --join on UID with nrt_ldf_data_key
+          inner join dbo.d_organization d with (nolock) on ldf.business_object_uid = d.organization_uid
+          left join dbo.ORGANIZATION_LDF_GROUP plg with (nolock)
+            on plg.organization_key = d.organization_key
+            and plg.LDF_GROUP_KEY = ldf.ldf_group_key
+        where plg.organization_key is null and plg.LDF_GROUP_KEY is null;
 
         COMMIT TRANSACTION;
 
