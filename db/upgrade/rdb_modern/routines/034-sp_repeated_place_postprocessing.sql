@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.sp_repeated_place_postprocessing
     @Batch_id bigint,
-    @phc_id bigint,
+    @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
 
@@ -30,9 +30,9 @@ BEGIN
                , 0
                , 'SP_Start'
                , 0
-               ,LEFT(CAST(@phc_id AS VARCHAR(10)), 500));
+               ,LEFT(@phc_id_list, 500));
 
-        SET @proc_step_name = 'Create PLACE_INIT_OUT Temp table -' + CAST(@phc_id AS VARCHAR(10));
+        SET @proc_step_name = 'Create PLACE_INIT_OUT Temp table';
         SET @proc_step_no = 1;
 
         SELECT
@@ -49,8 +49,10 @@ BEGIN
             dbo.NRT_PAGE_CASE_ANSWER pca with(nolock)
             left outer join dbo.NRT_INVESTIGATION inv with(nolock)
             on pca.act_uid = inv.public_health_case_uid
+            INNER JOIN
+        	(SELECT value FROM STRING_SPLIT(@phc_id_list, ',')) nu
+            ON nu.value = pca.act_uid
             where isnull(pca.batch_id, 1) = isnull(inv.batch_id, 1)
-         and act_uid = @phc_id
           AND PART_TYPE_CD IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC')
         ORDER BY
             ACT_UID,
@@ -607,7 +609,13 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+            -- Construct the error message string with all details:
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+        'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+        'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+        'Error Message: ' + ERROR_MESSAGE();
 
         /* Logging */
         INSERT INTO [dbo].[job_flow_log]
@@ -620,6 +628,7 @@ BEGIN
         , [step_number]
         , [step_name]
         , [row_count]
+        , [Error_Description]
         )
         VALUES ( @batch_id
                , current_timestamp
@@ -628,8 +637,9 @@ BEGIN
                , @package_name
                , 'ERROR'
                , @Proc_Step_no
-               , 'Step -' + CAST(@Proc_Step_no AS VARCHAR(3)) + ' -' + CAST(@ErrorMessage AS VARCHAR(500))
+                ,@proc_step_name
                , 0
+                ,@FullErrorMessage
                );
 
 
@@ -637,4 +647,4 @@ BEGIN
 
     END CATCH
 
-END
+END;
