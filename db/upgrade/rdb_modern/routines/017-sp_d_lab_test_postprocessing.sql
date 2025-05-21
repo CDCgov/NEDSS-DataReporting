@@ -1,5 +1,5 @@
 CREATE OR ALTER PROCEDURE dbo.sp_d_lab_test_postprocessing @obs_ids nvarchar(max),
-                                                           @debug bit = 'false'
+                                                             @debug bit = 'false'
 AS
 
 BEGIN
@@ -187,21 +187,21 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
+        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_txt ';
 
 
         select obstxt.*
         into #tmp_nrt_observation_txt
         from (
-                 select *
-                 from dbo.nrt_observation_txt
-                 where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
-             ) obstxt
-                 left outer join dbo.nrt_observation obs
-                                 on obs.observation_uid = obstxt.observation_uid
-        where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
+             select *
+             from dbo.nrt_observation_txt
+             where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
+         ) obstxt
+         left outer join dbo.nrt_observation obs
+          on obs.observation_uid = obstxt.observation_uid
+          where isnull(obs.batch_id,1) = isnull(obstxt.batch_id,1)
         ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -214,21 +214,21 @@ BEGIN
 
         BEGIN TRANSACTION;
         SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_reason';
+        @PROC_STEP_NAME = ' GENERATING #tmp_nrt_observation_reason';
 
 
         select obsres.*
         into #tmp_nrt_observation_reason
         from (
-                 select *
-                 from dbo.nrt_observation_reason
-                 where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
-             ) obsres
-                 left outer join dbo.nrt_observation obs
-                                 on obs.observation_uid = obsres.observation_uid
-        where isnull(obs.batch_id,1) = isnull(obsres.batch_id,1)
+             select *
+             from dbo.nrt_observation_reason
+             where observation_uid in (select value from STRING_SPLIT(@obs_ids, ',') )
+         ) obsres
+         left outer join dbo.nrt_observation obs
+          on obs.observation_uid = obsres.observation_uid
+          where isnull(obs.batch_id,1) = isnull(obsres.batch_id,1)
         ;
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -3327,7 +3327,7 @@ BEGIN
                                          , [step_name]
                                          , [row_count])
         VALUES ( @batch_id
-               , @Dataflow_Name
+        		, @Dataflow_Name
                , @Package_Name
                , 'COMPLETE'
                , @Proc_Step_no
@@ -3344,7 +3344,7 @@ BEGIN
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 
-        -- Construct the error message string with all details:
+         -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
