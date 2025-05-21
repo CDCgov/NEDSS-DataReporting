@@ -1,22 +1,8 @@
 -- SQL Script to create service-specific user for debezium-service
--- This script creates a dedicated user to replace the shared NBS_ODS user
+-- This script creates a dedicated user and grants necessary permissions
 
 DECLARE @ServiceName NVARCHAR(100) = 'debezium_service';
-DECLARE @UserPassword NVARCHAR(100) = 'DummyPassword123';
 DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
-
--- Check if login already exists before creating
-IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the login at server level
-        DECLARE @CreateLoginSQL NVARCHAR(MAX) = 'CREATE LOGIN [' + @UserName + '] WITH PASSWORD=N''' + @UserPassword + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF';
-        EXEC sp_executesql @CreateLoginSQL;
-        PRINT 'Created login [' + @UserName + ']';
-    END
-ELSE
-    BEGIN
-        PRINT 'Login [' + @UserName + '] already exists';
-    END
 
 -- ==========================================
 -- Grant permissions on ODSE database (READ)
@@ -45,6 +31,16 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
 ELSE
     BEGIN
         PRINT 'User [' + @UserName + '] already exists in NBS_ODSE';
+
+        -- Grant read permissions on ODSE for existing user
+        DECLARE @AddRoleMemberODSEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRoleMemberODSEExistingSQL;
+        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_ODSE';
+
+        -- Grant CONNECT permission for existing user
+        DECLARE @GrantConnectODSEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantConnectODSEExistingSQL;
+        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
     END
 
 -- ==========================================
@@ -74,6 +70,16 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
 ELSE
     BEGIN
         PRINT 'User [' + @UserName + '] already exists in NBS_SRTE';
+
+        -- Grant read permissions on SRTE for existing user
+        DECLARE @AddRoleMemberSRTEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRoleMemberSRTEExistingSQL;
+        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_SRTE';
+
+        -- Grant CONNECT permission for existing user
+        DECLARE @GrantConnectSRTEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantConnectSRTEExistingSQL;
+        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_SRTE';
     END
 
 -- ==========================================

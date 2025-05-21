@@ -1,22 +1,8 @@
--- SQL Script to create service-specific user for kafka-connect-sink-service
--- This script creates a dedicated user to replace the shared NBS_ODS user
+-- SQL Script to create service-specific user for kafka-sync-connector-service
+-- This script creates a dedicated user and grants necessary permissions
 
 DECLARE @ServiceName NVARCHAR(100) = 'kafka_sync_connector_service';
-DECLARE @UserPassword NVARCHAR(100) = 'DummyPassword123';
 DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
-
--- Check if login already exists before creating
-IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the login at server level
-        DECLARE @CreateLoginSQL NVARCHAR(MAX) = 'CREATE LOGIN [' + @UserName + '] WITH PASSWORD=N''' + @UserPassword + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF';
-        EXEC sp_executesql @CreateLoginSQL;
-        PRINT 'Created login [' + @UserName + ']';
-    END
-ELSE
-    BEGIN
-        PRINT 'Login [' + @UserName + '] already exists';
-    END
 
 -- ==========================================
 -- Grant permissions on RDB_modern database (WRITE)
@@ -45,6 +31,16 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
 ELSE
     BEGIN
         PRINT 'User [' + @UserName + '] already exists in rdb_modern';
+
+        -- Grant CONNECT permission
+        DECLARE @GrantConnectRDBModernExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantConnectRDBModernExistingSQL;
+        PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
+
+        -- Grant db_datawriter role
+        DECLARE @AddRoleMemberRDBModernWriterExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRoleMemberRDBModernWriterExistingSQL;
+        PRINT 'Added [' + @UserName + '] to db_datawriter role in rdb_modern';
     END
 
 -- ==========================================

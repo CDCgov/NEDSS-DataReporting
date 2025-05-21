@@ -1,22 +1,8 @@
 -- SQL Script to create service-specific user for post-processing-service
--- This script creates a dedicated user to replace the shared NBS_ODS user
+-- This script creates a dedicated user and grants necessary permissions
 
 DECLARE @ServiceName NVARCHAR(100) = 'post_processing_service';
-DECLARE @UserPassword NVARCHAR(100) = 'DummyPassword123';
 DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
-
--- Check if login already exists before creating
-IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the login at server level
-        DECLARE @CreateLoginSQL NVARCHAR(MAX) = 'CREATE LOGIN [' + @UserName + '] WITH PASSWORD=N''' + @UserPassword + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF';
-        EXEC sp_executesql @CreateLoginSQL;
-        PRINT 'Created login [' + @UserName + ']';
-    END
-ELSE
-    BEGIN
-        PRINT 'Login [' + @UserName + '] already exists';
-    END
 
 -- ==========================================
 -- Grant permissions on RDB_modern database (READ/WRITE)
@@ -46,22 +32,37 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         DECLARE @AddRoleMemberRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @UserName + '''';
         EXEC sp_executesql @AddRoleMemberRDBModernWriterSQL;
         PRINT 'Added [' + @UserName + '] to db_datawriter role in rdb_modern';
-
-        -- Grant EXECUTE permission on all sp_*_postprocessing stored procedures
-        DECLARE @GrantExecSQL NVARCHAR(MAX) =
-            'DECLARE @sql NVARCHAR(MAX) = '''';
-             SELECT @sql = @sql + ''GRANT EXECUTE ON ['' + SCHEMA_NAME(schema_id) + ''].['' + name + ''] TO [' + @UserName + '];'' + CHAR(13)
-         FROM sys.procedures
-         WHERE name LIKE ''sp_%\\_postprocessing%'' ESCAPE ''\'' OR name LIKE ''sp_%\\_datamart%'' ESCAPE ''\'' OR name LIKE ''sp_nrt_%'' ESCAPE ''\'' OR name LIKE ''sp_f_%'' ESCAPE ''\'' OR name LIKE ''sp_d_%'' ESCAPE ''\''
-         EXEC sp_executesql @sql;';
-
-        EXEC sp_executesql @GrantExecSQL;
-        PRINT 'Granted EXECUTE permission on all post-processing stored procedures to [' + @UserName + ']';
     END
 ELSE
     BEGIN
         PRINT 'User [' + @UserName + '] already exists in rdb_modern';
+
+        -- Grant CONNECT permission for existing user
+        DECLARE @GrantConnectRDBModernExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantConnectRDBModernExistingSQL;
+        PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
+
+        -- Grant data reader role for existing user
+        DECLARE @AddRoleMemberRDBModernReaderExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRoleMemberRDBModernReaderExistingSQL;
+        PRINT 'Added [' + @UserName + '] to db_datareader role in rdb_modern';
+
+        -- Grant data writer role for existing user
+        DECLARE @AddRoleMemberRDBModernWriterExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRoleMemberRDBModernWriterExistingSQL;
+        PRINT 'Added [' + @UserName + '] to db_datawriter role in rdb_modern';
     END
+
+-- Grant EXECUTE permission on all post-processing stored procedures (always grant regardless of user status)
+DECLARE @GrantExecSQL NVARCHAR(MAX) =
+    'DECLARE @sql NVARCHAR(MAX) = '''';
+     SELECT @sql = @sql + ''GRANT EXECUTE ON ['' + SCHEMA_NAME(schema_id) + ''].['' + name + ''] TO [' + @UserName + '];'' + CHAR(13)
+     FROM sys.procedures
+     WHERE name LIKE ''sp_%\\_postprocessing%'' ESCAPE ''\'' OR name LIKE ''sp_%\\_datamart%'' ESCAPE ''\'' OR name LIKE ''sp_nrt_%'' ESCAPE ''\'' OR name LIKE ''sp_f_%'' ESCAPE ''\'' OR name LIKE ''sp_d_%'' ESCAPE ''\''
+     EXEC sp_executesql @sql;';
+
+EXEC sp_executesql @GrantExecSQL;
+PRINT 'Granted EXECUTE permission on all post-processing stored procedures to [' + @UserName + ']';
 
 -- ==========================================
 -- Verify permissions for the new user

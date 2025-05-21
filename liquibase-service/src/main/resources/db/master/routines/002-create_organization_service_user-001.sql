@@ -1,22 +1,8 @@
 -- SQL Script to create service-specific user for organization-service
--- This script creates a dedicated user to replace the shared NBS_ODS user
+-- This script creates a dedicated user and grants necessary permissions
 
 DECLARE @ServiceName NVARCHAR(100) = 'organization_service';
-DECLARE @UserPassword NVARCHAR(100) = 'DummyPassword123';
 DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
-
--- Check if login already exists before creating
-IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the login at server level
-        DECLARE @CreateLoginSQL NVARCHAR(MAX) = 'CREATE LOGIN [' + @UserName + '] WITH PASSWORD=N''' + @UserPassword + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF';
-        EXEC sp_executesql @CreateLoginSQL;
-        PRINT 'Created login [' + @UserName + ']';
-    END
-ELSE
-    BEGIN
-        PRINT 'Login [' + @UserName + '] already exists';
-    END
 
 -- ==========================================
 -- Grant permissions on ODSE database (READ ONLY)
@@ -41,16 +27,26 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         DECLARE @GrantConnectODSESQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
         EXEC sp_executesql @GrantConnectODSESQL;
         PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
-
-        -- Grant EXECUTE permission on the store procedure
-        DECLARE @GrantExecSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_organization_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecSPSQL;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_organization_event] to [' + @UserName + ']';
     END
 ELSE
     BEGIN
         PRINT 'User [' + @UserName + '] already exists in NBS_ODSE';
+
+        -- Grant read permissions for existing user
+        DECLARE @AddRoleMemberODSEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRoleMemberODSEExistingSQL;
+        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_ODSE';
+
+        -- Grant CONNECT permission for existing user
+        DECLARE @GrantConnectODSEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantConnectODSEExistingSQL;
+        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
     END
+
+-- Grant EXECUTE permission on the stored procedure (always grant regardless of user status)
+DECLARE @GrantExecSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_organization_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecSPSQL;
+PRINT 'Granted EXECUTE permission on [dbo].[sp_organization_event] to [' + @UserName + ']';
 
 -- ==========================================
 -- Grant permissions on SRTE database (READ ONLY)
@@ -79,6 +75,16 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
 ELSE
     BEGIN
         PRINT 'User [' + @UserName + '] already exists in NBS_SRTE';
+
+        -- Grant read permissions for existing user
+        DECLARE @AddRoleMemberSRTEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRoleMemberSRTEExistingSQL;
+        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_SRTE';
+
+        -- Grant CONNECT permission for existing user
+        DECLARE @GrantConnectSRTEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantConnectSRTEExistingSQL;
+        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_SRTE';
     END
 
 -- ==========================================
@@ -99,16 +105,21 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         DECLARE @GrantConnectRDBModernSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
         EXEC sp_executesql @GrantConnectRDBModernSQL;
         PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
-
-        -- Grant INSERT permission on job_flow_log table
-        DECLARE @GrantInsertSQL NVARCHAR(MAX) = 'GRANT INSERT ON [dbo].[job_flow_log] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantInsertSQL;
-        PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
     END
 ELSE
     BEGIN
         PRINT 'User [' + @UserName + '] already exists in rdb_modern';
+
+        -- Grant CONNECT permission for existing user
+        DECLARE @GrantConnectRDBModernExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantConnectRDBModernExistingSQL;
+        PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
     END
+
+-- Grant INSERT permission on job_flow_log table (always grant regardless of user status)
+DECLARE @GrantInsertSQL NVARCHAR(MAX) = 'GRANT INSERT ON [dbo].[job_flow_log] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantInsertSQL;
+PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
 
 -- ==========================================
 -- Verify permissions for the new user
