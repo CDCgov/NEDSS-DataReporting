@@ -542,8 +542,18 @@ BEGIN
         FROM #temp_patient_table nrt with (nolock)
             INNER JOIN dbo.nrt_vaccination vac with (nolock) on nrt.patient_uid = vac.patient_uid
             INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Vaccination_Datamart'
-        WHERE vac.material_cd IN('207', '208', '213');
-
+        WHERE vac.material_cd IN('207', '208', '213')
+        UNION
+        SELECT DISTINCT   
+               ltr.LAB_TEST_UID                                  AS public_health_case_uid,
+               nrt.PATIENT_UID                                   AS patient_uid,
+               ltr.LAB_TEST_UID                                  AS observation_uid,
+               null                                              AS datamart,
+               null                                              AS condition_cd,
+               null                                              AS stored_procedure,
+               null                                              AS investigation_form_cd
+        FROM #temp_patient_table nrt with (nolock)
+        INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON nrt.patient_key = ltr.patient_key;
 
     END TRY
 
