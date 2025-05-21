@@ -20,30 +20,30 @@ SELECT
     cc.code_system_desc_txt AS condition_cd_sys_cd_nm,
     cc.assigning_authority_cd,
     cc.assigning_authority_desc_txt AS assigning_authority_desc,
-    CASE 
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_BMD%' THEN 'Bmird_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_CRS%' THEN 'CRS_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_GEN%' THEN 'Generic_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_VAR%' THEN 'Generic_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_RVC%' THEN 'Generic_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_HEP%' THEN 'Hepatitis_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_MEA%' THEN 'Measles_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_PER%' THEN 'Pertussis_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_RUB%' THEN 'Rubella_Case'
+    CASE LEFT(investigation_form_cd, 50)
+        WHEN 'INV_FORM_BMD' THEN 'Bmird_Case'
+        WHEN 'INV_FORM_CRS' THEN 'CRS_Case'
+        WHEN 'INV_FORM_GEN' THEN 'Generic_Case'
+        WHEN 'INV_FORM_VAR' THEN 'Generic_Case'
+        WHEN 'INV_FORM_RVC' THEN 'Generic_Case'
+        WHEN 'INV_FORM_HEP' THEN 'Hepatitis_Case'
+        WHEN 'INV_FORM_MEA' THEN 'Measles_Case'
+        WHEN 'INV_FORM_PER' THEN 'Pertussis_Case'
+        WHEN 'INV_FORM_RUB' THEN 'Rubella_Case'
         ELSE cc.investigation_form_cd
     END AS disease_grp_cd,
-    CASE 
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_BMD%' THEN 'Bmird_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_CRS%' THEN 'CRS_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_GEN%' THEN 'Generic_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_VAR%' THEN 'Generic_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_RVC%' THEN 'Generic_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_HEP%' THEN 'Hepatitis_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_MEA%' THEN 'Measles_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_PER%' THEN 'Pertussis_Case'
-        WHEN cc.investigation_form_cd LIKE 'INV_FORM_RUB%' THEN 'Rubella_Case'
+    CASE LEFT(investigation_form_cd, 50)
+        WHEN 'INV_FORM_BMD' THEN 'Bmird_Case'
+        WHEN 'INV_FORM_CRS' THEN 'CRS_Case'
+        WHEN 'INV_FORM_GEN' THEN 'Generic_Case'
+        WHEN 'INV_FORM_VAR' THEN 'Generic_Case'
+        WHEN 'INV_FORM_RVC' THEN 'Generic_Case'
+        WHEN 'INV_FORM_HEP' THEN 'Hepatitis_Case'
+        WHEN 'INV_FORM_MEA' THEN 'Measles_Case'
+        WHEN 'INV_FORM_PER' THEN 'Pertussis_Case'
+        WHEN 'INV_FORM_RUB' THEN 'Rubella_Case'
         ELSE cc.investigation_form_cd
-    END AS disease_grp_desc,
+    END AS disease_grp_desc,  
     effective_from_time
 FROM 
     dbo.nrt_srte_CONDITION_CODE cc
