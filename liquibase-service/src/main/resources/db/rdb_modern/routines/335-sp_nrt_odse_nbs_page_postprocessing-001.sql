@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_dyn_dm_schema_postprocessing] 
+CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
     @page_id_list nvarchar(max),
     @debug bit = 'false'
 AS
@@ -10,8 +10,8 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
-	DECLARE @Dataflow_Name VARCHAR(200) = 'DynDm Datamart Schema POST-Processing';
-	DECLARE @Package_Name VARCHAR(200) = 'sp_dyn_dm_schema_postprocessing';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'nrt_odse_NBS_Page POST-Processing';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_odse_nbs_page_postprocessing';
 
     BEGIN TRY
         
