@@ -193,8 +193,10 @@ BEGIN
             o1.cd AS Resulted_Test_Cd,
             o1.cd_desc_txt AS Resulted_Test_Desc,
             o1.cd_system_cd AS Resulted_Test_Code_System,
-            eii.root_extension_txt AS DEVICE_INSTANCE_ID_1,
-            eii2.root_extension_txt AS DEVICE_INSTANCE_ID_2,
+            NULL AS DEVICE_INSTANCE_ID_1,
+            NULL AS DEVICE_INSTANCE_ID_2,
+            --eii.root_extension_txt AS DEVICE_INSTANCE_ID_1,
+            --eii2.root_extension_txt AS DEVICE_INSTANCE_ID_2,
             cvg2.code_short_desc_txt AS Test_result_status,
             o1.method_desc_txt AS Test_Method_Desc,
             CASE WHEN o1.method_cd LIKE '%**%'
@@ -243,12 +245,12 @@ BEGIN
             AND cvg2.code_set_nm = 'ACT_OBJ_ST'
                  LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(NOLOCK) ON o1.observation_uid = ovn.observation_uid AND isnull(o1.batch_id,1) = isnull(ovn.batch_id,1)
                  LEFT OUTER JOIN dbo.nrt_observation_material mat WITH(NOLOCK) ON o.material_id = mat.material_id
-                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii WITH(NOLOCK) ON o1.observation_uid = eii.act_uid
-            AND eii.type_cd = 'EII'
-            AND eii.act_id_seq = 3
-                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii2 WITH(NOLOCK) ON o1.observation_uid = eii2.act_uid
-            AND eii2.type_cd = 'EII'
-            AND eii2.act_id_seq = 4
+            --                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii WITH(NOLOCK) ON o1.observation_uid = eii.act_uid
+--		            AND eii.type_cd = 'EII'
+--		            AND eii.act_id_seq = 3
+--                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii2 WITH(NOLOCK) ON o1.observation_uid = eii2.act_uid
+--		            AND eii2.type_cd = 'EII'
+--		            AND eii2.act_id_seq = 4
                  LEFT OUTER JOIN dbo.nrt_organization org_perform WITH(NOLOCK) ON o1.performing_organization_id = org_perform.organization_uid
             --LEFT JOIN dbo.nrt_organization_key orgk WITH(NOLOCK) ON orgk.organization_uid = org_perform.organization_uid
                  LEFT OUTER JOIN dbo.D_Organization d_org_perform WITH(NOLOCK) ON o1.performing_organization_id = d_org_perform.ORGANIZATION_UID
