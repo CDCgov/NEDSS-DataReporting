@@ -102,6 +102,9 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
 
    @Procedure("sp_nrt_ldf_dimensional_data_postprocessing")
     void executeStoredProcForLdfDimensionalData(@Param("ldfUids") String ldfUids);
+
+    @Procedure("sp_nrt_odse_nbs_page_postprocessing")
+    void executeStoredProcForNBSPage(@Param("pageUids") String pageUids);
      
 }
    

@@ -121,7 +121,8 @@ public class PostProcessingService {
             "${spring.kafka.topic.auth_user}",
             "${spring.kafka.topic.contact_record}",
             "${spring.kafka.topic.treatment}",
-            "${spring.kafka.topic.vaccination}"
+            "${spring.kafka.topic.vaccination}",
+            "${spring.kafka.topic.page}"
     })
     /**
      * Processes a message from a Kafka topic. This method is the entry point for handling messages
@@ -322,6 +323,9 @@ public class PostProcessingService {
 
                 Entity entity = getEntityByTopic(keyTopic);
                 switch (entity) {
+                    case PAGE:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage);
+                        break;
                     case ORGANIZATION:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds);
                         newDmMulti.computeIfAbsent(ORGANIZATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
