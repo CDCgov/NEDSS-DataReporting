@@ -7,7 +7,7 @@ AS
 BEGIN
     /*
      * [Description]
-     * This stored procedure processes event based updates to LAB_TEST_RESULT and associated tables.
+     * This stored procedure processes event based updates to LAB_TEST and associated tables.
      * 1. Receives input list of Lab Report based observations from Observation Service.
      * 2. Gets list of records from LAB TEST.
      * 3. Updates and inserts records into target dimensions.
@@ -45,10 +45,6 @@ BEGIN
         SET @PROC_STEP_NAME = 'GENERATING #TMP_lab_test_resultInit ';
 
 
-        IF OBJECT_ID('#TMP_lab_test_resultInit', 'U') IS NOT NULL
-            DROP TABLE #TMP_lab_test_resultInit ;
-
-
         --List of new Observations for Lab Test Result
         SELECT lab_test_key,
                root_ordered_test_pntr,
@@ -56,7 +52,8 @@ BEGIN
                record_status_cd,
                lab_rpt_created_dt,
                lab_test_type, -- for TMP_Result_And_R_Result
-               elr_ind -- for TMP_Result_And_R_Result
+               elr_ind, -- for TMP_Result_And_R_Result
+               LAB_TEST_CD
         INTO #TMP_D_LAB_TEST_N
         FROM dbo.LAB_TEST with (nolock)
         WHERE lab_test_uid IN (SELECT value FROM string_split(@pLabResultList, ','))
@@ -254,7 +251,7 @@ BEGIN
                even need a condition dimension.  Even though it's OK with the Dimension Modeling
                principle for adding a prog_area_cd row to the condition, it sure will cause
                some confusion among users.  There's no "disease" ON the input.
-               */
+              */
                  LEFT JOIN dbo.v_condition_dim	AS con with (nolock)
                            ON	no2.prog_area_cd  = con.program_area_cd
                                AND con.condition_cd IS NULL
@@ -278,14 +275,8 @@ BEGIN
         VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-
-
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Result_And_R_Result ';
-
-
-        IF OBJECT_ID('#TMP_Result_And_R_Result', 'U') IS NOT NULL
-            DROP TABLE  #TMP_Result_And_R_Result;
 
 
         SELECT *
@@ -306,9 +297,6 @@ BEGIN
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Comment ';
-
-        IF OBJECT_ID('#TMP_Lab_Result_Comment', 'U') IS NOT NULL
-            DROP TABLE #TMP_Lab_Result_Comment ;
 
         /*Notes: Inner Join specified*/
         SELECT
@@ -360,10 +348,6 @@ BEGIN
 
 
 --        create index idx_TMP_New_Lab_Result_Comment_uid ON  #TMP_New_Lab_Result_Comment (lab_test_uid);
-
-
-        IF OBJECT_ID('#TMP_New_Lab_Result_Comment_grouped', 'U') IS NOT NULL
-            DROP TABLE  #TMP_New_Lab_Result_Comment_grouped;
 
 
         SELECT DISTINCT LRV.lab_test_uid,
@@ -429,11 +413,10 @@ BEGIN
 
 
         /*Key generation*/
-
         UPDATE tmp_val
         SET tmp_val.Lab_Result_Comment_Key = lrc.Lab_Result_Comment_Key
         FROM #TMP_New_Lab_Result_Comment_FINAL tmp_val
-                 INNER JOIN Lab_Result_Comment lrc ON lrc.lab_test_uid = tmp_val.lab_test_uid;
+                 INNER JOIN dbo.LAB_RESULT_COMMENT lrc ON lrc.lab_test_uid = tmp_val.lab_test_uid;
 
         CREATE TABLE #tmp_id_assignment_comment(
                                                    Lab_Result_Comment_Key_id [int] IDENTITY(1,1) NOT NULL,
@@ -442,13 +425,13 @@ BEGIN
         INSERT INTO #tmp_id_assignment_comment
         SELECT rslt.lab_test_uid
         FROM #TMP_New_Lab_Result_Comment_FINAL rslt
-                 LEFT JOIN Lab_Result_Comment lrc ON lrc.lab_test_uid = rslt.lab_test_uid
+                 LEFT JOIN dbo.LAB_RESULT_COMMENT lrc ON lrc.lab_test_uid = rslt.lab_test_uid
         WHERE lrc.lab_test_uid IS NULL;
 
 
         UPDATE tmp_val
         SET tmp_val.LAB_RESULT_COMMENT_KEY =
-                Lab_Result_Comment_Key_id + COALESCE((SELECT MAX(Lab_Result_Comment_Key) FROM Lab_Result_Comment),1)
+                Lab_Result_Comment_Key_id + COALESCE((SELECT MAX(Lab_Result_Comment_Key) FROM dbo.LAB_RESULT_COMMENT),1)
         FROM #TMP_New_Lab_Result_Comment_FINAL tmp_val
                  LEFT JOIN #tmp_id_assignment_comment id ON tmp_val.lab_test_uid = id.lab_test_uid
         WHERE tmp_val.Lab_Result_Comment_Key IS NULL;
@@ -498,7 +481,7 @@ BEGIN
         ORDER BY rcg.Lab_Result_Comment_Key;
 
 
-        IF NOT EXISTS (SELECT * FROM Result_Comment_Group WHERE [RESULT_COMMENT_GRP_KEY]=1)
+        IF NOT EXISTS (SELECT * FROM dbo.RESULT_COMMENT_GROUP WHERE [RESULT_COMMENT_GRP_KEY]=1)
             INSERT INTO #tmp_Result_Comment_Group values ( 1,NULL);
 
         IF @pDebug = 'true' SELECT 'DEBUG: tmp_Result_Comment_Group',* FROM #tmp_Result_Comment_Group;
@@ -639,7 +622,7 @@ BEGIN
         UPDATE tmp_val
         SET tmp_val.test_result_grp_key = trg.test_result_grp_key
         FROM #TMP_Lab_Result_Val tmp_val
-                 INNER JOIN TEST_RESULT_GROUPING trg ON trg.lab_test_uid = tmp_val.lab_test_uid;
+                 INNER JOIN dbo.TEST_RESULT_GROUPING trg ON trg.lab_test_uid = tmp_val.lab_test_uid;
 
 
         CREATE TABLE #tmp_id_assignment(
@@ -649,13 +632,13 @@ BEGIN
         INSERT INTO #tmp_id_assignment
         SELECT rslt.lab_test_uid
         FROM #TMP_Lab_Result_Val rslt
-                 LEFT JOIN TEST_RESULT_GROUPING trg ON trg.lab_test_uid = rslt.lab_test_uid
+                 LEFT JOIN dbo.TEST_RESULT_GROUPING trg ON trg.lab_test_uid = rslt.lab_test_uid
         WHERE trg.lab_test_uid IS NULL;
 
 
         UPDATE tmp_val
         SET tmp_val.test_result_grp_key =
-                test_result_grp_id + COALESCE((SELECT MAX(test_result_grp_key) FROM TEST_RESULT_GROUPING),1)
+                test_result_grp_id + COALESCE((SELECT MAX(test_result_grp_key) FROM dbo.TEST_RESULT_GROUPING),1)
         FROM #TMP_Lab_Result_Val tmp_val
                  LEFT JOIN #tmp_id_assignment id ON tmp_val.lab_test_uid = id.lab_test_uid
         WHERE tmp_val.test_result_grp_key IS NULL;
@@ -665,7 +648,6 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
@@ -692,9 +674,7 @@ BEGIN
         WHERE Test_Result_Grp_Key IS NOT NULL;
 
 
-
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
@@ -703,9 +683,6 @@ BEGIN
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Val ';
-
-        IF OBJECT_ID('#TMP_New_Lab_Result_Val', 'U') IS NOT NULL
-            DROP TABLE  #TMP_New_Lab_Result_Val;
 
 
         SELECT DISTINCT LRV.lab_test_uid,
@@ -744,9 +721,6 @@ BEGIN
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Val_Final ';
-
-        IF OBJECT_ID('#TMP_Lab_Result_Val_Final', 'U') IS NOT NULL
-            DROP TABLE  #TMP_Lab_Result_Val_Final;
 
         SELECT MIN([TEST_RESULT_GRP_KEY]) AS TEST_RESULT_GRP_KEY
              ,[NUMERIC_RESULT]
@@ -811,8 +785,6 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result2 ';
 
-        IF OBJECT_ID('#TMP_Lab_Test_Result2', 'U') IS NOT NULL
-            DROP TABLE  #TMP_Lab_Test_Result2;
 
         SELECT 	tst.*,
                   COALESCE(lrv.Test_Result_Grp_Key,1) AS Test_Result_Grp_Key
@@ -826,7 +798,6 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID,[DATAFLOW_NAME],[PACKAGE_NAME] ,[STATUS_TYPE],[STEP_NUMBER],[STEP_NAME],[ROW_COUNT])
         VALUES(@BATCH_ID,@Dataflow_Name,@Package_Name,'START', @PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
@@ -835,9 +806,6 @@ BEGIN
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result3 ';
-
-        IF OBJECT_ID('#TMP_Lab_Test_Result3', 'U') IS NOT NULL
-            DROP TABLE   #TMP_Lab_Test_Result3;
 
 
         SELECT 	tst.*,
@@ -872,9 +840,6 @@ BEGIN
 
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result ';
-
-        IF OBJECT_ID('#TMP_Lab_Test_Result', 'U') IS NOT NULL
-            DROP TABLE  #TMP_Lab_Test_Result;
 
 
         SELECT DISTINCT tst.*,
@@ -1475,7 +1440,6 @@ BEGIN
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-
         SET @PROC_STEP_NO = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
@@ -1552,9 +1516,7 @@ BEGIN
                            dtm.Datamart                     AS datamart,
                            null                             AS condition_cd,
                            dtm.Stored_Procedure             AS stored_procedure,
-                           null                             AS investigation_form_cd,
-                           lc.condition_cd
-                ,lc.*
+                           null                             AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
                  INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  INNER JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
@@ -1565,21 +1527,23 @@ BEGIN
         WHERE dtm.Datamart IN ('Covid_Case_Datamart', 'Covid_Lab_Datamart')
           AND ltr.INVESTIGATION_KEY <> 1
         /*CASE 4: Return covid labs that are not associated to any investigations. The phc_uid and observation_uid
-         * are in this instance are the same and reconciled within the post-processing service. */
+         * are in this instance are the same and reconciled within the post-processing service.
+         * Sending the root_ordered_test_pntr or Order associated to the loinc-cds for Covid_Lab_Datamart.*/
         UNION
-        SELECT 	DISTINCT  tmp.LAB_TEST_UID                    AS public_health_case_uid,
+        SELECT 	DISTINCT  tmp.root_ordered_test_pntr                    AS public_health_case_uid,
                             pat.PATIENT_UID                  AS patient_uid,
-                            tmp.LAB_TEST_UID                 AS observation_uid,
+                            tmp.root_ordered_test_pntr                 AS observation_uid,
                             dtm.Datamart                     AS datamart,
                             dtm.condition_cd                 AS condition_cd,
                             dtm.Stored_Procedure             AS stored_procedure,
                             null                             AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
+                 INNER JOIN dbo.LAB_TEST_RESULT ltr with (nolock) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
                  LEFT JOIN dbo.nrt_srte_Loinc_condition lc with (nolock) ON lc.loinc_cd = tmp.LAB_TEST_CD
                  LEFT JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Lab_Datamart'--For other Investigations
-        WHERE tmp.LAB_TEST_TYPE = 'Result'
-          AND lc.condition_cd = dtm.condition_cd ;
+        WHERE
+            lc.condition_cd = dtm.condition_cd;
 
 
     END TRY
