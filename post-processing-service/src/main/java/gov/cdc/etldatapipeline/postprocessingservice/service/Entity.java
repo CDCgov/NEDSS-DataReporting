@@ -18,6 +18,7 @@ enum Entity {
     OBSERVATION(12, "observation", "observation_uid", null),
     CONTACT(13, "contact", "contact_uid", "sp_d_contact_record_postprocessing"),
     VACCINATION(14, "vaccination", "vaccination_uid", "sp_d_vaccination_postprocessing"),
+    STATE_DEFINED_FIELD_METADATA(15, "state_defined_field_metadata", "ldf_uid", "sp_nrt_ldf_postprocessing"),
     F_PAGE_CASE(0, "fact page case", Constants.PHC_UID, "sp_f_page_case_postprocessing"),
     CASE_ANSWERS(0, "case answers", Constants.PHC_UID, "sp_page_builder_postprocessing"),
     D_DISEASE_SITE(0, "disease site", Constants.PHC_UID, "sp_nrt_d_disease_site_postprocessing"),
