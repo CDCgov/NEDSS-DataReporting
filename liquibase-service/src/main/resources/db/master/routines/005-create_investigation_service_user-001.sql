@@ -1,7 +1,3 @@
--- SQL Script to create service-specific user for investigation-service
--- This script creates a dedicated user and grants necessary permissions
--- CORRECTED VERSION with proper table names
-
 DECLARE @ServiceName NVARCHAR(100) = 'investigation_service';
 DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
 
@@ -44,12 +40,36 @@ ELSE
         PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
     END
 
--- Grant EXECUTE permission on the stored procedure (always grant regardless of user status)
-DECLARE @GrantExecSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_investigation_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecSPSQL;
+-- Grant EXECUTE permission on stored procedures (always grant regardless of user status)
+DECLARE @GrantExecInvestigationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_investigation_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecInvestigationSQL;
 PRINT 'Granted EXECUTE permission on [dbo].[sp_investigation_event] to [' + @UserName + ']';
 
--- Grant write permissions on specific tables for investigation service (CORRECTED TABLE NAMES)
+DECLARE @GrantExecContactSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_contact_record_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecContactSQL;
+PRINT 'Granted EXECUTE permission on [dbo].[sp_contact_record_event] to [' + @UserName + ']';
+
+DECLARE @GrantExecInterviewSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_interview_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecInterviewSQL;
+PRINT 'Granted EXECUTE permission on [dbo].[sp_interview_event] to [' + @UserName + ']';
+
+DECLARE @GrantExecNotificationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_notification_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecNotificationSQL;
+PRINT 'Granted EXECUTE permission on [dbo].[sp_notification_event] to [' + @UserName + ']';
+
+DECLARE @GrantExecTreatmentSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_treatment_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecTreatmentSQL;
+PRINT 'Granted EXECUTE permission on [dbo].[sp_treatment_event] to [' + @UserName + ']';
+
+DECLARE @GrantExecVaccinationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_vaccination_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecVaccinationSQL;
+PRINT 'Granted EXECUTE permission on [dbo].[sp_vaccination_event] to [' + @UserName + ']';
+
+DECLARE @GrantExecPHCDatamartSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_event] TO [' + @UserName + ']';
+EXEC sp_executesql @GrantExecPHCDatamartSQL;
+PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_event] to [' + @UserName + ']';
+
+-- Grant write permissions on specific tables for investigation service
 DECLARE @GrantWriteSubjectRaceSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[SubjectRaceInfo] TO [' + @UserName + ']';
 EXEC sp_executesql @GrantWriteSubjectRaceSQL;
 PRINT 'Granted write permissions on [dbo].[SubjectRaceInfo] to [' + @UserName + ']';
