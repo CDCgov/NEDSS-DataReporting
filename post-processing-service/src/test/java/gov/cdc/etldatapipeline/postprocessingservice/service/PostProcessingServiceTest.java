@@ -654,7 +654,8 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(17).contains(contactTopic));
         assertTrue(topicLogList.get(18).contains(contactTopic));
         assertTrue(topicLogList.get(19).contains(vacTopic));
-        assertTrue(topicLogList.get(20).contains(vacTopic));        
+        assertTrue(topicLogList.get(20).contains(vacTopic));  
+        assertTrue(topicLogList.get(21).contains(stateDefinedFieldMetadataTopic));   
     }
 
     @Test
