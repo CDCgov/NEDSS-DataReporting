@@ -373,8 +373,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase,
                                 "sp_f_interview_case_postprocessing");
                         break;
-                    case LDF_DATA:
-                    case STATE_DEFINED_FIELD_METADATA:
+                    case LDF_DATA, STATE_DEFINED_FIELD_METADATA:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
                         break;
