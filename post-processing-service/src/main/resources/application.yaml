@@ -16,6 +16,7 @@ spring:
       contact_record: nrt_contact
       vaccination: nrt_vaccination
       datamart: nbs_Datamart
+      state_defined_field_metadata: nrt_odse_state_defined_field_metadata
     dlq:
       retry-suffix: -retry
       dlq-suffix: -dlt
