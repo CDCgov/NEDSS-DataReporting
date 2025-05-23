@@ -121,7 +121,8 @@ public class PostProcessingService {
             "${spring.kafka.topic.auth_user}",
             "${spring.kafka.topic.contact_record}",
             "${spring.kafka.topic.treatment}",
-            "${spring.kafka.topic.vaccination}"
+            "${spring.kafka.topic.vaccination}",
+            "${spring.kafka.topic.state_defined_field_metadata}"
     })
     /**
      * Processes a message from a Kafka topic. This method is the entry point for handling messages
@@ -372,7 +373,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase,
                                 "sp_f_interview_case_postprocessing");
                         break;
-                    case LDF_DATA:
+                    case LDF_DATA, STATE_DEFINED_FIELD_METADATA:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
                         break;
