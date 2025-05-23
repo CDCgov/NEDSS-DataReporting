@@ -548,7 +548,7 @@ BEGIN
                ltr.LAB_TEST_UID                                  AS public_health_case_uid,
                nrt.PATIENT_UID                                   AS patient_uid,
                ltr.LAB_TEST_UID                                  AS observation_uid,
-               null                                              AS datamart,
+               'LAB_INFO'                                        AS datamart,
                null                                              AS condition_cd,
                null                                              AS stored_procedure,
                null                                              AS investigation_form_cd

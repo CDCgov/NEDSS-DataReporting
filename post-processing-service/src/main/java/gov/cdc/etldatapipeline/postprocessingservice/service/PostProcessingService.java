@@ -333,7 +333,24 @@ public class PostProcessingService {
                         break;
                     case PATIENT:
                         dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
+                        Set<Long> obsIds = dmDataSp.stream()
+                        .filter(d -> "LAB_INFO".equals(d.getDatamart()))
+                        .map(DatamartData::getObservationUid)
+                        .collect(Collectors.toSet());
+
+                        if(!obsIds.isEmpty()){
+
+                            processTopic(keyTopic, OBSERVATION, obsIds,
+                                postProcRepository::executeStoredProcForLabTest, "sp_d_lab_test_postprocessing");
+                            processTopic(keyTopic, OBSERVATION, obsIds,
+                                postProcRepository::executeStoredProcForLabTestResult, "sp_d_labtest_result_postprocessing");
+                            processTopic(keyTopic, OBSERVATION, obsIds,
+                                postProcRepository::executeStoredProcForLab100Datamart, "sp_lab100_datamart_postprocessing");
+                            processTopic(keyTopic, OBSERVATION, obsIds,
+                                postProcRepository::executeStoredProcForLab101Datamart, "sp_lab101_datamart_postprocessing");
+
+                        }
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream().filter(dm -> !"LAB_INFO".equals(dm.getDatamart()))).distinct().toList();
                         newDmMulti.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case AUTH_USER:
