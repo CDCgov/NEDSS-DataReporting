@@ -71,22 +71,32 @@ BEGIN
             drop table #OBS_CODED_Hepatitis_Case;
 
 
-            select public_health_case_uid,
+            select rom.public_health_case_uid,
+                   rom.cd,
+                   rom.col_nm,
+                   rom.DB_field,
+                   rom.rdb_table,
+                   rom.label,
+                   rom.response
+            INTO #OBS_CODED_Hepatitis_Case
+            from (SELECT
+                   public_health_case_uid,
                    unique_cd      as cd,
                    CASE WHEN col_nm = 'NATION_CD' THEN 'PLACE_OF_BIRTH'
                    ELSE col_nm
                    END AS col_nm,
-                   rom.DB_field,
-                   rom.rdb_table,
-                   rom.label,
+                   DB_field,
+                   CASE WHEN col_nm = 'NATION_CD' THEN 'Hepatitis_Case'
+                   ELSE RDB_table
+                   END AS rdb_table,
+                   label,
                    coded_response as response
-            INTO #OBS_CODED_Hepatitis_Case
-            from dbo.v_rdb_obs_mapping rom
+            FROM dbo.v_rdb_obs_mapping) rom
             LEFT JOIN
                 INFORMATION_SCHEMA.COLUMNS isc
                 ON UPPER(isc.TABLE_NAME) = UPPER(rom.RDB_table)
                 AND UPPER(isc.COLUMN_NAME) = UPPER(rom.col_nm)
-            WHERE (RDB_TABLE = @tgt_table_nm OR unique_cd = 'HEP255') and db_field = 'code'
+            WHERE (RDB_TABLE = @tgt_table_nm OR cd = 'HEP255') and db_field = 'code'
               and (public_health_case_uid in (SELECT value FROM STRING_SPLIT(@phc_uids, ',')) OR (public_health_case_uid IS NULL and isc.column_name IS NOT NULL));
 
 
