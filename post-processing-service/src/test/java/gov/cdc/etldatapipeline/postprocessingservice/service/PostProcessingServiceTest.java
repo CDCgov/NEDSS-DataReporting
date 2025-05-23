@@ -33,6 +33,7 @@ import static org.mockito.Mockito.*;
 import org.awaitility.Awaitility;
 import java.util.concurrent.TimeUnit;
 
+
 class PostProcessingServiceTest {
 
     @InjectMocks @Spy
@@ -86,7 +87,8 @@ class PostProcessingServiceTest {
             "dummy_notification, '{\"payload\":{\"notification_uid\":123}}', 123",
             "dummy_ldf_data, '{\"payload\":{\"ldf_uid\":123}}', 123",
             "dummy_auth_user, '{\"payload\":{\"auth_user_uid\":123}}', 123",
-            "dummy_NBS_page, '{\"payload\":{\"nbs_page_uid\":123}}', 123"
+            "dummy_NBS_page, '{\"payload\":{\"nbs_page_uid\":123}}', 123",
+            "dummy_state_defined_field_metadata, '{\"payload\":{\"ldf_uid\":123}}', 123"
     })
     void testPostProcessMessage(String topic, String messageKey, Long expectedId) {
         postProcessingServiceMock.postProcessMessage(topic, messageKey, messageKey);
@@ -398,6 +400,27 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostStateDefinedFieldMetaData() {
+        String topic = "dummy_state_defined_field_metadata";
+        String key = "{\"payload\":{\"ldf_uid\":123}}";
+
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedLdfIdsString = "123";
+        verify(postProcRepositoryMock).executeStoredProcForLdfIds(expectedLdfIdsString);
+        verify(postProcRepositoryMock).executeStoredProcForLdfDimensionalData(expectedLdfIdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(7, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(STATE_DEFINED_FIELD_METADATA.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+    @Test
     void testPostProcessObservationMorb() {
         String topic = "dummy_observation";
         String key = "{\"payload\":{\"observation_uid\":123}}";
@@ -604,6 +627,7 @@ class PostProcessingServiceTest {
         String ntfTopic = "dummy_notification";
         String intTopic = "dummy_interview";
         String ldfTopic = "dummy_ldf_data";
+        String stateDefinedFieldMetadataTopic = "dummy_state_defined_field_metadata";
         String cmTopic = "dummy_case_management";
         String obsTopic = "dummy_observation";
         String contactTopic = "dummy_contact";
@@ -620,6 +644,7 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.postProcessMessage(treatmentTopic, treatmentKey, treatmentKey);
         postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
         postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationMsg);
+        postProcessingServiceMock.postProcessMessage(stateDefinedFieldMetadataTopic, ldfKey, ldfKey);
         postProcessingServiceMock.postProcessMessage(ldfTopic, ldfKey, ldfKey);
         postProcessingServiceMock.postProcessMessage(pageTopic, pageKey, pageKey);
         postProcessingServiceMock.postProcessMessage(cmTopic, caseManagementKey, caseManagementKey);
@@ -648,11 +673,13 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(14).contains(cmTopic));
         assertTrue(topicLogList.get(15).contains(ldfTopic));
         assertTrue(topicLogList.get(16).contains(ldfTopic));
-        assertTrue(topicLogList.get(17).contains(obsTopic));
-        assertTrue(topicLogList.get(18).contains(contactTopic));
-        assertTrue(topicLogList.get(19).contains(contactTopic));
-        assertTrue(topicLogList.get(20).contains(vacTopic));
-        assertTrue(topicLogList.get(21).contains(vacTopic));
+         assertTrue(topicLogList.get(17).contains(stateDefinedFieldMetadataTopic));
+        assertTrue(topicLogList.get(18).contains(stateDefinedFieldMetadataTopic));
+        assertTrue(topicLogList.get(19).contains(obsTopic));
+        assertTrue(topicLogList.get(20).contains(contactTopic));
+        assertTrue(topicLogList.get(21).contains(contactTopic));
+        assertTrue(topicLogList.get(22).contains(vacTopic));
+        assertTrue(topicLogList.get(23).contains(vacTopic));
     }
 
     @Test
