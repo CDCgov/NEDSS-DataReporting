@@ -671,10 +671,10 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(12).contains(intTopic));
         assertTrue(topicLogList.get(13).contains(cmTopic));
         assertTrue(topicLogList.get(14).contains(cmTopic));
-        assertTrue(topicLogList.get(15).contains(ldfTopic));
-        assertTrue(topicLogList.get(16).contains(ldfTopic));
-         assertTrue(topicLogList.get(17).contains(stateDefinedFieldMetadataTopic));
-        assertTrue(topicLogList.get(18).contains(stateDefinedFieldMetadataTopic));
+        assertTrue(topicLogList.get(15).contains(stateDefinedFieldMetadataTopic));
+        assertTrue(topicLogList.get(16).contains(stateDefinedFieldMetadataTopic));
+        assertTrue(topicLogList.get(17).contains(ldfTopic));
+        assertTrue(topicLogList.get(18).contains(ldfTopic));
         assertTrue(topicLogList.get(19).contains(obsTopic));
         assertTrue(topicLogList.get(20).contains(contactTopic));
         assertTrue(topicLogList.get(21).contains(contactTopic));
