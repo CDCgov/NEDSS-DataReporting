@@ -1560,6 +1560,14 @@ databaseChangeLog:
             path: 014-v_nrt_nbs_page-001.sql
             splitStatements: false
   - changeSet:
+      id: 152.9
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 026-v_nrt_odse_NBS_rdb_metadata_recent-001.sql
+            splitStatements: false
+  - changeSet:
       id: 153
       author: liquibase
       runOnChange: true
@@ -2624,4 +2632,12 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 330-sp_covid_lab_datamart_postprocessing-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 875
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 335-sp_nrt_odse_nbs_page_postprocessing-001.sql
             splitStatements: false

@@ -1,4 +1,3 @@
-
 CREATE OR ALTER VIEW dbo.v_nrt_d_provider_rdb_table_metadata AS
 SELECT DISTINCT 
 	RDB_COLUMN_NM, 
@@ -32,7 +31,7 @@ SELECT DISTINCT
 	cast(substring(USER_DEFINED_COLUMN_NM,1,CHARINDEX('_UID',USER_DEFINED_COLUMN_NM))+'QEC' AS VARCHAR(2000)) AS QEC,
 	cast(USER_DEFINED_COLUMN_NM AS VARCHAR(2000)) AS [UID],INVESTIGATION_FORM_CD
 
-FROM [dbo].nrt_odse_NBS_rdb_metadata rdb_meta WITH(NOLOCK)
+FROM [dbo].v_nrt_odse_NBS_rdb_metadata_recent rdb_meta WITH(NOLOCK)
 INNER JOIN [dbo].nrt_odse_NBS_ui_metadata ui_meta WITH(NOLOCK)
 	ON rdb_meta.NBS_UI_METADATA_UID =ui_meta.NBS_UI_METADATA_UID
 WHERE 
