@@ -1,151 +1,96 @@
--- SQL Script to create service-specific user for ldf-service
--- This script creates a dedicated user and grants necessary permissions
-
-DECLARE @ServiceName NVARCHAR(100) = 'ldf_service';
-DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
-
 -- ==========================================
+-- LDF SERVICE USER CREATION
+-- ==========================================
+DECLARE @LdfServiceName NVARCHAR(100) = 'ldf_service';
+DECLARE @LdfUserName NVARCHAR(150) = @LdfServiceName + '_rdb';
+
 -- Grant permissions on ODSE database (READ)
--- ==========================================
 USE [NBS_ODSE];
 PRINT 'Switched to database [NBS_ODSE]';
 
--- Check if user exists in this database
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the user in ODSE database
-        DECLARE @CreateUserODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
-        EXEC sp_executesql @CreateUserODSESQL;
-        PRINT 'Created database user [' + @UserName + '] in NBS_ODSE';
+-- Check if user exists and create if not
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
+BEGIN
+    DECLARE @CreateUserLdfODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
+    EXEC sp_executesql @CreateUserLdfODSESQL;
+    PRINT 'Created database user [' + @LdfUserName + '] in NBS_ODSE';
+END
 
-        -- Grant read permissions on ODSE
-        DECLARE @AddRoleMemberODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberODSESQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_ODSE';
+-- Grant permissions (always execute regardless of user creation)
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
+BEGIN
+    DECLARE @AddRoleMemberLdfODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @LdfUserName + '''';
+    EXEC sp_executesql @AddRoleMemberLdfODSESQL;
+    PRINT 'Added [' + @LdfUserName + '] to db_datareader role in NBS_ODSE';
 
-        -- Grant CONNECT permission
-        DECLARE @GrantConnectODSESQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectODSESQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
-    END
-ELSE
-    BEGIN
-        PRINT 'User [' + @UserName + '] already exists in NBS_ODSE';
+    -- Grant EXECUTE permissions on stored procedures
+    DECLARE @GrantExecLdfDataSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_data_event] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantExecLdfDataSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_data_event] to [' + @LdfUserName + ']';
 
-        -- Grant read permissions for existing user
-        DECLARE @AddRoleMemberODSEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberODSEExistingSQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_ODSE';
+    DECLARE @GrantExecLdfPatSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_patient_event] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantExecLdfPatSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_patient_event] to [' + @LdfUserName + ']';
 
-        -- Grant CONNECT permission for existing user
-        DECLARE @GrantConnectODSEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectODSEExistingSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
-    END
+    DECLARE @GrantExecLdfProvSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_provider_event] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantExecLdfProvSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_provider_event] to [' + @LdfUserName + ']';
 
--- Grant EXECUTE permission on stored procedures (always grant regardless of user status)
-DECLARE @GrantExecSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_data_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecSPSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_data_event] to [' + @UserName + ']';
+    DECLARE @GrantExecLdfOrgSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_organization_event] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantExecLdfOrgSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_organization_event] to [' + @LdfUserName + ']';
 
-DECLARE @GrantExecPatSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_patient_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecPatSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_patient_event] to [' + @UserName + ']';
+    DECLARE @GrantExecLdfObsSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_observation_event] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantExecLdfObsSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_observation_event] to [' + @LdfUserName + ']';
 
-DECLARE @GrantExecProvSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_provider_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecProvSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_provider_event] to [' + @UserName + ']';
+    DECLARE @GrantExecLdfPhcSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_phc_event] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantExecLdfPhcSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_phc_event] to [' + @LdfUserName + ']';
 
-DECLARE @GrantExecOrgSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_organization_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecOrgSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_organization_event] to [' + @UserName + ']';
+    DECLARE @GrantExecLdfIntSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_intervention_event] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantExecLdfIntSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_intervention_event] to [' + @LdfUserName + ']';
+END
 
-DECLARE @GrantExecObsSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_observation_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecObsSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_observation_event] to [' + @UserName + ']';
-
-DECLARE @GrantExecPhcSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_phc_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecPhcSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_phc_event] to [' + @UserName + ']';
-
-DECLARE @GrantExecIntSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_intervention_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecIntSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_intervention_event] to [' + @UserName + ']';
-
--- ==========================================
 -- Grant permissions on SRTE database (READ)
--- ==========================================
 USE [NBS_SRTE];
 PRINT 'Switched to database [NBS_SRTE]';
 
--- Check if user exists in this database
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the user in SRTE database
-        DECLARE @CreateUserSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
-        EXEC sp_executesql @CreateUserSRTESQL;
-        PRINT 'Created database user [' + @UserName + '] in NBS_SRTE';
+-- Check if user exists and create if not
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
+BEGIN
+    DECLARE @CreateUserLdfSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
+    EXEC sp_executesql @CreateUserLdfSRTESQL;
+    PRINT 'Created database user [' + @LdfUserName + '] in NBS_SRTE';
+END
 
-        -- Grant read permissions on SRTE
-        DECLARE @AddRoleMemberSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberSRTESQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_SRTE';
+-- Grant permissions (always execute regardless of user creation)
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
+BEGIN
+    DECLARE @AddRoleMemberLdfSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @LdfUserName + '''';
+    EXEC sp_executesql @AddRoleMemberLdfSRTESQL;
+    PRINT 'Added [' + @LdfUserName + '] to db_datareader role in NBS_SRTE';
+END
 
-        -- Grant CONNECT permission
-        DECLARE @GrantConnectSRTESQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectSRTESQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_SRTE';
-    END
-ELSE
-    BEGIN
-        PRINT 'User [' + @UserName + '] already exists in NBS_SRTE';
-
-        -- Grant read permissions for existing user
-        DECLARE @AddRoleMemberSRTEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberSRTEExistingSQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_SRTE';
-
-        -- Grant CONNECT permission for existing user
-        DECLARE @GrantConnectSRTEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectSRTEExistingSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_SRTE';
-    END
-
--- ==========================================
 -- Grant permissions on RDB_modern database (WRITE to job_flow_log only)
--- ==========================================
 USE [rdb_modern];
 PRINT 'Switched to database [rdb_modern]';
 
--- Check if user exists in this database
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the user in RDB_MODERN database
-        DECLARE @CreateUserRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
-        EXEC sp_executesql @CreateUserRDBModernSQL;
-        PRINT 'Created database user [' + @UserName + '] in rdb_modern';
+-- Check if user exists and create if not
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
+BEGIN
+    DECLARE @CreateUserLdfRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
+    EXEC sp_executesql @CreateUserLdfRDBModernSQL;
+    PRINT 'Created database user [' + @LdfUserName + '] in rdb_modern';
+END
 
-        -- Grant CONNECT permission
-        DECLARE @GrantConnectRDBModernSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectRDBModernSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
-    END
-ELSE
-    BEGIN
-        PRINT 'User [' + @UserName + '] already exists in rdb_modern';
+-- Grant permissions (always execute regardless of user creation)
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
+BEGIN
+    DECLARE @GrantInsertLdfSQL NVARCHAR(MAX) = 'GRANT INSERT ON [dbo].[job_flow_log] TO [' + @LdfUserName + ']';
+    EXEC sp_executesql @GrantInsertLdfSQL;
+    PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @LdfUserName + ']';
+END
 
-        -- Grant CONNECT permission for existing user
-        DECLARE @GrantConnectRDBModernExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectRDBModernExistingSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
-    END
-
--- Grant INSERT permission on job_flow_log table (always grant regardless of user status)
-DECLARE @GrantInsertSQL NVARCHAR(MAX) = 'GRANT INSERT ON [dbo].[job_flow_log] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantInsertSQL;
-PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
-
--- ==========================================
--- Verify permissions for the new user
--- ==========================================
-PRINT 'User creation completed. Verify that the user has been created in all databases and has the correct permissions.';
+PRINT 'LDF service user creation completed.';

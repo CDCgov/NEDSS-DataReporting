@@ -1,172 +1,114 @@
-DECLARE @ServiceName NVARCHAR(100) = 'investigation_service';
-DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
+-- ==========================================
+-- INVESTIGATION SERVICE USER CREATION
+-- Special permissions: db_datawriter on ODSE (writes to PublicHealthCaseFact and SubjectRaceInfo)
+-- ==========================================
+DECLARE @InvServiceName NVARCHAR(100) = 'investigation_service';
+DECLARE @InvUserName NVARCHAR(150) = @InvServiceName + '_rdb';
 
--- ==========================================
 -- Grant permissions on ODSE database (READ + WRITE to specific tables)
--- ==========================================
 USE [NBS_ODSE];
 PRINT 'Switched to database [NBS_ODSE]';
 
--- Check if user exists in this database
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the user in ODSE database
-        DECLARE @CreateUserODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
-        EXEC sp_executesql @CreateUserODSESQL;
-        PRINT 'Created database user [' + @UserName + '] in NBS_ODSE';
+-- Check if user exists and create if not
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
+BEGIN
+    DECLARE @CreateUserInvODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
+    EXEC sp_executesql @CreateUserInvODSESQL;
+    PRINT 'Created database user [' + @InvUserName + '] in NBS_ODSE';
+END
 
-        -- Grant read permissions on ODSE
-        DECLARE @AddRoleMemberODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberODSESQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_ODSE';
+-- Grant permissions (always execute regardless of user creation)
+-- Note: Using db_datawriter because investigation service writes to PublicHealthCaseFact and SubjectRaceInfo tables
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
+BEGIN
+    DECLARE @AddRoleMemberInvODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @InvUserName + '''';
+    EXEC sp_executesql @AddRoleMemberInvODSESQL;
+    PRINT 'Added [' + @InvUserName + '] to db_datawriter role in NBS_ODSE';
 
-        -- Grant CONNECT permission
-        DECLARE @GrantConnectODSESQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectODSESQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
-    END
-ELSE
-    BEGIN
-        PRINT 'User [' + @UserName + '] already exists in NBS_ODSE';
+    -- Grant EXECUTE permissions on stored procedures
+    DECLARE @GrantExecInvestigationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_investigation_event] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantExecInvestigationSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_investigation_event] to [' + @InvUserName + ']';
 
-        -- Grant read permissions for existing user
-        DECLARE @AddRoleMemberODSEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberODSEExistingSQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_ODSE';
+    DECLARE @GrantExecContactSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_contact_record_event] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantExecContactSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_contact_record_event] to [' + @InvUserName + ']';
 
-        -- Grant CONNECT permission for existing user
-        DECLARE @GrantConnectODSEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectODSEExistingSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_ODSE';
-    END
+    DECLARE @GrantExecInterviewSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_interview_event] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantExecInterviewSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_interview_event] to [' + @InvUserName + ']';
 
--- Grant EXECUTE permission on stored procedures (always grant regardless of user status)
-DECLARE @GrantExecInvestigationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_investigation_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecInvestigationSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_investigation_event] to [' + @UserName + ']';
+    DECLARE @GrantExecNotificationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_notification_event] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantExecNotificationSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_notification_event] to [' + @InvUserName + ']';
 
-DECLARE @GrantExecContactSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_contact_record_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecContactSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_contact_record_event] to [' + @UserName + ']';
+    DECLARE @GrantExecTreatmentSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_treatment_event] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantExecTreatmentSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_treatment_event] to [' + @InvUserName + ']';
 
-DECLARE @GrantExecInterviewSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_interview_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecInterviewSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_interview_event] to [' + @UserName + ']';
+    DECLARE @GrantExecVaccinationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_vaccination_event] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantExecVaccinationSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_vaccination_event] to [' + @InvUserName + ']';
 
-DECLARE @GrantExecNotificationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_notification_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecNotificationSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_notification_event] to [' + @UserName + ']';
+    DECLARE @GrantExecPHCDatamartSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_event] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantExecPHCDatamartSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_event] to [' + @InvUserName + ']';
 
-DECLARE @GrantExecTreatmentSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_treatment_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecTreatmentSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_treatment_event] to [' + @UserName + ']';
+    -- Grant write permissions on specific tables for investigation service
+    DECLARE @GrantWriteSubjectRaceSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[SubjectRaceInfo] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantWriteSubjectRaceSQL;
+    PRINT 'Granted write permissions on [dbo].[SubjectRaceInfo] to [' + @InvUserName + ']';
 
-DECLARE @GrantExecVaccinationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_vaccination_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecVaccinationSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_vaccination_event] to [' + @UserName + ']';
+    DECLARE @GrantWritePHCFactSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[PublicHealthCaseFact] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantWritePHCFactSQL;
+    PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact] to [' + @InvUserName + ']';
+END
 
-DECLARE @GrantExecPHCDatamartSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_event] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantExecPHCDatamartSQL;
-PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_event] to [' + @UserName + ']';
-
--- Grant write permissions on specific tables for investigation service
-DECLARE @GrantWriteSubjectRaceSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[SubjectRaceInfo] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantWriteSubjectRaceSQL;
-PRINT 'Granted write permissions on [dbo].[SubjectRaceInfo] to [' + @UserName + ']';
-
-DECLARE @GrantWritePHCFactSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[PublicHealthCaseFact] TO [' + @UserName + ']';
-EXEC sp_executesql @GrantWritePHCFactSQL;
-PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact] to [' + @UserName + ']';
-
--- ==========================================
 -- Grant permissions on SRTE database (READ)
--- ==========================================
 USE [NBS_SRTE];
 PRINT 'Switched to database [NBS_SRTE]';
 
--- Check if user exists in this database
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the user in SRTE database
-        DECLARE @CreateUserSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
-        EXEC sp_executesql @CreateUserSRTESQL;
-        PRINT 'Created database user [' + @UserName + '] in NBS_SRTE';
+-- Check if user exists and create if not
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
+BEGIN
+    DECLARE @CreateUserInvSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
+    EXEC sp_executesql @CreateUserInvSRTESQL;
+    PRINT 'Created database user [' + @InvUserName + '] in NBS_SRTE';
+END
 
-        -- Grant read permissions on SRTE
-        DECLARE @AddRoleMemberSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberSRTESQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_SRTE';
+-- Grant permissions (always execute regardless of user creation)
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
+BEGIN
+    DECLARE @AddRoleMemberInvSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @InvUserName + '''';
+    EXEC sp_executesql @AddRoleMemberInvSRTESQL;
+    PRINT 'Added [' + @InvUserName + '] to db_datareader role in NBS_SRTE';
+END
 
-        -- Grant CONNECT permission
-        DECLARE @GrantConnectSRTESQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectSRTESQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_SRTE';
-    END
-ELSE
-    BEGIN
-        PRINT 'User [' + @UserName + '] already exists in NBS_SRTE';
-
-        -- Grant read permissions for existing user
-        DECLARE @AddRoleMemberSRTEExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberSRTEExistingSQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_SRTE';
-
-        -- Grant CONNECT permission for existing user
-        DECLARE @GrantConnectSRTEExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectSRTEExistingSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in NBS_SRTE';
-    END
-
--- ==========================================
 -- Grant permissions on RDB_modern database (READ/WRITE)
--- ==========================================
+-- Note: Requires both db_datareader and db_datawriter because datawriter doesn't include read permissions
 USE [rdb_modern];
 PRINT 'Switched to database [rdb_modern]';
 
--- Check if user exists in this database
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
-    BEGIN
-        -- Create the user in RDB_MODERN database
-        DECLARE @CreateUserRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
-        EXEC sp_executesql @CreateUserRDBModernSQL;
-        PRINT 'Created database user [' + @UserName + '] in rdb_modern';
+-- Check if user exists and create if not
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
+BEGIN
+    DECLARE @CreateUserInvRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
+    EXEC sp_executesql @CreateUserInvRDBModernSQL;
+    PRINT 'Created database user [' + @InvUserName + '] in rdb_modern';
+END
 
-        -- Grant CONNECT permission
-        DECLARE @GrantConnectRDBModernSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectRDBModernSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
+-- Grant permissions (always execute regardless of user creation)
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
+BEGIN
+    -- Grant data writer role
+    DECLARE @AddRoleMemberInvRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @InvUserName + '''';
+    EXEC sp_executesql @AddRoleMemberInvRDBModernWriterSQL;
+    PRINT 'Added [' + @InvUserName + '] to db_datawriter role in rdb_modern';
 
-        -- Grant data writer role
-        DECLARE @AddRoleMemberRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberRDBModernWriterSQL;
-        PRINT 'Added [' + @UserName + '] to db_datawriter role in rdb_modern';
+    -- Grant data reader role (required because db_datawriter doesn't include read permissions)
+    DECLARE @AddRoleMemberInvRDBModernReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @InvUserName + '''';
+    EXEC sp_executesql @AddRoleMemberInvRDBModernReaderSQL;
+    PRINT 'Added [' + @InvUserName + '] to db_datareader role in rdb_modern';
+END
 
-        -- Grant data reader role
-        DECLARE @AddRoleMemberRDBModernReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberRDBModernReaderSQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in rdb_modern';
-    END
-ELSE
-    BEGIN
-        PRINT 'User [' + @UserName + '] already exists in rdb_modern';
-
-        -- Grant CONNECT permission for existing user
-        DECLARE @GrantConnectRDBModernExistingSQL NVARCHAR(MAX) = 'GRANT CONNECT TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantConnectRDBModernExistingSQL;
-        PRINT 'Granted CONNECT permission to [' + @UserName + '] in rdb_modern';
-
-        -- Grant data writer role for existing user
-        DECLARE @AddRoleMemberRDBModernWriterExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberRDBModernWriterExistingSQL;
-        PRINT 'Added [' + @UserName + '] to db_datawriter role in rdb_modern';
-
-        -- Grant data reader role for existing user
-        DECLARE @AddRoleMemberRDBModernReaderExistingSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRoleMemberRDBModernReaderExistingSQL;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in rdb_modern';
-    END
-
--- ==========================================
--- Verify permissions for the new user
--- ==========================================
-PRINT 'User creation completed. Verify that the user has been created in all databases and has the correct permissions.';
+PRINT 'Investigation service user creation completed.';

@@ -5,5 +5,77 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 001-fn_sql_server_agent_status_override-001.sql.sql
+            path: 001-fn_sql_server_agent_status_override-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 000-service_users_login_creation-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 2
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 002-create_organization_service_user-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 3
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 003-create_observation_service_user-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 4
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 004-create_person_service_user-001.sql.sql
+            splitStatements: false
+  - changeSet:
+      id: 5
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 005-create_investigation_service_user-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 6
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 006-create_ldf_service_user-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 7
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 007-create_post_processing_service_user-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 8
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 008-create_kafka_sync_connector_service_user-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 9
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 009-create_debezium_service_user-001.sql
             splitStatements: false
