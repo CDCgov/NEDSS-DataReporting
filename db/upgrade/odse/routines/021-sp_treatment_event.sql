@@ -44,7 +44,7 @@ BEGIN
             rx1.treatment_uid,
             par.subject_entity_uid AS organization_uid,
             par1.subject_entity_uid AS provider_uid,
-            viewPatientKeys.treatment_uid AS patient_treatment_uid,
+            par3.act_uid AS patient_treatment_uid,
             act1.target_act_uid AS morbidity_uid,
             rx1.local_id,
             rx1.add_time,
@@ -66,8 +66,11 @@ BEGIN
                                AND par1.type_cd = 'ProviderOfTrmt'
                                AND par1.subject_class_cd = 'PSN'
                                AND par1.act_class_cd = 'TRMT'
-                 LEFT JOIN NBS_ODSE.dbo.uvw_treatment_patient_keys AS viewPatientKeys WITH (NOLOCK)
-                           ON rx1.treatment_uid = viewPatientKeys.treatment_uid
+                 LEFT JOIN NBS_ODSE.dbo.Participation par3 WITH (NOLOCK)
+                           ON rx1.Treatment_uid = par3.act_uid
+                               AND par3.type_cd = 'SubjOfTrmt'
+                               AND par3.act_class_cd = 'TRMT'
+                               AND par3.subject_class_cd = 'PSN'
                  LEFT JOIN NBS_ODSE.dbo.act_relationship AS act1 WITH (NOLOCK)
                            ON rx1.Treatment_uid = act1.source_act_uid
                                AND act1.target_class_cd = 'OBS'
@@ -176,7 +179,7 @@ BEGIN
         INTO #TREATMENT_DETAILS
         FROM #TREATMENT_UIDS t
                  LEFT JOIN #ASSOCIATED_PHC_UIDS aphc
-                            ON t.treatment_uid = aphc.treatment_uid 
+                            ON t.treatment_uid = aphc.treatment_uid
                  INNER JOIN NBS_ODSE.dbo.treatment rx1 WITH (NOLOCK)
                             ON t.treatment_uid = rx1.treatment_uid
                  INNER JOIN NBS_ODSE.dbo.Treatment_administered rx2 WITH (NOLOCK)
