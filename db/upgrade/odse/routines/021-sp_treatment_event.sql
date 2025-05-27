@@ -66,7 +66,7 @@ BEGIN
                                AND par1.type_cd = 'ProviderOfTrmt'
                                AND par1.subject_class_cd = 'PSN'
                                AND par1.act_class_cd = 'TRMT'
-                 LEFT JOIN NBS_ODSE.dbo.Participation par3
+                 LEFT JOIN NBS_ODSE.dbo.Participation par3 WITH (NOLOCK)
                            ON rx1.Treatment_uid = par3.act_uid
                                AND par3.type_cd = 'SubjOfTrmt'
                                AND par3.act_class_cd = 'TRMT'
