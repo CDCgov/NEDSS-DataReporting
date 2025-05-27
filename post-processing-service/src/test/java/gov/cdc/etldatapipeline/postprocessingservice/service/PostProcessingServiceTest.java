@@ -100,6 +100,8 @@ class PostProcessingServiceTest {
         String topic = "dummy_patient";
         String key = "{\"payload\":{\"patient_uid\":123}}";
 
+        List<DatamartData> patientResult = getDatamartData(123L, null);
+        when(postProcRepositoryMock.executeStoredProcForPatientIds("123")).thenReturn(patientResult);
         postProcessingServiceMock.postProcessMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
@@ -907,6 +909,28 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPatientObservation() {
+        String topic = "dummy_patient";
+        String key = "{\"payload\":{\"patient_uid\":123}}";
+
+        List<DatamartData> obsResult = getObsData(123L, null);
+        String obsId = "123";
+        when(postProcRepositoryMock.executeStoredProcForPatientIds("123")).thenReturn(obsResult);
+        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        verify(postProcRepositoryMock).executeStoredProcForLabTest(obsId);
+        verify(postProcRepositoryMock).executeStoredProcForLabTestResult(obsId);
+        verify(postProcRepositoryMock).executeStoredProcForLab100Datamart(obsId);
+        verify(postProcRepositoryMock).executeStoredProcForLab101Datamart(obsId);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(13, logs.size());
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+    
+
+    @Test
     void testProduceDatamartTopicWithNoPatient() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
@@ -1377,6 +1401,17 @@ class PostProcessingServiceTest {
         datamartData.setConditionCd("10110");
         datamartData.setDatamart(dmVar.length > 0 ? dmVar[0] : HEPATITIS_DATAMART.getEntityName());
         datamartData.setStoredProcedure(HEPATITIS_DATAMART.getStoredProcedure());
+        datamartDataLst.add(datamartData);
+        return datamartDataLst;
+    }
+    private List<DatamartData> getObsData(Long phcUid, Long patientUid, String... dmVar) {
+        List<DatamartData> datamartDataLst = new ArrayList<>();
+        DatamartData datamartData = new DatamartData();
+        datamartData.setPublicHealthCaseUid(phcUid);
+        datamartData.setPatientUid(patientUid);
+        datamartData.setObservationUid(123L);
+        datamartData.setConditionCd("10110");
+        datamartData.setDatamart("LAB_INFO");
         datamartDataLst.add(datamartData);
         return datamartDataLst;
     }
