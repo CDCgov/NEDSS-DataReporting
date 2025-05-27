@@ -1404,7 +1404,7 @@ class PostProcessingServiceTest {
         datamartDataLst.add(datamartData);
         return datamartDataLst;
     }
-    private List<DatamartData> getObsData(Long phcUid, Long patientUid, String... dmVar) {
+    private List<DatamartData> getObsData(Long phcUid, Long patientUid) {
         List<DatamartData> datamartDataLst = new ArrayList<>();
         DatamartData datamartData = new DatamartData();
         datamartData.setPublicHealthCaseUid(phcUid);
