@@ -26,6 +26,10 @@ BEGIN
     DECLARE @GrantExecObsSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_observation_event] TO [' + @ObsUserName + ']';
     EXEC sp_executesql @GrantExecObsSPSQL;
     PRINT 'Granted EXECUTE permission on [dbo].[sp_observation_event] to [' + @ObsUserName + ']';
+
+    DECLARE @GrantExecPlaceSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_place_event] TO [' + @ObsUserName + ']';
+    EXEC sp_executesql @GrantExecPlaceSPSQL;
+    PRINT 'Granted EXECUTE permission on [dbo].[sp_place_event] to [' + @ObsUserName + ']';
 END
 
 -- Grant permissions on SRTE database (READ)
