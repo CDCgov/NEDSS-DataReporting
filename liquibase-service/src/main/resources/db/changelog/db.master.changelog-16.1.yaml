@@ -5,5 +5,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 001-fn_sql_server_agent_status_override-001.sql.sql
+            path: 001-fn_sql_server_agent_status_override-001.sql
             splitStatements: false
