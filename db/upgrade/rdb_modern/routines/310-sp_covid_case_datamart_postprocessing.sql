@@ -52,8 +52,8 @@ BEGIN TRY
 
     SELECT @ROWCOUNT_NO = 0;
     INSERT INTO [DBO].[JOB_FLOW_LOG]
-    (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-    VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
+    (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT] , [Msg_Description1])
+    VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT('ID List-' + @phc_uids, 500));
 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -167,8 +167,8 @@ BEGIN TRY
         phc.INFECTIOUS_TO_DATE AS 'CTT_INFECTIOUS_TO_DT',
         phc.CONTACT_INV_STATUS AS 'CTT_INV_STATUS',
         replace(phc.CONTACT_INV_TXT, CHAR(13) + CHAR(10), ' ') AS 'CTT_INV_COMMENTS',
-        confMethod.[Confirmation Method] AS 'CONFIRMATION_METHOD',
-        confMethod.[Confirmation Date] AS 'CONFIRMATION_DT',
+        confMethod.CONFIRMATION_METHOD,
+        confMethod.CONFIRMATION_DT,
         phc.notes AS 'NOTES'
     INTO #COVID_CASE_CORE_DATA
     from
@@ -177,23 +177,16 @@ BEGIN TRY
         dbo.NRT_INVESTIGATION phc WITH(NOLOCK) ON phc.public_health_case_uid = phc_list.public_health_case_uid
     LEFT OUTER JOIN
     (
-        SELECT DISTINCT
-            Public_health_case_uid,
-            STUFF(
-	            (
-	                SELECT '; ' + code_short_desc_txt
-	                FROM
-	                    dbo.NRT_INVESTIGATION_CONFIRMATION cm
-	                inner join
-	                    dbo.NRT_SRTE_CODE_VALUE_GENERAL cvg
-	                    ON cm.confirmation_method_cd = cvg.code AND cvg.code_set_nm = 'PHC_CONF_M'
-	                FOR XML PATH, TYPE
-	            ).value('.[1]', 'nvarchar(max)'), 1, 1, ''
-            ) as [Confirmation Method],
-            max(confirmation_method_time) as [Confirmation Date]
-        FROM
-            dbo.NRT_INVESTIGATION_CONFIRMATION WITH(NOLOCK)
-        GROUP BY Public_health_case_uid
+        SELECT 
+            cm.Public_health_case_uid,
+            STRING_AGG(cvg.code_short_desc_txt, '; ') AS CONFIRMATION_METHOD,
+            MAX(cm.confirmation_method_time) AS CONFIRMATION_DT
+        FROM dbo.NRT_INVESTIGATION_CONFIRMATION cm WITH(NOLOCK)
+		INNER JOIN #PHC_LIST l 
+			ON l.public_health_case_uid = cm.Public_health_case_uid
+		LEFT JOIN dbo.NRT_SRTE_CODE_VALUE_GENERAL cvg WITH(NOLOCK)
+			ON cm.confirmation_method_cd = cvg.code AND cvg.code_set_nm = 'PHC_CONF_M'
+        GROUP BY cm.Public_health_case_uid
     ) confMethod
         ON confMethod.public_health_case_uid = phc.public_health_case_uid
     left outer join
@@ -1067,126 +1060,163 @@ BEGIN TRY
    	exec('select '''+@Proc_Step_Name+'''  as step,* from '+@tmp_COVID_CASE_RPT_DATA_3);
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
-    BEGIN TRANSACTION;
+    BEGIN TRANSACTION; 
+
+    SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+    SET @PROC_STEP_NAME = ' INSERTING INTO COVID_CASE_DATAMART';
+
+    IF OBJECT_ID('#CASTED_COLUMNS') IS NOT NULL
+		DROP TABLE #CASTED_COLUMNS;
+	
+	SELECT 
+		c.COLUMN_NAME,
+		c.DATA_TYPE,
+		c.CHARACTER_MAXIMUM_LENGTH,
+		CASE 
+			WHEN UPPER(C.DATA_TYPE) = 'VARCHAR'
+			THEN 'CAST(' + c.column_name + ' AS ' + c.DATA_TYPE + '(' + 
+				CASE CHARACTER_MAXIMUM_LENGTH 
+					WHEN -1 
+					THEN 'MAX' 
+					ELSE TRIM(STR(CHARACTER_MAXIMUM_LENGTH )) 
+				END + '))'
+			ELSE c.COLUMN_NAME
+		END AS casted_column
+	INTO #CASTED_COLUMNS		
+	FROM rdb.INFORMATION_SCHEMA.COLUMNS c WITH(NOLOCK)
+	WHERE c.TABLE_NAME = 'COVID_CASE_DATAMART' AND TABLE_SCHEMA = 'dbo'
 
     DECLARE @insert_query NVARCHAR(MAX);
     SET @insert_query =
-    (
+    (	
     SELECT 'INSERT INTO  dbo.COVID_CASE_DATAMART( ' +
     STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name like '#COVID_CASE_CORE_DATA%'
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS 		
+	    WHERE table_name LIKE '#COVID_CASE_CORE_DATA%' 
+        ORDER BY column_name
 	    FOR XML PATH('')
     ), 1, 1, '') + ',' +
     STUFF((
     	SELECT ', [' + column_name + ']'
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name like '#COVID_PATIENT_DATA%'
-	    	AND column_name NOT IN('PAT_CASE_UID') FOR XML PATH('')
+	    WHERE table_name LIKE '#COVID_PATIENT_DATA%' AND column_name NOT IN('PAT_CASE_UID') 
+        ORDER BY column_name 
+		FOR XML PATH('')
 	), 1, 1, '') + ',' +
 	STUFF((
 	    SELECT ', [' + column_name + ']'
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name like '#COVID_ENTITIES_DATA%'
-	    	AND column_name NOT IN('ENTITY_CASE_UID') FOR XML PATH('')
+	    WHERE table_name LIKE '#COVID_ENTITIES_DATA%' AND column_name NOT IN('ENTITY_CASE_UID') 
+        ORDER BY column_name 
+		FOR XML PATH('')
 	), 1, 1, '') + ',' +
 	STUFF((
 	    SELECT ', [' + column_name + ']'
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_DISCRETE_DATA
-	    	AND column_name NOT IN('ACT_DISCRETE_UID') FOR XML PATH('')
+	    WHERE table_name = @tmp_COVID_CASE_DISCRETE_DATA AND column_name NOT IN('ACT_DISCRETE_UID') 
+        ORDER BY column_name FOR XML PATH('')
 	), 1, 1, '') + ', ' +
 	STUFF((
 	    SELECT ', [' + column_name + ']'
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_MULTI_DATA
-	    	AND column_name NOT IN('ACT_MULTI_UID') FOR XML PATH('')
+	    WHERE table_name = @tmp_COVID_CASE_MULTI_DATA AND column_name NOT IN('ACT_MULTI_UID') 
+        ORDER BY column_name FOR XML PATH('')
 	    ), 1, 1, '') + ', ' +
 	STUFF((
 	    SELECT ', [' + column_name + ']'
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_1
-	    	AND column_name NOT IN('ACT_RPT_1_UID') FOR XML PATH('')
+	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_1 AND column_name NOT IN('ACT_RPT_1_UID') 
+        ORDER BY column_name FOR XML PATH('')
 	    ), 1, 1, '') + ',' +
 	STUFF((
 	    SELECT ', [' + column_name + ']'
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_2
-	    	AND column_name NOT IN('ACT_RPT_2_UID') FOR XML PATH('')
+	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_2 AND column_name NOT IN('ACT_RPT_2_UID') 
+        ORDER BY column_name FOR XML PATH('')
 	    ), 1, 1, '') + ',' +
 	STUFF((
 	    SELECT ', [' + column_name + ']'
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_3
-	    	AND column_name NOT IN('ACT_RPT_3_UID') FOR XML PATH('')
+	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_3 AND column_name NOT IN('ACT_RPT_3_UID') 
+        ORDER BY column_name FOR XML PATH('')
 	    ), 1, 1, '')
 + ' ) select distinct ' +
 	STUFF((
-    	SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name like '#COVID_CASE_CORE_DATA%'
+    	SELECT ', ' + cc.casted_column 
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+	    WHERE tt.table_name LIKE '#COVID_CASE_CORE_DATA%'
+		ORDER BY tt.column_name
 	    FOR XML PATH('')
     ), 1, 1, '') + ',' +
     STUFF((
-	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name like '#COVID_PATIENT_DATA%'
-	            AND column_name NOT IN('PAT_CASE_UID') FOR XML PATH('')
+	    SELECT ', ' + cc.casted_column 
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+	    WHERE tt.table_name LIKE '#COVID_PATIENT_DATA%' AND tt.column_name NOT IN('PAT_CASE_UID') 
+        ORDER BY tt.column_name FOR XML PATH('')
 	), 1, 1, '') + ',' +
 	STUFF((
-	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name like '#COVID_ENTITIES_DATA%'
-	            AND column_name NOT IN('ENTITY_CASE_UID') FOR XML PATH('')
+	    SELECT ', ' + cc.casted_column
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+	    WHERE tt.table_name LIKE '#COVID_ENTITIES_DATA%' AND tt.column_name NOT IN('ENTITY_CASE_UID') 
+        ORDER BY tt.column_name FOR XML PATH('')
 	), 1, 1, '') + ',' +
 	STUFF((
-	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_DISCRETE_DATA
-	    	AND column_name NOT IN('ACT_DISCRETE_UID') FOR XML PATH('')
+	    SELECT ', ' + cc.casted_column
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+	    WHERE tt.table_name = @tmp_COVID_CASE_DISCRETE_DATA AND tt.column_name NOT IN('ACT_DISCRETE_UID') 
+        ORDER BY tt.column_name FOR XML PATH('')
 	), 1, 1, '') + ', ' +
 	STUFF((
-	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_MULTI_DATA
-	        AND column_name NOT IN('ACT_MULTI_UID') FOR XML PATH('')
+	    SELECT ', ' + cc.casted_column
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+	    WHERE tt.table_name = @tmp_COVID_CASE_MULTI_DATA AND tt.column_name NOT IN('ACT_MULTI_UID') 
+        ORDER BY tt.column_name FOR XML PATH('')
     ), 1, 1, '') + ', ' +
     STUFF((
-	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_1
-            AND column_name NOT IN('ACT_RPT_1_UID') FOR XML PATH('')
+	    SELECT ', ' + cc.casted_column
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+	    WHERE tt.table_name = @tmp_COVID_CASE_RPT_DATA_1 AND tt.column_name NOT IN('ACT_RPT_1_UID') 
+        ORDER BY tt.column_name FOR XML PATH('')
     ), 1, 1, '') + ',' +
     STUFF((
-    SELECT ', [' + column_name + ']'
-    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_2
-            AND column_name NOT IN('ACT_RPT_2_UID') FOR XML PATH('')
+    SELECT ', ' + cc.casted_column
+    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+	INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+    WHERE tt.table_name = @tmp_COVID_CASE_RPT_DATA_2 AND tt.column_name NOT IN('ACT_RPT_2_UID') 
+    ORDER BY tt.column_name FOR XML PATH('')
     ), 1, 1, '') + ',' +
     STUFF((
-    SELECT ', [' + column_name + ']'
-    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
-    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_3
-            AND column_name NOT IN('ACT_RPT_3_UID') FOR XML PATH('')
+    SELECT ', ' + cc.casted_column
+    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
+	INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
+    WHERE tt.table_name = @tmp_COVID_CASE_RPT_DATA_3 AND tt.column_name NOT IN('ACT_RPT_3_UID') 
+    ORDER BY tt.column_name FOR XML PATH('')
     ), 1, 1, '') + '
     FROM #COVID_CASE_CORE_DATA coreData
-    inner join #COVID_PATIENT_DATA patData ON coreData.public_health_case_uid = patData.PAT_CASE_UID
-    left outer join #COVID_ENTITIES_DATA entData ON coreData.public_health_case_uid = entData.ENTITY_CASE_UID
-    left outer join '+@tmp_COVID_CASE_DISCRETE_DATA+' disData ON coreData.public_health_case_uid = disData.ACT_DISCRETE_UID
-    left outer join '+@tmp_COVID_CASE_MULTI_DATA+' multiData ON coreData.public_health_case_uid = multiData.ACT_MULTI_UID
-    left outer join '+@tmp_COVID_CASE_RPT_DATA_1+' rptData1 ON coreData.public_health_case_uid = rptData1.ACT_RPT_1_UID
-    left outer join '+@tmp_COVID_CASE_RPT_DATA_2+' rptData2 ON coreData.public_health_case_uid = rptData2.ACT_RPT_2_UID
-    left outer join '+@tmp_COVID_CASE_RPT_DATA_3+' rptData3 ON coreData.public_health_case_uid = rptData3.ACT_RPT_3_UID'
+    INNER JOIN #COVID_PATIENT_DATA patData ON coreData.public_health_case_uid = patData.PAT_CASE_UID
+    LEFT OUTER JOIN #COVID_ENTITIES_DATA entData ON coreData.public_health_case_uid = entData.ENTITY_CASE_UID
+    LEFT OUTER JOIN '+@tmp_COVID_CASE_DISCRETE_DATA+' disData ON coreData.public_health_case_uid = disData.ACT_DISCRETE_UID
+    LEFT OUTER JOIN '+@tmp_COVID_CASE_MULTI_DATA+' multiData ON coreData.public_health_case_uid = multiData.ACT_MULTI_UID
+    LEFT OUTER JOIN '+@tmp_COVID_CASE_RPT_DATA_1+' rptData1 ON coreData.public_health_case_uid = rptData1.ACT_RPT_1_UID
+    LEFT OUTER JOIN '+@tmp_COVID_CASE_RPT_DATA_2+' rptData2 ON coreData.public_health_case_uid = rptData2.ACT_RPT_2_UID
+    LEFT OUTER JOIN '+@tmp_COVID_CASE_RPT_DATA_3+' rptData3 ON coreData.public_health_case_uid = rptData3.ACT_RPT_3_UID'
     );
 
     if @debug='true'
 	    select @insert_query as insert_query;
     EXEC sp_executesql @insert_query;
 
-    COMMIT TRANSACTION;
-
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+    COMMIT TRANSACTION; 
+    
     INSERT INTO [DBO].[JOB_FLOW_LOG]
     (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
     VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
@@ -1257,6 +1287,4 @@ BEGIN TRY
 
 END CATCH
 
-END
-
-    ;
+END;

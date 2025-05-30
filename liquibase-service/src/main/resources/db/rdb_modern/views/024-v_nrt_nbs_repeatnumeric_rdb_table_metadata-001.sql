@@ -17,7 +17,7 @@ SELECT
 FROM dbo.v_nrt_nbs_page page WITH(NOLOCK)
 INNER JOIN [dbo].nrt_odse_NBS_ui_metadata ui_meta WITH(NOLOCK)
     ON ui_meta.INVESTIGATION_FORM_CD = page.FORM_CD
-INNER JOIN [dbo].nrt_odse_NBS_rdb_metadata rdb_meta WITH(NOLOCK)
+INNER JOIN [dbo].v_nrt_odse_NBS_rdb_metadata_recent rdb_meta WITH(NOLOCK)
     ON rdb_meta.NBS_UI_METADATA_UID = ui_meta.NBS_UI_METADATA_UID
 WHERE
   rdb_meta.USER_DEFINED_COLUMN_NM <> '' 
