@@ -81,6 +81,9 @@ CREATE TABLE dbo.nrt_observation
     status_time                          datetime                                        NULL,
     batch_id                             bigint                                          NULL,
     associated_phc_uids                  nvarchar(max)                                   NULL,
+    activity_from_time                   datetime                                        NULL,
+    device_instance_id_1                 varchar(199)                                    NULL,
+    device_instance_id_2                 varchar(199)                                    NULL,
     refresh_datetime                     datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime                         datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)

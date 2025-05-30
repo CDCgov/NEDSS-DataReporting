@@ -100,4 +100,10 @@ public class ObservationReporting {
     private Long batchId;
 
     private String associatedPhcUids;
+    private String activityFromTime;
+
+    @JsonProperty("device_instance_id_1")
+    private String deviceInstanceId1;
+    @JsonProperty("device_instance_id_2")
+    private String deviceInstanceId2;
 }

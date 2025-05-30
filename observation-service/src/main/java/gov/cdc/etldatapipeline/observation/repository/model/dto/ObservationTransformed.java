@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.observation.repository.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Data
@@ -43,6 +44,11 @@ public class ObservationTransformed {
 
     private String accessionNumber;
     private Long materialId;
+
+    @JsonProperty("device_instance_id_1")
+    private String deviceInstanceId1;
+    @JsonProperty("device_instance_id_2")
+    private String deviceInstanceId2;
 
     private Long batchId;
 }
