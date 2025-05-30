@@ -373,7 +373,6 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
                 ALTER COLUMN ordering_person_id NVARCHAR(max)
             END;
 
-
 --CNDE-2750
         IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'activity_from_time'   AND Object_ID = Object_ID(N'nrt_observation'))
             BEGIN

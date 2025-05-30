@@ -27,4 +27,14 @@
     "type_desc_txt": "Equipment Instance Identifier",
     "act_last_change_time": null
   }
+,
+  {
+    "id": 10361979,
+    "act_id_seq": 4,
+    "record_status": "INACTIVE",
+    "root_extension_txt": "NEW TOOLS",
+    "type_cd": "EII",
+    "type_desc_txt": "Equipment Instance Identifier",
+    "act_last_change_time": null
+  }
 ]

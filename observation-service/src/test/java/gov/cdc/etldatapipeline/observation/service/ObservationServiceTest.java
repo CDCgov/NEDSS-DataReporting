@@ -269,7 +269,7 @@ class ObservationServiceTest {
         observation.setAccessionNumber("20120601114");
         observation.setActivityFromTime("2021-01-28 16:06:03.000");
         observation.setDeviceInstanceId1("No Equipment");
-        observation.setDeviceInstanceId2(null);
+        observation.setDeviceInstanceId2("NEW TOOLS");
 
         return observation;
     }
