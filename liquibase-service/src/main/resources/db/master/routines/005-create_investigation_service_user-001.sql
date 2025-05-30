@@ -62,6 +62,15 @@ BEGIN
     DECLARE @GrantWritePHCFactSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[PublicHealthCaseFact] TO [' + @InvUserName + ']';
     EXEC sp_executesql @GrantWritePHCFactSQL;
     PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact] to [' + @InvUserName + ']';
+
+    -- Grant write permissions on MODERN tables
+    DECLARE @GrantWriteSubjectRaceModernSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[SubjectRaceInfo_Modern] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantWriteSubjectRaceModernSQL;
+    PRINT 'Granted write permissions on [dbo].[SubjectRaceInfo_Modern] to [' + @InvUserName + ']';
+
+    DECLARE @GrantWritePHCFactModernSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[PublicHealthCaseFact_Modern] TO [' + @InvUserName + ']';
+    EXEC sp_executesql @GrantWritePHCFactModernSQL;
+    PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact_Modern] to [' + @InvUserName + ']';
 END
 
 -- Grant permissions on SRTE database (READ)
