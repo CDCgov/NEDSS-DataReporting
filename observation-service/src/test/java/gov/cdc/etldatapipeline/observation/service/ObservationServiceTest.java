@@ -213,6 +213,7 @@ class ObservationServiceTest {
         observation.setClassCd("OBS");
         observation.setMoodCd("ENV");
         observation.setLocalId("OBS10003388MA01");
+        observation.setActivityFromTime("2021-01-28 16:06:03.000");
         observation.setObsDomainCdSt1(obsDomainCdSt1);
         observation.setPersonParticipations(readFileData(filePathPrefix + "PersonParticipations.json"));
         observation.setOrganizationParticipations(readFileData(filePathPrefix + "OrganizationParticipations.json"));
@@ -266,6 +267,9 @@ class ObservationServiceTest {
         observation.setSpecimenCollectorId(10000033L);
         observation.setCopyToProviderId(10000044L);
         observation.setAccessionNumber("20120601114");
+        observation.setActivityFromTime("2021-01-28 16:06:03.000");
+        observation.setDeviceInstanceId1("No Equipment");
+        observation.setDeviceInstanceId2(null);
 
         return observation;
     }

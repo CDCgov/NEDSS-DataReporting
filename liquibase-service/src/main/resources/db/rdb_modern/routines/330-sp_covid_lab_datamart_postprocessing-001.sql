@@ -148,10 +148,6 @@ BEGIN
         SET @proc_step_name = 'Create COVID_LAB_CORE_DATA';
         SET @proc_step_no = 3;
 
-        --        select 'Test', *
---        FROM #COVID_TEXT_RESULT_LIST ctr
---         LEFT JOIN dbo.nrt_observation o WITH(NOLOCK) ON ctr.observation_uid = o.observation_uid
---
 
         SELECT DISTINCT
             o.observation_uid AS Observation_UID,
@@ -165,8 +161,7 @@ BEGIN
             o.jurisdiction_cd AS Jurisdiction_Cd,
             o.activity_to_time AS Lab_Report_Dt,
             o.rpt_to_state_time AS Lab_Rpt_Received_By_PH_Dt,
-            --o.activity_from_time AS ORDER_TEST_DATE, --Add to nrt_obs
-            NULL AS ORDER_TEST_DATE,
+            o.activity_from_time AS ORDER_TEST_DATE,
             o.target_site_cd AS SPECIMEN_SOURCE_SITE_CD,
             o.target_site_desc_txt AS SPECIMEN_SOURCE_SITE_DESC,
             cvg1.code_short_desc_txt AS Order_result_status,
@@ -193,10 +188,8 @@ BEGIN
             o1.cd AS Resulted_Test_Cd,
             o1.cd_desc_txt AS Resulted_Test_Desc,
             o1.cd_system_cd AS Resulted_Test_Code_System,
-            NULL AS DEVICE_INSTANCE_ID_1,
-            NULL AS DEVICE_INSTANCE_ID_2,
-            --eii.root_extension_txt AS DEVICE_INSTANCE_ID_1,
-            --eii2.root_extension_txt AS DEVICE_INSTANCE_ID_2,
+            o1.device_instance_id_1 AS DEVICE_INSTANCE_ID_1,
+            o1.device_instance_id_2 AS DEVICE_INSTANCE_ID_2,
             cvg2.code_short_desc_txt AS Test_result_status,
             o1.method_desc_txt AS Test_Method_Desc,
             CASE WHEN o1.method_cd LIKE '%**%'
@@ -245,12 +238,6 @@ BEGIN
             AND cvg2.code_set_nm = 'ACT_OBJ_ST'
                  LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(NOLOCK) ON o1.observation_uid = ovn.observation_uid AND isnull(o1.batch_id,1) = isnull(ovn.batch_id,1)
                  LEFT OUTER JOIN dbo.nrt_observation_material mat WITH(NOLOCK) ON o.material_id = mat.material_id
-            --                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii WITH(NOLOCK) ON o1.observation_uid = eii.act_uid
---		            AND eii.type_cd = 'EII'
---		            AND eii.act_id_seq = 3
---                 LEFT OUTER JOIN nbs_odse.dbo.act_id eii2 WITH(NOLOCK) ON o1.observation_uid = eii2.act_uid
---		            AND eii2.type_cd = 'EII'
---		            AND eii2.act_id_seq = 4
                  LEFT OUTER JOIN dbo.nrt_organization org_perform WITH(NOLOCK) ON o1.performing_organization_id = org_perform.organization_uid
             --LEFT JOIN dbo.nrt_organization_key orgk WITH(NOLOCK) ON orgk.organization_uid = org_perform.organization_uid
                  LEFT OUTER JOIN dbo.D_Organization d_org_perform WITH(NOLOCK) ON o1.performing_organization_id = d_org_perform.ORGANIZATION_UID
@@ -582,7 +569,6 @@ BEGIN
                ,@rowcount
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
-
 
 
         /* Insert updated records */
