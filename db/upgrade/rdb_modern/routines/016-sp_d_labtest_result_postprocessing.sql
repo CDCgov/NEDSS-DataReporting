@@ -36,7 +36,7 @@ BEGIN
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT],
          [Msg_Description1])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'TEST', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO,
+        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO,
                 LEFT(@pLabResultList, 500));
 
 --------------------------------------------------------------------------------------------------------------------------------------------
