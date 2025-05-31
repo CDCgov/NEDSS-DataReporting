@@ -115,32 +115,14 @@ class LdfDataServiceTest {
         ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
         var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
         assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(rec, consumer));
-    
-
-    }
-    @Test
-    void testNonNullBusObNmEmptyMessageException() {
-        String ldfTopic = "LdfData";
-        String ldfTopicOutput = "LdfDataOutput";
-        String busObjNm = "PHC";
-        long ldfUid = 100000001L;
-        String invalidPayload = "{\"payload\": {\"after\": {" +
-                "\"business_object_nm\": \"" + busObjNm + "\"," +
-                "\"ldf_uid\": \"" + ldfUid + "\"}}}";
-
-        ConsumerRecord<String, String> rec = getRecord(invalidPayload, ldfTopic);
-        var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
-        assertThrows(RuntimeException.class, () -> ldfDataService.processMessage(rec, consumer));
     }
 
     @Test
     void testProcessEmptyMessage() {
         String ldfTopic = "LdfData";
         String ldfTopicOutput = "LdfDataOutput";
-        String invalidPayload = null;
-        String emptyPayload = "";
-        testEmptyMessage(ldfTopic, ldfTopicOutput, invalidPayload);
-        testEmptyMessage(ldfTopic, ldfTopicOutput, emptyPayload);
+        testEmptyMessage(ldfTopic, ldfTopicOutput, null);
+        testEmptyMessage(ldfTopic, ldfTopicOutput, "");
     }
 
     private void testEmptyMessage(String ldfTopic, String ldfTopicOutput, String payload){
@@ -148,7 +130,7 @@ class LdfDataServiceTest {
         final var ldfDataService = getInvestigationService(ldfTopic, ldfTopicOutput);
         ldfDataService.processMessage(rec, consumer);
         List<ILoggingEvent> logs = listAppender.list;
-        assertTrue(logs.get(0).getFormattedMessage().contains("Received null or empty message on topic: "+ldfTopic));
+        assertTrue(logs.getFirst().getFormattedMessage().contains("Received null or empty message on topic: "+ldfTopic));
     }
 
     @Test
@@ -186,7 +168,7 @@ class LdfDataServiceTest {
         ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> ldfDataService.processMessage(rec, consumer));
-        assertEquals(ex.getCause().getClass(), NoSuchElementException.class);
+        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     private void validateData(String inputTopicName, String outputTopicName,

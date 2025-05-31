@@ -32,9 +32,12 @@ public class UtilHelper {
 
     public static String extractUid(String value, String uidName, String... overridePath) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(value);
+        JsonNode payloadNode = jsonNode.get(PAYLOAD_KEY);
+
         String path = overridePath.length > 0 ? overridePath[0] : DEFAULT_PATH;
-        JsonNode payloadNode = jsonNode.get(PAYLOAD_KEY).path(path);
-        if (!payloadNode.isMissingNode() && payloadNode.has(uidName)) {
+        JsonNode dataNode = jsonNode.get(PAYLOAD_KEY).path(path);
+        payloadNode = dataNode.isMissingNode() ? payloadNode : dataNode;
+        if (payloadNode.has(uidName)) {
             return payloadNode.get(uidName).asText();
         } else {
             throw new NoSuchElementException("The " + uidName + " field is missing in the message payload.");
