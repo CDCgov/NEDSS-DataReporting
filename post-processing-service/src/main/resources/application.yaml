@@ -39,8 +39,6 @@ spring:
   jpa:
     properties:
       javax.persistence.query.timeout: -1
-featureFlag:
-  covid-dm-enable: ${FF_COVID_DM_ENABLE:false}
 service:
   fixed-delay:
     cached-ids: ${FIXED_DELAY_ID:20000}
