@@ -12,6 +12,7 @@ public class TestUtils {
         throw new IllegalStateException("Utility class");
     }
 
+    // Read file data
     public static String readFileData(String fileName) {
         try {
             return FileUtils.readFileToString(
