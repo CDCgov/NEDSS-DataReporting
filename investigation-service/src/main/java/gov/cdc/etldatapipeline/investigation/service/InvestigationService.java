@@ -77,15 +77,6 @@ public class InvestigationService {
     @Value("${featureFlag.phc-datamart-enable}")
     private boolean phcDatamartEnable;
 
-    @Value("${featureFlag.bmird-case-enable}")
-    private boolean bmirdCaseEnable;
-
-    @Value("${featureFlag.contact-record-enable}")
-    public boolean contactRecordEnable;
-
-    @Value("${featureFlag.treatment-enable}")
-    public boolean treatmentEnable;
-
     private final InvestigationRepository investigationRepository;
     private final NotificationRepository notificationRepository;
     private final InterviewRepository interviewRepository;
@@ -145,11 +136,11 @@ public class InvestigationService {
             processNotification(message);
         } else if (topic.equals(interviewTopic)) {
             processInterview(message, batchId);
-        } else if (topic.equals(contactTopic) && contactRecordEnable) {
+        } else if (topic.equals(contactTopic)) {
             processContact(message);
         } else if (topic.equals(vaccinationTopic)) {
             processVaccination(message, true, "");
-        } else if (topic.equals(treatmentTopic) && treatmentEnable) {
+        } else if (topic.equals(treatmentTopic)) {
             processTreatment(message, true, "");
         } else if (topic.equals(actRelationshipTopic) && message != null) {
             processActRelationship(message);
@@ -164,12 +155,6 @@ public class InvestigationService {
 
             if (phcDatamartEnable) {
                 CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
-            }
-
-            // Check if feature flag for BMIRD is enabled
-            final String programArea = extractValue(value, "prog_area_cd");
-            if ("BMIRD".equals(programArea) && !bmirdCaseEnable) {
-                return;
             }
 
             logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
@@ -217,7 +202,7 @@ public class InvestigationService {
             if (typeCd.equals("1180")) {
                 processVaccination(value, false, sourceActUid);
             }
-            if ((typeCd.equals("TreatmentToPHC") || typeCd.equals("TreatmentToMorb")) && treatmentEnable) {
+            if (typeCd.equals("TreatmentToPHC") || typeCd.equals("TreatmentToMorb")) {
                 processTreatment(value, false, sourceActUid);
             }
         } catch (Exception e) {

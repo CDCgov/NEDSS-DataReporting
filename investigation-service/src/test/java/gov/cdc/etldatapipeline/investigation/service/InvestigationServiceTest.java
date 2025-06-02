@@ -100,9 +100,6 @@ class InvestigationServiceTest {
         investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository, treatmentRepository, kafkaTemplate, transformer);
 
         investigationService.setPhcDatamartEnable(true);
-        investigationService.setBmirdCaseEnable(true);
-        investigationService.setContactRecordEnable(true);
-        investigationService.setTreatmentEnable(true);
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
@@ -146,19 +143,6 @@ class InvestigationServiceTest {
 
         verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid));
         verify(investigationRepository).populatePhcFact(String.valueOf(investigationUid));
-    }
-
-    @Test
-    void testProcessInvestigationBmirdFeatureDisabled() {
-        Long investigationUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\", \"prog_area_cd\": \"BMIRD\"}}}";
-
-        final Investigation investigation = constructInvestigation(investigationUid);
-        when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
-
-        investigationService.setBmirdCaseEnable(false);
-        investigationService.processMessage(getRecord(investigationTopic, payload), consumer);
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -312,19 +296,6 @@ class InvestigationServiceTest {
     }
 
     @Test
-    void testProcessContactMessageWhenFeatureDisabled() {
-        Long contactUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"" + contactUid + "\"}}}";
-
-        final Contact contact = constructContact(contactUid);
-        when(contactRepository.computeContact(String.valueOf(contactUid))).thenReturn(Optional.of(contact));
-
-        investigationService.setContactRecordEnable(false);
-        investigationService.processMessage(getRecord(contactTopic, payload), consumer);
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
-    }
-
-    @Test
     void testProcessContactException() {
         String invalidPayload = "{\"payload\": {\"after\": {}}}";
         ConsumerRecord<String, String> rec = getRecord(contactTopic, invalidPayload);
@@ -468,18 +439,14 @@ class InvestigationServiceTest {
 
 
     @ParameterizedTest
-    @CsvSource(
-                {"d,TreatmentToPHC,true",
-                        "d,TreatmentToPHC,false",
-                        "d,TreatmentToMorb,true",
-                        "d,TreatmentToMorb,false",
-                        "c,TreatmentToPHC,true",
-                        "c,TreatmentToPHC,false",
-                        "c,TreatmentToMorb,true",
-                        "c,TreatmentToMorb,false",
-                        "c,OTHER,true"}
+    @CsvSource({
+            "d,TreatmentToPHC",
+            "d,TreatmentToMorb",
+            "c,TreatmentToPHC",
+            "c,TreatmentToMorb",
+            "c,OTHER,true"}
     )
-    void testProcessActRelationshipTreatment(String op, String typeCd, String treatmentEnabled) throws JsonProcessingException {
+    void testProcessActRelationshipTreatment(String op, String typeCd) throws JsonProcessingException {
         Long sourceActUid = 123456789L;
 
         String payload = "{\"payload\": {\"before\": {\"source_act_uid\": \"" + sourceActUid + "\", \"type_cd\": \"" + typeCd + "\"}," +
@@ -496,8 +463,7 @@ class InvestigationServiceTest {
         // Create a ConsumerRecord object
         ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
 
-        if (treatmentEnabled.equals("false") || typeCd.equals("OTHER")) {
-            investigationService.setTreatmentEnable(false);
+        if (typeCd.equals("OTHER")) {
             investigationService.processMessage(rec, consumer);
             verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
         }
@@ -624,19 +590,6 @@ class InvestigationServiceTest {
         assertEquals(treatment.getTreatmentUid(), keyObject.getTreatmentUid());
 
         assertEquals(treatment, actualTreatment);
-    }
-
-    @Test
-    void testProcessTreatmentWhenFeatureDisabled() {
-        Long treatmentUid = 234567890L;
-        String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}, \"op\": \"u\"}}";
-
-        final Treatment treatment = constructTreatment(treatmentUid);
-        when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
-
-        investigationService.setTreatmentEnable(false);
-        investigationService.processMessage(getRecord(treatmentTopic, payload), consumer);
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test

@@ -50,7 +50,6 @@ class DatamartProcessingTest {
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         datamartProcessor = new ProcessDatamartData(kafkaTemplate);
-        datamartProcessor.setCovidDmEnable(true);
     }
 
     @AfterEach
