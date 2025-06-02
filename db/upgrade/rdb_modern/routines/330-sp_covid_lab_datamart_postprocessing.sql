@@ -544,14 +544,6 @@ BEGIN
         IF @debug = 'true'
             SELECT @proc_step_name, * FROM #COVID_LAB_ASSOCIATIONS;
 
-        SELECT DISTINCT * FROM #COVID_LAB_CORE_DATA core
-                                   LEFT JOIN #COVID_LAB_RSLT_TYPE rslt ON core.Observation_UID = rslt.RT_Observation_UID
-            AND core.Result = rslt.RT_Result
-                                   LEFT JOIN #COVID_LAB_PATIENT_DATA pat ON core.Observation_UID = pat.Pat_Observation_UID
-                                   LEFT JOIN #COVID_LAB_ENTITIES_DATA ent ON core.Observation_UID = ent.Entity_Observation_uid
-                                   LEFT JOIN #COVID_LAB_ASSOCIATIONS assoc ON core.Observation_UID = assoc.ASSOC_OBSERVATION_UID;
-
-
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log] (
