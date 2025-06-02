@@ -89,30 +89,30 @@ BEGIN
         SET @proc_step_no = 2;
 
         SELECT DISTINCT
-            o_result.observation_uid,
+            o_order.observation_uid,
             o.observation_uid AS target_observation_uid, --result
             o.local_id AS Lab_Local_ID,
             COALESCE(dp.PATIENT_LOCAL_ID,p.local_id) AS Patient_Local_ID
         INTO #COVID_RESULT_LIST
         FROM #COVID_OBSERVATIONS_TO_PROCESS cp --Order
-                 INNER JOIN dbo.nrt_observation o_result WITH(NOLOCK) ON cp.observation_uid = o_result.observation_uid
+                 INNER JOIN dbo.nrt_observation o_order WITH(NOLOCK) ON cp.observation_uid = o_order.observation_uid
                  CROSS APPLY (
             SELECT CAST(value AS BIGINT) as target_obs_uid
-            FROM STRING_SPLIT(o_result.result_observation_uid, ',')
+            FROM STRING_SPLIT(o_order.result_observation_uid, ',')
         ) as split_results
                  INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON split_results.target_obs_uid = o.observation_uid
-                 LEFT JOIN dbo.D_PATIENT dp WITH(NOLOCK) ON o_result.patient_id = dp.patient_uid
-                 LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON o_result.patient_id = p.patient_uid
+                 LEFT JOIN dbo.D_PATIENT dp WITH(NOLOCK) ON o_order.patient_id = dp.patient_uid
+                 LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON o_order.patient_id = p.patient_uid
                  INNER JOIN dbo.nrt_patient_key pk WITH(NOLOCK) ON pk.patient_uid = p.patient_uid
         WHERE COALESCE(dp.patient_uid, pk.patient_uid) IS NOT NULL
-          AND (o_result.cd IN
+          AND (o.cd IN
                (
                    SELECT loinc_cd
                    FROM dbo.nrt_srte_Loinc_condition
                    WHERE condition_cd = '11065'
                )
-            OR o_result.cd IN(''))--replace '' with the local codes seperated by comma
-          AND o_result.cd NOT IN
+            OR o.cd IN(''))--replace '' with the local codes seperated by comma
+          AND o.cd NOT IN
               (
                   SELECT loinc_cd
                   FROM dbo.nrt_srte_Loinc_code
@@ -446,7 +446,7 @@ BEGIN
             COALESCE(d_org_author.ORGANIZATION_COUNTY, org_author.county) AS Reporting_Facility_County_Desc,
             COALESCE(d_org_author.ORGANIZATION_CITY, org_author.city) AS Reporting_Facility_City,
             COALESCE(d_org_author.ORGANIZATION_STATE_CODE, org_author.state_code) AS Reporting_Facility_State_Cd,
-            COALESCE(d_org_author.ORGANIZATION_STATE, org_author.state) AS Reporting_Facility_State,
+            COALESCE(dim_state_org_author.state_NM, nrt_state_org_author.state_NM) AS Reporting_Facility_State,
             COALESCE(d_org_author.ORGANIZATION_ZIP, org_author.zip) AS Reporting_Facility_Zip_Cd,
             COALESCE(d_org_author.ORGANIZATION_FACILITY_ID, org_author.facility_id) AS Reporting_Facility_Clia,
             COALESCE(d_org_author.ORGANIZATION_PHONE_WORK, org_author.phone_work) AS Reporting_Facility_Phone_Nbr,
@@ -459,7 +459,7 @@ BEGIN
             COALESCE(d_org_order.ORGANIZATION_COUNTY, org_order.county) AS Ordering_Facility_County_Desc,
             COALESCE(d_org_order.ORGANIZATION_CITY, org_order.city) AS Ordering_Facility_City,
             COALESCE(d_org_order.ORGANIZATION_STATE_CODE, org_order.state_code) AS Ordering_Facility_State_Cd,
-            COALESCE(d_org_order.ORGANIZATION_STATE, org_order.state) AS Ordering_Facility_State,
+            COALESCE(dim_state_org_order.state_NM, nrt_state_org_order.state_NM) AS Ordering_Facility_State,
             COALESCE(d_org_order.ORGANIZATION_ZIP, org_order.zip) AS Ordering_Facility_Zip_Cd,
             COALESCE(d_org_order.ORGANIZATION_PHONE_WORK, org_order.phone_work) AS Ordering_Facility_Phone_Nbr,
             COALESCE(d_org_order.ORGANIZATION_PHONE_EXT_WORK, org_order.phone_ext_work) AS Ordering_Facility_Phone_Ext,
@@ -472,7 +472,7 @@ BEGIN
             COALESCE(d_provider_order.PROVIDER_COUNTY,provider_order.county) AS Ordering_Provider_County_Desc,
             COALESCE(d_provider_order.PROVIDER_CITY,provider_order.city) AS Ordering_Provider_City,
             COALESCE(d_provider_order.PROVIDER_STATE_CODE,provider_order.state_code) AS Ordering_Provider_State_Cd,
-            COALESCE(d_provider_order.PROVIDER_STATE,provider_order.state) AS Ordering_Provider_State,
+            COALESCE(dim_state_provider_order.state_NM, nrt_state_provider_order.state_NM) AS Ordering_Provider_State,
             COALESCE(d_provider_order.PROVIDER_ZIP,provider_order.zip) AS Ordering_Provider_Zip_Cd,
             COALESCE(d_provider_order.PROVIDER_PHONE_WORK,provider_order.phone_work) AS Ordering_Provider_Phone_Nbr,
             COALESCE(d_provider_order.PROVIDER_PHONE_EXT_WORK,provider_order.phone_ext_work) AS Ordering_Provider_Phone_Ext,
@@ -483,15 +483,21 @@ BEGIN
             /*Auth Org*/
                  LEFT JOIN dbo.nrt_organization org_author WITH(NOLOCK) ON obs.author_organization_id = org_author.organization_uid
                  LEFT JOIN dbo.D_Organization d_org_author WITH(NOLOCK) ON obs.author_organization_id = d_org_author.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_org_author WITH(NOLOCK) ON dim_state_org_author.state_cd = d_org_author.ORGANIZATION_STATE_CODE
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_org_author WITH(NOLOCK) ON nrt_state_org_author.state_cd = org_author.state_code
             /*Ordering Org*/
                  LEFT JOIN dbo.nrt_organization org_order WITH(NOLOCK) ON obs.ordering_organization_id = org_order.organization_uid
                  LEFT JOIN dbo.D_Organization d_org_order WITH(NOLOCK) ON obs.ordering_organization_id = d_org_order.ORGANIZATION_UID
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_org_order WITH(NOLOCK) ON dim_state_org_order.state_cd = d_org_order.ORGANIZATION_STATE_CODE
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_org_order WITH(NOLOCK) ON nrt_state_org_order.state_cd = org_order.state_code
             /*Ordering Provider*/
                  LEFT JOIN dbo.nrt_provider 	AS provider_order with (nolock)
                            ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv
                                       WHERE cast(nprv.value as bigint) = provider_order.provider_uid)
                  LEFT JOIN dbo.D_PROVIDER AS d_provider_order with (nolock)  ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv
                                                                                         WHERE cast(nprv.value as bigint) = d_provider_order.provider_uid)
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_provider_order WITH(NOLOCK) ON dim_state_provider_order.state_cd = d_provider_order.PROVIDER_STATE_CODE
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_provider_order WITH(NOLOCK) ON nrt_state_provider_order.state_cd = provider_order.state_code
         ;
 
 
@@ -537,7 +543,6 @@ BEGIN
 
         IF @debug = 'true'
             SELECT @proc_step_name, * FROM #COVID_LAB_ASSOCIATIONS;
-
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
@@ -801,19 +806,19 @@ BEGIN
             LEFT(pat.County_Desc,255),
             pat.PATIENT_RACE_CALC,
             LEFT(pat.PATIENT_ETHNICITY,20),
-            ent.Reporting_Facility_Name,
-            ent.Reporting_Facility_Address_One,
-            ent.Reporting_Facility_Address_Two,
-            ent.Reporting_Facility_Country,
-            ent.Reporting_Facility_County,
-            ent.Reporting_Facility_County_Desc,
-            ent.Reporting_Facility_City,
-            ent.Reporting_Facility_State_Cd,
-            ent.Reporting_Facility_State,
-            ent.Reporting_Facility_Zip_Cd,
-            ent.Reporting_Facility_Clia,
-            ent.Reporting_Facility_Phone_Nbr,
-            ent.Reporting_Facility_Phone_Ext,
+            LEFT(ent.Reporting_Facility_Name,100),
+            LEFT(ent.Reporting_Facility_Address_One,100),
+            LEFT(ent.Reporting_Facility_Address_Two,100),
+            LEFT(ent.Reporting_Facility_Country,20),
+            LEFT(ent.Reporting_Facility_County,20),
+            LEFT(ent.Reporting_Facility_County_Desc,255),
+            LEFT(ent.Reporting_Facility_City,100),
+            LEFT(ent.Reporting_Facility_State_Cd,20),
+            LEFT(ent.Reporting_Facility_State,2),
+            LEFT(ent.Reporting_Facility_Zip_Cd,20),
+            LEFT(ent.Reporting_Facility_Clia,20),
+            LEFT(ent.Reporting_Facility_Phone_Nbr,20),
+            LEFT(ent.Reporting_Facility_Phone_Ext,20),
             ent.Ordering_Facility_Name,
             ent.Ordering_Facility_Address_One,
             ent.Ordering_Facility_Address_Two,
@@ -835,7 +840,7 @@ BEGIN
             ent.Ordering_Provider_County_Desc,
             ent.Ordering_Provider_City,
             ent.Ordering_Provider_State_Cd,
-            ent.Ordering_Provider_State,
+            LEFT(ent.Ordering_Provider_State,2),
             ent.Ordering_Provider_Zip_Cd,
             ent.Ordering_Provider_Phone_Nbr,
             ent.Ordering_Provider_Phone_Ext,
