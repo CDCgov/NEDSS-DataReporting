@@ -147,6 +147,9 @@ public class Observation {
     @Column(name = "status_time")
     private String statusTime;
 
+    @Column(name = "activity_from_time")
+    private String activityFromTime;
+
     @Column(name = "associated_phc_uids")
     private String associatedPhcUids;
 

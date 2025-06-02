@@ -372,4 +372,23 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation' and xtype = '
                 ALTER TABLE dbo.nrt_observation
                 ALTER COLUMN ordering_person_id NVARCHAR(max)
             END;
+
+--CNDE-2750
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'activity_from_time'   AND Object_ID = Object_ID(N'nrt_observation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_observation
+                ADD activity_from_time datetime;
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'device_instance_id_1'   AND Object_ID = Object_ID(N'nrt_observation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_observation
+                ADD device_instance_id_1 varchar(199);
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns   WHERE Name = N'device_instance_id_2'   AND Object_ID = Object_ID(N'nrt_observation'))
+            BEGIN
+                ALTER TABLE dbo.nrt_observation
+                ADD device_instance_id_2 varchar(199);
+            END;
     END;
