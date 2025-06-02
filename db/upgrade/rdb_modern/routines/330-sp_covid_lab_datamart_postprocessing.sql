@@ -108,20 +108,20 @@ BEGIN
           AND (o_result.cd IN
                (
                    SELECT loinc_cd
-                   FROM nbs_srte..Loinc_condition
+                   FROM dbo.nrt_srte_Loinc_condition
                    WHERE condition_cd = '11065'
                )
             OR o_result.cd IN(''))--replace '' with the local codes seperated by comma
           AND o_result.cd NOT IN
               (
                   SELECT loinc_cd
-                  FROM nbs_srte..Loinc_code
+                  FROM dbo.nrt_srte_Loinc_code
                   WHERE time_aspect = 'Pt'
                     AND system_cd = '^Patient'
               );
 
-        SELECT '#COVID_RESULT_LIST',*
-        from #COVID_RESULT_LIST;
+        IF @debug = 'true' SELECT '#COVID_RESULT_LIST', *
+                           from #COVID_RESULT_LIST;
 
 
         SELECT DISTINCT
@@ -140,8 +140,8 @@ BEGIN
             AND otxt_comment.ovt_txt_type_cd = 'N'
         ;
 
-        SELECT '#COVID_TEXT_RESULT_LIST',*
-        from #COVID_TEXT_RESULT_LIST;
+        IF @debug = 'true' SELECT '#COVID_TEXT_RESULT_LIST',*
+                           from #COVID_TEXT_RESULT_LIST;
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
@@ -375,7 +375,7 @@ BEGIN
             COALESCE(d_patient.PATIENT_MIDDLE_NAME,p.middle_name) AS Middle_Name,
             COALESCE(d_patient.PATIENT_FIRST_NAME,p.first_name) AS First_Name,
             COALESCE(d_patient.PATIENT_LOCAL_ID,p.local_id) AS Patient_Local_ID,
-            NULL AS Current_Sex_Cd, --Code is not recorded in D_PATIENT
+            NULL AS Current_Sex_Cd, --CNDE-2751: Code is not recorded in D_PATIENT. Temporary stopgap.
             COALESCE(d_patient.PATIENT_AGE_REPORTED,p.age_reported) AS Age_Reported,
             COALESCE(d_patient.PATIENT_AGE_REPORTED_UNIT,p.age_reported_unit) AS Age_Unit_Cd,
             COALESCE(d_patient.PATIENT_DOB,p.dob) AS Birth_Dt,
