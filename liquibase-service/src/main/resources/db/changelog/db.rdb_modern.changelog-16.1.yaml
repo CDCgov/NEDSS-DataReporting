@@ -2641,3 +2641,19 @@ databaseChangeLog:
         - sqlFile:
             path: 335-sp_nrt_odse_nbs_page_postprocessing-001.sql
             splitStatements: false
+  - changeSet:
+      id: 880
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 248-create_nrt_lab_test_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 885
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 249-create_nrt_lab_rpt_user_comment_key-001.sql
+            splitStatements: false
