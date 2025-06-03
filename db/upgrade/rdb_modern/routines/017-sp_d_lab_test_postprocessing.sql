@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_d_lab_test_postprocessing_cnde_2739 
+CREATE OR ALTER PROCEDURE [dbo].sp_d_lab_test_postprocessing
     @obs_ids nvarchar(max),
     @debug bit = 'false'
 AS
