@@ -7,7 +7,7 @@
         SET IDENTITY_INSERT [dbo].nrt_lab_rpt_user_comment_key ON
 
         INSERT INTO [dbo].nrt_lab_rpt_user_comment_key(USER_COMMENT_KEY, LAB_TEST_KEY, USER_COMMENT_UID)
-        SELECT uc.USER_COMMENT_KEY, uc.LAB_TEST_KEY,  uc.LAB_TEST_UID --uck.USER_COMMENT_UID 
+        SELECT uc.USER_COMMENT_KEY, uc.LAB_TEST_KEY,  uc.LAB_TEST_UID 
         FROM [dbo].LAB_RPT_USER_COMMENT uc WITH(NOLOCK)  
         LEFT JOIN [dbo].nrt_lab_rpt_user_comment_key uck 
             ON uck.USER_COMMENT_KEY = uc.USER_COMMENT_KEY 
