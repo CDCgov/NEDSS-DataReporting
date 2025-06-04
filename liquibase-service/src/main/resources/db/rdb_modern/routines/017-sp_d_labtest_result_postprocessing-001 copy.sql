@@ -578,6 +578,10 @@ BEGIN
         IF OBJECT_ID('#TMP_Result_Comment_Group', 'U') IS NOT NULL
             DROP TABLE #TMP_Result_Comment_Group;
 
+		IF @pDebug = 'true'
+			SELECT '#TMP_New_Lab_Result_Comment_FINAL before key generation'
+            SELECT @Proc_Step_Name AS step, * 
+            FROM #TMP_New_Lab_Result_Comment_FINAL;
 
         SELECT DISTINCT rcg.Lab_Result_Comment_Key AS [RESULT_COMMENT_GRP_KEY]
                       , rcg.[LAB_TEST_UID]
@@ -602,6 +606,11 @@ BEGIN
         UPDATE #TMP_lab_test_result1
         SET [RESULT_COMMENT_GRP_KEY] = 1
         WHERE [RESULT_COMMENT_GRP_KEY] IS NULL;
+
+		IF @pDebug = 'true'
+			SELECT '#TMP_New_Lab_Result_Comment_FINAL after key generation'
+            SELECT @Proc_Step_Name AS step, * 
+            FROM #TMP_New_Lab_Result_Comment_FINAL;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
