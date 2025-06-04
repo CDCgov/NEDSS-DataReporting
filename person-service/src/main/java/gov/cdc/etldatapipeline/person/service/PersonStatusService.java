@@ -14,7 +14,7 @@ public class PersonStatusService {
     }
 
     public ResponseEntity<String> getHealthStatus() {
-        LOG.info("Person Service Status OK");
+        LOG.info("Person Service Status OK!");
         return ResponseEntity.status(HttpStatus.OK).body("Person Service Status OK");
     }
 }

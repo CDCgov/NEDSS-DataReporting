@@ -33,31 +33,25 @@ public class ProcessDatamartData {
     @Value("${spring.kafka.topic.datamart}")
     public String datamartTopic;
 
-    @Value("${featureFlag.covid-dm-enable}")
-    private boolean covidDmEnable;
-
     public void process(List<DatamartData> data) {
         if (Objects.nonNull(data) && !data.isEmpty()) {
             data = reduce(data);
             try {
                 for (DatamartData datamartData : data) {
-                    // check feature flag to prevent Covid dm submission
-                    if (covidDmEnable || !datamartData.getDatamart().startsWith("Covid")) {
 
-                        if (Strings.isNullOrEmpty(datamartData.getDatamart())
-                                || Objects.isNull(datamartData.getPatientUid())) {
-                            continue; // skipping now for empty datamart or unprocessed patients
-                        }
-
-                        Datamart dmart = modelMapper.map(datamartData, Datamart.class);
-                        DatamartKey dmKey = new DatamartKey();
-                        dmKey.setEntityUid(datamartData.getPublicHealthCaseUid());
-                        String jsonKey = jsonGenerator.generateStringJson(dmKey);
-                        String jsonMessage = jsonGenerator.generateStringJson(dmart);
-
-                        kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
-                        logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
+                    if (Strings.isNullOrEmpty(datamartData.getDatamart())
+                            || Objects.isNull(datamartData.getPatientUid())) {
+                        continue; // skipping now for empty datamart or unprocessed patients
                     }
+
+                    Datamart dmart = modelMapper.map(datamartData, Datamart.class);
+                    DatamartKey dmKey = new DatamartKey();
+                    dmKey.setEntityUid(datamartData.getPublicHealthCaseUid());
+                    String jsonKey = jsonGenerator.generateStringJson(dmKey);
+                    String jsonMessage = jsonGenerator.generateStringJson(dmart);
+
+                    kafkaTemplate.send(datamartTopic, jsonKey, jsonMessage);
+                    logger.info("Datamart data: uid={}, datamart={} sent to {} topic", dmart.getPublicHealthCaseUid(), dmart.getDatamart(), datamartTopic);
                 }
             } catch (Exception e) {
                 String msg = "Error processing Datamart JSON array from datamart data: " + e.getMessage();

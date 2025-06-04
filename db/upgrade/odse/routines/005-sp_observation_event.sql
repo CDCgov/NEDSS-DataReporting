@@ -79,7 +79,8 @@ BEGIN
                      o.add_time      add_time,
                      o.last_chg_time last_chg_time,
                      o.record_status_time,
-                     o.status_time
+                     o.status_time,
+                     o.activity_from_time
                       ,nesteddata.person_participations
                       ,nesteddata.organization_participations
                       ,nesteddata.material_participations
@@ -101,9 +102,9 @@ BEGIN
                   FROM
                       -- follow up observations associated with observation-nested obs handling
                       (
-                          SELECT 
-                                STRING_AGG(ar.target_act_uid, ',') AS associated_phc_uids
-                          from nbs_odse.dbo.Act_relationship ar with (NOLOCK) 
+                          SELECT
+                              STRING_AGG(ar.target_act_uid, ',') AS associated_phc_uids
+                          from nbs_odse.dbo.Act_relationship ar with (NOLOCK)
                           where ar.type_cd IN ('MorbReport', 'LabReport')
                             and ar.target_class_cd = 'CASE'
                             and ar.source_act_uid = o.observation_uid
@@ -388,7 +389,7 @@ BEGIN
                               ) AS obs_num
                       ) AS obs_num -- can be more than 1
                   /* -- ldf_observation associated with observation
-                   (
+              (
                      SELECT
                        (
                         select * from nbs_odse..v_ldf_observation ldf
@@ -460,7 +461,7 @@ BEGIN
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-               -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +

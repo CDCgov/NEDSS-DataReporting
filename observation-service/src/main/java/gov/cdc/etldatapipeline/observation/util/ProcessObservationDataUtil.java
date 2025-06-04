@@ -59,6 +59,8 @@ public class ProcessObservationDataUtil {
     public static final String ENTITY_ID = "entity_id";
     public static final String ORDER = "Order";
     public static final String RESULT = "Result";
+    public static final String ACT_ID_SEQ = "act_id_seq";
+    public static final String ROOT_EXTENSION_TXT = "root_extension_txt";
 
     public ObservationTransformed transformObservationData(Observation observation, long batchId) {
         ObservationTransformed observationTransformed = new ObservationTransformed();
@@ -313,9 +315,18 @@ public class ProcessObservationDataUtil {
 
             for (JsonNode jsonNode : actIdsJsonArray) {
                 String typeCd = getNodeValue(jsonNode, TYPE_CD, JsonNode::asText);
+                Integer actIdSeq = getNodeValue(jsonNode, ACT_ID_SEQ, JsonNode::asInt);
                 if (typeCd.equals("FN")) {
-                    String rootExtTxt = getNodeValue(jsonNode, "root_extension_txt", JsonNode::asText);
+                    String rootExtTxt = getNodeValue(jsonNode, ROOT_EXTENSION_TXT, JsonNode::asText);
                     observationTransformed.setAccessionNumber(rootExtTxt);
+                }
+                if (typeCd.equals("EII") && actIdSeq.equals(3)) {
+                    String rootExtTxt = getNodeValue(jsonNode, ROOT_EXTENSION_TXT, JsonNode::asText);
+                    observationTransformed.setDeviceInstanceId1(rootExtTxt);
+                }
+                if (typeCd.equals("EII") && actIdSeq.equals(4)) {
+                    String rootExtTxt = getNodeValue(jsonNode, ROOT_EXTENSION_TXT, JsonNode::asText);
+                    observationTransformed.setDeviceInstanceId2(rootExtTxt);
                 }
             }
         } catch (IllegalArgumentException ex) {
