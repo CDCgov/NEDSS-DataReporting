@@ -1098,7 +1098,8 @@ BEGIN
             AND lab214.observation_uid IN (SELECT value FROM STRING_SPLIT(tdltn.followup_observation_uid, ',')) 
             AND lab214.obs_domain_cd_st_1 = 'C_Result'
             AND lab214.observation_uid = ovt.observation_uid
-            AND tdltn.followup_observation_uid IS NOT NULL;
+            AND tdltn.followup_observation_uid IS NOT NULL
+        ORDER BY lab214.observation_uid;
 
         IF @debug = 'true'
             SELECT @Proc_Step_Name AS step, * 
@@ -1116,14 +1117,13 @@ BEGIN
         IF OBJECT_ID('#lab_rpt_user_comment_N', 'U') IS NOT NULL
             DROP TABLE #lab_rpt_user_comment_N;
 
-        SELECT distinct cd.observation_uid, ltk.LAB_TEST_KEY
+        SELECT distinct cd.OBSERVATION_UID, cd.LAB_TEST_UID
         INTO #lab_rpt_user_comment_N
         FROM #lab_rpt_user_comment_data cd
-        INNER JOIN [dbo].nrt_lab_test_key ltk 
-            on ltk.lab_test_uid = cd.lab_test_uid
         LEFT JOIN [dbo].nrt_lab_rpt_user_comment_key uck 
-            on uck.USER_COMMENT_UID = cd.observation_uid
-        WHERE uck.USER_COMMENT_KEY IS NULL AND ltk.LAB_TEST_KEY IS NOT NULL 
+            ON uck.LAB_RPT_USER_COMMENT_UID = cd.observation_uid 
+            AND uck.LAB_TEST_UID = cd.LAB_TEST_UID
+        WHERE uck.LAB_RPT_USER_COMMENT_UID IS NULL AND uck.LAB_TEST_UID IS NULL 
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -1143,13 +1143,12 @@ BEGIN
         IF OBJECT_ID('#lab_rpt_user_comment_E', 'U') IS NOT NULL
             DROP TABLE #lab_rpt_user_comment_E;
 
-        SELECT distinct cd.observation_uid, ltk.LAB_TEST_KEY
+        SELECT distinct cd.OBSERVATION_UID, cd.LAB_TEST_UID
         INTO #lab_rpt_user_comment_E
         FROM #lab_rpt_user_comment_data cd
-        INNER JOIN [dbo].nrt_lab_test_key ltk WITH (NOLOCK)
-            on ltk.lab_test_uid = cd.lab_test_uid
         INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck 
-            on uck.USER_COMMENT_UID = cd.observation_uid
+            ON uck.LAB_RPT_USER_COMMENT_UID = cd.observation_uid 
+            AND uck.LAB_TEST_UID = cd.LAB_TEST_UID
         WHERE cd.RECORD_STATUS_CD <> 'INACTIVE';
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -1170,13 +1169,12 @@ BEGIN
         IF OBJECT_ID('#lab_rpt_user_comment_D', 'U') IS NOT NULL
             DROP TABLE #lab_rpt_user_comment_D;
 
-        SELECT distinct cd.observation_uid, ltk.LAB_TEST_KEY
+        SELECT distinct cd.OBSERVATION_UID, cd.LAB_TEST_UID
         INTO #lab_rpt_user_comment_D
-        FROM #lab_rpt_user_comment_data cd
-        INNER JOIN [dbo].nrt_lab_test_key ltk WITH (NOLOCK)
-            on ltk.lab_test_uid = cd.lab_test_uid
+        FROM #lab_rpt_user_comment_data cd        
         INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck 
-            on uck.USER_COMMENT_UID = cd.observation_uid
+            ON uck.LAB_RPT_USER_COMMENT_UID = cd.observation_uid 
+            AND uck.LAB_TEST_UID = cd.LAB_TEST_UID
         WHERE cd.RECORD_STATUS_CD = 'INACTIVE';
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -1196,8 +1194,8 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'GENERATING keys for #lab_rpt_user_comment_N';
 
-            INSERT INTO [dbo].nrt_lab_rpt_user_comment_key (USER_COMMENT_UID, LAB_TEST_KEY)
-            SELECT observation_uid, LAB_TEST_KEY 
+            INSERT INTO [dbo].nrt_lab_rpt_user_comment_key (LAB_RPT_USER_COMMENT_UID, LAB_TEST_UID)
+            SELECT OBSERVATION_UID, LAB_TEST_UID 
             FROM #lab_rpt_user_comment_N 
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -1206,8 +1204,8 @@ BEGIN
                 SELECT @Proc_Step_Name AS step, k.* 
                 FROM [dbo].nrt_lab_rpt_user_comment_key k WITH (NOLOCK)
                 INNER JOIN #lab_rpt_user_comment_N ucn
-                    ON ucn.observation_uid = k.USER_COMMENT_UID
-                    AND ucn.LAB_TEST_KEY = k.LAB_TEST_KEY;
+                    ON ucn.observation_uid = k.LAB_RPT_USER_COMMENT_UID
+                    AND ucn.LAB_TEST_UID = k.LAB_TEST_UID;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1238,15 +1236,19 @@ BEGIN
                 CAST(ucd.USER_RPT_COMMENTS AS VARCHAR(2000)),
                 ucd.COMMENTS_FOR_ELR_DT,
                 ucd.USER_COMMENT_CREATED_BY,
-                uck.LAB_TEST_KEY,
+                lk.LAB_TEST_KEY,
                 CAST(ucd.RECORD_STATUS_CD AS VARCHAR(8)) ,
                 ucd.LAB_TEST_UID,
                 GETDATE()
             FROM #lab_rpt_user_comment_data ucd
             INNER JOIN #lab_rpt_user_comment_N ucdn 
-                ON ucdn.observation_uid = ucd.observation_uid
+                ON ucdn.observation_uid = ucd.observation_uid 
+                AND ucdn.LAB_TEST_UID = ucd.LAB_TEST_UID
             INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck 
-                ON uck.USER_COMMENT_UID = ucd.observation_uid;
+                ON uck.LAB_RPT_USER_COMMENT_UID = ucdn.observation_uid 
+                AND uck.LAB_TEST_UID = ucdn.LAB_TEST_UID
+            INNER JOIN [dbo].nrt_lab_test_key lk
+                    ON lk.LAB_TEST_UID = ucd.LAB_TEST_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -1254,9 +1256,13 @@ BEGIN
                 SELECT @Proc_Step_Name AS step, lruc.* 
                 FROM [dbo].LAB_RPT_USER_COMMENT lruc WITH (NOLOCK)  
                 INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck 
-                    ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY AND uck.LAB_TEST_KEY = lruc.LAB_TEST_KEY
+                    ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY 
+                    AND uck.LAB_TEST_UID = lruc.LAB_TEST_UID
                 INNER JOIN #lab_rpt_user_comment_N ucdn 
-                    ON ucdn.observation_uid = uck.USER_COMMENT_UID;
+                    ON ucdn.observation_uid = uck.LAB_RPT_USER_COMMENT_UID 
+                    AND ucdn.LAB_TEST_UID = uck.LAB_TEST_UID
+                INNER JOIN [dbo].nrt_lab_test_key lk
+                    ON lk.LAB_TEST_UID = lruc.LAB_TEST_UID; 
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1279,12 +1285,17 @@ BEGIN
                 RECORD_STATUS_CD = CAST(ucd.RECORD_STATUS_CD AS VARCHAR(8)),
                 RDB_LAST_REFRESH_TIME = GETDATE()
             FROM [dbo].LAB_RPT_USER_COMMENT lruc 
-                INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                    ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY AND uck.LAB_TEST_KEY = lruc.LAB_TEST_KEY
-                INNER JOIN #lab_rpt_user_comment_E ucde
-                    ON ucde.observation_uid = uck.USER_COMMENT_UID
-                INNER JOIN #lab_rpt_user_comment_data ucd
-                    ON ucd.observation_uid = ucde.observation_uid;
+            INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
+                ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY 
+                AND uck.LAB_TEST_UID = lruc.LAB_TEST_UID
+            INNER JOIN #lab_rpt_user_comment_E ucde
+                ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
+                AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID
+            INNER JOIN #lab_rpt_user_comment_data ucd
+                ON ucd.observation_uid = ucde.observation_uid
+                AND ucd.LAB_TEST_uid = ucde.LAB_TEST_uid
+            INNER JOIN [dbo].nrt_lab_test_key lk
+                    ON lk.LAB_TEST_UID = ucd.LAB_TEST_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -1292,11 +1303,16 @@ BEGIN
                 SELECT @Proc_Step_Name AS step, lruc.* 
                 FROM [dbo].LAB_RPT_USER_COMMENT lruc WITH (NOLOCK)  
                 INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                    ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY AND uck.LAB_TEST_KEY = lruc.LAB_TEST_KEY
+                    ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY 
+                    AND uck.LAB_TEST_UID = lruc.LAB_TEST_UID
                 INNER JOIN #lab_rpt_user_comment_E ucde
-                    ON ucde.observation_uid = uck.USER_COMMENT_UID
+                    ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
+                    AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID
                 INNER JOIN #lab_rpt_user_comment_data ucd
-                    ON ucd.observation_uid = ucde.observation_uid;
+                    ON ucd.observation_uid = ucde.observation_uid
+                    AND ucd.LAB_TEST_uid = ucde.LAB_TEST_uid
+                INNER JOIN [dbo].nrt_lab_test_key lk
+                    ON lk.LAB_TEST_UID = ucd.LAB_TEST_UID;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1316,8 +1332,8 @@ BEGIN
                 uck.[updated_dttm] = GETDATE()
             FROM [dbo].nrt_lab_rpt_user_comment_key uck
             INNER JOIN #lab_rpt_user_comment_E ucde
-                ON ucde.observation_uid = uck.USER_COMMENT_UID 
-                AND ucde.LAB_TEST_KEY = uck.LAB_TEST_KEY;
+                ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID 
+                AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -1325,8 +1341,8 @@ BEGIN
                 SELECT @Proc_Step_Name AS step, uck.* 
                 FROM [dbo].nrt_lab_rpt_user_comment_key uck
                 INNER JOIN #lab_rpt_user_comment_E ucde
-                    ON ucde.observation_uid = uck.USER_COMMENT_UID 
-                    AND ucde.LAB_TEST_KEY = uck.LAB_TEST_KEY;
+                    ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID 
+                    AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1346,21 +1362,26 @@ BEGIN
                 SELECT @Proc_Step_Name AS step, uc.* 
                 FROM [dbo].LAB_RPT_USER_COMMENT uc 
                 INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                    ON uck.LAB_TEST_KEY = uc.LAB_TEST_KEY AND uck.USER_COMMENT_KEY = uc.USER_COMMENT_KEY
+                    ON uck.LAB_TEST_UID = uc.LAB_TEST_UID 
+                    AND uck.USER_COMMENT_KEY = uc.USER_COMMENT_KEY
                 INNER JOIN #lab_rpt_user_comment_D ucd
-                    ON ucd.LAB_TEST_KEY = uck.LAB_TEST_KEY AND ucd.observation_uid = uck.USER_COMMENT_UID;
+                    ON ucd.LAB_TEST_UID = uck.LAB_TEST_UID 
+                    AND ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID;
 
             DELETE uc 
             FROM [dbo].LAB_RPT_USER_COMMENT uc 
             INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                ON uck.LAB_TEST_KEY = uc.LAB_TEST_KEY AND uck.USER_COMMENT_KEY = uc.USER_COMMENT_KEY
+                ON uck.LAB_TEST_UID = uc.LAB_TEST_UID 
+                AND uck.USER_COMMENT_KEY = uc.USER_COMMENT_KEY
             INNER JOIN #lab_rpt_user_comment_D ucd
-                ON ucd.LAB_TEST_KEY = uck.LAB_TEST_KEY AND ucd.observation_uid = uck.USER_COMMENT_UID;
+                ON ucd.LAB_TEST_UID = uck.LAB_TEST_UID 
+                AND ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID;
             
             DELETE uck
             FROM [dbo].nrt_lab_rpt_user_comment_key uck
             INNER JOIN #lab_rpt_user_comment_D ucd 
-                ON ucd.LAB_TEST_KEY = uck.LAB_TEST_KEY AND ucd.observation_uid = uck.USER_COMMENT_UID;
+                ON ucd.LAB_TEST_UID = uck.LAB_TEST_UID 
+                AND ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID;
            
 
             SELECT @RowCount_no = @@ROWCOUNT;

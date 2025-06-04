@@ -3,15 +3,15 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_rpt_user_comment_k
 
 		CREATE TABLE [dbo].nrt_lab_rpt_user_comment_key (
 			USER_COMMENT_KEY BIGINT IDENTITY(1,1) NOT NULL,
-			LAB_TEST_KEY BIGINT NULL,
-			USER_COMMENT_UID BIGINT NULL,
+			LAB_RPT_USER_COMMENT_UID BIGINT NULL,
+			LAB_TEST_UID BIGINT NULL,
 			created_dttm DATETIME2 DEFAULT GETDATE(),
 			updated_dttm DATETIME2 DEFAULT GETDATE()
 		);
 
-		-- Insert Key = 1 with LAB_TEST_KEY= 1, USER_COMMENT_UID = NULL
-		INSERT INTO [dbo].nrt_lab_rpt_user_comment_key(LAB_TEST_KEY, USER_COMMENT_UID)
-		VALUES (1, NULL)
+		-- Insert Key = 1 with LAB_RPT_USER_COMMENT_UID = NULL, LAB_TEST_UID= NULL
+		INSERT INTO [dbo].nrt_lab_rpt_user_comment_key(LAB_RPT_USER_COMMENT_UID, LAB_TEST_UID)
+		VALUES (NULL, NULL)
 
 	END
 
