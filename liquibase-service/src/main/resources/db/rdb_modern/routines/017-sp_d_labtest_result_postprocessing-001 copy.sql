@@ -510,6 +510,16 @@ BEGIN
 		INTO #TMP_New_Lab_Result_Comment_FINAL
         FROM #TMP_New_Lab_Result_Comment;
 
+		UPDATE #TMP_New_Lab_Result_Comment_FINAL
+        SET [LAB_RESULT_COMMENTS] = (REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE([LAB_RESULT_COMMENTS],
+                                                                                             '&#x09;', CHAR(9)),
+                                                                                     '&#x0A;', CHAR(10)),
+                                                                             '&#x0D;', CHAR(13)),
+                                                                     '&#x20;', CHAR(32)),
+                                                             '&amp;', CHAR(38)),
+                                                     '&lt;', CHAR(60)),
+                                             '&gt;', CHAR(62)));
+
 
 		IF @pDebug = 'true'
 			SELECT '#TMP_New_Lab_Result_Comment_FINAL'
@@ -550,19 +560,8 @@ BEGIN
         UPDATE #TMP_New_Lab_Result_Comment_FINAL
         SET Result_Comment_Grp_Key = [LAB_RESULT_COMMENT_KEY];
 
-
-        UPDATE #TMP_New_Lab_Result_Comment_FINAL
-        SET [LAB_RESULT_COMMENTS] = (REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE([LAB_RESULT_COMMENTS],
-                                                                                             '&#x09;', CHAR(9)),
-                                                                                     '&#x0A;', CHAR(10)),
-                                                                             '&#x0D;', CHAR(13)),
-                                                                     '&#x20;', CHAR(32)),
-                                                             '&amp;', CHAR(38)),
-                                                     '&lt;', CHAR(60)),
-                                             '&gt;', CHAR(62)));
-
-
         IF @pDebug = 'true' SELECT 'DEBUG: TMP_New_Lab_Result_Comment', * FROM #TMP_New_Lab_Result_Comment;
+
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
