@@ -4,11 +4,11 @@ IF NOT EXISTS (SELECT 1
                  and xtype = 'U')
 CREATE TABLE dbo.nrt_treatment
 (
-    treatment_uid                  varchar(100)                                    NOT NULL,
-    organization_uid               varchar(100)                                    NULL,
-    provider_uid                   varchar(100)                                    NULL,
-    patient_treatment_uid          varchar(100)                                    NULL,
-    morbidity_uid                  varchar(100)                                    NULL,
+    treatment_uid                  bigint                                          NOT NULL,
+    organization_uid               bigint                                          NULL,
+    provider_uid                   bigint                                          NULL,
+    patient_treatment_uid          bigint                                          NULL,
+    morbidity_uid                  bigint                                          NULL,
     treatment_name                 varchar(500)                                    NULL,
     treatment_oid                  varchar(100)                                    NULL,
     treatment_comments             varchar(500)                                    NULL,
@@ -26,9 +26,9 @@ CREATE TABLE dbo.nrt_treatment
     local_id                       varchar(100)                                    NULL,
     record_status_cd               varchar(100)                                    NULL,
     add_time                       datetime                                        NULL,
-    add_user_id                    varchar(100)                                    NULL,
+    add_user_id                    bigint                                          NULL,
     last_chg_time                  datetime                                        NULL,
-    last_chg_user_id               varchar(100)                                    NULL,
+    last_chg_user_id               bigint                                          NULL,
     version_ctrl_nbr               varchar(100)                                    NULL,
     associated_phc_uids            nvarchar(max)                                   NULL,
     refresh_datetime               datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
