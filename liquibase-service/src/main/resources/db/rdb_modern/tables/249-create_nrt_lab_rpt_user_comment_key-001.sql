@@ -13,12 +13,12 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_rpt_user_comment_k
 		INSERT INTO [dbo].nrt_lab_rpt_user_comment_key(LAB_RPT_USER_COMMENT_UID, LAB_TEST_UID)
 		VALUES (NULL, NULL)
 
-	END
+		--RESEED [dbo].nrt_lab_rpt_user_comment_key table 
+		DECLARE @max BIGINT;
+		SELECT @max=max(USER_COMMENT_KEY) from [dbo].Lab_Rpt_User_Comment;
+		SELECT @max;
+		IF @max IS NULL   --check when max is returned as null
+			SET @max = 2; -- default to 2, default record with key = 1 is already created
+		DBCC CHECKIDENT ('[dbo].nrt_lab_rpt_user_comment_key', RESEED, @max);
 
---RESEED [dbo].nrt_lab_rpt_user_comment_key table 
-DECLARE @max BIGINT;
-SELECT @max=max(USER_COMMENT_KEY) from [dbo].Lab_Rpt_User_Comment;
-SELECT @max;
-IF @max IS NULL   --check when max is returned as null
-	SET @max = 2; -- default to 2, default record with key = 1 is already created
-DBCC CHECKIDENT ('[dbo].nrt_lab_rpt_user_comment_key', RESEED, @max);
+	END

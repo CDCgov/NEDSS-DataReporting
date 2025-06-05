@@ -12,12 +12,12 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_key' and xtyp
 		INSERT INTO [dbo].nrt_lab_test_key(LAB_TEST_UID)
 		VALUES (NULL)
 
-	END
+		--RESEED [dbo].nrt_lab_test_key table 
+		DECLARE @max BIGINT;
+		SELECT @max=max(LAB_TEST_KEY) from [dbo].LAB_TEST;
+		SELECT @max;
+		IF @max IS NULL   --check when max is returned as null
+			SET @max = 2; -- default to 2, default record with key = 1 is already created
+		DBCC CHECKIDENT ('[dbo].nrt_lab_test_key', RESEED, @max);
 
---RESEED [dbo].nrt_lab_test_key table 
-DECLARE @max BIGINT;
-SELECT @max=max(LAB_TEST_KEY) from [dbo].LAB_TEST;
-SELECT @max;
-IF @max IS NULL   --check when max is returned as null
-	SET @max = 2; -- default to 2, default record with key = 1 is already created
-DBCC CHECKIDENT ('[dbo].nrt_lab_test_key', RESEED, @max);
+	END
