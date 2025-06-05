@@ -13,7 +13,7 @@
 			updated_dttm 
         )
         SELECT 
-          	lt.LAB_TEST_KEY, 
+			lt.LAB_TEST_KEY, 
 			lt.LAB_TEST_UID, 
 			lt.LAB_RPT_CREATED_DT, 
 			lt.LAB_RPT_LAST_UPDATE_DT 
