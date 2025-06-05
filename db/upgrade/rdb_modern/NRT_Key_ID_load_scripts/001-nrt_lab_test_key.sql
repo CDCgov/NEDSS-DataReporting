@@ -6,12 +6,21 @@
 
         SET IDENTITY_INSERT [dbo].nrt_lab_test_key ON
 
-        INSERT INTO [dbo].nrt_lab_test_key(LAB_TEST_KEY, LAB_TEST_UID)
-        SELECT lt.LAB_TEST_KEY, lt.LAB_TEST_UID 
+        INSERT INTO [dbo].nrt_lab_test_key(
+			LAB_TEST_KEY, 
+			LAB_TEST_UID, 
+			created_dttm, 
+			updated_dttm 
+        )
+        SELECT 
+          	lt.LAB_TEST_KEY, 
+			lt.LAB_TEST_UID, 
+			lt.LAB_RPT_CREATED_DT, 
+			lt.LAB_RPT_LAST_UPDATE_DT 
         FROM [dbo].LAB_TEST lt WITH(NOLOCK) 
         LEFT JOIN [dbo].nrt_lab_test_key k
           ON k.LAB_TEST_KEY = lt.LAB_TEST_KEY AND k.LAB_TEST_UID= lt.LAB_TEST_UID
-        WHERE k.LAB_TEST_KEY is NULL and k.LAB_TEST_UID is null
+        WHERE k.LAB_TEST_KEY IS NULL AND k.LAB_TEST_UID IS NULL
             ORDER BY lt.LAB_TEST_KEY;
 
         SET IDENTITY_INSERT [dbo].nrt_lab_test_key OFF
