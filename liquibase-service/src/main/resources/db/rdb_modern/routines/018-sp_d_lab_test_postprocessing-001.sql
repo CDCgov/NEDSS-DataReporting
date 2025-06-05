@@ -83,7 +83,7 @@ BEGIN
         IF OBJECT_ID('#dx_document', 'U') IS NOT NULL
             DROP TABLE #edx_document;
 
-        ;WITH edx_lst AS(
+        WITH edx_lst AS(
             SELECT 
                 EDX_Document_uid,
                 edx_act_uid,
@@ -227,7 +227,7 @@ BEGIN
         IF OBJECT_ID('#material_data', 'U') IS NOT NULL
             DROP TABLE #material_data;
         
-        ;WITH mat AS (
+        WITH mat AS (
             SELECT 
                 act_uid,
                 material_cd,
@@ -432,7 +432,7 @@ BEGIN
         IF OBJECT_ID('#merge_order', 'U') IS NOT NULL
             DROP TABLE #merge_order;
 
-        ;WITH mat AS (
+        WITH mat AS (
             SELECT 
                 act_uid,
                 material_cd,
@@ -973,7 +973,7 @@ BEGIN
 
             /* Update records associated to Inactive Orders using Root Order UID. */
 
-            ;WITH inactive_orders AS (
+            WITH inactive_orders AS (
                 SELECT 
                     lt.root_ordered_test_pntr
                 FROM dbo.LAB_TEST lt WITH (NOLOCK)
@@ -1047,7 +1047,7 @@ BEGIN
         IF OBJECT_ID('#nrt_observation_txt_data', 'U') IS NOT NULL
             DROP TABLE #nrt_observation_txt_data;
 
-        ;WITH obstxt AS (
+        WITH obstxt AS (
             SELECT obstxt.*
             FROM [dbo].nrt_observation_txt obstxt WITH (NOLOCK)
             INNER JOIN #obs_ids ids ON ids.observation_uid =  obstxt.observation_uid
