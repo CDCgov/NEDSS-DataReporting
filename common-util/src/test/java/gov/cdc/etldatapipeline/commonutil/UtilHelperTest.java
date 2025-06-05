@@ -77,6 +77,9 @@ class UtilHelperTest {
 
         uid = UtilHelper.extractUid(sampleJson, "uid", "before");
         assertEquals("12344", uid);
+
+        uid = UtilHelper.extractUid("{\"payload\": {\"uid\": \"12346\"}}", "uid");
+        assertEquals("12346", uid);
     }
 
     @Test
