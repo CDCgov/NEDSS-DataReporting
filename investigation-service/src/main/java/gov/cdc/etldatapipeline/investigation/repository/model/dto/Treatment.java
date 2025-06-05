@@ -13,16 +13,19 @@ import lombok.Data;
 public class Treatment {
     @Id
     @Column(name = "treatment_uid")
-    private String treatmentUid;
+    private Long treatmentUid;
 
     @Column(name = "organization_uid")
-    private String organizationUid;
+    private Long organizationUid;
 
     @Column(name = "provider_uid")
-    private String providerUid;
+    private Long providerUid;
 
     @Column(name = "patient_treatment_uid")
-    private String patientTreatmentUid;
+    private Long patientTreatmentUid;
+
+    @Column(name = "morbidity_uid")
+    private Long morbidityUid;
 
     @Column(name = "treatment_name")
     private String treatmentName;
@@ -76,19 +79,16 @@ public class Treatment {
     private String addTime;
 
     @Column(name = "add_user_id")
-    private String addUserId;
+    private Long addUserId;
 
     @Column(name = "last_chg_time")
     private String lastChangeTime;
 
     @Column(name = "last_chg_user_id")
-    private String lastChangeUserId;
+    private Long lastChangeUserId;
 
     @Column(name = "version_ctrl_nbr")
     private String versionControlNumber;
-
-    @Column(name = "morbidity_uid")
-    private String morbidityUid;
 
     @Column(name = "associated_phc_uids")
     private String associatedPhcUids;

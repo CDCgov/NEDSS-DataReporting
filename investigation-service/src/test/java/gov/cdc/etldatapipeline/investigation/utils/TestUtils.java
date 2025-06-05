@@ -377,10 +377,10 @@ public class TestUtils {
 
     public static Treatment constructTreatment(Long treatmentUid) {
         Treatment treatment = new Treatment();
-        treatment.setTreatmentUid(String.valueOf(treatmentUid));
-        treatment.setOrganizationUid("67890");
-        treatment.setProviderUid("11111");
-        treatment.setPatientTreatmentUid("22222");
+        treatment.setTreatmentUid(treatmentUid);
+        treatment.setOrganizationUid(67890L);
+        treatment.setProviderUid(11111L);
+        treatment.setPatientTreatmentUid(22222L);
         treatment.setTreatmentName("Test Treatment");
         treatment.setTreatmentOid("33333");
         treatment.setTreatmentComments("Test Comments");
@@ -398,9 +398,9 @@ public class TestUtils {
         treatment.setLocalId("LOC123");
         treatment.setRecordStatusCd("Active");
         treatment.setAddTime("2024-01-01T10:00:00");
-        treatment.setAddUserId("44444");
+        treatment.setAddUserId(44444L);
         treatment.setLastChangeTime("2024-01-01T10:00:00");
-        treatment.setLastChangeUserId("55555");
+        treatment.setLastChangeUserId(55555L);
         treatment.setVersionControlNumber("1");
         treatment.setAssociatedPhcUids("123456,123457");
         return treatment;
