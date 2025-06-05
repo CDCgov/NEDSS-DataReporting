@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing_copy]
+CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
     @page_id_list nvarchar(max),
     @debug bit = 'false'
 AS
@@ -63,7 +63,6 @@ BEGIN
         where
             pg.nbs_page_uid IN (SELECT value FROM STRING_SPLIT(@page_id_list, ','))
             AND pg.datamart_nm IS NOT NULL
-            -- LIKE 'D_INV_%' filter since this is focused on updates to pagebuilder dimensions
         )
         SELECT 
             datamart_nm
@@ -381,7 +380,7 @@ BEGIN
             @PROC_STEP_NAME = 'CREATE #INV_REPEAT_COL_UPDATE';
 
         declare @max_pivot_nbr INTEGER;
-        -- SELECT @max_pivot_nbr = (select max(BLOCK_PIVOT_NBR) from dbo.test_repeat_metadata);
+        SELECT @max_pivot_nbr = (select max(BLOCK_PIVOT_NBR) from #UPDATED_COL_NAMES);
 
         with number_list as (
             SELECT 1 AS num
