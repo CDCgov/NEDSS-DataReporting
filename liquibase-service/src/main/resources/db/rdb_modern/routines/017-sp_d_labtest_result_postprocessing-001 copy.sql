@@ -16,7 +16,7 @@ BEGIN
      * 3. RESULT_COMMENT_GROUP
      * 4. LAB_RESULT_VAL
      * 5. LAB_RESULT_COMMENT
-     */
+     */ 
 
     DECLARE @batch_id bigint;
     SET @batch_id = CAST((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
