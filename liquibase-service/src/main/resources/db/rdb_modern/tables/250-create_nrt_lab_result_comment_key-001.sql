@@ -3,13 +3,13 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_result_comment_key
 
 		CREATE TABLE [dbo].nrt_lab_result_comment_key (
 		LAB_RESULT_COMMENT_KEY BIGINT IDENTITY(1,1) NOT NULL,
-		LAB_TEST_KEY BIGINT NULL,               
+		LAB_RESULT_COMMENT_UID BIGINT NULL,               
 		created_dttm DATETIME2 DEFAULT getdate(),
 		updated_dttm DATETIME2 DEFAULT getdate()           
 		);
 
 		-- Insert Key = 1 with LAB_RESULT_COMMENT_UID = NULL
-		INSERT INTO [dbo].nrt_lab_result_comment_key(LAB_TEST_KEY, LAB_RESULT_COMMENT_UID)
+		INSERT INTO [dbo].nrt_lab_result_comment_key(LAB_RESULT_COMMENT_UID)
 		VALUES (NULL)
 
 	END
