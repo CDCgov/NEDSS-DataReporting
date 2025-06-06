@@ -1,9 +1,10 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_cnty_group_key' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.nrt_move_cnty_group_key (
-                                               D_MOVE_CNTY_GROUP_KEY bigint IDENTITY (2,1) NOT NULL,
-                                               TB_PAM_UID bigint NOT NULL
-
+            D_MOVE_CNTY_GROUP_KEY bigint IDENTITY (2,1) NOT NULL,
+            TB_PAM_UID bigint NOT NULL,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
 
         declare @max bigint;
@@ -13,17 +14,3 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_cnty_group_key' a
             SET @max = 2; -- default to 2
         DBCC CHECKIDENT ('dbo.nrt_move_cnty_group_key', RESEED, @max);
     END
-
-IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_cnty_group_key' and xtype = 'U')
-    BEGIN
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'created_dttm' AND Object_ID = Object_ID(N'nrt_move_cnty_group_key'))
-            BEGIN
-                ALTER TABLE dbo.nrt_move_cnty_group_key
-                    ADD created_dttm DATETIME2 DEFAULT GETDATE();
-            END;
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'updated_dttm' AND Object_ID = Object_ID(N'nrt_move_cnty_group_key'))
-            BEGIN
-                ALTER TABLE dbo.nrt_move_cnty_group_key
-                    ADD updated_dttm DATETIME2 DEFAULT GETDATE();
-            END;
-    END;

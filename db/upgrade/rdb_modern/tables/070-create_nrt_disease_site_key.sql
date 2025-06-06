@@ -1,9 +1,11 @@
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_disease_site_key' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.nrt_disease_site_key (
-                                               D_DISEASE_SITE_KEY bigint IDENTITY (2,1) NOT NULL,
-                                               NBS_Case_Answer_UID bigint NOT NULL,
-                                               TB_PAM_UID bigint NOT NULL
+            D_DISEASE_SITE_KEY bigint IDENTITY (2,1) NOT NULL,
+            NBS_Case_Answer_UID bigint NOT NULL,
+            TB_PAM_UID bigint NOT NULL,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
                                               
         );
 
@@ -14,17 +16,3 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_disease_site_key' and 
             SET @max = 2; -- default to 2
         DBCC CHECKIDENT ('dbo.nrt_disease_site_key', RESEED, @max);
     END
-
-IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_disease_site_key' and xtype = 'U')
-    BEGIN
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'created_dttm' AND Object_ID = Object_ID(N'nrt_disease_site_key'))
-            BEGIN
-                ALTER TABLE dbo.nrt_disease_site_key
-                    ADD created_dttm DATETIME2 DEFAULT GETDATE();
-            END;
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'updated_dttm' AND Object_ID = Object_ID(N'nrt_disease_site_key'))
-            BEGIN
-                ALTER TABLE dbo.nrt_disease_site_key
-                    ADD updated_dttm DATETIME2 DEFAULT GETDATE();
-            END;
-    END;

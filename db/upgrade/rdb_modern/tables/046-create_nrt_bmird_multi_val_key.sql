@@ -5,7 +5,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_bmird_multi_val_key' a
             BMIRD_MULTI_VAL_FIELD_KEY bigint IDENTITY(1,1) NOT NULL,
             BMIRD_MULTI_VAL_GRP_KEY  bigint NOT NULL,
             public_health_case_uid bigint NULL,
-            selection_number bigint NULL
+            selection_number bigint NULL,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
         --check for null and set default to 2, as default record with key = 1 is not stored in BMIRD_MULTI_VALUE_FIELD
         DECLARE @max bigint = (SELECT ISNULL(MAX(BMIRD_MULTI_VAL_FIELD_KEY) + 1, 2) FROM dbo.BMIRD_MULTI_VALUE_FIELD);
@@ -21,16 +23,3 @@ IF NOT EXISTS (SELECT 1 FROM dbo.BMIRD_MULTI_VALUE_FIELD)
 
     END;
     
-IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_bmird_multi_val_key' and xtype = 'U')
-    BEGIN
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'created_dttm' AND Object_ID = Object_ID(N'nrt_bmird_multi_val_key'))
-            BEGIN
-                ALTER TABLE dbo.nrt_bmird_multi_val_key
-                    ADD created_dttm DATETIME2 DEFAULT GETDATE();
-            END;
-        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'updated_dttm' AND Object_ID = Object_ID(N'nrt_bmird_multi_val_key'))
-            BEGIN
-                ALTER TABLE dbo.nrt_bmird_multi_val_key
-                    ADD updated_dttm DATETIME2 DEFAULT GETDATE();
-            END;
-    END;
