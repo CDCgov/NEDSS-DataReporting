@@ -3,6 +3,8 @@ BEGIN
 	CREATE TABLE [dbo].[nrt_d_tb_pam_key](
 		[D_TB_PAM_KEY] [bigint] IDENTITY(1,1) NOT NULL,
 		[TB_PAM_UID] [bigint] NOT NULL,
+		[created_dttm] DATETIME2 DEFAULT GETDATE(),
+		[updated_dttm] DATETIME2 DEFAULT GETDATE(),
 	CONSTRAINT [nrt_d_tb_pam_key_pk] PRIMARY KEY CLUSTERED 
 	(
 		[D_TB_PAM_KEY] ASC

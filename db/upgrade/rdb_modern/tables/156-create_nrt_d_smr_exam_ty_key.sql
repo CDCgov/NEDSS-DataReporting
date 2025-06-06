@@ -3,7 +3,9 @@ BEGIN
     CREATE TABLE [dbo].[nrt_d_smr_exam_ty_key](
         [D_SMR_EXAM_TY_KEY] [bigint] IDENTITY (2,1) NOT NULL,
         [NBS_CASE_ANSWER_UID] [bigint] NOT NULL,
-        [TB_PAM_UID] [bigint] NOT NULL
+        [TB_PAM_UID] [bigint] NOT NULL,
+        [created_dttm] DATETIME2 DEFAULT GETDATE(),
+        [updated_dttm] DATETIME2 DEFAULT GETDATE(),
     CONSTRAINT [NRT_D_SMR_EXAM_TY_KEY_PK] PRIMARY KEY CLUSTERED 
 	(
 		[D_SMR_EXAM_TY_KEY] ASC
@@ -12,3 +14,4 @@ BEGIN
 	DECLARE @max bigint = (SELECT ISNULL(MAX(D_SMR_EXAM_TY_KEY)+1, 2) FROM dbo.D_SMR_EXAM_TY);
 	DBCC CHECKIDENT ('dbo.nrt_d_smr_exam_ty_key', RESEED, @max);
 END
+

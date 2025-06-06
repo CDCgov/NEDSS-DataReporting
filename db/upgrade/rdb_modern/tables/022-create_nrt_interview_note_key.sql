@@ -6,7 +6,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview_note_key' an
         CREATE TABLE dbo.nrt_interview_note_key (
           d_interview_note_key bigint IDENTITY(1,1) NOT NULL,
           d_interview_key bigint NOT NULL,
-          nbs_answer_uid bigint NULL
+          nbs_answer_uid bigint NULL,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
         declare @max bigint;
         select @max=max(d_interview_note_key)+1 from dbo.D_INTERVIEW_NOTE ;

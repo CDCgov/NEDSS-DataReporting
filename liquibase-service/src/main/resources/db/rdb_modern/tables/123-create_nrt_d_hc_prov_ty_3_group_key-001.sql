@@ -11,3 +11,17 @@ BEGIN
 	DECLARE @max bigint = (SELECT ISNULL(MAX(D_HC_PROV_TY_3_GROUP_KEY)+1, 2) FROM dbo.D_HC_PROV_TY_3_GROUP);
 	DBCC CHECKIDENT ('dbo.nrt_d_hc_prov_ty_3_group_key', RESEED, @max);	
 END
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_d_hc_prov_ty_3_group_key' and xtype = 'U')
+    BEGIN
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'created_dttm' AND Object_ID = Object_ID(N'nrt_d_hc_prov_ty_3_group_key'))
+            BEGIN
+                ALTER TABLE dbo.nrt_d_hc_prov_ty_3_group_key
+                    ADD created_dttm DATETIME2 DEFAULT GETDATE();
+            END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'updated_dttm' AND Object_ID = Object_ID(N'nrt_d_hc_prov_ty_3_group_key'))
+            BEGIN
+                ALTER TABLE dbo.nrt_d_hc_prov_ty_3_group_key
+                    ADD updated_dttm DATETIME2 DEFAULT GETDATE();
+            END;
+    END;

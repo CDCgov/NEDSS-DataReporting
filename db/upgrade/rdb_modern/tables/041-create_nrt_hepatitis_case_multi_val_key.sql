@@ -5,7 +5,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_hepatitis_case_multi_v
           HEP_MULTI_VAL_DATA_KEY bigint IDENTITY(1,1) NOT NULL,
           HEP_MULTI_VAL_GRP_KEY  bigint NOT NULL,
           public_health_case_uid bigint NULL,
-          selection_number bigint NULL
+          selection_number bigint NULL,
+          created_dttm DATETIME2 DEFAULT GETDATE(),
+          updated_dttm DATETIME2 DEFAULT GETDATE()
         );
 
         --check for null and set default to 2
@@ -25,3 +27,4 @@ IF NOT EXISTS (SELECT 1 FROM dbo.hep_multi_value_field)
         SELECT 1,1;
 
     END;
+

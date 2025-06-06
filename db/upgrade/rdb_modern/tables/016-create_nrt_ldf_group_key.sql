@@ -3,7 +3,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_group_key' and xty
 
         CREATE TABLE dbo.nrt_ldf_group_key (
             d_ldf_group_key bigint IDENTITY(1,1) NOT NULL,
-            business_object_uid bigint NULL
+            business_object_uid bigint NULL,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
 
         declare @max bigint;

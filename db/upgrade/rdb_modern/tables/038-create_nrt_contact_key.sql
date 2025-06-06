@@ -2,7 +2,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_contact_key' and xtype
 BEGIN
     CREATE TABLE dbo.nrt_contact_key (
        d_contact_record_key bigint IDENTITY (1,1) NOT NULL,
-       contact_uid   bigint                NULL
+       contact_uid   bigint                NULL,
+        created_dttm DATETIME2 DEFAULT GETDATE(),
+        updated_dttm DATETIME2 DEFAULT GETDATE()
     );
     declare @max bigint;
     select @max=max(d_contact_record_key)+1 from dbo.D_CONTACT_RECORD ;

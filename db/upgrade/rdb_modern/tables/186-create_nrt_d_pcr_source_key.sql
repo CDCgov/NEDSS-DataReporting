@@ -3,7 +3,9 @@ BEGIN
     CREATE TABLE [dbo].[nrt_d_pcr_source_key](
         [D_PCR_SOURCE_KEY] [bigint] IDENTITY (2,1) NOT NULL,
         [NBS_CASE_ANSWER_UID] [bigint] NOT NULL,
-        [VAR_PAM_UID] [bigint] NOT NULL
+        [VAR_PAM_UID] [bigint] NOT NULL,
+        [created_dttm] DATETIME2 DEFAULT GETDATE(),
+        [updated_dttm] DATETIME2 DEFAULT GETDATE(),
     CONSTRAINT [NRT_D_PCR_SOURCE_KEY_PK] PRIMARY KEY CLUSTERED 
 	(
 		[D_PCR_SOURCE_KEY] ASC
@@ -12,3 +14,4 @@ BEGIN
 	DECLARE @max bigint = (SELECT ISNULL(MAX(D_PCR_SOURCE_KEY)+1, 2) FROM dbo.D_PCR_SOURCE);
 	DBCC CHECKIDENT ('dbo.nrt_d_pcr_source_key', RESEED, @max);
 END
+

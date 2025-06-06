@@ -4,7 +4,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_confirmation_method_ke
         CREATE TABLE dbo.nrt_confirmation_method_key
         (
             d_confirmation_method_key bigint IDENTITY (1,1) NOT NULL,
-            confirmation_method_cd    varchar(50)           NULL
+            confirmation_method_cd    varchar(50)           NULL,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
 
         declare @max bigint;

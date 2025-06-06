@@ -3,6 +3,8 @@ BEGIN
 	CREATE TABLE [dbo].[nrt_d_gt_12_reas_group_key](
 		[D_GT_12_REAS_GROUP_KEY] [bigint] IDENTITY(2,1) NOT NULL,
 		[TB_PAM_UID] [bigint] NOT NULL,
+        [created_dttm] DATETIME2 DEFAULT GETDATE(),
+        [updated_dttm] DATETIME2 DEFAULT GETDATE(),
 	CONSTRAINT [nrt_d_gt_12_reas_group_key_pk] PRIMARY KEY CLUSTERED 
 	(
 		[D_GT_12_REAS_GROUP_KEY] ASC
