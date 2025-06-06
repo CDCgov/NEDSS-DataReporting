@@ -1,3 +1,4 @@
+
 -- This script to be run outside of Automation as a one time admin user creation
 -- Reset password of the login when the script is run
 USE [master]
