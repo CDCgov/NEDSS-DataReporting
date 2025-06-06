@@ -36,7 +36,7 @@ BEGIN
         SET @proc_step_no = 1;
 
         /* Temp treatment table creation */
-        SELECT CAST(nrt.treatment_uid AS bigint)                            AS treatment_uid,
+        SELECT nrt.treatment_uid                                            AS treatment_uid,
                nrt.local_id                                                 AS TREATMENT_LOCAL_ID,
                nrt.treatment_name                                           AS TREATMENT_NM,
                nrt.treatment_drug                                           AS TREATMENT_DRUG,
@@ -59,47 +59,47 @@ BEGIN
                nrt.treatment_date,
                nrt.public_health_case_uid
         INTO #temp_trt_table
-        FROM (SELECT t.treatment_uid,  
-                     t.organization_uid,  
-                     t.provider_uid,  
-                     t.patient_treatment_uid,  
-                     t.treatment_name,  
-                     t.Treatment_oid,  
-                     t.Treatment_comments,  
-                     t.Treatment_shared_ind,  
-                     t.cd,  
-                     t.treatment_date,  
-                     t.Treatment_drug,  
-                     t.treatment_drug_name,  
-                     t.Treatment_dosage_strength,  
-                     t.Treatment_dosage_strength_unit,  
-                     t.Treatment_frequency,  
-                     t.Treatment_duration,  
-                     t.Treatment_duration_unit,  
-                     t.Treatment_route,  
-                     t.LOCAL_ID,  
-                     t.record_status_cd,  
-                     t.ADD_TIME,  
-                     t.ADD_USER_ID,  
-                     t.last_change_time,  
-                     t.last_change_user_id,  
-                     t.version_control_number,  
-                     t.refresh_datetime,  
-                     t.max_datetime,  
-                     t.morbidity_uid,  
+        FROM (SELECT t.treatment_uid,
+                     t.organization_uid,
+                     t.provider_uid,
+                     t.patient_treatment_uid,
+                     t.treatment_name,
+                     t.Treatment_oid,
+                     t.Treatment_comments,
+                     t.Treatment_shared_ind,
+                     t.cd,
+                     t.treatment_date,
+                     t.Treatment_drug,
+                     t.treatment_drug_name,
+                     t.Treatment_dosage_strength,
+                     t.Treatment_dosage_strength_unit,
+                     t.Treatment_frequency,
+                     t.Treatment_duration,
+                     t.Treatment_duration_unit,
+                     t.Treatment_route,
+                     t.LOCAL_ID,
+                     t.record_status_cd,
+                     t.ADD_TIME,
+                     t.ADD_USER_ID,
+                     t.last_change_time,
+                     t.last_change_user_id,
+                     t.version_control_number,
+                     t.refresh_datetime,
+                     t.max_datetime,
+                     t.morbidity_uid,
                      t.associated_phc_uids,
-                     phc.value as public_health_case_uid
-              FROM dbo.nrt_treatment t 
+                     CAST(phc.value AS bigint)  as public_health_case_uid
+              FROM dbo.nrt_treatment t
               OUTER APPLY STRING_SPLIT(t.associated_phc_uids, ',') as phc) nrt
                  LEFT JOIN dbo.nrt_treatment_key tk WITH (NOLOCK)
-                           ON CAST(nrt.treatment_uid AS bigint) = tk.treatment_uid
+                           ON nrt.treatment_uid = tk.treatment_uid
                            AND COALESCE(nrt.public_health_case_uid, 1) = COALESCE(tk.public_health_case_uid, 1)
         WHERE nrt.treatment_uid IN (SELECT value FROM STRING_SPLIT(@treatment_uids, ','));
 
         IF @debug = 'true' SELECT @proc_step_name, * from #temp_trt_table;
 
         /* Temp treatment_event table creation */
-        SELECT CAST(nrt.treatment_uid AS bigint)  AS treatment_uid,
+        SELECT nrt.treatment_uid                  AS treatment_uid,
                COALESCE(dtt.DATE_KEY, 1)          AS TREATMENT_DT_KEY,
                COALESCE(p.PATIENT_KEY, 1)         AS PATIENT_KEY,
                COALESCE(org.ORGANIZATION_KEY, 1)  AS TREATMENT_PROVIDING_ORG_KEY,
@@ -116,19 +116,19 @@ BEGIN
         FROM #temp_trt_table nrt
                  LEFT JOIN dbo.TREATMENT trt WITH (NOLOCK) ON trt.TREATMENT_KEY = nrt.treatment_key
                  LEFT JOIN dbo.INVESTIGATION inv WITH (NOLOCK)
-                           ON CAST(nrt.public_health_case_uid AS bigint) = inv.CASE_UID
+                           ON nrt.public_health_case_uid = inv.CASE_UID
                  LEFT JOIN dbo.nrt_investigation nrt_inv WITH (NOLOCK)
-                           ON CAST(nrt.public_health_case_uid AS bigint) = nrt_inv.public_health_case_uid
+                           ON nrt.public_health_case_uid = nrt_inv.public_health_case_uid
                  LEFT JOIN dbo.v_condition_dim cnd WITH (NOLOCK) ON nrt_inv.cd = cnd.CONDITION_CD
-                 LEFT JOIN dbo.D_PATIENT p WITH (NOLOCK) ON CAST(nrt.patient_treatment_uid AS bigint) = p.PATIENT_UID
+                 LEFT JOIN dbo.D_PATIENT p WITH (NOLOCK) ON nrt.patient_treatment_uid = p.PATIENT_UID
                  LEFT JOIN dbo.D_ORGANIZATION org WITH (NOLOCK)
-                           ON CAST(nrt.organization_uid AS bigint) = org.ORGANIZATION_UID
-                 LEFT JOIN dbo.D_PROVIDER prv WITH (NOLOCK) ON CAST(nrt.provider_uid AS bigint) = prv.PROVIDER_UID
+                           ON nrt.organization_uid = org.ORGANIZATION_UID
+                 LEFT JOIN dbo.D_PROVIDER prv WITH (NOLOCK) ON nrt.provider_uid = prv.PROVIDER_UID
                  LEFT JOIN dbo.RDB_DATE dtt WITH (NOLOCK) ON CAST(nrt.treatment_date AS DATE) = dtt.DATE_MM_DD_YYYY
                  LEFT JOIN dbo.MORBIDITY_REPORT mrb WITH (NOLOCK)
-                           ON CAST(nrt.morbidity_uid AS bigint) = mrb.MORB_RPT_UID
+                           ON nrt.morbidity_uid = mrb.MORB_RPT_UID
                  LEFT JOIN dbo.LDF_GROUP ldf WITH (NOLOCK)
-                           ON CAST(nrt.treatment_uid AS bigint) = ldf.business_object_uid
+                           ON nrt.treatment_uid = ldf.business_object_uid
         WHERE nrt.treatment_uid IN (SELECT value FROM STRING_SPLIT(@treatment_uids, ','));
 
         IF @debug = 'true' SELECT @proc_step_name, * from #temp_trt_event_table;
@@ -158,7 +158,7 @@ BEGIN
         SET @proc_step_name = 'Get old treatment keys';
         SET @proc_step_no = 2;
 
-        SELECT 
+        SELECT
         trk.D_TREATMENT_KEY AS TREATMENT_KEY
         INTO #OLD_TREATMENT_KEYS
         FROM
@@ -218,7 +218,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        
+
 
         BEGIN TRANSACTION
         SET @proc_step_name = 'Remove old keys from dbo.TREATMENT_EVENT';
@@ -249,7 +249,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        
+
 
         BEGIN TRANSACTION
         SET @proc_step_name = 'Remove old keys from dbo.TREATMENT';
@@ -411,7 +411,7 @@ BEGIN
                trt.TREATMENT_OID,
                trt.RECORD_STATUS_CD
         FROM #temp_trt_table trt
-                 JOIN dbo.nrt_treatment_key k 
+                 JOIN dbo.nrt_treatment_key k
                      ON trt.treatment_uid = k.treatment_uid
                      AND COALESCE(trt.public_health_case_uid, 1) = COALESCE(k.public_health_case_uid, 1)
         WHERE trt.TREATMENT_KEY IS NULL;

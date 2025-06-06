@@ -13,5 +13,5 @@ import lombok.NonNull;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TreatmentReportingKey {
     @NonNull
-    private String treatmentUid;
+    private Long treatmentUid;
 }

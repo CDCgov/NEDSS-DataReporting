@@ -322,7 +322,6 @@ public class InvestigationService {
                 treatmentUid = actRelationshipSourceActUid;
             }
 
-
             logger.info(topicDebugLog, "Treatment", treatmentUid, topic);
             Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
             if(treatmentData.isPresent()) {
