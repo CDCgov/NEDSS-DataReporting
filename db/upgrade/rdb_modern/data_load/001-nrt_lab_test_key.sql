@@ -8,15 +8,11 @@
 
         INSERT INTO [dbo].nrt_lab_test_key(
 			LAB_TEST_KEY, 
-			LAB_TEST_UID, 
-			created_dttm, 
-			updated_dttm 
+			LAB_TEST_UID
         )
         SELECT 
 			lt.LAB_TEST_KEY, 
-			lt.LAB_TEST_UID, 
-			lt.LAB_RPT_CREATED_DT, 
-			lt.LAB_RPT_LAST_UPDATE_DT 
+			lt.LAB_TEST_UID 
         FROM [dbo].LAB_TEST lt WITH(NOLOCK) 
         LEFT JOIN [dbo].nrt_lab_test_key k
           ON k.LAB_TEST_KEY = lt.LAB_TEST_KEY AND k.LAB_TEST_UID= lt.LAB_TEST_UID

@@ -12,16 +12,12 @@
         INSERT INTO [dbo].nrt_lab_rpt_user_comment_key(
 			USER_COMMENT_KEY, 
 			LAB_RPT_USER_COMMENT_UID, 
-			LAB_TEST_UID,
-			created_dttm,
-			updated_dttm
+			LAB_TEST_UID
 		)
 		SELECT 
 			c.USER_COMMENT_KEY,
 			o.observation_uid,
-			c.lab_test_uid,
-			c.COMMENTS_FOR_ELR_DT,
-			c.RDB_LAST_REFRESH_TIME
+			c.lab_test_uid
 		FROM [dbo].LAB_RPT_USER_COMMENT c WITH (NOLOCK)
 		INNER JOIN [NBS_ODSE].[dbo].Act_relationship ar WITH (NOLOCK)
 			ON ar.target_act_uid = c.lab_test_uid 
