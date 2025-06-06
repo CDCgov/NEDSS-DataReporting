@@ -2650,6 +2650,14 @@ databaseChangeLog:
             path: 330-sp_covid_lab_datamart_postprocessing-001.sql
             splitStatements: false
   - changeSet:
+      id: 874
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 247-create_nrt_dyn_dm_column_metadata-001.sql
+            splitStatements: false
+  - changeSet:
       id: 875
       author: liquibase
       runOnChange: true
