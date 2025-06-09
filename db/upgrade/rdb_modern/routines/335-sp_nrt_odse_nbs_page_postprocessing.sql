@@ -43,19 +43,19 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #PAGEBUILDER_SCHEMA_INIT';
 
         -- initial temp table
-        -- include row_num <= 3 for debugging purposes
         WITH ordered_rdb_metadata AS (
         SELECT
             pg.datamart_nm
+            , pg.nbs_page_uid
+            , rdbm.nbs_ui_metadata_uid
             , rdbm.rdb_table_nm
             , rdbm.rdb_column_nm
-            , rdbm.user_defined_column_nm
+            , COALESCE(rdbm.user_defined_column_nm, CONCAT('COL_NAME_REMOVED_VIA_UI_', rdbm.nbs_ui_metadata_uid)) as user_defined_column_nm
             , rdbm.last_chg_time
-            , LEAD(rdbm.user_defined_column_nm) OVER (PARTITION BY pg.datamart_nm, rdbm.rdb_table_nm, rdbm.rdb_column_nm ORDER BY rdbm.last_chg_time DESC) as prev_udcn
-            , ROW_NUMBER() OVER (PARTITION BY pg.datamart_nm, rdbm.rdb_table_nm, rdbm.rdb_column_nm ORDER BY rdbm.last_chg_time DESC) as row_num
             , uim.data_type
+            , rdbm.block_pivot_nbr
         FROM dbo.nrt_odse_NBS_page pg
-        INNER JOIN dbo.nrt_odse_NBS_rdb_metadata rdbm
+        INNER JOIN dbo.v_nrt_odse_NBS_rdb_metadata_recent rdbm
             ON rdbm.nbs_page_uid = pg.nbs_page_uid
         INNER JOIN dbo.nrt_odse_NBS_ui_metadata uim
             ON uim.nbs_ui_metadata_uid = rdbm.nbs_ui_metadata_uid
@@ -63,22 +63,23 @@ BEGIN
         where
             pg.nbs_page_uid IN (SELECT value FROM STRING_SPLIT(@page_id_list, ','))
             AND pg.datamart_nm IS NOT NULL
-            -- LIKE 'D_INV_%' filter since this is focused on updates to pagebuilder dimensions
-            AND rdb_table_nm LIKE 'D_INV_%'
         )
         SELECT 
             datamart_nm
+            , nbs_page_uid
+            , nbs_ui_metadata_uid
             , rdb_table_nm
             , rdb_column_nm
             , user_defined_column_nm
             , last_chg_time
-            , prev_udcn
-            , row_num
             , data_type
+            , block_pivot_nbr
         INTO #PAGEBUILDER_SCHEMA_INIT
         FROM ordered_rdb_metadata
-        WHERE row_num <= 3
         ORDER BY datamart_nm, rdb_table_nm, rdb_column_nm, last_chg_time DESC;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
 
 
         IF @debug = 'true'
@@ -88,6 +89,119 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATE #METADATA_TABLE_RECORDS';
+
+        -- COUNT OF RECORDS IN DYN DM COLUMN METADATA TABLE 
+        -- If 0, a load of the original table state must be done
+        SELECT
+            psi.nbs_page_uid
+            , SUM(CASE WHEN md.nbs_ui_metadata_uid IS NULL THEN 0 ELSE 1 END) AS record_count
+            INTO #METADATA_TABLE_RECORDS
+        FROM (SELECT DISTINCT nbs_page_uid FROM #PAGEBUILDER_SCHEMA_INIT) psi
+        LEFT JOIN dbo.nrt_dyn_dm_column_metadata md
+            ON psi.nbs_page_uid = md.nbs_page_uid
+        GROUP BY psi.nbs_page_uid;
+        
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+        IF @debug = 'true'
+            SELECT * FROM #METADATA_TABLE_RECORDS;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+          
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATE #ORIGINAL_DATAMART_STATE';
+
+        /*
+            Generates the oldest state for the datamart as determined by what has been synced
+            into dbo.nrt_odse_NBS_rdb_metadata. This should generate the current state.
+
+            1. When RTR is deployed, we get a sync from NBS_ODSE.dbo.NBS_rdb_metadata into
+                dbo.nrt_odse_NBS_rdb_metadata (consider this the original state).
+            2. A given page gets X many updates, each time a new set of metadata enters the nrt table
+            3. This stored procedure runs (dynamic datamart schema has yet to be updated)
+            4. This table captures the state from our original sync and is inserted into
+                dbo.nrt_dyn_dm_column_metadata
+            5. Each time this procedure runs, it checks and updates dbo.nrt_dyn_dm_column_metadata
+                to keep track of user defined column names based on nbs_ui_metadata_uid
+                a. This is the only way to ensure that the correct columns are being renamed by this
+                    procedure
+        */
+
+        WITH ordered_rdb_metadata AS (
+        SELECT
+            pg.nbs_page_uid
+            , rdbm.nbs_ui_metadata_uid
+            , rdbm.user_defined_column_nm
+            , RANK() OVER (PARTITION BY pg.datamart_nm ORDER BY rdbm.last_chg_time asc) as row_num
+            , rdbm.block_pivot_nbr
+        FROM dbo.nrt_odse_NBS_page pg
+        INNER JOIN dbo.nrt_odse_NBS_rdb_metadata rdbm
+            ON rdbm.nbs_page_uid = pg.nbs_page_uid
+        where
+            pg.nbs_page_uid IN (SELECT nbs_page_uid FROM #METADATA_TABLE_RECORDS WHERE record_count = 0)
+            AND pg.datamart_nm IS NOT NULL
+        )
+        SELECT 
+            nbs_page_uid
+            , nbs_ui_metadata_uid
+            , user_defined_column_nm
+            , block_pivot_nbr
+        INTO #ORIGINAL_DATAMART_STATE
+        FROM ordered_rdb_metadata
+        where row_num = 1;
+        
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+        IF @debug = 'true'
+            SELECT * FROM #ORIGINAL_DATAMART_STATE;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+          
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'INSERT ORIGINAL STATE INTO dbo.nrt_dyn_dm_column_metadata';
+
+        -- generates the oldest state for the datamart
+        INSERT INTO dbo.nrt_dyn_dm_column_metadata (
+            nbs_page_uid
+            , nbs_ui_metadata_uid
+            , user_defined_column_nm
+            , block_pivot_nbr
+        )
+        SELECT
+            nbs_page_uid
+            , nbs_ui_metadata_uid
+            , user_defined_column_nm
+            , block_pivot_nbr
+        FROM #ORIGINAL_DATAMART_STATE;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+        
 
 --------------------------------------------------------------------------------------------------------
 
@@ -104,7 +218,7 @@ BEGIN
             LEFT JOIN INFORMATION_SCHEMA.TABLES ist
                 ON UPPER(psi.rdb_table_nm) = UPPER(ist.TABLE_NAME)
             WHERE ist.TABLE_NAME IS NULL
-                AND psi.row_num = 1
+                AND rdb_table_nm LIKE 'D_INV%'
         )
         SELECT
             rdb_table_nm
@@ -115,6 +229,7 @@ BEGIN
         INTO #MISSING_DIMENSION_TABLES
         FROM distinct_table_cte;
         
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         IF @debug = 'true'
             SELECT * FROM #MISSING_DIMENSION_TABLES;
@@ -153,6 +268,7 @@ BEGIN
         IF COALESCE(@create_dim_sql, '') != ''
             exec sp_executesql @create_dim_sql;
         
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -178,7 +294,7 @@ BEGIN
                 ON UPPER(psi.rdb_table_nm) = UPPER(isc.TABLE_NAME)
                 AND UPPER(psi.rdb_column_nm) = UPPER(isc.COLUMN_NAME)
             WHERE ist.TABLE_NAME IS NOT NULL AND isc.COLUMN_NAME IS NULL
-                            AND psi.row_num = 1
+                AND psi.rdb_table_nm LIKE 'D_INV%'
         )
         SELECT
             rdb_table_nm
@@ -189,6 +305,7 @@ BEGIN
         INTO #MISSING_DIMENSION_COLUMNS
         FROM distinct_column_cte;
         
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         IF @debug = 'true'
             SELECT * FROM #MISSING_DIMENSION_COLUMNS;
@@ -216,7 +333,9 @@ BEGIN
 
         IF COALESCE(@alter_dim_sql, '') != ''
             exec sp_executesql @alter_dim_sql;
-        
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
 
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -230,26 +349,24 @@ BEGIN
             @PROC_STEP_NAME = 'CREATE #UPDATED_COL_NAMES';
 
 
-
         SELECT 
             psi.datamart_nm
-            , psi.user_defined_column_nm
-            , psi.prev_udcn
-            , 'EXEC sys.sp_rename N''DM_INV_' + UPPER(psi.datamart_nm) + '.' + UPPER(psi.prev_udcn) + ''', N''' + UPPER(psi.user_defined_column_nm) + ''', ''COLUMN''; ' AS rename_statement
+            , psi.user_defined_column_nm as new_udcn
+            , md.user_defined_column_nm as current_udcn
+            , psi.block_pivot_nbr
+            , psi.rdb_table_nm
         INTO #UPDATED_COL_NAMES
         FROM #PAGEBUILDER_SCHEMA_INIT psi
-        INNER JOIN INFORMATION_SCHEMA.COLUMNS isc
-            ON 'DM_INV_' + UPPER(psi.datamart_nm) = UPPER(isc.TABLE_NAME)
-                AND UPPER(psi.prev_udcn) = UPPER(isc.COLUMN_NAME)
-                -- We only want the scenario when the new user_defined_column_nm (udcn) is different from the previous
-                -- if the previous udcn is null, then default it to the value for the current udcn, which excludes it
-                AND psi.user_defined_column_nm != COALESCE(psi.prev_udcn, psi.user_defined_column_nm)
-        WHERE psi.row_num = 1;
+        INNER JOIN dbo.nrt_dyn_dm_column_metadata md
+            ON psi.nbs_page_uid = md.nbs_page_uid AND psi.nbs_ui_metadata_uid = md.nbs_ui_metadata_uid
+                -- We only want the scenario when the new user_defined_column_nm (udcn) is different from the current
+                AND psi.user_defined_column_nm != COALESCE(md.user_defined_column_nm, psi.user_defined_column_nm);
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * FROM #UPDATED_COL_NAMES;
 
-        
 
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -260,19 +377,154 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'ADD MISSING COLUMNS TO PAGEBUILDER DIMENSIONS';
+            @PROC_STEP_NAME = 'CREATE #INV_REPEAT_COL_UPDATE';
 
-        DECLARE @update_col_nm_sql NVARCHAR(MAX) = '';
+        declare @max_pivot_nbr INTEGER;
+        SELECT @max_pivot_nbr = (select max(BLOCK_PIVOT_NBR) from #UPDATED_COL_NAMES);
 
+        with number_list as (
+            SELECT 1 AS num
+            UNION ALL
+            SELECT num + 1
+            FROM number_list
+            WHERE num < @max_pivot_nbr
+        ),
+        expanded_col_list AS (
+            SELECT
+                ucn.datamart_nm
+                , CONCAT(ucn.new_udcn, '_', ce.suffix) AS new_udcn
+                , CONCAT(ucn.current_udcn, '_', ce.suffix) AS current_udcn
+            FROM #UPDATED_COL_NAMES ucn
+            LEFT JOIN (
+                SELECT CAST('ALL' AS VARCHAR(50)) as suffix
+                UNION ALL
+                SELECT CAST(num AS VARCHAR(50)) FROM number_list) ce
+                on COALESCE(TRY_CAST(ce.suffix as INTEGER), 999999) <= ucn.block_pivot_nbr OR ce.suffix = 'ALL'
+            WHERE ucn.rdb_table_nm = 'D_INVESTIGATION_REPEAT'
+        )
         SELECT 
-            @update_col_nm_sql = STRING_AGG(rename_statement, ' ') 
-        FROM #UPDATED_COL_NAMES;
+            datamart_nm
+            , new_udcn
+            , current_udcn
+            , CONCAT(current_udcn, '_', 'PLACEHOLDERFORSCHEMAUPDATE') as placeholder_udcn
+        INTO #INV_REPEAT_COL_UPDATE
+        FROM expanded_col_list;
+    
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         if @debug = 'true'
-            SELECT @Proc_Step_Name, @update_col_nm_sql;
+            SELECT @Proc_Step_Name, * FROM #INV_REPEAT_COL_UPDATE;
 
-        IF COALESCE(@update_col_nm_sql, '') != ''
-            exec sp_executesql @update_col_nm_sql;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+          
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'CREATE #PAGEBUILDER_COL_UPDATE';
+
+
+        SELECT 
+            datamart_nm
+            , new_udcn
+            , current_udcn
+            , CONCAT(current_udcn, '_', 'PLACEHOLDERFORSCHEMAUPDATE') as placeholder_udcn
+        INTO #PAGEBUILDER_COL_UPDATE
+        FROM #UPDATED_COL_NAMES 
+        WHERE rdb_table_nm LIKE 'D_INV_%';
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+        if @debug = 'true'
+            SELECT @Proc_Step_Name, * FROM #INV_REPEAT_COL_UPDATE;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+          
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'CREATE #COLUMN_UPDATE_FINAL';
+
+
+        /*
+            placeholder_udcn:
+                This column is a temporary renaming that is used in case we need to swap the names of two
+                columns at the same time. This way, we do not run into situations where we get an error
+                trying to assign a duplicate column name
+        */
+        WITH column_update_union AS (
+            SELECT 
+                datamart_nm
+                , new_udcn
+                , current_udcn
+                , placeholder_udcn
+            FROM #INV_REPEAT_COL_UPDATE
+            UNION ALL
+            SELECT
+                datamart_nm
+                , new_udcn
+                , current_udcn
+                , placeholder_udcn
+            FROM #PAGEBUILDER_COL_UPDATE
+        )
+        SELECT 
+            datamart_nm
+            , new_udcn
+            , current_udcn
+            , 'EXEC sys.sp_rename N''DM_INV_' + UPPER(psi.datamart_nm) + '.' + UPPER(current_udcn) + ''', N''' + UPPER(placeholder_udcn) + ''', ''COLUMN''; ' AS rename_curr_to_placeholder_statement
+            , 'EXEC sys.sp_rename N''DM_INV_' + UPPER(psi.datamart_nm) + '.' + UPPER(placeholder_udcn) + ''', N''' + UPPER(new_udcn) + ''', ''COLUMN''; ' AS rename_placeholder_to_new_statement
+        INTO #COLUMN_UPDATE_FINAL
+        FROM column_update_union psi
+        INNER JOIN INFORMATION_SCHEMA.COLUMNS isc
+            ON 'DM_INV_' + UPPER(psi.datamart_nm) = UPPER(isc.TABLE_NAME)
+                AND UPPER(current_udcn) = UPPER(isc.COLUMN_NAME);
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+
+        if @debug = 'true'
+            SELECT @Proc_Step_Name, * FROM #COLUMN_UPDATE_FINAL;
+
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+          
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'RENAME DYNAMIC DATAMART COLUMN NAMES';
+
+        DECLARE @curr_to_placeholder_sql NVARCHAR(MAX) = '';
+        DECLARE @placeholder_to_new_sql NVARCHAR(MAX) = '';
+
+
+        SELECT 
+            @curr_to_placeholder_sql = STRING_AGG(rename_curr_to_placeholder_statement, ' ') 
+        FROM #COLUMN_UPDATE_FINAL;
+
+        SELECT 
+            @placeholder_to_new_sql = STRING_AGG(rename_placeholder_to_new_statement, ' ') 
+        FROM #COLUMN_UPDATE_FINAL;
+
+        if @debug = 'true'
+            SELECT @Proc_Step_Name, @curr_to_placeholder_sql, @placeholder_to_new_sql;
+
+        IF COALESCE(@curr_to_placeholder_sql, '') != ''
+            exec sp_executesql @curr_to_placeholder_sql;
+
+        IF COALESCE(@placeholder_to_new_sql, '') != ''
+            exec sp_executesql @placeholder_to_new_sql;
         
 
         INSERT INTO [dbo].[job_flow_log] 
@@ -307,6 +559,64 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+              
+--------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'UPDATE dbo.nrt_dyn_dm_column_metadata';
+
+
+            UPDATE nrt
+                SET
+                    nrt.user_defined_column_nm = psi.user_defined_column_nm
+                    , nrt.block_pivot_nbr = psi.block_pivot_nbr
+            FROM dbo.nrt_dyn_dm_column_metadata nrt
+                INNER JOIN #PAGEBUILDER_SCHEMA_INIT psi
+                ON nrt.nbs_page_uid = psi.nbs_page_uid AND nrt.nbs_ui_metadata_uid = psi.nbs_ui_metadata_uid;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+        
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+        COMMIT TRANSACTION;
+              
+--------------------------------------------------------------------------------------------------------
+
+        BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'INSERT INTO dbo.nrt_dyn_dm_column_metadata';
+
+
+        INSERT INTO dbo.nrt_dyn_dm_column_metadata (
+            nbs_page_uid
+            , nbs_ui_metadata_uid
+            , user_defined_column_nm
+            , block_pivot_nbr
+        )
+        SELECT
+            psi.nbs_page_uid
+            , psi.nbs_ui_metadata_uid
+            , psi.user_defined_column_nm
+            , psi.block_pivot_nbr
+        FROM #PAGEBUILDER_SCHEMA_INIT psi 
+            LEFT JOIN dbo.nrt_dyn_dm_column_metadata nrt
+            ON nrt.nbs_page_uid = psi.nbs_page_uid AND nrt.nbs_ui_metadata_uid = psi.nbs_ui_metadata_uid
+        WHERE nrt.nbs_ui_metadata_uid IS NULL;
+
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+        
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+        COMMIT TRANSACTION;
               
 --------------------------------------------------------------------------------------------------------
 

@@ -15,7 +15,7 @@ WITH ordered_cte as(
         rpt_admin_column_nm,
         rdb_column_nm,
         block_pivot_nbr,
-        ROW_NUMBER() OVER (PARTITION BY nbs_page_uid, rdb_table_nm, rdb_column_nm, nbs_ui_metadata_uid ORDER BY last_chg_time DESC) as row_num
+        RANK() OVER (PARTITION BY nbs_page_uid ORDER BY last_chg_time DESC) as row_num
     FROM dbo.nrt_odse_NBS_rdb_metadata)
 SELECT 
     nbs_rdb_metadata_uid,
