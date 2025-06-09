@@ -5,7 +5,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data_key' and xtyp
             d_ldf_data_key      bigint IDENTITY (1,1) NOT NULL,
             d_ldf_group_key     bigint                NULL,
             business_object_uid bigint                NULL,
-            ldf_uid             bigint                null
+            ldf_uid             bigint                null,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
 
         declare @max bigint;

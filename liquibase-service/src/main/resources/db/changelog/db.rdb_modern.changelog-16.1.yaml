@@ -1568,6 +1568,30 @@ databaseChangeLog:
             path: 060-create-summary-report-case-001.sql
             splitStatements: false
   - changeSet:
+      id: 149
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 190-create_nrt_odse_page_cond_mapping-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 150
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 191-create_nrt_odse_nbs_page-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 151
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 193-create_nrt_odse_nbs_rdb_metadata-001.sql
+            splitStatements: false
+  - changeSet:
       id: 152
       author: liquibase
       runOnChange: true
@@ -2328,30 +2352,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 245-sp_dyn_dm_createdm_postprocessing-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 665
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 190-create_nrt_odse_page_cond_mapping-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 666
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 191-create_nrt_odse_nbs_page-001.sql
-            splitStatements: false  
-  - changeSet:
-      id: 670
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 193-create_nrt_odse_nbs_rdb_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 675

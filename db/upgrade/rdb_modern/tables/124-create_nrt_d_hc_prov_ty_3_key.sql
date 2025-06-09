@@ -3,7 +3,9 @@ BEGIN
     CREATE TABLE [dbo].nrt_d_hc_prov_ty_3_key(
         [D_HC_PROV_TY_3_KEY] [bigint] IDENTITY (2,1) NOT NULL,
         [NBS_CASE_ANSWER_UID] [bigint] NOT NULL,
-        [TB_PAM_UID] [bigint] NOT NULL
+        [TB_PAM_UID] [bigint] NOT NULL,
+        [created_dttm] DATETIME2 DEFAULT GETDATE(),
+        [updated_dttm] DATETIME2 DEFAULT GETDATE(),
     CONSTRAINT [NRT_D_HC_PROV_TY_3_KEY_PK] PRIMARY KEY CLUSTERED 
 	(
 		[D_HC_PROV_TY_3_KEY] ASC
