@@ -736,7 +736,23 @@ databaseChangeLog:
             path: 016-sp_nrt_morbidity_report_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 50
+      id: 50.00
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 250-create_nrt_lab_result_comment_key-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 50.01
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 251-create_nrt_lab_test_result_group_key-001.sql
+            splitStatements: false          
+  - changeSet:
+      id: 50.02
       author: liquibase
       runOnChange: true
       changes:
@@ -744,7 +760,7 @@ databaseChangeLog:
             path: 017-sp_d_labtest_result_postprocessing-001.sql
             splitStatements: false
   - changeSet:
-      id: 53
+      id: 55.00
       author: liquibase
       runOnChange: true
       changes:
@@ -752,7 +768,7 @@ databaseChangeLog:
             path: 248-create_nrt_lab_test_key-001.sql
             splitStatements: false
   - changeSet:
-      id: 54
+      id: 55.01
       author: liquibase
       runOnChange: true
       changes:
@@ -760,7 +776,7 @@ databaseChangeLog:
             path: 249-create_nrt_lab_rpt_user_comment_key-001.sql
             splitStatements: false
   - changeSet:
-      id: 55
+      id: 55.02
       author: liquibase
       runOnChange: true
       changes:
