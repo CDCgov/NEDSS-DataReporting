@@ -3,7 +3,9 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_pertussis_treatment_gr
 
         CREATE TABLE dbo.nrt_pertussis_treatment_group_key (
             PERTUSSIS_TREATMENT_GRP_KEY bigint IDENTITY(1,1) NOT NULL,
-            public_health_case_uid bigint NULL
+            public_health_case_uid bigint NULL,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
         --check for null and set default to 2
         DECLARE @max bigint = (SELECT ISNULL(MAX(PERTUSSIS_TREATMENT_GRP_KEY) + 1, 2) FROM dbo.PERTUSSIS_TREATMENT_GROUP);

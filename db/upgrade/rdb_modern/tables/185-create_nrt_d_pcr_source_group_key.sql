@@ -3,6 +3,8 @@ BEGIN
 	CREATE TABLE [dbo].[nrt_d_pcr_source_group_key](
 		[D_PCR_SOURCE_GROUP_KEY] [bigint] IDENTITY(2,1) NOT NULL,
 		[VAR_PAM_UID] [bigint] NOT NULL,
+        [created_dttm] DATETIME2 DEFAULT GETDATE(),
+        [updated_dttm] DATETIME2 DEFAULT GETDATE(),
 	CONSTRAINT [NRT_D_PCR_SOURCE_GROUP_KEY_PK] PRIMARY KEY CLUSTERED  
 	(
 		[D_PCR_SOURCE_GROUP_KEY] ASC

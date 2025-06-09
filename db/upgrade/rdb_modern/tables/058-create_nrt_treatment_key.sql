@@ -1,9 +1,15 @@
+/*
+    NOTE: As of ticket CNDE-2536, treatment_uid is no longer enough to determine uniqueness, 
+    but a combination of treatment_uid and public_health_case_uid is required.
+*/
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment_key' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.nrt_treatment_key (
-                                               d_treatment_key          bigint IDENTITY (1,1) NOT NULL,
-                                               treatment_uid            bigint                NULL,
-                                               public_health_case_uid   bigint                NULL
+            d_treatment_key bigint IDENTITY (1,1) NOT NULL,
+            treatment_uid   bigint                NULL,
+            public_health_case_uid bigint,
+            created_dttm DATETIME2 DEFAULT GETDATE(),
+            updated_dttm DATETIME2 DEFAULT GETDATE()
         );
 
         declare @max bigint;
@@ -13,6 +19,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment_key' and xty
             SET @max = 2; -- default to 2
         DBCC CHECKIDENT ('dbo.nrt_treatment_key', RESEED, @max);
     END
+
 
 IF NOT EXISTS (SELECT 1 FROM dbo.TREATMENT)
     BEGIN

@@ -3,7 +3,9 @@ BEGIN
     CREATE TABLE [dbo].[nrt_d_out_of_cntry_key](
         [D_OUT_OF_CNTRY_KEY] [bigint] IDENTITY (2,1) NOT NULL,
         [NBS_CASE_ANSWER_UID] [bigint] NOT NULL,
-        [TB_PAM_UID] [bigint] NOT NULL
+        [TB_PAM_UID] [bigint] NOT NULL,
+        [created_dttm] DATETIME2 DEFAULT GETDATE(),
+        [updated_dttm] DATETIME2 DEFAULT GETDATE(),
     CONSTRAINT [NRT_D_OUT_OF_CNTRY_KEY_PK] PRIMARY KEY CLUSTERED 
 	(
 		[D_OUT_OF_CNTRY_KEY] ASC
@@ -12,5 +14,3 @@ BEGIN
 	DECLARE @max bigint = (SELECT ISNULL(MAX(D_OUT_OF_CNTRY_KEY)+1, 2) FROM dbo.D_OUT_OF_CNTRY);
 	DBCC CHECKIDENT ('dbo.nrt_d_out_of_cntry_key', RESEED, @max);	
 END
-
-
