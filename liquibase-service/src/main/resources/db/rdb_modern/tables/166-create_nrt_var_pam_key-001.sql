@@ -18,3 +18,16 @@ BEGIN
         DBCC CHECKIDENT ('dbo.nrt_var_pam_key', RESEED, @max);
     END
 
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_var_pam_key' and xtype = 'U')
+    BEGIN
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'created_dttm' AND Object_ID = Object_ID(N'nrt_var_pam_key'))
+            BEGIN
+                ALTER TABLE dbo.nrt_var_pam_key
+                    ADD created_dttm DATETIME2 DEFAULT GETDATE();
+            END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'updated_dttm' AND Object_ID = Object_ID(N'nrt_var_pam_key'))
+            BEGIN
+                ALTER TABLE dbo.nrt_var_pam_key
+                    ADD updated_dttm DATETIME2 DEFAULT GETDATE();
+            END;
+    END;
