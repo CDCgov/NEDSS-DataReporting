@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_d_labtest_result_postprocessing_cnde_2740](
+CREATE OR ALTER PROCEDURE [dbo].[sp_d_labtest_result_postprocessing](
 	@pLabResultList nvarchar(max), 
 	@pDebug bit = 'false'
 )
