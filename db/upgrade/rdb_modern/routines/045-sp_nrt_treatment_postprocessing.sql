@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_treatment_postprocessing_cnde_2416] 
+CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_treatment_postprocessing] 
        @treatment_uids nvarchar(max),
        @debug bit = 'false'
 AS
