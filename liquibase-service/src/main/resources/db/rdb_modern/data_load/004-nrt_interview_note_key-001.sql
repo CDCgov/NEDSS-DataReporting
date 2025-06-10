@@ -2,7 +2,7 @@
      AND EXISTS (SELECT 1 FROM sysobjects WHERE name = 'L_INTERVIEW_NOTE' and xtype = 'U')
     BEGIN
         
-        --copy already existing (D_INTERVIEW_KEY, INTERVIEW_UID) from L_INTERVIEW
+        --copy already existing (D_INTERVIEW_KEY, D_INTERVIEW_NOTE_KEY, NBS_ANSWER_UID) from L_INTERVIEW_NOTE
 
         SET IDENTITY_INSERT [dbo].nrt_interview_note_key ON
 
