@@ -666,18 +666,18 @@ class PostProcessingServiceTest {
         assertTrue(topicLogList.get(6).contains(invTopic));
         assertTrue(topicLogList.get(8).contains(invTopic));
         assertTrue(topicLogList.get(9).contains(ntfTopic));
-        assertTrue(topicLogList.get(10).contains(treatmentTopic));
+        assertTrue(topicLogList.get(10).contains(intTopic));
         assertTrue(topicLogList.get(11).contains(intTopic));
-        assertTrue(topicLogList.get(12).contains(intTopic));
-        assertTrue(topicLogList.get(13).contains(cmTopic));
-        assertTrue(topicLogList.get(14).contains(cmTopic));
+        assertTrue(topicLogList.get(12).contains(cmTopic));
+        assertTrue(topicLogList.get(13).contains(cmTopic));        
+        assertTrue(topicLogList.get(14).contains(stateDefinedFieldMetadataTopic));
         assertTrue(topicLogList.get(15).contains(stateDefinedFieldMetadataTopic));
-        assertTrue(topicLogList.get(16).contains(stateDefinedFieldMetadataTopic));
+        assertTrue(topicLogList.get(16).contains(ldfTopic));
         assertTrue(topicLogList.get(17).contains(ldfTopic));
-        assertTrue(topicLogList.get(18).contains(ldfTopic));
-        assertTrue(topicLogList.get(19).contains(obsTopic));
+        assertTrue(topicLogList.get(18).contains(obsTopic));
+        assertTrue(topicLogList.get(19).contains(contactTopic));
         assertTrue(topicLogList.get(20).contains(contactTopic));
-        assertTrue(topicLogList.get(21).contains(contactTopic));
+        assertTrue(topicLogList.get(21).contains(treatmentTopic));
         assertTrue(topicLogList.get(22).contains(vacTopic));
         assertTrue(topicLogList.get(23).contains(vacTopic));
     }
