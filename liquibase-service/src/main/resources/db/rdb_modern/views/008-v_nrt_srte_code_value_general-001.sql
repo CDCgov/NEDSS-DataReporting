@@ -1,3 +1,11 @@
-create or alter view dbo.v_nrt_srte_code_value_general as
-select *
-from nbs_srte.dbo.Code_Value_General;
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_srte_code_value_general')
+BEGIN
+    DROP VIEW [dbo].v_nrt_srte_code_value_general
+END
+GO
+
+CREATE VIEW [dbo].v_nrt_srte_code_value_general 
+AS
+SELECT 
+    *
+FROM [dbo].nrt_srte_Code_value_general;

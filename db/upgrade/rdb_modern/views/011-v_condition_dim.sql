@@ -1,11 +1,17 @@
-CREATE OR ALTER VIEW dbo.v_condition_dim AS
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_condition_dim')
+BEGIN
+    DROP VIEW [dbo].v_condition_dim
+END
+GO
+
+CREATE VIEW [dbo].v_condition_dim 
+AS
 -- default record for the dimension
--- default record for the dimension
-with default_record as (
-    SELECT 1 AS CONDITION_KEY
+WITH default_record AS (
+SELECT 1 AS CONDITION_KEY
 ),
 -- CTE containing condition dim transformations
-condition_list as(
+condition_list AS(
 SELECT 
     cc.condition_cd,
     cc.condition_desc_txt AS condition_desc,
@@ -43,26 +49,20 @@ SELECT
         WHEN 'INV_FORM_PER' THEN 'Pertussis_Case'
         WHEN 'INV_FORM_RUB' THEN 'Rubella_Case'
         ELSE cc.investigation_form_cd
-    END AS disease_grp_desc,  
+    END AS disease_grp_desc,    
     effective_from_time
 FROM 
-    dbo.nrt_srte_CONDITION_CODE cc
-    LEFT JOIN
-    dbo.nrt_srte_Program_area_code pac
-        on  cc.prog_area_cd = pac.prog_area_cd
+    [dbo].nrt_srte_CONDITION_CODE cc WITH (NOLOCk)
+    LEFT JOIN dbo.nrt_srte_Program_area_code pac WITH (NOLOCk)
+        ON cc.prog_area_cd = pac.prog_area_cd
 ),
 -- section for records containing only program area information
-pam_only as (
-    SELECT
+pam_only AS (
+SELECT
     program_area_cd,
     program_area_desc,
-    (row_number() OVER (ORDER BY program_area_cd)) + (SELECT COUNT(*) FROM condition_list) + 1 AS CONDITION_KEY
-    FROM
-    (SELECT DISTINCT
-    program_area_cd,
-    program_area_desc
-    FROM
-    condition_list) as dist_pam
+    (ROW_NUMBER() OVER (ORDER BY program_area_cd)) + (SELECT COUNT(*) FROM condition_list) + 1 AS CONDITION_KEY
+    FROM (SELECT DISTINCT program_area_cd, program_area_desc FROM condition_list) AS dist_pam
 )
 SELECT 
     NULL AS condition_cd,
@@ -80,7 +80,7 @@ SELECT
     NULL AS assigning_authority_cd, 
     NULL AS assigning_authority_desc,
     NULL AS condition_cd_sys_cd
-from default_record
+FROM default_record
 UNION ALL
 SELECT 
     condition_cd,
@@ -104,8 +104,8 @@ SELECT
     NULL AS condition_cd,
     NULL AS condition_desc, 
     NULL AS condition_short_nm, 
- NULL AS condition_cd_eff_dt, 
-   NULL AS condition_cd_end_dt, 
+    NULL AS condition_cd_eff_dt, 
+    NULL AS condition_cd_end_dt, 
     NULL AS nnd_ind, 
     condition_key,
     NULL AS disease_grp_cd, 
@@ -116,4 +116,4 @@ SELECT
     NULL AS assigning_authority_cd, 
     NULL AS assigning_authority_desc,
     NULL AS condition_cd_sys_cd
-from pam_only;
+FROM pam_only;

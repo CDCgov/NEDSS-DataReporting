@@ -1,12 +1,18 @@
-CREATE OR ALTER VIEW dbo.v_nrt_d_inv_repeat_blockdata AS
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_d_inv_repeat_blockdata')
+BEGIN
+    DROP VIEW [dbo].v_nrt_d_inv_repeat_blockdata
+END
+GO
+
+CREATE VIEW [dbo].v_nrt_d_inv_repeat_blockdata 
+AS
 SELECT
 	BLOCK_NM,
 	RDB_COLUMN_NM,
 	USER_DEFINED_COLUMN_NM,
 	INVESTIGATION_FORM_CD
-FROM
-	[dbo].v_nrt_odse_NBS_rdb_metadata_recent rdb_meta WITH(NOLOCK)
-INNER JOIN [dbo].nrt_odse_NBS_ui_metadata ui_meta
+FROM [dbo].v_nrt_odse_NBS_rdb_metadata_recent rdb_meta WITH(NOLOCK)
+INNER JOIN [dbo].nrt_odse_NBS_ui_metadata ui_meta WITH(NOLOCK)
 	ON rdb_meta.NBS_UI_METADATA_UID = ui_meta.NBS_UI_METADATA_UID
 WHERE
 	BLOCK_NM IS NOT NULL
