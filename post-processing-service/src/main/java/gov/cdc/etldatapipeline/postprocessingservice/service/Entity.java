@@ -14,7 +14,7 @@ enum Entity {
     NOTIFICATION(8, "notification", "notification_uid", "sp_nrt_notification_postprocessing"),
     INTERVIEW(9, "interview", "interview_uid", "sp_d_interview_postprocessing"),
     CASE_MANAGEMENT(10, "case_management", Constants.PHC_UID, "sp_nrt_case_management_postprocessing"),
-    STATE_DEFINED_FIELD_METADATA(12, "state_defined_field_metadata", "ldf_uid", "sp_nrt_ldf_postprocessing"),
+    STATE_DEFINED_FIELD_METADATA(11, "state_defined_field_metadata", "ldf_uid", "sp_nrt_ldf_postprocessing"),
     LDF_DATA(12, "ldf_data", "ldf_uid", "sp_nrt_ldf_postprocessing"),
     OBSERVATION(13, "observation", "observation_uid", null),
     CONTACT(14, "contact", "contact_uid", "sp_d_contact_record_postprocessing"),
