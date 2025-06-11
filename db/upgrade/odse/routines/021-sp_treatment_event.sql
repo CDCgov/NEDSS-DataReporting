@@ -44,7 +44,7 @@ BEGIN
             rx1.treatment_uid,
             par.subject_entity_uid AS organization_uid,
             par1.subject_entity_uid AS provider_uid,
-            par3.act_uid AS patient_treatment_uid,
+            par3.subject_entity_uid AS patient_treatment_uid,
             act1.target_act_uid AS morbidity_uid,
             rx1.local_id,
             rx1.add_time,
