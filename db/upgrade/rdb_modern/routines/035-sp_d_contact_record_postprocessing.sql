@@ -214,10 +214,8 @@ BEGIN
         UPDATE tgt 
         SET tgt.[updated_dttm] = GETDATE()
         FROM [dbo].NRT_CONTACT_KEY tgt 
-        inner join dbo.d_contact_record d with (nolock)
-            on d.d_contact_record_key = tgt.d_contact_record_key
         INNER JOIN #CONTACT_INIT ci 
-            ON ci.contact_uid = tgt.contact_uid;
+            ON ci.d_contact_record_key = tgt.d_contact_record_key;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 

@@ -178,9 +178,6 @@ BEGIN
         UPDATE tgt 
         SET tgt.[updated_dttm] = GETDATE()
         FROM [dbo].NRT_VACCINATION_KEY tgt 
-        INNER JOIN DBO.D_VACCINATION d WITH (NOLOCK)
-            on d.d_vaccination_key = tgt.d_vaccination_key
-            and d.vaccination_uid = tgt.vaccination_uid
         INNER JOIN #D_VACCINATION_INIT g 
             ON g.D_VACCINATION_KEY = tgt.D_VACCINATION_KEY
             AND g.VACCINATION_UID = tgt.VACCINATION_UID;

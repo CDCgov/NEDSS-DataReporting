@@ -242,10 +242,9 @@ BEGIN
         UPDATE tgt 
         SET tgt.[updated_dttm] = GETDATE()
         FROM [dbo].nrt_case_management_key tgt 
-        INNER JOIN dbo.d_case_management g with (nolock) 
-            ON g.d_case_management_key = tgt.d_case_management_key
         INNER JOIN #temp_cm_table tmp
-            on tmp.public_health_case_uid = tgt.public_health_case_uid;
+            on tmp.public_health_case_uid = tgt.public_health_case_uid and
+            tmp.d_case_management_key = tgt.d_case_management_key;
 
         if @debug = 'true' select * from dbo.nrt_case_management_key;
 
