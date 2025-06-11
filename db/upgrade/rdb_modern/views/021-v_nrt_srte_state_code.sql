@@ -1,6 +1,12 @@
-CREATE OR ALTER VIEW dbo.v_nrt_srte_state_code
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_srte_state_code')
+BEGIN
+    DROP VIEW [dbo].v_nrt_srte_state_code
+END
+GO
+
+CREATE VIEW [dbo].v_nrt_srte_state_code
 AS
-SELECT
+SELECT 
     state_cd,
     assigning_authority_cd,
     assigning_authority_desc_txt,
@@ -24,6 +30,6 @@ SELECT
     code_system_desc_txt,
     state_cd AS code,
     state_cd AS concept_code,
-    code_desc_txt AS concept_preferred_nm,
+    code_desc_txt AS concept_preferred_nm, 
     code_desc_txt AS concept_nm
-FROM dbo.nrt_srte_State_code WITH(NOLOCK);
+FROM [dbo].nrt_srte_State_code WITH(NOLOCK);

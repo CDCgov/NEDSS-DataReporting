@@ -1,4 +1,11 @@
-CREATE OR ALTER VIEW dbo.v_nrt_d_inv_repeat_metadata AS
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_d_inv_repeat_metadata')
+BEGIN
+    DROP VIEW [dbo].v_nrt_d_inv_repeat_metadata
+END
+GO
+
+CREATE VIEW [dbo].v_nrt_d_inv_repeat_metadata 
+AS
 SELECT DISTINCT 
 	ui_meta.INVESTIGATION_FORM_CD,
 	page.FORM_CD,
@@ -15,7 +22,7 @@ SELECT DISTINCT
 	BLOCK_PIVOT_NBR,
 	PART_TYPE_CD,
 	QUESTION_GROUP_SEQ_NBR
-FROM dbo.v_nrt_nbs_page page WITH(NOLOCK)
+FROM [dbo].v_nrt_nbs_page page WITH(NOLOCK)
 INNER JOIN [dbo].nrt_odse_NBS_ui_metadata ui_meta WITH(NOLOCK) 
 	ON ui_meta.INVESTIGATION_FORM_CD = page.FORM_CD
 INNER JOIN [dbo].v_nrt_odse_NBS_rdb_metadata_recent rdb_meta with (nolock)

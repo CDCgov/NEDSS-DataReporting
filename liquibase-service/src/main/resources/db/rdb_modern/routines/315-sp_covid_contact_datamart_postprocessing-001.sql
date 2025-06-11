@@ -318,28 +318,28 @@ BEGIN
             LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_con WITH (NOLOCK)
                 ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg4 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg4 WITH (NOLOCK)
                 ON cvg4.code_short_desc_txt = inv.contact_inv_priority AND cvg4.code_set_nm = 'NBS_PRIORITY'
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg5 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg5 WITH (NOLOCK)
                 ON cvg5.code_short_desc_txt = con.CTT_PRIORITY AND cvg5.code_set_nm = 'NBS_PRIORITY'
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg6 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg6 WITH (NOLOCK)
                 ON cvg6.code_short_desc_txt = con.CTT_DISPOSITION AND cvg6.code_set_nm IN ('NBS_DISPO','FIELD_FOLLOWUP_DISPOSITION_STD')
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg7 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg7 WITH (NOLOCK)
                 ON cvg7.code_short_desc_txt = con.CTT_RELATIONSHIP AND cvg7.code_set_nm = 'NBS_RELATIONSHIP'
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg8 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg8 WITH (NOLOCK)
                 ON cvg8.code_short_desc_txt = con.CTT_HEALTH_STATUS AND cvg8.code_set_nm = 'NBS_HEALTH_STATUS'
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg9 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg9 WITH (NOLOCK)
                       ON cvg9.code_short_desc_txt = con.CTT_SYMP_IND AND cvg9.code_set_nm = 'YNU'
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg10 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg10 WITH (NOLOCK)
                       ON cvg10.code_short_desc_txt = con.CTT_RISK_IND AND cvg10.code_set_nm = 'YNU'
 
-            LEFT JOIN dbo.v_nrt_srte_code_value_general cvg11 WITH (NOLOCK)
+            LEFT JOIN dbo.nrt_srte_Code_value_general cvg11 WITH (NOLOCK)
                       ON cvg11.code_short_desc_txt = con.CTT_EVAL_COMPLETED AND cvg11.code_set_nm = 'YNU'
 
             OUTER APPLY (
