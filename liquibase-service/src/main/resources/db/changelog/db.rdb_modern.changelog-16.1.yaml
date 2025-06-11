@@ -198,7 +198,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 001-fn_get_record_status-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 20.01
       author: liquibase
@@ -1318,7 +1318,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 002-fn_get_proper_case-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 130
       author: liquibase
