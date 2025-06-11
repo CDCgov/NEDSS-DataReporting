@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_ui_metadata_answers')
 BEGIN
     DROP VIEW [dbo].v_rdb_ui_metadata_answers
-END;
+END
 GO
 
 CREATE VIEW [dbo].v_rdb_ui_metadata_answers 

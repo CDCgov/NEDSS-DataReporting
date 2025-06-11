@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_inv_keys_attrs_mapping')
 BEGIN
     DROP VIEW [dbo].v_nrt_inv_keys_attrs_mapping
-END;
+END
 GO
 
 CREATE VIEW [dbo].v_nrt_inv_keys_attrs_mapping 

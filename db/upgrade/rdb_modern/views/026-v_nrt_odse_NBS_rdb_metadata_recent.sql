@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_odse_NBS_rdb_metadata_recent')
 BEGIN
     DROP VIEW [dbo].v_nrt_odse_NBS_rdb_metadata_recent
-END;
+END
 GO
 
 CREATE VIEW [dbo].v_nrt_odse_NBS_rdb_metadata_recent
