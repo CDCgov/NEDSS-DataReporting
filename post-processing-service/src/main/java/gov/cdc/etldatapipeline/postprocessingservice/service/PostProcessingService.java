@@ -363,10 +363,7 @@ public class PostProcessingService {
                         dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    case TREATMENT:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment);
-                        break;
+                        break;                    
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase,
@@ -384,6 +381,9 @@ public class PostProcessingService {
                     case OBSERVATION:
                         dmData = processObservation(keyTopic, entity, dmData);
                         newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                        break;
+                    case TREATMENT:
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment);
                         break;
                     case VACCINATION:
                         dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
