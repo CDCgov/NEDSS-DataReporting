@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_condition_dim')
 BEGIN
     DROP VIEW [dbo].v_condition_dim
 END;
---GO   "GO" not supported by liquibase, keep "GO" in manual scripts
+--GO   --"GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_condition_dim 
 AS

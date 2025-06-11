@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_inv_keys_attrs_mapping')
 BEGIN
     DROP VIEW [dbo].v_nrt_inv_keys_attrs_mapping
 END;
---GO   "GO" not supported by liquibase, keep "GO" in manual scripts
+--GO   --"GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_nrt_inv_keys_attrs_mapping 
 AS

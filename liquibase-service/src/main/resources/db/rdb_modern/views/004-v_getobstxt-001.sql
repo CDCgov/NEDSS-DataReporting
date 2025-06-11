@@ -1,8 +1,8 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_getobstxt')
 BEGIN
     DROP VIEW [dbo].v_getobstxt
-END
---GO   "GO" not supported by liquibase, keep "GO" in manual scripts
+END;
+--GO   --"GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_getobstxt
 AS

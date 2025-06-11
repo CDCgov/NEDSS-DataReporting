@@ -1,8 +1,8 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_ui_metadata_answers_contact')
 BEGIN
     DROP VIEW [dbo].v_rdb_ui_metadata_answers_contact
-END
---GO   "GO" not supported by liquibase, keep "GO" in manual scripts
+END;
+--GO   --"GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_rdb_ui_metadata_answers_contact 
 AS

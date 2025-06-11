@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_d_inv_repeat_blockdata')
 BEGIN
     DROP VIEW [dbo].v_nrt_d_inv_repeat_blockdata
 END;
---GO   "GO" not supported by liquibase, keep "GO" in manual scripts
+--GO   --"GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_nrt_d_inv_repeat_blockdata 
 AS
