@@ -236,7 +236,6 @@ BEGIN
                ,@rowcount
                ,LEFT(@id_list, 500));
 
-        /* Investigation Insert Operation */
         SET @proc_step_name = 'Update nrt_case_management_key table updated_dttm';
         SET @proc_step_no = @proc_step_no + 1;
 
