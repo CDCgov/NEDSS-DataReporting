@@ -22,7 +22,7 @@
             ON notif.NOTIFICATION_KEY = notif_event.NOTIFICATION_KEY
         LEFT JOIN [dbo].INVESTIGATION inv
             ON inv.INVESTIGATION_KEY = notif_event.INVESTIGATION_KEY
-        LEFT JOIN NBS_ODSE.dbo.Act_relationship ar1
+        INNER JOIN NBS_ODSE.dbo.Act_relationship ar1
             ON inv.CASE_UID = ar1.target_act_uid
             AND ar1.target_class_cd = 'CASE'
             AND ar1.source_class_cd = 'NOTF'
