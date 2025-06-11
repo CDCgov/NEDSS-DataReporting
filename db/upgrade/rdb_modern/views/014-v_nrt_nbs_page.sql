@@ -1,4 +1,11 @@
-CREATE  OR ALTER VIEW dbo.v_nrt_nbs_page AS
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_nbs_page')
+BEGIN
+    DROP VIEW [dbo].v_nrt_nbs_page
+END
+GO
+
+CREATE VIEW [dbo].v_nrt_nbs_page 
+AS
 SELECT DISTINCT 
 	page.FORM_CD, 
 	page.DATAMART_NM 
