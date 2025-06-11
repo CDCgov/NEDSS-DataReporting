@@ -1,8 +1,8 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_obs_mapping')
 BEGIN
     DROP VIEW [dbo].v_rdb_obs_mapping
-END
---GO   "GO" not supported by liquibase, keep in manual scripts
+END;
+--GO   "GO" not supported by liquibase, keep "GO" in manual scripts
 
 /*
     CNDE-2531:

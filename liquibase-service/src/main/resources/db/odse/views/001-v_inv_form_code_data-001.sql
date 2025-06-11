@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_inv_form_code_data')
 BEGIN
     DROP VIEW [dbo].v_inv_form_code_data
 END
---GO   "GO" not supported by liquibase, keep in manual scripts
+--GO   "GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_inv_form_code_data 
 AS

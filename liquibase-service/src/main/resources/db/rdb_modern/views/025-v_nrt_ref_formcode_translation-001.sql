@@ -1,8 +1,8 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_ref_formcode_translation')
 BEGIN
     DROP VIEW [dbo].v_nrt_ref_formcode_translation
-END
---GO   "GO" not supported by liquibase, keep in manual scripts
+END;
+--GO   "GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_nrt_ref_formcode_translation 
 AS
