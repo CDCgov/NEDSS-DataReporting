@@ -269,5 +269,13 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 028-fn_get_value_to_pascal_case-001.sql
+            path: 005-fn_get_record_status-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 37
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 006-fn_get_value_to_pascal_case-001.sql
             splitStatements: false

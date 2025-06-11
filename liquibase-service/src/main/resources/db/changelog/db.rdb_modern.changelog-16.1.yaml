@@ -1341,7 +1341,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 041-fn_get_proper_case-001.sql
+            path: 002-fn_get_proper_case-001.sql
             splitStatements: false
   - changeSet:
       id: 130
