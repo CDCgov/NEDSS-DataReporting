@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_odse_NBS_rdb_metadata_rece
 BEGIN
     DROP VIEW [dbo].v_nrt_odse_NBS_rdb_metadata_recent
 END
-GO
+--GO   "GO" not supported by liquibase, keep in manual scripts
 
 CREATE VIEW [dbo].v_nrt_odse_NBS_rdb_metadata_recent
 AS

@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_d_provider_rdb_table_metad
 BEGIN
     DROP VIEW [dbo].v_nrt_d_provider_rdb_table_metadata
 END
-GO
+--GO   "GO" not supported by liquibase, keep in manual scripts
 
 CREATE VIEW [dbo].v_nrt_d_provider_rdb_table_metadata 
 AS

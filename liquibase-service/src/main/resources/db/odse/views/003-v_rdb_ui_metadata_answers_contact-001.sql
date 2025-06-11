@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_ui_metadata_answers_contac
 BEGIN
     DROP VIEW [dbo].v_rdb_ui_metadata_answers_contact
 END
-GO
+--GO   "GO" not supported by liquibase, keep in manual scripts
 
 CREATE VIEW [dbo].v_rdb_ui_metadata_answers_contact 
 AS

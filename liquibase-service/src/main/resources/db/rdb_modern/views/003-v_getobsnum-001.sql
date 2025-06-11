@@ -2,7 +2,7 @@ IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_getobsnum')
 BEGIN
     DROP VIEW [dbo].v_getobsnum
 END
-GO
+--GO   "GO" not supported by liquibase, keep in manual scripts
 
 CREATE VIEW [dbo].v_getobsnum
 AS
