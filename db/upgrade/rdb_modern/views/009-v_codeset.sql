@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_codeset')
 BEGIN
     DROP VIEW [dbo].v_codeset
-END
+END;
 GO
 
 CREATE VIEW [dbo].v_codeset 
