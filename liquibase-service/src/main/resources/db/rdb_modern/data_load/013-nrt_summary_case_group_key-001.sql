@@ -29,7 +29,7 @@
                 ON inv.INVESTIGATION_KEY = src.INVESTIGATION_KEY
             LEFT JOIN NBS_ODSE.dbo.Act_relationship ar1
                 ON ar1.target_act_uid = inv.CASE_UID
-            LEFT JOIN NBS_ODSE.dbo.Act_relationship ar2
+            INNER JOIN NBS_ODSE.dbo.Act_relationship ar2
                 ON ar1.source_act_uid = ar2.target_act_uid
             INNER JOIN NBS_ODSE.dbo.Observation obs
                 ON ar2.source_act_uid = obs.observation_uid AND obs.cd = 'SUM103'
@@ -47,4 +47,3 @@
         SET IDENTITY_INSERT [dbo].nrt_summary_case_group_key OFF
         
     END
-
