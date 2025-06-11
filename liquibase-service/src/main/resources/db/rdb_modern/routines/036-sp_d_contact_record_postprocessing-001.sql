@@ -205,8 +205,29 @@ BEGIN
         VALUES (@BATCH_ID,@Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
+   
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Update nrt_contact_key updated_dttm';
+
+        UPDATE tgt 
+        SET tgt.[updated_dttm] = GETDATE()
+        FROM [dbo].NRT_CONTACT_KEY tgt 
+        inner join dbo.d_contact_record d with (nolock)
+            on d.d_contact_record_key = tgt.d_contact_record_key
+        INNER JOIN #CONTACT_INIT ci 
+            ON ci.contact_uid = tgt.contact_uid;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id,@Dataflow_Name,@Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
 
+        COMMIT TRANSACTION;
+   
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
