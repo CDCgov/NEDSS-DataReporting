@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_obs_mapping')
 BEGIN
     DROP VIEW [dbo].v_rdb_obs_mapping
-END
+END;
 GO
 
 /*
