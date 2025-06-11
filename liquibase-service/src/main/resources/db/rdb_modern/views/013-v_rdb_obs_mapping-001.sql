@@ -4,6 +4,22 @@ BEGIN
 END
 GO
 
+/*
+    CNDE-2531:
+    Added CROSS JOIN with two dummy rows. This allows for a code to ALWAYS be represented alongside a null PHC_UID.
+    This is important for ensuring that when a selection is removed from the UI, it is properly represented and set
+    to null in the target table.
+    Reasoning:
+        If an answer with a certain code is removed from only one investigation,
+        but that answer exists for another investigation, the changed investigation won't have that attribute set to null.
+        This is because there wouldn't be a record with NULL for that code in v_rdb_obs_mapping.
+        Adding the cross join ensures that there is always a record in v_rdb_obs_mapping that is just the information from IMRDBMapping without any observation data.
+        The process is basically duplicate every row in the IMRDBMapping, join the observation data onto the duplicated rows only (n = 2),
+        then keep only the records with n=1 (the original rows from IMRDBMapping with, deliberately not containing any observation data) or
+        records that have a non-null PHC_uid (which would indicate that there are observations for the given code)
+        the n=1 filter is there to keep only one record for a code in the scenario that no data exists for that code.
+*/
+
 CREATE VIEW [dbo].v_rdb_obs_mapping
 AS
 WITH imrdb AS (
