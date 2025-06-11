@@ -173,11 +173,48 @@ BEGIN
                ,LEFT(@id_list,500)
                );
 
-        SET @proc_step_name='Update D_PATIENT Dimension';
-        SET @proc_step_no = 2;
 
         /* D_Patient Update Operation */
         BEGIN TRANSACTION;
+
+        SET @proc_step_name='Update dbo.nrt_patient_key';
+        SET @proc_step_no = 2;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_patient_key k
+          INNER JOIN #temp_patient_table d
+            ON K.d_patient_key = d.patient_KEY;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+
+          SET @proc_step_name='Update D_PATIENT Dimension';
+          SET @proc_step_no = 3;
+
+
         update dbo.d_patient
         set	[PATIENT_KEY]	=	tpt.[PATIENT_KEY]	,
                [PATIENT_MPR_UID]	=	tpt.[PATIENT_MPR_UID]	,
@@ -288,7 +325,7 @@ BEGIN
                );
 
         SET @proc_step_name='Insert into D_PATIENT Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 4;
 
         /* D_Patient Insert Operation */
         -- declare @max_key bigint;
