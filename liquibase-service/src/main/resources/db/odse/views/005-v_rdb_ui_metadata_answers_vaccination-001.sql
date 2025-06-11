@@ -1,8 +1,8 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_ui_metadata_answers_vaccination')
 BEGIN
     DROP VIEW [dbo].v_rdb_ui_metadata_answers_vaccination
-END;
---GO   --"GO" not supported by liquibase, keep "GO" in manual scripts
+END
+GO
 
 CREATE VIEW [dbo].v_rdb_ui_metadata_answers_vaccination 
 AS
