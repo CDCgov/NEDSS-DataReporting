@@ -1,8 +1,8 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_nbs_d_patient_rdb_table_metadata')
 BEGIN
     DROP VIEW [dbo].v_nrt_nbs_d_patient_rdb_table_metadata
-END
---GO   "GO" not supported by liquibase, keep in manual scripts
+END;
+--GO   --"GO" not supported by liquibase, keep "GO" in manual scripts
 
 CREATE VIEW [dbo].v_nrt_nbs_d_patient_rdb_table_metadata 
 AS

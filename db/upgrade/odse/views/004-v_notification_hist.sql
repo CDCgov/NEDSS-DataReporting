@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_notification_hist')
 BEGIN
     DROP VIEW [dbo].v_notification_hist
-END
+END;
 GO
 
 CREATE VIEW [dbo].v_notification_hist

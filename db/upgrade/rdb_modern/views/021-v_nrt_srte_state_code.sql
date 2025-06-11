@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_srte_state_code')
 BEGIN
     DROP VIEW [dbo].v_nrt_srte_state_code
-END
+END;
 GO
 
 CREATE VIEW [dbo].v_nrt_srte_state_code

@@ -1,7 +1,7 @@
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_ref_formcode_translation')
 BEGIN
     DROP VIEW [dbo].v_nrt_ref_formcode_translation
-END
+END;
 GO
 
 CREATE VIEW [dbo].v_nrt_ref_formcode_translation 
