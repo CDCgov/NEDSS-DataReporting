@@ -198,7 +198,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 001-fn_get_record_status-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 20.01
       author: liquibase
@@ -222,7 +222,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 011-v_condition_dim-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 20.04
       author: liquibase
@@ -582,7 +582,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 025-v_nrt_ref_formcode_translation-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 26.05
       author: liquibase
@@ -886,7 +886,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 009-v_codeset-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 72
       author: liquibase
@@ -894,7 +894,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 002-v_getobsdate-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 73
       author: liquibase
@@ -902,7 +902,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 003-v_getobsnum-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 74
       author: liquibase
@@ -910,7 +910,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 004-v_getobstxt-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 75
       author: liquibase
@@ -1030,31 +1030,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 005-v_nrt_srte_totalidm-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 91
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 006-v_nrt_srte_imrdbmapping-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 92
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 007-v_nrt_srte_codeset-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 93
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 008-v_nrt_srte_code_value_general-001.sql
-            splitStatements: false
+            splitStatements: true  
   - changeSet:
       id: 94
       author: liquibase
@@ -1062,7 +1038,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 001-v_getobscode-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 95
       author: liquibase
@@ -1070,7 +1046,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 010-v_code_value_general-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 97
       author: liquibase
@@ -1134,7 +1110,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 012-v_nrt_inv_keys_attrs_mapping-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 105
       author: liquibase
@@ -1142,7 +1118,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 013-v_rdb_obs_mapping-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 106
       author: liquibase
@@ -1341,8 +1317,8 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 041-fn_get_proper_case-001.sql
-            splitStatements: false
+            path: 002-fn_get_proper_case-001.sql
+            splitStatements: true
   - changeSet:
       id: 130
       author: liquibase
@@ -1614,7 +1590,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 014-v_nrt_nbs_page-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 152.9
       author: liquibase
@@ -1622,7 +1598,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 026-v_nrt_odse_NBS_rdb_metadata_recent-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 153
       author: liquibase
@@ -1630,7 +1606,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 015-v_nrt_nbs_investigation_rdb_table_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 154
       author: liquibase
@@ -1638,7 +1614,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 016-v_nrt_nbs_d_case_mgmt_rdb_table_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 155
       author: liquibase
@@ -1646,7 +1622,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 017-v_nrt_d_inv_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 156
       author: liquibase
@@ -1654,7 +1630,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 018-v_nrt_d_provider_rdb_table_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 157
       author: liquibase
@@ -1662,7 +1638,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 019-v_nrt_nbs_d_organization_rdb_table_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 159
       author: liquibase
@@ -1678,7 +1654,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 020-v_nrt_nbs_d_patient_rdb_table_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 160
       author: liquibase
@@ -2175,7 +2151,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 021-v_nrt_nbs_repeatvarch_rdb_table_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 555
       author: liquibase
@@ -2183,7 +2159,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 022-v_nrt_d_inv_repeat_blockdata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 560
       author: liquibase
@@ -2223,7 +2199,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 023-v_nrt_d_inv_repeat_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 580
       author: liquibase
@@ -2239,7 +2215,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 021-v_nrt_srte_state_code-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 585
       author: liquibase
@@ -2343,7 +2319,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 024-v_nrt_nbs_repeatnumeric_rdb_table_metadata-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 645
       author: liquibase

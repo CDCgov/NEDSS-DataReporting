@@ -465,8 +465,32 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
-            
 
+--------------------------------------------------------------------------------------------------------
+    BEGIN TRANSACTION
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'Update nrt_var_pam_key updated_dttm';
+          
+        UPDATE tgt 
+        SET tgt.[updated_dttm] = GETDATE()
+        FROM [dbo].nrt_var_pam_key tgt 
+        INNER JOIN dbo.d_var_pam d WITH (NOLOCK)
+            on tgt.D_VAR_PAM_KEY = tgt.D_VAR_PAM_KEY AND
+            tgt.VAR_PAM_UID = tgt.VAR_PAM_UID
+        INNER JOIN #S_VAR_PAM_SET_TRANSLATED S
+            ON S.VAR_PAM_UID = D.VAR_PAM_UID
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name,
+                @RowCount_no);
+        
+        COMMIT TRANSACTION;
+    
 --------------------------------------------------------------------------------------------------------
     BEGIN TRANSACTION
         SET

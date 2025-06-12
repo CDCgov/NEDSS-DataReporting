@@ -1,13 +1,20 @@
-CREATE or ALTER VIEW dbo.v_rdb_ui_metadata_answers_vaccination AS
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_ui_metadata_answers_vaccination')
+BEGIN
+    DROP VIEW [dbo].v_rdb_ui_metadata_answers_vaccination
+END
+GO
+
+CREATE VIEW [dbo].v_rdb_ui_metadata_answers_vaccination 
+AS
 SELECT
-	PA.nbs_answer_uid as nbs_answer_uid,
+	PA.nbs_answer_uid AS nbs_answer_uid,
 	nuim.nbs_ui_metadata_uid,
 	nrdbm.nbs_rdb_metadata_uid,
 	nrdbm.rdb_table_nm,
 	nrdbm.rdb_column_nm,
 	nuim.code_set_group_id,
-	cast(replace(answer_txt, char(13) + char(10), ' ') as varchar(2000)) as answer_txt,
-	pa.act_uid as INTERVENTION_UID,
+	CAST(REPLACE(answer_txt, CHAR(13) + CHAR(10), ' ') AS VARCHAR(2000)) AS answer_txt,
+	pa.act_uid AS INTERVENTION_UID,
 	pa.record_status_cd,
 	nuim.nbs_question_uid,
 	nuim.investigation_form_cd,
@@ -25,17 +32,13 @@ SELECT
 	pa.last_chg_time,
 	cvg.code,
 	cvg.code_set_nm
-from
-	nbs_odse.dbo.nbs_rdb_metadata nrdbm with (nolock)
-inner join nbs_odse.dbo.nbs_ui_metadata nuim with (nolock)
-	on
-	nrdbm.nbs_ui_metadata_uid = nuim.nbs_ui_metadata_uid
-left outer join nbs_odse.dbo.NBS_ANSWER pa with (nolock)
-	on
-	nuim.nbs_question_uid = pa.nbs_question_uid
-left outer join nbs_srte.dbo.code_value_general cvg with (nolock)
-	on
-	cvg.code = nuim.data_type
-where
+FROM nbs_odse.[dbo].nbs_rdb_metadata nrdbm WITH (NOLOCK)
+INNER JOIN nbs_odse.[dbo].nbs_ui_metadata nuim WITH (NOLOCK)
+	ON nrdbm.nbs_ui_metadata_uid = nuim.nbs_ui_metadata_uid
+LEFT OUTER JOIN nbs_odse.[dbo].NBS_ANSWER pa WITH (NOLOCK)
+	on nuim.nbs_question_uid = pa.nbs_question_uid
+LEFT OUTER JOIN nbs_srte.[dbo].code_value_general cvg WITH (NOLOCK)
+	ON cvg.code = nuim.data_type
+WHERE
 	cvg.code_set_nm = 'NBS_DATA_TYPE'
-	and nuim.data_location = 'NBS_ANSWER.ANSWER_TXT';
+	AND nuim.data_location = 'NBS_ANSWER.ANSWER_TXT';

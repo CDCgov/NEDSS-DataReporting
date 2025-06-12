@@ -1,4 +1,10 @@
-CREATE OR ALTER VIEW dbo.v_nrt_ref_formcode_translation 
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_nrt_ref_formcode_translation')
+BEGIN
+    DROP VIEW [dbo].v_nrt_ref_formcode_translation
+END;
+GO
+
+CREATE VIEW [dbo].v_nrt_ref_formcode_translation 
 AS
 SELECT DISTINCT
 	(INVESTIGATION_FORM_CD + CODE_VALUE_GENERAL.CODE_SET_NM) AS PAGE_CODE_SET_NM, 
