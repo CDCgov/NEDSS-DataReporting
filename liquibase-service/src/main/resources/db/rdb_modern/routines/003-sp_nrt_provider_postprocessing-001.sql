@@ -125,11 +125,48 @@ BEGIN
                , LEFT (@id_list, 500)
                );
 
-        SET @proc_step_name='Update D_PROVIDER Dimension';
-        SET @proc_step_no = 2;
 
         /* D_Provider Update Operation */
         BEGIN TRANSACTION;
+
+        SET @proc_step_name='Update dbo.nrt_provider_key';
+        SET @proc_step_no = 2;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_provider_key k
+          INNER JOIN #temp_prv_table d
+            ON K.d_provider_key = d.PROVIDER_KEY;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+
+
+        SET @proc_step_name='Update D_PROVIDER Dimension';
+        SET @proc_step_no = 3;
+
         update dbo.d_provider
         set [PROVIDER_UID] = prv.[PROVIDER_UID], [PROVIDER_KEY] = prv.[PROVIDER_KEY], [PROVIDER_LOCAL_ID] = prv.[PROVIDER_LOCAL_ID], [PROVIDER_RECORD_STATUS] = prv.[PROVIDER_RECORD_STATUS], [PROVIDER_NAME_PREFIX] = prv.[PROVIDER_NAME_PREFIX], [PROVIDER_FIRST_NAME] = prv.[PROVIDER_FIRST_NAME], [PROVIDER_MIDDLE_NAME] = prv.[PROVIDER_MIDDLE_NAME], [PROVIDER_LAST_NAME] = prv.[PROVIDER_LAST_NAME], [PROVIDER_NAME_SUFFIX] = prv.[PROVIDER_NAME_SUFFIX], [PROVIDER_NAME_DEGREE] = prv.[PROVIDER_NAME_DEGREE], [PROVIDER_GENERAL_COMMENTS] = prv.[PROVIDER_GENERAL_COMMENTS], [PROVIDER_QUICK_CODE] = substring (prv.[PROVIDER_QUICK_CODE], 1, 50), [PROVIDER_REGISTRATION_NUM] = substring (prv.[PROVIDER_REGISTRATION_NUM], 1, 50), [PROVIDER_REGISRATION_NUM_AUTH] = substring (prv.[PROVIDER_REGISRATION_NUM_AUTH], 1, 50), [PROVIDER_STREET_ADDRESS_1] = substring (prv.[PROVIDER_STREET_ADDRESS_1], 1, 50), [PROVIDER_STREET_ADDRESS_2] = substring (prv.[PROVIDER_STREET_ADDRESS_2], 1, 50), [PROVIDER_CITY] = substring (prv.[PROVIDER_CITY], 1, 50), [PROVIDER_STATE] = prv.[PROVIDER_STATE], [PROVIDER_STATE_CODE] = prv.[PROVIDER_STATE_CODE], [PROVIDER_ZIP] = prv.[PROVIDER_ZIP], [PROVIDER_COUNTY] = prv.[PROVIDER_COUNTY], [PROVIDER_COUNTY_CODE] = prv.[PROVIDER_COUNTY_CODE], [PROVIDER_COUNTRY] = prv.[PROVIDER_COUNTRY], [PROVIDER_ADDRESS_COMMENTS] = prv.[PROVIDER_ADDRESS_COMMENTS], [PROVIDER_PHONE_WORK] = prv.[PROVIDER_PHONE_WORK], [PROVIDER_PHONE_EXT_WORK] = prv.[PROVIDER_PHONE_EXT_WORK], [PROVIDER_EMAIL_WORK] = substring (prv.[PROVIDER_EMAIL_WORK], 1, 50), [PROVIDER_PHONE_COMMENTS] = prv.[PROVIDER_PHONE_COMMENTS], [PROVIDER_PHONE_CELL] = prv.[PROVIDER_PHONE_CELL], [PROVIDER_ENTRY_METHOD] = prv.[PROVIDER_ENTRY_METHOD], [PROVIDER_LAST_CHANGE_TIME] = prv.[PROVIDER_LAST_CHANGE_TIME], [PROVIDER_ADD_TIME] = prv.[PROVIDER_ADD_TIME], [PROVIDER_ADDED_BY] = prv.[PROVIDER_ADDED_BY], [PROVIDER_LAST_UPDATED_BY] = prv.[PROVIDER_LAST_UPDATED_BY]
         from #temp_prv_table prv
@@ -164,7 +201,7 @@ BEGIN
                );
 
         SET @proc_step_name='Insert into D_PROVIDER Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 4;
 
         /* D_Provider Insert Operation */
 

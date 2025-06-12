@@ -113,8 +113,44 @@ BEGIN
                );
 
         BEGIN TRANSACTION;
-        SET @proc_step_name='Update NOTIFICATION Dimension';
+
+        SET @proc_step_name='Update dbo.nrt_notification_key';
         SET @proc_step_no = 2;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_notification_key k
+          INNER JOIN #temp_ntf_table d
+            ON K.d_notification_key = d.notification_key;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@notification_uids,500)
+               );
+
+
+        SET @proc_step_name='Update NOTIFICATION Dimension';
+        SET @proc_step_no = 3;
 
         /* Notification Update Operation */
         UPDATE dbo.NOTIFICATION
@@ -152,7 +188,7 @@ BEGIN
                );
 
         SET @proc_step_name='Update NOTIFICATION_EVENT Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 4;
 
         /* Notification_Event Update Operation */
         UPDATE dbo.NOTIFICATION_EVENT
@@ -192,7 +228,7 @@ BEGIN
                );
 
         SET @proc_step_name='Insert into NOTIFICATION Dimension';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 5;
 
         /* Notification Insert Operation */
 
@@ -242,7 +278,7 @@ BEGIN
                );
 
         SET @proc_step_name='Insert into NOTIFICATION_EVENT Dimension';
-        SET @proc_step_no = 5;
+        SET @proc_step_no = 6;
 
         INSERT INTO dbo.NOTIFICATION_EVENT
         (PATIENT_KEY
