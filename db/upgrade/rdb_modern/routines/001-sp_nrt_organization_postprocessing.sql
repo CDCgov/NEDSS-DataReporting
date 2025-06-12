@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_organization_postprocessing @id_list nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_organization_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_organization_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_nrt_organization_postprocessing @id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 
@@ -77,7 +85,7 @@ BEGIN
             nrt.last_chg_user_name as ORGANIZATION_LAST_UPDATED_BY,
             nrt.last_chg_time as ORGANIZATION_LAST_CHANGE_TIME
         into #temp_org_table
-        from dbo.nrt_organization nrt
+        from dbo.nrt_organization nrt with (nolock)
                  left join dbo.d_organization o with (nolock) on o.organization_uid = nrt.organization_uid
         where nrt.organization_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 

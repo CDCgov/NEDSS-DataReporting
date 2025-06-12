@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_l_pagebuilder_postprocessing
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_l_pagebuilder_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_l_pagebuilder_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_l_pagebuilder_postprocessing
 	@Batch_id bigint,
 	@phc_id_list nvarchar(max),
 	@rdb_TABLE_NAME varchar(250),

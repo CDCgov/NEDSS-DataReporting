@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_d_lab_test_postprocessing
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_d_lab_test_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_d_lab_test_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].sp_d_lab_test_postprocessing
     @obs_ids nvarchar(max),
     @debug bit = 'false'
 AS

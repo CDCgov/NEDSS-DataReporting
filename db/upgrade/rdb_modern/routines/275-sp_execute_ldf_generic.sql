@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_execute_ldf_generic] 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_execute_ldf_generic]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_execute_ldf_generic]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_execute_ldf_generic] 
 @phc_uids nvarchar(max),
 @batch_id bigint,
 @debug bit = 'false',

@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_dyn_dm_org_data_postprocessing @batch_id BIGINT,
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_org_data_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_dyn_dm_org_data_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_dyn_dm_org_data_postprocessing @batch_id BIGINT,
                                                                 @DATAMART_NAME VARCHAR(100),
                                                                 @phc_id_list nvarchar(max),
                                                                 @debug bit = false
