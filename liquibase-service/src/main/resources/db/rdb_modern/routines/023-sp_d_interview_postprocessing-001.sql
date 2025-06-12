@@ -166,9 +166,32 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        BEGIN TRANSACTION;
 
-        BEGIN
-            TRANSACTION;
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'UPDATE nrt_interview_key';
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_interview_key k
+          INNER JOIN #INTERVIEW_INIT d
+            ON K.d_interview_key = d.d_interview_key;
+
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+
+        COMMIT TRANSACTION;
+
+
+        BEGIN TRANSACTION;
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -422,6 +445,10 @@ BEGIN
         DELETE FROM dbo.D_INTERVIEW_NOTE
         WHERE D_INTERVIEW_KEY IN (SELECT D_INTERVIEW_KEY FROM #INTERVIEW_NOTE_INIT WHERE D_INTERVIEW_KEY IS NOT NULL);
 
+        -- remove old keys
+        DELETE FROM dbo.nrt_interview_note_key
+        WHERE D_INTERVIEW_KEY IN (SELECT D_INTERVIEW_KEY FROM #INTERVIEW_NOTE_INIT WHERE D_INTERVIEW_KEY IS NOT NULL);
+
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -445,7 +472,7 @@ BEGIN
             D_INTERVIEW_KEY,
             NBS_ANSWER_UID
         FROM #INTERVIEW_NOTE_INIT
-        WHERE D_INTERVIEW_NOTE_KEY IS NULL;
+        WHERE D_INTERVIEW_KEY IS NOT NULL;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;

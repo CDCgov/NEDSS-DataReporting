@@ -372,8 +372,43 @@ BEGIN
 
         /* Investigation Update Operation */
         BEGIN TRANSACTION;
-        SET @proc_step_name = 'Update INVESTIGATION Dimension';
+
+        SET @proc_step_name='Update dbo.nrt_investigation_key';
         SET @proc_step_no = 2;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_investigation_key k
+          INNER JOIN #temp_inv_table d
+            ON K.d_investigation_key = d.INVESTIGATION_KEY;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+
+        SET @proc_step_name = 'Update INVESTIGATION Dimension';
+        SET @proc_step_no = 3;
 
         update dbo.INVESTIGATION
         set [INVESTIGATION_KEY]             = inv.INVESTIGATION_KEY,
@@ -475,7 +510,7 @@ BEGIN
 
         /* Investigation Insert Operation */
         SET @proc_step_name = 'Insert into INVESTIGATION Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 4;
 
         insert into dbo.nrt_investigation_key(case_uid)
         select case_uid
@@ -654,8 +689,10 @@ BEGIN
 
         BEGIN TRANSACTION;
 
+        
+
         SET @proc_step_name = 'Update CONFIRMATION_METHOD';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 6;
 
 
         /*Temp Confirmation Method Table*/
@@ -681,6 +718,40 @@ BEGIN
 
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #temp_cm_table;
+
+        SET @proc_step_name='Update dbo.nrt_confirmation_method_key';
+        SET @proc_step_no = 5;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_confirmation_method_key k
+          INNER JOIN #temp_cm_table d
+            ON K.d_confirmation_method_key = d.CONFIRMATION_METHOD_KEY;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
 
         -- if confirmation_method_key for the cd exists get the key or insert a new row to rdb.confirmation_method
 
@@ -714,7 +785,7 @@ BEGIN
 
 
         SET @proc_step_name = 'Insert into CONFIRMATION_METHOD';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 7;
 
         insert into dbo.nrt_confirmation_method_key(confirmation_method_cd)
         select distinct cmt.confirmation_method_cd
@@ -758,7 +829,7 @@ BEGIN
                ,LEFT(@id_list, 500));
 
         SET @proc_step_name = 'UPDATE CONFIRMATION_METHOD_GROUP';
-        SET @proc_step_no = 5;
+        SET @proc_step_no = 8;
 
         delete dbo.CONFIRMATION_METHOD_GROUP
         where investigation_key in

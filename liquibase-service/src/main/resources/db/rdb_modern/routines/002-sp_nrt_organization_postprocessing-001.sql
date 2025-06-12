@@ -110,8 +110,45 @@ BEGIN
 
         /* D_Organization Update Operation */
         BEGIN TRANSACTION;
-        SET @proc_step_name='Update D_ORAGANIZATION Dimension';
+
+        SET @proc_step_name='Update dbo.nrt_organization_key';
         SET @proc_step_no = 2;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_organization_key k
+          INNER JOIN #temp_org_table d
+            ON K.d_organization_key = d.ORGANIZATION_KEY;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+
+
+
+        SET @proc_step_name='Update D_ORGANIZATION Dimension';
+        SET @proc_step_no = 3;
         update dbo.d_organization
         set	[ORGANIZATION_KEY]             = org.ORGANIZATION_KEY,
                [ORGANIZATION_UID]               = org.ORGANIZATION_UID,
@@ -173,7 +210,7 @@ BEGIN
                );
 
         SET @proc_step_name='Insert into D_ORAGANIZATION Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 4;
 
         /* D_Organization Insert Operation */
         
