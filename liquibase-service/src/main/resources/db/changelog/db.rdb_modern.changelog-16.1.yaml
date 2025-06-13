@@ -2376,8 +2376,9 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 225_sp_nrt_d_rash_loc_gen_postprocessing-001.sql
-            splitStatements: false
+            path: 225-sp_nrt_d_rash_loc_gen_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 620
       author: liquibase
