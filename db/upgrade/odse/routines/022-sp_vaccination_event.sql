@@ -1,4 +1,12 @@
-CREATE or ALTER PROCEDURE [dbo].[sp_vaccination_event] @vac_uids nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_vaccination_event]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_vaccination_event]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_vaccination_event] @vac_uids nvarchar(max), @debug bit = 'false'
 as
 BEGIN
  DECLARE

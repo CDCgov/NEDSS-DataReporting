@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_patient_postprocessing @id_list nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_patient_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_patient_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_nrt_patient_postprocessing @id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 
@@ -145,7 +153,7 @@ BEGIN
             last_chg_user_name AS PATIENT_LAST_UPDATED_BY,
             last_chg_time AS PATIENT_LAST_CHANGE_TIME
         into #temp_patient_table
-        from dbo.nrt_patient nrt
+        from dbo.nrt_patient nrt with (nolock)
                  left join dbo.d_patient p with (nolock) on p.patient_uid = nrt.patient_uid
         where
             nrt.patient_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));

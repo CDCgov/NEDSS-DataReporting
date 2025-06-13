@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_investigation_postprocessing @id_list nvarchar(max),@debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_investigation_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_investigation_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_nrt_investigation_postprocessing @id_list nvarchar(max),@debug bit = 'false'
 AS
 BEGIN
     /*
@@ -136,7 +144,7 @@ BEGIN
                nrt.patient_id,
                nrt.batch_id
         into #temp_inv_table
-        from dbo.nrt_investigation nrt
+        from dbo.nrt_investigation nrt with (nolock)
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
         where nrt.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
@@ -189,8 +197,8 @@ BEGIN
                 FROM #temp_inv_table t
                          LEFT JOIN (
                     select invobs.*
-                    from dbo.NRT_INVESTIGATION_OBSERVATION invobs
-                             left outer join dbo.NRT_INVESTIGATION inv
+                    from dbo.NRT_INVESTIGATION_OBSERVATION invobs with (nolock)
+                             left outer join dbo.NRT_INVESTIGATION inv with (nolock)
                                              on inv.public_health_case_uid = invobs.public_health_case_uid
                     where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
                       and invobs.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
@@ -792,7 +800,7 @@ BEGIN
         from #temp_cm_table cmt
         where cmt.CONFIRMATION_METHOD_KEY is null and cmt.confirmation_method_cd is not null
           and not exists (select confirmation_method_cd
-                          from dbo.confirmation_method cd
+                          from dbo.confirmation_method cd with (nolock)
                           where cd.confirmation_method_cd = cmt.confirmation_method_cd);
 
 --        /* Insert confirmation_method */
@@ -802,7 +810,7 @@ BEGIN
                  join dbo.nrt_confirmation_method_key cmk with (nolock) on cmk.confirmation_method_cd = cmt.confirmation_method_cd
         where cmt.CONFIRMATION_METHOD_KEY is null
           and not exists (select confirmation_method_cd
-                          from dbo.confirmation_method cd
+                          from dbo.confirmation_method cd with (nolock)
                           where cd.confirmation_method_cd = cmt.confirmation_method_cd);
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #temp_cm_table;

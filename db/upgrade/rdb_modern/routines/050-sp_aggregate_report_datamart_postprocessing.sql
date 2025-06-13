@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_aggregate_report_datamart_postprocessing(
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_aggregate_report_datamart_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_aggregate_report_datamart_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_aggregate_report_datamart_postprocessing(
     @id_list nvarchar(MAX),
     @debug bit = 'false')
 AS

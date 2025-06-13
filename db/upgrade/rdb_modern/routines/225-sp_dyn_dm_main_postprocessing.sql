@@ -1,4 +1,12 @@
-CREATE or alter PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_main_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_dyn_dm_main_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
     @datamart_name VARCHAR(100),
     @phc_id_list VARCHAR(MAX) = NULL,
     @debug BIT = 'false'

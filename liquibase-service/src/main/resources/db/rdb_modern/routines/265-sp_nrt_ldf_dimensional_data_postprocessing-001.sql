@@ -1,5 +1,13 @@
 
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_ldf_dimensional_data_postprocessing]
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_ldf_dimensional_data_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_ldf_dimensional_data_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_nrt_ldf_dimensional_data_postprocessing]
   @ldf_id_list nvarchar(max),
   @debug bit = 'false'
  AS
