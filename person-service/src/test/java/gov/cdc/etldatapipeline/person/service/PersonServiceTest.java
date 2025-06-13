@@ -80,6 +80,7 @@ class PersonServiceTest {
         personService.setProviderReportingOutputTopic(providerReportingTopic);
         personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
         personService.setUserReportingOutputTopic(userReportingTopic);
+        personService.setElasticSearchEnable(true);
     }
 
     @Test

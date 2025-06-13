@@ -56,6 +56,9 @@ public class OrganizationService {
     @Value("${spring.kafka.output.place.topic-name-tele}")
     private String teleOutputTopic;
 
+    @Value("${featureFlag.elastic-search-enable}")
+    private boolean elasticSearchEnable;
+
     private final OrgRepository orgRepository;
     private final PlaceRepository placeRepository;
     private final DataTransformers transformer;
@@ -110,11 +113,13 @@ public class OrganizationService {
                     log.info("Organization data (uid={}) sent to {}", orgUid, orgReportingOutputTopic);
                     log.debug("Organization Reporting: {}", reportingData);
 
-                    String elasticKey = transformer.buildOrganizationKey(org);
-                    String elasticData = transformer.processData(org, OrganizationType.ORGANIZATION_ELASTIC_SEARCH);
-                    kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
-                    log.info("Organization data (uid={}) sent to {}", orgUid, orgElasticSearchTopic);
-                    log.debug("Organization Elastic: {}", elasticData!= null ? elasticData : "");
+                    if (elasticSearchEnable) {
+                        String elasticKey = transformer.buildOrganizationKey(org);
+                        String elasticData = transformer.processData(org, OrganizationType.ORGANIZATION_ELASTIC_SEARCH);
+                        kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
+                        log.info("Organization data (uid={}) sent to {}", orgUid, orgElasticSearchTopic);
+                        log.debug("Organization Elastic: {}", elasticData != null ? elasticData : "");
+                    }
                 });
             } else {
                 throw new EntityNotFoundException("Unable to find Organization with id: " + organizationUid);

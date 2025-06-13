@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
+import static gov.cdc.etldatapipeline.organization.transformer.OrganizationType.ORGANIZATION_REPORTING;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OrganizationDataProcessTests {
@@ -130,6 +131,32 @@ class OrganizationDataProcessTests {
                                     readFileData("orgtransformed/OrgElastic.json")).path("payload").toString(),
                             OrganizationElasticSearch.class);
                 };
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void testOrganizationReportingEmptyObjects() {
+        DataTransformers transformer = new DataTransformers();
+        orgSp.setOrganizationAddress(null);
+        orgSp.setOrganizationEntityId(null);
+        orgSp.setOrganizationFax(null);
+        orgSp.setOrganizationTelephone(null);
+        orgSp.setOrganizationName(null);
+        Object actual = transformer.buildTransformedObject(orgSp, ORGANIZATION_REPORTING);
+
+        Object expected = OrganizationReporting.builder()
+                .organizationUid(10036000L)
+                .localId("ORG10000000AL01")
+                .recordStatus("ACTIVE")
+                .generalComments("1.0.5 PHA 8 Bobby H. Bryant-Area Admin. & Admin for Autauga County")
+                .entryMethod("N")
+                .standIndClass("Health Care and Social Assistance")
+                .addTime("2004-07-22 10:48:53.343")
+                .lastChgUserId(10180119L)
+                .lastChgUserName("ZRY4SFCLNAIUPX, CRPVQBYEAZNDJS6H")
+                .lastChgTime("2024-04-05 18:55:54.177")
+                .build();
 
         assertEquals(expected, actual);
     }
