@@ -62,7 +62,6 @@ BEGIN
                 FROM STRING_SPLIT(@observation_id_list, ',') split_ids
                          INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON TRY_CAST(split_ids.value AS BIGINT) = obs.observation_uid
                 WHERE COALESCE(obs.record_status_cd, '') <> 'LOG_DEL';
-
             END
 
         /* Logging */
@@ -105,22 +104,22 @@ BEGIN
         FROM #COVID_OBSERVATIONS_TO_PROCESS cp --Order
                  INNER JOIN dbo.nrt_observation o_order WITH(NOLOCK) ON cp.observation_uid = o_order.observation_uid
                  CROSS APPLY (
-            SELECT CAST(value AS BIGINT) as target_obs_uid
+            SELECT CAST(value AS BIGINT) AS target_obs_uid
             FROM STRING_SPLIT(o_order.result_observation_uid, ',')
-        ) as split_results
-                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON split_results.target_obs_uid = o.observation_uid
-                 LEFT JOIN dbo.D_PATIENT dp WITH(NOLOCK) ON o_order.patient_id = dp.patient_uid
-                 LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON o_order.patient_id = p.patient_uid
-                 INNER JOIN dbo.nrt_patient_key pk WITH(NOLOCK) ON pk.patient_uid = p.patient_uid
+        ) AS split_results
+        INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON split_results.target_obs_uid = o.observation_uid
+        LEFT JOIN dbo.D_PATIENT dp WITH(NOLOCK) ON o_order.patient_id = dp.patient_uid
+        LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON o_order.patient_id = p.patient_uid
+        INNER JOIN dbo.nrt_patient_key pk WITH(NOLOCK) ON pk.patient_uid = p.patient_uid
         WHERE COALESCE(dp.patient_uid, pk.patient_uid) IS NOT NULL
-          AND (o.cd IN
+            AND (o.cd IN
                (
                    SELECT loinc_cd
                    FROM dbo.nrt_srte_Loinc_condition
                    WHERE condition_cd = '11065'
                )
             OR o.cd IN(''))--replace '' with the local codes seperated by comma
-          AND o.cd NOT IN
+            AND o.cd NOT IN
               (
                   SELECT loinc_cd
                   FROM dbo.nrt_srte_Loinc_code
@@ -137,16 +136,17 @@ BEGIN
             cp.target_observation_uid, --result
             cp.Lab_Local_ID,
             cp.Patient_Local_ID,
-            replace(replace(otxt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ') AS Text_Result_Desc,
-            replace(replace(otxt_comment.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ') AS Result_Comments
+            REPLACE(REPLACE(otxt.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ') AS Text_Result_Desc,
+            REPLACE(REPLACE(otxt_comment.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ') AS Result_Comments
         INTO #COVID_TEXT_RESULT_LIST
         FROM #COVID_RESULT_LIST cp --Order
-                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON cp.target_observation_uid = o.observation_uid
-                 LEFT OUTER JOIN dbo.nrt_observation_txt otxt WITH(NOLOCK) ON o.observation_uid = otxt.observation_uid AND isnull(o.batch_id,1) = isnull(otxt.batch_id,1)
+        INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON cp.target_observation_uid = o.observation_uid
+        LEFT OUTER JOIN dbo.nrt_observation_txt otxt WITH(NOLOCK) ON o.observation_uid = otxt.observation_uid 
+            AND ISNULL(o.batch_id,1) = ISNULL(otxt.batch_id,1)
             AND (otxt.ovt_txt_type_cd = 'O' OR otxt.ovt_txt_type_cd IS NULL)
-                 LEFT OUTER JOIN dbo.nrt_observation_txt otxt_comment WITH(NOLOCK) ON o.observation_uid = otxt_comment.observation_uid AND isnull(o.batch_id,1) = isnull(otxt_comment.batch_id,1)
-            AND otxt_comment.ovt_txt_type_cd = 'N'
-        ;
+        LEFT OUTER JOIN dbo.nrt_observation_txt otxt_comment WITH(NOLOCK) ON o.observation_uid = otxt_comment.observation_uid 
+            AND ISNULL(o.batch_id,1) = ISNULL(otxt_comment.batch_id,1)
+            AND otxt_comment.ovt_txt_type_cd = 'N';
 
         IF @debug = 'true' SELECT '#COVID_TEXT_RESULT_LIST',*
                            from #COVID_TEXT_RESULT_LIST;
