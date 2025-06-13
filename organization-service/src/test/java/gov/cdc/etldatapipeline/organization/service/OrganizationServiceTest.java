@@ -78,6 +78,7 @@ class OrganizationServiceTest {
         organizationService.setOrgElasticSearchTopic(orgElasticTopic);
         organizationService.setPlaceReportingOutputTopic(placeReportingTopic);
         organizationService.setTeleOutputTopic(teleReportingTopic);
+        organizationService.setElasticSearchEnable(true);
 
         Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
         listAppender.start();
