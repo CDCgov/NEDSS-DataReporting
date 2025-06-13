@@ -7,3 +7,4 @@ databaseChangeLog:
         - sqlFile:
             path: 001-fn_sql_server_agent_status_override-001.sql
             splitStatements: true
+            endDelimiter: GO
