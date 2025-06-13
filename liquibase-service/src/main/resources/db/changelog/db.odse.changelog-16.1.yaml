@@ -29,8 +29,8 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 003-fn-get_user_name-001.sql
-            splitStatements: false
+            path: 003-fn_get_user_name-001.sql
+            splitStatements: true
   - changeSet:
       id: 4
       author: liquibase
