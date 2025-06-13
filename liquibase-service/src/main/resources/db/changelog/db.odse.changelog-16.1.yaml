@@ -15,6 +15,7 @@ databaseChangeLog:
         - sqlFile:
             path: 001-fn_get_value_by_cd_ques-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 2
       author: liquibase
@@ -23,6 +24,7 @@ databaseChangeLog:
         - sqlFile:
             path: 002-fn_get_value_by_cvg-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 3
       author: liquibase
@@ -31,6 +33,7 @@ databaseChangeLog:
         - sqlFile:
             path: 003-fn_get_user_name-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 4
       author: liquibase
@@ -39,6 +42,7 @@ databaseChangeLog:
         - sqlFile:
             path: 004-fn_get_value_by_cd_codeset-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 5
       author: liquibase
@@ -47,6 +51,7 @@ databaseChangeLog:
         - sqlFile:
             path: 005-sp_organization_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 6
       author: liquibase
@@ -55,6 +60,7 @@ databaseChangeLog:
         - sqlFile:
             path: 006-sp_provider_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 7
       author: liquibase
@@ -63,6 +69,7 @@ databaseChangeLog:
         - sqlFile:
             path: 007-sp_patient_race_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 8
       author: liquibase
@@ -71,6 +78,7 @@ databaseChangeLog:
         - sqlFile:
             path: 008-sp_patient_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 9
       author: liquibase
@@ -79,6 +87,7 @@ databaseChangeLog:
         - sqlFile:
             path: 009-sp_observation_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 9.1
       author: liquibase
@@ -87,6 +96,7 @@ databaseChangeLog:
         - sqlFile:
             path: 004-v_notification_hist-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 10
       author: liquibase
@@ -95,6 +105,7 @@ databaseChangeLog:
         - sqlFile:
             path: 010-sp_investigation_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 11
       author: liquibase
@@ -103,6 +114,7 @@ databaseChangeLog:
         - sqlFile:
             path: 011-sp_ldf_provider_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 12
       author: liquibase
@@ -111,6 +123,7 @@ databaseChangeLog:
         - sqlFile:
             path: 012-sp_ldf_organization_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 13
       author: liquibase
@@ -119,6 +132,7 @@ databaseChangeLog:
         - sqlFile:
             path: 013-sp_ldf_patient_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 14
       author: liquibase
@@ -127,6 +141,7 @@ databaseChangeLog:
         - sqlFile:
             path: 014-sp_ldf_observation_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 15
       author: liquibase
@@ -135,6 +150,7 @@ databaseChangeLog:
         - sqlFile:
             path: 015-sp_ldf_phc_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 16
       author: liquibase
@@ -143,6 +159,7 @@ databaseChangeLog:
         - sqlFile:
             path: 016-sp_ldf_intervention_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 17
       author: liquibase
@@ -151,6 +168,7 @@ databaseChangeLog:
         - sqlFile:
             path: 017-sp_ldf_data_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 18
       author: liquibase
@@ -159,6 +177,7 @@ databaseChangeLog:
         - sqlFile:
             path: 018-sp_public_health_case_fact_datamart_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 19
       author: liquibase
@@ -167,6 +186,7 @@ databaseChangeLog:
         - sqlFile:
             path: 001-v_inv_form_code_data-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 20
       author: liquibase
@@ -175,6 +195,7 @@ databaseChangeLog:
         - sqlFile:
             path: 005-fn_get_record_status-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 21
       author: liquibase
@@ -183,6 +204,7 @@ databaseChangeLog:
         - sqlFile:
             path: 020-sp_notification_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 27
       author: liquibase
@@ -191,6 +213,7 @@ databaseChangeLog:
         - sqlFile:
             path: 021-sp_interview_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 28
       author: liquibase
@@ -199,6 +222,7 @@ databaseChangeLog:
         - sqlFile:
             path: 002-v_rdb_ui_metadata_answers-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 29
       author: liquibase
@@ -207,6 +231,7 @@ databaseChangeLog:
         - sqlFile:
             path: 022-sp_user_report_permissions-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 30
       author: liquibase
@@ -215,6 +240,7 @@ databaseChangeLog:
         - sqlFile:
             path: 023-sp_auth_user_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 31
       author: liquibase
@@ -223,6 +249,7 @@ databaseChangeLog:
         - sqlFile:
             path: 024-sp_place_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 32
       author: liquibase
@@ -231,6 +258,7 @@ databaseChangeLog:
         - sqlFile:
             path: 003-v_rdb_ui_metadata_answers_contact-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 33
       author: liquibase
@@ -239,6 +267,7 @@ databaseChangeLog:
         - sqlFile:
             path: 025-sp_contact_record_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 34
       author: liquibase
@@ -247,6 +276,7 @@ databaseChangeLog:
         - sqlFile:
             path: 026-sp_treatment_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 34.1
       author: liquibase
@@ -255,6 +285,7 @@ databaseChangeLog:
         - sqlFile:
             path: 005-v_rdb_ui_metadata_answers_vaccination-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 35
       author: liquibase
@@ -263,6 +294,7 @@ databaseChangeLog:
         - sqlFile:
             path: 027-sp_vaccination_event-001.sql
             splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 36
       author: liquibase
@@ -271,3 +303,4 @@ databaseChangeLog:
         - sqlFile:
             path: 006-fn_get_value_to_pascal_case-001.sql
             splitStatements: true
+            endDelimiter: GO
