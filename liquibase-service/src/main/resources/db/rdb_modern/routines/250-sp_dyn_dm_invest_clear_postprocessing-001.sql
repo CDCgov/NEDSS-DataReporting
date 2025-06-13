@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_dyn_dm_invest_clear_postprocessing
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_invest_clear_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_dyn_dm_invest_clear_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_dyn_dm_invest_clear_postprocessing
 
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100), --HEPATITIS_A_ACUTE

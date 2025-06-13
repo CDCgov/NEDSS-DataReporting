@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_page_builder_d_inv_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_dyn_dm_page_builder_d_inv_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].sp_dyn_dm_page_builder_d_inv_postprocessing
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100),
     @RDB_TABLE_NM  VARCHAR(100),

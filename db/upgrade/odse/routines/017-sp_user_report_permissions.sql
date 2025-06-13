@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_user_report_permissions(
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_user_report_permissions]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_user_report_permissions]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_user_report_permissions(
     @user_ids NVARCHAR(MAX) = '')
 as
 

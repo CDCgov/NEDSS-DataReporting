@@ -486,7 +486,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 002-sp_nrt_organization_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 22
       author: liquibase
@@ -494,7 +494,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 003-sp_nrt_provider_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 22.01
       author: liquibase
@@ -526,7 +526,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 004-sp_nrt_patient_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 24
       author: liquibase
@@ -534,7 +534,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 005-sp_nrt_investigation_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 25
       author: liquibase
@@ -542,7 +542,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 006-sp_nrt_notification_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 26.00
       author: liquibase
@@ -590,7 +590,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 007-sp_s_pagebuilder_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 27
       author: liquibase
@@ -598,7 +598,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 008-sp_l_pagebuilder_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 28
       author: liquibase
@@ -606,7 +606,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 009-sp_d_pagebuilder_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 29
       author: liquibase
@@ -614,7 +614,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 010-sp_sld_investigation_repeat_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 30
       author: liquibase
@@ -622,7 +622,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 011-sp_page_builder_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 31
       author: liquibase
@@ -630,7 +630,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 012-sp_f_page_case_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 32
       author: liquibase
@@ -638,7 +638,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 013-sp_hepatitis_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 33
       author: liquibase
@@ -654,7 +654,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 014-sp_get_date_dim-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 35
       author: liquibase
@@ -670,7 +670,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 015-sp_nrt_ldf_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 41
       author: liquibase
@@ -734,7 +734,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 016-sp_nrt_morbidity_report_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 50.00
       author: liquibase
@@ -758,7 +758,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 017-sp_d_labtest_result_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 55.00
       author: liquibase
@@ -782,7 +782,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 018-sp_d_lab_test_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:  
       id: 56
       author: liquibase
@@ -790,7 +790,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 019-sp_lab100_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 58
       author: liquibase
@@ -798,7 +798,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 020-sp_lab101_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 61
       author: liquibase
@@ -806,7 +806,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 021-sp_nrt_case_count_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 62
       author: liquibase
@@ -830,7 +830,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 022-sp_nrt_case_management_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 67
       author: liquibase
@@ -918,7 +918,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 023-sp_d_interview_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 76
       author: liquibase
@@ -942,7 +942,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 024-sp_f_interview_case_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 80
       author: liquibase
@@ -950,7 +950,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 025-sp_f_std_page_case_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 81
       author: liquibase
@@ -974,7 +974,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 026-sp_std_hiv_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 89.1
       author: liquibase
@@ -1062,7 +1062,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 027-sp_user_profile_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 99
       author: liquibase
@@ -1102,7 +1102,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 028-sp_nrt_place_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 104
       author: liquibase
@@ -1126,7 +1126,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 029-sp_alter_datamart_schema_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 107
       author: liquibase
@@ -1134,7 +1134,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 030-sp_generic_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 108
       author: liquibase
@@ -1142,7 +1142,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 031-sp_rubella_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 109
       author: liquibase
@@ -1150,7 +1150,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 032-sp_crs_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 110
       author: liquibase
@@ -1158,7 +1158,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 033-sp_measles_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 110.01
       author: liquibase
@@ -1174,7 +1174,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 034-sp_case_lab_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 112
       author: liquibase
@@ -1182,7 +1182,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 035-sp_repeated_place_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 113
       author: liquibase
@@ -1214,7 +1214,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 036-sp_d_contact_record_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 117
       author: liquibase
@@ -1222,7 +1222,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 037-sp_event_metric_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 118
       author: liquibase
@@ -1230,7 +1230,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 038-sp_f_contact_record_case_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 119
       author: liquibase
@@ -1262,7 +1262,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 039-sp_hepatitis_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 123
       author: liquibase
@@ -1310,7 +1310,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 040-sp_bmird_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 129
       author: liquibase
@@ -1326,7 +1326,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 042-sp_hep100_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 131
       author: liquibase
@@ -1366,7 +1366,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 043-sp_pertussis_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 139
       author: liquibase
@@ -1374,7 +1374,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 044-sp_d_vaccination_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 139.01
       author: liquibase
@@ -1510,7 +1510,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 045-sp_inv_summary_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 143
       author: liquibase
@@ -1518,7 +1518,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 046-sp_f_vaccination_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 144
       author: liquibase
@@ -1646,7 +1646,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 115-sp_dyn_dm_invest_form_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 158
       author: liquibase
@@ -1662,7 +1662,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 130-sp_dyn_dm_case_management_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 161
       author: liquibase
@@ -1670,7 +1670,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 125-sp_dyn_dm_page_builder_d_inv_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 162
       author: liquibase
@@ -1678,7 +1678,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 120-sp_dyn_dm_provider_data_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 164
       author: liquibase
@@ -1686,7 +1686,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 135-sp_dyn_dm_org_data_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 180
       author: liquibase
@@ -1695,7 +1695,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 047-sp_nrt_treatment_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 185
       author: liquibase
@@ -1711,7 +1711,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 140-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 200
       author: liquibase
@@ -1743,7 +1743,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 145-sp_nrt_d_disease_site_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 220
       author: liquibase
@@ -1759,7 +1759,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 048-sp_morbidity_report_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 230
       author: liquibase
@@ -1775,7 +1775,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 150-sp_summary_report_case_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 240
       author: liquibase
@@ -1791,7 +1791,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 155-sp_sr100_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 255
       author: liquibase
@@ -1807,7 +1807,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 147-sp_nrt_d_tb_pam_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 270
       author: liquibase
@@ -1839,7 +1839,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 146-sp_nrt_d_addl_risk_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 290
       author: liquibase
@@ -1863,7 +1863,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 160-sp_nrt_d_tb_hiv_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 305
       author: liquibase
@@ -1887,7 +1887,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 050-sp_aggregate_report_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 355
       author: liquibase
@@ -1919,7 +1919,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 156-sp_nrt_d_move_cntry_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 380
       author: liquibase
@@ -1951,7 +1951,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 170-sp_nrt_d_gt_12_reas_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 405
       author: liquibase
@@ -1983,7 +1983,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 175-sp_nrt_d_move_cnty_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 430
       author: liquibase
@@ -2015,7 +2015,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 180-sp_nrt_d_hc_prov_ty_3_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 455
       author: liquibase
@@ -2047,7 +2047,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 185-sp_nrt_d_move_state_postprocessing-001.sql
-            splitStatements: false        
+            splitStatements: true        
   - changeSet:
       id: 480
       author: liquibase
@@ -2079,7 +2079,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 190-sp_nrt_d_out_of_cntry_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 505
       author: liquibase
@@ -2111,7 +2111,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 195-sp_nrt_d_moved_where_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 530
       author: liquibase
@@ -2143,7 +2143,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 200-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 550
       author: liquibase
@@ -2167,7 +2167,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 565
       author: liquibase
@@ -2175,7 +2175,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 206-sp_f_tb_pam_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 570
       author: liquibase
@@ -2191,7 +2191,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 215-sp_nrt_d_var_pam_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 576
       author: liquibase
@@ -2207,7 +2207,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 210-sp_dyn_dm_repeatdate_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 581
       author: liquibase
@@ -2231,7 +2231,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 590
       author: liquibase
@@ -2247,7 +2247,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 225-sp_dyn_dm_main_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 600
       author: liquibase
@@ -2311,7 +2311,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 230-sp_nrt_d_pcr_source_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 640
       author: liquibase
@@ -2327,7 +2327,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 235-sp_dyn_dm_repeatnumeric_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 655
       author: liquibase
@@ -2335,7 +2335,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 240-sp_f_var_pam_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
 
   - changeSet:
       id: 660
@@ -2344,7 +2344,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 245-sp_dyn_dm_createdm_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 675
       author: liquibase
@@ -2360,7 +2360,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 235-sp_nrt_var_pam_ldf_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 685
       author: liquibase
@@ -2368,7 +2368,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 250-sp_var_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 695
       author: liquibase
@@ -2384,7 +2384,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 255-sp_tb_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 705
       author: liquibase
@@ -2400,7 +2400,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 260-sp_tb_hiv_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 715
       author: liquibase
@@ -2408,7 +2408,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 250-sp_dyn_dm_invest_clear_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 725
       author: liquibase
@@ -2440,7 +2440,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 750
       author: liquibase
@@ -2472,7 +2472,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 270-sp_merge_tables-001.sql
-            splitStatements: false      
+            splitStatements: true      
   - changeSet:
       id: 770
       author: liquibase
@@ -2480,7 +2480,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 275-sp_execute_ldf_generic-001.sql
-            splitStatements: false   
+            splitStatements: true   
   - changeSet:
       id: 775
       author: liquibase
@@ -2488,7 +2488,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 280-sp_ldf_generic_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 780
       author: liquibase
@@ -2504,7 +2504,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 285-sp_ldf_bmird_datamart_postprocessing-001.sql
-            splitStatements: false 
+            splitStatements: true 
   - changeSet:
       id: 790
       author: liquibase
@@ -2520,7 +2520,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 290-sp_ldf_foodborne_datamart_postprocessing-001.sql
-            splitStatements: false 
+            splitStatements: true 
   - changeSet:
       id: 800
       author: liquibase
@@ -2536,7 +2536,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 295-sp_ldf_mumps_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 810
       author: liquibase
@@ -2552,7 +2552,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 300-sp_ldf_tetanus_datamart_postprocessing-001.sql
-            splitStatements: false             
+            splitStatements: true             
   - changeSet:
       id: 820
       author: liquibase
@@ -2568,7 +2568,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql
-            splitStatements: false      
+            splitStatements: true      
   - changeSet:
       id: 830
       author: liquibase
@@ -2576,7 +2576,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 310-sp_covid_case_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 835
       author: liquibase
@@ -2592,7 +2592,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 315-sp_covid_contact_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 845
       author: liquibase
@@ -2600,7 +2600,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 320-sp_covid_vaccination_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 850
       author: liquibase
@@ -2616,7 +2616,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 320-sp_ldf_hepatitis_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 860
       author: liquibase
@@ -2632,7 +2632,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 325-sp_covid_lab_celr_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 870
       author: liquibase
@@ -2640,7 +2640,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 330-sp_covid_lab_datamart_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 874
       author: liquibase
@@ -2656,4 +2656,4 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 335-sp_nrt_odse_nbs_page_postprocessing-001.sql
-            splitStatements: false
+            splitStatements: true

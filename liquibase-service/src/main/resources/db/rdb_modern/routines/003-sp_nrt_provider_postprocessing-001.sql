@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_provider_postprocessing @id_list nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_provider_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_provider_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_nrt_provider_postprocessing @id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 
@@ -88,7 +96,7 @@ BEGIN
                last_chg_user_name                           as PROVIDER_LAST_UPDATED_BY,
                last_chg_time                                as PROVIDER_LAST_CHANGE_TIME
         into #temp_prv_table
-        from dbo.nrt_provider nrt
+        from dbo.nrt_provider nrt with (nolock)
                  left join dbo.d_provider p with (nolock) on p.provider_uid = nrt.provider_uid
         where nrt.provider_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 

@@ -46,7 +46,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 005-sp_organization_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 6
       author: liquibase
@@ -54,7 +54,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 006-sp_provider_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 7
       author: liquibase
@@ -62,7 +62,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 007-sp_patient_race_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 8
       author: liquibase
@@ -70,7 +70,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 008-sp_patient_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 9
       author: liquibase
@@ -78,7 +78,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 009-sp_observation_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 9.1
       author: liquibase
@@ -94,7 +94,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 010-sp_investigation_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 11
       author: liquibase
@@ -102,7 +102,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 011-sp_ldf_provider_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 12
       author: liquibase
@@ -110,7 +110,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 012-sp_ldf_organization_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 13
       author: liquibase
@@ -118,7 +118,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 013-sp_ldf_patient_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 14
       author: liquibase
@@ -126,7 +126,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 014-sp_ldf_observation_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 15
       author: liquibase
@@ -134,7 +134,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 015-sp_ldf_phc_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 16
       author: liquibase
@@ -142,7 +142,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 016-sp_ldf_intervention_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 17
       author: liquibase
@@ -150,7 +150,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 017-sp_ldf_data_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 18
       author: liquibase
@@ -158,7 +158,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 018-sp_public_health_case_fact_datamart_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 19
       author: liquibase
@@ -182,7 +182,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 020-sp_notification_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 27
       author: liquibase
@@ -190,7 +190,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 021-sp_interview_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 28
       author: liquibase
@@ -206,7 +206,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 022-sp_user_report_permissions-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 30
       author: liquibase
@@ -214,7 +214,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 023-sp_auth_user_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 31
       author: liquibase
@@ -222,7 +222,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 024-sp_place_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 32
       author: liquibase
@@ -238,7 +238,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 025-sp_contact_record_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 34
       author: liquibase
@@ -246,7 +246,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 026-sp_treatment_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 34.1
       author: liquibase
@@ -262,7 +262,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 027-sp_vaccination_event-001.sql
-            splitStatements: false
+            splitStatements: true
   - changeSet:
       id: 36
       author: liquibase

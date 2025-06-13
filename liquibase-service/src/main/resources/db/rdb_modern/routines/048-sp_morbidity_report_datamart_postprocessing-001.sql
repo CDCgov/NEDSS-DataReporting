@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_morbidity_report_datamart_postprocessing(
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_morbidity_report_datamart_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_morbidity_report_datamart_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_morbidity_report_datamart_postprocessing(
     @obs_uids NVARCHAR(MAX),
     @pat_uids NVARCHAR(MAX),
     @prov_uids NVARCHAR(MAX),

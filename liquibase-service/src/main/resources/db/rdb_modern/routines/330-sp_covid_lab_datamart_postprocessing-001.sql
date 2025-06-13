@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_covid_lab_datamart_postprocessing]
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_covid_lab_datamart_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_covid_lab_datamart_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_covid_lab_datamart_postprocessing]
     @observation_id_list nvarchar(max),       -- List of observation IDs to process (comma-separated)
     @debug bit = 'false'                       -- Flag to enable debug output
 AS
