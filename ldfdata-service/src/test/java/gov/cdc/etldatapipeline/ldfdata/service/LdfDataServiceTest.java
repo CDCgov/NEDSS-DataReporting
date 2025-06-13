@@ -179,6 +179,7 @@ class LdfDataServiceTest {
 
         LdfDataKey ldfDataKey = new LdfDataKey();
         ldfDataKey.setLdfUid(ldfData.getLdfUid());
+        ldfDataKey.setBusObjUid(ldfData.getBusinessObjectUid());
 
         String expectedKey = jsonGenerator.generateStringJson(ldfDataKey);
         String expectedValue = jsonGenerator.generateStringJson(ldfData);
