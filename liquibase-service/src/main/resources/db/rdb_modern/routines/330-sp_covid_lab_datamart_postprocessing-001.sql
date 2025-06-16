@@ -621,26 +621,26 @@ BEGIN
                         END AS Answer_Txt
                 INTO #COVID_LAB_AOE_ST
                 FROM [dbo].[nrt_odse_lookup_question] lq
-                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation] o1 WITH(NOLOCK)
+                         LEFT OUTER JOIN dbo.nrt_observation o1 WITH(NOLOCK)
                                          ON o1.cd = lq.FROM_QUESTION_IDENTIFIER
                                              AND o1.obs_domain_cd_st_1 = 'Result'
-                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation] o WITH(NOLOCK)
+                         LEFT OUTER JOIN dbo.nrt_observation o WITH(NOLOCK)
                                          ON EXISTS (
                                              SELECT 1
                                              FROM STRING_SPLIT(ISNULL(CAST(o1.report_observation_uid AS VARCHAR(MAX)), ''), ',')
                                              WHERE TRY_CAST(LTRIM(RTRIM(value)) AS BIGINT) = o.observation_uid
                                          )
-                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation_coded] noc WITH(NOLOCK)
+                         LEFT OUTER JOIN dbo.nrt_observation_coded noc WITH(NOLOCK)
                                          ON noc.observation_uid = o1.observation_uid
                                              AND ISNULL(o1.batch_id, 1) = ISNULL(noc.batch_id, 1)
-                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation_txt] not2 WITH(NOLOCK)
+                         LEFT OUTER JOIN dbo.nrt_observation_txt not2 WITH(NOLOCK)
                                          ON not2.observation_uid = o1.observation_uid
                                              AND (not2.ovt_txt_type_cd = 'O' OR not2.ovt_txt_type_cd IS NULL)
                                              AND ISNULL(o1.batch_id, 1) = ISNULL(not2.batch_id, 1)
-                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation_numeric] ovn WITH(NOLOCK)
+                         LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(NOLOCK)
                                          ON ovn.observation_uid = o1.observation_uid
                                              AND ISNULL(o1.batch_id, 1) = ISNULL(ovn.batch_id, 1)
-                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_srte_Code_value_general] cvg WITH(NOLOCK)
+                         LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg WITH(NOLOCK)
                                          ON cvg.code_set_nm = lq.FROM_CODE_SET
                                              AND noc.ovc_code = cvg.code
                 WHERE o.observation_uid IN (SELECT observation_uid FROM #COVID_OBSERVATIONS_TO_PROCESS)
@@ -690,6 +690,72 @@ BEGIN
 /* Debug output if requested */
         IF @debug = 'true'
             EXEC sp_executesql N'SELECT @proc_step_name AS debug_step, * FROM #COVID_LAB_AOE_DATA';
+
+
+        SET @proc_step_name = 'Alter Datamart Columns for AOE';
+        SET @proc_step_no = 7.7;
+
+        DECLARE @Temp_Query_Table TABLE (
+                                            ID INT IDENTITY(1, 1),
+                                            QUERY_stmt VARCHAR(5000)
+                                        );
+        DECLARE @column_query VARCHAR(5000);
+        DECLARE @Max_Query_No INT;
+        DECLARE @Curr_Query_No INT;
+
+        -- Generate ALTER statements (checking COVID_LAB_DATAMART for missing AOE columns)
+        INSERT INTO @Temp_Query_Table
+        SELECT 'ALTER TABLE dbo.COVID_LAB_DATAMART ADD [' + COLUMN_NAME + '] ' + DATA_TYPE +
+               CASE
+                   WHEN DATA_TYPE IN('char', 'varchar', 'nchar', 'nvarchar') THEN
+                       ' (' + COALESCE(CAST(NULLIF(CHARACTER_MAXIMUM_LENGTH, -1) AS VARCHAR(10)),
+                                       CAST(CHARACTER_MAXIMUM_LENGTH AS VARCHAR(10))) + ')'
+                   ELSE ''
+                   END +
+               CASE
+                   WHEN IS_NULLABLE = 'NO' THEN ' NOT NULL'
+                   ELSE ' NULL'
+                   END
+        FROM INFORMATION_SCHEMA.COLUMNS AS c
+        WHERE TABLE_NAME = 'COVID_LAB_AOE_DATA'
+          AND TABLE_SCHEMA = 'tempdb'
+          AND NOT EXISTS (
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = 'COVID_LAB_DATAMART'
+              AND COLUMN_NAME = c.COLUMN_NAME
+        )
+          AND COLUMN_NAME NOT IN('AOE_Observation_uid');
+
+        -- Execute ALTER statements using original loop logic
+        SET @Max_Query_No = (SELECT MAX(ID) FROM @Temp_Query_Table AS t);
+        SET @Curr_Query_No = 0;
+
+        WHILE @Max_Query_No > @Curr_Query_No
+            BEGIN
+                SET @Curr_Query_No = @Curr_Query_No + 1;
+                SET @column_query = (SELECT QUERY_stmt FROM @Temp_Query_Table AS t WHERE ID = @Curr_Query_No);
+
+                BEGIN TRY
+                    EXEC (@column_query);
+                    IF @debug = 'true'
+                        PRINT 'Executed: ' + @column_query;
+                END TRY
+                BEGIN CATCH
+                    PRINT 'Error executing: ' + @column_query + ' - ' + ERROR_MESSAGE();
+                END CATCH
+            END
+
+        /* Logging */
+        INSERT INTO [dbo].[job_flow_log] (
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
+        ) VALUES (
+                     @batch_id, @dataflow_name, @package_name, 'START',
+                     @proc_step_no, @proc_step_name, ISNULL(@Max_Query_No, 0),
+                     LEFT(ISNULL(@observation_id_list, 'NULL'),500)
+                 );
+
 
 
         /* Start transaction for the actual update to the datamart */
