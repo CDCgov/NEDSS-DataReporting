@@ -35,16 +35,14 @@ BEGIN
             , 0
             , LEFT('ID List-' + @condition_cd_list, 500));
         
-
 --------------------------------------------------------------------------------------------------------
-
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
             @PROC_STEP_NAME = 'GENERATING #CONDITION_INIT';
 
-        -- information for the conditions codes passed into the procedure
+        
         WITH condition_list AS(
             SELECT 
                 cc.condition_cd,
@@ -166,8 +164,6 @@ BEGIN
 
 
 --------------------------------------------------------------------------------------------------------
-
-
         BEGIN TRANSACTION;
         
         SET
@@ -225,9 +221,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-
 --------------------------------------------------------------------------------------------------------
-
 
         BEGIN TRANSACTION;
         
@@ -307,9 +301,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-
 --------------------------------------------------------------------------------------------------------
-
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
@@ -318,7 +310,6 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
-    
     
 -------------------------------------------------------------------------------------------
     END TRY
