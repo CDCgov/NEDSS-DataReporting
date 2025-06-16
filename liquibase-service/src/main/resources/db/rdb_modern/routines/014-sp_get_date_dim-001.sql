@@ -1,6 +1,14 @@
-CREATE  OR ALTER PROCEDURE dbo.sp_get_date_dim @start int, @end int
-    AS
-begin
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_get_date_dim]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_get_date_dim]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_get_date_dim @start int, @end int
+AS
+BEGIN
 
 
 -- get the first day of the start year
