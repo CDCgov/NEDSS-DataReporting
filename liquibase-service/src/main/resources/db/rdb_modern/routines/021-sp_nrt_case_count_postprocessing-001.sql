@@ -1,4 +1,12 @@
-CREATE or ALTER PROCEDURE [dbo].[sp_nrt_case_count_postprocessing] @phc_id_list nvarchar(max)
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_case_count_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_case_count_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_nrt_case_count_postprocessing] @phc_id_list nvarchar(max)
 AS
 BEGIN
     BEGIN TRY

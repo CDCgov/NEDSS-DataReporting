@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_notification_postprocessing] @notification_uids nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_notification_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_notification_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_nrt_notification_postprocessing] @notification_uids nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 
@@ -54,7 +62,7 @@ BEGIN
                nrt.notif_add_user_id AS NOTIFICATION_SUBMITTED_BY,
                nrt.notif_last_chg_time AS NOTIFICATION_LAST_CHANGE_TIME
         INTO #temp_ntf_table
-        FROM dbo.nrt_investigation_notification nrt
+        FROM dbo.nrt_investigation_notification nrt with (nolock)
                  LEFT JOIN dbo.nrt_notification_key nk with (nolock) ON nrt.notification_uid = nk.notification_uid
         WHERE nrt.notification_uid in (SELECT value FROM STRING_SPLIT(@notification_uids, ','));
 
@@ -69,8 +77,8 @@ BEGIN
                cnd.CONDITION_KEY,
                COALESCE(dupd.DATE_KEY, 1) AS NOTIFICATION_UPD_DT_KEY
         INTO #temp_ntf_event_table
-        FROM dbo.nrt_investigation_notification nrt
-                 LEFT JOIN dbo.nrt_notification_key nk ON nrt.notification_uid = nk.notification_uid
+        FROM dbo.nrt_investigation_notification nrt with (nolock)
+                 LEFT JOIN dbo.nrt_notification_key nk with (nolock) ON nrt.notification_uid = nk.notification_uid
                  LEFT JOIN dbo.NOTIFICATION_EVENT eve with (nolock) ON eve.NOTIFICATION_KEY = nk.d_notification_key
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON nrt.public_health_case_uid = inv.CASE_UID
                  LEFT JOIN dbo.D_PATIENT p with (nolock) ON nrt.local_patient_uid = p.PATIENT_UID
@@ -105,8 +113,44 @@ BEGIN
                );
 
         BEGIN TRANSACTION;
-        SET @proc_step_name='Update NOTIFICATION Dimension';
+
+        SET @proc_step_name='Update dbo.nrt_notification_key';
         SET @proc_step_no = 2;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_notification_key k
+          INNER JOIN #temp_ntf_table d
+            ON K.d_notification_key = d.notification_key;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@notification_uids,500)
+               );
+
+
+        SET @proc_step_name='Update NOTIFICATION Dimension';
+        SET @proc_step_no = 3;
 
         /* Notification Update Operation */
         UPDATE dbo.NOTIFICATION
@@ -144,7 +188,7 @@ BEGIN
                );
 
         SET @proc_step_name='Update NOTIFICATION_EVENT Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 4;
 
         /* Notification_Event Update Operation */
         UPDATE dbo.NOTIFICATION_EVENT
@@ -184,7 +228,7 @@ BEGIN
                );
 
         SET @proc_step_name='Insert into NOTIFICATION Dimension';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 5;
 
         /* Notification Insert Operation */
 
@@ -234,7 +278,7 @@ BEGIN
                );
 
         SET @proc_step_name='Insert into NOTIFICATION_EVENT Dimension';
-        SET @proc_step_no = 5;
+        SET @proc_step_no = 6;
 
         INSERT INTO dbo.NOTIFICATION_EVENT
         (PATIENT_KEY

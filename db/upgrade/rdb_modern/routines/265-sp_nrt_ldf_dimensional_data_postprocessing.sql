@@ -1,5 +1,13 @@
 
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_ldf_dimensional_data_postprocessing]
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_ldf_dimensional_data_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_ldf_dimensional_data_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_nrt_ldf_dimensional_data_postprocessing]
   @ldf_id_list nvarchar(max),
   @debug bit = 'false'
  AS
@@ -514,7 +522,7 @@ BEGIN
 		SET 
 			@PROC_STEP_NO =  @PROC_STEP_NO + 1;
 		SET 
-			@PROC_STEP_NAME = 'Generate Delete from #LDF_DATA'; 
+			@PROC_STEP_NAME = 'GENERATING #LDF_DATA_DEL'; 
 
 		-- Create table LDF_DATA_DEL
 		IF OBJECT_ID('#LDF_DATA_DEL', 'U') IS NOT NULL  
@@ -550,10 +558,10 @@ BEGIN
 		SET 
 			@PROC_STEP_NO =  @PROC_STEP_NO + 1;
 		SET 
-			@PROC_STEP_NAME = 'Delete from #LDF_DATA'; 
+			@PROC_STEP_NAME = 'DELETING FROM LDF_DIMENSIONAL_DATA'; 
 
 		DELETE LDA
-		FROM DBO.LDF_DIMENSIONAL_DATA LDA with (nolock)
+		FROM [dbo].LDF_DIMENSIONAL_DATA LDA with (nolock)
 		INNER JOIN #LDF_DATA_DEL LDF_DATA_DEL
 			ON LDA.LDF_UID = LDF_DATA_DEL.LDF_UID;
 
@@ -939,7 +947,7 @@ BEGIN
 			@PROC_STEP_NAME = 'GENERATING #LDF_DIMENSIONAL_DATA'; 	
 
 		IF OBJECT_ID('#LDF_DIMENSIONAL_DATA', 'U') IS NOT NULL  
-			DROP TABLE #LDF_DIMENSIONAL_DATA_N;	
+			DROP TABLE #LDF_DIMENSIONAL_DATA;	
 
 		SELECT 
 			dim.col1,  

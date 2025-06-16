@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_merge_tables] 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_merge_tables]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_merge_tables]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_merge_tables] 
 	@INPUT_TABLE1		VARCHAR(150) = '', 
 	@INPUT_TABLE2		VARCHAR(150) = '', 
 	@OUTPUT_TABLE       VARCHAR(150) = '', 
