@@ -101,6 +101,24 @@ class OrganizationServiceTest {
     }
 
     @Test
+    void testProcessOrgMessageNoElasticSearch() {
+        OrganizationSp orgSp = new OrganizationSp();
+        orgSp.setOrganizationUid(10036000L);
+        when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
+
+        String changeData = readFileData("orgcdc/OrgChangeData.json");
+
+        organizationService.setElasticSearchEnable(false);
+        organizationService.processMessage(changeData, orgTopic);
+
+        // verify that only one message was sent
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+
+        String actualTopic = topicCaptor.getValue();
+        assertEquals(orgReportingTopic, actualTopic);
+    }
+
+    @Test
     void testProcessPlaceMessage() throws Exception {
         Place place = objectMapper.readValue(readFileData("place/Place.json"), Place.class);
         when(placeRepository.computeAllPlaces(anyString())).thenReturn(Optional.of(List.of(place)));
