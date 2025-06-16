@@ -575,6 +575,122 @@ BEGIN
                ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                );
 
+        /* start transaction for AEO logic */
+        SET @proc_step_name = 'Create COVID_LAB_AOE_DATA';
+        SET @proc_step_no = 7.5;
+
+-- Check if nrt_odse_lookup_question table has data for LAB_REPORT form
+        IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_odse_lookup_question] WHERE FROM_FORM_CD = 'LAB_REPORT')
+            BEGIN
+                -- No AOE metadata available, create minimal structure
+                IF OBJECT_ID('tempdb..#COVID_LAB_AOE_DATA', 'U') IS NOT NULL
+                    DROP TABLE #COVID_LAB_AOE_DATA;
+
+                CREATE TABLE #COVID_LAB_AOE_DATA (
+                                                     AOE_Observation_uid BIGINT NULL,
+                                                     FIRST_TEST VARCHAR(50) NULL
+                );
+
+                -- Insert observations for minimal structure
+                INSERT INTO #COVID_LAB_AOE_DATA (AOE_Observation_uid)
+                SELECT DISTINCT observation_uid
+                FROM #COVID_OBSERVATIONS_TO_PROCESS;
+
+                IF @debug = 'true'
+                    SELECT 'No AOE metadata - minimal structure created' AS debug_message, * FROM #COVID_LAB_AOE_DATA;
+            END
+        ELSE
+            BEGIN
+                -- AOE metadata exists, proceed with full AOE processing
+
+                -- Create staging table (following original COVID_LAB_AOE_ST pattern)
+                IF OBJECT_ID('tempdb..#COVID_LAB_AOE_ST', 'U') IS NOT NULL
+                    DROP TABLE #COVID_LAB_AOE_ST;
+
+                SELECT DISTINCT
+                    o.observation_uid AS AOE_Observation_uid,
+                    o1.cd,
+                    lq.RDB_COLUMN_NM,
+                    CASE
+                        WHEN ovn.ovn_numeric_value_1 IS NOT NULL THEN
+                            CAST(ovn.ovn_numeric_value_1 AS VARCHAR(20)) + '^' + ISNULL(ovn.ovn_numeric_unit_cd, '')
+                        WHEN not2.ovt_value_txt IS NOT NULL THEN
+                            not2.ovt_value_txt
+                        WHEN noc.ovc_code IS NOT NULL THEN
+                            cvg.code_short_desc_txt
+                        END AS Answer_Txt
+                INTO #COVID_LAB_AOE_ST
+                FROM [dbo].[nrt_odse_lookup_question] lq
+                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation] o1 WITH(NOLOCK)
+                                         ON o1.cd = lq.FROM_QUESTION_IDENTIFIER
+                                             AND o1.obs_domain_cd_st_1 = 'Result'
+                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation] o WITH(NOLOCK)
+                                         ON EXISTS (
+                                             SELECT 1
+                                             FROM STRING_SPLIT(ISNULL(CAST(o1.report_observation_uid AS VARCHAR(MAX)), ''), ',')
+                                             WHERE TRY_CAST(LTRIM(RTRIM(value)) AS BIGINT) = o.observation_uid
+                                         )
+                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation_coded] noc WITH(NOLOCK)
+                                         ON noc.observation_uid = o1.observation_uid
+                                             AND ISNULL(o1.batch_id, 1) = ISNULL(noc.batch_id, 1)
+                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation_txt] not2 WITH(NOLOCK)
+                                         ON not2.observation_uid = o1.observation_uid
+                                             AND (not2.ovt_txt_type_cd = 'O' OR not2.ovt_txt_type_cd IS NULL)
+                                             AND ISNULL(o1.batch_id, 1) = ISNULL(not2.batch_id, 1)
+                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_observation_numeric] ovn WITH(NOLOCK)
+                                         ON ovn.observation_uid = o1.observation_uid
+                                             AND ISNULL(o1.batch_id, 1) = ISNULL(ovn.batch_id, 1)
+                         LEFT OUTER JOIN [rdb_modern].[dbo].[nrt_srte_Code_value_general] cvg WITH(NOLOCK)
+                                         ON cvg.code_set_nm = lq.FROM_CODE_SET
+                                             AND noc.ovc_code = cvg.code
+                WHERE o.observation_uid IN (SELECT observation_uid FROM #COVID_OBSERVATIONS_TO_PROCESS)
+                  AND lq.FROM_FORM_CD = 'LAB_REPORT';
+
+                -- Create final AOE data table using dynamic pivot
+                IF OBJECT_ID('tempdb..#COVID_LAB_AOE_DATA', 'U') IS NOT NULL
+                    DROP TABLE #COVID_LAB_AOE_DATA;
+
+                DECLARE @columns NVARCHAR(MAX);
+                DECLARE @sql NVARCHAR(MAX);
+                SET @columns = N'';
+
+                SELECT @columns += N', p.' + QUOTENAME(LTRIM(RTRIM([RDB_COLUMN_NM])))
+                FROM (
+                         SELECT DISTINCT [RDB_COLUMN_NM]
+                         FROM [dbo].[nrt_odse_lookup_question] AS p WITH(NOLOCK)
+                         WHERE FROM_FORM_CD = 'LAB_REPORT'
+                     ) AS x;
+
+                SET @sql = N'SELECT [AOE_Observation_uid] , ' + STUFF(@columns, 1, 2, '') +
+                           ' INTO #COVID_LAB_AOE_DATA ' +
+                           'FROM ( SELECT [AOE_Observation_uid], answer_txt, [RDB_COLUMN_NM] ' +
+                           '       FROM #COVID_LAB_AOE_ST AS p WITH (NOLOCK) ' +
+                           '       GROUP BY [AOE_Observation_uid], [answer_txt], [RDB_COLUMN_NM] ' +
+                           ') AS j ' +
+                           'PIVOT (MAX(answer_txt) FOR [RDB_COLUMN_NM] IN (' +
+                           STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ')) AS p;';
+
+                EXEC sp_executesql @sql;
+
+                IF @debug = 'true'
+                    SELECT 'Full AOE processing completed' AS debug_message, @sql AS pivot_sql;
+            END
+
+/* Logging */
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
+        ) VALUES (
+                     @batch_id, @dataflow_name, @package_name, 'START',
+                     @proc_step_no, @proc_step_name, @rowcount,
+                     LEFT(ISNULL(@observation_id_list, 'NULL'),500)
+                 );
+
+/* Debug output if requested */
+        IF @debug = 'true'
+            EXEC sp_executesql N'SELECT @proc_step_name AS debug_step, * FROM #COVID_LAB_AOE_DATA';
+
 
         /* Start transaction for the actual update to the datamart */
         SET @proc_step_name = 'Update COVID_LAB_DATAMART';
@@ -859,7 +975,9 @@ BEGIN
             AND core.Result = rslt.RT_Result
                  LEFT JOIN #COVID_LAB_PATIENT_DATA pat ON core.Observation_UID = pat.Pat_Observation_UID
                  LEFT JOIN #COVID_LAB_ENTITIES_DATA ent ON core.Observation_UID = ent.Entity_Observation_uid
-                 LEFT JOIN #COVID_LAB_ASSOCIATIONS assoc ON core.Observation_UID = assoc.ASSOC_OBSERVATION_UID;
+                 LEFT JOIN #COVID_LAB_ASSOCIATIONS assoc ON core.Observation_UID = assoc.ASSOC_OBSERVATION_UID
+                 LEFT JOIN #COVID_LAB_AOE_DATA aoe ON core.Observation_UID = aoe.AOE_Observation_uid;
+
 
         /* Logging for insert operation */
         SET @rowcount = @@ROWCOUNT;
