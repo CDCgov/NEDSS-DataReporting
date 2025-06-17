@@ -90,8 +90,8 @@ class PostProcessingServiceTest {
             "dummy_NBS_page, '{\"payload\":{\"nbs_page_uid\":123}}', 123",
             "dummy_state_defined_field_metadata, '{\"payload\":{\"ldf_uid\":123}}', 123"
     })
-    void testPostProcessMessage(String topic, String messageKey, Long expectedId) {
-        postProcessingServiceMock.postProcessMessage(topic, messageKey, messageKey);
+    void testProcessNrtMessage(String topic, String messageKey, Long expectedId) {
+        postProcessingServiceMock.processNrtMessage(topic, messageKey, messageKey);
         assertEquals(expectedId, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
     }
@@ -101,7 +101,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_patient";
         String key = "{\"payload\":{\"patient_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPatientIdsString = "123";
@@ -116,7 +116,7 @@ class PostProcessingServiceTest {
     void testPostProcessProviderMessage() {
         String topic = "dummy_provider";
         String key = "{\"payload\":{\"provider_uid\":123}}";
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
 
@@ -133,7 +133,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_organization";
         String key = "{\"payload\":{\"organization_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedOrganizationIdsIdsString = "123";
@@ -148,7 +148,7 @@ class PostProcessingServiceTest {
     void testPostProcessInvestigationMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPublicHealthCaseIdsString = "123";
@@ -174,7 +174,7 @@ class PostProcessingServiceTest {
 
         List<DatamartData> masterData = getTBDatamart(123L, 201L);
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
         String expectedPublicHealthCaseIdsString = "123";
 
@@ -206,7 +206,7 @@ class PostProcessingServiceTest {
 
         List<DatamartData> masterData = getVarDatamart(123L, 201L);
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("12")).thenReturn(masterData);
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
         String expectedPublicHealthCaseIdsString = "123";
 
@@ -227,7 +227,7 @@ class PostProcessingServiceTest {
     void testPostProcessSummaryMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"S\"}}";
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPublicHealthCaseIdsString = "123";
@@ -244,7 +244,7 @@ class PostProcessingServiceTest {
     void testPostProcessAggregateMessage() {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_type_cd\":\"A\"}}";
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPublicHealthCaseIdsString = "123";
@@ -261,7 +261,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_notification";
         String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedNotificationIdsString = "123";
@@ -278,7 +278,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_NBS_page";
         String key = "{\"payload\":{\"nbs_page_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedNBSPageIdsString = "123";
@@ -295,7 +295,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_notification";
         String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123,\"act_type_cd\":\"SummaryNotification\"}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPublicHealthCaseIdsString = "122";
@@ -315,7 +315,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_case_management";
         String key = "{\"payload\":{\"public_health_case_uid\":123,\"case_management_uid\":1001}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPublicHealthCaseIdsString = "123";
@@ -341,11 +341,11 @@ class PostProcessingServiceTest {
         Long expectedPublicHealthCaseId = 123L;
         String expectedRdbTableName = "D_INV_CLINICAL";
 
-        postProcessingServiceMock.postProcessMessage(topic, key1, msg1);
+        postProcessingServiceMock.processNrtMessage(topic, key1, msg1);
         assertTrue(postProcessingServiceMock.pbCache.containsKey(expectedRdbTableName));
         assertTrue(postProcessingServiceMock.pbCache.get(expectedRdbTableName).contains(expectedPublicHealthCaseId));
 
-        postProcessingServiceMock.postProcessMessage(topic, key2, msg2);
+        postProcessingServiceMock.processNrtMessage(topic, key2, msg2);
 
         postProcessingServiceMock.processCachedIds();
         assertTrue(postProcessingServiceMock.pbCache.isEmpty());
@@ -362,7 +362,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_interview";
         String key = "{\"payload\":{\"interview_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -383,7 +383,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_ldf_data";
         String key = "{\"payload\":{\"ldf_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -404,7 +404,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_state_defined_field_metadata";
         String key = "{\"payload\":{\"ldf_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -426,7 +426,7 @@ class PostProcessingServiceTest {
         String key = "{\"payload\":{\"observation_uid\":123}}";
         String msg = "{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"MorbReport\"}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, msg);
+        postProcessingServiceMock.processNrtMessage(topic, key, msg);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -459,7 +459,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_observation";
         String key = "{\"payload\":{\"observation_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, payload);
+        postProcessingServiceMock.processNrtMessage(topic, key, payload);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -492,7 +492,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_observation";
         String key = "{\"payload\":{\"observation_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, payload);
+        postProcessingServiceMock.processNrtMessage(topic, key, payload);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
         assertTrue(postProcessingServiceMock.obsCache.isEmpty());
@@ -529,16 +529,16 @@ class PostProcessingServiceTest {
         String treatmentKey2 = "{\"payload\":{\"treatment_uid\":790}}";
         String treatmentTopic = "dummy_treatment";
 
-        postProcessingServiceMock.postProcessMessage(orgTopic, orgKey1, orgKey1);
-        postProcessingServiceMock.postProcessMessage(orgTopic, orgKey2, orgKey2);
-        postProcessingServiceMock.postProcessMessage(ntfTopic, ntfKey1, ntfKey1);
-        postProcessingServiceMock.postProcessMessage(ntfTopic, ntfKey2, ntfKey2);
-        postProcessingServiceMock.postProcessMessage(invTopic, invKey1, invKey1);
-        postProcessingServiceMock.postProcessMessage(invTopic, invKey2, invKey2);
-        postProcessingServiceMock.postProcessMessage(placeTopic, placeKey1, placeKey1);
-        postProcessingServiceMock.postProcessMessage(placeTopic, placeKey2, placeKey2);
-        postProcessingServiceMock.postProcessMessage(treatmentTopic, treatmentKey1, treatmentKey1);
-        postProcessingServiceMock.postProcessMessage(treatmentTopic, treatmentKey2, treatmentKey2);
+        postProcessingServiceMock.processNrtMessage(orgTopic, orgKey1, orgKey1);
+        postProcessingServiceMock.processNrtMessage(orgTopic, orgKey2, orgKey2);
+        postProcessingServiceMock.processNrtMessage(ntfTopic, ntfKey1, ntfKey1);
+        postProcessingServiceMock.processNrtMessage(ntfTopic, ntfKey2, ntfKey2);
+        postProcessingServiceMock.processNrtMessage(invTopic, invKey1, invKey1);
+        postProcessingServiceMock.processNrtMessage(invTopic, invKey2, invKey2);
+        postProcessingServiceMock.processNrtMessage(placeTopic, placeKey1, placeKey1);
+        postProcessingServiceMock.processNrtMessage(placeTopic, placeKey2, placeKey2);
+        postProcessingServiceMock.processNrtMessage(treatmentTopic, treatmentKey1, treatmentKey1);
+        postProcessingServiceMock.processNrtMessage(treatmentTopic, treatmentKey2, treatmentKey2);
 
         assertTrue(postProcessingServiceMock.idCache.containsKey(orgTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(invTopic));
@@ -560,7 +560,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_contact";
         String key = "{\"payload\":{\"contact_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -581,7 +581,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_vaccination";
         String key = "{\"payload\":{\"vaccination_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -634,22 +634,22 @@ class PostProcessingServiceTest {
         String treatmentTopic = "dummy_treatment";
         String vacTopic = "dummy_vaccination";
 
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
-        postProcessingServiceMock.postProcessMessage(providerTopic, providerKey, providerKey);
-        postProcessingServiceMock.postProcessMessage(patientTopic, patientKey, patientKey);
-        postProcessingServiceMock.postProcessMessage(userProfileTopic, userProfileKey, userProfileKey);
-        postProcessingServiceMock.postProcessMessage(placeTopic, placeKey, placeKey);
-        postProcessingServiceMock.postProcessMessage(intTopic, interviewKey, interviewKey);
-        postProcessingServiceMock.postProcessMessage(ntfTopic, notificationKey, notificationKey);
-        postProcessingServiceMock.postProcessMessage(treatmentTopic, treatmentKey, treatmentKey);
-        postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
-        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationMsg);
-        postProcessingServiceMock.postProcessMessage(stateDefinedFieldMetadataTopic, ldfKey, ldfKey);
-        postProcessingServiceMock.postProcessMessage(ldfTopic, ldfKey, ldfKey);
-        postProcessingServiceMock.postProcessMessage(pageTopic, pageKey, pageKey);
-        postProcessingServiceMock.postProcessMessage(cmTopic, caseManagementKey, caseManagementKey);
-        postProcessingServiceMock.postProcessMessage(contactTopic, contactKey, contactKey);
-        postProcessingServiceMock.postProcessMessage(vacTopic, vacKey, vacKey);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey, investigationKey);
+        postProcessingServiceMock.processNrtMessage(providerTopic, providerKey, providerKey);
+        postProcessingServiceMock.processNrtMessage(patientTopic, patientKey, patientKey);
+        postProcessingServiceMock.processNrtMessage(userProfileTopic, userProfileKey, userProfileKey);
+        postProcessingServiceMock.processNrtMessage(placeTopic, placeKey, placeKey);
+        postProcessingServiceMock.processNrtMessage(intTopic, interviewKey, interviewKey);
+        postProcessingServiceMock.processNrtMessage(ntfTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.processNrtMessage(treatmentTopic, treatmentKey, treatmentKey);
+        postProcessingServiceMock.processNrtMessage(orgTopic, orgKey, orgKey);
+        postProcessingServiceMock.processNrtMessage(obsTopic, observationKey, observationMsg);
+        postProcessingServiceMock.processNrtMessage(stateDefinedFieldMetadataTopic, ldfKey, ldfKey);
+        postProcessingServiceMock.processNrtMessage(ldfTopic, ldfKey, ldfKey);
+        postProcessingServiceMock.processNrtMessage(pageTopic, pageKey, pageKey);
+        postProcessingServiceMock.processNrtMessage(cmTopic, caseManagementKey, caseManagementKey);
+        postProcessingServiceMock.processNrtMessage(contactTopic, contactKey, contactKey);
+        postProcessingServiceMock.processNrtMessage(vacTopic, vacKey, vacKey);
 
         postProcessingServiceMock.processCachedIds();
 
@@ -688,7 +688,7 @@ class PostProcessingServiceTest {
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"tb_datamart\",\"stored_procedure\":\"\"}}";
 
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDmMessage(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
         String id = "123";
@@ -708,7 +708,7 @@ class PostProcessingServiceTest {
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                 "\"datamart\":\"var_datamart\",\"stored_procedure\":\"\"}}";
 
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDmMessage(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
         String id = "123";
@@ -722,9 +722,9 @@ class PostProcessingServiceTest {
 
     @ParameterizedTest
     @MethodSource("datamartTestData")
-    void testPostProcessDatamart(DatamartTestCase testCase) {
+    void testProcessDmMessage(DatamartTestCase testCase) {
         String topic = "dummy_datamart";
-        postProcessingServiceMock.postProcessDatamart(topic, testCase.msg);
+        postProcessingServiceMock.processDmMessage(topic, testCase.msg);
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock);
         assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
@@ -910,8 +910,8 @@ class PostProcessingServiceTest {
         String keyNtf = "{\"payload\":{\"notification_uid\":124}}";
 
         datamartProcessor.datamartTopic = dmTopic;
-        postProcessingServiceMock.postProcessMessage(topicInv, keyInv, keyInv);
-        postProcessingServiceMock.postProcessMessage(topicNtf, keyNtf, keyNtf);
+        postProcessingServiceMock.processNrtMessage(topicInv, keyInv, keyInv);
+        postProcessingServiceMock.processNrtMessage(topicNtf, keyNtf, keyNtf);
 
         List<DatamartData> masterData = getDatamartData(123L, 200L);
         List<DatamartData> notificationData = getDatamartData(123L, 200L);
@@ -939,7 +939,7 @@ class PostProcessingServiceTest {
 
         datamartProcessor.datamartTopic = dmTopic;
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
@@ -955,7 +955,7 @@ class PostProcessingServiceTest {
 
         datamartProcessor.datamartTopic = dmTopic;
         when(investigationRepositoryMock.executeStoredProcForPublicHealthCaseIds("123")).thenReturn(invResults);
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
@@ -966,7 +966,7 @@ class PostProcessingServiceTest {
         // Test with an event that doesn't trigger the event metric datamart procedure
         String orgKey = "{\"payload\":{\"organization_uid\":123}}";
         String orgTopic = "dummy_organization";
-        postProcessingServiceMock.postProcessMessage(orgTopic, orgKey, orgKey);
+        postProcessingServiceMock.processNrtMessage(orgTopic, orgKey, orgKey);
         postProcessingServiceMock.processCachedIds();
 
         verify(postProcRepositoryMock, never()).executeStoredProcForEventMetric(any(),any(),any(),any(),any());
@@ -991,12 +991,12 @@ class PostProcessingServiceTest {
         String crTopic = "dummy_contact";
         String vaxTopic = "dummy_vaccination";
 
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey2, investigationKey2);
-        postProcessingServiceMock.postProcessMessage(ntfTopic, notificationKey, notificationKey);
-        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationMsg);
-        postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
-        postProcessingServiceMock.postProcessMessage(vaxTopic, vaccinationKey, vaccinationKey);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey1, investigationKey1);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey2, investigationKey2);
+        postProcessingServiceMock.processNrtMessage(ntfTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.processNrtMessage(obsTopic, observationKey, observationMsg);
+        postProcessingServiceMock.processNrtMessage(crTopic, contactKey, contactKey);
+        postProcessingServiceMock.processNrtMessage(vaxTopic, vaccinationKey, vaccinationKey);
         postProcessingServiceMock.processCachedIds();
 
         verify(postProcRepositoryMock).executeStoredProcForEventMetric("126,235", "130", "127", "123", "999");
@@ -1007,7 +1007,7 @@ class PostProcessingServiceTest {
         // Test with an event that doesn't trigger the Hep100 datamart procedure
         String contactKey = "{\"payload\":{\"contact_uid\":123}}";
         String crTopic = "dummy_contact";
-        postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
+        postProcessingServiceMock.processNrtMessage(crTopic, contactKey, contactKey);
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
 
@@ -1031,11 +1031,11 @@ class PostProcessingServiceTest {
         String provTopic = "dummy_provider";
         String orgTopic = "dummy_organization";
 
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey2, investigationKey2);
-        postProcessingServiceMock.postProcessMessage(patTopic, patientKey, patientKey);
-        postProcessingServiceMock.postProcessMessage(provTopic, providerKey, providerKey);
-        postProcessingServiceMock.postProcessMessage(orgTopic, organizationKey, organizationKey);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey1, investigationKey1);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey2, investigationKey2);
+        postProcessingServiceMock.processNrtMessage(patTopic, patientKey, patientKey);
+        postProcessingServiceMock.processNrtMessage(provTopic, providerKey, providerKey);
+        postProcessingServiceMock.processNrtMessage(orgTopic, organizationKey, organizationKey);
 
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
@@ -1054,9 +1054,9 @@ class PostProcessingServiceTest {
         String notTopic = "dummy_notification";
         String obsTopic = "dummy_observation";
 
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
-        postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
-        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey, investigationKey);
+        postProcessingServiceMock.processNrtMessage(notTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.processNrtMessage(obsTopic, observationKey, observationKey);
 
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
@@ -1070,7 +1070,7 @@ class PostProcessingServiceTest {
         String contactKey = "{\"payload\":{\"contact_uid\":123}}";
         String crTopic = "dummy_contact";
 
-        postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
+        postProcessingServiceMock.processNrtMessage(crTopic, contactKey, contactKey);
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
 
@@ -1084,7 +1084,7 @@ class PostProcessingServiceTest {
         // Test with an event that doesn't trigger the morbidity report datamart procedure
         String contactKey = "{\"payload\":{\"contact_uid\":123}}";
         String crTopic = "dummy_contact";
-        postProcessingServiceMock.postProcessMessage(crTopic, contactKey, contactKey);
+        postProcessingServiceMock.processNrtMessage(crTopic, contactKey, contactKey);
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
 
@@ -1111,12 +1111,12 @@ class PostProcessingServiceTest {
         String orgTopic = "dummy_organization";
         String obsTopic = "dummy_observation";
 
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey1, investigationKey1);
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey2, investigationKey2);
-        postProcessingServiceMock.postProcessMessage(patTopic, patientKey, patientKey);
-        postProcessingServiceMock.postProcessMessage(provTopic, providerKey, providerKey);
-        postProcessingServiceMock.postProcessMessage(orgTopic, organizationKey, organizationKey);
-        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationMsg);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey1, investigationKey1);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey2, investigationKey2);
+        postProcessingServiceMock.processNrtMessage(patTopic, patientKey, patientKey);
+        postProcessingServiceMock.processNrtMessage(provTopic, providerKey, providerKey);
+        postProcessingServiceMock.processNrtMessage(orgTopic, organizationKey, organizationKey);
+        postProcessingServiceMock.processNrtMessage(obsTopic, observationKey, observationMsg);
 
         postProcessingServiceMock.processCachedIds();
         postProcessingServiceMock.processDatamartIds();
@@ -1135,9 +1135,9 @@ class PostProcessingServiceTest {
         String notTopic = "dummy_notification";
         String obsTopic = "dummy_observation";
 
-        postProcessingServiceMock.postProcessMessage(invTopic, investigationKey, investigationKey);
-        postProcessingServiceMock.postProcessMessage(notTopic, notificationKey, notificationKey);
-        postProcessingServiceMock.postProcessMessage(obsTopic, observationKey, observationKey);
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey, investigationKey);
+        postProcessingServiceMock.processNrtMessage(notTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.processNrtMessage(obsTopic, observationKey, observationKey);
 
         List<DatamartData> masterData = new ArrayList<>();
         DatamartData datamartData = new DatamartData();
@@ -1164,7 +1164,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_auth_user";
         String key = "{\"payload\":{\"auth_user_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedUserProfileIdsString = "123";
@@ -1182,8 +1182,8 @@ class PostProcessingServiceTest {
         String userProfileKey2 = "{\"payload\":{\"auth_user_uid\":124}}";
         String userProfileTopic = "dummy_auth_user";
 
-        postProcessingServiceMock.postProcessMessage(userProfileTopic, userProfileKey1, userProfileKey1);
-        postProcessingServiceMock.postProcessMessage(userProfileTopic, userProfileKey2, userProfileKey2);
+        postProcessingServiceMock.processNrtMessage(userProfileTopic, userProfileKey1, userProfileKey1);
+        postProcessingServiceMock.processNrtMessage(userProfileTopic, userProfileKey2, userProfileKey2);
 
         assertTrue(postProcessingServiceMock.idCache.containsKey(userProfileTopic));
         postProcessingServiceMock.processCachedIds();
@@ -1196,7 +1196,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_user_profile";
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> postProcessingServiceMock.postProcessMessage(topic, userProfileKey, userProfileKey));
+                () -> postProcessingServiceMock.processNrtMessage(topic, userProfileKey, userProfileKey));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
@@ -1205,7 +1205,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_place";
         String key = "{\"payload\":{\"place_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         String expectedPlaceIdsString = "123";
@@ -1223,8 +1223,8 @@ class PostProcessingServiceTest {
         String placeKey2 = "{\"payload\":{\"place_uid\":124}}";
         String placeTopic = "dummy_place";
 
-        postProcessingServiceMock.postProcessMessage(placeTopic, placeKey1, placeKey1);
-        postProcessingServiceMock.postProcessMessage(placeTopic, placeKey2, placeKey2);
+        postProcessingServiceMock.processNrtMessage(placeTopic, placeKey1, placeKey1);
+        postProcessingServiceMock.processNrtMessage(placeTopic, placeKey2, placeKey2);
 
         assertTrue(postProcessingServiceMock.idCache.containsKey(placeTopic));
 
@@ -1238,7 +1238,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_place";
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> postProcessingServiceMock.postProcessMessage(topic, placeKey, placeKey));
+                () -> postProcessingServiceMock.processNrtMessage(topic, placeKey, placeKey));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
@@ -1247,7 +1247,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_treatment";
         String key = "{\"payload\":{\"treatment_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         assertEquals(123L, postProcessingServiceMock.idCache.get(topic).element());
         assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
 
@@ -1269,7 +1269,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_treatment";
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> postProcessingServiceMock.postProcessMessage(topic, treatmentKey, treatmentKey));
+                () -> postProcessingServiceMock.processNrtMessage(topic, treatmentKey, treatmentKey));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
@@ -1283,7 +1283,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_investigation";
         String key = "{\"payload\":{\"public_health_case_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, payload);
+        postProcessingServiceMock.processNrtMessage(topic, key, payload);
         assertTrue(postProcessingServiceMock.pbCache.isEmpty());
 
         postProcessingServiceMock.processCachedIds();
@@ -1300,11 +1300,11 @@ class PostProcessingServiceTest {
     }
 
     @Test
-    void testPostProcessMessageException() {
+    void testProcessNrtMessageException() {
         String invalidKey = "invalid_key";
         String invalidTopic = "dummy_topic";
 
-        assertThrows(RuntimeException.class, () -> postProcessingServiceMock.postProcessMessage(invalidTopic,
+        assertThrows(RuntimeException.class, () -> postProcessingServiceMock.processNrtMessage(invalidTopic,
                 invalidKey, invalidKey));
     }
 
@@ -1314,17 +1314,17 @@ class PostProcessingServiceTest {
         String topic = "dummy_organization";
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> postProcessingServiceMock.postProcessMessage(topic,
+                () -> postProcessingServiceMock.processNrtMessage(topic,
                         orgKey, orgKey));
         assertEquals(NoSuchElementException.class, ex.getCause().getClass());
     }
 
     @Test
-    void testPostProcessDatamartException() {
+    void testProcessDmMessageException() {
         String topic = "dummy_datamart";
         String invalidMsg = "invalid_msg";
 
-        assertThrows(RuntimeException.class, () -> postProcessingServiceMock.postProcessDatamart(topic, invalidMsg));
+        assertThrows(RuntimeException.class, () -> postProcessingServiceMock.processDmMessage(topic, invalidMsg));
     }
 
     @ParameterizedTest
@@ -1336,10 +1336,10 @@ class PostProcessingServiceTest {
             "'{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"datamart\":null}}'",
 
     })
-    void testPostProcessDatamartIncompleteData(String msg) {
+    void testProcessDmMessageIncompleteData(String msg) {
         String topic = "dummy_datamart";
 
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDmMessage(topic, msg);
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.getLast().getFormattedMessage().contains("Skipping further processing"));
     }
@@ -1360,7 +1360,7 @@ class PostProcessingServiceTest {
         String msg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10370\"," +
                 "\"datamart\":\"UNKNOWN\",\"stored_procedure\":\"sp_nrt_unknown_postprocessing\"}}";
 
-        postProcessingServiceMock.postProcessDatamart(topic, msg);
+        postProcessingServiceMock.processDmMessage(topic, msg);
         postProcessingServiceMock.processDatamartIds();
 
         List<ILoggingEvent> logs = listAppender.list;
@@ -1373,7 +1373,7 @@ class PostProcessingServiceTest {
         String topic = "dummy_topic";
         String key = "{\"payload\":{\"unknown_uid\":123}}";
 
-        postProcessingServiceMock.postProcessMessage(topic, key, key);
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
 
         List<ILoggingEvent> logs = listAppender.list;

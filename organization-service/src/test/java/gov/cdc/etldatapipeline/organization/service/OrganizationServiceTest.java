@@ -78,6 +78,7 @@ class OrganizationServiceTest {
         organizationService.setOrgElasticSearchTopic(orgElasticTopic);
         organizationService.setPlaceReportingOutputTopic(placeReportingTopic);
         organizationService.setTeleOutputTopic(teleReportingTopic);
+        organizationService.setElasticSearchEnable(true);
 
         Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
         listAppender.start();
@@ -97,6 +98,24 @@ class OrganizationServiceTest {
         when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
 
         validateOrgTransformation();
+    }
+
+    @Test
+    void testProcessOrgMessageNoElasticSearch() {
+        OrganizationSp orgSp = new OrganizationSp();
+        orgSp.setOrganizationUid(10036000L);
+        when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
+
+        String changeData = readFileData("orgcdc/OrgChangeData.json");
+
+        organizationService.setElasticSearchEnable(false);
+        organizationService.processMessage(changeData, orgTopic);
+
+        // verify that only one message was sent
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+
+        String actualTopic = topicCaptor.getValue();
+        assertEquals(orgReportingTopic, actualTopic);
     }
 
     @Test
