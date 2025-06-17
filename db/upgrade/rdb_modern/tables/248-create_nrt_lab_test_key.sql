@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_key' and xtyp
 		LAB_TEST_KEY BIGINT IDENTITY(1,1) NOT NULL,
 		LAB_TEST_UID BIGINT NULL,
 		created_dttm DATETIME2 DEFAULT getdate(),
-		updated_dttm DATETIME2 DEFAULT getdate()           
+		updated_dttm DATETIME2 DEFAULT getdate(),
+        PRIMARY KEY (LAB_TEST_KEY)
 		);
 
 		-- Insert Key = 1 with LAB_TEST_UID = NULL

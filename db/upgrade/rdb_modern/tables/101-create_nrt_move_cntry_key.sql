@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_cntry_key' and xt
             TB_PAM_UID bigint NOT NULL,
             NBS_Case_Answer_UID bigint NOT NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (D_MOVE_CNTRY_KEY, TB_PAM_UID, NBS_Case_Answer_UID)
         );
 
         declare @max bigint;

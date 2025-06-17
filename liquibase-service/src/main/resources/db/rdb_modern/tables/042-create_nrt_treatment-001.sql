@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'nrt_treatment'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment' and xtype = 'U')
 CREATE TABLE dbo.nrt_treatment
 (
     treatment_uid                  varchar(100)                                    NOT NULL,
@@ -34,6 +31,12 @@ CREATE TABLE dbo.nrt_treatment
     max_datetime                   datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_treatment'))
+    BEGIN
+        ALTER TABLE dbo.nrt_treatment
+        ADD CONSTRAINT pk_nrt_treatment PRIMARY KEY (treatment_uid);
+    END;
 
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment' and xtype = 'U')
     BEGIN

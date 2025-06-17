@@ -27,3 +27,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_state_group_key' and 
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_move_state_group_key'))
+    BEGIN
+        ALTER TABLE dbo.nrt_move_state_group_key
+        ADD CONSTRAINT pk_nrt_move_state_group_key PRIMARY KEY (D_MOVE_STATE_GROUP_KEY, TB_PAM_UID);
+    END

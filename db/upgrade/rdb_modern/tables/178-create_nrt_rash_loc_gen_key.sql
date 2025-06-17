@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_rash_loc_gen_key' and 
             VAR_PAM_UID bigint NOT NULL,
             NBS_Case_Answer_UID bigint NOT NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (D_RASH_LOC_GEN_KEY, VAR_PAM_UID, NBS_Case_Answer_UID)
         );
 
         declare @max bigint;

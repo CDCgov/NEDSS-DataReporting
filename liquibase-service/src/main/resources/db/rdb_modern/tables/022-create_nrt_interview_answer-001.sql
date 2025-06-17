@@ -20,3 +20,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview_answer' and xtyp
             END;
 
     END;
+
+IF NOT EXISTS(SELECT 1  FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_interview_answer'))
+    BEGIN
+        ALTER TABLE dbo.nrt_interview_answer
+        ADD CONSTRAINT pk_nrt_interview_answer PRIMARY KEY (interview_uid);
+    END

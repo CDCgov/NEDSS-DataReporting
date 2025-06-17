@@ -26,3 +26,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_case_management_key' and x
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_case_management_key'))
+    BEGIN
+        ALTER TABLE dbo.nrt_case_management_key
+        ADD CONSTRAINT nrt_case_management_key_pk PRIMARY KEY (d_case_management_key);
+    END
