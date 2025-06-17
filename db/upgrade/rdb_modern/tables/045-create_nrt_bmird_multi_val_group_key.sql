@@ -6,7 +6,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_bmird_multi_val_group_
             public_health_case_uid bigint NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
             updated_dttm DATETIME2 DEFAULT GETDATE(),
-            PRIMARY KEY (BMIRD_MULTI_VAL_GRP_KEY
+            PRIMARY KEY (BMIRD_MULTI_VAL_GRP_KEY)
         );
         --check for null and set default to 2
         DECLARE @max bigint = (SELECT ISNULL(MAX(BMIRD_MULTI_VAL_GRP_KEY) + 1, 2) FROM dbo.BMIRD_MULTI_VALUE_FIELD_GROUP);

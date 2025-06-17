@@ -38,9 +38,3 @@ BEGIN
     ALTER TABLE nrt_bmird_multi_val_group_key
     ADD CONSTRAINT pk_nrt_bmird_multi_val_group_key PRIMARY KEY (BMIRD_MULTI_VAL_GRP_KEY);
 END
-
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_bmird_multi_val_key'))
-BEGIN
-    ALTER TABLE dbo.nrt_bmird_multi_val_key
-    ADD CONSTRAINT pk_nrt_bmird_multi_val_key PRIMARY KEY (BMIRD_MULTI_VAL_FIELD_KEY, BMIRD_MULTI_VAL_GRP_KEY);
-END;
