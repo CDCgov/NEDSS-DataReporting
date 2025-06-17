@@ -8,7 +8,6 @@ GO
 
 CREATE PROCEDURE dbo.sp_nrt_ldf_postprocessing @ldf_uid_list nvarchar(max), @debug bit = 'false'
 AS
-
 BEGIN
 
     BEGIN TRY
@@ -748,12 +747,13 @@ BEGIN
             ld.ldf_column_type,
             ld.condition_cd,
             ld.condition_desc_txt,
+            ld.cdc_national_id,
             ld.class_cd,
             ld.code_set_nm,
             ld.ldf_field_data_business_object_nm as business_object_nm,
             ld.display_order_nbr as display_order_number,
             ld.field_size,
-    ld.ldf_value,
+            ld.ldf_value,
             ld.import_version_nbr,
             ld.label_txt,
             ld.ldf_oid,
@@ -812,6 +812,7 @@ BEGIN
           ,ldf_column_type = ld.ldf_column_type
           ,condition_cd = ld.condition_cd
           ,condition_desc_txt = ld.condition_desc_txt
+          ,cdc_national_id = ld.cdc_national_id
           ,class_cd = ld.class_cd
           ,code_set_nm = ld.code_set_nm
           ,business_obj_nm = ld.business_object_nm
@@ -919,6 +920,7 @@ BEGIN
         ,ldf_column_type
         ,condition_cd
         ,condition_desc_txt
+        ,cdc_national_id
         ,class_cd
         ,code_set_nm
         ,business_obj_nm
@@ -936,6 +938,7 @@ BEGIN
              ,tld.ldf_column_type
              ,tld.condition_cd
              ,tld.condition_desc_txt
+             ,tld.cdc_national_id  
              ,tld.class_cd
              ,tld.code_set_nm
              ,tld.business_object_nm
@@ -945,7 +948,7 @@ BEGIN
              ,tld.import_version_nbr
              ,tld.label_txt
              ,tld.ldf_oid
-           ,tld.nnd_ind
+             ,tld.nnd_ind
              ,tld.metadata_record_status_cd
         FROM #tmp_ldf_data tld
                  join dbo.nrt_ldf_data_key k with (nolock) on tld.ldf_uid = k.ldf_uid
