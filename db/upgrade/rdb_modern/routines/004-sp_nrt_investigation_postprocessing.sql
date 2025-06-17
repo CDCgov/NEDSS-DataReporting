@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_investigation_postprocessing @id_list nvarchar(max),@debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_investigation_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_investigation_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_nrt_investigation_postprocessing @id_list nvarchar(max),@debug bit = 'false'
 AS
 BEGIN
     /*
@@ -136,7 +144,7 @@ BEGIN
                nrt.patient_id,
                nrt.batch_id
         into #temp_inv_table
-        from dbo.nrt_investigation nrt
+        from dbo.nrt_investigation nrt with (nolock)
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
         where nrt.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
@@ -189,8 +197,8 @@ BEGIN
                 FROM #temp_inv_table t
                          LEFT JOIN (
                     select invobs.*
-                    from dbo.NRT_INVESTIGATION_OBSERVATION invobs
-                             left outer join dbo.NRT_INVESTIGATION inv
+                    from dbo.NRT_INVESTIGATION_OBSERVATION invobs with (nolock)
+                             left outer join dbo.NRT_INVESTIGATION inv with (nolock)
                                              on inv.public_health_case_uid = invobs.public_health_case_uid
                     where isnull(inv.batch_id,1) = isnull(invobs.batch_id,1)
                       and invobs.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
@@ -372,8 +380,43 @@ BEGIN
 
         /* Investigation Update Operation */
         BEGIN TRANSACTION;
-        SET @proc_step_name = 'Update INVESTIGATION Dimension';
+
+        SET @proc_step_name='Update dbo.nrt_investigation_key';
         SET @proc_step_no = 2;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_investigation_key k
+          INNER JOIN #temp_inv_table d
+            ON K.d_investigation_key = d.INVESTIGATION_KEY;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+
+        SET @proc_step_name = 'Update INVESTIGATION Dimension';
+        SET @proc_step_no = 3;
 
         update dbo.INVESTIGATION
         set [INVESTIGATION_KEY]             = inv.INVESTIGATION_KEY,
@@ -475,7 +518,7 @@ BEGIN
 
         /* Investigation Insert Operation */
         SET @proc_step_name = 'Insert into INVESTIGATION Dimension';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 4;
 
         insert into dbo.nrt_investigation_key(case_uid)
         select case_uid
@@ -654,8 +697,10 @@ BEGIN
 
         BEGIN TRANSACTION;
 
+        
+
         SET @proc_step_name = 'Update CONFIRMATION_METHOD';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = 6;
 
 
         /*Temp Confirmation Method Table*/
@@ -681,6 +726,40 @@ BEGIN
 
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #temp_cm_table;
+
+        SET @proc_step_name='Update dbo.nrt_confirmation_method_key';
+        SET @proc_step_no = 5;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_confirmation_method_key k
+          INNER JOIN #temp_cm_table d
+            ON K.d_confirmation_method_key = d.CONFIRMATION_METHOD_KEY;
+
+        set @rowcount=@@rowcount
+
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
 
         -- if confirmation_method_key for the cd exists get the key or insert a new row to rdb.confirmation_method
 
@@ -714,14 +793,14 @@ BEGIN
 
 
         SET @proc_step_name = 'Insert into CONFIRMATION_METHOD';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 7;
 
         insert into dbo.nrt_confirmation_method_key(confirmation_method_cd)
         select distinct cmt.confirmation_method_cd
         from #temp_cm_table cmt
         where cmt.CONFIRMATION_METHOD_KEY is null and cmt.confirmation_method_cd is not null
           and not exists (select confirmation_method_cd
-                          from dbo.confirmation_method cd
+                          from dbo.confirmation_method cd with (nolock)
                           where cd.confirmation_method_cd = cmt.confirmation_method_cd);
 
 --        /* Insert confirmation_method */
@@ -731,7 +810,7 @@ BEGIN
                  join dbo.nrt_confirmation_method_key cmk with (nolock) on cmk.confirmation_method_cd = cmt.confirmation_method_cd
         where cmt.CONFIRMATION_METHOD_KEY is null
           and not exists (select confirmation_method_cd
-                          from dbo.confirmation_method cd
+                          from dbo.confirmation_method cd with (nolock)
                           where cd.confirmation_method_cd = cmt.confirmation_method_cd);
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #temp_cm_table;
@@ -758,7 +837,7 @@ BEGIN
                ,LEFT(@id_list, 500));
 
         SET @proc_step_name = 'UPDATE CONFIRMATION_METHOD_GROUP';
-        SET @proc_step_no = 5;
+        SET @proc_step_no = 8;
 
         delete dbo.CONFIRMATION_METHOD_GROUP
         where investigation_key in

@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_place_postprocessing @id_list nvarchar(max),
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_place_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_place_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_nrt_place_postprocessing @id_list nvarchar(max),
                                                           @debug bit = 'false'
 AS
 BEGIN
@@ -387,6 +395,39 @@ BEGIN
 
 
         IF @debug = 'true' SELECT * FROM #tmp_locator_gen;
+
+        /* Logging */
+        SET @rowcount = @@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        ( batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count]
+        , [msg_description1])
+        VALUES ( @batch_id
+               , @dataflow_name
+               , @package_name
+               , 'START'
+               , @proc_step_no
+               , @proc_step_name
+               , @rowcount
+               , LEFT(@id_list, 500));
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @proc_step_name = 'Update dbo.nrt_place_key';
+        SET @proc_step_no = @proc_step_no + 1;
+
+        update k
+        SET
+          k.updated_dttm = GETDATE()
+        FROM dbo.nrt_place_key k
+          INNER JOIN #tmp_locator_gen d
+            ON K.d_place_key = d.place_key
+            AND k.PLACE_LOCATOR_UID = d.PLACE_LOCATOR_UID;
 
         /* Logging */
         SET @rowcount = @@rowcount

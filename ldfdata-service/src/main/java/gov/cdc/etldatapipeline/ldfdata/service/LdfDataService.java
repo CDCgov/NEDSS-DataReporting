@@ -104,16 +104,18 @@ public class LdfDataService {
             if (operationType.equals("d")){
                 LdfData custLdfData = initializeBean(ldfUid, busObjUid, busObjNm);
                 ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
+                ldfDataKey.setBusObjUid(Long.valueOf(busObjUid));
                 pushKeyValuePairToKafka(ldfDataKey, custLdfData, ldfDataTopicReporting);
-                logger.info("LDF data (uid={}) sent to {}", ldfUid, ldfDataTopicReporting);
+                logger.info("LDF data (ldfUid={} busObjUid={}) sent to {}", ldfUid, busObjUid, ldfDataTopicReporting);
 
             } else {
                 
                 ldfData = ldfDataRepository.computeLdfData(busObjNm, ldfUid, busObjUid);
                 if (ldfData.isPresent()) {
                     ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
+                    ldfDataKey.setBusObjUid(Long.valueOf(busObjUid));
                     pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
-                    logger.info("LDF data (uid={}) sent to {}", ldfUid, ldfDataTopicReporting);
+                    logger.info("LDF data (uid={} busObjUid={}) sent to {}", ldfUid, busObjUid, ldfDataTopicReporting);
                 }
                 else {
                     throw new EntityNotFoundException("Unable to find LDF data with id: " + ldfUid);

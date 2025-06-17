@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_public_health_case_fact_datamart_event @phc_id_list nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_public_health_case_fact_datamart_event]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_public_health_case_fact_datamart_event]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_public_health_case_fact_datamart_event @phc_id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
     DECLARE @RowCount_no INT;

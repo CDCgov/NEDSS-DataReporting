@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_d_tb_pam_postprocessing]
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_d_tb_pam_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_d_tb_pam_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_nrt_d_tb_pam_postprocessing]
     @phc_id_list nvarchar(max),
     @debug bit = 'false'
 AS
@@ -881,6 +889,30 @@ BEGIN TRY
 
 	COMMIT transaction;
 
+	BEGIN TRANSACTION
+
+	SET
+		@PROC_STEP_NO = @PROC_STEP_NO + 1;
+	SET
+		@PROC_STEP_NAME = 'Update nrt_d_tb_pam_key updated_dttm';
+
+	UPDATE tgt 
+	SET tgt.[updated_dttm] = GETDATE()
+	FROM [dbo].nrt_d_tb_pam_key tgt 
+	INNER JOIN dbo.d_tb_pam d WITH (NOLOCK)
+		on tgt.D_TB_PAM_KEY = tgt.D_TB_PAM_KEY AND
+		tgt.TB_PAM_UID = tgt.TB_PAM_UID
+	INNER JOIN #S_TB_PAM_SET S
+		ON S.TB_PAM_UID = D.TB_PAM_UID
+
+	SELECT @RowCount_no = @@ROWCOUNT;
+
+	INSERT INTO [dbo].[job_flow_log]
+	(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+	VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+	COMMIT TRANSACTION;
+	
 	BEGIN TRANSACTION
 
 		SET

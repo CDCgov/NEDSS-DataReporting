@@ -1,4 +1,12 @@
-CREATE or ALTER  PROCEDURE [dbo].[sp_contact_record_event] @cc_uids nvarchar(max),
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_contact_record_event]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_contact_record_event]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_contact_record_event] @cc_uids nvarchar(max),
                                                      @debug bit = 'false'
 AS
 BEGIN

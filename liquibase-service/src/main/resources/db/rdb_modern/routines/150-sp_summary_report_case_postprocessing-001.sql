@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_summary_report_case_postprocessing(
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_summary_report_case_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_summary_report_case_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_summary_report_case_postprocessing(
     @id_list nvarchar(MAX),
     @debug bit = 'false')
 AS

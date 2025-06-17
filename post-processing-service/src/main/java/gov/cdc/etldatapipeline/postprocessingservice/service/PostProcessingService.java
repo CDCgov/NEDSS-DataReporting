@@ -93,6 +93,18 @@ public class PostProcessingService {
     @Value("${spring.kafka.topic.investigation}")
     private String investigationTopic;
 
+    /**
+     * Processes a message from a Kafka topic. This method is the entry point for handling messages
+     * from Kafka topics.
+     * <p>Steps:
+     * <ul>1. Identify the entity type based on the topic.</ul>
+     * <ul>2. Extract relevant IDs or data from the message payload.</ul>
+     * <ul>3. Cache the extracted IDs for further processing in idCache and data in idVals.</ul>
+     *
+     * @param topic The name of the Kafka topic from which the message was received.
+     * @param key The key of the Kafka message, typically used for partitioning.
+     * @param payload The value of the Kafka message, which contains the payload to be processed.
+     */
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
             autoCreateTopics = "false", 
@@ -125,20 +137,7 @@ public class PostProcessingService {
             "${spring.kafka.topic.state_defined_field_metadata}",
             "${spring.kafka.topic.page}"
     })
-    /**
-     * Processes a message from a Kafka topic. This method is the entry point for handling messages
-     * from Kafka topics.
-     *
-     * @param topic The name of the Kafka topic from which the message was received.
-     * @param key The key of the Kafka message, typically used for partitioning.
-     * @param value The value of the Kafka message, which contains the payload to be processed.
-     *
-     * Steps:
-     * 1. Identify the entity type based on the topic.
-     * 2. Extract relevant IDs or data from the message payload.
-     * 3. Cache the extracted IDs for further processing in idCache and data in idVals.
-     */
-    public void postProcessMessage(
+    public void processNrtMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload String payload) {
@@ -175,7 +174,6 @@ public class PostProcessingService {
      * @param uid
      * @param topic
      * @param payload
-     * @return String
      */
     private void extractValFromMessage(Long uid, String topic, String payload) {
         try {
@@ -236,7 +234,7 @@ public class PostProcessingService {
             RuntimeException.class
     })
     @KafkaListener(topics = { "${spring.kafka.topic.datamart}" })
-    public void postProcessDatamart(
+    public void processDmMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Payload String payload) {
         try {
@@ -279,14 +277,14 @@ public class PostProcessingService {
      * Processes all cached IDs for various entities (e.g., investigations, notifications, organizations)
      * and executes the appropriate stored procedures for each entity type. This method triggers at fixed intervals and
      * consolidates the processing of IDs collected from multiple Kafka messages.
-     *
+     * <p>
      * Steps:
-     * 1. Iterate through cached IDs grouped by entity type.
-     * 2. Execute the corresponding stored procedure for each entity type.
-     * 3. Log the execution status for debugging and monitoring purposes.
-     * 4. Store the entity name and ids for later if it is needed for data marts (both direct dependent and also for multi-id data marts)
-     * 5. Process event metric and summary data marts
-     * 6. Send the event message to the kafka topic that handles data mart events for building other data marts
+     * <ul>1. Iterate through cached IDs grouped by entity type.</ul>
+     * <ul>2. Execute the corresponding stored procedure for each entity type.</ul>
+     * <ul>3. Log the execution status for debugging and monitoring purposes.</ul>
+     * <ul>4. Store the entity name and ids for later if it is needed for data marts (both direct dependent and also for multi-id data marts).</ul>
+     * <ul>5. Process event metric and summary data marts</ul>
+     * <ul>6. Send the event message to the kafka topic that handles data mart events for building other data marts</ul>
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processCachedIds() {
@@ -533,11 +531,11 @@ public class PostProcessingService {
     /**
      * Processes cached IDs for datamarts by executing the appropriate stored procedures. This method triggers at fixed
      * intervals and handles the processing of data that needs to be loaded into specific datamarts.
-     *
+     * <p>
      * Steps:
-     * 1. Iterate through cached IDs grouped by datamart type.
-     * 2. Execute the corresponding stored procedure for each datamart type.
-     * 3. Log the execution status for debugging and monitoring purposes.
+     * <ul>1. Iterate through cached IDs grouped by datamart type.</ul>
+     * <ul>2. Execute the corresponding stored procedure for each datamart type.</ul>
+     * <ul>3. Log the execution status for debugging and monitoring purposes.</ul>
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
     protected void processDatamartIds() {
@@ -823,7 +821,7 @@ public class PostProcessingService {
      *
      * @param topic The name of the Kafka topic (e.g., "dummy_investigation", "dummy_notification").
      * @return The corresponding entity type as an `Entity` enum value.
-     *
+     *<p>
      * Example:
      * If the topic is "dummy_investigation", the method will return `Entity.INVESTIGATION`.
      *

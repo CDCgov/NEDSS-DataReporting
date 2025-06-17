@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_covid_vaccination_datamart_postprocessing(
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_covid_vaccination_datamart_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_covid_vaccination_datamart_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_covid_vaccination_datamart_postprocessing(
     @vac_uids NVARCHAR(MAX), @patient_uids  NVARCHAR(MAX),
     @debug bit = 'false')
     as

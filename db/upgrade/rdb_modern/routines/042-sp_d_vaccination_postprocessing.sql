@@ -1,4 +1,12 @@
-CREATE or ALTER PROCEDURE [dbo].[sp_d_vaccination_postprocessing] @vac_uids nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_d_vaccination_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_d_vaccination_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_d_vaccination_postprocessing] @vac_uids nvarchar(max), @debug bit = 'false'
 as
 BEGIN
 
@@ -170,6 +178,24 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Update nrt_vaccination_key updated_dttm';
+
+        UPDATE tgt 
+        SET tgt.[updated_dttm] = GETDATE()
+        FROM [dbo].NRT_VACCINATION_KEY tgt 
+        INNER JOIN #D_VACCINATION_INIT g 
+            ON g.D_VACCINATION_KEY = tgt.D_VACCINATION_KEY
+            AND g.VACCINATION_UID = tgt.VACCINATION_UID;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id,@Dataflow_Name,@Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+        COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
 

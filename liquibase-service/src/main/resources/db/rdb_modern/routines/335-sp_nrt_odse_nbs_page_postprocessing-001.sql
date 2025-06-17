@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_odse_nbs_page_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
     @page_id_list nvarchar(max),
     @debug bit = 'false'
 AS

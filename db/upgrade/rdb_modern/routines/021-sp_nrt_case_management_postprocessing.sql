@@ -1,4 +1,12 @@
-CREATE OR ALTER PROCEDURE dbo.sp_nrt_case_management_postprocessing @id_list nvarchar(max), @debug bit = 'false'
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_case_management_postprocessing]') 
+	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+)
+BEGIN
+    DROP PROCEDURE [dbo].[sp_nrt_case_management_postprocessing]
+END
+GO 
+
+CREATE PROCEDURE dbo.sp_nrt_case_management_postprocessing @id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 
@@ -39,7 +47,7 @@ BEGIN
                ,0);
 
         SET @proc_step_name = 'Create CASE_MANAGEMENT Temp table -' + LEFT(@id_list, 160);
-        SET @proc_step_no = 1;
+        SET @proc_step_no = @proc_step_no + 1;
 
         SELECT
                nrt.public_health_case_uid,
@@ -141,7 +149,7 @@ BEGIN
         /* Investigation Update Operation */
         BEGIN TRANSACTION;
         SET @proc_step_name = 'Update D_CASE_MANAGEMENT';
-        SET @proc_step_no = 2;
+        SET @proc_step_no = @proc_step_no + 1;
 
         UPDATE dbo.D_CASE_MANAGEMENT
         SET
@@ -236,9 +244,44 @@ BEGIN
                ,@rowcount
                ,LEFT(@id_list, 500));
 
+        SET @proc_step_name = 'Update nrt_case_management_key table updated_dttm';
+        SET @proc_step_no = @proc_step_no + 1;
+
+        UPDATE tgt 
+        SET tgt.[updated_dttm] = GETDATE()
+        FROM [dbo].nrt_case_management_key tgt 
+        INNER JOIN #temp_cm_table tmp
+            on tmp.public_health_case_uid = tgt.public_health_case_uid and
+            tmp.d_case_management_key = tgt.d_case_management_key;
+
+        if @debug = 'true' select * from dbo.nrt_case_management_key;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list, 500)
+               );
+        
         /* Investigation Insert Operation */
         SET @proc_step_name = 'Insert into D_CASE_MANAGEMENT';
-        SET @proc_step_no = 3;
+        SET @proc_step_no = @proc_step_no + 1;
 
         INSERT INTO dbo.nrt_case_management_key(public_health_case_uid)
         SELECT public_health_case_uid
