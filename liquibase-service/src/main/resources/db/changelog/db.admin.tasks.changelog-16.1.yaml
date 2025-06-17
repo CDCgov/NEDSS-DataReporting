@@ -9,7 +9,7 @@ databaseChangeLog:
             path: 000-odse-db-general-001.sql
             splitStatements: false
   - changeSet:
-      id: 0
+      id: 1
       author: liquibase
       runOnChange: true
       comment: "Enable CDC for Treatment table in ODSE"
