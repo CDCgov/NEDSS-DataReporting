@@ -32,5 +32,5 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_moved_where_key' and xtype
 IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_moved_where_key'))
     BEGIN
         ALTER TABLE dbo.nrt_moved_where_key
-        ADD CONSTRAINT pk_nrt_moved_where_key PRIMARY KEY (D_MOVED_WHERE_KEY, TB_PAM_UID, NBS_Case_Answer_UID);
+        ADD CONSTRAINT pk_nrt_moved_where_key PRIMARY KEY (D_MOVED_WHERE_KEY);
     END

@@ -32,5 +32,5 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_addl_risk_group_key' and x
 IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_addl_risk_group_key'))
     BEGIN
         ALTER TABLE dbo.nrt_addl_risk_group_key
-        ADD CONSTRAINT pk_nrt_addl_risk_group_key PRIMARY KEY (D_ADDL_RISK_GROUP_KEY, TB_PAM_UID);
+        ADD CONSTRAINT pk_nrt_addl_risk_group_key PRIMARY KEY (D_ADDL_RISK_GROUP_KEY);
     END;

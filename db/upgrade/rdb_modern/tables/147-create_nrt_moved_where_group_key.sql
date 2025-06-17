@@ -5,7 +5,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_moved_where_group_key'
             TB_PAM_UID bigint NOT NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
             updated_dttm DATETIME2 DEFAULT GETDATE(),
-            PRIMARY KEY (D_MOVED_WHERE_GROUP_KEY, TB_PAM_UID)
+            PRIMARY KEY (D_MOVED_WHERE_GROUP_KEY)
         );
 
         declare @max bigint;
