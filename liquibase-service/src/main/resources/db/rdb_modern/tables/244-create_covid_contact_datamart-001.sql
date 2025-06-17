@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'COVID_CONTACT_DATAMART'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'COVID_CONTACT_DATAMART' and xtype = 'U')
     BEGIN
         CREATE TABLE dbo.COVID_CONTACT_DATAMART
         (
