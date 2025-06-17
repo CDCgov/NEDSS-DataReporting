@@ -29,6 +29,7 @@ IF NOT EXISTS (SELECT 1
                     ,ldf_column_type
                     ,condition_cd
                     ,condition_desc_txt
+                    ,cdc_national_id
                     ,class_cd
                     ,code_set_nm
                     ,business_obj_nm
@@ -39,10 +40,11 @@ IF NOT EXISTS (SELECT 1
                     ,label_txt
                     ,ldf_oid
                     ,nnd_ind
-                    ,record_status_cd
+                    ,record_status_cd                    
                     )
                         values (1
                                 ,1
+                                ,NULL
                                 ,NULL
                                 ,NULL
                                 ,NULL
