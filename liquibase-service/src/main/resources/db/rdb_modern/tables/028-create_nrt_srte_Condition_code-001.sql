@@ -46,3 +46,17 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' a
             WITH ( PAD_INDEX = OFF ,FILLFACTOR = 90 ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON )
             ON [PRIMARY ];
     END;
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Condition_code' and xtype = 'U')
+    BEGIN
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'rhap_parse_nbs_ind' AND Object_ID = Object_ID(N'nrt_srte_Condition_code'))
+            BEGIN
+                ALTER TABLE dbo.nrt_srte_Condition_code
+                    ADD rhap_parse_nbs_ind varchar(1);
+            END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'rhap_action_value' AND Object_ID = Object_ID(N'nrt_srte_Condition_code'))
+            BEGIN
+                ALTER TABLE dbo.nrt_srte_Condition_code
+                    ADD rhap_action_value varchar(200);
+            END;
+    END;
