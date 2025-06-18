@@ -14,5 +14,5 @@ IF NOT EXISTS (SELECT 1
             effective_from_time datetime     NULL,
             effective_to_time   datetime     NULL,
             PRIMARY KEY (snomed_cd)
-        ) 
+        ) ON [PRIMARY]
     END;
