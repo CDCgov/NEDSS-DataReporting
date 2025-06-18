@@ -339,7 +339,6 @@ public class PostProcessingService {
                 logger.info("Processing {} id(s) from topic: {}", cds.size(), keyTopic);
 
                 Entity entity = getEntityByTopic(keyTopic);
-                // no default as a topic is required to reach this point
                 switch (entity) {
                     case CONDITION:
                         processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);

@@ -2782,3 +2782,20 @@ databaseChangeLog:
             path: 335-sp_nrt_odse_nbs_page_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 880
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 252-create_nrt_condition_key-001.sql
+            splitStatements: true
+  - changeSet:
+      id: 885
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 340-sp_nrt_srte_condition_code_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
