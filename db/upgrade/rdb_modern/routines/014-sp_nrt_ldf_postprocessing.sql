@@ -8,7 +8,6 @@ GO
 
 CREATE PROCEDURE dbo.sp_nrt_ldf_postprocessing @ldf_uid_list nvarchar(max), @debug bit = 'false'
 AS
-
 BEGIN
 
     BEGIN TRY
@@ -88,7 +87,7 @@ BEGIN
                );
 
 --------------------------------------------------------------------------------------------------------
-        SET @proc_step_name='Create #DEL_LDF_DATA_KEY';
+        SET @proc_step_name='Create #DEL_LDF_DATA_KEY to capture delete events';
         SET @proc_step_no = @proc_step_no +1;
 
         IF OBJECT_ID('#DEL_LDF_DATA_KEY', 'U') IS NOT NULL
@@ -729,9 +728,88 @@ BEGIN
                ,@rowcount
                ,LEFT(@ldf_uid_list,500)
                );
+------------------------------------------------------------------------------------------------------
+        SET @proc_step_name='Get Business IDS to delete';
+        SET @proc_step_no = @proc_step_no +1;
 
+        IF OBJECT_ID('#tmp_business_object_uids', 'U') IS NOT NULL
+          DROP TABLE #tmp_business_object_uids;
+
+        select distinct nrt.business_object_uid
+        into #tmp_business_object_uids
+        from dbo.nrt_ldf_data nrt with (nolock)
+        inner join dbo.ldf_group lg with (nolock)
+          on nrt.business_object_uid = lg.business_object_uid
+        inner join #LDF_UID_LIST ldf
+          on nrt.ldf_uid = ldf.value
+
+        if @debug = 'true' select * from #DEL_LDF_DATA_KEY;
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+------------------------------------------------------------------------------------------------------
+        BEGIN TRANSACTION;
+
+        SET @proc_step_name='Delete from LDF_DATA';
+        SET @proc_step_no = @proc_step_no +1;
+
+
+        delete d  
+        from dbo.ldf_data d with (nolock)
+        inner join dbo.ldf_group lg with (nolock)
+          on d.LDF_GROUP_KEY = lg.LDF_GROUP_KEY
+        inner join #tmp_business_object_uids tmp
+          on lg.business_object_uid = tmp.business_object_uid
+        left join dbo.nrt_ldf_data_key lk with (nolock)
+        on lk.d_ldf_data_key = d.ldf_data_key
+        where lk.d_ldf_data_key is null;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+      COMMIT TRANSACTION;
 --------------------------------------------------------------------------------------------------------              
-        
+      BEGIN TRANSACTION;
         SET @proc_step_name='Create LDF_DATA Temp tables-'+ LEFT(@ldf_uid_list,105);
         SET @proc_step_no = @proc_step_no +1;
 
@@ -740,20 +818,21 @@ BEGIN
 
 
         /**Create temp table for LDF_DATA */
-        select
+         select
             ldf.ldf_data_key,
-            ldf.ldf_group_key,
+            lgk.d_ldf_group_key as ldf_group_key,
             ld.ldf_uid,
             ld.business_object_uid,
             ld.ldf_column_type,
             ld.condition_cd,
             ld.condition_desc_txt,
+            ld.cdc_national_id,
             ld.class_cd,
             ld.code_set_nm,
             ld.ldf_field_data_business_object_nm as business_object_nm,
             ld.display_order_nbr as display_order_number,
             ld.field_size,
-    ld.ldf_value,
+            ld.ldf_value,
             ld.import_version_nbr,
             ld.label_txt,
             ld.ldf_oid,
@@ -762,8 +841,8 @@ BEGIN
         into #tmp_ldf_data
         from dbo.nrt_ldf_data ld
                  left join dbo.nrt_ldf_data_key nldk with (nolock) ON ld.ldf_uid = nldk.ldf_uid and ld.business_object_uid = nldk.business_object_uid
-                 left join dbo.ldf_data ldf with (nolock) ON nldk.d_ldf_data_key = ldf.ldf_data_key
-            and nldk.d_ldf_group_key = ldf.ldf_group_key
+                 left join dbo.nrt_ldf_group_key lgk with (nolock) ON lgk.business_object_uid = ld.business_object_uid
+                 left join dbo.ldf_data ldf with (nolock) ON nldk.d_ldf_data_key = ldf.ldf_data_key and nldk.d_ldf_group_key = ldf.ldf_group_key
         inner join dbo.nrt_odse_state_defined_field_metadata sdfmd with (nolock) 
           on sdfmd.ldf_uid = ld.ldf_uid
         inner join #LDF_UID_LIST ldf_uid_list 
@@ -799,6 +878,84 @@ BEGIN
                ,LEFT(@ldf_uid_list,500)
                );
 
+      COMMIT TRANSACTION;
+  --------------------------------------------------------------------------------------------------------              
+        BEGIN TRANSACTION;
+
+        SET @proc_step_name='Update nrt_ldf_data_key updated_dttm';
+        SET @proc_step_no = @proc_step_no +1;
+
+        UPDATE tgt 
+        SET tgt.[updated_dttm] = GETDATE()
+        FROM [dbo].nrt_ldf_data_key tgt 
+        INNER JOIN #tmp_ldf_data tmp
+            on tmp.ldf_data_key = tgt.d_ldf_data_key;
+
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+      COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------              
+      BEGIN TRANSACTION;
+        SET @proc_step_name='Update nrt_ldf_group_key updated_dttm';
+        SET @proc_step_no = @proc_step_no +1;
+
+        UPDATE tgt 
+        SET tgt.[updated_dttm] = GETDATE()
+        FROM [dbo].nrt_ldf_group_key tgt 
+        INNER JOIN #tmp_ldf_data tmp
+            on tmp.ldf_group_key = tgt.d_ldf_group_key;
+
+       
+        if @debug = 'true' select * from #DEL_LDF_DATA_KEY;
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (
+          batch_id
+        ,[Dataflow_Name]
+        ,[package_Name]
+        ,[Status_Type]
+        ,[step_number]
+        ,[step_name]
+        ,[row_count]
+        ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@ldf_uid_list,500)
+               );
+
+      COMMIT TRANSACTION;         
+--------------------------------------------------------------------------------------------------------                   
+        
         BEGIN TRANSACTION;
         SET @proc_step_name='Update LDF_DATA Dimension';
         SET @proc_step_no = @proc_step_no +1;
@@ -812,6 +969,7 @@ BEGIN
           ,ldf_column_type = ld.ldf_column_type
           ,condition_cd = ld.condition_cd
           ,condition_desc_txt = ld.condition_desc_txt
+          ,cdc_national_id = ld.cdc_national_id
           ,class_cd = ld.class_cd
           ,code_set_nm = ld.code_set_nm
           ,business_obj_nm = ld.business_object_nm
@@ -919,6 +1077,7 @@ BEGIN
         ,ldf_column_type
         ,condition_cd
         ,condition_desc_txt
+        ,cdc_national_id
         ,class_cd
         ,code_set_nm
         ,business_obj_nm
@@ -936,6 +1095,7 @@ BEGIN
              ,tld.ldf_column_type
              ,tld.condition_cd
              ,tld.condition_desc_txt
+             ,tld.cdc_national_id  
              ,tld.class_cd
              ,tld.code_set_nm
              ,tld.business_object_nm
@@ -945,7 +1105,7 @@ BEGIN
              ,tld.import_version_nbr
              ,tld.label_txt
              ,tld.ldf_oid
-           ,tld.nnd_ind
+             ,tld.nnd_ind
              ,tld.metadata_record_status_cd
         FROM #tmp_ldf_data tld
                  join dbo.nrt_ldf_data_key k with (nolock) on tld.ldf_uid = k.ldf_uid

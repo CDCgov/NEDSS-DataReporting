@@ -5,7 +5,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_alter_data
 BEGIN
     DROP PROCEDURE [dbo].[sp_alter_datamart_schema_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE dbo.sp_alter_datamart_schema_postprocessing
      @batch_id bigint,
@@ -88,20 +88,20 @@ BEGIN TRY
 	select
 	    snt.rdb_table,
         snt.col_nm,
-        coalesce(isc_rdb.data_type,isc_srte.data_type, ''varchar''),
-        coalesce(isc_rdb.character_maximum_length,isc_srte.character_maximum_length, 300),
-        coalesce(isc_rdb.numeric_precision,isc_srte.numeric_precision,18),
-        coalesce(isc_rdb.numeric_scale,isc_srte.numeric_scale,0)
+        coalesce(isc_rdb.data_type, ''varchar''),
+        coalesce(isc_rdb.character_maximum_length, 300),
+        coalesce(isc_rdb.numeric_precision, 18),
+        coalesce(isc_rdb.numeric_scale, 0)
 	from
 	(
 	select src.*,
 			case
 				when db_field =''code'' and label is null then ''nrt_observation_coded''
-				when db_field =''code'' and label is not null and label = ''cvg_code'' then ''code_value_general''
-				when db_field =''code'' and label is not null and label = ''country'' then ''Country_code''
-				when db_field =''code'' and label is not null and label = ''state'' then ''State_code''
-				when db_field =''code'' and label is not null and label = ''county'' then ''State_county_code_value''
-				when db_field =''code'' and label is not null and label = ''jurcode'' then ''Jurisdiction_code''
+				when db_field =''code'' and label is not null and label = ''cvg_code'' then ''nrt_srte_code_value_general''
+				when db_field =''code'' and label is not null and label = ''country'' then ''nrt_srte_Country_code''
+				when db_field =''code'' and label is not null and label = ''state'' then ''nrt_srte_State_code''
+				when db_field =''code'' and label is not null and label = ''county'' then ''nrt_srte_State_county_code_value''
+				when db_field =''code'' and label is not null and label = ''jurcode'' then ''nrt_srte_Jurisdiction_code''
 				when db_field=''from_time'' then ''nrt_observation_date''
 				when db_field=''numeric_value_1'' then ''nrt_observation_numeric''
 				when db_field=''value_txt'' then ''nrt_observation_txt''
@@ -128,10 +128,6 @@ BEGIN TRY
 		on tgt.name = src.col_nm
 		where tgt.name is null
 	) snt
-	left outer join
-	    nbs_srte.INFORMATION_SCHEMA.COLUMNS isc_srte
-	    ON UPPER(isc_srte.TABLE_NAME) = UPPER(snt.src_nrt_table)
-	    AND UPPER(isc_srte.COLUMN_NAME) = UPPER(snt.src_nrt_table_col)
 	left outer join
 	    INFORMATION_SCHEMA.COLUMNS isc_rdb
 	    ON UPPER(isc_rdb.TABLE_NAME) = UPPER(snt.src_nrt_table)
