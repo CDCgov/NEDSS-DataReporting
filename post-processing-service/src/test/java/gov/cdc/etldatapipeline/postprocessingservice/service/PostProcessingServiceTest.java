@@ -291,6 +291,36 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testPostProcessConditionCodeMessage() {
+        String topic = "dummy_Condition_code";
+        String key = "{\"payload\":{\"condition_cd\":\"123A\"}}";
+
+        postProcessingServiceMock.processNrtMessage(topic, key, key);
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedConditionCdsString = "123A";
+        verify(postProcRepositoryMock).executeStoredProcForConditionCode(expectedConditionCdsString);
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(4, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains(CONDITION.getStoredProcedure()));
+        assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
+//    @Test
+//    void testPostProcessConditionCodeNoIds() {
+//        String topic = "dummy_Condition_code";
+//        String key = "{\"payload\":{\"condition_cd\":\"\"}}";
+//
+//        postProcessingServiceMock.processNrtMessage(topic, key, key);
+//        postProcessingServiceMock.processCachedIds();
+//
+//        String expectedConditionCdsString = "";
+//        verify(postProcRepositoryMock, never()).executeStoredProcForConditionCode(expectedConditionCdsString);
+//
+//    }
+
+    @Test
     void testPostProcessSummaryNotificationMessage() {
         String topic = "dummy_notification";
         String key = "{\"payload\":{\"public_health_case_uid\":122,\"notification_uid\":123,\"act_type_cd\":\"SummaryNotification\"}}";
@@ -529,6 +559,10 @@ class PostProcessingServiceTest {
         String treatmentKey2 = "{\"payload\":{\"treatment_uid\":790}}";
         String treatmentTopic = "dummy_treatment";
 
+        String conditionCodeKey1 = "{\"payload\":{\"condition_cd\":\"123B\"}}";
+        String conditionCodeKey2 = "{\"payload\":{\"condition_cd\":\"111\"}}";
+        String conditionCodeTopic = "dummy_Condition_code";
+
         postProcessingServiceMock.processNrtMessage(orgTopic, orgKey1, orgKey1);
         postProcessingServiceMock.processNrtMessage(orgTopic, orgKey2, orgKey2);
         postProcessingServiceMock.processNrtMessage(ntfTopic, ntfKey1, ntfKey1);
@@ -539,12 +573,15 @@ class PostProcessingServiceTest {
         postProcessingServiceMock.processNrtMessage(placeTopic, placeKey2, placeKey2);
         postProcessingServiceMock.processNrtMessage(treatmentTopic, treatmentKey1, treatmentKey1);
         postProcessingServiceMock.processNrtMessage(treatmentTopic, treatmentKey2, treatmentKey2);
+        postProcessingServiceMock.processNrtMessage(conditionCodeTopic, conditionCodeKey1, conditionCodeKey1);
+        postProcessingServiceMock.processNrtMessage(conditionCodeTopic, conditionCodeKey2, conditionCodeKey2);
 
         assertTrue(postProcessingServiceMock.idCache.containsKey(orgTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(invTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(ntfTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(placeTopic));
         assertTrue(postProcessingServiceMock.idCache.containsKey(treatmentTopic));
+        assertTrue(postProcessingServiceMock.cdCache.containsKey(conditionCodeTopic));
 
         postProcessingServiceMock.processCachedIds();
 
@@ -553,6 +590,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForNotificationIds("567,568");
         verify(postProcRepositoryMock).executeStoredProcForDPlace("123,124");
         verify(postProcRepositoryMock).executeStoredProcForTreatment("789,790");
+        //verify(postProcRepositoryMock).executeStoredProcForConditionCode("123B,111");
     }
 
     @Test
@@ -1368,10 +1406,13 @@ class PostProcessingServiceTest {
         assertTrue(logs.getLast().getMessage().contains("No associated datamart processing logic found"));
     }
 
-    @Test
-    void testPostProcessUnknownTopic() {
+    @ParameterizedTest
+    @CsvSource({
+            "{\"payload\":{\"unknown_uid\":123}}",
+            "{\"payload\":{\"unknown_uid\":\"123\"}}"
+    })
+    void testPostProcessUnknownTopic(String key) {
         String topic = "dummy_topic";
-        String key = "{\"payload\":{\"unknown_uid\":123}}";
 
         postProcessingServiceMock.processNrtMessage(topic, key, key);
         postProcessingServiceMock.processCachedIds();
