@@ -580,7 +580,7 @@ BEGIN
         SET @proc_step_no = 7.5;
 
 -- Check if nrt_odse_lookup_question table has data for LAB_REPORT form
-        IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_odse_lookup_question] WHERE FROM_FORM_CD = 'LAB_REPORT')
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_odse_lookup_question WHERE FROM_FORM_CD = 'LAB_REPORT')
             BEGIN
                 -- No AOE metadata available, create minimal structure
                 IF OBJECT_ID('tempdb..#COVID_LAB_AOE_DATA', 'U') IS NOT NULL
@@ -620,7 +620,7 @@ BEGIN
                             cvg.code_short_desc_txt
                         END AS Answer_Txt
                 INTO #COVID_LAB_AOE_ST
-                FROM [dbo].[nrt_odse_lookup_question] lq
+                FROM dbo.nrt_odse_lookup_question lq
                          LEFT OUTER JOIN dbo.nrt_observation o1 WITH(NOLOCK)
                                          ON o1.cd = lq.FROM_QUESTION_IDENTIFIER
                                              AND o1.obs_domain_cd_st_1 = 'Result'
@@ -657,7 +657,7 @@ BEGIN
                 SELECT @columns += N', p.' + QUOTENAME(LTRIM(RTRIM([RDB_COLUMN_NM])))
                 FROM (
                          SELECT DISTINCT [RDB_COLUMN_NM]
-                         FROM [dbo].[nrt_odse_lookup_question] AS p WITH(NOLOCK)
+                         FROM dbo.nrt_odse_lookup_question AS p WITH(NOLOCK)
                          WHERE FROM_FORM_CD = 'LAB_REPORT'
                      ) AS x;
 
@@ -687,12 +687,7 @@ BEGIN
                      LEFT(ISNULL(@observation_id_list, 'NULL'),500)
                  );
 
-/* Debug output if requested */
-        IF @debug = 'true'
-            EXEC sp_executesql N'SELECT @proc_step_name AS debug_step, * FROM #COVID_LAB_AOE_DATA';
-
-
-        SET @proc_step_name = 'Alter Datamart Columns for AOE';
+        SET @proc_step_name = 'Alter Datamart Columns for All Temp Tables';
         SET @proc_step_no = 7.7;
 
         DECLARE @Temp_Query_Table TABLE (
@@ -703,7 +698,8 @@ BEGIN
         DECLARE @Max_Query_No INT;
         DECLARE @Curr_Query_No INT;
 
-        -- Generate ALTER statements (checking COVID_LAB_DATAMART for missing AOE columns)
+        -- Generate ALTER statements for ALL temporary tables
+-- Check each temp table for columns that don't exist in COVID_LAB_DATAMART
         INSERT INTO @Temp_Query_Table
         SELECT 'ALTER TABLE dbo.COVID_LAB_DATAMART ADD [' + COLUMN_NAME + '] ' + DATA_TYPE +
                CASE
@@ -717,17 +713,33 @@ BEGIN
                    ELSE ' NULL'
                    END
         FROM INFORMATION_SCHEMA.COLUMNS AS c
-        WHERE TABLE_NAME = 'COVID_LAB_AOE_DATA'
-          AND TABLE_SCHEMA = 'tempdb'
+        WHERE TABLE_SCHEMA = 'tempdb'
+          AND TABLE_NAME IN (
+                             'COVID_LAB_CORE_DATA',
+                             'COVID_LAB_RSLT_TYPE',
+                             'COVID_LAB_PATIENT_DATA',
+                             'COVID_LAB_ENTITIES_DATA',
+                             'COVID_LAB_ASSOCIATIONS',
+                             'COVID_LAB_AOE_DATA'
+            )
           AND NOT EXISTS (
             SELECT COLUMN_NAME
             FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_NAME = 'COVID_LAB_DATAMART'
+              AND TABLE_SCHEMA = 'dbo'
               AND COLUMN_NAME = c.COLUMN_NAME
         )
-          AND COLUMN_NAME NOT IN('AOE_Observation_uid');
+          -- Exclude primary key/identifier columns from each temp table
+          AND COLUMN_NAME NOT IN(
+                                 'AOE_Observation_uid',           -- COVID_LAB_AOE_DATA primary key
+                                 'RT_Observation_UID',            -- COVID_LAB_RSLT_TYPE primary key
+                                 'Pat_Observation_UID',           -- COVID_LAB_PATIENT_DATA primary key
+                                 'Entity_Observation_uid',        -- COVID_LAB_ENTITIES_DATA primary key
+                                 'ASSOC_OBSERVATION_UID'          -- COVID_LAB_ASSOCIATIONS primary key
+            -- Note: COVID_LAB_CORE_DATA uses Observation_UID which should already exist in main table
+            );
 
-        -- Execute ALTER statements using original loop logic
+-- Execute ALTER statements using original loop logic
         SET @Max_Query_No = (SELECT MAX(ID) FROM @Temp_Query_Table AS t);
         SET @Curr_Query_No = 0;
 
@@ -742,9 +754,15 @@ BEGIN
                         PRINT 'Executed: ' + @column_query;
                 END TRY
                 BEGIN CATCH
-                    PRINT 'Error executing: ' + @column_query + ' - ' + ERROR_MESSAGE();
+                    IF @debug = 'true'
+                        PRINT 'Error executing: ' + @column_query + ' - ' + ERROR_MESSAGE();
+                    -- Continue processing other columns even if one fails
                 END CATCH
             END
+
+        IF @debug = 'true'
+            SELECT 'Dynamic column check completed for all temp tables' AS debug_message,
+                   @Max_Query_No AS total_alter_statements;
 
         /* Logging */
         INSERT INTO [dbo].[job_flow_log] (
