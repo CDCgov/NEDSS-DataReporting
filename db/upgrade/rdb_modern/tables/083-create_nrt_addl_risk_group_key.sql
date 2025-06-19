@@ -4,7 +4,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_addl_risk_group_key' a
             D_ADDL_RISK_GROUP_KEY bigint IDENTITY (2,1) NOT NULL,
             TB_PAM_UID bigint NOT NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (D_ADDL_RISK_GROUP_KEY)
                                               
         );
 

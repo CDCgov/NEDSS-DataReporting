@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'nrt_treatment'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment' and xtype = 'U')
 CREATE TABLE dbo.nrt_treatment
 (
     treatment_uid                  bigint                                          NOT NULL,
@@ -33,5 +30,6 @@ CREATE TABLE dbo.nrt_treatment
     associated_phc_uids            nvarchar(max)                                   NULL,
     refresh_datetime               datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime                   datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
+    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime),
+    PRIMARY KEY (treatment_uid)
 )

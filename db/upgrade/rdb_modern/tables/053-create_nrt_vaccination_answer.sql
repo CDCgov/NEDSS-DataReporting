@@ -6,5 +6,6 @@ CREATE TABLE dbo.nrt_vaccination_answer
     answer_val       varchar(4000)                                   NULL,
     refresh_datetime datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime     datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
+    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime),
+    PRIMARY KEY (vaccination_uid)
 );

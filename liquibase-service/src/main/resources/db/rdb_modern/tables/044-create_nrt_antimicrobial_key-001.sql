@@ -34,3 +34,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_antimicrobial_key' and xty
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_antimicrobial_key'))
+BEGIN
+    ALTER TABLE dbo.nrt_antimicrobial_key
+    ADD CONSTRAINT pk_nrt_antimicrobial_key PRIMARY KEY (ANTIMICROBIAL_KEY, ANTIMICROBIAL_GRP_KEY);
+END

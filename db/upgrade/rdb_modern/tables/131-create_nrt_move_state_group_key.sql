@@ -4,7 +4,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_state_group_key' 
             D_MOVE_STATE_GROUP_KEY bigint IDENTITY (2,1) NOT NULL,
             TB_PAM_UID bigint NOT NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (D_MOVE_STATE_GROUP_KEY)
         );
 
         declare @max bigint;

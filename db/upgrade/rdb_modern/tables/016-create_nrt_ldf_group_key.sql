@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_group_key' and xty
             d_ldf_group_key bigint IDENTITY(1,1) NOT NULL,
             business_object_uid bigint NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (d_ldf_group_key)
         );
 
         declare @max bigint;
@@ -15,4 +16,4 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_group_key' and xty
             SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_ldf_group_key', RESEED, @max);
 
-    END
+    END;

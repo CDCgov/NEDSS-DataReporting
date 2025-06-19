@@ -25,3 +25,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_key' and xty
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_investigation_key'))
+   BEGIN
+   ALTER TABLE dbo.nrt_investigation_key
+       ADD CONSTRAINT nrt_investigation_key_pk PRIMARY KEY (d_investigation_key);
+    END;

@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_vaccination_key' and x
             d_vaccination_key bigint IDENTITY (1,1) NOT NULL,
             vaccination_uid   bigint                NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (d_vaccination_key)
         );
         declare @max bigint;
         select @max=max(d_vaccination_key)+1 from dbo.D_VACCINATION ;

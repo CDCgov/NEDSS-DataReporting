@@ -5,7 +5,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data_key' and xtyp
             d_ldf_data_key      bigint IDENTITY (1,1) NOT NULL,
             d_ldf_group_key     bigint                NULL,
             business_object_uid bigint                NULL,
-            ldf_uid             bigint                null
+            ldf_uid             bigint                NULL
         );
 
         declare @max bigint;
@@ -30,3 +30,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data_key' and xtype = 
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_ldf_data_key'))
+    BEGIN
+        ALTER TABLE dbo.nrt_ldf_data_key
+        ADD CONSTRAINT pk_ldf_data_key PRIMARY KEY (d_ldf_data_key);
+    END

@@ -13,7 +13,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_group_key' and xty
             SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_ldf_group_key', RESEED, @max);
 
-    END
+    END;
 
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_group_key' and xtype = 'U')
     BEGIN
@@ -28,3 +28,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_group_key' and xtype =
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_ldf_group_key'))
+BEGIN
+    ALTER TABLE dbo.nrt_ldf_group_key
+    ADD CONSTRAINT pk_ldf_group_key PRIMARY KEY (d_ldf_group_key);
+END;

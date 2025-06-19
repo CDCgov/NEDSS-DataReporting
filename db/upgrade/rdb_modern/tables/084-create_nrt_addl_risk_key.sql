@@ -5,8 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_addl_risk_key' and xty
             TB_PAM_UID bigint NOT NULL,
             NBS_Case_Answer_UID bigint NOT NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
-                                              
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (D_ADDL_RISK_KEY)
         );
 
         declare @max bigint;

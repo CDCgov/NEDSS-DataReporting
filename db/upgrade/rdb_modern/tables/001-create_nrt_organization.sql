@@ -34,5 +34,6 @@ CREATE TABLE dbo.nrt_organization
     last_chg_time      datetime                                        NULL,
     refresh_datetime   datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime       datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
+    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime),
+    PRIMARY KEY (organization_uid)
 );
