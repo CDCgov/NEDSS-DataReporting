@@ -2,7 +2,6 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
@@ -93,6 +92,9 @@ public class PostProcessingService {
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
 
+    private final String UNKNOWN_TOPIC_LOG_MESSAGE = "Unknown topic: {} cannot be processed";
+    private final String PROCESSING_IDS_LOG_MESSAGE = "Processing {} id(s) from topic: {}";
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
 
@@ -148,29 +150,16 @@ public class PostProcessingService {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload String payload) {
-
-        JsonNode idNode = extractIdFromMessage(topic, key);
-
-        if (idNode.isTextual()) {
-            String cd = idNode.asText();
-            cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
-        }
-        else {
-            Long id = idNode.asLong();
-            idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-            extractValFromMessage(id, topic, payload);
-        }
-
-
+        extractIdFromMessage(topic, key, payload);
     }
 
     /**
      * Extract id from the kafka message key
      * @param topic
      * @param messageKey
-     * @return id or uid
+     * @param payload
      */
-    private JsonNode extractIdFromMessage(String topic, String messageKey) {
+    private void extractIdFromMessage(String topic, String messageKey, String payload) {
         try {
             logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
             JsonNode keyNode = objectMapper.readTree(messageKey);
@@ -180,7 +169,18 @@ public class PostProcessingService {
                 throw new NoSuchElementException(
                         "The '" + entity.getUidName() + "' value is missing in the '" + topic + "' message payload.");
             }
-            return keyNode.get(PAYLOAD).get(entity.getUidName());
+            JsonNode idNode = keyNode.get(PAYLOAD).get(entity.getUidName());
+
+            if (idNode.isTextual()) {
+                String cd = idNode.asText();
+                cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+            }
+            else {
+                Long id = idNode.asLong();
+                idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
+                extractValFromMessage(id, topic, payload);
+            }
+
         } catch (Exception e) {
             String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
             throw new DataProcessingException(msg, e);
@@ -327,28 +327,7 @@ public class PostProcessingService {
         boolean isCdCacheEmpty = cdCacheSnapshot.isEmpty();
         boolean isIdCacheEmpty = idCacheSnapshot.isEmpty();
 
-        if (!cdCacheSnapshot.isEmpty()) {
-            List<Entry<String, List<String>>> cdSortedEntries = cdCacheSnapshot.entrySet().stream()
-                    .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
-
-
-            for (Entry<String, List<String>> entry : cdSortedEntries) {
-                String keyTopic = entry.getKey();
-                List<String> cds = entry.getValue();
-
-                logger.info("Processing {} id(s) from topic: {}", cds.size(), keyTopic);
-
-                Entity entity = getEntityByTopic(keyTopic);
-                switch (entity) {
-                    case CONDITION:
-                        processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
-                        break;
-                    default:
-                        logger.warn("Unknown topic: {} cannot be processed", keyTopic);
-                        break;
-                }
-            }
-        }
+        processCdCache(cdCacheSnapshot, isCdCacheEmpty);
 
         if (!idCacheSnapshot.isEmpty()) {
             // sorting idCacheSnapshot so that entities with higher priority is processed first
@@ -369,7 +348,7 @@ public class PostProcessingService {
                 String keyTopic = entry.getKey();
                 List<Long> ids = entry.getValue();
 
-                logger.info("Processing {} id(s) from topic: {}", ids.size(), keyTopic);
+                logger.info(PROCESSING_IDS_LOG_MESSAGE, ids.size(), keyTopic);
 
                 Entity entity = getEntityByTopic(keyTopic);
                 switch (entity) {
@@ -442,7 +421,7 @@ public class PostProcessingService {
                         newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     default:
-                        logger.warn("Unknown topic: {} cannot be processed", keyTopic);
+                        logger.warn(UNKNOWN_TOPIC_LOG_MESSAGE, keyTopic);
                         break;
                 }
             }
@@ -462,6 +441,25 @@ public class PostProcessingService {
         // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
         if (isCdCacheEmpty && isIdCacheEmpty) {
             logger.info("No ids to process from the topics.");
+        }
+    }
+
+    private void processCdCache(Map<String, List<String>> cdCacheSnapshot, boolean isCdCacheEmpty) {
+        if (!isCdCacheEmpty) {
+            for (Entry<String, List<String>> entry : cdCacheSnapshot.entrySet()) {
+                String keyTopic = entry.getKey();
+                List<String> cds = entry.getValue();
+
+                logger.info(PROCESSING_IDS_LOG_MESSAGE, cds.size(), keyTopic);
+
+                Entity entity = getEntityByTopic(keyTopic);
+
+                if (Objects.requireNonNull(entity) == CONDITION) {
+                    processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
+                } else {
+                    logger.warn(UNKNOWN_TOPIC_LOG_MESSAGE, keyTopic);
+                }
+            }
         }
     }
 

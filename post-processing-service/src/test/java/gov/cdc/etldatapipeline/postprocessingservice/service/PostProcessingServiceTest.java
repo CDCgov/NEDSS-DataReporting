@@ -307,19 +307,6 @@ class PostProcessingServiceTest {
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
-//    @Test
-//    void testPostProcessConditionCodeNoIds() {
-//        String topic = "dummy_Condition_code";
-//        String key = "{\"payload\":{\"condition_cd\":\"\"}}";
-//
-//        postProcessingServiceMock.processNrtMessage(topic, key, key);
-//        postProcessingServiceMock.processCachedIds();
-//
-//        String expectedConditionCdsString = "";
-//        verify(postProcRepositoryMock, never()).executeStoredProcForConditionCode(expectedConditionCdsString);
-//
-//    }
-
     @Test
     void testPostProcessSummaryNotificationMessage() {
         String topic = "dummy_notification";
@@ -590,7 +577,7 @@ class PostProcessingServiceTest {
         verify(investigationRepositoryMock).executeStoredProcForNotificationIds("567,568");
         verify(postProcRepositoryMock).executeStoredProcForDPlace("123,124");
         verify(postProcRepositoryMock).executeStoredProcForTreatment("789,790");
-        //verify(postProcRepositoryMock).executeStoredProcForConditionCode("123B,111");
+        verify(postProcRepositoryMock).executeStoredProcForConditionCode("123B,111");
     }
 
     @Test
