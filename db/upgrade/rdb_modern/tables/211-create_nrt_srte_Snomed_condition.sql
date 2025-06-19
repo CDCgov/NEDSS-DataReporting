@@ -12,6 +12,7 @@ IF NOT EXISTS (SELECT 1
             status_cd           char(1)      NULL,
             status_time         datetime     NULL,
             effective_from_time datetime     NULL,
-            effective_to_time   datetime     NULL
+            effective_to_time   datetime     NULL,
+            PRIMARY KEY (snomed_cd)
         ) ON [PRIMARY]
     END;
