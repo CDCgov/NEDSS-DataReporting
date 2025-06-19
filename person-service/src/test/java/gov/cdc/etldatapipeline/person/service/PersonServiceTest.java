@@ -80,6 +80,7 @@ class PersonServiceTest {
         personService.setProviderReportingOutputTopic(providerReportingTopic);
         personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
         personService.setUserReportingOutputTopic(userReportingTopic);
+        personService.setElasticSearchEnable(true);
     }
 
     @Test
@@ -111,6 +112,37 @@ class PersonServiceTest {
                 "rawDataFiles/provider/ProviderReporting.json",
                 "rawDataFiles/provider/ProviderElasticSearch.json",
                 "rawDataFiles/provider/ProviderKey.json");
+    }
+
+    @Test
+    void testProcessPatientDataNoElasticSearch() {
+        PatientSp patientSp = PatientSp.builder().personUid(10000001L).build();
+        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(List.of(patientSp));
+
+        String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
+
+        personService.setElasticSearchEnable(false);
+        personService.processMessage(patientData, inputTopicPerson);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+
+        String actualPatientTopic = topicCaptor.getValue();
+        assertEquals(patientReportingTopic, actualPatientTopic);
+    }
+
+    @Test
+    void testProcessProviderDataNoElasticSearch() {
+        ProviderSp providerSp = ProviderSp.builder().personUid(10000001L).build();
+        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
+        Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
+
+        String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
+
+        personService.setElasticSearchEnable(false);
+        personService.processMessage(providerData, inputTopicPerson);
+        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+
+        String actualProviderTopic = topicCaptor.getValue();
+        assertEquals(providerReportingTopic, actualProviderTopic);
     }
 
     @Test

@@ -34,3 +34,22 @@ IF NOT EXISTS (SELECT 1
             CONSTRAINT PK_Treatment_code211 PRIMARY KEY CLUSTERED (treatment_cd)
         ) ON [PRIMARY]
     END;
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Treatment_code' and xtype = 'U')
+    BEGIN
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'short_list_ind_cd' AND Object_ID = Object_ID(N'nrt_srte_Treatment_code'))
+            BEGIN
+                ALTER TABLE dbo.nrt_srte_Treatment_code
+                ADD short_list_ind_cd char(1) DEFAULT 'Y' NULL;
+            END;
+    END;
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Treatment_code' and xtype = 'U')
+    BEGIN
+        --Increase varchar length according to 6.0.16 data dictionary
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = object_id('nrt_srte_Treatment_code') AND name='dose_qty_unit_cd' AND max_length=10)
+            BEGIN
+                ALTER TABLE dbo.nrt_srte_Treatment_code
+                ALTER COLUMN dose_qty_unit_cd VARCHAR(20)
+            END
+    END;

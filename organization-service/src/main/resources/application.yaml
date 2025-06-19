@@ -36,5 +36,7 @@ spring:
     url: ${DB_ODSE_URL:jdbc:sqlserver://localhost:1433;databaseName=:NBS_ODSE;encrypt=true;trustServerCertificate=true;}
   liquibase:
     change-log: db/changelog/db.changelog-master.yaml
+featureFlag:
+  elastic-search-enable: ${FF_ES_ENABLE:false}
 server:
   port: '8092'

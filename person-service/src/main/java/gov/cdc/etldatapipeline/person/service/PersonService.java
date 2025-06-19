@@ -70,6 +70,9 @@ public class PersonService {
     @Value("${spring.kafka.output.userReporting.topic-name}")
     private String userReportingOutputTopic;
 
+    @Value("${featureFlag.elastic-search-enable}")
+    private boolean elasticSearchEnable;
+
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
 
@@ -144,11 +147,13 @@ public class PersonService {
             log.info("Provider data (uid={}) sent to {}", provider.getPersonUid(), providerReportingOutputTopic);
             log.debug("Provider Reporting: {}", reportingData);
 
-            String elasticKey = transformer.buildProviderKey(provider);
-            String elasticData = transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
-            kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
-            log.info("Provider data (uid={}) sent to {}", provider.getPersonUid(), providerElasticSearchOutputTopic);
-            log.debug("Provider Elastic: {}", elasticData != null ? elasticData : "");
+            if (elasticSearchEnable) {
+                String elasticKey = transformer.buildProviderKey(provider);
+                String elasticData = transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
+                kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
+                log.info("Provider data (uid={}) sent to {}", provider.getPersonUid(), providerElasticSearchOutputTopic);
+                log.debug("Provider Elastic: {}", elasticData != null ? elasticData : "");
+            }
         });
     }
 
@@ -160,11 +165,13 @@ public class PersonService {
             log.info("Patient data (uid={}) sent to {}", personData.getPersonUid(), patientReportingOutputTopic);
             log.debug("Patient Reporting: {}", reportingData != null ? reportingData : "");
 
-            String elasticKey = transformer.buildPatientKey(personData);
-            String elasticData = transformer.processData(personData, PersonType.PATIENT_ELASTIC_SEARCH);
-            kafkaTemplate.send(patientElasticSearchOutputTopic, elasticKey, elasticData);
-            log.info("Patient data (uid={}) sent to {}", personData.getPersonUid(), patientElasticSearchOutputTopic);
-            log.debug("Patient Elastic: {}", elasticData != null ? elasticData : "");
+            if (elasticSearchEnable) {
+                String elasticKey = transformer.buildPatientKey(personData);
+                String elasticData = transformer.processData(personData, PersonType.PATIENT_ELASTIC_SEARCH);
+                kafkaTemplate.send(patientElasticSearchOutputTopic, elasticKey, elasticData);
+                log.info("Patient data (uid={}) sent to {}", personData.getPersonUid(), patientElasticSearchOutputTopic);
+                log.debug("Patient Elastic: {}", elasticData != null ? elasticData : "");
+            }
         });
     }
 
