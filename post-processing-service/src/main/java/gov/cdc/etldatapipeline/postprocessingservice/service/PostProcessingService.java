@@ -83,6 +83,8 @@ public class PostProcessingService {
     static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG = "Processing {} message topic. Calling stored proc: {} '{}'";
     static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG_2 = "Processing {} message topic. Calling stored proc: {} '{}', '{}";
     static final String MULTI_ID_DATAMART = "MultiId_Datamart";
+    static final String UNKNOWN_TOPIC_LOG_MSG = "Unknown topic: {} cannot be processed";
+    static final String PROCESSING_IDS_LOG_MSG = "Processing {} id(s) from topic: {}";
 
     static final String MORB_REPORT = "MorbReport";
     static final String LAB_REPORT = "LabReport";
@@ -92,8 +94,7 @@ public class PostProcessingService {
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
 
-    private final String UNKNOWN_TOPIC_LOG_MESSAGE = "Unknown topic: {} cannot be processed";
-    private final String PROCESSING_IDS_LOG_MESSAGE = "Processing {} id(s) from topic: {}";
+
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
@@ -348,7 +349,7 @@ public class PostProcessingService {
                 String keyTopic = entry.getKey();
                 List<Long> ids = entry.getValue();
 
-                logger.info(PROCESSING_IDS_LOG_MESSAGE, ids.size(), keyTopic);
+                logger.info(PROCESSING_IDS_LOG_MSG, ids.size(), keyTopic);
 
                 Entity entity = getEntityByTopic(keyTopic);
                 switch (entity) {
@@ -421,7 +422,7 @@ public class PostProcessingService {
                         newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     default:
-                        logger.warn(UNKNOWN_TOPIC_LOG_MESSAGE, keyTopic);
+                        logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
                         break;
                 }
             }
@@ -450,14 +451,14 @@ public class PostProcessingService {
                 String keyTopic = entry.getKey();
                 List<String> cds = entry.getValue();
 
-                logger.info(PROCESSING_IDS_LOG_MESSAGE, cds.size(), keyTopic);
+                logger.info(PROCESSING_IDS_LOG_MSG, cds.size(), keyTopic);
 
                 Entity entity = getEntityByTopic(keyTopic);
 
                 if (Objects.requireNonNull(entity) == CONDITION) {
                     processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
                 } else {
-                    logger.warn(UNKNOWN_TOPIC_LOG_MESSAGE, keyTopic);
+                    logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
                 }
             }
         }
