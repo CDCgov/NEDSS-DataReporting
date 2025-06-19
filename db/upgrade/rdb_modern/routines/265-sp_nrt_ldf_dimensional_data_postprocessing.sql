@@ -333,7 +333,8 @@ BEGIN
 					'[\/,@\\%[\]#;$\-\.\>\<\=\:\?\(\)\{\}\"&*\+!`\'']', '_'
 				)
 				, 1, 29
-			) AS datamart_column_nm
+			) AS datamart_column_nm,
+			a.business_object_nm
 		INTO #LDF_METADATA
 		FROM [dbo].D_LDF_META_DATA a WITH(NOLOCK)
 		INNER JOIN #LDF_UID_LIST l 
@@ -345,7 +346,8 @@ BEGIN
 			a.condition_cd,
 			a.class_cd,
 			a.custom_subform_metadata_uid,
-			a.LDF_PAGE_SET;
+			a.LDF_PAGE_SET,
+			a.business_object_nm;
 
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -379,7 +381,8 @@ BEGIN
 			a.custom_subform_metadata_uid,
 			a.LDF_PAGE_SET,
 			a.ldf_datamart_column_ref_uid,
-			a.datamart_column_nm
+			a.datamart_column_nm,
+			a.business_object_nm
 		INTO #LDF_METADATA_N
 		FROM #LDF_METADATA a
 		LEFT JOIN [dbo].ldf_datamart_column_ref b WITH(NOLOCK)
@@ -418,7 +421,8 @@ BEGIN
 			a.custom_subform_metadata_uid,
 			a.LDF_PAGE_SET,
 			a.ldf_datamart_column_ref_uid,
-			a.datamart_column_nm
+			a.datamart_column_nm,
+			a.business_object_nm
 		INTO #LDF_METADATA_E
 		FROM #LDF_METADATA a
 		INNER JOIN [dbo].ldf_datamart_column_ref b WITH(NOLOCK)
@@ -453,6 +457,7 @@ BEGIN
 				DATAMART_COLUMN_NM, 
 				LDF_UID, 
 				CDC_NATIONAL_ID, 
+				BUSINESS_OBJECT_NM,
 				LDF_PAGE_SET
 			)
 			SELECT 
@@ -462,6 +467,7 @@ BEGIN
 				DATAMART_COLUMN_NM, 
 				LDF_UID, 
 				CDC_NATIONAL_ID, 
+				BUSINESS_OBJECT_NM,
 				LDF_PAGE_SET
 			FROM 
 				#LDF_METADATA_N
@@ -498,6 +504,7 @@ BEGIN
 				D.LDF_LABEL = S.LDF_LABEL,
 				D.DATAMART_COLUMN_NM = S.DATAMART_COLUMN_NM,
 				D.CDC_NATIONAL_ID = S.CDC_NATIONAL_ID,
+				D.BUSINESS_OBJECT_NM = S.BUSINESS_OBJECT_NM,  
 				D.LDF_PAGE_SET = S.LDF_PAGE_SET 
 			FROM  [dbo].LDF_DATAMART_COLUMN_REF D 
 			INNER JOIN #LDF_METADATA_E S 
