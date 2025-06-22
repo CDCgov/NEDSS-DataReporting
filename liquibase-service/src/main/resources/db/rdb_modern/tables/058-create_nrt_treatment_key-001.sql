@@ -17,11 +17,11 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment_key' and xty
         DBCC CHECKIDENT ('dbo.nrt_treatment_key', RESEED, @max);
     END
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_treatment_key'))
-BEGIN
-ALTER TABLE nrt_treatment_key
-    ADD CONSTRAINT pk_nrt_treatment_key PRIMARY KEY (d_treatment_key);
-END;
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_treatment_key'))
+    BEGIN
+        ALTER TABLE nrt_treatment_key
+        ADD CONSTRAINT pk_nrt_treatment_key PRIMARY KEY (d_treatment_key);
+    END;
 
 IF NOT EXISTS (SELECT 1 FROM dbo.TREATMENT)
     BEGIN

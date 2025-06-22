@@ -24,7 +24,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_rpt_user_comment_k
 	END
 
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_lab_rpt_user_comment_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_lab_rpt_user_comment_key'))
     BEGIN
         ALTER TABLE dbo.nrt_lab_rpt_user_comment_key
         ADD CONSTRAINT pk_nrt_lab_rpt_user_comment_key PRIMARY KEY (USER_COMMENT_KEY);

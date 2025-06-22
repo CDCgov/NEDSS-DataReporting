@@ -15,7 +15,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_aggregat
         );
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_investigation_aggregate'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_investigation_aggregate'))
     BEGIN
         ALTER TABLE dbo.nrt_investigation_aggregate
         ADD CONSTRAINT pk_nrt_investigation_aggregate PRIMARY KEY (act_uid, nbs_case_answer_uid);

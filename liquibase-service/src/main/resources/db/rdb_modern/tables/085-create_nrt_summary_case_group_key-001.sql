@@ -13,7 +13,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects  WHERE name = 'nrt_summary_case_group_ke
 
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_summary_case_group_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_summary_case_group_key'))
     BEGIN
         ALTER TABLE dbo.nrt_summary_case_group_key
         ADD CONSTRAINT pk_nrt_summary_case_group_key PRIMARY KEY (summary_case_src_key);

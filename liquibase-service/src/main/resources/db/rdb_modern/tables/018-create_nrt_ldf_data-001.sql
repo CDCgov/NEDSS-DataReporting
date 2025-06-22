@@ -48,7 +48,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data' and xtype = 
         );
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_ldf_data'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_ldf_data'))
     BEGIN
         ALTER TABLE dbo.nrt_ldf_data
         ADD CONSTRAINT pk_nrt_ldf_data PRIMARY KEY (ldf_uid, business_object_uid);

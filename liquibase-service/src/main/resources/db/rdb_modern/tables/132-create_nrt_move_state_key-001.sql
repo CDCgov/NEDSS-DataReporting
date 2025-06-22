@@ -29,7 +29,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_state_key' and xtype 
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_move_state_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_move_state_key'))
     BEGIN
         ALTER TABLE dbo.nrt_move_state_key
         ADD CONSTRAINT pk_nrt_move_state_key PRIMARY KEY (D_MOVE_STATE_KEY);

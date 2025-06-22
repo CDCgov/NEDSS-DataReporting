@@ -26,7 +26,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_coded' and xty
 
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_observation_coded'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_observation_coded'))
     BEGIN
         ALTER TABLE dbo.nrt_observation_coded
         ADD CONSTRAINT pk_nrt_observation_coded PRIMARY KEY (observation_uid,ovc_code);

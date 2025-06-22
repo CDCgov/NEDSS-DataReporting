@@ -11,7 +11,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects  WHERE name = 'nrt_vaccination_answer' a
         );
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_vaccination_answer'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_vaccination_answer'))
     BEGIN
         ALTER TABLE dbo.nrt_vaccination_answer
         ADD CONSTRAINT pk_nrt_vaccination_answer PRIMARY KEY (vaccination_uid);

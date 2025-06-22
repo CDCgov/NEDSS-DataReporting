@@ -39,7 +39,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization' and xtyp
         );
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_organization'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_organization'))
     BEGIN
         ALTER TABLE dbo.nrt_organization
         ADD CONSTRAINT pk_nrt_organization PRIMARY KEY (organization_uid);

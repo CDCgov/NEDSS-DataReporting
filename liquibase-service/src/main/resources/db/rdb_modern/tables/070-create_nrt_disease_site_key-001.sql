@@ -29,7 +29,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_disease_site_key' and xtyp
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_disease_site_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_disease_site_key'))
     BEGIN
         ALTER TABLE dbo.nrt_disease_site_key
         ADD CONSTRAINT pk_nrt_disease_site_key PRIMARY KEY (D_DISEASE_SITE_KEY);

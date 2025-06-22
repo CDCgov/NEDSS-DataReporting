@@ -28,7 +28,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_cntry_group_key' and 
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_move_cntry_group_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_move_cntry_group_key'))
     BEGIN
         ALTER TABLE dbo.nrt_move_cntry_group_key
         ADD CONSTRAINT pk_nrt_move_cntry_group_key PRIMARY KEY (D_MOVE_CNTRY_GROUP_KEY);

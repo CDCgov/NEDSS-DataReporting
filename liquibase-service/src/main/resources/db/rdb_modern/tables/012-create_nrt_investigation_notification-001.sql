@@ -33,7 +33,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_notifica
         );
 END;
 
-    IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_investigation_notification'))
+    IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_investigation_notification'))
         BEGIN
             ALTER TABLE dbo.nrt_investigation_notification
             ADD CONSTRAINT pk_nrt_investigation_notification PRIMARY KEY (source_act_uid, notification_uid);

@@ -30,7 +30,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_addl_risk_key' and xtype =
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_addl_risk_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_addl_risk_key'))
     BEGIN
         ALTER TABLE dbo.nrt_addl_risk_key
         ADD CONSTRAINT pk_nrt_addl_risk_key PRIMARY KEY (D_ADDL_RISK_KEY);

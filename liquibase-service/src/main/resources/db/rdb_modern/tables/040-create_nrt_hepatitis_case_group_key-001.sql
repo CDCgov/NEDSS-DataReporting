@@ -36,7 +36,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_hepatitis_case_group_key' 
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_hepatitis_case_group_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_hepatitis_case_group_key'))
     BEGIN
         ALTER TABLE dbo.nrt_hepatitis_case_group_key
         ADD CONSTRAINT pk_nrt_hepatitis_case_group_key PRIMARY KEY (HEP_MULTI_VAL_GRP_KEY);

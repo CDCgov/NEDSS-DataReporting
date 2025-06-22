@@ -18,7 +18,7 @@ IF NOT EXISTS (SELECT 1  FROM sysobjects WHERE name = 'nrt_place_tele' and xtype
         );
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_place_tele'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_place_tele'))
     BEGIN
         ALTER TABLE dbo.nrt_place_tele
         ADD CONSTRAINT pk_nrt_place_tele PRIMARY KEY (place_uid, place_tele_locator_uid);

@@ -30,7 +30,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_rash_loc_gen_key' and xtyp
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_rash_loc_gen_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_rash_loc_gen_key'))
     BEGIN
         ALTER TABLE dbo.nrt_rash_loc_gen_key
         ADD CONSTRAINT pk_nrt_rash_loc_gen_key PRIMARY KEY (D_RASH_LOC_GEN_KEY);

@@ -21,7 +21,7 @@ CREATE TABLE dbo.nrt_observation_material
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_observation_material'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_observation_material'))
     BEGIN
         ALTER TABLE dbo.nrt_observation_material
         ADD CONSTRAINT pk_nrt_observation_material PRIMARY KEY (act_uid,material_id);

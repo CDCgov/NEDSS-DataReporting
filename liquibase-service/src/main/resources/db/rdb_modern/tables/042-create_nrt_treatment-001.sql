@@ -32,7 +32,7 @@ CREATE TABLE dbo.nrt_treatment
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_treatment'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_treatment'))
     BEGIN
         ALTER TABLE dbo.nrt_treatment
         ADD CONSTRAINT pk_nrt_treatment PRIMARY KEY (treatment_uid);

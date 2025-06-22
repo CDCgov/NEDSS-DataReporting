@@ -23,7 +23,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_result_group_
 	END;
 
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_lab_test_result_group_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_lab_test_result_group_key'))
         BEGIN
             ALTER TABLE dbo.nrt_lab_test_result_group_key
             ADD CONSTRAINT pk_nrt_lab_test_result_group_key PRIMARY KEY (TEST_RESULT_GRP_KEY);

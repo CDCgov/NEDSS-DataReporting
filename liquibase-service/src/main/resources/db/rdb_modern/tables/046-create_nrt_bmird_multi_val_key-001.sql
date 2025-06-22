@@ -35,7 +35,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_bmird_multi_val_key' and x
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND object_id = OBJECT_ID('nrt_bmird_multi_val_key'))
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_bmird_multi_val_key'))
     BEGIN
         ALTER TABLE dbo.nrt_bmird_multi_val_key
         ADD CONSTRAINT pk_nrt_bmird_multi_val_key PRIMARY KEY (BMIRD_MULTI_VAL_FIELD_KEY, BMIRD_MULTI_VAL_GRP_KEY);
