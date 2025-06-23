@@ -31,8 +31,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_place_key' and xtype = 'U'
             END;
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_place_key'))
+--CNDE-2859: Drop primary key from table to allow same key inserts for data load.
+IF EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_place_key'))
     BEGIN
         ALTER TABLE dbo.nrt_place_key
-        ADD CONSTRAINT pk_d_place_key_pk PRIMARY KEY (d_place_key);
+            DROP CONSTRAINT pk_d_place_key_pk;
     END;
