@@ -148,6 +148,7 @@ IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_page_case_answer_a
         CREATE INDEX idx_nrt_page_case_answer_act_uid ON dbo.nrt_page_case_answer (act_uid);
     END
 
+--CNDE-2859: Evaluate performance and create index if needed
 IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_addl_risk_group_key_uid' AND object_id = OBJECT_ID('dbo.nrt_addl_risk_group_key')) 
    BEGIN 
         CREATE INDEX  idx_nrt_addl_risk_group_key_uid  ON dbo.nrt_addl_risk_group_key (TB_PAM_UID)
@@ -421,9 +422,4 @@ IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_treatment_key_uid'
 IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_vaccination_key_uid' AND object_id = OBJECT_ID('dbo.nrt_vaccination_key')) 
    BEGIN 
         CREATE INDEX  idx_nrt_vaccination_key_uid  ON dbo.nrt_vaccination_key (vaccination_uid)
-   END
-
-IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_var_pam_key_uid' AND object_id = OBJECT_ID('dbo.nrt_var_pam_key')) 
-   BEGIN 
-        CREATE INDEX  idx_nrt_var_pam_key_uid  ON dbo.nrt_var_pam_key (VAR_PAM_UID)
    END
