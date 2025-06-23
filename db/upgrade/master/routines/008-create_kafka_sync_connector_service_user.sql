@@ -10,18 +10,19 @@ PRINT 'Switched to database [rdb_modern]';
 
 -- Check if user exists and create if not
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @KafkaUserName)
-BEGIN
-    DECLARE @CreateUserKafkaRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @KafkaUserName + '] FOR LOGIN [' + @KafkaUserName + ']';
-    EXEC sp_executesql @CreateUserKafkaRDBModernSQL;
-    PRINT 'Created database user [' + @KafkaUserName + '] in rdb_modern';
-END
+    BEGIN
+        DECLARE @CreateUserKafkaRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @KafkaUserName + '] FOR LOGIN [' + @KafkaUserName + ']';
+        EXEC sp_executesql @CreateUserKafkaRDBModernSQL;
+        PRINT 'Created database user [' + @KafkaUserName + '] in rdb_modern';
+    END
 
--- Grant permissions (always execute regardless of user creation)
+-- RE-GRANT PERMISSIONS (Execute every time)
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @KafkaUserName)
-BEGIN
-    DECLARE @AddRoleMemberKafkaRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @KafkaUserName + '''';
-    EXEC sp_executesql @AddRoleMemberKafkaRDBModernWriterSQL;
-    PRINT 'Added [' + @KafkaUserName + '] to db_datawriter role in rdb_modern';
-END
+    BEGIN
+        PRINT 'Re-granting permissions for [' + @KafkaUserName + '] in rdb_modern...';
+        DECLARE @AddRoleMemberKafkaRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @KafkaUserName + '''';
+        EXEC sp_executesql @AddRoleMemberKafkaRDBModernWriterSQL;
+        PRINT 'Added [' + @KafkaUserName + '] to db_datawriter role in rdb_modern';
+    END
 
-PRINT 'Kafka sync connector service user creation completed.';
+PRINT 'Kafka sync connector service user permissions completed.';

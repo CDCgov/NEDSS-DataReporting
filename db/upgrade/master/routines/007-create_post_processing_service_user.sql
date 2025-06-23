@@ -19,9 +19,10 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
         PRINT 'Created database user [' + @PostUserName + '] in rdb';
     END
 
--- Grant permissions (always execute regardless of user creation)
+-- RE-GRANT PERMISSIONS (Execute every time)
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
     BEGIN
+        PRINT 'Re-granting permissions for [' + @PostUserName + '] in rdb...';
         DECLARE @AddRoleMemberPostRDBOwnerSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_owner'', ''' + @PostUserName + '''';
         EXEC sp_executesql @AddRoleMemberPostRDBOwnerSQL;
         PRINT 'Added [' + @PostUserName + '] to db_owner role in rdb';
@@ -39,9 +40,10 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
         PRINT 'Created database user [' + @PostUserName + '] in rdb_modern';
     END
 
--- Grant permissions (always execute regardless of user creation)
+-- RE-GRANT PERMISSIONS (Execute every time)
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
     BEGIN
+        PRINT 'Re-granting permissions for [' + @PostUserName + '] in rdb_modern...';
         DECLARE @AddRoleMemberPostRDBModernOwnerSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_owner'', ''' + @PostUserName + '''';
         EXEC sp_executesql @AddRoleMemberPostRDBModernOwnerSQL;
         PRINT 'Added [' + @PostUserName + '] to db_owner role in rdb_modern';
@@ -59,14 +61,15 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
         PRINT 'Created database user [' + @PostUserName + '] in NBS_SRTE';
     END
 
--- Grant permissions (always execute regardless of user creation)
+-- RE-GRANT PERMISSIONS (Execute every time)
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
     BEGIN
+        PRINT 'Re-granting permissions for [' + @PostUserName + '] in NBS_SRTE...';
         DECLARE @AddRoleMemberPostNBSSRTEReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @PostUserName + '''';
         EXEC sp_executesql @AddRoleMemberPostNBSSRTEReaderSQL;
         PRINT 'Added [' + @PostUserName + '] to db_datareader role in NBS_SRTE';
     END
 
-PRINT 'Post-processing service user creation completed:';
+PRINT 'Post-processing service user permissions completed:';
 PRINT '- db_owner permissions on rdb and rdb_modern databases';
 PRINT '- db_datareader permissions on NBS_SRTE database (for information schema access)';
