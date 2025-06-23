@@ -21,7 +21,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_srte_Treatment_code' a
             drug_cd                      varchar(20)         NULL,
             drug_desc_txt                varchar(255)        NULL,
             dose_qty                     varchar(20)         NULL,
-            dose_qty_unit_cd             varchar(10)         NULL,
+            dose_qty_unit_cd             varchar(20)         NULL,
             route_cd                     varchar(20)         NULL,
             route_desc_txt               varchar(255)        NULL,
             interval_cd                  varchar(20)         NULL,

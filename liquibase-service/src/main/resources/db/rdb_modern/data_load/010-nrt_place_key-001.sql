@@ -23,6 +23,6 @@
         WHERE k.d_place_key IS NULL AND k.place_uid IS NULL AND k.place_locator_uid IS NULL
             ORDER BY pl.PLACE_KEY;
 
-        SET IDENTITY_INSERT [dbo].nrt_investigation_key OFF
+        SET IDENTITY_INSERT [dbo].nrt_place_key OFF
         
     END
