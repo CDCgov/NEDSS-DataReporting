@@ -58,7 +58,7 @@ if not exist "%SCRIPT_DIR%" (
         echo Executing %%F...
         echo [%date% %time%] Executing %%F... >> "%LOG_FILE%"
         :: Using sqlcmd for SQL Server; modify if using a different database client
-        sqlcmd -S %SERVER_NAME% -d %DATABASE% -U %DB_USER% -P %DB_PASS% -i "%%F" -b >> "%LOG_FILE%" 2>&1
+        sqlcmd -S %SERVER_NAME% -d %DATABASE% -U %DB_USER% -P %DB_PASS% -i "%%F" -b -C >> "%LOG_FILE%" 2>&1
         set CURRENT_ERROR=!errorlevel!
         if !CURRENT_ERROR! neq 0 (
             echo error: !CURRENT_ERROR! 
@@ -79,7 +79,7 @@ if !ERROR_COUNT! equ 0 (
             echo Executing %%F...
             echo [%date% %time%] Executing %%F... >> "%LOG_FILE%"
             :: Using sqlcmd for SQL Server; modify if using a different database client
-            sqlcmd -S %SERVER_NAME% -d %DATABASE% -U %DB_USER% -P %DB_PASS% -i "%%F" -b >> "%LOG_FILE%" 2>&1
+            sqlcmd -S %SERVER_NAME% -d %DATABASE% -U %DB_USER% -P %DB_PASS% -i "%%F" -b -C >> "%LOG_FILE%" 2>&1
             set CURRENT_ERROR=!errorlevel!
             if !CURRENT_ERROR! neq 0 (
                 echo Error executing %%F. Errorlevel: !CURRENT_ERROR!
