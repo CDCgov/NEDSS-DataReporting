@@ -1,3 +1,7 @@
+/*
+    This file is a DTS1 ONLY Script and should NOT be checked into the Liquibase Changelog
+*/
+
 IF  EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'INVESTIGATION')
 	AND EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'F_PAGE_CASE')
 	AND EXISTS (SELECT * FROM sys.views WHERE name = 'v_condition_dim')

@@ -1,3 +1,7 @@
+/*
+    This file is a DTS1 ONLY Script and should NOT be checked into the Liquibase Changelog
+*/
+
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'LDF_DATAMART_TABLE_REF' and xtype = 'U')
 BEGIN
     CREATE TABLE [dbo].[LDF_DATAMART_TABLE_REF](
