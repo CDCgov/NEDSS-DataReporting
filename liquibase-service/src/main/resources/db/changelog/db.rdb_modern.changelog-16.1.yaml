@@ -2799,3 +2799,11 @@ databaseChangeLog:
             path: 340-sp_nrt_srte_condition_code_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 890
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 253-create_nrt_odse_NBS_configuration-001.sql
+            splitStatements: false
