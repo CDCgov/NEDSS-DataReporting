@@ -36,7 +36,7 @@ set DB_USER=%3
 set DB_PASS=%4
 
 set SCRIPT_DIR=%~dp0
-@REM  LOG file name "script_execution.log" 
+@REM  LOG file name "upgrade_db_execution.log" 
 set LOG_FILE=%SCRIPT_DIR%upgrade_db_execution.log
 @REM  array of folder names to execute scripts
 set PATHS=(tables views functions routines remove data_load)
