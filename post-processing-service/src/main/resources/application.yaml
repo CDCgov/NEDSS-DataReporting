@@ -18,6 +18,7 @@ spring:
       page: nrt_odse_NBS_page
       datamart: nbs_Datamart
       state_defined_field_metadata: nrt_odse_state_defined_field_metadata
+      condition: nrt_srte_Condition_code
     dlq:
       retry-suffix: -retry
       dlq-suffix: -dlt

@@ -8,7 +8,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_antimicrobial_key' and
             selection_number bigint NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
             updated_dttm DATETIME2 DEFAULT GETDATE(),
-            PRIMARY KEY (ANTIMICROBIAL_KEY, ANTIMICROBIAL_GRP_KEY)
+            PRIMARY KEY (ANTIMICROBIAL_KEY)
         );
         --check for null and set default to 2, as default record with key = 1 is not stored in ANTIMICROBIAL
         DECLARE @max bigint = (SELECT ISNULL(MAX(ANTIMICROBIAL_KEY) + 1, 2) FROM dbo.ANTIMICROBIAL);

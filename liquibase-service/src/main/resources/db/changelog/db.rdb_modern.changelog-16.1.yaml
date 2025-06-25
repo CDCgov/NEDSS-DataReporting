@@ -2124,7 +2124,7 @@ databaseChangeLog:
         - sqlFile:
             path: 185-sp_nrt_d_move_state_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO
+            endDelimiter: GO        
   - changeSet:
       id: 480
       author: liquibase
@@ -2575,7 +2575,7 @@ databaseChangeLog:
         - sqlFile:
             path: 270-sp_merge_tables-001.sql
             splitStatements: true
-            endDelimiter: GO
+            endDelimiter: GO      
   - changeSet:
       id: 770
       author: liquibase
@@ -2584,7 +2584,7 @@ databaseChangeLog:
         - sqlFile:
             path: 275-sp_execute_ldf_generic-001.sql
             splitStatements: true
-            endDelimiter: GO
+            endDelimiter: GO   
   - changeSet:
       id: 775
       author: liquibase
@@ -2610,7 +2610,7 @@ databaseChangeLog:
         - sqlFile:
             path: 285-sp_ldf_bmird_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO
+            endDelimiter: GO 
   - changeSet:
       id: 790
       author: liquibase
@@ -2627,7 +2627,7 @@ databaseChangeLog:
         - sqlFile:
             path: 290-sp_ldf_foodborne_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO
+            endDelimiter: GO 
   - changeSet:
       id: 800
       author: liquibase
@@ -2661,7 +2661,7 @@ databaseChangeLog:
         - sqlFile:
             path: 300-sp_ldf_tetanus_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO
+            endDelimiter: GO             
   - changeSet:
       id: 820
       author: liquibase
@@ -2772,6 +2772,23 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 335-sp_nrt_odse_nbs_page_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 880
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 252-create_nrt_condition_key-001.sql
+            splitStatements: true
+  - changeSet:
+      id: 885
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 340-sp_nrt_srte_condition_code_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:

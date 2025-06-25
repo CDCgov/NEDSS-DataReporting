@@ -10,9 +10,3 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_contact_answer' and xt
             PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
         );
     END;
-
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_contact_answer'))
-    BEGIN
-        ALTER TABLE dbo.nrt_contact_answer
-        ADD CONSTRAINT pk_nrt_contact_answer PRIMARY KEY (contact_uid);
-    END;
