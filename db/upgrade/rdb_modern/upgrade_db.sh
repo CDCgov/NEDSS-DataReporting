@@ -1,5 +1,5 @@
 #!/bin/bash
-    
+
 # This script is designed to be executed in Unix/Linux
 # It is required to install msodbcsql18
 # This Script only can be executed over a copy of RDB database without nrt_afaik tables
