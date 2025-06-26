@@ -1,32 +1,51 @@
-@REM This script is designed to be executed in Windows
-@REM This Script only can be executed over a copy of RDB database without nrt_afaik tables
-@REM Parameters:
+@REM This script is designed to be executed on Windows
+@REM Required Parameters:
 @REM     server: Server Name or IP address 
-@REM     database: Database Name (usually RDB_MODERN)
-@REM     user: User Name  (must have permissions to create/delete objects in database)
+@REM     database: Database Name
+@REM     user: User Name  
 @REM     password: User Password
 
-@REM EXAMPLE of command to execute the script:
+@REM Optional Parameters:
+@REM    --load-data: Include or not the load_data subdirectory    
+
+@REM Usage:
 @REM upgrade_db.bat server_name rdb_modern my_user my_password
+@REM upgrade_db.bat --load-data server_name rdb_modern my_user my_password
 
 @echo off
 setlocal EnableDelayedExpansion
 
+:: Check for help flag
+if /i "%1"=="/h" goto help
+if /i "%1"=="-h" goto help
+if /i "%1"=="--help" goto help
+
+:: Parse optional --load-data flag
+set "load_data=false"
+if /i "%1"=="--load-data" (
+    set "load_data=true"
+    shift
+)
+
 :: Check if all parameters are provided
 if "%~1"=="" (
-    echo Usage: %0 server database user password
+    echo Usage: %0 [options] server database user password
+    echo Type %0 /h for help
     exit /b 1
 )
 if "%~2"=="" (
-    echo Usage: %0 server database user password
+    echo Usage: %0 [options] server database user password
+    echo Type %0 /h for help
     exit /b 1
 )
 if "%~3"=="" (
-    echo Usage: %0 server database user password
+    echo Usage: %0 [options] server database user password
+    echo Type %0 /h for help
     exit /b 1
 )
 if "%~4"=="" (
-    echo Usage: %0 server database user password
+    echo Usage: %0 [options] server database user password
+    echo Type %0 /h for help
     exit /b 1
 )
 
@@ -39,13 +58,22 @@ set SCRIPT_DIR=%~dp0
 @REM  LOG file name "upgrade_db_execution.log" 
 set LOG_FILE=%SCRIPT_DIR%upgrade_db_execution.log
 @REM  array of folder names to execute scripts
-set PATHS=(tables views functions routines remove data_load)
+set PATHS=(tables views functions routines remove)
+if "!load_data!"=="true" (
+    set "PATHS=(tables views functions routines remove data_load)"
+) 
 set ERROR_COUNT=0
 @REM  array to store failed files
 set FAILED_SCRIPTS=   
 
 :: Initialize log
 echo [%date% %time%] Starting script execution... >> "%LOG_FILE%"
+if "!load_data!"=="true" (
+    echo [%date% %time%] Load Data scripts have been included >> "%LOG_FILE%"
+) else (
+    echo [%date% %time%] Load Data scripts have been excluded >> "%LOG_FILE%"
+)
+echo [%date% %time%] Executing SQL scripts from current folder and children folders !PATHS!... >> "%LOG_FILE%"
 
 :: Check if directory exists
 if not exist "%SCRIPT_DIR%" (
@@ -103,5 +131,28 @@ if !ERROR_COUNT! equ 0 (
     )
     
 )
+
+exit /b 0
+
+:help
+echo Usage: %0 [options] server database user password
+echo.
+echo This script executes SQL scripts to upgrade the RDB_MODERN database.
+echo.
+echo Required Parameters:
+echo   server            Server Name or IP address
+echo   database          Database Name
+echo   user              User Name (must have permissions to create/delete objects in database)
+echo   password          User Password
+echo.
+echo Options:
+echo   /h, -h, --help    Display this help message
+echo   --load-data       Execute scripts in the data_load folder (default: false)
+echo.
+echo Examples:
+echo   %0 server_name rdb_modern my_user my_password 
+echo   %0 --load-data server_name rdb_modern my_user my_password  
+exit /b 0
+
 
 endlocal
