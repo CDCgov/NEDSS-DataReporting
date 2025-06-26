@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_cnty_key' and xty
             TB_PAM_UID bigint NOT NULL,
             NBS_Case_Answer_UID bigint NOT NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (D_MOVE_CNTY_KEY)
         );
 
         declare @max bigint;
@@ -14,4 +15,4 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_move_cnty_key' and xty
         if @max IS NULL   --check when max is returned as null
             SET @max = 2; -- default to 2
         DBCC CHECKIDENT ('dbo.nrt_move_cnty_key', RESEED, @max);
-    END
+    END;

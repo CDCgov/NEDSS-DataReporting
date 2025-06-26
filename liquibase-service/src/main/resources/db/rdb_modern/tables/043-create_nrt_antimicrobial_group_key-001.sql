@@ -24,11 +24,17 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_antimicrobial_group_key' a
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'created_dttm' AND Object_ID = Object_ID(N'nrt_antimicrobial_group_key'))
             BEGIN
                 ALTER TABLE dbo.nrt_antimicrobial_group_key
-                    ADD created_dttm DATETIME2 DEFAULT GETDATE();
+                ADD created_dttm DATETIME2 DEFAULT GETDATE();
             END;
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'updated_dttm' AND Object_ID = Object_ID(N'nrt_antimicrobial_group_key'))
             BEGIN
                 ALTER TABLE dbo.nrt_antimicrobial_group_key
-                    ADD updated_dttm DATETIME2 DEFAULT GETDATE();
+                ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_antimicrobial_group_key'))
+BEGIN
+    ALTER TABLE dbo.nrt_antimicrobial_group_key
+    ADD CONSTRAINT pk_nrt_antimicrobial_group_key PRIMARY KEY (ANTIMICROBIAL_GRP_KEY);
+END;

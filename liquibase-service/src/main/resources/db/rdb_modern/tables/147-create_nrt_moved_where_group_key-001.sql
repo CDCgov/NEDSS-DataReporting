@@ -27,3 +27,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_moved_where_group_key' and
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_moved_where_group_key'))
+    BEGIN
+        ALTER TABLE dbo.nrt_moved_where_group_key
+        ADD CONSTRAINT pk_nrt_moved_where_group_key PRIMARY KEY (D_MOVED_WHERE_GROUP_KEY);
+    END

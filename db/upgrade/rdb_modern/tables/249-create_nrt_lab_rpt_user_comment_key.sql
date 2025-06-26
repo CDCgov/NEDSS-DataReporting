@@ -6,7 +6,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_rpt_user_comment_k
 			LAB_RPT_USER_COMMENT_UID BIGINT NULL,
 			LAB_TEST_UID BIGINT NULL,
 			created_dttm DATETIME2 DEFAULT GETDATE(),
-			updated_dttm DATETIME2 DEFAULT GETDATE()
+			updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (USER_COMMENT_KEY)
 		);
 
 		-- Insert Key = 1 with LAB_RPT_USER_COMMENT_UID = NULL, LAB_TEST_UID= NULL

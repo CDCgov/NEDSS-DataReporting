@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'nrt_place_key'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_place_key' and xtype = 'U')
     BEGIN
 
         CREATE TABLE dbo.nrt_place_key
@@ -9,8 +6,8 @@ IF NOT EXISTS (SELECT 1
             d_place_key       bigint IDENTITY (1,1) NOT NULL,
             place_uid         bigint                NULL,
             place_locator_uid varchar(30)           NULL,
-            created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            created_dttm      DATETIME2 DEFAULT GETDATE(),
+            updated_dttm      DATETIME2 DEFAULT GETDATE()
         );
         declare @max bigint;
         select @max = max(place_key) + 1 from dbo.D_PLACE;
