@@ -1063,7 +1063,7 @@ databaseChangeLog:
         - sqlFile:
             path: 005-v_nrt_srte_totalidm-001.sql
             splitStatements: true
-            endDelimiter: GO  
+            endDelimiter: GO
   - changeSet:
       id: 94
       author: liquibase
@@ -1280,14 +1280,6 @@ databaseChangeLog:
             path: 038-sp_f_contact_record_case_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
-  - changeSet:
-      id: 119
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 039-alter_table_add_index-001.sql
-            splitStatements: false            
   - changeSet:
       id: 120
       author: liquibase
@@ -2686,7 +2678,7 @@ databaseChangeLog:
         - sqlFile:
             path: 305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO      
+            endDelimiter: GO
   - changeSet:
       id: 830
       author: liquibase
@@ -2799,3 +2791,19 @@ databaseChangeLog:
             path: 340-sp_nrt_srte_condition_code_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 890
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 253-create_nrt_odse_NBS_configuration-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 900
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 039-alter_table_add_index-001.sql
+            splitStatements: false

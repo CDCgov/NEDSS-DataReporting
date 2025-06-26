@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and 
             d_notification_key bigint IDENTITY (1,1) NOT NULL,
             notification_uid   bigint                NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (d_notification_key)
         );
         declare @max bigint;
         select @max=max(notification_key)+1 from dbo.NOTIFICATION ;
@@ -14,4 +15,5 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and 
             SET @max = 1;
         DBCC CHECKIDENT ('dbo.nrt_notification_key', RESEED, @max);
 
-    END
+    END;
+
