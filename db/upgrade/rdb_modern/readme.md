@@ -4,7 +4,7 @@
 
 The `upgrade_db` scripts (`upgrade_db.bat` for Windows and `upgrade_db.sh` for Linux) are designed to execute SQL scripts to upgrade the RDB_MODERN database . The scripts process `.sql` files in the script's directory and specific subdirectories (`tables`, `views`, `functions`, `routines`, `remove`, and optionally `data_load`). Execution details, including errors, are logged to `upgrade_db_execution.log`. 
 
-The `upgrade_db` script do not requires modifications, unless the subdirectories names are modified or more subdirectories are added.
+The `upgrade_db` scripts do not requires modifications, unless the subdirectories names are modified or more subdirectories are added.
 
 Both, (Windows and Linux) scripts support the same functionality:
 - Accept required parameters: `server`, `database`, `user`, `password`.
