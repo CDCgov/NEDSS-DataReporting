@@ -21,4 +21,3 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_txt' AND xtype
             END;
 
     END;
-

@@ -10,6 +10,5 @@ CREATE TABLE dbo.nrt_investigation_aggregate
     batch_id               bigint                                          NULL,
     refresh_datetime       datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime           datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime),
-    PRIMARY KEY (act_uid, nbs_case_answer_uid)
+    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );

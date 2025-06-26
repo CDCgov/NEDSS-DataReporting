@@ -26,4 +26,3 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_date' and xtyp
             END;
 
     END;
-

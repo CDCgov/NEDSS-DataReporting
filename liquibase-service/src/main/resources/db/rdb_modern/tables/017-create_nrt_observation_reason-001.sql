@@ -20,4 +20,3 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_reason' AND xt
             END;
 
     END;
-

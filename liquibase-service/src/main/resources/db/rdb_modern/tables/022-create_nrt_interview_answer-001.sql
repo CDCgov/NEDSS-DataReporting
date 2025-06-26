@@ -20,4 +20,3 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview_answer' and xtyp
             END;
 
     END;
-
