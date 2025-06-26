@@ -51,7 +51,7 @@ BEGIN
         
         DECLARE @metrics_gobackby_days INTEGER;
 
-        SET @metrics_gobackby_days = CAST((SELECT MAX(config_value) FROM NBS_ODSE.dbo.NBS_configuration WITH (NOLOCK)
+        SET @metrics_gobackby_days = CAST((SELECT MAX(config_value) FROM dbo.nrt_odse_NBS_configuration WITH (NOLOCK)
                                         WHERE config_key = 'METRICS_GOBACKBY_DAYS') AS INTEGER);
 
         if @debug = 'true'

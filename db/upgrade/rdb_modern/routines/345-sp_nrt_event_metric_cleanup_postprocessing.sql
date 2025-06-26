@@ -1,13 +1,12 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_odse_nbs_page_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_event_metric_cleanup_postprocessing]') 
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
+    DROP PROCEDURE [dbo].[sp_event_metric_cleanup_postprocessing]
 END
 GO 
 
-CREATE PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
-    @page_id_list nvarchar(max),
+CREATE PROCEDURE [dbo].[sp_event_metric_cleanup_postprocessing]
     @debug bit = 'false'
 AS
 BEGIN
@@ -18,8 +17,8 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
-	DECLARE @Dataflow_Name VARCHAR(200) = 'nrt_odse_NBS_Page POST-Processing';
-	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_odse_nbs_page_postprocessing';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'Event Metric Cleanup POST-Processing';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_event_metric_cleanup_postprocessing';
 
     BEGIN TRY
         
@@ -32,18 +31,17 @@ BEGIN
                                     , [Status_Type]
                                     , [step_number]
                                     , [step_name]
-                                    , [row_count]
-                                    , [Msg_Description1])
+                                    , [row_count])
         VALUES ( @batch_id
             , @Dataflow_Name
             , @Package_Name
             , 'START'
             , @Proc_Step_no
             , @Proc_Step_Name
-            , 0
-            , LEFT('ID List-' + @page_id_list, 500));
+            , 0);
         
 --------------------------------------------------------------------------------------------------------
+
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -51,10 +49,44 @@ BEGIN
             @PROC_STEP_NAME = 'GET CONFIG VALUE';
 
         
+        DECLARE @metrics_gobackby_days INTEGER;
+
+        SET @metrics_gobackby_days = CAST((SELECT MAX(config_value) FROM dbo.nrt_odse_NBS_configuration WITH (NOLOCK)
+                                        WHERE config_key = 'METRICS_GOBACKBY_DAYS') AS INTEGER);
+
+        if @debug = 'true'
+            SELECT @Proc_Step_Name, @metrics_gobackby_days;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
 
 
-              
 --------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETE OLD EVENTS FROM dbo.EVENT_METRIC';
+
+        
+        DELETE em 
+        FROM dbo.EVENT_METRIC em
+        WHERE DATEDIFF(day, ADD_TIME, GETDATE()) > 730;
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+
+        IF @debug = 'true'
+            SELECT @Proc_Step_Name, @RowCount_no AS deleted_rows;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
@@ -63,6 +95,7 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
+    
     
 -------------------------------------------------------------------------------------------
     END TRY
