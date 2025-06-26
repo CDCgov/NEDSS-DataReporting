@@ -73,7 +73,7 @@ BEGIN
         
         DELETE em 
         FROM dbo.EVENT_METRIC em
-        WHERE DATEDIFF(day, ADD_TIME, GETDATE()) > 730;
+        WHERE DATEDIFF(day, ADD_TIME, GETDATE()) > @metrics_gobackby_days;
         
         SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
@@ -95,7 +95,6 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
-    
     
 -------------------------------------------------------------------------------------------
     END TRY

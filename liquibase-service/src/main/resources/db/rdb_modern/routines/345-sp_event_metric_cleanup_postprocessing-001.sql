@@ -73,7 +73,7 @@ BEGIN
         
         DELETE em 
         FROM dbo.EVENT_METRIC em
-        WHERE DATEDIFF(day, ADD_TIME, GETDATE()) > 730;
+        WHERE DATEDIFF(day, ADD_TIME, GETDATE()) > @metrics_gobackby_days;
         
         SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
