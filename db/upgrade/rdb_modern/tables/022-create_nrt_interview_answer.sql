@@ -8,8 +8,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects  WHERE name = 'nrt_interview_answer' AND
             batch_id         bigint                                          NULL,
             refresh_datetime datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
             max_datetime     datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-            PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime),
-            PRIMARY KEY (interview_uid)
+            PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
         );
     END;
 

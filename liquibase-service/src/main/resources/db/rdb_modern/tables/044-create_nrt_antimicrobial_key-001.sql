@@ -38,5 +38,5 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_antimicrobial_key' and xty
 IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_antimicrobial_key'))
 BEGIN
     ALTER TABLE dbo.nrt_antimicrobial_key
-    ADD CONSTRAINT pk_nrt_antimicrobial_key PRIMARY KEY (ANTIMICROBIAL_KEY, ANTIMICROBIAL_GRP_KEY);
+    ADD CONSTRAINT pk_nrt_antimicrobial_key PRIMARY KEY (ANTIMICROBIAL_KEY);
 END

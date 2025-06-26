@@ -14,9 +14,3 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_aggregat
             PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
         );
     END;
-
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_investigation_aggregate'))
-    BEGIN
-        ALTER TABLE dbo.nrt_investigation_aggregate
-        ADD CONSTRAINT pk_nrt_investigation_aggregate PRIMARY KEY (act_uid, nbs_case_answer_uid);
-    END

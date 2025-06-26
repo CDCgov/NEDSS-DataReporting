@@ -43,8 +43,6 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data' and xtype = 
             metadata_record_status_cd         varchar(20)                                     NULL,
             refresh_datetime                  datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
             max_datetime                      datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-            PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime),
-            PRIMARY KEY (ldf_uid, business_object_uid)
-
+            PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
         );
     END;
