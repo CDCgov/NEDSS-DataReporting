@@ -22,9 +22,3 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_txt' AND xtype
 
     END;
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_observation_txt'))
-    BEGIN
-        ALTER TABLE dbo.nrt_observation_txt
-        ADD CONSTRAINT pk_nrt_observation_txt PRIMARY KEY (observation_uid);
-    END
-
