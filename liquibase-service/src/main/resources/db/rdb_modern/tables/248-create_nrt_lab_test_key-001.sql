@@ -20,5 +20,11 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_key' and xtyp
 			SET @max = 2; -- default to 2, default record with key = 1 is already created
 		DBCC CHECKIDENT ('[dbo].nrt_lab_test_key', RESEED, @max);
 
-	END
+	END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_lab_test_key'))
+    BEGIN
+        ALTER TABLE dbo.nrt_lab_test_key
+        ADD CONSTRAINT pk_nrt_lab_test_key PRIMARY KEY (LAB_TEST_KEY);
+    END
 

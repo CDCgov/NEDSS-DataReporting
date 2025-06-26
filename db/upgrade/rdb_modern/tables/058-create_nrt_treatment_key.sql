@@ -9,7 +9,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment_key' and xty
             treatment_uid   bigint                NULL,
             public_health_case_uid bigint,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (d_treatment_key)
         );
 
         declare @max bigint;
@@ -25,5 +26,4 @@ IF NOT EXISTS (SELECT 1 FROM dbo.TREATMENT)
     BEGIN
         INSERT INTO dbo.TREATMENT (TREATMENT_KEY, RECORD_STATUS_CD)
         SELECT 1,'ACTIVE'; --Default record with ACTIVE status as per CHK_TREATMENT_RECORD_STATUS constraint
-
     END;

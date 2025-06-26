@@ -7,7 +7,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_pertussis_source_key' 
             public_health_case_uid bigint NULL,
             selection_number bigint NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (PERTUSSIS_SUSPECT_SRC_FLD_KEY)
         );
         --check for null and set default to 2
         DECLARE @max bigint = (SELECT ISNULL(MAX(PERTUSSIS_SUSPECT_SRC_FLD_KEY) + 1, 2) FROM dbo.PERTUSSIS_SUSPECTED_SOURCE_FLD);

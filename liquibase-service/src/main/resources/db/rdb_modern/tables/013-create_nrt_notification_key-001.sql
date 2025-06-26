@@ -27,3 +27,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and xtyp
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_notification_key'))
+    BEGIN
+        ALTER TABLE dbo.nrt_notification_key
+        ADD CONSTRAINT pk_notification_key PRIMARY KEY (d_notification_key);
+    END

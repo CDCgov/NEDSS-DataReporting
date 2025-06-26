@@ -4,7 +4,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization_key' and 
             d_organization_key bigint IDENTITY (1,1) NOT NULL,
             organization_uid   bigint                NULL,
             created_dttm DATETIME2 DEFAULT GETDATE(),
-            updated_dttm DATETIME2 DEFAULT GETDATE()
+            updated_dttm DATETIME2 DEFAULT GETDATE(),
+            PRIMARY KEY (d_organization_key)
         );
 
         declare @max bigint;

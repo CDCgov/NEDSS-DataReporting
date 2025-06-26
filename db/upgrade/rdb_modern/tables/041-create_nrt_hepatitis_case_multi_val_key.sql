@@ -7,7 +7,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_hepatitis_case_multi_v
           public_health_case_uid bigint NULL,
           selection_number bigint NULL,
           created_dttm DATETIME2 DEFAULT GETDATE(),
-          updated_dttm DATETIME2 DEFAULT GETDATE()
+          updated_dttm DATETIME2 DEFAULT GETDATE(),
+          PRIMARY KEY (HEP_MULTI_VAL_DATA_KEY)
         );
 
         --check for null and set default to 2

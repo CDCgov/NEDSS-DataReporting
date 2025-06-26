@@ -1,5 +1,4 @@
-IF
-NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_date' and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_date' and xtype = 'U')
 CREATE TABLE dbo.nrt_observation_date
 (
     observation_uid  bigint NOT NULL,
