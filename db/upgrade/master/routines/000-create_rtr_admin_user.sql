@@ -37,11 +37,11 @@ if exists (select 1
         /*
             CNDE-2707:
 
-            For AWS RDS deployments, SQLAgentOperatorRole must be grante explicitly. For Azure and onprem,
+            For AWS RDS deployments, SQLAgentOperatorRole must be granted explicitly. For Azure and onprem,
             it is sufficient to just have sysadmin role, which has full access to SQL Server Agent roles.
         */
 
-        ALTER ROLE [SQLAgentUserRole] ADD MEMBER [db_deploy_admin];
+        ALTER ROLE [SQLAgentOperatorRole] ADD MEMBER [db_deploy_admin];
     end;
 else
     begin
