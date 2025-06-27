@@ -1,5 +1,5 @@
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_lookup_question' and xtype = 'U')
-CREATE TABLE dbo.nrt_odse_lookup_question
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_odse_LOOKUP_QUESTION' and xtype = 'U')
+CREATE TABLE dbo.nrt_odse_LOOKUP_QUESTION
 (
     lookup_question_uid            bigint                                       not null primary key,
     FROM_QUESTION_IDENTIFIER       varchar(250)                                 null,
@@ -22,8 +22,5 @@ CREATE TABLE dbo.nrt_odse_lookup_question
     LAST_CHG_TIME                  datetime                                     null,
     LAST_CHG_USER_ID               bigint                                       null,
     STATUS_CD                      varchar(1)                                   null,
-    STATUS_TIME                    datetime                                     null,
-    refresh_datetime               datetime2 generated always as row start     not null,
-    max_datetime                   datetime2 generated always as row end hidden not null,
-    period for system_time (refresh_datetime,max_datetime)
+    STATUS_TIME                    datetime                                     null
 );
