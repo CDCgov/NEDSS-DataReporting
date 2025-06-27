@@ -17,10 +17,13 @@ Both, (Windows and Linux) scripts support the same functionality:
 - To modify tables, add "ALTER TABLE" statements on the corresponding table script or add a new script after the table creation script.
 - Views, Functions, and Stored Pocedures SQL scrips are designed to drop and recreate the corresponding element.
 
+## Pre-requisites
+- **Database**: RDB_MODEN database without `nrt_afaik` tables the first time the script is executed.
+
 ## Requirements
 
 ### Common Requirements
-- **Database**: SQL Server (RDB_MODEN database without `nrt_afaik` tables the first time the script is executed).
+- **Database**: SQL Server 2016 or higher.
 - **Database Client**: Microsoft SQL Server `sqlcmd`.
 - **Permissions**: The database user must have permissions to create and delete objects in the specified database.
 - **Directory Structure**: The script expects `.sql` files in its directory and optional subdirectories: `tables`, `views`, `functions`, `routines`, `remove`, and `data_load`. Folder names are case-sensitive on Linux.
@@ -120,6 +123,3 @@ upgrade_db.bat [options] server database user password
 - **Invalid Parameters**: Use `--help` to check the correct syntax.
 - **No .sql Files**: Ensure `.sql` files exist in the script's directory or subdirectories.
 - **Case Sensitivity (Linux)**: Verify folder names (`tables`, `data_load`, etc.) and file extensions (`.sql`) match exactly.
-
-## License
-These scripts are provided as-is without any warranty. Modify and use them according to your project's needs.
