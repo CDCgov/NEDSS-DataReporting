@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0
+      author: liquibase
+      runOnChange: true
+      comment: "Create Event Metric Cleanup Job/Schedule"
+      changes:
+        - sqlFile:
+            path: 001-create_event_metric_cleanup_job-001.sql
+            splitStatements: false
+            endDelimiter: GO

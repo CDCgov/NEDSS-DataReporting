@@ -1268,6 +1268,14 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
+            path: 253-create_nrt_odse_NBS_configuration-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 117.1
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
             path: 037-sp_event_metric_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
@@ -2797,13 +2805,14 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 253-create_nrt_odse_NBS_configuration-001.sql
+            path: 039-alter_table_add_index-001.sql
             splitStatements: false
   - changeSet:
-      id: 900
+      id: 895
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 039-alter_table_add_index-001.sql
-            splitStatements: false
+            path: 345-sp_event_metric_cleanup_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
