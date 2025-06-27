@@ -34,6 +34,14 @@ if exists (select 1
 
         GRANT EXECUTE ON msdb.dbo.rds_cdc_disable_db TO db_deploy_admin;
 
+        /*
+            CNDE-2707:
+
+            For AWS RDS deployments, SQLAgentOperatorRole must be grante explicitly. For Azure and onprem,
+            it is sufficient to just have sysadmin role, which has full access to SQL Server Agent roles.
+        */
+
+        ALTER ROLE [SQLAgentUserRole] ADD MEMBER [db_deploy_admin];
     end;
 else
     begin
