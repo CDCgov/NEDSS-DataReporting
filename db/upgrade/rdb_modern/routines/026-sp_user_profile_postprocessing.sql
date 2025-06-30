@@ -62,6 +62,28 @@ BEGIN
         WHERE A.auth_user_uid IN (SELECT value FROM STRING_SPLIT(@id_list, ','))
         ORDER BY NEDSS_ENTRY_ID;
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                        left join dbo.nrt_auth_user tmp with(nolock)
+                        on tmp.auth_user_uid = t.value	
+                        WHERE tmp.auth_user_uid is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity_type = 'AUTH_USER',
+                    @record_uid_list = @backfill_list,
+                    @rdb_table_map = NULL,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: sp_user_profile_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+               RETURN;
+          END   
 
         IF @debug = 'true' SELECT * FROM #TMP_PROVIDER_USER_DIMENSION;
 

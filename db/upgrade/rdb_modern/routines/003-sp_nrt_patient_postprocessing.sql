@@ -158,6 +158,29 @@ BEGIN
         where
             nrt.patient_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                left join #temp_patient_table tmp
+                on tmp.patient_uid = t.value	
+                WHERE tmp.patient_uid is null	
+		);
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity_type = 'PATIENT',
+                    @record_uid_list = @backfill_list,
+                    @rdb_table_map = NULL,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: sp_nrt_patient_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+               RETURN;
+          END
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log] (

@@ -62,6 +62,29 @@ BEGIN
             observation_uid IN (SELECT value FROM STRING_SPLIT(@pMorbidityIdList, ','));
 
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@pMorbidityIdList, ',')) t
+                        left join #nrt_morbidity_observation tmp
+                        on tmp.observation_uid = t.value	
+                        WHERE tmp.observation_uid is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity_type = 'OBSERVATION',
+                    @record_uid_list = @backfill_list,
+                    @rdb_table_map = NULL,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: Morbidity Report -> sp_d_morbidity_report_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+               RETURN;
+          END    
+        
         --Get map act_relationship associations for observation_uids.
         SELECT
             observation_uid

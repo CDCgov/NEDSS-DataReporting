@@ -136,6 +136,29 @@ BEGIN
 				ON nrt.treatment_uid = tk.treatment_uid
 				AND COALESCE(nrt.public_health_case_uid, 1) = COALESCE(tk.public_health_case_uid, 1)
 
+		declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@treatment_uids, ',')) t
+                        left join #treatment tmp
+                        on tmp.treatment_uids = t.value	
+                        WHERE tmp.treatment_uids is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity_type = 'TREATMENT',
+                    @record_uid_list = @backfill_list,
+                    @rdb_table_map = NULL,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: sp_nrt_treatment_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+               RETURN;
+          END  
+		
 		SELECT @RowCount_no = @@ROWCOUNT;
 
         IF @debug = 'true' 
