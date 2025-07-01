@@ -17,6 +17,181 @@ Both, (Windows and Linux) scripts support the same functionality:
 - To modify tables, add "ALTER TABLE" statements on the corresponding table script or add a new script after the table creation script.
 - Views, Functions, and Stored Pocedures SQL scrips are designed to drop and recreate the corresponding element.
 
+## **MANDATORY POST-UPGRADE STEP: Microservice Permissions**
+
+CRITICAL: After running the upgrade_db script, you MUST execute the microservice permission script to ensure all service users have proper database access.
+
+### Why This Step Is Required
+
+When stored procedures are dropped and recreated during upgrades, database permissions are lost. All microservices require specific permissions to function properly.
+
+### Execute Permission Script
+
+After the upgrade_db script completes successfully, run:
+
+# Location: routines/001-service_users_login_creation.sql
+sqlcmd -S [SERVER] -d [DATABASE] -U [USER] -P [PASSWORD] -i "routines/001-service_users_login_creation.sql"
+
+Example:
+
+sqlcmd -S myserver -d rdb_modern -U admin_user -P mypassword -i "routines/001-service_users_login_creation.sql"
+
+### Validate Permissions
+
+After running the permission script, validate that all microservice users are properly configured:
+
+-- ==========================================
+-- MICROSERVICE PERMISSIONS VALIDATION
+-- ==========================================
+-- Quick validation to verify all service users are properly configured
+
+PRINT 'Validating microservice permissions...';
+PRINT '';
+
+-- Check all server logins exist
+SELECT
+CASE WHEN COUNT(*) = 8
+THEN '✓ All 8 server logins exist'
+ELSE '✗ Missing server logins: ' + CAST((8 - COUNT(*)) AS VARCHAR(2))
+END as Server_Logins_Status
+FROM sys.server_principals
+WHERE name IN (
+'debezium_service_rdb',
+'kafka_sync_connector_service_rdb',
+'post_processing_service_rdb',
+'ldf_service_rdb',
+'investigation_service_rdb',
+'person_service_rdb',
+'observation_service_rdb',
+'organization_service_rdb'
+);
+
+-- Check users across all databases
+PRINT 'Checking database users across all databases...';
+
+-- NBS_ODSE users (6 services: all except Kafka and postprocessing)
+EXEC('USE [NBS_ODSE];
+SELECT ''NBS_ODSE'' as Database_Name, COUNT(*) as User_Count,
+CASE WHEN COUNT(*) = 6 THEN ''✓ Expected count'' ELSE ''✗ Wrong count'' END as Status
+FROM sys.database_principals
+WHERE name LIKE ''%_service_rdb''');
+
+-- NBS_SRTE users (7 services: all except Kafka)
+EXEC('USE [NBS_SRTE];
+SELECT ''NBS_SRTE'' as Database_Name, COUNT(*) as User_Count,
+CASE WHEN COUNT(*) = 7 THEN ''✓ Expected count'' ELSE ''✗ Wrong count'' END as Status
+FROM sys.database_principals
+WHERE name LIKE ''%_service_rdb''');
+
+-- rdb_modern users (7 services: all except Debezium)
+USE [rdb_modern];
+SELECT 'rdb_modern' as Database_Name, COUNT(*) as User_Count,
+CASE WHEN COUNT(*) = 7 THEN '✓ Expected count' ELSE '✗ Wrong count' END as Status
+FROM sys.database_principals
+WHERE name LIKE '%_service_rdb';
+
+-- Check role memberships in rdb_modern (should only be 3 services)
+PRINT '';
+PRINT 'Role memberships in rdb_modern (should only be 3 services):';
+
+SELECT
+'rdb_modern' as Database_Name,
+mp.name as Service_User,
+STRING_AGG(rp.name, ', ') as Roles_Granted
+FROM sys.database_role_members rm
+JOIN sys.database_principals rp ON rm.role_principal_id = rp.principal_id
+JOIN sys.database_principals mp ON rm.member_principal_id = mp.principal_id
+WHERE mp.name LIKE '%_service_rdb'
+GROUP BY mp.name
+ORDER BY mp.name;
+
+-- Count role memberships
+SELECT
+'Role Members Count' as Check_Type,
+COUNT(DISTINCT mp.name) as Actual_Count,
+CASE WHEN COUNT(DISTINCT mp.name) = 3
+THEN '✓ Expected 3 services with roles'
+ELSE '✗ Wrong count - should be 3'
+END as Status
+FROM sys.database_role_members rm
+JOIN sys.database_principals mp ON rm.member_principal_id = mp.principal_id
+WHERE mp.name LIKE '%_service_rdb';
+
+PRINT 'Validation completed. Review results above.';
+
+### Expected Validation Results
+
+✅ All 8 server logins exist
+✅ NBS_ODSE: 6 users (all except Kafka and postprocessing)
+✅ NBS_SRTE: 7 users (all except Kafka)
+✅ rdb_modern: 7 users (all except Debezium)
+✅ Role Members Count: 3 services (Investigation, Post Processing, Kafka only)
+
+### Expected Role Memberships in rdb_modern:
+
+- Investigation: db_datareader, db_datawriter
+- Post Processing: db_owner
+- Kafka: db_datareader, db_datawriter
+
+### Services WITHOUT role memberships (table-level permissions only):
+
+- Organization, Observation, Person, LDF: Only INSERT ON job_flow_log
+
+### Troubleshooting Permission Issues
+
+If validation fails:
+
+- Missing server logins: Re-run the permission script
+- Wrong user counts:
+  NBS_ODSE should have 6 users (all except Kafka and postprocessing)
+  NBS_SRTE should have 7 users (all except Kafka)
+  rdb_modern should have 7 users (all except Debezium)
+- Wrong role membership count: Only 3 services should have roles in rdb_modern
+- Unexpected role memberships: Organization, Observation, Person, LDF should NOT have any role memberships - only table-level INSERT permissions
+- Security Issue: If Organization/Observation/Person/LDF services show role memberships (especially db_owner), this is a security problem - remove these roles immediately
+
+## Microservice Permission Summary
+
+Service	                          Databases	                                 Permissions	                                                    
+Organization	                  NBS_ODSE, NBS_SRTE, rdb_modern	         db_datareader + sp_organization_event + job_flow_log INSERT	    
+Observation	                      NBS_ODSE, NBS_SRTE, rdb_modern	         db_datareader + 2 SPs + job_flow_log INSERT	
+Person	                          NBS_ODSE, NBS_SRTE, rdb_modern	         db_datareader + 4 SPs + job_flow_log INSERT	
+Investigation	                  NBS_ODSE, NBS_SRTE, rdb_modern	         db_datawriter on ODSE + full READ/WRITE on rdb_modern	
+LDF	                              NBS_ODSE, NBS_SRTE, rdb_modern	         db_datareader + 7 SPs + job_flow_log INSERT	
+Post Processing	                  rdb, rdb_modern, NBS_SRTE	                 db_owner on rdb/rdb_modern + db_datareader on SRTE	
+Kafka Sync	                      rdb_modern	                             db_datareader + db_datawriter (full READ/WRITE)	
+Debezium	                      NBS_ODSE, NBS_SRTE	                     db_datareader only	
+
+### Stored Procedures by Service
+## Organization Service:
+- sp_organization_event
+## Observation Service:
+- sp_observation_event
+- sp_place_event
+## Person Service:
+- sp_patient_event
+- sp_patient_race_event
+- sp_provider_event
+- sp_auth_user_event
+## Investigation Service:
+- sp_investigation_event
+- sp_contact_record_event
+- sp_interview_event
+- sp_notification_event
+- sp_treatment_event
+- sp_vaccination_event
+- sp_public_health_case_fact_datamart_event
+## LDF Service:
+- sp_ldf_data_event
+- sp_ldf_patient_event
+- sp_ldf_provider_event
+- sp_ldf_organization_event
+- sp_ldf_observation_event
+- sp_ldf_phc_event
+- sp_ldf_intervention_event
+## Post Processing, Kafka Sync, Debezium Services:
+- No specific stored procedures (use role-based permissions for direct table access)
+
 ## Pre-requisites
 - **Database**: RDB_MODEN database without `nrt_afaik` tables the first time the script is executed.
 
@@ -98,6 +273,26 @@ upgrade_db.bat [options] server database user password
    ```bash
    ./upgrade_db.sh --help | -h | /h
    ```
+   
+## Complete Deployment Process
+
+### Recommended Deployment Steps
+
+1.Execute upgrade_db script (as documented above)
+2.⚠️ MANDATORY: Run permission script (see "MANDATORY POST-UPGRADE STEP" section)
+3.Validate permissions (run validation query)
+4.Test microservice connectivity (optional but recommended)
+
+### Example Complete Deployment
+
+# Step 1: Run database upgrade
+./upgrade_db.sh myserver rdb_modern admin_user mypassword
+
+# Step 2: MANDATORY - Restore microservice permissions
+sqlcmd -S myserver -d rdb_modern -U admin_user -P mypassword -i "routines/001-service_users_login_creation.sql"
+
+# Step 3: Validate (copy validation SQL above into a file and run it)
+sqlcmd -S myserver -d rdb_modern -U admin_user -P mypassword -i "validate_permissions.sql"
 
 ## Output
 - **Log File**: Execution details, including errors, are logged to `upgrade_db_execution.log` in the script's directory.
@@ -123,3 +318,5 @@ upgrade_db.bat [options] server database user password
 - **Invalid Parameters**: Use `--help` to check the correct syntax.
 - **No .sql Files**: Ensure `.sql` files exist in the script's directory or subdirectories.
 - **Case Sensitivity (Linux)**: Verify folder names (`tables`, `data_load`, etc.) and file extensions (`.sql`) match exactly.
+- Microservice Connection Issues: First run the permission validation query to ensure all users and roles are properly configured.
+
