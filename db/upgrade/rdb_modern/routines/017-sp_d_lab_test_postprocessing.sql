@@ -715,7 +715,7 @@ BEGIN
 			INNER JOIN followup f 
 				ON f.observation_uid = obstxt.observation_uid
         )
-        SELECT 
+        SELECT DISTINCT
             obstxt.*           
         INTO #nrt_observation_txt_data
         FROM obstxt
