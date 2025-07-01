@@ -150,7 +150,7 @@ BEGIN
                BEGIN
                     EXECUTE dbo.sp_nrt_backfill_postprocessing 
                     @entity_type = 'TREATMENT',
-                    @record_uid_list = @backfill_list,
+                    @record_uid_list = @treatment_uids,
                     @rdb_table_map = NULL,
                     @batch_id = @batch_id,
                     @err_description = 'Missing NRT Record: sp_nrt_treatment_postprocessing',
