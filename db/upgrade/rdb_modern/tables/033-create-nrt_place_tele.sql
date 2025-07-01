@@ -16,5 +16,6 @@ CREATE TABLE dbo.nrt_place_tele
     place_tele_use           varchar(10) COLLATE SQL_Latin1_General_CP1_CI_AS   NULL,
     refresh_datetime         datetime2 generated always as row start            NOT NULL,
     max_datetime             datetime2 generated always as row end hidden       NOT NULL,
-    period for system_time (refresh_datetime,max_datetime)
+    period for system_time (refresh_datetime,max_datetime),
+    PRIMARY KEY (place_uid, place_tele_locator_uid)
 );

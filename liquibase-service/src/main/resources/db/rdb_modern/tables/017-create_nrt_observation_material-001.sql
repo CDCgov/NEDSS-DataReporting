@@ -1,7 +1,4 @@
-IF NOT EXISTS (SELECT 1
-               FROM sysobjects
-               WHERE name = 'nrt_observation_material'
-                 and xtype = 'U')
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_observation_material' and xtype = 'U')
 CREATE TABLE dbo.nrt_observation_material
 (
     act_uid                      bigint                                          NOT NULL,
@@ -23,3 +20,9 @@ CREATE TABLE dbo.nrt_observation_material
     max_datetime                 datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_observation_material'))
+    BEGIN
+        ALTER TABLE dbo.nrt_observation_material
+        ADD CONSTRAINT pk_nrt_observation_material PRIMARY KEY (act_uid,material_id);
+    END

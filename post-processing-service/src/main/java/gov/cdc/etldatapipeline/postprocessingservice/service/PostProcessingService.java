@@ -51,6 +51,11 @@ public class PostProcessingService {
     // a map of nrt topic name and its associated ids
     final Map<String, Queue<Long>> idCache = new ConcurrentHashMap<>();
 
+    // cache to store cds from nrt topics that need to be processed for loading dims and facts
+    // this will be used to store information from topics with key values that need to be type String as opposed to Long
+    // a map of nrt topic name and its associated ids
+    final Map<String, Queue<String>> cdCache = new ConcurrentHashMap<>();
+
     // cache to store PHC ids from for specific case types to run summary and aggregate reports
     // a map of case type (sum/agg) and its associated ids
     final Map<String, Queue<Long>> sumCache = new ConcurrentHashMap<>();
@@ -78,6 +83,8 @@ public class PostProcessingService {
     static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG = "Processing {} message topic. Calling stored proc: {} '{}'";
     static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG_2 = "Processing {} message topic. Calling stored proc: {} '{}', '{}";
     static final String MULTI_ID_DATAMART = "MultiId_Datamart";
+    static final String UNKNOWN_TOPIC_LOG_MSG = "Unknown topic: {} cannot be processed";
+    static final String PROCESSING_IDS_LOG_MSG = "Processing {} id(s) from topic: {}";
 
     static final String MORB_REPORT = "MorbReport";
     static final String LAB_REPORT = "LabReport";
@@ -87,12 +94,26 @@ public class PostProcessingService {
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
 
+
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
 
     @Value("${spring.kafka.topic.investigation}")
     private String investigationTopic;
 
+    /**
+     * Processes a message from a Kafka topic. This method is the entry point for handling messages
+     * from Kafka topics.
+     * <p>Steps:
+     * <ul>1. Identify the entity type based on the topic.</ul>
+     * <ul>2. Extract relevant IDs or data from the message payload.</ul>
+     * <ul>3. Cache the extracted IDs for further processing in idCache and data in idVals.</ul>
+     *
+     * @param topic The name of the Kafka topic from which the message was received.
+     * @param key The key of the Kafka message, typically used for partitioning.
+     * @param payload The value of the Kafka message, which contains the payload to be processed.
+     */
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}", 
             autoCreateTopics = "false", 
@@ -123,38 +144,23 @@ public class PostProcessingService {
             "${spring.kafka.topic.treatment}",
             "${spring.kafka.topic.vaccination}",
             "${spring.kafka.topic.state_defined_field_metadata}",
-            "${spring.kafka.topic.page}"
+            "${spring.kafka.topic.page}",
+            "${spring.kafka.topic.condition}"
     })
-    /**
-     * Processes a message from a Kafka topic. This method is the entry point for handling messages
-     * from Kafka topics.
-     *
-     * @param topic The name of the Kafka topic from which the message was received.
-     * @param key The key of the Kafka message, typically used for partitioning.
-     * @param value The value of the Kafka message, which contains the payload to be processed.
-     *
-     * Steps:
-     * 1. Identify the entity type based on the topic.
-     * 2. Extract relevant IDs or data from the message payload.
-     * 3. Cache the extracted IDs for further processing in idCache and data in idVals.
-     */
-    public void postProcessMessage(
+    public void processNrtMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload String payload) {
-
-        Long id = extractIdFromMessage(topic, key);
-        idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-        extractValFromMessage(id, topic, payload);
+        extractIdFromMessage(topic, key, payload);
     }
 
     /**
      * Extract id from the kafka message key
      * @param topic
      * @param messageKey
-     * @return id or uid
+     * @param payload
      */
-    private Long extractIdFromMessage(String topic, String messageKey) {
+    private void extractIdFromMessage(String topic, String messageKey, String payload) {
         try {
             logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
             JsonNode keyNode = objectMapper.readTree(messageKey);
@@ -164,7 +170,18 @@ public class PostProcessingService {
                 throw new NoSuchElementException(
                         "The '" + entity.getUidName() + "' value is missing in the '" + topic + "' message payload.");
             }
-            return keyNode.get(PAYLOAD).get(entity.getUidName()).asLong();
+            JsonNode idNode = keyNode.get(PAYLOAD).get(entity.getUidName());
+
+            if (idNode.isTextual()) {
+                String cd = idNode.asText();
+                cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+            }
+            else {
+                Long id = idNode.asLong();
+                idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
+                extractValFromMessage(id, topic, payload);
+            }
+
         } catch (Exception e) {
             String msg = "Error processing '" + topic + "'  message: " + e.getMessage();
             throw new DataProcessingException(msg, e);
@@ -175,7 +192,6 @@ public class PostProcessingService {
      * @param uid
      * @param topic
      * @param payload
-     * @return String
      */
     private void extractValFromMessage(Long uid, String topic, String payload) {
         try {
@@ -236,7 +252,7 @@ public class PostProcessingService {
             RuntimeException.class
     })
     @KafkaListener(topics = { "${spring.kafka.topic.datamart}" })
-    public void postProcessDatamart(
+    public void processDmMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Payload String payload) {
         try {
@@ -279,14 +295,14 @@ public class PostProcessingService {
      * Processes all cached IDs for various entities (e.g., investigations, notifications, organizations)
      * and executes the appropriate stored procedures for each entity type. This method triggers at fixed intervals and
      * consolidates the processing of IDs collected from multiple Kafka messages.
-     *
+     * <p>
      * Steps:
-     * 1. Iterate through cached IDs grouped by entity type.
-     * 2. Execute the corresponding stored procedure for each entity type.
-     * 3. Log the execution status for debugging and monitoring purposes.
-     * 4. Store the entity name and ids for later if it is needed for data marts (both direct dependent and also for multi-id data marts)
-     * 5. Process event metric and summary data marts
-     * 6. Send the event message to the kafka topic that handles data mart events for building other data marts
+     * <ul>1. Iterate through cached IDs grouped by entity type.</ul>
+     * <ul>2. Execute the corresponding stored procedure for each entity type.</ul>
+     * <ul>3. Log the execution status for debugging and monitoring purposes.</ul>
+     * <ul>4. Store the entity name and ids for later if it is needed for data marts (both direct dependent and also for multi-id data marts).</ul>
+     * <ul>5. Process event metric and summary data marts</ul>
+     * <ul>6. Send the event message to the kafka topic that handles data mart events for building other data marts</ul>
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processCachedIds() {
@@ -295,11 +311,24 @@ public class PostProcessingService {
         // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
         final Map<String, List<Long>> idCacheSnapshot;
 
+        // Making cache snapshot preventing out-of-sequence ids processing
+        // creates a deep copy of cdCache into cdCacheSnapshot
+        final Map<String, List<String>> cdCacheSnapshot;
+
         synchronized (cacheLock) {
             idCacheSnapshot = idCache.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
             idCache.clear();
+
+            cdCacheSnapshot = cdCache.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+            cdCache.clear();
         }
+
+        boolean isCdCacheEmpty = cdCacheSnapshot.isEmpty();
+        boolean isIdCacheEmpty = idCacheSnapshot.isEmpty();
+
+        processCdCache(cdCacheSnapshot, isCdCacheEmpty);
 
         if (!idCacheSnapshot.isEmpty()) {
             // sorting idCacheSnapshot so that entities with higher priority is processed first
@@ -320,7 +349,7 @@ public class PostProcessingService {
                 String keyTopic = entry.getKey();
                 List<Long> ids = entry.getValue();
 
-                logger.info("Processing {} id(s) from topic: {}", ids.size(), keyTopic);
+                logger.info(PROCESSING_IDS_LOG_MSG, ids.size(), keyTopic);
 
                 Entity entity = getEntityByTopic(keyTopic);
                 switch (entity) {
@@ -393,7 +422,7 @@ public class PostProcessingService {
                         newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     default:
-                        logger.warn("Unknown topic: {} cannot be processed", keyTopic);
+                        logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
                         break;
                 }
             }
@@ -408,8 +437,30 @@ public class PostProcessingService {
                 newDmMulti.forEach((key, queue) ->
                         dmMulti.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
             }
-        } else {
+        }
+
+        // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
+        if (isCdCacheEmpty && isIdCacheEmpty) {
             logger.info("No ids to process from the topics.");
+        }
+    }
+
+    private void processCdCache(Map<String, List<String>> cdCacheSnapshot, boolean isCdCacheEmpty) {
+        if (!isCdCacheEmpty) {
+            for (Entry<String, List<String>> entry : cdCacheSnapshot.entrySet()) {
+                String keyTopic = entry.getKey();
+                List<String> cds = entry.getValue();
+
+                logger.info(PROCESSING_IDS_LOG_MSG, cds.size(), keyTopic);
+
+                Entity entity = getEntityByTopic(keyTopic);
+
+                if (Objects.requireNonNull(entity) == CONDITION) {
+                    processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
+                } else {
+                    logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
+                }
+            }
         }
     }
 
@@ -533,11 +584,11 @@ public class PostProcessingService {
     /**
      * Processes cached IDs for datamarts by executing the appropriate stored procedures. This method triggers at fixed
      * intervals and handles the processing of data that needs to be loaded into specific datamarts.
-     *
+     * <p>
      * Steps:
-     * 1. Iterate through cached IDs grouped by datamart type.
-     * 2. Execute the corresponding stored procedure for each datamart type.
-     * 3. Log the execution status for debugging and monitoring purposes.
+     * <ul>1. Iterate through cached IDs grouped by datamart type.</ul>
+     * <ul>2. Execute the corresponding stored procedure for each datamart type.</ul>
+     * <ul>3. Log the execution status for debugging and monitoring purposes.</ul>
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
     protected void processDatamartIds() {
@@ -806,6 +857,10 @@ public class PostProcessingService {
                 .orElse("");
     }
 
+    private String listToLogString(Collection<Long> inputList) {
+        return inputList.stream().map(String::valueOf).distinct().collect(Collectors.joining(","));
+    }
+
     @PreDestroy
     public void shutdown() {
         processCachedIds();
@@ -823,7 +878,7 @@ public class PostProcessingService {
      *
      * @param topic The name of the Kafka topic (e.g., "dummy_investigation", "dummy_notification").
      * @return The corresponding entity type as an `Entity` enum value.
-     *
+     *<p>
      * Example:
      * If the topic is "dummy_investigation", the method will return `Entity.INVESTIGATION`.
      *
@@ -840,18 +895,30 @@ public class PostProcessingService {
     private void processTopic(String keyTopic, Entity entity, Collection<Long> ids, Consumer<String> repositoryMethod,
             String... names) {
         if (!ids.isEmpty()) {
+            String idsString = listToParameterString(ids);
             String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
-            String idsString = prepareAndLog(keyTopic, ids, entity.getEntityName(), spName);
+            prepareAndLog(keyTopic, idsString, entity.getEntityName(), spName);
             repositoryMethod.accept(idsString);
             completeLog(spName);
         }
+
+    }
+
+    private void processTopicCd(String keyTopic, Entity entity, Collection<String> cds,
+                                Consumer<String> repositoryMethod) {
+        String cdString = cds.stream().distinct().collect(Collectors.joining(","));
+        String spName = entity.getStoredProcedure();
+        prepareAndLog(keyTopic, cdString, entity.getEntityName(), spName);
+        repositoryMethod.accept(cdString);
+        completeLog(spName);
     }
 
     private <T> List<T> processTopic(String keyTopic, Entity entity, Collection<Long> ids,
             Function<String, List<T>> repositoryMethod, String... names) {
         String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
-        String idsString = prepareAndLog(keyTopic, ids, entity.getEntityName(), spName);
-        List<T> result = repositoryMethod.apply(idsString);
+        String idString = listToLogString(ids);
+        prepareAndLog(keyTopic, idString, entity.getEntityName(), spName);
+        List<T> result = repositoryMethod.apply(idString);
         completeLog(spName);
         return result;
     }
@@ -860,19 +927,18 @@ public class PostProcessingService {
                               BiConsumer<String, String> repositoryMethod) {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
-        String idsString = prepareAndLog(keyTopic, ids, entity.getEntityName(), name);
+        String idString = listToLogString(ids);
+        prepareAndLog(keyTopic, idString, entity.getEntityName(), name);
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", name, keyTopic,
-                entity.getStoredProcedure(), idsString, vals);
-        repositoryMethod.accept(idsString, vals);
+                entity.getStoredProcedure(), idString, vals);
+        repositoryMethod.accept(idString, vals);
         completeLog(entity.getStoredProcedure());
     }
 
-    private String prepareAndLog(String keyTopic, Collection<Long> ids, String name, String spName) {
-        String idsString = ids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
+    private void prepareAndLog(String keyTopic, String idString, String name, String spName) {
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}'", name, keyTopic,
-                spName, idsString);
-        return idsString;
+                spName, idString);
     }
 
     private void completeLog(String sp) {

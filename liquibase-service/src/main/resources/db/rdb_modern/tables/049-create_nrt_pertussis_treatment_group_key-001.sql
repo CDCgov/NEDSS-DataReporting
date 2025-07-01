@@ -32,3 +32,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_pertussis_treatment_group_
                     ADD updated_dttm DATETIME2 DEFAULT GETDATE();
             END;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_pertussis_treatment_group_key'))
+    BEGIN
+        ALTER TABLE dbo.nrt_pertussis_treatment_group_key
+        ADD CONSTRAINT pk_nrt_pertussis_treatment_group_key PRIMARY KEY (PERTUSSIS_TREATMENT_GRP_KEY);
+    END

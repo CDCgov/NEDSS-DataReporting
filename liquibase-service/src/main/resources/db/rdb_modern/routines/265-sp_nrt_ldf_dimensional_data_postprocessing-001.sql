@@ -333,7 +333,8 @@ BEGIN
 					'[\/,@\\%[\]#;$\-\.\>\<\=\:\?\(\)\{\}\"&*\+!`\'']', '_'
 				)
 				, 1, 29
-			) AS datamart_column_nm
+			) AS datamart_column_nm,
+			a.business_object_nm
 		INTO #LDF_METADATA
 		FROM [dbo].D_LDF_META_DATA a WITH(NOLOCK)
 		INNER JOIN #LDF_UID_LIST l 
@@ -345,7 +346,8 @@ BEGIN
 			a.condition_cd,
 			a.class_cd,
 			a.custom_subform_metadata_uid,
-			a.LDF_PAGE_SET;
+			a.LDF_PAGE_SET,
+			a.business_object_nm;
 
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -379,7 +381,8 @@ BEGIN
 			a.custom_subform_metadata_uid,
 			a.LDF_PAGE_SET,
 			a.ldf_datamart_column_ref_uid,
-			a.datamart_column_nm
+			a.datamart_column_nm,
+			a.business_object_nm
 		INTO #LDF_METADATA_N
 		FROM #LDF_METADATA a
 		LEFT JOIN [dbo].ldf_datamart_column_ref b WITH(NOLOCK)
@@ -418,7 +421,8 @@ BEGIN
 			a.custom_subform_metadata_uid,
 			a.LDF_PAGE_SET,
 			a.ldf_datamart_column_ref_uid,
-			a.datamart_column_nm
+			a.datamart_column_nm,
+			a.business_object_nm
 		INTO #LDF_METADATA_E
 		FROM #LDF_METADATA a
 		INNER JOIN [dbo].ldf_datamart_column_ref b WITH(NOLOCK)
@@ -453,6 +457,7 @@ BEGIN
 				DATAMART_COLUMN_NM, 
 				LDF_UID, 
 				CDC_NATIONAL_ID, 
+				BUSINESS_OBJECT_NM,
 				LDF_PAGE_SET
 			)
 			SELECT 
@@ -462,6 +467,7 @@ BEGIN
 				DATAMART_COLUMN_NM, 
 				LDF_UID, 
 				CDC_NATIONAL_ID, 
+				BUSINESS_OBJECT_NM,
 				LDF_PAGE_SET
 			FROM 
 				#LDF_METADATA_N
@@ -498,6 +504,7 @@ BEGIN
 				D.LDF_LABEL = S.LDF_LABEL,
 				D.DATAMART_COLUMN_NM = S.DATAMART_COLUMN_NM,
 				D.CDC_NATIONAL_ID = S.CDC_NATIONAL_ID,
+				D.BUSINESS_OBJECT_NM = S.BUSINESS_OBJECT_NM,  
 				D.LDF_PAGE_SET = S.LDF_PAGE_SET 
 			FROM  [dbo].LDF_DATAMART_COLUMN_REF D 
 			INNER JOIN #LDF_METADATA_E S 
@@ -528,17 +535,19 @@ BEGIN
 		IF OBJECT_ID('#LDF_DATA_DEL', 'U') IS NOT NULL  
 			DROP TABLE #LDF_DATA_DEL;
 
-		SELECT LDA.LDF_UID INTO 
-		#LDF_DATA_DEL
-		FROM DBO.LDF_DIMENSIONAL_DATA LDA with (nolock)
+		SELECT 
+			LDA.LDF_UID, 
+			LDA.INVESTIGATION_UID
+		INTO #LDF_DATA_DEL
+		FROM [dbo].LDF_DIMENSIONAL_DATA LDA WITH (NOLOCK)
 		INNER JOIN #LDF_UID_LIST LL
 			ON LDA.LDF_UID = LL.LDF_UID
-		LEFT JOIN dbo.nrt_ldf_data NRT_LDF_DATA with (nolock)
-			ON LDA.LDF_UID = NRT_LDF_DATA.LDF_UID And 
+		LEFT JOIN [dbo].nrt_ldf_data NRT_LDF_DATA WITH (NOLOCK)
+			ON LDA.LDF_UID = NRT_LDF_DATA.LDF_UID AND 
 			LDA.investigation_uid = NRT_LDF_DATA.business_object_uid
-		where NRT_LDF_DATA.ldf_meta_data_business_object_nm is null 
-			and NRT_LDF_DATA.ldf_meta_data_add_time is null;
-
+		WHERE 
+			NRT_LDF_DATA.ldf_meta_data_business_object_nm IS NULL 
+			AND NRT_LDF_DATA.ldf_meta_data_add_time IS NULL;
 
 		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -560,11 +569,20 @@ BEGIN
 		SET 
 			@PROC_STEP_NAME = 'DELETING FROM LDF_DIMENSIONAL_DATA'; 
 
+		IF
+			@debug = 'true'
+			SELECT @Proc_Step_Name AS step, LDA.*
+			FROM [dbo].LDF_DIMENSIONAL_DATA LDA WITH (NOLOCK)
+			INNER JOIN #LDF_DATA_DEL LDF_DATA_DEL
+				ON LDA.LDF_UID = LDF_DATA_DEL.LDF_UID
+				AND LDA.INVESTIGATION_UID = LDF_DATA_DEL.INVESTIGATION_UID;
+
 		DELETE LDA
-		FROM [dbo].LDF_DIMENSIONAL_DATA LDA with (nolock)
+		FROM [dbo].LDF_DIMENSIONAL_DATA LDA
 		INNER JOIN #LDF_DATA_DEL LDF_DATA_DEL
 			ON LDA.LDF_UID = LDF_DATA_DEL.LDF_UID;
 
+		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 		INSERT INTO [dbo].[job_flow_log]
 			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -637,10 +655,10 @@ BEGIN
 		SET 
 			@PROC_STEP_NO = @PROC_STEP_NO + 1;
 		SET 
-			@PROC_STEP_NAME = 'GENERATING #LDF_DATA_TRANSLATED_ROWS_NE'; 
+			@PROC_STEP_NAME = 'GENERATING #LDF_DATA_TRANSLATED_ROWS'; 
 				
-		IF OBJECT_ID('#LDF_DATA_TRANSLATED_ROWS_NE', 'U') IS NOT NULL  
-			DROP TABLE #LDF_DATA_TRANSLATED_ROWS_NE;
+		IF OBJECT_ID('#LDF_DATA_TRANSLATED_ROWS', 'U') IS NOT NULL  
+			DROP TABLE #LDF_DATA_TRANSLATED_ROWS;
 		
 		SELECT  
 			data_source,
@@ -650,7 +668,7 @@ BEGIN
 			label_txt,
 			phc_cd,
 			splitted_ldf.item AS COL1
-		INTO #LDF_DATA_TRANSLATED_ROWS_NE
+		INTO #LDF_DATA_TRANSLATED_ROWS
 		FROM #LDF_DATA f 
 		OUTER APPLY [dbo].[NBS_Strings_Split] (f.LDF_VALUE, '|') splitted_ldf
 		WHERE DATALENGTH(splitted_ldf.item) > 0;
@@ -660,7 +678,7 @@ BEGIN
 		IF
 			@debug = 'true'
 			SELECT @Proc_Step_Name AS step, *
-			FROM #LDF_DATA_TRANSLATED_ROWS_NE;
+			FROM #LDF_DATA_TRANSLATED_ROWS;
 
 		INSERT INTO [dbo].[job_flow_log]
 			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -692,7 +710,7 @@ BEGIN
 			phc_cd,
 			label_txt					
 		INTO #LDF_BASE_CODED_TRANSLATED
-		FROM #LDF_DATA_TRANSLATED_ROWS_NE ldf
+		FROM #LDF_DATA_TRANSLATED_ROWS ldf
 		LEFT JOIN [dbo].nrt_srte_Code_value_general cvg WITH (NOLOCK)
 			ON cvg.code_set_nm=ldf.code_set_nm 	AND cvg.code=ldf.col1 AND ldf.data_source='code_value_general';
 	
@@ -721,7 +739,6 @@ BEGIN
 			DROP TABLE #LDF_BASE_CLINICAL_TRANSLATED;
 
 		SELECT 	
-			--col1, 
 			CASE 
 				WHEN cvg.code_desc_txt IS NOT NULL AND DATALENGTH(cvg.code_desc_txt) > 0 THEN cvg.code_desc_txt 
 				ELSE col1 
@@ -763,7 +780,6 @@ BEGIN
 			DROP TABLE #LDF_BASE_STATE_TRANSLATED;
 
 		SELECT 	
-			--col1,  
 			CASE 
 				WHEN cvg.code_desc_txt IS NOT NULL AND DATALENGTH(cvg.code_desc_txt) > 0 THEN cvg.code_desc_txt 
 				ELSE col1 
@@ -804,7 +820,6 @@ BEGIN
 			DROP TABLE #LDF_BASE_COUNTRY_TRANSLATED;
 
 		SELECT
-			--col1,  
 			CASE 
 				WHEN cvg.code_desc_txt IS NOT NULL AND DATALENGTH(cvg.code_desc_txt) > 0 THEN cvg.code_desc_txt 
 				ELSE col1 
@@ -1005,8 +1020,13 @@ BEGIN
 		INTO #LDF_DIMENSIONAL_DATA_N
 		FROM #LDF_DIMENSIONAL_DATA a
 		LEFT JOIN [dbo].LDF_DIMENSIONAL_DATA b WITH (NOLOCK)
-			ON b.LDF_UID = a.LDF_UID
-		WHERE b.LDF_UID IS NULL;
+			ON b.LDF_UID = a.LDF_UID 
+			AND b.investigation_uid = a.investigation_uid
+		WHERE 
+			b.LDF_UID IS NULL 
+			AND b.investigation_uid IS NULL;
+
+		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 		IF
 			@debug = 'true'
@@ -1034,7 +1054,10 @@ BEGIN
 		INTO #LDF_DIMENSIONAL_DATA_E
 		FROM #LDF_DIMENSIONAL_DATA a
 		INNER JOIN [dbo].LDF_DIMENSIONAL_DATA b WITH (NOLOCK)
-			ON b.LDF_UID = a.LDF_UID;
+			ON b.LDF_UID = a.LDF_UID 
+			AND b.investigation_uid = a.investigation_uid;
+
+		SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
 		IF
 			@debug = 'true'
@@ -1138,7 +1161,8 @@ BEGIN
 				D.FIELD_SIZE = S.FIELD_SIZE				
 			FROM [dbo].LDF_DIMENSIONAL_DATA D 
 			INNER JOIN #LDF_DIMENSIONAL_DATA_E S 
-				ON S.LDF_UID = D.LDF_UID	
+				ON S.LDF_UID = D.LDF_UID
+				AND S.INVESTIGATION_UID = D.INVESTIGATION_UID;	
 
 			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
