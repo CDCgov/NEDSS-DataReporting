@@ -1169,7 +1169,7 @@ BEGIN
             --------------------------------------------------------------------------------------------------------
 
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'UPDATING [dbo].nrt_lab_test_key table';
+            SET @PROC_STEP_NAME = 'UPDATING field updated_dttm in [dbo].nrt_lab_test_key table';
 
             UPDATE ltk 
             SET 
@@ -1318,7 +1318,7 @@ BEGIN
             --------------------------------------------------------------------------------------------------------
 
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'UPDATING [dbo].nrt_lab_rpt_user_comment_key table';
+            SET @PROC_STEP_NAME = 'UPDATING field updated_dttm in [dbo].nrt_lab_rpt_user_comment_key table';
 
             UPDATE uck 
             SET 
