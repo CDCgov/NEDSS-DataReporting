@@ -14,6 +14,7 @@ CREATE PROCEDURE [dbo].[sp_nrt_backfill_postprocessing]
     @err_description nvarchar(1000),
     @status_cd  nvarchar(1000),
     @retry_count smallint
+
 AS
 BEGIN
 
@@ -28,8 +29,8 @@ BEGIN
         BEGIN TRANSACTION;
 
         --Update the NRT_BACKFILL table if the same record_uid_list exists
-        update dbo.nrt_backfill
-        set tmp.status_cd = @status_cd,
+        update dbo.nrt_backfill 
+        set status_cd = @status_cd,
         retry_count = @retry_count
         where record_uid_list = @record_uid_list;
 
@@ -46,7 +47,7 @@ BEGIN
             (
                 select 
                 @entity_type as entity_type, 
-                @backfill_list as record_uid_list,
+                @record_uid_list as record_uid_list,
                 @batch_id as batch_id,
                 @err_description as err_description,
                 @status_cd AS status_cd,
@@ -55,14 +56,6 @@ BEGIN
             left join dbo.nrt_backfill nrt with (nolock)
                 on tmp.record_uid_list = @record_uid_list
             where nrt.batch_id is null
-
-        select 
-            nrt.entity_type,
-            nrt.record_uid_list, 
-            nrt.batch_id,
-            nrt.status_cd,
-            nrt.retry_count
-        from dbo.nrt_backfill nrt where status_cd <> 'READY';
 
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -84,7 +77,7 @@ BEGIN
                ,@proc_step_no
                ,@proc_step_name
                ,@rowcount
-               ,LEFT(@id_list,500)
+               ,LEFT(@record_uid_list,500)
                );
         
         COMMIT TRANSACTION;
