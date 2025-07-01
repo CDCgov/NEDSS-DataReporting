@@ -28,11 +28,21 @@ BEGIN
 
         BEGIN TRANSACTION;
 
-        --Update the NRT_BACKFILL table if the same record_uid_list exists
-        update dbo.nrt_backfill 
-        set status_cd = @status_cd,
-        retry_count = @retry_count
-        where record_uid_list = @record_uid_list;
+        if @record_uid_list is null
+            --Update the NRT_BACKFILL table if the same record_uid_list exists
+            BEGIN
+                update dbo.nrt_backfill 
+                set status_cd = @status_cd,
+                retry_count = @retry_count
+                where batch_id = @batch_id;
+            END
+        ELSE
+            BEGIN
+                update dbo.nrt_backfill 
+                set status_cd = @status_cd,
+                retry_count = @retry_count
+                where record_uid_list = @record_uid_list and entity_type = @entity_type;
+            END
 
         --Insert into NRT_BACKFILL table if the record_uid_list doesnt exists
         insert into dbo.nrt_backfill(entity_type, record_uid_list, batch_id, err_description, status_cd, retry_count)
@@ -54,8 +64,9 @@ BEGIN
                 0 AS retry_count
             ) AS tmp
             left join dbo.nrt_backfill nrt with (nolock)
-                on tmp.record_uid_list = @record_uid_list
-            where nrt.batch_id is null
+                on tmp.record_uid_list = nrt.record_uid_list and 
+                tmp.entity_type = nrt.entity_type
+            where nrt.record_uid_list is null and nrt.entity_type is null
 
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]

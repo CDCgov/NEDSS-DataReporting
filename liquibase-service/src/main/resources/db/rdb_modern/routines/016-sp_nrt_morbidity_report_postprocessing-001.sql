@@ -82,9 +82,19 @@ BEGIN
                     @err_description = 'Missing NRT Record: Morbidity Report -> sp_d_morbidity_report_postprocessing',
                     @status_cd  = 'READY',
                     @retry_count = 0
+             
+                SELECT 
+                    CAST(NULL AS BIGINT) AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    CAST(NULL AS VARCHAR(30)) AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+               WHERE 1=0;
+               
                RETURN;
           END    
-        
         --Get map act_relationship associations for observation_uids.
         SELECT
             observation_uid

@@ -142,8 +142,8 @@ BEGIN
               SELECT string_agg(t.value, ',')
               FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@treatment_uids, ',')) t
                         left join #treatment tmp
-                        on tmp.treatment_uids = t.value	
-                        WHERE tmp.treatment_uids is null	
+                        on tmp.treatment_uid = t.value	
+                        WHERE tmp.treatment_uid is null	
             );
 
           IF @backfill_list IS NOT NULL

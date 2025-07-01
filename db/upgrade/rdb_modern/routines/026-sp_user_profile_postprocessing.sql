@@ -44,7 +44,6 @@ BEGIN
 
 -------------------------------------------------1. CREATE TABLE TMP_PROVIDER_USER_DIMENSION---------------------------------------------------------------------------
 
-        BEGIN TRANSACTION;
         SET @Proc_Step_name = 'Create #TMP_PROVIDER_USER_DIMENSION';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
@@ -82,6 +81,7 @@ BEGIN
                     @err_description = 'Missing NRT Record: sp_user_profile_postprocessing',
                     @status_cd  = 'READY',
                     @retry_count = 0
+               
                RETURN;
           END   
 
@@ -93,7 +93,6 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @dataflow_name, @package_name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
         --Select * from TMP_PROVIDER_USER_DIMENSION
 -------------------------------------------------2. CREATE TABLE TMP_USER_PROVIDER---------------------------------------------------
         BEGIN TRANSACTION;
