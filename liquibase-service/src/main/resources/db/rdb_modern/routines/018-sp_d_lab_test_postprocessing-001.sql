@@ -712,8 +712,7 @@ BEGIN
             UNION ALL 
             SELECT obstxt.*
             FROM [dbo].nrt_observation_txt obstxt WITH (NOLOCK)
-			INNER JOIN followup f 
-				ON f.observation_uid = obstxt.observation_uid
+			INNER JOIN followup f ON f.observation_uid = obstxt.observation_uid
         )
         SELECT DISTINCT
             obstxt.*           
