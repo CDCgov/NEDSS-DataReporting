@@ -672,7 +672,7 @@ BEGIN
          EXEC sp_executesql @aoe_sql;
 
           IF @debug = 'true'
-         PRINT 'AOE columns added: ' + @aoe_sql;
+         PRINT 'AOE columns added : ' + @aoe_sql;
         END
 
                 -- Update AOE table with data using dynamic pivot
