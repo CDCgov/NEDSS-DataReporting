@@ -29,7 +29,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         if @record_uid_list is null
-            --Update the NRT_BACKFILL table if the same record_uid_list exists
+            --Update the NRT_BACKFILL through JAVA
             BEGIN
                 update dbo.nrt_backfill 
                 set status_cd = @status_cd,
@@ -38,8 +38,12 @@ BEGIN
             END
         ELSE
             BEGIN
+                --Update the NRT_BACKFILL through SPROC
+                --Update the Batch_id so that Java will not update the new batch_id if record_uid is still missing
                 update dbo.nrt_backfill 
-                set retry_count = retry_count + 1
+                set 
+                retry_count = retry_count + 1,
+                batch_id = @batch_id
                 where record_uid_list = @record_uid_list and entity_type = @entity_type;
             END
 

@@ -21,7 +21,6 @@ Begin
             err_description,
             status_cd,
             retry_count,
-            retry_count,
             created_dttm,
             updated_dttm
         from [dbo].nrt_backfill with (nolock)
