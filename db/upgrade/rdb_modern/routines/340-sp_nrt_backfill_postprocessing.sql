@@ -39,8 +39,7 @@ BEGIN
         ELSE
             BEGIN
                 update dbo.nrt_backfill 
-                set status_cd = @status_cd,
-                retry_count = @retry_count
+                set retry_count = retry_count + 1
                 where record_uid_list = @record_uid_list and entity_type = @entity_type;
             END
 
