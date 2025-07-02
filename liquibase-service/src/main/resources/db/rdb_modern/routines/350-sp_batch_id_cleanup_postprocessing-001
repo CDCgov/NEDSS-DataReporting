@@ -2,11 +2,11 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_batch_id_c
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_event_metric_cleanup_postprocessing]
+    DROP PROCEDURE [dbo].[sp_batch_id_cleanup_postprocessing]
 END
 GO 
 
-CREATE PROCEDURE [dbo].[sp_event_metric_cleanup_postprocessing]
+CREATE PROCEDURE [dbo].[sp_batch_id_cleanup_postprocessing]
     @debug bit = 'false'
 AS
 BEGIN
@@ -17,8 +17,11 @@ BEGIN
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT= 0;
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
-	DECLARE @Dataflow_Name VARCHAR(200) = 'Event Metric Cleanup POST-Processing';
-	DECLARE @Package_Name VARCHAR(200) = 'sp_event_metric_cleanup_postprocessing';
+	DECLARE @Dataflow_Name VARCHAR(200) = 'Batch Id Cleanup POST-Processing';
+	DECLARE @Package_Name VARCHAR(200) = 'sp_batch_id_cleanup_postprocessing';
+    DECLARE @StartDatetime DATETIME = GETDATE();
+    DECLARE @CompleteDatetime DATETIME;
+    DECLARE @LastSuccessTimestamp DATETIME;
 
     BEGIN TRY
         
@@ -46,18 +49,16 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'GENERATING #UPDATED_LEGACY_CASES';
+            @PROC_STEP_NAME = 'GET MOST RECENT SUCCESS TIMESTAMP';
 
-        
-        SELECT
-            public_health_case_uid
-            , batch_id
-        INTO #UPDATED_LEGACY_CASES
-        FROM dbo.nrt_investigation_observation WITH (NOLOCK)
-            WHERE DATEDIFF(day, refresh_datetime, GETDATE()) <= 7;
+        SET @LastSuccessTimestamp = (SELECT TOP 1
+                                        RUN_START_DTTM
+                                    FROM dbo.nrt_delete_job_log
+                                    WHERE RUN_STATUS IN ('Initial', 'Success')
+                                    ORDER BY RUN_START_DTTM DESC);
 
         if @debug = 'true'
-            SELECT @Proc_Step_Name, #UPDATED_LEGACY_CASES;
+            SELECT @Proc_Step_Name, @LastSuccessTimestamp as LastSuccessTimestamp;
 
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -70,20 +71,19 @@ BEGIN
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
-            @PROC_STEP_NAME = 'GENERATING #UPDATED_MORB_REPORTS';
+            @PROC_STEP_NAME = 'GENERATING #UPDATED_INVESTIGATIONS';
 
         SELECT
-            observation_uid
-            , followup_observation_uid
-            , result_observation_uid
-        INTO #UPDATED_MORB_REPORTS
-        FROM dbo.nrt_observation WITH (NOLOCK)
-            WHERE DATEDIFF(day, refresh_datetime, GETDATE()) <= 7
-                AND ctrl_cd_display_form = 'MorbReport';
+            public_health_case_uid
+            , investigation_form_cd
+            , case_type_cd
+            , batch_id
+        INTO #UPDATED_INVESTIGATIONS
+        FROM dbo.nrt_investigation WITH (NOLOCK)
+            WHERE refresh_datetime >= @LastSuccessTimestamp;
 
-        
         if @debug = 'true'
-            SELECT @Proc_Step_Name, #UPDATED_MORB_REPORTS;
+            SELECT @Proc_Step_Name, * FROM #UPDATED_INVESTIGATIONS;
 
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -92,6 +92,248 @@ BEGIN
 
 --------------------------------------------------------------------------------------------------------
 
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #OLD_INVESTIGATION_OBSERVATIONS';
+
+        SELECT
+            inv.public_health_case_uid
+            , inv.batch_id as inv_batch_id
+            , nio.batch_id as nio_batch_id
+            , obs.observation_uid as branch_id
+            , obs.batch_id as obs_batch_id
+        INTO #OLD_INVESTIGATION_OBSERVATIONS
+        FROM (SELECT * FROM #UPDATED_INVESTIGATIONS
+            WHERE investigation_form_cd LIKE 'INV_FORM%') inv
+            INNER JOIN dbo.nrt_investigation_observation nio WITH (NOLOCK)
+                ON inv.public_health_case_uid = nio.public_health_case_uid
+                    AND nio.batch_id < inv.batch_id
+            INNER JOIN dbo.nrt_observation obs
+                ON nio.branch_id = obs.observation_uid;
+
+        if @debug = 'true'
+            SELECT @Proc_Step_Name, * FROM #OLD_INVESTIGATION_OBSERVATIONS;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'GENERATING #UPDATED_INTERVIEWS';
+
+        SELECT
+            interview_uid
+            , batch_id
+        INTO #UPDATED_INTERVIEWS
+        FROM dbo.nrt_interview WITH (NOLOCK)
+            WHERE refresh_datetime >= @LastSuccessTimestamp;
+
+        if @debug = 'true'
+            SELECT @Proc_Step_Name, * FROM #UPDATED_INTERVIEWS;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_investigation_confirmation';
+
+        DELETE tgt
+        FROM dbo.nrt_investigation_confirmation tgt
+            INNER JOIN #UPDATED_INVESTIGATIONS uinv
+                ON tgt.public_health_case_uid = uinv.public_health_case_uid
+                    AND tgt.batch_id < uinv.batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_page_case_answer';
+
+        DELETE tgt
+        FROM dbo.nrt_page_case_answer tgt
+            INNER JOIN #UPDATED_INVESTIGATIONS uinv
+                ON tgt.act_uid = uinv.public_health_case_uid
+                    AND tgt.batch_id < uinv.batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_investigation_aggregate';
+
+        DELETE tgt
+        FROM dbo.nrt_investigation_aggregate tgt
+            INNER JOIN (SELECT * FROM #UPDATED_INVESTIGATIONS WHERE case_type_cd = 'A') uinv
+                ON tgt.act_uid = uinv.public_health_case_uid
+                    AND tgt.batch_id < uinv.batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_observation_coded';
+
+        DELETE tgt
+        FROM dbo.nrt_observation_coded tgt
+            INNER JOIN #OLD_INVESTIGATION_OBSERVATIONS uinv
+                ON tgt.observation_uid = uinv.branch_id
+                    AND tgt.batch_id = uinv.obs_batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_observation_txt';
+
+        DELETE tgt
+        FROM dbo.nrt_observation_txt tgt
+            INNER JOIN #OLD_INVESTIGATION_OBSERVATIONS uinv
+                ON tgt.observation_uid = uinv.branch_id
+                    AND tgt.batch_id = uinv.obs_batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_observation_date';
+
+        DELETE tgt
+        FROM dbo.nrt_observation_date tgt
+            INNER JOIN #OLD_INVESTIGATION_OBSERVATIONS uinv
+                ON tgt.observation_uid = uinv.branch_id
+                    AND tgt.batch_id = uinv.obs_batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_observation_numeric';
+
+        DELETE tgt
+        FROM dbo.nrt_observation_numeric tgt
+            INNER JOIN #OLD_INVESTIGATION_OBSERVATIONS uinv
+                ON tgt.observation_uid = uinv.branch_id
+                    AND tgt.batch_id = uinv.obs_batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_investigation_observation';
+
+        DELETE tgt
+        FROM dbo.nrt_investigation_observation tgt
+            INNER JOIN #OLD_INVESTIGATION_OBSERVATIONS uinv
+                ON tgt.branch_id = uinv.branch_id
+                    AND tgt.batch_id = uinv.obs_batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_interview_note';
+
+        DELETE tgt
+        FROM dbo.nrt_interview_note tgt
+            INNER JOIN #UPDATED_INTERVIEWS uix
+                ON tgt.interview_uid = uix.interview_uid
+                    AND tgt.batch_id < uix.batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
+
+
+        SET
+            @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET
+            @PROC_STEP_NAME = 'DELETING FROM dbo.nrt_interview_answer';
+
+        DELETE tgt
+        FROM dbo.nrt_interview_answer tgt
+            INNER JOIN #UPDATED_INTERVIEWS uix
+                ON tgt.interview_uid = uix.interview_uid
+                    AND tgt.batch_id < uix.batch_id;
+
+        INSERT INTO [dbo].[job_flow_log] 
+		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+
+--------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
