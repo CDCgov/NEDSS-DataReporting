@@ -850,6 +850,8 @@ BEGIN
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         --------------------------------------------------------------------------------------------------------
+        --requires future enhancement to implement retry mechanism for ids that do not make it to target tables 
+        --due to logical errors in catch section.
 
         BEGIN TRANSACTION
 
