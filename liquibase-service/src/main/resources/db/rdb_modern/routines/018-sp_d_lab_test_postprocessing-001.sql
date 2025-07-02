@@ -33,6 +33,7 @@ BEGIN
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
     DECLARE @Dataflow_Name VARCHAR(200) = 'D_LAB_TEST Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_lab_test_postprocessing';
+    DECLARE @rdb_last_refresh_time datetime; 
 
     BEGIN TRY
 
@@ -68,7 +69,7 @@ BEGIN
         IF OBJECT_ID('#obs_ids', 'U') IS NOT NULL
             DROP TABLE #obs_ids;
 
-        SELECT value AS observation_uid
+        SELECT DISTINCT TRIM(value) AS observation_uid
         INTO #obs_ids
         FROM STRING_SPLIT(@obs_ids, ',');
 
@@ -688,364 +689,6 @@ BEGIN
 
         --------------------------------------------------------------------------------------------------------
 
-        BEGIN TRANSACTION
-            
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'GENERATING keys for #lab_test_N';
-
-            INSERT INTO [dbo].nrt_lab_test_key (LAB_TEST_UID)
-            SELECT LAB_TEST_UID 
-            FROM #lab_test_N
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, k.* 
-                FROM [dbo].nrt_lab_test_key k WITH (NOLOCK)
-                INNER JOIN #lab_test_N ltn
-                    ON ltn.LAB_TEST_UID = k.LAB_TEST_UID;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-
-        COMMIT TRANSACTION
-
-        --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION 
-
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'INSERTING new entries to LAB_TEST';
-
-            INSERT INTO [dbo].LAB_TEST (
-                [LAB_TEST_STATUS]
-                ,[LAB_TEST_KEY]
-                ,[LAB_RPT_LOCAL_ID]
-                ,[TEST_METHOD_CD]
-                ,[TEST_METHOD_CD_DESC]
-                ,[LAB_RPT_SHARE_IND]
-                ,[LAB_TEST_CD]
-                ,[ELR_IND]
-                ,[LAB_RPT_UID]
-                ,[LAB_TEST_CD_DESC]
-                ,[INTERPRETATION_FLG]
-                ,[LAB_RPT_RECEIVED_BY_PH_DT]
-                ,[LAB_RPT_CREATED_BY]
-                ,[REASON_FOR_TEST_DESC]
-                ,[REASON_FOR_TEST_CD]
-                ,[LAB_RPT_LAST_UPDATE_BY]
-                ,[LAB_TEST_DT]
-                ,[LAB_RPT_CREATED_DT]
-                ,[LAB_TEST_TYPE]
-                ,[LAB_RPT_LAST_UPDATE_DT]
-                ,[JURISDICTION_CD]
-                ,[LAB_TEST_CD_SYS_CD]
-                ,[LAB_TEST_CD_SYS_NM]
-                ,[JURISDICTION_NM]
-                ,[OID]
-                ,[ALT_LAB_TEST_CD]
-                ,[LAB_RPT_STATUS]
-                ,[DANGER_CD_DESC]
-                ,[ALT_LAB_TEST_CD_DESC]
-                ,[ACCESSION_NBR]
-                ,[SPECIMEN_SRC]
-                ,[PRIORITY_CD]
-                ,[ALT_LAB_TEST_CD_SYS_CD]
-                ,[ALT_LAB_TEST_CD_SYS_NM]
-                ,[SPECIMEN_SITE]
-                ,[SPECIMEN_DETAILS]
-                ,[DANGER_CD]
-                ,[SPECIMEN_COLLECTION_VOL]
-                ,[SPECIMEN_COLLECTION_VOL_UNIT]
-                ,[SPECIMEN_DESC]
-                ,[SPECIMEN_SITE_DESC]
-                ,[CLINICAL_INFORMATION]
-                ,[LAB_TEST_UID]
-                ,[ROOT_ORDERED_TEST_PNTR]
-                ,[PARENT_TEST_PNTR]
-                ,[LAB_TEST_PNTR]
-                ,[SPECIMEN_ADD_TIME]
-                ,[SPECIMEN_LAST_CHANGE_TIME]
-                ,[SPECIMEN_COLLECTION_DT]
-                ,[SPECIMEN_NM]
-                ,[ROOT_ORDERED_TEST_NM]    
-                ,[PARENT_TEST_NM]
-                ,[TRANSCRIPTIONIST_NAME]
-                ,[TRANSCRIPTIONIST_ID]
-                ,[TRANSCRIPTIONIST_ASS_AUTH_CD]
-                ,[TRANSCRIPTIONIST_ASS_AUTH_TYPE]
-                ,[ASSISTANT_INTERPRETER_NAME]
-                ,[ASSISTANT_INTERPRETER_ID]
-                ,[ASSISTANT_INTER_ASS_AUTH_CD]
-                ,[ASSISTANT_INTER_ASS_AUTH_TYPE]
-                ,[RESULT_INTERPRETER_NAME]
-                ,[RECORD_STATUS_CD]
-                ,[RDB_LAST_REFRESH_TIME]
-                ,[CONDITION_CD]
-                ,[PROCESSING_DECISION_CD]
-                ,[PROCESSING_DECISION_DESC] 
-            )
-            SELECT 
-                RTRIM(CAST(ltf.LAB_TEST_STATUS AS VARCHAR(50))),
-                k.LAB_TEST_KEY,
-                RTRIM(CAST(ltf.LAB_RPT_LOCAL_ID AS VARCHAR(50))),
-                RTRIM(CAST(ltf.TEST_METHOD_CD AS VARCHAR(199))),
-                RTRIM(CAST(ltf.TEST_METHOD_CD_DESC AS VARCHAR(100))),
-                RTRIM(CAST(ltf.LAB_RPT_SHARE_IND AS VARCHAR(50))),
-                RTRIM(CAST(ltf.LAB_TEST_CD AS VARCHAR(1000))),
-                RTRIM(CAST(ltf.ELR_IND AS VARCHAR(50))),
-                ltf.LAB_RPT_UID,
-                RTRIM(CAST(ltf.LAB_TEST_CD_DESC AS VARCHAR(2000))),
-                RTRIM(CAST(ltf.INTERPRETATION_FLG as VARCHAR(20))),
-                ltf.LAB_RPT_RECEIVED_BY_PH_DT,
-                ltf.LAB_RPT_CREATED_BY,
-                RTRIM(CAST(ltf.REASON_FOR_TEST_DESC AS VARCHAR(4000))),
-                RTRIM(CAST(ltf.REASON_FOR_TEST_CD AS VARCHAR(4000))),
-                ltf.LAB_RPT_LAST_UPDATE_BY,
-                ltf.LAB_TEST_DT,
-                ltf.LAB_RPT_CREATED_DT,
-                RTRIM(CAST(ltf.LAB_TEST_TYPE AS VARCHAR(50))),
-                ltf.LAB_RPT_LAST_UPDATE_DT,
-                RTRIM(CAST(ltf.JURISDICTION_CD AS VARCHAR(20))),
-                RTRIM(CAST(ltf.LAB_TEST_CD_SYS_CD AS VARCHAR(50))),
-                RTRIM(CAST(ltf.LAB_TEST_CD_SYS_NM AS VARCHAR(100))),
-                RTRIM(CAST(ltf.JURISDICTION_NM AS VARCHAR(50))),
-                ltf.OID,
-                RTRIM(CAST(ltf.ALT_LAB_TEST_CD AS VARCHAR(50))),
-                CAST(ltf.LAB_RPT_STATUS AS VARCHAR(1)),
-                RTRIM(CAST(ltf.DANGER_CD_DESC AS VARCHAR(100))),
-                RTRIM(CAST(ltf.ALT_LAB_TEST_CD_DESC AS VARCHAR(1000))),
-                RTRIM(CAST(ltf.ACCESSION_NBR AS VARCHAR(100))),
-                RTRIM(CAST(ltf.SPECIMEN_SRC AS VARCHAR(50))),
-                RTRIM(CAST(ltf.PRIORITY_CD AS VARCHAR(20))),
-                RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_CD AS VARCHAR(50))),
-                RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_NM AS VARCHAR(100))),
-                RTRIM(CAST(ltf.SPECIMEN_SITE AS VARCHAR(20))),
-                RTRIM(CAST(ltf.SPECIMEN_DETAILS AS VARCHAR(100))),
-                RTRIM(CAST(ltf.DANGER_CD AS VARCHAR(20))),
-                RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL AS VARCHAR(20))),
-                RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL_UNIT AS VARCHAR(50))),
-                RTRIM(CAST(ltf.SPECIMEN_DESC AS VARCHAR(1000))),
-                RTRIM(CAST(ltf.SPECIMEN_SITE_DESC AS VARCHAR(100))),
-                RTRIM(CAST(ltf.CLINICAL_INFORMATION AS VARCHAR(1000))),
-                ltf.LAB_TEST_UID,
-                ltf.ROOT_ORDERED_TEST_PNTR,
-                ltf.PARENT_TEST_PNTR,
-                ltf.LAB_TEST_PNTR,
-                ltf.SPECIMEN_ADD_TIME,
-                ltf.SPECIMEN_LAST_CHANGE_TIME,
-                ltf.SPECIMEN_COLLECTION_DT,
-                RTRIM(CAST(ltf.SPECIMEN_NM AS VARCHAR(100))),
-                RTRIM(CAST(ltf.ROOT_ORDERED_TEST_NM AS VARCHAR(1000))),    
-                RTRIM(CAST(ltf.PARENT_TEST_NM AS VARCHAR(1000))),
-                RTRIM(CAST(ltf.TRANSCRIPTIONIST_NAME AS VARCHAR(300))),
-                RTRIM(CAST(ltf.TRANSCRIPTIONIST_ID AS VARCHAR(100))),
-                RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_CD AS VARCHAR(199))),
-                RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_TYPE AS VARCHAR(100))),
-                RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_NAME AS VARCHAR(300))),
-                RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_ID AS VARCHAR(100))),
-                RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_CD AS VARCHAR(199))),
-                RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_TYPE AS VARCHAR(100))),
-                RTRIM(CAST(ltf.RESULT_INTERPRETER_NAME AS VARCHAR(300))),
-                RTRIM(CAST(ltf.RECORD_STATUS_CD AS VARCHAR(8))),
-                GETDATE(),
-                RTRIM(CAST(ltf.CONDITION_CD AS VARCHAR(20))),
-                RTRIM(CAST(ltf.PROCESSING_DECISION_CD AS VARCHAR(50))),
-                RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS VARCHAR(50)))
-            FROM #lab_test_final ltf 
-            INNER JOIN #lab_test_N ltn 
-                ON ltn.LAB_TEST_UID = ltf.LAB_TEST_UID
-            INNER JOIN [dbo].nrt_lab_test_key k WITH (NOLOCK)
-                ON k.LAB_TEST_UID = ltf.LAB_TEST_UID;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, lt.* 
-                FROM [dbo].LAB_TEST lt 
-                INNER JOIN #lab_test_N ltn 
-                    ON ltn.LAB_TEST_UID = lt.LAB_TEST_UID
-                INNER JOIN [dbo].nrt_lab_test_key k WITH (NOLOCK)
-                    ON k.LAB_TEST_UID = lt.LAB_TEST_UID;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION 
-        
-        --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION 
-
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'UPDATING existing entries in LAB_TEST';
-
-            UPDATE lt 
-            SET 
-                lt.[LAB_TEST_STATUS]                = RTRIM(CAST(ltf.LAB_TEST_STATUS AS varchar(50))),
-                lt.[LAB_RPT_LOCAL_ID]               = RTRIM(CAST(ltf.LAB_RPT_LOCAL_ID AS varchar(50))),
-                lt.[TEST_METHOD_CD]                 = RTRIM(CAST(ltf.TEST_METHOD_CD AS varchar(199))),
-                lt.[TEST_METHOD_CD_DESC]            = RTRIM(CAST(ltf.TEST_METHOD_CD_DESC AS varchar(199))),
-                lt.[LAB_RPT_SHARE_IND]              = RTRIM(CAST(ltf.LAB_RPT_SHARE_IND AS varchar(50))),
-                lt.[LAB_TEST_CD]                    = RTRIM(CAST(ltf.LAB_TEST_CD AS varchar(1000))),
-                lt.[ELR_IND]                        = RTRIM(CAST(ltf.ELR_IND AS varchar(50))),
-                lt.[LAB_RPT_UID]                    = ltf.LAB_RPT_UID,
-                lt.[LAB_TEST_CD_DESC]               = RTRIM(CAST(ltf.LAB_TEST_CD_DESC AS varchar(2000))),
-                lt.[INTERPRETATION_FLG]             = RTRIM(CAST(ltf.INTERPRETATION_FLG AS varchar(20))),
-                lt.[LAB_RPT_RECEIVED_BY_PH_DT]      = ltf.LAB_RPT_RECEIVED_BY_PH_DT,
-                lt.[LAB_RPT_CREATED_BY]             = ltf.LAB_RPT_CREATED_BY,
-                lt.[REASON_FOR_TEST_DESC]           = RTRIM(CAST(ltf.REASON_FOR_TEST_DESC AS varchar(4000))),
-                lt.[REASON_FOR_TEST_CD]             = RTRIM(CAST(ltf.REASON_FOR_TEST_CD AS varchar(4000))),
-                lt.[LAB_RPT_LAST_UPDATE_BY]         = ltf.LAB_RPT_LAST_UPDATE_BY,
-                lt.[LAB_TEST_DT]                    = ltf.LAB_TEST_DT,
-                lt.[LAB_RPT_CREATED_DT]             = ltf.LAB_RPT_CREATED_DT,
-                lt.[LAB_TEST_TYPE]                  = RTRIM(CAST(ltf.LAB_TEST_TYPE AS varchar(50))),
-                lt.[LAB_RPT_LAST_UPDATE_DT]         = ltf.LAB_RPT_LAST_UPDATE_DT,
-                lt.[JURISDICTION_CD]                = RTRIM(CAST(ltf.JURISDICTION_CD AS varchar(20))),
-                lt.[LAB_TEST_CD_SYS_CD]             = RTRIM(CAST(ltf.LAB_TEST_CD_SYS_CD AS varchar(50))),
-                lt.[LAB_TEST_CD_SYS_NM]             = RTRIM(CAST(ltf.LAB_TEST_CD_SYS_NM AS varchar(100))),
-                lt.[JURISDICTION_NM]                = RTRIM(CAST(ltf.JURISDICTION_NM AS varchar(50))),
-                lt.[OID]                            = ltf.OID,
-                lt.[ALT_LAB_TEST_CD]                = RTRIM(CAST(ltf.ALT_LAB_TEST_CD AS varchar(50))),
-                lt.[LAB_RPT_STATUS]                 = CAST(ltf.LAB_RPT_STATUS AS char(1)),
-                lt.[DANGER_CD_DESC]                 = RTRIM(CAST(ltf.DANGER_CD_DESC AS varchar(100))),
-                lt.[ALT_LAB_TEST_CD_DESC]           = RTRIM(CAST(ltf.ALT_LAB_TEST_CD_DESC AS varchar(1000))),
-                lt.[ACCESSION_NBR]                  = RTRIM(CAST(ltf.ACCESSION_NBR AS varchar(199))),
-                lt.[SPECIMEN_SRC]                   = RTRIM(CAST(ltf.SPECIMEN_SRC AS varchar(50))),
-                lt.[PRIORITY_CD]                    = RTRIM(CAST(ltf.PRIORITY_CD AS varchar(20))),
-                lt.[ALT_LAB_TEST_CD_SYS_CD]         = RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_CD AS varchar(50))),
-                lt.[ALT_LAB_TEST_CD_SYS_NM]         = RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_NM AS varchar(100))),
-                lt.[SPECIMEN_SITE]                  = RTRIM(CAST(ltf.SPECIMEN_SITE AS varchar(20))),
-                lt.[SPECIMEN_DETAILS]               = RTRIM(CAST(ltf.SPECIMEN_DETAILS AS varchar(1000))),
-                lt.[DANGER_CD]                      = RTRIM(CAST(ltf.DANGER_CD AS varchar(20))),
-                lt.[SPECIMEN_COLLECTION_VOL]        = RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL AS varchar(20))),
-                lt.[SPECIMEN_COLLECTION_VOL_UNIT]   = RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL_UNIT AS varchar(50))),
-                lt.[SPECIMEN_DESC]                  = RTRIM(CAST(ltf.SPECIMEN_DESC AS varchar(1000))),
-                lt.[SPECIMEN_SITE_DESC]             = RTRIM(CAST(ltf.SPECIMEN_SITE_DESC AS varchar(100))),
-                lt.[CLINICAL_INFORMATION]           = RTRIM(CAST(ltf.CLINICAL_INFORMATION AS varchar(1000))),
-                lt.[ROOT_ORDERED_TEST_PNTR]         = ltf.ROOT_ORDERED_TEST_PNTR,
-                lt.[PARENT_TEST_PNTR]               = ltf.PARENT_TEST_PNTR,
-                lt.[LAB_TEST_PNTR]                  = ltf.LAB_TEST_PNTR,
-                lt.[SPECIMEN_ADD_TIME]              = ltf.SPECIMEN_ADD_TIME,
-                lt.[SPECIMEN_LAST_CHANGE_TIME]      = ltf.SPECIMEN_LAST_CHANGE_TIME,
-                lt.[SPECIMEN_COLLECTION_DT]         = ltf.SPECIMEN_COLLECTION_DT,
-                lt.[SPECIMEN_NM]                    = RTRIM(CAST(ltf.SPECIMEN_NM AS varchar(100))),
-                lt.[ROOT_ORDERED_TEST_NM]           = RTRIM(CAST(ltf.ROOT_ORDERED_TEST_NM AS varchar(1000))),
-                lt.[PARENT_TEST_NM]                 = RTRIM(CAST(ltf.PARENT_TEST_NM AS varchar(1000))),
-                lt.[TRANSCRIPTIONIST_NAME]          = RTRIM(CAST(ltf.TRANSCRIPTIONIST_NAME AS varchar(300))),
-                lt.[TRANSCRIPTIONIST_ID]            = RTRIM(CAST(ltf.TRANSCRIPTIONIST_ID AS varchar(100))),
-                lt.[TRANSCRIPTIONIST_ASS_AUTH_CD]   = RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_CD AS varchar(199))),
-                lt.[TRANSCRIPTIONIST_ASS_AUTH_TYPE] = RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_TYPE AS varchar(100))),
-                lt.[ASSISTANT_INTERPRETER_NAME]     = RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_NAME AS varchar(300))),
-                lt.[ASSISTANT_INTERPRETER_ID]       = RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_ID AS varchar(100))),
-                lt.[ASSISTANT_INTER_ASS_AUTH_CD]    = RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_CD AS varchar(199))),
-                lt.[ASSISTANT_INTER_ASS_AUTH_TYPE]  = RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_TYPE AS varchar(100))),
-                lt.[RESULT_INTERPRETER_NAME]        = RTRIM(CAST(ltf.RESULT_INTERPRETER_NAME AS varchar(300))),
-                lt.[RECORD_STATUS_CD]               = RTRIM(CAST(ltf.RECORD_STATUS_CD AS varchar(8))),
-                lt.[RDB_LAST_REFRESH_TIME]          = GETDATE(),
-                lt.[CONDITION_CD]                   = RTRIM(CAST(ltf.CONDITION_CD AS varchar(20))),
-                lt.[PROCESSING_DECISION_CD]         = RTRIM(CAST(ltf.PROCESSING_DECISION_CD AS varchar(50))),
-                lt.[PROCESSING_DECISION_DESC]       = RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS varchar(50)))
-            FROM [dbo].LAB_TEST lt 
-            INNER JOIN #lab_test_final ltf 
-                ON lt.LAB_TEST_UID = ltf.LAB_TEST_UID
-            INNER JOIN #lab_test_E lte 
-                ON lte.LAB_TEST_UID = ltf.LAB_TEST_UID;
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, lt.* 
-                FROM [dbo].LAB_TEST lt 
-                INNER JOIN #lab_test_final ltf 
-                    ON lt.LAB_TEST_UID = ltf.LAB_TEST_UID
-                INNER JOIN #lab_test_E lte 
-                    ON lte.LAB_TEST_UID = ltf.LAB_TEST_UID;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION     
-
-        --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION;
-
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST Records';
-
-
-            /* Update records associated to Inactive Orders using Root Order UID. */
-
-            ;WITH inactive_orders AS (
-                SELECT 
-                    lt.root_ordered_test_pntr
-                FROM dbo.LAB_TEST lt WITH (NOLOCK)
-                INNER JOIN #lab_test_D ltd
-                    ON ltd.LAB_TEST_UID = lt.LAB_TEST_UID
-                WHERE 
-                    lt.lab_test_type = 'Order'
-                    AND lt.record_status_cd = 'INACTIVE'
-            )
-            UPDATE lt
-            SET record_status_cd = 'INACTIVE'
-            FROM [dbo].LAB_TEST lt 
-            INNER JOIN inactive_orders inor 
-                ON inor.root_ordered_test_pntr = lt.root_ordered_test_pntr
-            WHERE
-                record_status_cd <> 'INACTIVE';
-
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, lt.* 
-                FROM [dbo].LAB_TEST lt WITH (NOLOCK) 
-                INNER JOIN #lab_test_D ltd
-                    ON ltd.LAB_TEST_UID = lt.LAB_TEST_UID;
-
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-        --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION 
-
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'UPDATING [dbo].nrt_lab_test_key table';
-
-            UPDATE ltk 
-            SET 
-                ltk.[updated_dttm] = GETDATE()
-            FROM [dbo].nrt_lab_test_key ltk
-            INNER JOIN #lab_test_E lte 
-                ON lte.LAB_TEST_UID = ltk.LAB_TEST_UID;    
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, ltk.* 
-                FROM [dbo].nrt_lab_test_key ltk
-                INNER JOIN #lab_test_E lte 
-                    ON lte.LAB_TEST_UID = ltk.LAB_TEST_UID;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-            
-
-        COMMIT TRANSACTION   
-
-        --------------------------------------------------------------------------------------------------------
-
         -- Lab_Report_User_Comment Dimension
         --------------------------------------------------------------------------------------------------------
 
@@ -1055,12 +698,23 @@ BEGIN
         IF OBJECT_ID('#nrt_observation_txt_data', 'U') IS NOT NULL
             DROP TABLE #nrt_observation_txt_data;
 
-        ;WITH obstxt AS (
+        ;WITH 
+		followup AS (
+			SELECT value as observation_uid  
+			FROM STRING_SPLIT(
+				(SELECT STRING_AGG(followup_observation_uid , ',' ) FROM #observation_data), ','
+			) 
+		),
+		obstxt AS (
             SELECT obstxt.*
             FROM [dbo].nrt_observation_txt obstxt WITH (NOLOCK)
             INNER JOIN #obs_ids ids ON ids.observation_uid =  obstxt.observation_uid
+            UNION ALL 
+            SELECT obstxt.*
+            FROM [dbo].nrt_observation_txt obstxt WITH (NOLOCK)
+			INNER JOIN followup f ON f.observation_uid = obstxt.observation_uid
         )
-        SELECT 
+        SELECT DISTINCT
             obstxt.*           
         INTO #nrt_observation_txt_data
         FROM obstxt
@@ -1196,8 +850,352 @@ BEGIN
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
         --------------------------------------------------------------------------------------------------------
+        --requires future enhancement to implement retry mechanism for ids that do not make it to target tables 
+        --due to logical errors in catch section.
 
         BEGIN TRANSACTION
+
+            SELECT @rdb_last_refresh_time = GETDATE()
+            
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET @PROC_STEP_NAME = 'GENERATING keys for #lab_test_N';
+
+            INSERT INTO [dbo].nrt_lab_test_key (LAB_TEST_UID)
+            SELECT LAB_TEST_UID 
+            FROM #lab_test_N
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF @debug = 'true'
+                SELECT @Proc_Step_Name AS step, k.* 
+                FROM [dbo].nrt_lab_test_key k WITH (NOLOCK)
+                INNER JOIN #lab_test_N ltn
+                    ON ltn.LAB_TEST_UID = k.LAB_TEST_UID;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+            --------------------------------------------------------------------------------------------------------
+
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET @PROC_STEP_NAME = 'INSERTING new entries to LAB_TEST';
+
+            INSERT INTO [dbo].LAB_TEST (
+                [LAB_TEST_STATUS]
+                ,[LAB_TEST_KEY]
+                ,[LAB_RPT_LOCAL_ID]
+                ,[TEST_METHOD_CD]
+                ,[TEST_METHOD_CD_DESC]
+                ,[LAB_RPT_SHARE_IND]
+                ,[LAB_TEST_CD]
+                ,[ELR_IND]
+                ,[LAB_RPT_UID]
+                ,[LAB_TEST_CD_DESC]
+                ,[INTERPRETATION_FLG]
+                ,[LAB_RPT_RECEIVED_BY_PH_DT]
+                ,[LAB_RPT_CREATED_BY]
+                ,[REASON_FOR_TEST_DESC]
+                ,[REASON_FOR_TEST_CD]
+                ,[LAB_RPT_LAST_UPDATE_BY]
+                ,[LAB_TEST_DT]
+                ,[LAB_RPT_CREATED_DT]
+                ,[LAB_TEST_TYPE]
+                ,[LAB_RPT_LAST_UPDATE_DT]
+                ,[JURISDICTION_CD]
+                ,[LAB_TEST_CD_SYS_CD]
+                ,[LAB_TEST_CD_SYS_NM]
+                ,[JURISDICTION_NM]
+                ,[OID]
+                ,[ALT_LAB_TEST_CD]
+                ,[LAB_RPT_STATUS]
+                ,[DANGER_CD_DESC]
+                ,[ALT_LAB_TEST_CD_DESC]
+                ,[ACCESSION_NBR]
+                ,[SPECIMEN_SRC]
+                ,[PRIORITY_CD]
+                ,[ALT_LAB_TEST_CD_SYS_CD]
+                ,[ALT_LAB_TEST_CD_SYS_NM]
+                ,[SPECIMEN_SITE]
+                ,[SPECIMEN_DETAILS]
+                ,[DANGER_CD]
+                ,[SPECIMEN_COLLECTION_VOL]
+                ,[SPECIMEN_COLLECTION_VOL_UNIT]
+                ,[SPECIMEN_DESC]
+                ,[SPECIMEN_SITE_DESC]
+                ,[CLINICAL_INFORMATION]
+                ,[LAB_TEST_UID]
+                ,[ROOT_ORDERED_TEST_PNTR]
+                ,[PARENT_TEST_PNTR]
+                ,[LAB_TEST_PNTR]
+                ,[SPECIMEN_ADD_TIME]
+                ,[SPECIMEN_LAST_CHANGE_TIME]
+                ,[SPECIMEN_COLLECTION_DT]
+                ,[SPECIMEN_NM]
+                ,[ROOT_ORDERED_TEST_NM]    
+                ,[PARENT_TEST_NM]
+                ,[TRANSCRIPTIONIST_NAME]
+                ,[TRANSCRIPTIONIST_ID]
+                ,[TRANSCRIPTIONIST_ASS_AUTH_CD]
+                ,[TRANSCRIPTIONIST_ASS_AUTH_TYPE]
+                ,[ASSISTANT_INTERPRETER_NAME]
+                ,[ASSISTANT_INTERPRETER_ID]
+                ,[ASSISTANT_INTER_ASS_AUTH_CD]
+                ,[ASSISTANT_INTER_ASS_AUTH_TYPE]
+                ,[RESULT_INTERPRETER_NAME]
+                ,[RECORD_STATUS_CD]
+                ,[RDB_LAST_REFRESH_TIME]
+                ,[CONDITION_CD]
+                ,[PROCESSING_DECISION_CD]
+                ,[PROCESSING_DECISION_DESC] 
+            )
+            SELECT 
+                RTRIM(CAST(ltf.LAB_TEST_STATUS AS VARCHAR(50))),
+                k.LAB_TEST_KEY,
+                RTRIM(CAST(ltf.LAB_RPT_LOCAL_ID AS VARCHAR(50))),
+                RTRIM(CAST(ltf.TEST_METHOD_CD AS VARCHAR(199))),
+                RTRIM(CAST(ltf.TEST_METHOD_CD_DESC AS VARCHAR(100))),
+                RTRIM(CAST(ltf.LAB_RPT_SHARE_IND AS VARCHAR(50))),
+                RTRIM(CAST(ltf.LAB_TEST_CD AS VARCHAR(1000))),
+                RTRIM(CAST(ltf.ELR_IND AS VARCHAR(50))),
+                ltf.LAB_RPT_UID,
+                RTRIM(CAST(ltf.LAB_TEST_CD_DESC AS VARCHAR(2000))),
+                RTRIM(CAST(ltf.INTERPRETATION_FLG as VARCHAR(20))),
+                ltf.LAB_RPT_RECEIVED_BY_PH_DT,
+                ltf.LAB_RPT_CREATED_BY,
+                RTRIM(CAST(ltf.REASON_FOR_TEST_DESC AS VARCHAR(4000))),
+                RTRIM(CAST(ltf.REASON_FOR_TEST_CD AS VARCHAR(4000))),
+                ltf.LAB_RPT_LAST_UPDATE_BY,
+                ltf.LAB_TEST_DT,
+                ltf.LAB_RPT_CREATED_DT,
+                RTRIM(CAST(ltf.LAB_TEST_TYPE AS VARCHAR(50))),
+                ltf.LAB_RPT_LAST_UPDATE_DT,
+                RTRIM(CAST(ltf.JURISDICTION_CD AS VARCHAR(20))),
+                RTRIM(CAST(ltf.LAB_TEST_CD_SYS_CD AS VARCHAR(50))),
+                RTRIM(CAST(ltf.LAB_TEST_CD_SYS_NM AS VARCHAR(100))),
+                RTRIM(CAST(ltf.JURISDICTION_NM AS VARCHAR(50))),
+                ltf.OID,
+                RTRIM(CAST(ltf.ALT_LAB_TEST_CD AS VARCHAR(50))),
+                CAST(ltf.LAB_RPT_STATUS AS VARCHAR(1)),
+                RTRIM(CAST(ltf.DANGER_CD_DESC AS VARCHAR(100))),
+                RTRIM(CAST(ltf.ALT_LAB_TEST_CD_DESC AS VARCHAR(1000))),
+                RTRIM(CAST(ltf.ACCESSION_NBR AS VARCHAR(100))),
+                RTRIM(CAST(ltf.SPECIMEN_SRC AS VARCHAR(50))),
+                RTRIM(CAST(ltf.PRIORITY_CD AS VARCHAR(20))),
+                RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_CD AS VARCHAR(50))),
+                RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_NM AS VARCHAR(100))),
+                RTRIM(CAST(ltf.SPECIMEN_SITE AS VARCHAR(20))),
+                RTRIM(CAST(ltf.SPECIMEN_DETAILS AS VARCHAR(100))),
+                RTRIM(CAST(ltf.DANGER_CD AS VARCHAR(20))),
+                RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL AS VARCHAR(20))),
+                RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL_UNIT AS VARCHAR(50))),
+                RTRIM(CAST(ltf.SPECIMEN_DESC AS VARCHAR(1000))),
+                RTRIM(CAST(ltf.SPECIMEN_SITE_DESC AS VARCHAR(100))),
+                RTRIM(CAST(ltf.CLINICAL_INFORMATION AS VARCHAR(1000))),
+                ltf.LAB_TEST_UID,
+                ltf.ROOT_ORDERED_TEST_PNTR,
+                ltf.PARENT_TEST_PNTR,
+                ltf.LAB_TEST_PNTR,
+                ltf.SPECIMEN_ADD_TIME,
+                ltf.SPECIMEN_LAST_CHANGE_TIME,
+                ltf.SPECIMEN_COLLECTION_DT,
+                RTRIM(CAST(ltf.SPECIMEN_NM AS VARCHAR(100))),
+                RTRIM(CAST(ltf.ROOT_ORDERED_TEST_NM AS VARCHAR(1000))),    
+                RTRIM(CAST(ltf.PARENT_TEST_NM AS VARCHAR(1000))),
+                RTRIM(CAST(ltf.TRANSCRIPTIONIST_NAME AS VARCHAR(300))),
+                RTRIM(CAST(ltf.TRANSCRIPTIONIST_ID AS VARCHAR(100))),
+                RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_CD AS VARCHAR(199))),
+                RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_TYPE AS VARCHAR(100))),
+                RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_NAME AS VARCHAR(300))),
+                RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_ID AS VARCHAR(100))),
+                RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_CD AS VARCHAR(199))),
+                RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_TYPE AS VARCHAR(100))),
+                RTRIM(CAST(ltf.RESULT_INTERPRETER_NAME AS VARCHAR(300))),
+                RTRIM(CAST(ltf.RECORD_STATUS_CD AS VARCHAR(8))),
+                @rdb_last_refresh_time,
+                RTRIM(CAST(ltf.CONDITION_CD AS VARCHAR(20))),
+                RTRIM(CAST(ltf.PROCESSING_DECISION_CD AS VARCHAR(50))),
+                RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS VARCHAR(50)))
+            FROM #lab_test_final ltf 
+            INNER JOIN #lab_test_N ltn 
+                ON ltn.LAB_TEST_UID = ltf.LAB_TEST_UID
+            INNER JOIN [dbo].nrt_lab_test_key k WITH (NOLOCK)
+                ON k.LAB_TEST_UID = ltf.LAB_TEST_UID;
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF @debug = 'true'
+                SELECT @Proc_Step_Name AS step, lt.* 
+                FROM [dbo].LAB_TEST lt 
+                INNER JOIN #lab_test_N ltn 
+                    ON ltn.LAB_TEST_UID = lt.LAB_TEST_UID
+                INNER JOIN [dbo].nrt_lab_test_key k WITH (NOLOCK)
+                    ON k.LAB_TEST_UID = lt.LAB_TEST_UID;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+            --------------------------------------------------------------------------------------------------------
+
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET @PROC_STEP_NAME = 'UPDATING existing entries in LAB_TEST';
+
+            UPDATE lt 
+            SET 
+                lt.[LAB_TEST_STATUS]                = RTRIM(CAST(ltf.LAB_TEST_STATUS AS varchar(50))),
+                lt.[LAB_RPT_LOCAL_ID]               = RTRIM(CAST(ltf.LAB_RPT_LOCAL_ID AS varchar(50))),
+                lt.[TEST_METHOD_CD]                 = RTRIM(CAST(ltf.TEST_METHOD_CD AS varchar(199))),
+                lt.[TEST_METHOD_CD_DESC]            = RTRIM(CAST(ltf.TEST_METHOD_CD_DESC AS varchar(199))),
+                lt.[LAB_RPT_SHARE_IND]              = RTRIM(CAST(ltf.LAB_RPT_SHARE_IND AS varchar(50))),
+                lt.[LAB_TEST_CD]                    = RTRIM(CAST(ltf.LAB_TEST_CD AS varchar(1000))),
+                lt.[ELR_IND]                        = RTRIM(CAST(ltf.ELR_IND AS varchar(50))),
+                lt.[LAB_RPT_UID]                    = ltf.LAB_RPT_UID,
+                lt.[LAB_TEST_CD_DESC]               = RTRIM(CAST(ltf.LAB_TEST_CD_DESC AS varchar(2000))),
+                lt.[INTERPRETATION_FLG]             = RTRIM(CAST(ltf.INTERPRETATION_FLG AS varchar(20))),
+                lt.[LAB_RPT_RECEIVED_BY_PH_DT]      = ltf.LAB_RPT_RECEIVED_BY_PH_DT,
+                lt.[LAB_RPT_CREATED_BY]             = ltf.LAB_RPT_CREATED_BY,
+                lt.[REASON_FOR_TEST_DESC]           = RTRIM(CAST(ltf.REASON_FOR_TEST_DESC AS varchar(4000))),
+                lt.[REASON_FOR_TEST_CD]             = RTRIM(CAST(ltf.REASON_FOR_TEST_CD AS varchar(4000))),
+                lt.[LAB_RPT_LAST_UPDATE_BY]         = ltf.LAB_RPT_LAST_UPDATE_BY,
+                lt.[LAB_TEST_DT]                    = ltf.LAB_TEST_DT,
+                lt.[LAB_RPT_CREATED_DT]             = ltf.LAB_RPT_CREATED_DT,
+                lt.[LAB_TEST_TYPE]                  = RTRIM(CAST(ltf.LAB_TEST_TYPE AS varchar(50))),
+                lt.[LAB_RPT_LAST_UPDATE_DT]         = ltf.LAB_RPT_LAST_UPDATE_DT,
+                lt.[JURISDICTION_CD]                = RTRIM(CAST(ltf.JURISDICTION_CD AS varchar(20))),
+                lt.[LAB_TEST_CD_SYS_CD]             = RTRIM(CAST(ltf.LAB_TEST_CD_SYS_CD AS varchar(50))),
+                lt.[LAB_TEST_CD_SYS_NM]             = RTRIM(CAST(ltf.LAB_TEST_CD_SYS_NM AS varchar(100))),
+                lt.[JURISDICTION_NM]                = RTRIM(CAST(ltf.JURISDICTION_NM AS varchar(50))),
+                lt.[OID]                            = ltf.OID,
+                lt.[ALT_LAB_TEST_CD]                = RTRIM(CAST(ltf.ALT_LAB_TEST_CD AS varchar(50))),
+                lt.[LAB_RPT_STATUS]                 = CAST(ltf.LAB_RPT_STATUS AS char(1)),
+                lt.[DANGER_CD_DESC]                 = RTRIM(CAST(ltf.DANGER_CD_DESC AS varchar(100))),
+                lt.[ALT_LAB_TEST_CD_DESC]           = RTRIM(CAST(ltf.ALT_LAB_TEST_CD_DESC AS varchar(1000))),
+                lt.[ACCESSION_NBR]                  = RTRIM(CAST(ltf.ACCESSION_NBR AS varchar(199))),
+                lt.[SPECIMEN_SRC]                   = RTRIM(CAST(ltf.SPECIMEN_SRC AS varchar(50))),
+                lt.[PRIORITY_CD]                    = RTRIM(CAST(ltf.PRIORITY_CD AS varchar(20))),
+                lt.[ALT_LAB_TEST_CD_SYS_CD]         = RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_CD AS varchar(50))),
+                lt.[ALT_LAB_TEST_CD_SYS_NM]         = RTRIM(CAST(ltf.ALT_LAB_TEST_CD_SYS_NM AS varchar(100))),
+                lt.[SPECIMEN_SITE]                  = RTRIM(CAST(ltf.SPECIMEN_SITE AS varchar(20))),
+                lt.[SPECIMEN_DETAILS]               = RTRIM(CAST(ltf.SPECIMEN_DETAILS AS varchar(1000))),
+                lt.[DANGER_CD]                      = RTRIM(CAST(ltf.DANGER_CD AS varchar(20))),
+                lt.[SPECIMEN_COLLECTION_VOL]        = RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL AS varchar(20))),
+                lt.[SPECIMEN_COLLECTION_VOL_UNIT]   = RTRIM(CAST(ltf.SPECIMEN_COLLECTION_VOL_UNIT AS varchar(50))),
+                lt.[SPECIMEN_DESC]                  = RTRIM(CAST(ltf.SPECIMEN_DESC AS varchar(1000))),
+                lt.[SPECIMEN_SITE_DESC]             = RTRIM(CAST(ltf.SPECIMEN_SITE_DESC AS varchar(100))),
+                lt.[CLINICAL_INFORMATION]           = RTRIM(CAST(ltf.CLINICAL_INFORMATION AS varchar(1000))),
+                lt.[ROOT_ORDERED_TEST_PNTR]         = ltf.ROOT_ORDERED_TEST_PNTR,
+                lt.[PARENT_TEST_PNTR]               = ltf.PARENT_TEST_PNTR,
+                lt.[LAB_TEST_PNTR]                  = ltf.LAB_TEST_PNTR,
+                lt.[SPECIMEN_ADD_TIME]              = ltf.SPECIMEN_ADD_TIME,
+                lt.[SPECIMEN_LAST_CHANGE_TIME]      = ltf.SPECIMEN_LAST_CHANGE_TIME,
+                lt.[SPECIMEN_COLLECTION_DT]         = ltf.SPECIMEN_COLLECTION_DT,
+                lt.[SPECIMEN_NM]                    = RTRIM(CAST(ltf.SPECIMEN_NM AS varchar(100))),
+                lt.[ROOT_ORDERED_TEST_NM]           = RTRIM(CAST(ltf.ROOT_ORDERED_TEST_NM AS varchar(1000))),
+                lt.[PARENT_TEST_NM]                 = RTRIM(CAST(ltf.PARENT_TEST_NM AS varchar(1000))),
+                lt.[TRANSCRIPTIONIST_NAME]          = RTRIM(CAST(ltf.TRANSCRIPTIONIST_NAME AS varchar(300))),
+                lt.[TRANSCRIPTIONIST_ID]            = RTRIM(CAST(ltf.TRANSCRIPTIONIST_ID AS varchar(100))),
+                lt.[TRANSCRIPTIONIST_ASS_AUTH_CD]   = RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_CD AS varchar(199))),
+                lt.[TRANSCRIPTIONIST_ASS_AUTH_TYPE] = RTRIM(CAST(ltf.TRANSCRIPTIONIST_ASS_AUTH_TYPE AS varchar(100))),
+                lt.[ASSISTANT_INTERPRETER_NAME]     = RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_NAME AS varchar(300))),
+                lt.[ASSISTANT_INTERPRETER_ID]       = RTRIM(CAST(ltf.ASSISTANT_INTERPRETER_ID AS varchar(100))),
+                lt.[ASSISTANT_INTER_ASS_AUTH_CD]    = RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_CD AS varchar(199))),
+                lt.[ASSISTANT_INTER_ASS_AUTH_TYPE]  = RTRIM(CAST(ltf.ASSISTANT_INTER_ASS_AUTH_TYPE AS varchar(100))),
+                lt.[RESULT_INTERPRETER_NAME]        = RTRIM(CAST(ltf.RESULT_INTERPRETER_NAME AS varchar(300))),
+                lt.[RECORD_STATUS_CD]               = RTRIM(CAST(ltf.RECORD_STATUS_CD AS varchar(8))),
+                lt.[RDB_LAST_REFRESH_TIME]          = @rdb_last_refresh_time,
+                lt.[CONDITION_CD]                   = RTRIM(CAST(ltf.CONDITION_CD AS varchar(20))),
+                lt.[PROCESSING_DECISION_CD]         = RTRIM(CAST(ltf.PROCESSING_DECISION_CD AS varchar(50))),
+                lt.[PROCESSING_DECISION_DESC]       = RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS varchar(50)))
+            FROM [dbo].LAB_TEST lt 
+            INNER JOIN #lab_test_final ltf 
+                ON lt.LAB_TEST_UID = ltf.LAB_TEST_UID
+            INNER JOIN #lab_test_E lte 
+                ON lte.LAB_TEST_UID = ltf.LAB_TEST_UID;
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF @debug = 'true'
+                SELECT @Proc_Step_Name AS step, lt.* 
+                FROM [dbo].LAB_TEST lt 
+                INNER JOIN #lab_test_final ltf 
+                    ON lt.LAB_TEST_UID = ltf.LAB_TEST_UID
+                INNER JOIN #lab_test_E lte 
+                    ON lte.LAB_TEST_UID = ltf.LAB_TEST_UID;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+            --------------------------------------------------------------------------------------------------------
+
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST Records';
+
+
+            /* Update records associated to Inactive Orders using Root Order UID. */
+
+            ;WITH inactive_orders AS (
+                SELECT 
+                    lt.root_ordered_test_pntr
+                FROM dbo.LAB_TEST lt WITH (NOLOCK)
+                INNER JOIN #lab_test_D ltd
+                    ON ltd.LAB_TEST_UID = lt.LAB_TEST_UID
+                WHERE 
+                    lt.lab_test_type = 'Order'
+                    AND lt.record_status_cd = 'INACTIVE'
+            )
+            UPDATE lt
+            SET record_status_cd = 'INACTIVE'
+            FROM [dbo].LAB_TEST lt 
+            INNER JOIN inactive_orders inor 
+                ON inor.root_ordered_test_pntr = lt.root_ordered_test_pntr
+            WHERE
+                record_status_cd <> 'INACTIVE';
+
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF @debug = 'true'
+                SELECT @Proc_Step_Name AS step, lt.* 
+                FROM [dbo].LAB_TEST lt WITH (NOLOCK) 
+                INNER JOIN #lab_test_D ltd
+                    ON ltd.LAB_TEST_UID = lt.LAB_TEST_UID;
+
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+
+            --------------------------------------------------------------------------------------------------------
+
+            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET @PROC_STEP_NAME = 'UPDATING field updated_dttm in [dbo].nrt_lab_test_key table';
+
+            UPDATE ltk 
+            SET 
+                ltk.[updated_dttm] = @rdb_last_refresh_time
+            FROM [dbo].nrt_lab_test_key ltk
+            INNER JOIN #lab_test_E lte 
+                ON lte.LAB_TEST_UID = ltk.LAB_TEST_UID;    
+
+            SELECT @RowCount_no = @@ROWCOUNT;
+
+            IF @debug = 'true'
+                SELECT @Proc_Step_Name AS step, ltk.* 
+                FROM [dbo].nrt_lab_test_key ltk
+                INNER JOIN #lab_test_E lte 
+                    ON lte.LAB_TEST_UID = ltk.LAB_TEST_UID;
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
+            
+
+            --------------------------------------------------------------------------------------------------------
+
+            -- LAB_RPT_USER_COMMENT Dimension 
+            --------------------------------------------------------------------------------------------------------
             
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'GENERATING keys for #lab_rpt_user_comment_N';
@@ -1219,12 +1217,8 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
+            --------------------------------------------------------------------------------------------------------
 
-        COMMIT TRANSACTION
-
-        --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
 
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'INSERTING new entries to LAB_RPT_USER_COMMENT';
@@ -1247,7 +1241,7 @@ BEGIN
                 lk.LAB_TEST_KEY,
                 CAST(ucd.RECORD_STATUS_CD AS VARCHAR(8)) ,
                 ucd.LAB_TEST_UID,
-                GETDATE()
+                @rdb_last_refresh_time
             FROM #lab_rpt_user_comment_data ucd
             INNER JOIN #lab_rpt_user_comment_N ucdn 
                 ON ucdn.observation_uid = ucd.observation_uid 
@@ -1276,11 +1270,7 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION
-
-        --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION
+            --------------------------------------------------------------------------------------------------------
 
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'UPDATING existing entries in LAB_RPT_USER_COMMENT';
@@ -1291,7 +1281,7 @@ BEGIN
                 COMMENTS_FOR_ELR_DT = ucd.COMMENTS_FOR_ELR_DT,
                 USER_COMMENT_CREATED_BY = ucd.USER_COMMENT_CREATED_BY,
                 RECORD_STATUS_CD = CAST(ucd.RECORD_STATUS_CD AS VARCHAR(8)),
-                RDB_LAST_REFRESH_TIME = GETDATE()
+                RDB_LAST_REFRESH_TIME = @rdb_last_refresh_time
             FROM [dbo].LAB_RPT_USER_COMMENT lruc 
             INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
                 ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY 
@@ -1326,18 +1316,14 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION
-
-        --------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION 
+            --------------------------------------------------------------------------------------------------------
 
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'UPDATING [dbo].nrt_lab_rpt_user_comment_key table';
+            SET @PROC_STEP_NAME = 'UPDATING field updated_dttm in [dbo].nrt_lab_rpt_user_comment_key table';
 
             UPDATE uck 
             SET 
-                uck.[updated_dttm] = GETDATE()
+                uck.[updated_dttm] = @rdb_last_refresh_time
             FROM [dbo].nrt_lab_rpt_user_comment_key uck
             INNER JOIN #lab_rpt_user_comment_E ucde
                 ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID 
@@ -1356,13 +1342,8 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
             
-
-        COMMIT TRANSACTION     
-
-        --------------------------------------------------------------------------------------------------------
+            --------------------------------------------------------------------------------------------------------
         
-        BEGIN TRANSACTION 
-
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'DELETING inactive entries from LAB_RPT_USER_COMMENT';
 
@@ -1398,11 +1379,10 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
         
-        COMMIT TRANSACTION
+            --------------------------------------------------------------------------------------------------------
 
-        --------------------------------------------------------------------------------------------------------
-        
-        BEGIN TRANSACTION 
+            -- LAB_TEST Dimension
+            --------------------------------------------------------------------------------------------------------
 
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'DELETING inactive entries from LAB_TEST';
