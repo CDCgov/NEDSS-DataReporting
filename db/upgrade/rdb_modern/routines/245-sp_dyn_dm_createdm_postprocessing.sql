@@ -255,14 +255,14 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
             FROM INFORMATION_SCHEMA.columns 
             where table_name = '''+ @tgt_table_nm +''' and TABLE_SCHEMA = ''dbo'')  
                 ) snt) 
-                select @altercolsOUT = STRING_AGG( col_nm + '' '' +  col_data_type + 
+                select @altercolsOUT = STRING_AGG(CAST( col_nm + '' '' +  col_data_type + 
                     CASE 
                         WHEN col_data_type IN (''decimal'', ''numeric'') THEN ''('' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + '','' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + '')'' 
                         WHEN col_data_type = ''varchar'' THEN ''('' + 
                             CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN ''MAX'' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END 
                         + '') '' 
                         ELSE '''' 
-                    END, '', '') from col_cte';
+                    END AS NVARCHAR(MAX)), '', '') from col_cte';
 
                 DECLARE @altercols NVARCHAR(MAX);
 
