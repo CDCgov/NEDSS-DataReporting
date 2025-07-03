@@ -88,15 +88,15 @@ BEGIN
         I.PROG_AREA_CD,
         I.JURISDICTION_CD,
         I.PROGRAM_JURISDICTION_OID,
-		cvg1.code_short_desc_txt AS VACCINATION_ADMINISTERED_NM,
+		COALESCE(cvg1.code_short_desc_txt, '') AS VACCINATION_ADMINISTERED_NM,
 		I.TARGET_SITE_CD,
-	    cvg2.code_short_desc_txt AS VACCINATION_ANATOMICAL_SITE,
+	    COALESCE(cvg2.code_short_desc_txt, '') AS VACCINATION_ANATOMICAL_SITE,
 	    I.AGE_AT_VACC_UNIT_CD,
-	    cvg3.code_short_desc_txt AS AGE_AT_VACCINATION_UNIT,
+	    COALESCE(cvg3.code_short_desc_txt, '') AS AGE_AT_VACCINATION_UNIT,
 	    I.VACC_MFGR_CD,
-	    cvg4.code_short_desc_txt AS VACCINE_MANUFACTURER_NM,
+	    COALESCE(cvg4.code_short_desc_txt, '') AS VACCINE_MANUFACTURER_NM,
 	    I.VACC_INFO_SOURCE_CD,
-	    cvg5.code_short_desc_txt AS VACCINE_INFO_SOURCE
+	    COALESCE(cvg5.code_short_desc_txt, '') AS VACCINE_INFO_SOURCE
 	INTO #TMP_VACCINATION_INIT
 	FROM NBS_ODSE.dbo.INTERVENTION I with (nolock)
 	INNER JOIN (
