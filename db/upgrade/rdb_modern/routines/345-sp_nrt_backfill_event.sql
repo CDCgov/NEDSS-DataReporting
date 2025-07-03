@@ -14,9 +14,8 @@ Begin
     
         select 
             record_key,
-            entity_type,
+            entity,
             record_uid_list,
-            rdb_table_map,
             batch_id,
             err_description,
             status_cd,

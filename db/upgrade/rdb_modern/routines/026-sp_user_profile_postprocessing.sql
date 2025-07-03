@@ -74,9 +74,8 @@ BEGIN
           IF @backfill_list IS NOT NULL
                BEGIN
                     EXECUTE dbo.sp_nrt_backfill_postprocessing 
-                    @entity_type = 'AUTH_USER',
+                    @entity = 'AUTH_USER',
                     @record_uid_list = @id_list,
-                    @rdb_table_map = NULL,
                     @batch_id = @batch_id,
                     @err_description = 'Missing NRT Record: sp_user_profile_postprocessing',
                     @status_cd  = 'READY',

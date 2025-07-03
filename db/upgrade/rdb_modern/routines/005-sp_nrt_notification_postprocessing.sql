@@ -79,9 +79,8 @@ BEGIN
           IF @backfill_list IS NOT NULL
                BEGIN
                     EXECUTE dbo.sp_nrt_backfill_postprocessing 
-                    @entity_type = 'NOTIFICATION',
+                    @entity = 'NOTIFICATION',
                     @record_uid_list = @notification_uids,
-                    @rdb_table_map = NULL,
                     @batch_id = @batch_id,
                     @err_description = 'Missing NRT Record: sp_nrt_notification_postprocessing',
                     @status_cd  = 'READY',

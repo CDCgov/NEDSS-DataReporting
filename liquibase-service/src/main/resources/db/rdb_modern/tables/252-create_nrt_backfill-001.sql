@@ -3,9 +3,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_backfill' and xtype = 
 
         CREATE TABLE [dbo].nrt_backfill (
             record_key  bigint IDENTITY(1,1) NOT NULL,
-            entity_type varchar(256)        NULL,
+            entity varchar(256)        NULL,
             record_uid_list nvarchar(max)   NULL,
-            rdb_table_map nvarchar(max)     NULL,
             batch_id bigint                 NULL,
             err_description varchar(1000)   NULL,
             status_cd varchar(256)          NULL,

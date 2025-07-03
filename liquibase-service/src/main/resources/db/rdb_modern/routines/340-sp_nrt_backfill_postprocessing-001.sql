@@ -7,12 +7,11 @@ END
 GO 
 
 CREATE PROCEDURE [dbo].[sp_nrt_backfill_postprocessing]
-    @entity_type nvarchar(1000),
+    @entity nvarchar(256),
     @record_uid_list nvarchar(max),
-    @rdb_table_map nvarchar(max),
     @batch_id bigint,
     @err_description nvarchar(1000),
-    @status_cd  nvarchar(1000),
+    @status_cd  nvarchar(256),
     @retry_count smallint
 
 AS
@@ -30,12 +29,21 @@ BEGIN
 
         if @record_uid_list is null
             --Update the NRT_BACKFILL through JAVA
-            BEGIN
-                update dbo.nrt_backfill 
-                set status_cd = @status_cd,
-                retry_count = @retry_count
-                where batch_id = @batch_id;
-            END
+            IF @entity is not null
+                BEGIN
+                    update dbo.nrt_backfill 
+                    set status_cd = @status_cd,
+                    retry_count = @retry_count
+                    where batch_id = @batch_id and
+                        entity = @entity;
+                END
+            ELSE
+                BEGIN
+                    update dbo.nrt_backfill 
+                    set status_cd = @status_cd,
+                    retry_count = @retry_count
+                    where batch_id = @batch_id;
+                END
         ELSE
             BEGIN
                 --Update the NRT_BACKFILL through SPROC
@@ -44,13 +52,13 @@ BEGIN
                 set 
                 retry_count = retry_count + 1,
                 batch_id = @batch_id
-                where record_uid_list = @record_uid_list and entity_type = @entity_type;
+                where record_uid_list = @record_uid_list and entity = @entity;
             END
 
         --Insert into NRT_BACKFILL table if the record_uid_list doesnt exists
-        insert into dbo.nrt_backfill(entity_type, record_uid_list, batch_id, err_description, status_cd, retry_count)
+        insert into dbo.nrt_backfill(entity, record_uid_list, batch_id, err_description, status_cd, retry_count)
             select 
-                tmp.entity_type,
+                tmp.entity,
                 tmp.record_uid_list, 
                 tmp.batch_id,
                 tmp.err_description,
@@ -59,7 +67,7 @@ BEGIN
             from 
             (
                 select 
-                @entity_type as entity_type, 
+                @entity as entity, 
                 @record_uid_list as record_uid_list,
                 @batch_id as batch_id,
                 @err_description as err_description,
@@ -68,8 +76,13 @@ BEGIN
             ) AS tmp
             left join dbo.nrt_backfill nrt with (nolock)
                 on tmp.record_uid_list = nrt.record_uid_list and 
-                tmp.entity_type = nrt.entity_type
-            where nrt.record_uid_list is null and nrt.entity_type is null
+                tmp.entity = nrt.entity
+            left join dbo.nrt_backfill nrt2 with (nolock)
+                on nrt2.batch_id = @batch_id
+            where
+            (nrt.record_uid_list is null and nrt.entity is null 
+                and @record_uid_list is not null) and (nrt2.batch_id is null)
+           
 
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
