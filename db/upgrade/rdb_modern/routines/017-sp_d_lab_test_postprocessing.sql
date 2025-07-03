@@ -233,7 +233,7 @@ BEGIN
             BEGIN
                 EXECUTE dbo.sp_nrt_backfill_postprocessing 
                 @entity = 'OBSERVATION',
-                @record_uid_list = @id_list,
+                @record_uid_list = @obs_ids,
                 @batch_id = @batch_id,
                 @err_description = 'Missing NRT Record: sp_d_lab_test_postprocessing',
                 @status_cd  = 'READY',
