@@ -33,7 +33,8 @@ BEGIN
                 BEGIN
                     update dbo.nrt_backfill 
                     set status_cd = @status_cd,
-                    retry_count = @retry_count
+                    retry_count = @retry_count,
+                    updated_dttm = getdate()
                     where batch_id = @batch_id and
                         entity = @entity;
                 END
@@ -41,7 +42,8 @@ BEGIN
                 BEGIN
                     update dbo.nrt_backfill 
                     set status_cd = @status_cd,
-                    retry_count = @retry_count
+                    retry_count = @retry_count,
+                    updated_dttm = getdate()
                     where batch_id = @batch_id;
                 END
         ELSE
@@ -51,7 +53,8 @@ BEGIN
                 update dbo.nrt_backfill 
                 set 
                 retry_count = retry_count + 1,
-                batch_id = @batch_id
+                batch_id = @batch_id,
+                updated_dttm = getdate()
                 where record_uid_list = @record_uid_list and entity = @entity;
             END
 
