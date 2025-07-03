@@ -66,6 +66,40 @@ BEGIN
                  LEFT JOIN dbo.nrt_notification_key nk with (nolock) ON nrt.notification_uid = nk.notification_uid
         WHERE nrt.notification_uid in (SELECT value FROM STRING_SPLIT(@notification_uids, ','));
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@notification_uids, ',')) t
+                        left join #temp_ntf_table tmp
+                        on tmp.notification_uid = t.value	
+                        WHERE tmp.notification_uid is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity = 'NOTIFICATION',
+                    @record_uid_list = @notification_uids,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: sp_nrt_notification_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+
+              
+                SELECT 
+                    CAST(NULL AS BIGINT) AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    CAST(NULL AS VARCHAR(30)) AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+               WHERE 1=0;
+               
+               RETURN;
+          END        
+        
         /* Temp notification_event table creation */
         SELECT nrt.notification_uid,
                COALESCE(p.PATIENT_KEY, 1) AS PATIENT_KEY,
