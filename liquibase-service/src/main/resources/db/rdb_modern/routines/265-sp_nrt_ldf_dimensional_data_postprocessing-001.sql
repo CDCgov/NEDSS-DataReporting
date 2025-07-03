@@ -320,12 +320,12 @@ BEGIN
 			) AS ldf_datamart_column_ref_uid,
 			SUBSTRING(
 				CASE 
-					WHEN a.class_cd = 'State' THEN 'L_' + RTRIM(REPLACE(a.ldf_uid, ' ', '')) + '_'
-					WHEN a.class_cd = 'CDC' THEN 'C_' + RTRIM(REPLACE(a.ldf_uid, ' ', '')) + '_'
+					WHEN a.class_cd = 'State' THEN 'L_' + RTRIM(REPLACE(a.ldf_uid, ' ', ''))
+					WHEN a.class_cd = 'CDC' THEN 'C_' + RTRIM(REPLACE(a.ldf_uid, ' ', ''))
 					WHEN LEN(RTRIM(a.cdc_national_id)) > 1 
 						AND LEN(RTRIM(a.cdc_national_id)) + LEN(RTRIM(a.label_txt)) > 0 
 						AND LEN(RTRIM(CAST(a.custom_subform_metadata_uid AS VARCHAR(MAX)))) > 1 
-						THEN 'C_' + RTRIM(a.cdc_national_id) + '_'
+						THEN 'C_' + RTRIM(a.cdc_national_id)
 					ELSE ''
 				END +
 				REPLACE(
