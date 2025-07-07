@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import jakarta.annotation.PreDestroy;
@@ -30,12 +31,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.HashMap;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
@@ -47,17 +53,20 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
 
+    // unique per instance, randomly assigned once
+    private static final int INSTANCE_ID = new Random(System.identityHashCode(PostProcessingService.class))
+            .nextInt(1 << 10); // 10-bit random ID
+
     // cache to store ids from nrt topics that needs to be processed for loading dims and facts
     // a map of nrt topic name and its associated ids
     final Map<String, Queue<Long>> idCache = new ConcurrentHashMap<>();
 
-    // cache to store cds from nrt topics that need to be processed for loading dims and facts
-    // this will be used to store information from topics with key values that need to be type String as opposed to Long
-    // a map of nrt topic name and its associated ids
+    // cache to store information from topics with key values that need to be type String as opposed to Long
+    // a map of nrt topic name and its associated cds
     final Map<String, Queue<String>> cdCache = new ConcurrentHashMap<>();
 
     // cache to store PHC ids from for specific case types to run summary and aggregate reports
-    // a map of case type (sum/agg) and its associated ids
+    // a map of the case type (sum/agg) and its associated ids
     final Map<String, Queue<Long>> sumCache = new ConcurrentHashMap<>();
 
     // cache to store rdb_table -> phc uids mapping for page_builder post-processing
@@ -67,8 +76,16 @@ public class PostProcessingService {
     final Map<String, Queue<Long>> obsCache = new ConcurrentHashMap<>();
 
     // cache to store ids that needs to be processed for datamarts
-    // a map of datamart names and the needed ids
+    // a map of datamart names and the necessary ids
     final Map<String, Map<String, Queue<Long>>> dmCache = new ConcurrentHashMap<>();
+
+    // set of caches for retrying failed topics/IDs and tracking retry attempts
+    private final Map<Long, Map<String, Queue<Long>>> retryCache = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> retryAttempts = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> backfillAttempts = new ConcurrentHashMap<>();
+
+    @Value("${service.max-retries}")
+    private int maxRetries;
 
     private static int nProc = Runtime.getRuntime().availableProcessors();
     private final ExecutorService dynDmExecutor = Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
@@ -94,7 +111,8 @@ public class PostProcessingService {
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
 
-
+    static final String STATUS_READY = "READY";
+    static final String STATUS_COMPLETE = "COMPLETE";
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
@@ -115,10 +133,10 @@ public class PostProcessingService {
      * @param payload The value of the Kafka message, which contains the payload to be processed.
      */
     @RetryableTopic(
-            attempts = "${spring.kafka.consumer.max-retry}", 
-            autoCreateTopics = "false", 
-            dltStrategy = DltStrategy.FAIL_ON_ERROR, 
-            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
+            attempts = "${spring.kafka.consumer.max-retry}",
+            autoCreateTopics = "false",
+            dltStrategy = DltStrategy.FAIL_ON_ERROR,
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
             dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
             // retry topic name, such as topic-retry-1, topic-retry-2, etc
             topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
@@ -240,12 +258,12 @@ public class PostProcessingService {
     }
 
     @RetryableTopic(
-        attempts = "${spring.kafka.consumer.max-retry}", 
-        autoCreateTopics = "false", 
-        dltStrategy = DltStrategy.FAIL_ON_ERROR, 
-        retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
-        dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}", 
-        topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE, 
+        attempts = "${spring.kafka.consumer.max-retry}",
+        autoCreateTopics = "false",
+        dltStrategy = DltStrategy.FAIL_ON_ERROR,
+        retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
+        dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
+        topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
         backoff = @Backoff(delay = 1000, multiplier = 2.0), exclude = {
             SerializationException.class,
             DeserializationException.class,
@@ -300,18 +318,18 @@ public class PostProcessingService {
      * <ul>1. Iterate through cached IDs grouped by entity type.</ul>
      * <ul>2. Execute the corresponding stored procedure for each entity type.</ul>
      * <ul>3. Log the execution status for debugging and monitoring purposes.</ul>
-     * <ul>4. Store the entity name and ids for later if it is needed for data marts (both direct dependent and also for multi-id data marts).</ul>
-     * <ul>5. Process event metric and summary data marts</ul>
-     * <ul>6. Send the event message to the kafka topic that handles data mart events for building other data marts</ul>
+     * <ul>4. Store the entity name and ids for later if needed for data marts (both direct dependent and also for multi-id datamarts).</ul>
+     * <ul>5. Process event metric and summary datamarts</ul>
+     * <ul>6. Send the event message to the kafka topic that handles data mart events for building other datamarts</ul>
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processCachedIds() {
 
-        // Making cache snapshot preventing out-of-sequence ids processing
+        // Making a cache snapshot preventing out-of-sequence ids processing
         // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
         final Map<String, List<Long>> idCacheSnapshot;
 
-        // Making cache snapshot preventing out-of-sequence ids processing
+        // Making a cache snapshot preventing out-of-sequence ids processing
         // creates a deep copy of cdCache into cdCacheSnapshot
         final Map<String, List<String>> cdCacheSnapshot;
 
@@ -325,33 +343,152 @@ public class PostProcessingService {
             cdCache.clear();
         }
 
-        boolean isCdCacheEmpty = cdCacheSnapshot.isEmpty();
-        boolean isIdCacheEmpty = idCacheSnapshot.isEmpty();
-
-        processCdCache(cdCacheSnapshot, isCdCacheEmpty);
+        processCdCache(cdCacheSnapshot);
 
         if (!idCacheSnapshot.isEmpty()) {
-            // sorting idCacheSnapshot so that entities with higher priority is processed first
-            List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
-                    .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
+            processIdCache(idCacheSnapshot, null);
+        }
 
-            // list to store details of datamarts and the associated ids that needs to be hydrated downstream
-            List<DatamartData> dmData = new ArrayList<>();
-            // list to keep volatile datamart data to be merged into dmData
-            List<DatamartData> dmDataSp;
+        // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
+        if (cdCacheSnapshot.isEmpty() && idCacheSnapshot.isEmpty()) {
+            logger.info("No ids to process from the topics.");
+        }
+    }
 
-            // Isolated temporary map to accumulate entity ID collections by entity type.
-            // After processing, it is merged into dmCache for multi-ID datamarts invocation.
-            // Isolation prevents conflicts from concurrent modifications by the datamart processing thread.
-            Map<String, Queue<Long>> newDmMulti = new ConcurrentHashMap<>();
+    @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
+    protected void processRetryCache() {
 
-            for (Entry<String, List<Long>> entry : sortedEntries) {
-                String keyTopic = entry.getKey();
-                List<Long> ids = entry.getValue();
+        for(Entry<Long, Map<String, Queue<Long>>> retryEntry : retryCache.entrySet()) {
 
+            Long batchId = retryEntry.getKey();
+
+            // Making cache snapshot preventing out-of-sequence ids processing
+            // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
+            final Map<String, List<Long>> idCacheSnapshot;
+
+            synchronized (cacheLock) {
+                idCacheSnapshot = retryEntry.getValue().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+                retryCache.remove(batchId);
+            }
+
+            boolean processed = processIdCache(idCacheSnapshot, retryEntry.getKey());
+
+            // update backfill batch record(s) if exists
+            if (backfillAttempts.containsKey(batchId)) {
+
+                String status = processed ? STATUS_COMPLETE : STATUS_READY;
+                int bfAttempt = backfillAttempts.getOrDefault(batchId, 0) + 1;
+                if (bfAttempt > maxRetries) {
+                    logger.info("Reached max backfill retries for batch id: {}. Suspend further processing.", batchId);
+                    status = "SUSPENDED";
+                    bfAttempt = 0;
+                    backfillAttempts.remove(batchId);
+                }
+
+                postProcRepository.executeStoredProcForBackfill(null, null, batchId, null,
+                    status, bfAttempt);
+            }
+
+            if (processed) {
+                // clear retry attempt caches if no errors after re-processing
+                retryAttempts.remove(batchId);
+                backfillAttempts.remove(batchId);
+
+            } else {
+
+                int attempt = retryAttempts.getOrDefault(batchId, 0);
+                if (attempt > maxRetries) {
+                    logger.info("Reached max retries for batch id: {}. Skipping further processing.", batchId);
+                    retryAttempts.remove(batchId);
+
+                    for (Entry<String, List<Long>> entry : idCacheSnapshot.entrySet()) {
+                        Entity entity = getEntityByTopic(entry.getKey());
+                        postProcRepository.executeStoredProcForBackfill(
+                                entity.getEntityName().toUpperCase(),
+                                listToParameterString(entry.getValue()),
+                                batchId,
+                                "err",
+                                STATUS_READY,
+                                backfillAttempts.getOrDefault(batchId, 0)
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    @Scheduled(fixedDelayString = "${service.fixed-delay.backfill}")
+    protected void backfillEvent() {
+        List<BackfillData> backfills = postProcRepository.executeBackfillEvent(STATUS_READY);
+        if (backfills.isEmpty()) {
+            logger.info("No backfill records found.");
+            return;
+        }
+
+        // Build a temporary map: batchId -> (entity -> queue of UIDs)
+        Map<Long, Map<String, Queue<Long>>> retryCacheLocal = new HashMap<>();
+        backfills.forEach(bf -> {
+            Long batchId = bf.getBatchId();
+            String entity = "nrt_".concat(bf.getEntity().toLowerCase());
+            Queue<Long> queue = Arrays.stream(bf.getRecordUidList().split(","))
+                    .map(Long::valueOf)
+                    .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
+            retryCacheLocal
+                .computeIfAbsent(batchId, k -> new HashMap<>())
+                .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
+                .addAll(queue);
+            backfillAttempts.computeIfAbsent(batchId, k -> bf.getRetryCount());
+        });
+
+        // Merge into the main retryCache for reprocessing, preserving batch IDs
+        retryCacheLocal.forEach((batchId, entityMap) -> {
+            Map<String, Queue<Long>> batchMap = retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+            entityMap.forEach((entity, queue) ->
+                batchMap.computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>()).addAll(queue)
+            );
+        });
+        logger.info("Re-queued {} backfill batch(es) into retryCache", retryCacheLocal.size());
+
+    }
+
+    private boolean processIdCache(Map<String, List<Long>> idCacheSnapshot, Long batchId) {
+        // sorting idCacheSnapshot so that entities with higher priority is processed first
+        List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
+                .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
+
+        // list to store details of datamarts and the associated ids that needs to be hydrated downstream
+        List<DatamartData> dmData = new ArrayList<>();
+
+        // list to keep volatile datamart data to be merged into dmData
+        List<DatamartData> dmDataSp;
+
+        // Isolated temporary map to accumulate entity ID collections by entity type.
+        // After processing, it is merged into dmCache for multi-ID datamarts invocation.
+        // Isolation prevents conflicts from concurrent modifications by the datamart processing thread.
+        Map<String, Queue<Long>> newDmMulti = new ConcurrentHashMap<>();
+
+        boolean processingFailed = false;
+
+        for (Entry<String, List<Long>> entry : sortedEntries) {
+            String keyTopic = entry.getKey();
+            List<Long> ids = entry.getValue();
+
+            if (processingFailed) {
+                Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
+                retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                continue;
+            }
+
+            if (batchId == null) {
                 logger.info(PROCESSING_IDS_LOG_MSG, ids.size(), keyTopic);
+            } else {
+                logger.info("Retrying {} id(s) from topic: {}, attempt #{} for batch id: {}",
+                        ids.size(), keyTopic, retryAttempts.getOrDefault(batchId, 1), batchId);
+            }
 
-                Entity entity = getEntityByTopic(keyTopic);
+            Entity entity = getEntityByTopic(keyTopic);
+            try {
                 switch (entity) {
                     case PAGE:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage);
@@ -392,7 +529,7 @@ public class PostProcessingService {
                         dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;                    
+                        break;
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase,
@@ -425,41 +562,45 @@ public class PostProcessingService {
                         logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
                         break;
                 }
-            }
-            // process METRIC_EVENT datamart since multiple datamarts depend on it
-            processMetricEventDatamart(newDmMulti);
-            processSummaryCases();
-            datamartProcessor.process(dmData);
-
-            // merge entity IDs collections from temporary map `newDmMulti` into main datamart cache
-            synchronized (cacheLock) {
-                Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTI_ID_DATAMART, k -> new ConcurrentHashMap<>());
-                newDmMulti.forEach((key, queue) ->
-                        dmMulti.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
+            } catch (Exception e) {
+                processingFailed = true;
+                if (batchId == null) {
+                    batchId = (System.currentTimeMillis() << 10) | INSTANCE_ID;
+                }
+                Map<String, Queue<Long>> retryMap = retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+                retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                retryAttempts.merge(batchId, 1, Integer::sum);
             }
         }
 
-        // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
-        if (isCdCacheEmpty && isIdCacheEmpty) {
-            logger.info("No ids to process from the topics.");
+        // process METRIC_EVENT datamart since multiple datamarts depend on it
+        processMetricEventDatamart(newDmMulti);
+        processSummaryCases();
+        datamartProcessor.process(dmData);
+
+        // merge entity IDs collections from temporary map newDmMulti into main datamart cache
+        synchronized (cacheLock) {
+            Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTI_ID_DATAMART, k -> new ConcurrentHashMap<>());
+            newDmMulti.forEach((key, queue) ->
+                    dmMulti.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
         }
+
+        return !processingFailed;
     }
 
-    private void processCdCache(Map<String, List<String>> cdCacheSnapshot, boolean isCdCacheEmpty) {
-        if (!isCdCacheEmpty) {
-            for (Entry<String, List<String>> entry : cdCacheSnapshot.entrySet()) {
-                String keyTopic = entry.getKey();
-                List<String> cds = entry.getValue();
+    private void processCdCache(Map<String, List<String>> cdCacheSnapshot) {
+        for (Entry<String, List<String>> entry : cdCacheSnapshot.entrySet()) {
+            String keyTopic = entry.getKey();
+            List<String> cds = entry.getValue();
 
-                logger.info(PROCESSING_IDS_LOG_MSG, cds.size(), keyTopic);
+            logger.info(PROCESSING_IDS_LOG_MSG, cds.size(), keyTopic);
 
-                Entity entity = getEntityByTopic(keyTopic);
+            Entity entity = getEntityByTopic(keyTopic);
 
-                if (Objects.requireNonNull(entity) == CONDITION) {
-                    processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
-                } else {
-                    logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
-                }
+            if (Objects.requireNonNull(entity) == CONDITION) {
+                processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
+            } else {
+                logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
             }
         }
     }

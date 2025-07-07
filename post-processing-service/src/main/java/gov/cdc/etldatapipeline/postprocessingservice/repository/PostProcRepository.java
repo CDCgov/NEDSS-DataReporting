@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.postprocessingservice.repository;
 
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -108,6 +109,17 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
 
     @Procedure("sp_nrt_srte_condition_code_postprocessing")
     void executeStoredProcForConditionCode(@Param("conditionCds") String conditionCds);
-     
+
+    @Procedure("sp_nrt_backfill_postprocessing")
+    void executeStoredProcForBackfill(
+            @Param("entity")  String entity,
+            @Param("backfillUids") String backfillUids,
+            @Param("batchId") Long batchId,
+            @Param("errDesc") String errDesc,
+            @Param("statusCd") String statusCd,
+            @Param("retryCnt") Integer retryCnt);
+
+    @Query(value = "EXEC sp_nrt_backfill_event :statusCd", nativeQuery = true)
+    List<BackfillData> executeBackfillEvent(@Param("statusCd") String statusCd);
 }
    
