@@ -27,34 +27,25 @@ BEGIN
 
         BEGIN TRANSACTION;
 
-        if @record_uid_list is null
+       if @record_uid_list is null
             --Update the NRT_BACKFILL through JAVA
-            IF @entity is not null
-                BEGIN
-                    update dbo.nrt_backfill 
-                    set status_cd = @status_cd,
-                    retry_count = @retry_count,
-                    updated_dttm = getdate()
-                    where batch_id = @batch_id and
-                        entity = @entity;
-                END
-            ELSE
-                BEGIN
-                    update dbo.nrt_backfill 
-                    set status_cd = @status_cd,
-                    retry_count = @retry_count,
-                    updated_dttm = getdate()
-                    where batch_id = @batch_id;
-                END
+            --Will be ignored if sproc already updated it and retry_count was increased
+            BEGIN
+               UPDATE dbo.nrt_backfill
+               SET status_cd       = @status_cd,
+                   retry_count     = @retry_count,
+                   err_description = @err_description,
+                   updated_dttm    = GETDATE()
+               WHERE batch_id = @batch_id AND (@retry_count > retry_count OR @retry_count = 0)
+                 AND (@entity IS NULL OR entity = @entity);
+            END
         ELSE
             BEGIN
                 --Update the NRT_BACKFILL through SPROC
-                --Update the Batch_id so that Java will not update the new batch_id if record_uid is still missing
-                update dbo.nrt_backfill 
-                set 
-                retry_count = retry_count + 1,
-                batch_id = @batch_id,
-                updated_dttm = getdate()
+                update dbo.nrt_backfill
+                set
+                    retry_count = retry_count + 1,
+                    updated_dttm = getdate()
                 where record_uid_list = @record_uid_list and entity = @entity;
             END
 
