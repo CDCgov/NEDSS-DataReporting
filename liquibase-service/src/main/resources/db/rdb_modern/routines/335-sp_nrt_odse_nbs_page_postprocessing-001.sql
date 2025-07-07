@@ -267,7 +267,7 @@ BEGIN
             existing dimensions.
         */
         SELECT 
-            @create_dim_sql = STRING_AGG(create_statement, ' ') 
+            @create_dim_sql = STRING_AGG(CAST(create_statement AS NVARCHAR(MAX)), ' ') 
         FROM #MISSING_DIMENSION_TABLES;
 
         if @debug = 'true'
@@ -282,6 +282,7 @@ BEGIN
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
           
+
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -333,7 +334,7 @@ BEGIN
         DECLARE @alter_dim_sql NVARCHAR(MAX) = '';
 
         SELECT 
-            @alter_dim_sql = STRING_AGG(alter_statement, ' ') 
+            @alter_dim_sql = STRING_AGG(CAST(alter_statement AS NVARCHAR(MAX)), ' ') 
         FROM #MISSING_DIMENSION_COLUMNS;
 
         if @debug = 'true'
@@ -349,6 +350,7 @@ BEGIN
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
           
+
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -518,11 +520,11 @@ BEGIN
 
 
         SELECT 
-            @curr_to_placeholder_sql = STRING_AGG(rename_curr_to_placeholder_statement, ' ') 
+            @curr_to_placeholder_sql = STRING_AGG(CAST(rename_curr_to_placeholder_statement AS NVARCHAR(MAX)), ' ') 
         FROM #COLUMN_UPDATE_FINAL;
 
         SELECT 
-            @placeholder_to_new_sql = STRING_AGG(rename_placeholder_to_new_statement, ' ') 
+            @placeholder_to_new_sql = STRING_AGG(CAST(rename_placeholder_to_new_statement AS NVARCHAR(MAX)), ' ') 
         FROM #COLUMN_UPDATE_FINAL;
 
         if @debug = 'true'
@@ -554,7 +556,7 @@ BEGIN
             FROM #PAGEBUILDER_SCHEMA_INIT
         )
         SELECT 
-            @update_dyn_dm_sql = STRING_AGG('EXEC dbo.sp_dyn_dm_main_postprocessing ''' + datamart_nm + ''', '''';', ' ') 
+            @update_dyn_dm_sql = STRING_AGG(CAST('EXEC dbo.sp_dyn_dm_main_postprocessing ''' + datamart_nm + ''', '''';' AS NVARCHAR(MAX)), ' ') 
         FROM distinct_datamart_cte;
 
         if @debug = 'true'
