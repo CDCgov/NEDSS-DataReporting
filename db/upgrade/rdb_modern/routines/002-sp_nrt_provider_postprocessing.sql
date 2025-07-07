@@ -100,6 +100,29 @@ BEGIN
                  left join dbo.d_provider p with (nolock) on p.provider_uid = nrt.provider_uid
         where nrt.provider_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                left join #temp_prv_table tmp
+                on tmp.provider_uid = t.value	
+                WHERE tmp.provider_uid is null	
+		);
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity = 'PROVIDER',
+                    @record_uid_list = @id_list,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: sp_nrt_provider_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+           
+               RETURN;
+          END
+
         if @debug = 'true' select * from #temp_prv_table;
 
         /* Logging */

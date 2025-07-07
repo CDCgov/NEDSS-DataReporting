@@ -114,7 +114,7 @@ BEGIN
                 ' ', '') ) AS document_link
         INTO #edx_document
         FROM edx_lst
-        WHERE rankno = 1;        
+        WHERE rankno = 1;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -219,6 +219,29 @@ BEGIN
             AND (obs.CTRL_CD_DISPLAY_FORM IN ('LabReport', 'LabReportMorb') OR obs.CTRL_CD_DISPLAY_FORM IS NULL);    
         
         SELECT @RowCount_no = @@ROWCOUNT;
+
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@obs_ids, ',')) t
+                left join #observation_data tmp
+                on tmp.observation_uid = t.value	
+                WHERE tmp.observation_uid is null	
+		);
+
+        IF @backfill_list IS NOT NULL
+            BEGIN
+                EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                @entity = 'OBSERVATION',
+                @record_uid_list = @obs_ids,
+                @batch_id = @batch_id,
+                @err_description = 'Missing NRT Record: sp_d_lab_test_postprocessing',
+                @status_cd  = 'READY',
+                @retry_count = 0
+
+            RETURN;
+        END
 
         IF @debug = 'true'
             SELECT @Proc_Step_Name AS step, * 
