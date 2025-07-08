@@ -148,6 +148,39 @@ BEGIN
                  left join dbo.investigation i with (nolock) on i.case_uid = nrt.public_health_case_uid
         where nrt.public_health_case_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                left join #temp_inv_table tmp
+                on tmp.case_uid = t.value	
+                WHERE tmp.case_uid is null	
+		);
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity = 'INVESTIGATION',
+                    @record_uid_list = @id_list,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: sp_nrt_investigation_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+
+                SELECT 
+                    CAST(NULL AS BIGINT) AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    CAST(NULL AS VARCHAR(30)) AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+               WHERE 1=0;
+               
+               RETURN;
+          END
+        
         IF @debug = 'true' SELECT * FROM #temp_inv_table;
 
         /* Logging */

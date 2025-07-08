@@ -2816,3 +2816,12 @@ databaseChangeLog:
             path: 345-sp_event_metric_cleanup_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 900
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 350-sp_batch_id_cleanup_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO

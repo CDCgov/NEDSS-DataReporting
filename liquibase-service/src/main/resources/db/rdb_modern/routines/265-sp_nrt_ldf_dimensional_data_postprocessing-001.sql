@@ -96,13 +96,13 @@ BEGIN
 			page_set.code_short_desc_txt AS page_set,
 			a.data_type,
 			a.Field_size,
-			CASE 
+			CAST(CASE
 				WHEN a.business_object_nm = 'BMD' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'BMIRD'
 				WHEN a.business_object_nm = 'NIP' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'VPD'
 				WHEN a.business_object_nm = 'PHC' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'OTHER'
 				WHEN a.business_object_nm = 'HEP' AND LEN(TRIM(ISNULL(a.condition_cd, 0))) < 2 THEN 'HEP'
-				ELSE a.condition_desc_txt
-			END AS LDF_PAGE_SET
+				ELSE NULL
+			END AS VARCHAR(50)) AS LDF_PAGE_SET
 		INTO #LDF_META_DATA
 		FROM [dbo].nrt_odse_state_defined_field_metadata a WITH ( NOLOCK) 
 				LEFT OUTER JOIN 
@@ -320,12 +320,12 @@ BEGIN
 			) AS ldf_datamart_column_ref_uid,
 			SUBSTRING(
 				CASE 
-					WHEN a.class_cd = 'State' THEN 'L_' + RTRIM(REPLACE(a.ldf_uid, ' ', '')) + '_'
-					WHEN a.class_cd = 'CDC' THEN 'C_' + RTRIM(REPLACE(a.ldf_uid, ' ', '')) + '_'
+					WHEN a.class_cd = 'State' THEN 'L_' + RTRIM(REPLACE(a.ldf_uid, ' ', ''))
+					WHEN a.class_cd = 'CDC' THEN 'C_' + RTRIM(REPLACE(a.ldf_uid, ' ', ''))
 					WHEN LEN(RTRIM(a.cdc_national_id)) > 1 
 						AND LEN(RTRIM(a.cdc_national_id)) + LEN(RTRIM(a.label_txt)) > 0 
 						AND LEN(RTRIM(CAST(a.custom_subform_metadata_uid AS VARCHAR(MAX)))) > 1 
-						THEN 'C_' + RTRIM(a.cdc_national_id) + '_'
+						THEN 'C_' + RTRIM(a.cdc_national_id)
 					ELSE ''
 				END +
 				REPLACE(
