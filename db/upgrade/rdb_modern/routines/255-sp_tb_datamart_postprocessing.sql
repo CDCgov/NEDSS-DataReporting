@@ -457,55 +457,54 @@ BEGIN
 
         -- 8. Create #BASE_TRANSLATED temporary table
         SELECT 
-            i.ADD_TIME AS INVESTIGATION_CREATE_DATE,
-            i.ADD_USER_ID AS INVESTIGATION_CREATED_BY,
-            i.LAST_CHG_USER_ID AS INVESTIGATION_LAST_UPDTD_BY,
-            i.LAST_CHG_TIME AS INVESTIGATION_LAST_UPDTD_DATE,
+            i.ADD_TIME                      AS INVESTIGATION_CREATE_DATE,
+            i.ADD_USER_ID                   AS INVESTIGATION_CREATED_BY,
+            i.LAST_CHG_USER_ID              AS INVESTIGATION_LAST_UPDTD_BY,
+            i.LAST_CHG_TIME                 AS INVESTIGATION_LAST_UPDTD_DATE,
             i.PROGRAM_AREA_DESCRIPTION,
-            i.LOCAL_ID AS INVESTIGATION_LOCAL_ID,
-            inv.CASE_OID AS PROGRAM_JURISDICTION_OID,
-            inv.CASE_RPT_MMWR_WK AS MMWR_WEEK,
-            inv.CASE_RPT_MMWR_YR AS MMWR_YEAR,
-            inv.INV_COMMENTS AS GENERAL_COMMENTS,
-            --inv.INV_LOCAL_ID AS INVESTIGATION_LOCAL_ID_ALIAS, -- Alias to avoid conflict
-            inv.INV_STATE_CASE_ID AS STATE_CASE_NUMBER,
-            inv.CITY_COUNTY_CASE_NBR AS city_county_case_number,
-            inv.INV_START_DT AS INVESTIGATION_START_DATE,
-            inv.INVESTIGATION_key AS INVESTIGATION_KEY,
-            inv.INVESTIGATION_STATUS AS INVESTIGATION_STATUS,
-            inv.INV_CASE_STATUS AS CASE_STATUS,
-            inv.JURISDICTION_NM AS JURISDICTION_NAME,
-            inv.CITY_COUNTY_CASE_NBR AS CITY_COUNTY_CASE_NBR,
-            inv.Inv_Rpt_Dt AS DATE_REPORTED,
-            inv.Earliest_Rpt_To_State_Dt AS DATE_SUBMITTED,
-            inv.HSPTLIZD_IND AS HOSPITALIZED,
-            inv.HSPTL_ADMISSION_DT AS HOSPITALIZED_ADMISSION_DATE,
-            inv.HSPTL_DISCHARGE_DT AS HOSPITALIZED_DISCHARGE_DATE,
-            inv.HSPTL_DURATION_DAYS AS HOSPITALIZED_DURATION_DAYS,
-            inv.ILLNESS_ONSET_DT AS ILLNESS_ONSET_DATE,
-            inv.DIAGNOSIS_DT AS DIAGNOSIS_DATE,
-            inv.EARLIEST_RPT_TO_CNTY_DT AS DATE_REPORTED_TO_COUNTY,
-            inv.OUTBREAK_IND AS OUTBREAK,
-            inv.OUTBREAK_NAME AS OUTBREAK_CD,
-            inv.INV_ASSIGNED_DT AS INVESTIGATOR_ASSIGN_DATE,
-            inv.PATIENT_AGE_AT_ONSET_UNIT AS ILLNESS_ONSET_AGE_UNIT,
-            inv.PATIENT_AGE_AT_ONSET AS ILLNESS_ONSET_AGE,
-            inv.PATIENT_PREGNANT_IND AS PREGNANT,
-            inv.INVESTIGATION_DEATH_DATE AS INVESTIGATION_DEATH_DATE,
-            inv.DIE_FRM_THIS_ILLNESS_IND AS DIE_FRM_THIS_ILLNESS_IND,
-            inv.ILLNESS_END_DT AS ILLNESS_END_DATE,
-            inv.ILLNESS_DURATION AS ILLNESS_DURATION,
-            inv.ILLNESS_DURATION_UNIT AS ILLNESS_DURATION_UNIT,
-            inv.DAYCARE_ASSOCIATION_IND AS DAYCARE,
-            inv.FOOD_HANDLR_IND AS FOOD_HANDLER,
-            inv.DISEASE_IMPORTED_IND AS DISEASE_ACQUIRED_WHERE,
-            inv.IMPORT_FRM_CNTRY AS DISEASE_ACQUIRED_COUNTRY,
-            inv.IMPORT_FRM_STATE AS DISEASE_ACQUIRED_STATE,
-            inv.IMPORT_FRM_CITY AS DISEASE_ACQUIRED_CITY,
-            inv.IMPORT_FRM_CNTY AS DISEASE_ACQUIRED_COUNTY,
-            inv.TRANSMISSION_MODE AS TRANSMISSION_MODE,
-            inv.DETECTION_METHOD_DESC_TXT AS DETECTION_METHOD,
-            inv.RPT_SRC_CD_DESC AS REPORTING_SOURCE_TYPE,
+            i.LOCAL_ID                      AS INVESTIGATION_LOCAL_ID,
+            inv.CASE_OID                    AS PROGRAM_JURISDICTION_OID,
+            inv.CASE_RPT_MMWR_WK            AS MMWR_WEEK,
+            inv.CASE_RPT_MMWR_YR            AS MMWR_YEAR,
+            inv.INV_COMMENTS                AS GENERAL_COMMENTS,
+            inv.INV_STATE_CASE_ID           AS STATE_CASE_NUMBER,
+            inv.CITY_COUNTY_CASE_NBR        AS city_county_case_number,
+            inv.INV_START_DT                AS INVESTIGATION_START_DATE,
+            inv.INVESTIGATION_key           AS INVESTIGATION_KEY,
+            inv.INVESTIGATION_STATUS        AS INVESTIGATION_STATUS,
+            inv.INV_CASE_STATUS             AS CASE_STATUS,
+            inv.JURISDICTION_NM             AS JURISDICTION_NAME,
+            inv.CITY_COUNTY_CASE_NBR        AS CITY_COUNTY_CASE_NBR,
+            inv.Inv_Rpt_Dt                  AS DATE_REPORTED,
+            inv.Earliest_Rpt_To_State_Dt    AS DATE_SUBMITTED,
+            inv.HSPTLIZD_IND                AS HOSPITALIZED,
+            inv.HSPTL_ADMISSION_DT          AS HOSPITALIZED_ADMISSION_DATE,
+            inv.HSPTL_DISCHARGE_DT          AS HOSPITALIZED_DISCHARGE_DATE,
+            inv.HSPTL_DURATION_DAYS         AS HOSPITALIZED_DURATION_DAYS,
+            inv.ILLNESS_ONSET_DT            AS ILLNESS_ONSET_DATE,
+            inv.DIAGNOSIS_DT                AS DIAGNOSIS_DATE,
+            inv.EARLIEST_RPT_TO_CNTY_DT     AS DATE_REPORTED_TO_COUNTY,
+            inv.OUTBREAK_IND                AS OUTBREAK,
+            inv.OUTBREAK_NAME               AS OUTBREAK_CD,
+            inv.INV_ASSIGNED_DT             AS INVESTIGATOR_ASSIGN_DATE,
+            inv.PATIENT_AGE_AT_ONSET_UNIT   AS ILLNESS_ONSET_AGE_UNIT,
+            inv.PATIENT_AGE_AT_ONSET        AS ILLNESS_ONSET_AGE,
+            inv.PATIENT_PREGNANT_IND        AS PREGNANT,
+            inv.INVESTIGATION_DEATH_DATE    AS INVESTIGATION_DEATH_DATE,
+            inv.DIE_FRM_THIS_ILLNESS_IND    AS DIE_FRM_THIS_ILLNESS_IND,
+            inv.ILLNESS_END_DT              AS ILLNESS_END_DATE,
+            inv.ILLNESS_DURATION            AS ILLNESS_DURATION,
+            inv.ILLNESS_DURATION_UNIT       AS ILLNESS_DURATION_UNIT,
+            inv.DAYCARE_ASSOCIATION_IND     AS DAYCARE,
+            inv.FOOD_HANDLR_IND             AS FOOD_HANDLER,
+            inv.DISEASE_IMPORTED_IND        AS DISEASE_ACQUIRED_WHERE,
+            inv.IMPORT_FRM_CNTRY            AS DISEASE_ACQUIRED_COUNTRY,
+            inv.IMPORT_FRM_STATE            AS DISEASE_ACQUIRED_STATE,
+            inv.IMPORT_FRM_CITY             AS DISEASE_ACQUIRED_CITY,
+            inv.IMPORT_FRM_CNTY             AS DISEASE_ACQUIRED_COUNTY,
+            inv.TRANSMISSION_MODE           AS TRANSMISSION_MODE,
+            inv.DETECTION_METHOD_DESC_TXT   AS DETECTION_METHOD,
+            inv.RPT_SRC_CD_DESC             AS REPORTING_SOURCE_TYPE,
             --t.*,
             t.D_TB_PAM_KEY,
             t.TB_PAM_UID,
@@ -666,7 +665,6 @@ BEGIN
             t.COMMENTS_FOLLOW_UP_2,
             t.MOVE_CITY_2,
             t.DATE_ARRIVED_IN_US,
-            --t.DATE_SUBMITTED,
             t.PATIENT_BIRTH_COUNTRY,
             t.US_BORN_IND,
             t.TB_VERCRIT_CALC_IND,
@@ -784,8 +782,8 @@ BEGIN
                 el.REPORTER_LAST_NAME,
                 el.REPORTER_PHONE_NUMBER,
                 el.REPORTING_SOURCE_NAME,
-                CAST(el.PATIENT_DOB AS date) AS PAT_DOB,
-                CAST(bt.DATE_REPORTED AS date) AS RPT_TIME,
+                CAST(el.PATIENT_DOB AS DATE) AS PAT_DOB,
+                CAST(bt.DATE_REPORTED AS DATE) AS RPT_TIME,
                 CASE 
                     WHEN el.PATIENT_DOB IS NOT NULL AND bt.DATE_REPORTED IS NOT NULL 
                     THEN DATEDIFF(day, el.PATIENT_DOB, bt.DATE_REPORTED) / 365.25 
@@ -869,10 +867,10 @@ BEGIN
         SELECT 
             D_GT_12_REAS_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS GT_12_REAS_ALL,  
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS GT_12_REAS_1,  
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS GT_12_REAS_2,  
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS GT_12_REAS_3,  
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS GT_12_REAS_4,  
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS GT_12_REAS_1,  
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS GT_12_REAS_2,  
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS GT_12_REAS_3,  
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS GT_12_REAS_4,  
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -917,10 +915,10 @@ BEGIN
         SELECT 
             D_SMR_EXAM_TY_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS SMR_EXAM_TY_ALL,
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS SMR_EXAM_TY_1,
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS SMR_EXAM_TY_2,
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS SMR_EXAM_TY_3,
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS SMR_EXAM_TY_4,
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS SMR_EXAM_TY_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS SMR_EXAM_TY_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS SMR_EXAM_TY_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS SMR_EXAM_TY_4,
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -965,10 +963,10 @@ BEGIN
         SELECT 
             D_ADDL_RISK_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS ADDL_RISK_ALL,  
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS ADDL_RISK_1,  
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS ADDL_RISK_2,  
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS ADDL_RISK_3,  
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS ADDL_RISK_4,  
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS ADDL_RISK_1,  
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS ADDL_RISK_2,  
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS ADDL_RISK_3,  
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS ADDL_RISK_4,  
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -1013,10 +1011,10 @@ BEGIN
         SELECT 
             D_DISEASE_SITE_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS DISEASE_SITE_ALL,
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS DISEASE_SITE_1,
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS DISEASE_SITE_2,
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS DISEASE_SITE_3,
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS DISEASE_SITE_4,
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS DISEASE_SITE_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS DISEASE_SITE_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS DISEASE_SITE_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS DISEASE_SITE_4,
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -1061,10 +1059,10 @@ BEGIN
         SELECT 
             D_HC_PROV_TY_3_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS HC_PROV_TY_ALL,
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS HC_PROV_TY_1,
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS HC_PROV_TY_2,
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS HC_PROV_TY_3,
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS HC_PROV_TY_4,
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS HC_PROV_TY_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS HC_PROV_TY_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS HC_PROV_TY_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS HC_PROV_TY_4,
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -1109,10 +1107,10 @@ BEGIN
         SELECT 
             D_MOVED_WHERE_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVED_WHERE_ALL,
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS MOVED_WHERE_1,
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS MOVED_WHERE_2,
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS MOVED_WHERE_3,
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS MOVED_WHERE_4,
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS MOVED_WHERE_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS MOVED_WHERE_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS MOVED_WHERE_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS MOVED_WHERE_4,
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -1157,10 +1155,10 @@ BEGIN
         SELECT 
             D_OUT_OF_CNTRY_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS OUT_OF_CNTRY_ALL,
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS OUT_OF_CNTRY_1,
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS OUT_OF_CNTRY_2,
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS OUT_OF_CNTRY_3,
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS OUT_OF_CNTRY_4,
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS OUT_OF_CNTRY_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS OUT_OF_CNTRY_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS OUT_OF_CNTRY_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS OUT_OF_CNTRY_4,
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -1205,10 +1203,10 @@ BEGIN
         SELECT 
             D_MOVE_STATE_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_STATE_ALL,
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS MOVE_STATE_1,
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS MOVE_STATE_2,
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS MOVE_STATE_3,
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS MOVE_STATE_4,
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS MOVE_STATE_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS MOVE_STATE_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS MOVE_STATE_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS MOVE_STATE_4,
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -1254,10 +1252,10 @@ BEGIN
         SELECT 
             D_MOVE_CNTRY_GROUP_KEY,
             STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_CNTRY_ALL,
-            MAX(CASE WHEN rn = 1 THEN value ELSE '' END) AS MOVE_CNTRY_1,
-            MAX(CASE WHEN rn = 2 THEN value ELSE '' END) AS MOVE_CNTRY_2,
-            MAX(CASE WHEN rn = 3 THEN value ELSE '' END) AS MOVE_CNTRY_3,
-            MAX(CASE WHEN rn = 4 THEN value ELSE '' END) AS MOVE_CNTRY_4,
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS MOVE_CNTRY_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS MOVE_CNTRY_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS MOVE_CNTRY_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'') AS MOVE_CNTRY_4,
             CASE 
                 WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > '' 
                 THEN 'TRUE' 
@@ -1291,39 +1289,30 @@ BEGIN
             DROP TABLE #MOVE_CNTY_OUT;
 
         -- 19. Create #MOVE_CNTY_OUT temporary table
-        WITH Pivoted AS (
+        WITH Ranked AS (
             SELECT 
                 D_MOVE_CNTY_GROUP_KEY,
-                MAX(CASE WHEN rn = 1 THEN value END) AS COL1,
-                MAX(CASE WHEN rn = 2 THEN value END) AS COL2,
-                MAX(CASE WHEN rn = 3 THEN value END) AS COL3,
-                MAX(CASE WHEN rn = 4 THEN value END) AS COL4
-            FROM (
-                SELECT 
-                    D_MOVE_CNTY_GROUP_KEY,
-                    value,
-                    ROW_NUMBER() OVER (PARTITION BY D_MOVE_CNTY_GROUP_KEY ORDER BY value) AS rn
-                FROM [dbo].D_MOVE_CNTY D WITH (NOLOCK)
-                INNER JOIN #S_INVESTIGATION_LIST S 
-                    ON S.TB_PAM_UID = D.TB_PAM_UID
-            ) AS Ranked
-            GROUP BY D_MOVE_CNTY_GROUP_KEY
+                value,
+                ROW_NUMBER() OVER (PARTITION BY D_MOVE_CNTY_GROUP_KEY ORDER BY value) AS rn
+            FROM [dbo].D_MOVE_CNTY D WITH (NOLOCK)
+            INNER JOIN #S_INVESTIGATION_LIST S 
+                ON S.TB_PAM_UID = D.TB_PAM_UID
         )
         SELECT 
             D_MOVE_CNTY_GROUP_KEY,
-            TRIM(' | ' FROM CONCAT_WS(' | ', COL1, COL2, COL3, COL4)) AS MOVE_CNTY_ALL,  -- Concatenate non-null values
-            ISNULL(COL1, '') AS MOVE_CNTY_1,
-            ISNULL(COL2, '') AS MOVE_CNTY_2,
-            ISNULL(COL3, '') AS MOVE_CNTY_3,
-            ISNULL(COL4, '') AS MOVE_CNTY_4,
+            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_CNTY_ALL,  
+            NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'')  AS MOVE_CNTY_1,
+            NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'')  AS MOVE_CNTY_2,
+            NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'')  AS MOVE_CNTY_3,
+            NULLIF(MAX(CASE WHEN rn = 4 THEN value ELSE '' END),'')  AS MOVE_CNTY_4,
             CASE 
-                WHEN COL4 IS NOT NULL AND COL4 > '' 
+                WHEN MAX(CASE WHEN rn = 4 THEN value ELSE '' END) > ''  
                 THEN 'TRUE' 
                 ELSE 'FALSE' 
             END AS MOVE_CNTY_GT3_IND
         INTO #MOVE_CNTY_OUT
-        FROM Pivoted
-        ORDER BY D_MOVE_CNTY_GROUP_KEY;
+        FROM Ranked
+        GROUP BY D_MOVE_CNTY_GROUP_KEY;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -1414,12 +1403,15 @@ BEGIN
             FROM Pivoted
         )
         SELECT 
-            CONFIRMATION_METHOD_1, CONFIRMATION_METHOD_2, CONFIRMATION_METHOD_3,
-            CONFIRMATION_METHOD_GT3_IND, CONFIRMATION_METHOD_ALL, confirmation_dt AS CONFIRMATION_DT,
-            investigation_key AS INVESTIGATION_KEY
+            NULLIF(CONFIRMATION_METHOD_1, '') AS CONFIRMATION_METHOD_1, 
+            NULLIF(CONFIRMATION_METHOD_2, '') AS CONFIRMATION_METHOD_2, 
+            NULLIF(CONFIRMATION_METHOD_3, '') AS CONFIRMATION_METHOD_3, 
+            NULLIF(CONFIRMATION_METHOD_GT3_IND, '') AS CONFIRMATION_METHOD_GT3_IND,  
+            NULLIF(CONFIRMATION_METHOD_ALL, '') AS CONFIRMATION_METHOD_ALL,  
+            CONFIRMATION_DT,
+            INVESTIGATION_KEY
         INTO #CONFIRMATION_METHOD_OUT  
         FROM Processed
-        WHERE LEN(CONFIRMATION_METHOD_ALL) > 0
         ORDER BY INVESTIGATION_KEY;
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -1534,7 +1526,7 @@ BEGIN
             LEFT JOIN [dbo].notification n WITH(NOLOCK) 
                 ON ne.notification_key = n.notification_key
             LEFT JOIN [dbo].nrt_investigation_notification invn WITH(NOLOCK)  
-                ON invn.public_health_case_uid = tdi.TB_PAM_UID     -- (original) LEFT JOIN [dbo].RDB_DATE rd ON ne.NOTIFICATION_SENT_DT_KEY = rd.DATE_key
+                ON invn.public_health_case_uid = tdi.TB_PAM_UID     
             LEFT JOIN [dbo].user_profile nu WITH(NOLOCK) 
                 ON n.notification_submitted_by = nu.NEDSS_ENTRY_ID
             LEFT JOIN [dbo].user_profile cu WITH(NOLOCK) 
@@ -1697,12 +1689,12 @@ BEGIN
 
         --------------------------------------------------------------------------------------------------------
 
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'DELETE INCOMING ACTIVE RECORDS';
-        
         BEGIN TRANSACTION
+        
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETE INCOMING ACTIVE RECORDS';
 
             -- 23. DELETE INCOMING ACTIVE RECORDS
             DELETE T
@@ -1722,16 +1714,12 @@ BEGIN
             VALUES 
                 (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION;
+            --------------------------------------------------------------------------------------------------------
 
-        --------------------------------------------------------------------------------------------------------
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'DELETE INCOMING DELETED RECORDS';
-
-        BEGIN TRANSACTION
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'DELETE INCOMING DELETED RECORDS';
 
             -- 24. DELETE DELETED RECORDS
             DELETE T
@@ -1751,16 +1739,13 @@ BEGIN
             VALUES 
                 (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-        COMMIT TRANSACTION;
         
-        --------------------------------------------------------------------------------------------------------
+            --------------------------------------------------------------------------------------------------------
 
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'INSERT INCOMING RECORDS';
-
-        BEGIN TRANSACTION
+            SET
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                @PROC_STEP_NAME = 'INSERT INCOMING RECORDS';
 
             -- 25. INSERT INCOMING RECORDS
             INSERT INTO [dbo].TB_DATAMART (
