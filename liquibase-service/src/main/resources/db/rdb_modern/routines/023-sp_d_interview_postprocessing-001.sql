@@ -144,7 +144,28 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+        (
+            SELECT string_agg(t.value, ',')
+            FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@interview_uids, ',')) t
+                left join #INTERVIEW_INIT tmp
+                on tmp.interview_uid = t.value
+                WHERE tmp.interview_uid is null
+        );
 
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            EXECUTE dbo.sp_nrt_backfill_postprocessing
+                @entity = 'INTERVIEW',
+                @record_uid_list = @interview_uids,
+                @batch_id = @batch_id,
+                @err_description = 'Missing NRT Record: sp_d_interview_postprocessing',
+                @status_cd  = 'READY',
+                @retry_count = 0
+
+            RETURN;
+        END
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
