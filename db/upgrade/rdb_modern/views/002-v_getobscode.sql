@@ -46,6 +46,7 @@ SELECT
     ,obs.branch_id
     ,obs.branch_type_cd
     ,obs.cd
+    ,obs.ovc_code
     ,CASE
         WHEN obs.ovc_code = 'NI' THEN 'No Input'
         WHEN label = 'cvg_code' THEN cvg.code_short_desc_txt
