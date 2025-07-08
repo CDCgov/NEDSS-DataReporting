@@ -80,7 +80,8 @@ public class PostProcessingService {
     final Map<String, Map<String, Queue<Long>>> dmCache = new ConcurrentHashMap<>();
 
     // set of caches for retrying failed topics/IDs and tracking retry attempts
-    private final Map<Long, Map<String, Queue<Long>>> retryCache = new ConcurrentHashMap<>();
+    final Map<Long, Map<String, Queue<Long>>> retryCache = new ConcurrentHashMap<>();
+    final Map<Long, String> errorMap = new ConcurrentHashMap<>();
     private final Map<Long, Integer> retryAttempts = new ConcurrentHashMap<>();
     private final Map<Long, Integer> backfillAttempts = new ConcurrentHashMap<>();
 
@@ -113,6 +114,7 @@ public class PostProcessingService {
 
     static final String STATUS_READY = "READY";
     static final String STATUS_COMPLETE = "COMPLETE";
+    static final String STATUS_SUSPENDED = "SUSPENDED";
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
@@ -376,31 +378,35 @@ public class PostProcessingService {
 
             // update backfill batch record(s) if exists
             if (backfillAttempts.containsKey(batchId)) {
+                retryCache.remove(batchId);
+                retryAttempts.remove(batchId);
 
                 String status = processed ? STATUS_COMPLETE : STATUS_READY;
                 int bfAttempt = backfillAttempts.getOrDefault(batchId, 0) + 1;
                 if (bfAttempt > maxRetries) {
                     logger.info("Reached max backfill retries for batch id: {}. Suspend further processing.", batchId);
-                    status = "SUSPENDED";
+                    status = STATUS_SUSPENDED;
                     bfAttempt = 0;
-                    backfillAttempts.remove(batchId);
                 }
 
-                postProcRepository.executeStoredProcForBackfill(null, null, batchId, null,
-                    status, bfAttempt);
+                postProcRepository.executeStoredProcForBackfill(null, null, batchId,
+                        errorMap.get(batchId), status, bfAttempt);
+
+                backfillAttempts.remove(batchId);
+                errorMap.remove(batchId);
+                continue;
             }
 
             if (processed) {
-                // clear retry attempt caches if no errors after re-processing
+                // clear retry caches if no errors after re-processing
                 retryAttempts.remove(batchId);
-                backfillAttempts.remove(batchId);
-
+                errorMap.remove(batchId);
             } else {
-
                 int attempt = retryAttempts.getOrDefault(batchId, 0);
-                if (attempt > maxRetries) {
+                if (attempt >= maxRetries) {
                     logger.info("Reached max retries for batch id: {}. Skipping further processing.", batchId);
                     retryAttempts.remove(batchId);
+                    retryCache.remove(batchId);
 
                     for (Entry<String, List<Long>> entry : idCacheSnapshot.entrySet()) {
                         Entity entity = getEntityByTopic(entry.getKey());
@@ -408,11 +414,12 @@ public class PostProcessingService {
                                 entity.getEntityName().toUpperCase(),
                                 listToParameterString(entry.getValue()),
                                 batchId,
-                                "err",
+                                errorMap.get(batchId),
                                 STATUS_READY,
                                 backfillAttempts.getOrDefault(batchId, 0)
                         );
                     }
+                    errorMap.remove(batchId);
                 }
             }
         }
@@ -439,6 +446,7 @@ public class PostProcessingService {
                 .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
                 .addAll(queue);
             backfillAttempts.computeIfAbsent(batchId, k -> bf.getRetryCount());
+            errorMap.computeIfAbsent(batchId, k -> bf.getErrDescription());
         });
 
         // Merge into the main retryCache for reprocessing, preserving batch IDs
@@ -566,10 +574,13 @@ public class PostProcessingService {
                 processingFailed = true;
                 if (batchId == null) {
                     batchId = (System.currentTimeMillis() << 10) | INSTANCE_ID;
+                    retryAttempts.put(batchId, 0);
+                } else {
+                    retryAttempts.merge(batchId, 1, Integer::sum);
                 }
                 Map<String, Queue<Long>> retryMap = retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
                 retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                retryAttempts.merge(batchId, 1, Integer::sum);
+                errorMap.computeIfAbsent(batchId, k -> e.getLocalizedMessage());
             }
         }
 
@@ -990,7 +1001,6 @@ public class PostProcessingService {
             logger.info("No updates to MORBIDITY_REPORT_DATAMART");
         }
     }
-
 
     private String listToParameterString(Collection<Long> inputList) {
         return Optional.ofNullable(inputList)
