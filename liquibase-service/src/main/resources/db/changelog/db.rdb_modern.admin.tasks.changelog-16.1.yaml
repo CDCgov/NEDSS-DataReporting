@@ -9,3 +9,13 @@ databaseChangeLog:
             path: 001-create_event_metric_cleanup_job-001.sql
             splitStatements: false
             endDelimiter: GO
+  - changeSet:
+      id: 5
+      author: liquibase
+      runOnChange: true
+      comment: "Create Batch Id Cleanup Job/Schedule"
+      changes:
+        - sqlFile:
+            path: 002-create_batch_id_cleanup_job-001.sql
+            splitStatements: false
+            endDelimiter: GO
