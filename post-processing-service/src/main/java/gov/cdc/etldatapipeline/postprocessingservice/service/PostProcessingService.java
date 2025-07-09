@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import jakarta.annotation.PreDestroy;
@@ -30,14 +31,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.HashMap;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Arrays;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 
 @Service
@@ -47,17 +55,20 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
 
+    // unique per instance, randomly assigned once
+    private static final int INSTANCE_ID = new Random(System.identityHashCode(PostProcessingService.class))
+            .nextInt(1 << 10); // 10-bit random ID
+
     // cache to store ids from nrt topics that needs to be processed for loading dims and facts
     // a map of nrt topic name and its associated ids
     final Map<String, Queue<Long>> idCache = new ConcurrentHashMap<>();
 
-    // cache to store cds from nrt topics that need to be processed for loading dims and facts
-    // this will be used to store information from topics with key values that need to be type String as opposed to Long
-    // a map of nrt topic name and its associated ids
+    // cache to store information from topics with key values that need to be type String as opposed to Long
+    // a map of nrt topic name and its associated cds
     final Map<String, Queue<String>> cdCache = new ConcurrentHashMap<>();
 
     // cache to store PHC ids from for specific case types to run summary and aggregate reports
-    // a map of case type (sum/agg) and its associated ids
+    // a map of the case type (sum/agg) and its associated ids
     final Map<String, Queue<Long>> sumCache = new ConcurrentHashMap<>();
 
     // cache to store rdb_table -> phc uids mapping for page_builder post-processing
@@ -67,8 +78,17 @@ public class PostProcessingService {
     final Map<String, Queue<Long>> obsCache = new ConcurrentHashMap<>();
 
     // cache to store ids that needs to be processed for datamarts
-    // a map of datamart names and the needed ids
+    // a map of datamart names and the necessary ids
     final Map<String, Map<String, Queue<Long>>> dmCache = new ConcurrentHashMap<>();
+
+    // set of caches for retrying failed topics/IDs and tracking retry attempts
+    final Map<Long, Map<String, Queue<Long>>> retryCache = new ConcurrentHashMap<>();
+    final Map<Long, String> errorMap = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> retryAttempts = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> backfillAttempts = new ConcurrentHashMap<>();
+
+    @Value("${service.max-retries}")
+    private int maxRetries;
 
     private static int nProc = Runtime.getRuntime().availableProcessors();
     private final ExecutorService dynDmExecutor = Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
@@ -94,7 +114,9 @@ public class PostProcessingService {
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
 
-
+    static final String STATUS_READY = "READY";
+    static final String STATUS_COMPLETE = "COMPLETE";
+    static final String STATUS_SUSPENDED = "SUSPENDED";
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
@@ -115,10 +137,10 @@ public class PostProcessingService {
      * @param payload The value of the Kafka message, which contains the payload to be processed.
      */
     @RetryableTopic(
-            attempts = "${spring.kafka.consumer.max-retry}", 
-            autoCreateTopics = "false", 
-            dltStrategy = DltStrategy.FAIL_ON_ERROR, 
-            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
+            attempts = "${spring.kafka.consumer.max-retry}",
+            autoCreateTopics = "false",
+            dltStrategy = DltStrategy.FAIL_ON_ERROR,
+            retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
             dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
             // retry topic name, such as topic-retry-1, topic-retry-2, etc
             topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
@@ -240,12 +262,12 @@ public class PostProcessingService {
     }
 
     @RetryableTopic(
-        attempts = "${spring.kafka.consumer.max-retry}", 
-        autoCreateTopics = "false", 
-        dltStrategy = DltStrategy.FAIL_ON_ERROR, 
-        retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}", 
-        dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}", 
-        topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE, 
+        attempts = "${spring.kafka.consumer.max-retry}",
+        autoCreateTopics = "false",
+        dltStrategy = DltStrategy.FAIL_ON_ERROR,
+        retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
+        dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
+        topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
         backoff = @Backoff(delay = 1000, multiplier = 2.0), exclude = {
             SerializationException.class,
             DeserializationException.class,
@@ -300,20 +322,19 @@ public class PostProcessingService {
      * <ul>1. Iterate through cached IDs grouped by entity type.</ul>
      * <ul>2. Execute the corresponding stored procedure for each entity type.</ul>
      * <ul>3. Log the execution status for debugging and monitoring purposes.</ul>
-     * <ul>4. Store the entity name and ids for later if it is needed for data marts (both direct dependent and also for multi-id data marts).</ul>
-     * <ul>5. Process event metric and summary data marts</ul>
-     * <ul>6. Send the event message to the kafka topic that handles data mart events for building other data marts</ul>
+     * <ul>4. Store the entity name and ids for later if needed for data marts (both direct dependent and also for multi-id datamarts).</ul>
+     * <ul>5. Process event metric and summary datamarts</ul>
+     * <ul>6. Send the event message to the kafka topic that handles data mart events for building other datamarts</ul>
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processCachedIds() {
 
-        // Making cache snapshot preventing out-of-sequence ids processing
-        // creates a deep copy of idCache into idCacheSnapshot and idVals into idValsSnapshot
+        // Making a cache snapshots preventing out-of-sequence ids processing
+        // creates a deep copy of caches into snapshots
         final Map<String, List<Long>> idCacheSnapshot;
-
-        // Making cache snapshot preventing out-of-sequence ids processing
-        // creates a deep copy of cdCache into cdCacheSnapshot
         final Map<String, List<String>> cdCacheSnapshot;
+        final Map<String, List<Long>> pbCacheSnapshot;
+        final Map<String, List<Long>> obsCacheSnapshot;
 
         synchronized (cacheLock) {
             idCacheSnapshot = idCache.entrySet().stream()
@@ -323,35 +344,204 @@ public class PostProcessingService {
             cdCacheSnapshot = cdCache.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
             cdCache.clear();
+
+            pbCacheSnapshot = pbCache.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+            pbCache.clear();
+
+            obsCacheSnapshot = obsCache.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+            obsCache.clear();
         }
 
-        boolean isCdCacheEmpty = cdCacheSnapshot.isEmpty();
-        boolean isIdCacheEmpty = idCacheSnapshot.isEmpty();
-
-        processCdCache(cdCacheSnapshot, isCdCacheEmpty);
+        processCdCache(cdCacheSnapshot);
 
         if (!idCacheSnapshot.isEmpty()) {
-            // sorting idCacheSnapshot so that entities with higher priority is processed first
-            List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
-                    .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
+            processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, null);
+        }
 
-            // list to store details of datamarts and the associated ids that needs to be hydrated downstream
-            List<DatamartData> dmData = new ArrayList<>();
-            // list to keep volatile datamart data to be merged into dmData
-            List<DatamartData> dmDataSp;
+        // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
+        if (cdCacheSnapshot.isEmpty() && idCacheSnapshot.isEmpty()) {
+            logger.info("No ids to process from the topics.");
+        }
+    }
 
-            // Isolated temporary map to accumulate entity ID collections by entity type.
-            // After processing, it is merged into dmCache for multi-ID datamarts invocation.
-            // Isolation prevents conflicts from concurrent modifications by the datamart processing thread.
-            Map<String, Queue<Long>> newDmMulti = new ConcurrentHashMap<>();
+    @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
+    protected void processRetryCache() {
 
-            for (Entry<String, List<Long>> entry : sortedEntries) {
-                String keyTopic = entry.getKey();
-                List<Long> ids = entry.getValue();
+        for(Entry<Long, Map<String, Queue<Long>>> retryEntry : retryCache.entrySet()) {
 
+            Long batchId = retryEntry.getKey();
+
+            // Making a cache snapshot preventing out-of-sequence ids processing
+            // creates a deep copy of cache into snapshot
+            final Map<String, List<Long>> idCacheSnapshot;
+            final Map<String, List<Long>> pbCacheSnapshot;
+            final Map<String, List<Long>> obsCacheSnapshot;
+
+            synchronized (cacheLock) {
+                idCacheSnapshot = retryEntry.getValue().entrySet().stream()
+                        .filter(entry -> !entry.getKey().contains("^"))
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+
+                pbCacheSnapshot = retryEntry.getValue().entrySet().stream()
+                        .filter(e -> e.getKey().startsWith("PB^"))
+                        .collect(Collectors.toMap(
+                                e -> e.getKey().substring("PB^".length()),
+                                e -> new ArrayList<>(e.getValue())
+                        ));
+
+                obsCacheSnapshot = retryEntry.getValue().entrySet().stream()
+                        .filter(e -> e.getKey().startsWith("OBS^"))
+                        .collect(Collectors.toMap(
+                                e -> e.getKey().substring("OBS^".length()),
+                                e -> new ArrayList<>(e.getValue())
+                        ));
+
+                retryCache.remove(batchId);
+            }
+
+            boolean processed = processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, batchId);
+
+            // update backfill batch record(s) if exists
+            if (backfillAttempts.containsKey(batchId)) {
+                retryCache.remove(batchId);
+                retryAttempts.remove(batchId);
+
+                String status = processed ? STATUS_COMPLETE : STATUS_READY;
+                int bfAttempt = backfillAttempts.get(batchId) + 1;
+                if (bfAttempt >= maxRetries) {
+                    logger.info("Reached max backfill retries for batch id: {}. Suspend further processing.", batchId);
+                    status = STATUS_SUSPENDED;
+                    bfAttempt = 0;
+                }
+
+                postProcRepository.executeStoredProcForBackfill(null, null, batchId,
+                        errorMap.get(batchId), status, bfAttempt);
+
+                backfillAttempts.remove(batchId);
+                errorMap.remove(batchId);
+                continue;
+            }
+
+            if (processed) {
+                // clear retry caches if no errors after re-processing
+                retryAttempts.remove(batchId);
+                errorMap.remove(batchId);
+            } else {
+                int attempt = retryAttempts.getOrDefault(batchId, 0);
+                if (attempt >= maxRetries) {
+                    logger.info("Reached max retries for batch id: {}. Skipping further processing.", batchId);
+                    retryAttempts.remove(batchId);
+                    retryCache.remove(batchId);
+
+                    processBackfills(idCacheSnapshot, key -> getEntityByTopic(key).getEntityName().toUpperCase(), batchId);
+                    processBackfills(pbCacheSnapshot, key -> "PB^" + key, batchId);
+                    processBackfills(obsCacheSnapshot, key -> "OBS^" + key, batchId);
+
+                    errorMap.remove(batchId);
+                }
+            }
+        }
+    }
+
+    private void processBackfills(Map<String, List<Long>> cache, UnaryOperator<String> nameOp, Long batchId) {
+
+        for (Entry<String, List<Long>> entry : cache.entrySet()) {
+            postProcRepository.executeStoredProcForBackfill(
+                    nameOp.apply(entry.getKey()),
+                    listToParameterString(entry.getValue()),
+                    batchId,
+                    errorMap.get(batchId),
+                    STATUS_READY,
+                    backfillAttempts.getOrDefault(batchId, 0)
+            );
+        }
+    }
+
+    @Scheduled(fixedDelayString = "${service.fixed-delay.backfill}")
+    protected void backfillEvent() {
+        //skip processing for non-positive value
+        if (maxRetries <= 0) {
+            return;
+        }
+
+        List<BackfillData> backfills = postProcRepository.executeBackfillEvent(STATUS_READY);
+        if (backfills.isEmpty()) {
+            logger.info("No backfill records found.");
+            return;
+        }
+
+        // Build a temporary map: batchId -> (entity -> queue of UIDs)
+        Map<Long, Map<String, Queue<Long>>> retryCacheLocal = new HashMap<>();
+        backfills.forEach(bf -> {
+            Long batchId = bf.getBatchId();
+
+            String bfe = bf.getEntity();
+            String entity = bfe.contains("^") ? bfe : "nrt_" + bfe.toLowerCase();
+            Queue<Long> queue = Arrays.stream(bf.getRecordUidList().split(","))
+                    .map(Long::valueOf)
+                    .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
+            retryCacheLocal
+                .computeIfAbsent(batchId, k -> new HashMap<>())
+                .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
+                .addAll(queue);
+            backfillAttempts.put(batchId, bf.getRetryCount());
+            retryAttempts.put(batchId, bf.getRetryCount());
+            errorMap.put(batchId, bf.getErrDescription());
+        });
+
+        // Merge into the main retryCache for reprocessing, preserving batch IDs
+        retryCacheLocal.forEach((batchId, entityMap) -> {
+            Map<String, Queue<Long>> batchMap = retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+            entityMap.forEach((entity, queue) ->
+                batchMap.computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>()).addAll(queue)
+            );
+        });
+        logger.info("Re-queued {} backfill batch(es) into retryCache", retryCacheLocal.size());
+    }
+
+    private boolean processIdCache(
+            Map<String, List<Long>> idCache, Map<String, List<Long>> pbCache, Map<String, List<Long>> obsCache, Long batchId) {
+
+        // sorting idCacheSnapshot so that entities with higher priority is processed first
+        List<Entry<String, List<Long>>> sortedEntries = idCache.entrySet().stream()
+                .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
+
+        // list to store details of datamarts and the associated ids that needs to be hydrated downstream
+        List<DatamartData> dmData = new ArrayList<>();
+
+        // list to keep volatile datamart data to be merged into dmData
+        List<DatamartData> dmDataSp;
+
+        // Isolated temporary map to accumulate entity ID collections by entity type.
+        // After processing, it is merged into dmCache for multi-ID datamarts invocation.
+        // Isolation prevents conflicts from concurrent modifications by the datamart processing thread.
+        Map<String, Queue<Long>> newDmMulti = new ConcurrentHashMap<>();
+
+        boolean processingFailed = false;
+
+        for (Entry<String, List<Long>> entry : sortedEntries) {
+            String keyTopic = entry.getKey();
+            List<Long> ids = entry.getValue();
+
+            if (processingFailed) {
+                if (batchId != null){
+                    Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
+                    retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                }
+                continue;
+            }
+
+            if (batchId == null) {
                 logger.info(PROCESSING_IDS_LOG_MSG, ids.size(), keyTopic);
+            } else {
+                logger.info("Retrying {} id(s) from topic: {}, attempt #{} for batch id: {}",
+                        ids.size(), keyTopic, retryAttempts.getOrDefault(batchId, 0)+1, batchId);
+            }
 
-                Entity entity = getEntityByTopic(keyTopic);
+            Entity entity = getEntityByTopic(keyTopic);
+            try {
                 switch (entity) {
                     case PAGE:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage);
@@ -376,7 +566,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace);
                         break;
                     case INVESTIGATION:
-                        dmDataSp = processInvestigation(keyTopic, entity, ids);
+                        dmDataSp = processInvestigation(keyTopic, entity, ids, pbCache);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         processByInvFormCode(dmData, keyTopic);
@@ -392,7 +582,7 @@ public class PostProcessingService {
                         dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;                    
+                        break;
                     case CASE_MANAGEMENT:
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
                         processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase,
@@ -408,7 +598,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
                         break;
                     case OBSERVATION:
-                        dmData = processObservation(keyTopic, entity, dmData);
+                        dmData = processObservation(keyTopic, entity, dmData, obsCache);
                         newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case TREATMENT:
@@ -425,41 +615,41 @@ public class PostProcessingService {
                         logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
                         break;
                 }
-            }
-            // process METRIC_EVENT datamart since multiple datamarts depend on it
-            processMetricEventDatamart(newDmMulti);
-            processSummaryCases();
-            datamartProcessor.process(dmData);
-
-            // merge entity IDs collections from temporary map `newDmMulti` into main datamart cache
-            synchronized (cacheLock) {
-                Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTI_ID_DATAMART, k -> new ConcurrentHashMap<>());
-                newDmMulti.forEach((key, queue) ->
-                        dmMulti.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
+            } catch (Exception e) {
+                logger.error(errorMessage(entity.getEntityName(), listToLogString(ids), e));
+                processingFailed = true;
+                batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
             }
         }
 
-        // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
-        if (isCdCacheEmpty && isIdCacheEmpty) {
-            logger.info("No ids to process from the topics.");
+        // process METRIC_EVENT datamart since multiple datamarts depend on it
+        processMetricEventDatamart(newDmMulti);
+        processSummaryCases();
+        datamartProcessor.process(dmData);
+
+        // merge entity IDs collections from temporary map newDmMulti into main datamart cache
+        synchronized (cacheLock) {
+            Map<String, Queue<Long>> dmMulti = dmCache.computeIfAbsent(MULTI_ID_DATAMART, k -> new ConcurrentHashMap<>());
+            newDmMulti.forEach((key, queue) ->
+                    dmMulti.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
         }
+
+        return !processingFailed;
     }
 
-    private void processCdCache(Map<String, List<String>> cdCacheSnapshot, boolean isCdCacheEmpty) {
-        if (!isCdCacheEmpty) {
-            for (Entry<String, List<String>> entry : cdCacheSnapshot.entrySet()) {
-                String keyTopic = entry.getKey();
-                List<String> cds = entry.getValue();
+    private void processCdCache(Map<String, List<String>> cdCacheSnapshot) {
+        for (Entry<String, List<String>> entry : cdCacheSnapshot.entrySet()) {
+            String keyTopic = entry.getKey();
+            List<String> cds = entry.getValue();
 
-                logger.info(PROCESSING_IDS_LOG_MSG, cds.size(), keyTopic);
+            logger.info(PROCESSING_IDS_LOG_MSG, cds.size(), keyTopic);
 
-                Entity entity = getEntityByTopic(keyTopic);
+            Entity entity = getEntityByTopic(keyTopic);
 
-                if (Objects.requireNonNull(entity) == CONDITION) {
-                    processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
-                } else {
-                    logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
-                }
+            if (Objects.requireNonNull(entity) == CONDITION) {
+                processTopic(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
+            } else {
+                logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
             }
         }
     }
@@ -529,18 +719,46 @@ public class PostProcessingService {
         }
     }
 
-    private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids) {
+    private Long buildRetryCache(
+            Long batchId, String keyTopic, List<Long> ids, Map<String, List<Long>> pbCache, Map<String, List<Long>> obsCache, Exception e) {
+
+        //skip retrying for non-positive value
+        if (maxRetries <= 0) {
+            return null;
+        }
+
+        if (batchId == null) {
+            batchId = (System.currentTimeMillis() << 10) | INSTANCE_ID;
+            retryAttempts.put(batchId, 0);
+        } else {
+            retryAttempts.merge(batchId, 1, Integer::sum);
+        }
+
+        Map<String, Queue<Long>> retryMap = retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+        retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+
+        Throwable cause = e;
+        while (cause.getCause() != null) {
+            cause = cause.getCause(); // unwrap nested exceptions
+        }
+        String errorMsg = cause.getMessage();
+        errorMap.put(batchId, errorMsg);
+
+        pbCache.forEach((tbl, queue) ->
+                retryMap.computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
+
+        obsCache.forEach((key, queue) ->
+                retryMap.computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
+
+        return batchId;
+    }
+
+    private List<DatamartData> processInvestigation(
+            String keyTopic, Entity entity, List<Long> ids, Map<String, List<Long>> pbCache) {
         List<DatamartData> dmData;
         dmData = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
-        Map<String, List<Long>> pbCacheSnapshot;
-        synchronized (cacheLock) {
-            pbCacheSnapshot = pbCache.entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
-            pbCache.clear();
-        }
-
-        pbCacheSnapshot.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
+        pbCache.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
                 investigationRepository::executeStoredProcForPageBuilder));
 
         processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
@@ -549,15 +767,13 @@ public class PostProcessingService {
         return dmData;
     }
 
-    private List<DatamartData> processObservation(String keyTopic, Entity entity, List<DatamartData> dmData) {
+    private List<DatamartData> processObservation(
+            String keyTopic, Entity entity, List<DatamartData> dmData, Map<String, List<Long>> obsCache) {
         final List<Long> morbIds;
         final List<Long> labIds;
 
-        synchronized (cacheLock) {
-            morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
-            labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
-            obsCache.clear();
-        }
+        morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
+        labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
 
         if (!morbIds.isEmpty()) {
             List<DatamartData> dmDataM = processTopic(keyTopic, entity, morbIds,
@@ -594,169 +810,160 @@ public class PostProcessingService {
     protected void processDatamartIds() {
         List<Long> ldfUids = new ArrayList<>();
         for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
-            if (!entry.getValue().isEmpty()) {
-                String dmKey = entry.getKey();
+            String dmKey = entry.getKey();
+            Map<String, Queue<Long>> dmValues = entry.getValue();
 
-                // skip multi ID processing here, it should after this processing
-                if (MULTI_ID_DATAMART.equals(dmKey)) {
-                    continue;
-                }
+            if (dmValues.isEmpty() || MULTI_ID_DATAMART.equals(dmKey)) {
+                continue;
+            }
 
-                // for complex value (e.g. "GENERIC_CASE,LDF_GENERIC") the key should be parsed
-                String[] dmTypes = dmKey.split(",");
-                String dmType =  dmTypes[0];
-                String ldfType = dmTypes.length > 1 ? dmTypes[1] : "UNKNOWN" ;
+            // for complex value (e.g. "GENERIC_CASE,LDF_GENERIC") the key should be parsed
+            String[] dmTypes = dmKey.split(",");
+            String dmType =  dmTypes[0];
+            String ldfType = dmTypes.length > 1 ? dmTypes[1] : "UNKNOWN" ;
 
-                List<Long> uids = Optional.ofNullable(entry.getValue().get(INVESTIGATION.getEntityName()))
-                        .map(ArrayList::new).orElseGet(ArrayList::new);
+            List<Long> uids = Optional.ofNullable(dmValues.get(INVESTIGATION.getEntityName()))
+                    .map(ArrayList::new).orElseGet(ArrayList::new);
 
-                List<Long> patUids = Optional.ofNullable(entry.getValue().get(PATIENT.getEntityName()))
-                        .map(ArrayList::new).orElseGet(ArrayList::new);
+            List<Long> patUids = Optional.ofNullable(dmValues.get(PATIENT.getEntityName()))
+                    .map(ArrayList::new).orElseGet(ArrayList::new);
 
-                List<Long> obsUids = Optional.ofNullable(entry.getValue().get(OBSERVATION.getEntityName()))
-                        .map(ArrayList::new).orElseGet(ArrayList::new);
+            List<Long> obsUids = Optional.ofNullable(dmValues.get(OBSERVATION.getEntityName()))
+                    .map(ArrayList::new).orElseGet(ArrayList::new);
 
-                if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
-                    ldfUids.addAll(uids);
-                }
+            if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
+                ldfUids.addAll(uids);
+            }
 
-                dmCache.put(dmKey, new ConcurrentHashMap<>());
+            dmCache.put(dmKey, new ConcurrentHashMap<>());
 
-                // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
-                // for COVID_VAC_DATAMART it actually contains vaccination uids
-                String cases = uids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
+            // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
+            // for COVID_VAC_DATAMART it actually contains vaccination uids
+            String cases = uids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
 
-                // make sure the entity names for datamart enum values follows the same naming
-                // as the enum itself
-                switch (Entity.valueOf(dmType.toUpperCase())) {
-                    case HEPATITIS_DATAMART:
-                        executeDatamartProc(CASE_LAB_DATAMART,
-                                investigationRepository::executeStoredProcForCaseLabDatamart, cases);
-                        executeDatamartProc(HEPATITIS_DATAMART,
-                                investigationRepository::executeStoredProcForHepDatamart, cases);
-                        
-                        break;
-                    case STD_HIV_DATAMART:
-                        executeDatamartProc(STD_HIV_DATAMART,
-                                investigationRepository::executeStoredProcForStdHIVDatamart, cases);
-                        break;
-                    case GENERIC_CASE:
-                        executeDatamartProc(GENERIC_CASE,
-                            investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
+            // make sure the entity names for datamart enum values follows the same naming
+            // as the enum itself
+            switch (Entity.valueOf(dmType.toUpperCase())) {
+                case HEPATITIS_DATAMART:
+                    executeDatamartProc(CASE_LAB_DATAMART,
+                            investigationRepository::executeStoredProcForCaseLabDatamart, cases);
+                    executeDatamartProc(HEPATITIS_DATAMART,
+                            investigationRepository::executeStoredProcForHepDatamart, cases);
+                    break;
+                case STD_HIV_DATAMART:
+                    executeDatamartProc(STD_HIV_DATAMART,
+                            investigationRepository::executeStoredProcForStdHIVDatamart, cases);
+                    break;
+                case GENERIC_CASE:
+                    executeDatamartProc(GENERIC_CASE,
+                        investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
+                    processLdfLegacy(ldfType, cases);
+                    break;
+                case CRS_CASE:
+                    executeDatamartProc(CRS_CASE,
+                            investigationRepository::executeStoredProcForCRSCaseDatamart, cases);
+                    break;
+                case RUBELLA_CASE:
+                    executeDatamartProc(RUBELLA_CASE,
+                            investigationRepository::executeStoredProcForRubellaCaseDatamart, cases);
+                    break;
+                case MEASLES_CASE:
+                    executeDatamartProc(MEASLES_CASE,
+                            investigationRepository::executeStoredProcForMeaslesCaseDatamart, cases);
+                    break;
+                case CASE_LAB_DATAMART:
+                    executeDatamartProc(CASE_LAB_DATAMART,
+                            investigationRepository::executeStoredProcForCaseLabDatamart, cases);
+                    break;
+                case BMIRD_CASE:
+                    executeDatamartProc(BMIRD_CASE,
+                            investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
+                    executeDatamartProc(BMIRD_STREP_PNEUMO_DATAMART,
+                            investigationRepository::executeStoredProcForBmirdStrepPneumoDatamart, cases);
+                    processLdfLegacy(ldfType, cases);
+                    break;
+                case HEPATITIS_CASE:
+                    executeDatamartProc(HEPATITIS_CASE,
+                            investigationRepository::executeStoredProcForHepatitisCaseDatamart, cases);
+                    processLdfLegacy(ldfType, cases);
+                    break;
+                case PERTUSSIS_CASE:
+                    executeDatamartProc(PERTUSSIS_CASE,
+                            investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
+                    break;
+                case TB_DATAMART:
+                    executeDatamartProc(TB_DATAMART,
+                            investigationRepository::executeStoredProcForTbDatamart, cases);
 
-                        switch (Entity.valueOf(ldfType.toUpperCase())) {
-                            case LDF_GENERIC:
-                                executeDatamartProc(LDF_GENERIC,
-                                investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
-                                break;
-                            case LDF_FOODBORNE:
-                                executeDatamartProc(LDF_FOODBORNE,
-                                investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
-                                break;
-                            case LDF_TETANUS:
-                                // to test this, Tetanus must be added as a legacy page and 
-                                // [dbo].nrt_datamart_metadata table must be updated adding TETANUS
-                                executeDatamartProc(LDF_TETANUS,
-                                investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
-                                break;
-                            case LDF_MUMPS:
-                                executeDatamartProc(LDF_MUMPS,
-                                    investigationRepository::executeStoredProcForLdfMumpsDatamart, cases);
-                                break;
-                            default:
-                                break;
-                        }    
-                        
-                        break;
-                    case CRS_CASE:
-                        executeDatamartProc(CRS_CASE,
-                                investigationRepository::executeStoredProcForCRSCaseDatamart, cases);
-                        break;
-                    case RUBELLA_CASE:
-                        executeDatamartProc(RUBELLA_CASE,
-                                investigationRepository::executeStoredProcForRubellaCaseDatamart, cases);
-                        break;
-                    case MEASLES_CASE:
-                        executeDatamartProc(MEASLES_CASE,
-                                investigationRepository::executeStoredProcForMeaslesCaseDatamart, cases);
-                        break;
-                    case CASE_LAB_DATAMART:
-                        executeDatamartProc(CASE_LAB_DATAMART,
-                                investigationRepository::executeStoredProcForCaseLabDatamart, cases);
-                        break;
-                    case BMIRD_CASE:
-                        executeDatamartProc(BMIRD_CASE,
-                                investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
-                        if(ldfType.equalsIgnoreCase(LDF_BMIRD.getEntityName())){
-                            executeDatamartProc(LDF_BMIRD,
-                            investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
-                        }
-                        executeDatamartProc(BMIRD_STREP_PNEUMO_DATAMART,
-                                investigationRepository::executeStoredProcForBmirdStrepPneumoDatamart, cases);
-                        break;
-                    case HEPATITIS_CASE:
-                        executeDatamartProc(HEPATITIS_CASE,
-                                investigationRepository::executeStoredProcForHepatitisCaseDatamart, cases);
-                        if (ldfType.equalsIgnoreCase(LDF_HEPATITIS.getEntityName())) {
-                            executeDatamartProc(LDF_HEPATITIS,
-                            investigationRepository::executeStoredProcForLdfHepatitisDatamart, cases);
-                        }  
-                        break;
-                    case PERTUSSIS_CASE:
-                        executeDatamartProc(PERTUSSIS_CASE,
-                                investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
-                        break;
-                    case TB_DATAMART:
-                        executeDatamartProc(TB_DATAMART,
-                                investigationRepository::executeStoredProcForTbDatamart, cases);
+                    executeDatamartProc(TB_HIV_DATAMART,
+                            investigationRepository::executeStoredProcForTbHivDatamart, cases);
+                    break;
+                case VAR_DATAMART:
+                    executeDatamartProc(VAR_DATAMART,
+                        investigationRepository::executeStoredProcForVarDatamart, cases);
+                    break;
+                case COVID_CASE_DATAMART:
+                    executeDatamartProc(COVID_CASE_DATAMART,
+                            investigationRepository::executeStoredProcForCovidCaseDatamart, cases);
+                    break;
+                case COVID_CONTACT_DATAMART:
+                    executeDatamartProc(COVID_CONTACT_DATAMART,
+                            investigationRepository::executeStoredProcForCovidContactDatamart, cases);
+                    break;
+                case COVID_VACCINATION_DATAMART:
+                    String pats = patUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
 
-                        executeDatamartProc(TB_HIV_DATAMART,
-                                investigationRepository::executeStoredProcForTbHivDatamart, cases);
-                        break;
-                    case VAR_DATAMART:
-                        executeDatamartProc(VAR_DATAMART,
-                            investigationRepository::executeStoredProcForVarDatamart, cases);
-                        break;
-                    case COVID_CASE_DATAMART:
-                        executeDatamartProc(COVID_CASE_DATAMART,
-                                investigationRepository::executeStoredProcForCovidCaseDatamart, cases);
-                        break;
-                    case COVID_CONTACT_DATAMART:
-                        executeDatamartProc(COVID_CONTACT_DATAMART,
-                                investigationRepository::executeStoredProcForCovidContactDatamart, cases);
-                        break;
-                    case COVID_VACCINATION_DATAMART:
-                        String pats = patUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
+                    executeDatamartProc(COVID_VACCINATION_DATAMART,
+                            investigationRepository::executeStoredProcForCovidVacDatamart, cases, pats);
+                    break;
+                case COVID_LAB_DATAMART:
+                    String labs = obsUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
 
-                        executeDatamartProc(COVID_VACCINATION_DATAMART,
-                                investigationRepository::executeStoredProcForCovidVacDatamart, cases, pats);
-                        break;
-                    case COVID_LAB_DATAMART:
-                        String labs = obsUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-
-                        executeDatamartProc(COVID_LAB_DATAMART,
-                                investigationRepository::executeStoredProcForCovidLabDatamart, labs);
-                        executeDatamartProc(COVID_LAB_CELR_DATAMART,
-                                investigationRepository::executeStoredProcForCovidLabCelrDatamart, labs);
-                        break;
-                    default:
-                        logger.info("No associated datamart processing logic found for the key: {} ", dmType);
-                }
-            } else {
-                logger.info("No data to process from the datamart topics.");
+                    executeDatamartProc(COVID_LAB_DATAMART,
+                            investigationRepository::executeStoredProcForCovidLabDatamart, labs);
+                    executeDatamartProc(COVID_LAB_CELR_DATAMART,
+                            investigationRepository::executeStoredProcForCovidLabCelrDatamart, labs);
+                    break;
+                default:
+                    logger.info("No associated datamart processing logic found for the key: {} ", dmType);
             }
         }
 
-        if (!ldfUids.isEmpty()) {
-            String cases = ldfUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-            executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
-                    investigationRepository::executeStoredProcForLdfVacPreventDiseasesDatamart, cases);
-        }
+        String cases = ldfUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
+        executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
+                investigationRepository::executeStoredProcForLdfVacPreventDiseasesDatamart, cases);
 
         Optional.ofNullable(dmCache.get(MULTI_ID_DATAMART)).ifPresent(multi -> {
             dmCache.put(MULTI_ID_DATAMART, new ConcurrentHashMap<>());
             processMultiIdDatamart(multi);
         });
+    }
+
+    private void processLdfLegacy(String ldfType, String cases) {
+        switch (Entity.valueOf(ldfType.toUpperCase())) {
+            case LDF_GENERIC:
+                executeDatamartProc(LDF_GENERIC, investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
+                break;
+            case LDF_FOODBORNE:
+                executeDatamartProc(LDF_FOODBORNE, investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
+                break;
+            case LDF_TETANUS:
+                // to test this, Tetanus must be added as a legacy page and
+                // [dbo].nrt_datamart_metadata table must be updated adding TETANUS
+                executeDatamartProc(LDF_TETANUS, investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
+                break;
+            case LDF_MUMPS:
+                executeDatamartProc(LDF_MUMPS, investigationRepository::executeStoredProcForLdfMumpsDatamart, cases);
+                break;
+            case LDF_BMIRD:
+                executeDatamartProc(LDF_BMIRD, investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
+                break;
+            case LDF_HEPATITIS:
+                executeDatamartProc(LDF_HEPATITIS, investigationRepository::executeStoredProcForLdfHepatitisDatamart, cases);
+                break;
+            default:
+                break;
+        }
     }
 
     private void executeDatamartProc(Entity dmEntity, Consumer<String> repositoryMethod, String ids) {
@@ -828,7 +1035,6 @@ public class PostProcessingService {
                                         Collectors.joining(",")
                                 )
                         ));
-                    
 
                 datamartPhcIdMap.forEach((datamart, phcIds) ->
                             CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
@@ -838,7 +1044,6 @@ public class PostProcessingService {
             } else {
                 logger.info("No updates to Dynamic Datamarts");
             }
-
         } else {
             logger.info("No updates to INV_SUMMARY Datamart");
         }
@@ -849,7 +1054,6 @@ public class PostProcessingService {
             logger.info("No updates to MORBIDITY_REPORT_DATAMART");
         }
     }
-
 
     private String listToParameterString(Collection<Long> inputList) {
         return Optional.ofNullable(inputList)
@@ -901,11 +1105,9 @@ public class PostProcessingService {
             repositoryMethod.accept(idsString);
             completeLog(spName);
         }
-
     }
 
-    private void processTopicCd(String keyTopic, Entity entity, Collection<String> cds,
-                                Consumer<String> repositoryMethod) {
+    private void processTopic(String keyTopic, Entity entity, Collection<String> cds, Consumer<String> repositoryMethod) {
         String cdString = cds.stream().distinct().collect(Collectors.joining(","));
         String spName = entity.getStoredProcedure();
         prepareAndLog(keyTopic, cdString, entity.getEntityName(), spName);
@@ -923,7 +1125,7 @@ public class PostProcessingService {
         return result;
     }
 
-    private void processTopic(String keyTopic, Entity entity,  Collection<Long> ids, String vals,
+    private void processTopic(String keyTopic, Entity entity, Collection<Long> ids, String vals,
                               BiConsumer<String, String> repositoryMethod) {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
@@ -944,5 +1146,4 @@ public class PostProcessingService {
     private void completeLog(String sp) {
         logger.info(SP_EXECUTION_COMPLETED, sp);
     }
-
 }
