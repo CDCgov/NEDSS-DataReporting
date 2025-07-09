@@ -19,7 +19,7 @@ CREATE TABLE dbo.nrt_observation
     version_ctrl_nbr                     smallint                                        NOT NULL,
     ordering_person_id                   nvarchar(max)                                   NULL,
     patient_id                           bigint                                          NULL,
-    result_observation_uid               bigint                                          NULL,
+    result_observation_uid               nvarchar(max)                                   NULL,
     author_organization_id               bigint                                          NULL,
     ordering_organization_id             bigint                                          NULL,
     performing_organization_id           bigint                                          NULL,
