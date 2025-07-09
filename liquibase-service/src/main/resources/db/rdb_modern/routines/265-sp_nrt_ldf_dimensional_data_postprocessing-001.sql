@@ -133,6 +133,30 @@ BEGIN
 
 
 		------------------------------------------------------------------------------------------------------------------------------------------
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@ldf_id_list, ',')) t
+                left join #LDF_META_DATA tmp
+                on tmp.ldf_uid = t.value	
+                WHERE tmp.ldf_uid is null	
+		);
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_nrt_ldf_dimensional_data_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+           RETURN;
+        END
+		------------------------------------------------------------------------------------------------------------------------------------------
 
 
 		SET 
@@ -166,8 +190,6 @@ BEGIN
 
 
 		------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 		SET 
 			@PROC_STEP_NO =  @PROC_STEP_NO + 1;
@@ -1209,7 +1231,15 @@ BEGIN
 			(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
 			VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 
-		return -1 ;
+		SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                @FullErrorMessage AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
 
 	END CATCH
 

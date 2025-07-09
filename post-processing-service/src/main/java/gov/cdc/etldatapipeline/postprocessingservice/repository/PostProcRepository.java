@@ -20,8 +20,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Query(value = "EXEC sp_nrt_patient_postprocessing :patientUids", nativeQuery = true)
     List<DatamartData>  executeStoredProcForPatientIds(@Param("patientUids") String patientUids);
 
-    @Procedure("sp_nrt_ldf_postprocessing")
-    void executeStoredProcForLdfIds(@Param("ldfUids") String ldfUids);
+    @Query(value = "EXEC sp_nrt_ldf_postprocessing :ldfUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfIds(@Param("ldfUids") String ldfUids);
 
     @Query(value = "EXEC sp_d_morbidity_report_postprocessing :observationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForMorbReport(@Param("observationUids") String observationUids);
@@ -100,8 +100,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
             @Param("datamart") String datamart,
             @Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_ldf_dimensional_data_postprocessing")
-    void executeStoredProcForLdfDimensionalData(@Param("ldfUids") String ldfUids);
+    @Query(value = "exec sp_nrt_ldf_dimensional_data_postprocessing :ldfUids", nativeQuery = true)
+    List<DatamartData>  executeStoredProcForLdfDimensionalData(@Param("ldfUids") String ldfUids);
 
     @Procedure("sp_nrt_odse_nbs_page_postprocessing")
     void executeStoredProcForNBSPage(@Param("pageUids") String pageUids);

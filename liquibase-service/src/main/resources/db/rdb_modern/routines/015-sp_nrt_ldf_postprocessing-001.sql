@@ -51,7 +51,7 @@ BEGIN
                );
 
 --------------------------------------------------------------------------------------------------------
-        SET @proc_step_name='Create #LDF_LIST Table';
+        SET @proc_step_name='Create #LDF_UID_LIST Table';
         SET @proc_step_no = @proc_step_no +1;
 
         IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL
@@ -134,6 +134,30 @@ BEGIN
                );
                
 ------------------------------------------------------------------------------------------------------
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+        ( 
+          SELECT string_agg(t.value, ',')
+          FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@ldf_uid_list, ',')) t
+                    left join #DEL_LDF_DATA_KEY tmp
+                    on tmp.ldf_uid = t.value	
+                    WHERE tmp.ldf_uid is null	
+        );
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_nrt_ldf_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+           RETURN;
+        END
+		------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @proc_step_name='Delete Records from nrt_ldf_data_key';
         SET @proc_step_no = @proc_step_no +1;
@@ -1351,36 +1375,20 @@ BEGIN
 
         /* Logging */
         INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        ,[Error_Description]
-        )
-      VALUES
-  (
-              @batch_id
-            ,current_timestamp
-            ,current_timestamp
-            ,@dataflow_name
-            ,@package_name
-            ,'ERROR'
-            ,@Proc_Step_no
-            ,@proc_step_name
-            ,0
-            ,LEFT(@ldf_uid_list,500)
-            ,@FullErrorMessage
-            );
+        ( batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1],[Error_Description])
+        VALUES
+        (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'ERROR',@Proc_Step_no,@proc_step_name,0,LEFT(@ldf_uid_list,500),@FullErrorMessage);
 
 
-        RETURN @FullErrorMessage;
+        SELECT
+          CAST(NULL AS BIGINT) AS public_health_case_uid,
+          CAST(NULL AS BIGINT) AS patient_uid,
+          CAST(NULL AS BIGINT) AS observation_uid,
+          'Error' AS datamart,
+          CAST(NULL AS VARCHAR(50))  AS condition_cd,
+          @FullErrorMessage AS stored_procedure,
+          CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+          WHERE 1=1;
 
 
     END CATCH
