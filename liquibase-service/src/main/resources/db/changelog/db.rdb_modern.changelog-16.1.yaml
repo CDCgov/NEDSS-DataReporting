@@ -2132,7 +2132,7 @@ databaseChangeLog:
         - sqlFile:
             path: 185-sp_nrt_d_move_state_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO        
+            endDelimiter: GO
   - changeSet:
       id: 480
       author: liquibase
@@ -2618,7 +2618,7 @@ databaseChangeLog:
         - sqlFile:
             path: 285-sp_ldf_bmird_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO 
+            endDelimiter: GO
   - changeSet:
       id: 790
       author: liquibase
@@ -2635,7 +2635,7 @@ databaseChangeLog:
         - sqlFile:
             path: 290-sp_ldf_foodborne_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO 
+            endDelimiter: GO
   - changeSet:
       id: 800
       author: liquibase
@@ -2669,7 +2669,7 @@ databaseChangeLog:
         - sqlFile:
             path: 300-sp_ldf_tetanus_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO             
+            endDelimiter: GO
   - changeSet:
       id: 820
       author: liquibase
@@ -2799,14 +2799,6 @@ databaseChangeLog:
             path: 340-sp_nrt_srte_condition_code_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
-  - changeSet:
-      id: 890
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 039-alter_table_add_index-001.sql
-            splitStatements: false
   - changeSet:
       id: 895
       author: liquibase
