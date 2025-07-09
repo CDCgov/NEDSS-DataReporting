@@ -382,7 +382,7 @@ BEGIN
                 ON HC.INVESTIGATOR_KEY = INVGTR.PROVIDER_KEY
             LEFT JOIN dbo.D_ORGANIZATION REPTORG WITH (NOLOCK)
                 ON HC.RPT_SRC_ORG_KEY = REPTORG.ORGANIZATION_KEY
-            LEFT JOIN dbo.v_condition_dim con WITH (NOLOCK)
+            LEFT JOIN dbo.condition con WITH (NOLOCK)
                 ON inv.cd = con.condition_cd
             WHERE 
             (I.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))

@@ -211,7 +211,7 @@ BEGIN
             COALESCE(PEDIATRICIAN.PROVIDER_KEY, 1) AS PEDIATRICIAN_KEY
         into #ENTITY_KEYSTORE_STD
         FROM #PHC_CASE_UIDS_ALL   FSSHC
-                 LEFT OUTER JOIN dbo.v_condition_dim CONDITION with(nolock) ON FSSHC.CD= CONDITION.CONDITION_CD
+                 LEFT OUTER JOIN dbo.condition CONDITION with(nolock) ON FSSHC.CD= CONDITION.CONDITION_CD
                  LEFT OUTER JOIN dbo.D_PATIENT PATIENT	with(nolock) ON fsshc.PATIENT_ID= PATIENT.PATIENT_UID
                  LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPITAL with(nolock) ON fsshc.HOSPITAL_UID= HOSPITAL.ORGANIZATION_UID
                  LEFT OUTER JOIN dbo.D_ORGANIZATION  HOSPDELIVERY with(nolock) ON fsshc.ORG_AS_HOSPITAL_OF_DELIVERY_UID= HOSPDELIVERY.ORGANIZATION_UID
@@ -406,7 +406,7 @@ BEGIN
         FROM #F_STD_PAGE_CASE_TEMP_INC pti
                  inner join dbo.INVESTIGATION inv with(nolock) on inv.INVESTIGATION_KEY = pti.INVESTIGATION_KEY
                  inner join dbo.D_PATIENT pt with(nolock) on pt.PATIENT_KEY = pti.PATIENT_KEY
-                 inner join dbo.v_condition_dim cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
+                 inner join dbo.condition cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
         where pti.INVESTIGATION_KEY in ( select INVESTIGATION_KEY
                                          FROM #F_STD_PAGE_CASE_TEMP_INC pti
                                          group by INVESTIGATION_KEY, PATIENT_KEY having count(*) > 1
@@ -431,7 +431,7 @@ BEGIN
         FROM #F_STD_PAGE_CASE_TEMP_INC pti
                  inner join dbo.INVESTIGATION inv with(nolock) on inv.INVESTIGATION_KEY = pti.INVESTIGATION_KEY
                  inner join dbo.D_PATIENT pt with(nolock) on pt.PATIENT_KEY = pti.PATIENT_KEY
-                 inner join dbo.v_condition_dim cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
+                 inner join dbo.condition cd with(nolock) on cd.CONDITION_KEY = pti.CONDITION_KEY
         where pti.INVESTIGATION_KEY  in ( select INVESTIGATION_KEY
                                           FROM #F_STD_PAGE_CASE_TEMP_INC pti
                                           group by INVESTIGATION_KEY having count(*) > 1

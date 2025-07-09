@@ -119,7 +119,7 @@ BEGIN
                  LEFT JOIN dbo.RDB_DATE drpt with (nolock) ON CAST(nrt.rpt_sent_time AS DATE) = drpt.DATE_MM_DD_YYYY
                  LEFT JOIN dbo.RDB_DATE dsub with (nolock) ON CAST(nrt.notif_add_time AS DATE) = dsub.DATE_MM_DD_YYYY
                  LEFT JOIN dbo.RDB_DATE dupd with (nolock) ON CAST(nrt.notif_last_chg_time AS DATE) = dupd.DATE_MM_DD_YYYY
-                 LEFT JOIN dbo.v_condition_dim cnd with (nolock) ON nrt.condition_cd = cnd.CONDITION_CD
+                 LEFT JOIN dbo.condition cnd with (nolock) ON nrt.condition_cd = cnd.CONDITION_CD
         WHERE nrt.notification_uid in (SELECT value FROM STRING_SPLIT(@notification_uids, ','));
 
         /* Logging */
@@ -401,7 +401,7 @@ BEGIN
                null                               AS investigation_form_cd
         FROM #temp_ntf_event_table ntf
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ntf.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = ntf.CONDITION_KEY
+                 LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_KEY = ntf.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ntf.PATIENT_KEY
                  INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
         WHERE dtm.Datamart NOT IN ('Covid_Contact_Datamart','Covid_Lab_Datamart','Covid_Vaccination_Datamart');

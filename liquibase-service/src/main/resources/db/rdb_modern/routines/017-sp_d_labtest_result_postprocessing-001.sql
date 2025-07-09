@@ -330,7 +330,7 @@ BEGIN
                principle for adding a prog_area_cd row to the condition, it sure will cause
                some confusion among users.  There's no "disease" ON the input.
              */
-		LEFT JOIN [dbo].v_condition_dim AS con WITH (NOLOCK)
+		LEFT JOIN [dbo].condition AS con WITH (NOLOCK)
 			ON no2.prog_area_cd = con.program_area_cd AND con.condition_cd IS NULL
             /*LDF_GRP_KEY*/
             --LEFT JOIN ldf_group AS ldf_g 	ON tst.Lab_test_UID = ldf_g.business_object_uid --VS
@@ -1900,7 +1900,7 @@ BEGIN
                  INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
                  LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
                  JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.condition_cd = c.CONDITION_CD
         WHERE ltr.INVESTIGATION_KEY <> 1
@@ -1919,7 +1919,7 @@ BEGIN
                  INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
                  LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
                  JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.Datamart = 'Case_Lab_Datamart'
         WHERE ltr.INVESTIGATION_KEY <> 1
@@ -1937,7 +1937,7 @@ BEGIN
                  INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
                  INNER JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
                  LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
                  LEFT JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.condition_cd = c.CONDITION_CD
         WHERE dtm.Datamart IN ('Covid_Case_Datamart', 'Covid_Lab_Datamart')
