@@ -832,7 +832,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForTreatment(expectedTreatmentIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(9, logs.size());
+        assertEquals(8, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(TREATMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }

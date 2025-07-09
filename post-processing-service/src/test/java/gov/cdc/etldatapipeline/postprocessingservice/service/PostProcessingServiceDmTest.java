@@ -19,7 +19,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -290,11 +289,11 @@ class PostProcessingServiceDmTest {
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\"," +
                                 "\"datamart\":\"BMIRD_Case,LDF_BMIRD\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
-                        "BMIRD_Case,LDF_BMIRD", BMIRD_STREP_PNEUMO_DATAMART.getStoredProcedure(), 7,
+                        "BMIRD_Case,LDF_BMIRD", LDF_BMIRD.getStoredProcedure(), 7,
                         repo -> {
                             verify(repo).executeStoredProcForBmirdCaseDatamart("123");
-                            verify(repo).executeStoredProcForLdfBmirdDatamart("123");
                             verify(repo).executeStoredProcForBmirdStrepPneumoDatamart("123");
+                            verify(repo).executeStoredProcForLdfBmirdDatamart("123");
                         }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
@@ -526,16 +525,6 @@ class PostProcessingServiceDmTest {
         postProcessingServiceMock.processDmMessage(topic, msg);
         List<ILoggingEvent> logs = listAppender.list;
         assertTrue(logs.getLast().getFormattedMessage().contains("Skipping further processing"));
-    }
-
-    @Test
-    void testProcessDatamartEmptyCache() {
-        postProcessingServiceMock.dmCache.put("Datamart", new ConcurrentHashMap<>());
-        postProcessingServiceMock.processDatamartIds();
-
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(1, logs.size());
-        assertTrue(logs.getFirst().getMessage().contains("No data to process from the datamart topics."));
     }
 
     @Test

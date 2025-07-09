@@ -12,7 +12,6 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.kafka.common.errors.SerializationException;
-import org.hibernate.JDBCException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +45,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 
 @Service
@@ -334,6 +334,7 @@ public class PostProcessingService {
         final Map<String, List<Long>> idCacheSnapshot;
         final Map<String, List<String>> cdCacheSnapshot;
         final Map<String, List<Long>> pbCacheSnapshot;
+        final Map<String, List<Long>> obsCacheSnapshot;
 
         synchronized (cacheLock) {
             idCacheSnapshot = idCache.entrySet().stream()
@@ -347,12 +348,16 @@ public class PostProcessingService {
             pbCacheSnapshot = pbCache.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
             pbCache.clear();
+
+            obsCacheSnapshot = obsCache.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+            obsCache.clear();
         }
 
         processCdCache(cdCacheSnapshot);
 
         if (!idCacheSnapshot.isEmpty()) {
-            processIdCache(idCacheSnapshot, pbCacheSnapshot, null);
+            processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, null);
         }
 
         // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
@@ -368,14 +373,15 @@ public class PostProcessingService {
 
             Long batchId = retryEntry.getKey();
 
-            // Making cache snapshot preventing out-of-sequence ids processing
+            // Making a cache snapshot preventing out-of-sequence ids processing
             // creates a deep copy of cache into snapshot
             final Map<String, List<Long>> idCacheSnapshot;
             final Map<String, List<Long>> pbCacheSnapshot;
+            final Map<String, List<Long>> obsCacheSnapshot;
 
             synchronized (cacheLock) {
                 idCacheSnapshot = retryEntry.getValue().entrySet().stream()
-                        .filter(entry -> !entry.getKey().startsWith("PB^"))
+                        .filter(entry -> !entry.getKey().contains("^"))
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
 
                 pbCacheSnapshot = retryEntry.getValue().entrySet().stream()
@@ -385,10 +391,17 @@ public class PostProcessingService {
                                 e -> new ArrayList<>(e.getValue())
                         ));
 
+                obsCacheSnapshot = retryEntry.getValue().entrySet().stream()
+                        .filter(e -> e.getKey().startsWith("OBS^"))
+                        .collect(Collectors.toMap(
+                                e -> e.getKey().substring("OBS^".length()),
+                                e -> new ArrayList<>(e.getValue())
+                        ));
+
                 retryCache.remove(batchId);
             }
 
-            boolean processed = processIdCache(idCacheSnapshot, pbCacheSnapshot, batchId);
+            boolean processed = processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, batchId);
 
             // update backfill batch record(s) if exists
             if (backfillAttempts.containsKey(batchId)) {
@@ -396,8 +409,8 @@ public class PostProcessingService {
                 retryAttempts.remove(batchId);
 
                 String status = processed ? STATUS_COMPLETE : STATUS_READY;
-                int bfAttempt = backfillAttempts.getOrDefault(batchId, 0) + 1;
-                if (bfAttempt > maxRetries) {
+                int bfAttempt = backfillAttempts.get(batchId) + 1;
+                if (bfAttempt >= maxRetries) {
                     logger.info("Reached max backfill retries for batch id: {}. Suspend further processing.", batchId);
                     status = STATUS_SUSPENDED;
                     bfAttempt = 0;
@@ -424,6 +437,7 @@ public class PostProcessingService {
 
                     processBackfills(idCacheSnapshot, key -> getEntityByTopic(key).getEntityName().toUpperCase(), batchId);
                     processBackfills(pbCacheSnapshot, key -> "PB^" + key, batchId);
+                    processBackfills(obsCacheSnapshot, key -> "OBS^" + key, batchId);
 
                     errorMap.remove(batchId);
                 }
@@ -447,6 +461,11 @@ public class PostProcessingService {
 
     @Scheduled(fixedDelayString = "${service.fixed-delay.backfill}")
     protected void backfillEvent() {
+        //skip processing for non-positive value
+        if (maxRetries <= 0) {
+            return;
+        }
+
         List<BackfillData> backfills = postProcRepository.executeBackfillEvent(STATUS_READY);
         if (backfills.isEmpty()) {
             logger.info("No backfill records found.");
@@ -467,8 +486,9 @@ public class PostProcessingService {
                 .computeIfAbsent(batchId, k -> new HashMap<>())
                 .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
                 .addAll(queue);
-            backfillAttempts.computeIfAbsent(batchId, k -> bf.getRetryCount());
-            errorMap.computeIfAbsent(batchId, k -> bf.getErrDescription());
+            backfillAttempts.put(batchId, bf.getRetryCount());
+            retryAttempts.put(batchId, bf.getRetryCount());
+            errorMap.put(batchId, bf.getErrDescription());
         });
 
         // Merge into the main retryCache for reprocessing, preserving batch IDs
@@ -479,12 +499,13 @@ public class PostProcessingService {
             );
         });
         logger.info("Re-queued {} backfill batch(es) into retryCache", retryCacheLocal.size());
-
     }
 
-    private boolean processIdCache(Map<String, List<Long>> idCacheSnapshot, Map<String, List<Long>> pbCacheSnapshot, Long batchId) {
+    private boolean processIdCache(
+            Map<String, List<Long>> idCache, Map<String, List<Long>> pbCache, Map<String, List<Long>> obsCache, Long batchId) {
+
         // sorting idCacheSnapshot so that entities with higher priority is processed first
-        List<Entry<String, List<Long>>> sortedEntries = idCacheSnapshot.entrySet().stream()
+        List<Entry<String, List<Long>>> sortedEntries = idCache.entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> getEntityByTopic(entry.getKey()).getPriority())).toList();
 
         // list to store details of datamarts and the associated ids that needs to be hydrated downstream
@@ -505,8 +526,10 @@ public class PostProcessingService {
             List<Long> ids = entry.getValue();
 
             if (processingFailed) {
-                Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
-                retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                if (batchId != null){
+                    Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
+                    retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                }
                 continue;
             }
 
@@ -514,7 +537,7 @@ public class PostProcessingService {
                 logger.info(PROCESSING_IDS_LOG_MSG, ids.size(), keyTopic);
             } else {
                 logger.info("Retrying {} id(s) from topic: {}, attempt #{} for batch id: {}",
-                        ids.size(), keyTopic, retryAttempts.getOrDefault(batchId, 1)+1, batchId);
+                        ids.size(), keyTopic, retryAttempts.getOrDefault(batchId, 0)+1, batchId);
             }
 
             Entity entity = getEntityByTopic(keyTopic);
@@ -543,7 +566,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace);
                         break;
                     case INVESTIGATION:
-                        dmDataSp = processInvestigation(keyTopic, entity, ids, pbCacheSnapshot);
+                        dmDataSp = processInvestigation(keyTopic, entity, ids, pbCache);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         processByInvFormCode(dmData, keyTopic);
@@ -575,7 +598,7 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
                         break;
                     case OBSERVATION:
-                        dmData = processObservation(keyTopic, entity, dmData);
+                        dmData = processObservation(keyTopic, entity, dmData, obsCache);
                         newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case TREATMENT:
@@ -593,8 +616,9 @@ public class PostProcessingService {
                         break;
                 }
             } catch (Exception e) {
+                logger.error(errorMessage(entity.getEntityName(), listToLogString(ids), e));
                 processingFailed = true;
-                batchId = buildRetryCache(batchId, keyTopic, ids, pbCacheSnapshot, e);
+                batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
             }
         }
 
@@ -623,7 +647,7 @@ public class PostProcessingService {
             Entity entity = getEntityByTopic(keyTopic);
 
             if (Objects.requireNonNull(entity) == CONDITION) {
-                processTopicCd(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
+                processTopic(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
             } else {
                 logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
             }
@@ -695,19 +719,27 @@ public class PostProcessingService {
         }
     }
 
-    private Long buildRetryCache(Long batchId, String keyTopic, List<Long> ids, Map<String, List<Long>> pbCache, Exception e) {
+    private Long buildRetryCache(
+            Long batchId, String keyTopic, List<Long> ids, Map<String, List<Long>> pbCache, Map<String, List<Long>> obsCache, Exception e) {
+
+        //skip retrying for non-positive value
+        if (maxRetries <= 0) {
+            return null;
+        }
+
         if (batchId == null) {
             batchId = (System.currentTimeMillis() << 10) | INSTANCE_ID;
             retryAttempts.put(batchId, 0);
         } else {
             retryAttempts.merge(batchId, 1, Integer::sum);
         }
+
         Map<String, Queue<Long>> retryMap = retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
         retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
 
-        Throwable cause = e.getCause();
+        Throwable cause = e;
         while (cause.getCause() != null) {
-            cause = cause.getCause(); // Unwrap nested exceptions
+            cause = cause.getCause(); // unwrap nested exceptions
         }
         String errorMsg = cause.getMessage();
         errorMap.put(batchId, errorMsg);
@@ -715,14 +747,18 @@ public class PostProcessingService {
         pbCache.forEach((tbl, queue) ->
                 retryMap.computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
 
+        obsCache.forEach((key, queue) ->
+                retryMap.computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
+
         return batchId;
     }
 
-    private List<DatamartData> processInvestigation(String keyTopic, Entity entity, List<Long> ids, Map<String, List<Long>> pbCacheSnapshot) {
+    private List<DatamartData> processInvestigation(
+            String keyTopic, Entity entity, List<Long> ids, Map<String, List<Long>> pbCache) {
         List<DatamartData> dmData;
         dmData = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForPublicHealthCaseIds);
 
-        pbCacheSnapshot.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
+        pbCache.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
                 investigationRepository::executeStoredProcForPageBuilder));
 
         processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
@@ -731,15 +767,13 @@ public class PostProcessingService {
         return dmData;
     }
 
-    private List<DatamartData> processObservation(String keyTopic, Entity entity, List<DatamartData> dmData) {
+    private List<DatamartData> processObservation(
+            String keyTopic, Entity entity, List<DatamartData> dmData, Map<String, List<Long>> obsCache) {
         final List<Long> morbIds;
         final List<Long> labIds;
 
-        synchronized (cacheLock) {
-            morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
-            labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
-            obsCache.clear();
-        }
+        morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
+        labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
 
         if (!morbIds.isEmpty()) {
             List<DatamartData> dmDataM = processTopic(keyTopic, entity, morbIds,
@@ -1071,11 +1105,9 @@ public class PostProcessingService {
             repositoryMethod.accept(idsString);
             completeLog(spName);
         }
-
     }
 
-    private void processTopicCd(String keyTopic, Entity entity, Collection<String> cds,
-                                Consumer<String> repositoryMethod) {
+    private void processTopic(String keyTopic, Entity entity, Collection<String> cds, Consumer<String> repositoryMethod) {
         String cdString = cds.stream().distinct().collect(Collectors.joining(","));
         String spName = entity.getStoredProcedure();
         prepareAndLog(keyTopic, cdString, entity.getEntityName(), spName);
@@ -1093,7 +1125,7 @@ public class PostProcessingService {
         return result;
     }
 
-    private void processTopic(String keyTopic, Entity entity,  Collection<Long> ids, String vals,
+    private void processTopic(String keyTopic, Entity entity, Collection<Long> ids, String vals,
                               BiConsumer<String, String> repositoryMethod) {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
@@ -1114,5 +1146,4 @@ public class PostProcessingService {
     private void completeLog(String sp) {
         logger.info(SP_EXECUTION_COMPLETED, sp);
     }
-
 }

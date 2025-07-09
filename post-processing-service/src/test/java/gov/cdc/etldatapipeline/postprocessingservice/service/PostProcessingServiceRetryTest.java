@@ -73,12 +73,16 @@ class PostProcessingServiceRetryTest {
         String invTopic = "dummy_investigation";
         String invKey = "{\"payload\":{\"public_health_case_uid\":234}}";
         String invMsg = "{\"payload\":{\"public_health_case_uid\":234, \"rdb_table_name_list\":\"D_INV_CLINICAL,D_INV_ADMINISTRATIVE\"}}";
+        String obsTopic = "dummy_observation";
+        String obsKey = "{\"payload\":{\"observation_uid\":567}}";
+        String obsMsg = "{\"payload\":{\"observation_uid\":567, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"LabReport\"}}";
 
         String patientUid = "123";
 
         when(postProcRepositoryMock.executeStoredProcForPatientIds(patientUid)).thenThrow(new RuntimeException(errorMsg));
         postProcessingServiceMock.processNrtMessage(patTopic, patKey, patKey);
         postProcessingServiceMock.processNrtMessage(invTopic, invKey, invMsg);
+        postProcessingServiceMock.processNrtMessage(obsTopic, obsKey, obsMsg);
         postProcessingServiceMock.processCachedIds();
 
         assertFalse(postProcessingServiceMock.retryCache.isEmpty());
@@ -86,7 +90,7 @@ class PostProcessingServiceRetryTest {
 
         Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
         assertEquals(errorMsg, postProcessingServiceMock.errorMap.get(batchId));
-        assertEquals(4, postProcessingServiceMock.retryCache.get(batchId).size());
+        assertEquals(6, postProcessingServiceMock.retryCache.get(batchId).size());
 
         postProcessingServiceMock.processRetryCache();
         verify(postProcRepositoryMock, never()).executeStoredProcForBackfill(
@@ -124,6 +128,23 @@ class PostProcessingServiceRetryTest {
                 Entity.PATIENT.getEntityName().toUpperCase(), patientUid, batchId, errorMsg, STATUS_READY, 0);
 
         verify(postProcRepositoryMock, times(2)).executeStoredProcForPatientIds(anyString());
+    }
+
+    @Test
+    void testProcessRetryCacheDisabled() {
+        String patTopic = "dummy_patient";
+        String patKey = "{\"payload\":{\"patient_uid\":123}}";
+
+        postProcessingServiceMock.setMaxRetries(-1);
+        when(postProcRepositoryMock.executeStoredProcForPatientIds("123")).thenThrow(new RuntimeException(errorMsg));
+
+        postProcessingServiceMock.processNrtMessage(patTopic, patKey, patKey);
+        postProcessingServiceMock.processCachedIds();
+
+        assertTrue(postProcessingServiceMock.retryCache.isEmpty());
+
+        postProcessingServiceMock.backfillEvent();
+        verify(postProcRepositoryMock, never()).executeBackfillEvent(anyString());
     }
 
     @Test
