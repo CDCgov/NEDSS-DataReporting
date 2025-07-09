@@ -11,11 +11,11 @@ import java.util.List;
 
 @Repository
 public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
-    @Procedure("sp_nrt_organization_postprocessing")
-    void executeStoredProcForOrganizationIds(@Param("organizationUids") String organizationUids);
+    @Query(value = "EXEC sp_nrt_organization_postprocessing: organizationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForOrganizationIds(@Param("organizationUids") String organizationUids);
 
-    @Procedure("sp_nrt_provider_postprocessing")
-    void executeStoredProcForProviderIds(@Param("providerUids") String providerUids);
+    @Query(value = "EXEC sp_nrt_provider_postprocessing: providerUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForProviderIds(@Param("providerUids") String providerUids);
 
     @Query(value = "EXEC sp_nrt_patient_postprocessing :patientUids", nativeQuery = true)
     List<DatamartData>  executeStoredProcForPatientIds(@Param("patientUids") String patientUids);
@@ -26,8 +26,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Query(value = "EXEC sp_d_morbidity_report_postprocessing :observationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForMorbReport(@Param("observationUids") String observationUids);
 
-    @Procedure("sp_d_lab_test_postprocessing")
-    void executeStoredProcForLabTest(@Param("observationUids") String observationUids);
+    @Query(value = "EXEC sp_d_lab_test_postprocessing :observationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLabTest(@Param("observationUids") String observationUids);
 
     @Query(value = "EXEC sp_d_labtest_result_postprocessing :observationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForLabTestResult(@Param("observationUids") String observationUids);
@@ -38,8 +38,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_lab101_datamart_postprocessing")
     void executeStoredProcForLab101Datamart(@Param("observationUids") String observationUids);
 
-    @Procedure("sp_d_interview_postprocessing")
-    void executeStoredProcForDInterview(@Param("interviewUids") String interviewUids);
+    @Query(value = "EXEC sp_d_interview_postprocessing :interviewUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDInterview(@Param("interviewUids") String interviewUids);
 
     @Procedure("sp_f_interview_case_postprocessing")
     void executeStoredProcForFInterviewCase(@Param("interviewUids") String interviewUids);
@@ -47,8 +47,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Procedure("sp_nrt_place_postprocessing")
     void executeStoredProcForDPlace(@Param("placeUids") String placeUids);
 
-    @Procedure("sp_user_profile_postprocessing")
-    void executeStoredProcForUserProfile(@Param("userProfileUids") String userProfileUids);
+    @Query(value = "EXEC sp_user_profile_postprocessing :userProfileUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForUserProfile(@Param("userProfileUids") String userProfileUids);
 
     @Query(value = "EXEC sp_d_contact_record_postprocessing :contactUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForDContactRecord(@Param("contactUids") String contactUids);
@@ -71,8 +71,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
             @Param("providerUids") String providerUids,
             @Param("organizationUids") String organizationUids);
 
-    @Procedure("sp_nrt_treatment_postprocessing")
-    void executeStoredProcForTreatment(@Param("treatmentUids") String treatmentUids);
+    @Query(value = "exec sp_nrt_treatment_postprocessing :treatmentUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForTreatment(@Param("treatmentUids") String treatmentUids);
 
     @Query(value = "exec sp_d_vaccination_postprocessing :vaccinationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForDVaccination(@Param("vaccinationUids") String vaccinationUids);
