@@ -144,7 +144,30 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+        (
+            SELECT string_agg(t.value, ',')
+            FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@interview_uids, ',')) t
+                left join #INTERVIEW_INIT tmp
+                on tmp.interview_uid = t.value
+                WHERE tmp.interview_uid is null
+        );
 
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_d_interview_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+            RETURN;
+
+        END
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -567,7 +590,15 @@ BEGIN
                , 0);
 
 
-        return -1;
+         SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
 
     END CATCH
 
