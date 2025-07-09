@@ -72,12 +72,13 @@ class PostProcessingServiceRetryTest {
         String patKey = "{\"payload\":{\"patient_uid\":123}}";
         String invTopic = "dummy_investigation";
         String invKey = "{\"payload\":{\"public_health_case_uid\":234}}";
+        String invMsg = "{\"payload\":{\"public_health_case_uid\":234, \"rdb_table_name_list\":\"D_INV_CLINICAL,D_INV_ADMINISTRATIVE\"}}";
 
         String patientUid = "123";
 
         when(postProcRepositoryMock.executeStoredProcForPatientIds(patientUid)).thenThrow(new RuntimeException(errorMsg));
         postProcessingServiceMock.processNrtMessage(patTopic, patKey, patKey);
-        postProcessingServiceMock.processNrtMessage(invTopic, invKey, patKey);
+        postProcessingServiceMock.processNrtMessage(invTopic, invKey, invMsg);
         postProcessingServiceMock.processCachedIds();
 
         assertFalse(postProcessingServiceMock.retryCache.isEmpty());
@@ -85,7 +86,7 @@ class PostProcessingServiceRetryTest {
 
         Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
         assertEquals(errorMsg, postProcessingServiceMock.errorMap.get(batchId));
-        assertEquals(2, postProcessingServiceMock.retryCache.get(batchId).size());
+        assertEquals(4, postProcessingServiceMock.retryCache.get(batchId).size());
 
         postProcessingServiceMock.processRetryCache();
         verify(postProcRepositoryMock, never()).executeStoredProcForBackfill(
