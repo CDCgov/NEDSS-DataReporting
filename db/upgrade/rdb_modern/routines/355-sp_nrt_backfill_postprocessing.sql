@@ -49,34 +49,39 @@ BEGIN
                 where record_uid_list = @record_uid_list and entity = @entity;
             END
 
-        --Insert into NRT_BACKFILL table if the record_uid_list doesnt exists
-        insert into dbo.nrt_backfill(entity, record_uid_list, batch_id, err_description, status_cd, retry_count)
-            select 
-                tmp.entity,
-                tmp.record_uid_list, 
-                tmp.batch_id,
-                tmp.err_description,
-                tmp.status_cd,
-                tmp.retry_count
-            from 
-            (
-                select 
-                @entity as entity, 
-                @record_uid_list as record_uid_list,
-                @batch_id as batch_id,
-                @err_description as err_description,
-                @status_cd AS status_cd,
-                0 AS retry_count
-            ) AS tmp
-            left join dbo.nrt_backfill nrt with (nolock)
-                on tmp.record_uid_list = nrt.record_uid_list and 
-                tmp.entity = nrt.entity
-            left join dbo.nrt_backfill nrt2 with (nolock)
-                on nrt2.batch_id = @batch_id
-            where
-            (nrt.record_uid_list is null and nrt.entity is null 
-                and @record_uid_list is not null) and (nrt2.batch_id is null)
-           
+        --Insert into NRT_BACKFILL table if entity with the same record_uid_list doesn't exist
+        INSERT INTO dbo.nrt_backfill
+            ( entity
+            , record_uid_list
+            , batch_id
+            , err_description
+            , status_cd
+            , retry_count
+            )
+        SELECT
+            @entity,
+            @record_uid_list,
+            @batch_id,
+            @err_description,
+            @status_cd,
+            0
+        WHERE
+            -- only if there is an actual record list
+            @record_uid_list IS NOT NULL
+            -- and no existing row with the same (entity, record_uid_list)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM dbo.nrt_backfill AS nb
+                WHERE nb.entity           = @entity
+                  AND nb.record_uid_list = @record_uid_list
+            )
+            -- and no existing row with the same (entity, batch_id)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM dbo.nrt_backfill AS nb2
+                WHERE nb2.entity   = @entity
+                  AND nb2.batch_id = @batch_id
+            );
 
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]

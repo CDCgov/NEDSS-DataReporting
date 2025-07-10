@@ -434,19 +434,15 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #CODED_TABLE_SN_MERGED';
 
-        WITH numbered_answers AS (SELECT INTERVIEW_UID,
-                                         NBS_QUESTION_UID,
-                                         ANSWER_TXT1,
-                                         ROW_NUMBER() OVER (PARTITION BY INTERVIEW_UID, NBS_QUESTION_UID ORDER BY INTERVIEW_UID, NBS_QUESTION_UID) AS rn
-                                  FROM #coded_table_sn_merged),
-             aggregated_answers AS (SELECT INTERVIEW_UID,
-                                           NBS_QUESTION_UID,
-                                           STRING_AGG(TRIM(ANSWER_TXT1), ' | ')        AS ANSWER_DESC11
+        WITH aggregated_answers AS (
+        SELECT INTERVIEW_UID,
+            NBS_QUESTION_UID,
+            STRING_AGG(TRIM(ANSWER_TXT1), ' | ')        AS ANSWER_DESC11
 
-                                    FROM numbered_answers
-                                    GROUP BY INTERVIEW_UID,
-                                             NBS_QUESTION_UID)
-
+        FROM #coded_table_sn_merged
+        GROUP BY INTERVIEW_UID,
+                NBS_QUESTION_UID
+        )
         SELECT aa.INTERVIEW_UID,
                aa.NBS_QUESTION_UID,
                ctsm.RDB_COLUMN_NM,
@@ -556,7 +552,7 @@ BEGIN
         FROM aggregated_answers cctd
                  LEFT JOIN #CODED_COUNTY_TABLE cct
                            ON cctd.interview_uid = cct.INTERVIEW_UID
-                               AND cctd.NBS_QUESTION_UID = cct.INTERVIEW_UID;
+                               AND cctd.NBS_QUESTION_UID = cct.NBS_QUESTION_UID;
 
 
         if
@@ -707,12 +703,12 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #NUMERIC_BASE_DATA';
 
-        SELECT NBS_ANSWER_UID,
+        SELECT metadata.NBS_ANSWER_UID,
                metadata.CODE_SET_GROUP_ID,
-               RDB_COLUMN_NM,
-               ANSWER_TXT,
-               PA.ACT_UID AS INTERVIEW_UID,
-               PA.RECORD_STATUS_CD,
+               metadata.RDB_COLUMN_NM,
+               metadata.ANSWER_TXT,
+               metadata.ACT_UID AS INTERVIEW_UID,
+               metadata.RECORD_STATUS_CD,
                metadata.NBS_QUESTION_UID
         INTO #NUMERIC_BASE_DATA
         FROM (SELECT DISTINCT RDB_COLUMN_NM,
@@ -720,22 +716,22 @@ BEGIN
                               CODE_SET_GROUP_ID,
                               INVESTIGATION_FORM_CD,
                               QUESTION_GROUP_SEQ_NBR,
-                              DATA_TYPE
+                              DATA_TYPE,
+                              ACT_UID,
+                              RECORD_STATUS_CD,
+                              NBS_ANSWER_UID,
+                              ANSWER_TXT
               FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
-                AND UPPER(DATA_TYPE) = 'TEXT'
+                AND ANSWER_GROUP_SEQ_NBR IS NULL
+                AND DATA_TYPE IN ('Numeric', 'NUMERIC')
                 AND data_location = 'NBS_ANSWER.ANSWER_TXT'
                 AND ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) metadata
-                 LEFT JOIN
-             NBS_ODSE.dbo.NBS_ANSWER AS PA WITH (NOLOCK)
-             ON metadata.nbs_question_uid = PA.nbs_question_uid
-                 INNER JOIN
-             NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
-             ON UPPER(CVG.CODE) = UPPER(metadata.DATA_TYPE)
-        WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
-          AND CVG.CODE IN ('Numeric', 'NUMERIC')
-          AND PA.ANSWER_GROUP_SEQ_NBR IS NULL;
+            INNER JOIN NBS_SRTE.dbo.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
+                ON UPPER(CVG.CODE) = UPPER(metadata.DATA_TYPE)
+            WHERE CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
+                AND CVG.CODE IN ('Numeric', 'NUMERIC');
 
 
         if
