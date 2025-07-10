@@ -217,15 +217,6 @@ databaseChangeLog:
             path: 027-create_nrt_srte_Program_area_code-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.03
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 008-v_condition_dim-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
       id: 20.04
       author: liquibase
       runOnChange: true
