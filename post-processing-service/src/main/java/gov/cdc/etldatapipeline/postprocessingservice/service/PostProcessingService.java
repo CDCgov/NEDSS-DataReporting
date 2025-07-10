@@ -36,13 +36,10 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Arrays;
-import java.util.function.UnaryOperator;
+import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
@@ -544,26 +541,26 @@ public class PostProcessingService {
             try {
                 switch (entity) {
                     case PAGE:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage, this::checkResult);
                         break;
                     case ORGANIZATION:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds, this::checkResult);
                         newDmMulti.computeIfAbsent(ORGANIZATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case PROVIDER:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds, this::checkResult);
                         newDmMulti.computeIfAbsent(PROVIDER.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case PATIENT:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds, this::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case AUTH_USER:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile, this::checkResult);
                         break;
                     case D_PLACE:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace, this::checkResult);
                         break;
                     case INVESTIGATION:
                         dmDataSp = processInvestigation(keyTopic, entity, ids, pbCache);
@@ -572,42 +569,42 @@ public class PostProcessingService {
                         processByInvFormCode(dmData, keyTopic);
                         break;
                     case CONTACT:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord, this::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFContactRecordCase,
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFContactRecordCase, this::checkResult,
                                 "sp_f_contact_record_case_postprocessing");
                         newDmMulti.computeIfAbsent(CONTACT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case NOTIFICATION:
-                        dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds);
+                        dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds, this::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case CASE_MANAGEMENT:
-                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement);
-                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase,
+                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement, this::checkResult);
+                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase, this::checkResult,
                                 "sp_f_std_page_case_postprocessing");
                         break;
                     case INTERVIEW:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview);
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase,
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase, this::checkResult,
                                 "sp_f_interview_case_postprocessing");
                         break;
                     case LDF_DATA, STATE_DEFINED_FIELD_METADATA:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds);
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, this::checkResult);
                         break;
                     case OBSERVATION:
                         dmData = processObservation(keyTopic, entity, dmData, obsCache);
                         newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case TREATMENT:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment, this::checkResult);
                         break;
                     case VACCINATION:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination, this::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFVaccination,
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFVaccination, this::checkResult,
                                 "sp_f_vaccination_postprocessing");
                         newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
@@ -616,7 +613,7 @@ public class PostProcessingService {
                         break;
                 }
             } catch (Exception e) {
-                logger.error(errorMessage(entity.getEntityName(), listToLogString(ids), e));
+                logger.error(errorMessage(entity.getEntityName(), listToLogString(ids), new Exception(e.getClass().getSimpleName())));
                 processingFailed = true;
                 batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
             }
@@ -719,6 +716,64 @@ public class PostProcessingService {
         }
     }
 
+    private List<DatamartData> processInvestigation(
+            String keyTopic, Entity entity, List<Long> ids, Map<String, List<Long>> pbCache) {
+        List<DatamartData> dmData;
+        dmData = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForPublicHealthCaseIds, this::checkResult);
+
+        pbCache.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
+                investigationRepository::executeStoredProcForPageBuilder, this::checkResult));
+
+        processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase, this::checkResult);
+        processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount, this::checkResult);
+                                       
+        return dmData;
+    }
+
+    private List<DatamartData> processObservation(
+            String keyTopic, Entity entity, List<DatamartData> dmData, Map<String, List<Long>> obsCache) {
+        final List<Long> morbIds;
+        final List<Long> labIds;
+
+        morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
+        labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
+
+        if (!morbIds.isEmpty()) {
+            List<DatamartData> dmDataM = processTopic(keyTopic, entity, morbIds,
+                    postProcRepository::executeStoredProcForMorbReport, this::checkResult,
+                    "sp_d_morbidity_report_postprocessing");
+            dmData = Stream.concat(dmData.stream(), dmDataM.stream()).distinct().toList();
+        }
+
+        if (!labIds.isEmpty()) {
+            processTopic(keyTopic, entity, labIds,
+                    postProcRepository::executeStoredProcForLabTest, this::checkResult,
+                    "sp_d_lab_test_postprocessing");
+
+            List<DatamartData> dmDataL = processTopic(keyTopic, entity, labIds,
+                    postProcRepository::executeStoredProcForLabTestResult, this::checkResult,
+                    "sp_d_labtest_result_postprocessing");
+            dmData = Stream.concat(dmData.stream(), dmDataL.stream()).distinct().toList();
+
+            processTopic(keyTopic, entity, labIds,
+                    postProcRepository::executeStoredProcForLab100Datamart, this::checkResult,
+                    "sp_lab100_datamart_postprocessing");
+            processTopic(keyTopic, entity, labIds,
+                    postProcRepository::executeStoredProcForLab101Datamart, this::checkResult,
+                    "sp_lab101_datamart_postprocessing");
+        }
+        return dmData;
+    }
+
+    private void checkResult(List<DatamartData> dmData) throws DataProcessingException {
+        if (!dmData.isEmpty()) {
+            DatamartData dme = dmData.getFirst();
+            if ("Error".equals(dme.getDatamart())) {
+                throw new DataProcessingException(dme.getStoredProcedure());
+            }
+        }
+    }
+
     private Long buildRetryCache(
             Long batchId, String keyTopic, List<Long> ids, Map<String, List<Long>> pbCache, Map<String, List<Long>> obsCache, Exception e) {
 
@@ -751,50 +806,6 @@ public class PostProcessingService {
                 retryMap.computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
 
         return batchId;
-    }
-
-    private List<DatamartData> processInvestigation(
-            String keyTopic, Entity entity, List<Long> ids, Map<String, List<Long>> pbCache) {
-        List<DatamartData> dmData;
-        dmData = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForPublicHealthCaseIds);
-
-        pbCache.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
-                investigationRepository::executeStoredProcForPageBuilder));
-
-        processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase);
-        processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount);
-                                       
-        return dmData;
-    }
-
-    private List<DatamartData> processObservation(
-            String keyTopic, Entity entity, List<DatamartData> dmData, Map<String, List<Long>> obsCache) {
-        final List<Long> morbIds;
-        final List<Long> labIds;
-
-        morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
-        labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
-
-        if (!morbIds.isEmpty()) {
-            List<DatamartData> dmDataM = processTopic(keyTopic, entity, morbIds,
-                    postProcRepository::executeStoredProcForMorbReport, "sp_d_morbidity_report_postprocessing");
-            dmData = Stream.concat(dmData.stream(), dmDataM.stream()).distinct().toList();
-        }
-
-        if (!labIds.isEmpty()) {
-            processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLabTest, "sp_d_lab_test_postprocessing");
-
-            List<DatamartData> dmDataL = processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLabTestResult, "sp_d_labtest_result_postprocessing");
-            dmData = Stream.concat(dmData.stream(), dmDataL.stream()).distinct().toList();
-
-            processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLab100Datamart, "sp_lab100_datamart_postprocessing");
-            processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLab101Datamart, "sp_lab101_datamart_postprocessing");
-        }
-        return dmData;
     }
 
     /**
@@ -1116,24 +1127,27 @@ public class PostProcessingService {
     }
 
     private <T> List<T> processTopic(String keyTopic, Entity entity, Collection<Long> ids,
-            Function<String, List<T>> repositoryMethod, String... names) {
+                                     Function<String, List<T>> repositoryMethod, Consumer<List<T>> checkResult,
+                                     String... names) {
         String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
         String idString = listToLogString(ids);
         prepareAndLog(keyTopic, idString, entity.getEntityName(), spName);
         List<T> result = repositoryMethod.apply(idString);
+        checkResult.accept(result);
         completeLog(spName);
         return result;
     }
 
-    private void processTopic(String keyTopic, Entity entity, Collection<Long> ids, String vals,
-                              BiConsumer<String, String> repositoryMethod) {
+    private <T> void processTopic(String keyTopic, Entity entity, Collection<Long> ids, String vals,
+                                  BiFunction<String, String, List<T>> repositoryMethod, Consumer<List<T>> checkResult) {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
         String idString = listToLogString(ids);
         prepareAndLog(keyTopic, idString, entity.getEntityName(), name);
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", name, keyTopic,
                 entity.getStoredProcedure(), idString, vals);
-        repositoryMethod.accept(idString, vals);
+        List<T> result = repositoryMethod.apply(idString, vals);
+        checkResult.accept(result);
         completeLog(entity.getStoredProcedure());
     }
 
