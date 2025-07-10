@@ -941,7 +941,7 @@ BEGIN
         FROM '+@tmp_Morbidity_Report+' rpt
                  inner join #morb_obs_reference n ON rpt.morb_rpt_uid = n.observation_uid
                  left join dbo.d_patient AS pat WITH (NOLOCK) ON n.patient_id = pat.patient_uid
-                 left join dbo.v_condition_dim AS con WITH (NOLOCK) ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
+                 left join dbo.condition AS con WITH (NOLOCK) ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
      			 left join dbo.d_Organization AS org1 WITH (NOLOCK) ON org1.Organization_uid = n.health_care_id
             /*HSPTL_DISCHARGE_DT_KEY*/
                  left join dbo.rdb_date	as dt3	WITH (NOLOCK) on rpt.temp_hsptl_discharge_dt_key = dt3.date_mm_dd_yyyy
@@ -1380,7 +1380,7 @@ BEGIN
                  INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
                  JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
                  LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
                  JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
         WHERE mre.INVESTIGATION_KEY <> 1

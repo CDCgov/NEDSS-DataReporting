@@ -480,7 +480,7 @@ BEGIN
         into #TMP_PATIENT_INFO
         FROM #TMP_PATIENT_LOCATION_KEYS keys
                  INNER JOIN dbo.CASE_COUNT CC ON keys.investigation_key = CC.investigation_key
-                 INNER JOIN dbo.v_condition_dim C with (nolock) ON C.CONDITION_KEY = CC.CONDITION_KEY;
+                 INNER JOIN dbo.condition C with (nolock) ON C.CONDITION_KEY = CC.CONDITION_KEY;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_PATIENT_INFO;
 
@@ -1014,7 +1014,7 @@ BEGIN
         from
         dbo.INVESTIGATION inv  with ( nolock)
         inner join dbo.INV_SUMM_DATAMART isd with ( nolock) on isd.INVESTIGATION_KEY  =inv.INVESTIGATION_KEY
-        INNER JOIN dbo.v_condition_dim c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD
+        INNER JOIN dbo.condition c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD
         inner join dbo.v_nrt_nbs_investigation_rdb_table_metadata inv_meta on c.DISEASE_GRP_CD =  inv_meta.FORM_CD
         where inv.CASE_UID in (SELECT value FROM STRING_SPLIT(@phc_uids, ','));
 

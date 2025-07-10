@@ -493,7 +493,7 @@ BEGIN TRY
     FROM
         #COVID_CASE_CORE_DATA caseData
         inner join
-            dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
+            dbo.condition cDim WITH(NOLOCK)
                 ON cDim.condition_cd = caseData.condition_cd
         inner join
             dbo.NRT_ODSE_NBS_UI_METADATA uiMeta WITH(NOLOCK)
@@ -566,7 +566,7 @@ BEGIN TRY
             AND data_location LIKE '%Answer_txt'
             AND user_defined_column_nm IS NOT NULL
     inner join
-        dbo.V_CONDITION_DIM cDim WITH(NOLOCK)
+        dbo.condition cDim WITH(NOLOCK)
         ON cDim.disease_grp_cd = uiMeta.investigation_form_cd
             AND cDim.condition_cd = '11065'
     EXCEPT

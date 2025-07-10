@@ -468,7 +468,7 @@ and copying the values that were for the corresponding user_defined_column_nm fo
             c.DISEASE_GRP_CD
         into  #tmp_DynDm_SUMM_DATAMART
         FROM dbo.INV_SUMM_DATAMART isd with ( nolock)
-                 INNER JOIN dbo.V_CONDITION_DIM c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
+                 INNER JOIN dbo.condition c with ( nolock)  ON   isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
                  INNER JOIN dbo.INVESTIGATION inv with (nolock) ON isd.investigation_key = inv.investigation_key
             and  inv.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));
 

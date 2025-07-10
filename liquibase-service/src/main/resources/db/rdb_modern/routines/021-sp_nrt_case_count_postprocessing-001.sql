@@ -71,7 +71,7 @@ BEGIN
         into #CASE_COUNT
         from dbo.NRT_INVESTIGATION cc with(nolock)
                  inner join dbo.INVESTIGATION i with(nolock) on cc.public_health_case_uid = i.case_uid
-                 inner join dbo.v_condition_dim con with(nolock) on	con.condition_cd = cc.CD
+                 inner join dbo.condition con with(nolock) on	con.condition_cd = cc.CD
                  left outer join dbo.D_PATIENT dpat with(nolock) on cc.patient_id = dpat.patient_uid
                  left outer join dbo.D_PROVIDER dpro1 with(nolock) on cc.investigator_id = dpro1.provider_uid
                  left outer join dbo.D_PROVIDER dpro2 with(nolock) on cc.physician_id = dpro2.provider_uid

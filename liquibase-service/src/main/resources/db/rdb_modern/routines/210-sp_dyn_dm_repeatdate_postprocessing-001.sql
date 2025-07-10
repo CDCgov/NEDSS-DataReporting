@@ -429,7 +429,7 @@ BEGIN
         SELECT isd.PATIENT_KEY AS PATIENT_KEY, isd.INVESTIGATION_KEY, c.DISEASE_GRP_CD
         into #tmp_DynDm_SUMM_DATAMART
         FROM dbo.INV_SUMM_DATAMART isd  with (nolock)
-                 INNER JOIN dbo.v_condition_dim c
+                 INNER JOIN dbo.condition c
                             ON isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
                  INNER JOIN dbo.INVESTIGATION I with (nolock) ON isd.investigation_key = I.INVESTIGATION_KEY
             and I.case_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','));

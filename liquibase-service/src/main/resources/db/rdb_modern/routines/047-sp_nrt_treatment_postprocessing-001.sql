@@ -199,7 +199,7 @@ BEGIN
 			ON nrt.public_health_case_uid = inv.CASE_UID
 		LEFT JOIN dbo.nrt_investigation nrt_inv WITH (NOLOCK)
 			ON nrt.public_health_case_uid = nrt_inv.public_health_case_uid
-		LEFT JOIN dbo.v_condition_dim cnd WITH (NOLOCK) 
+		LEFT JOIN dbo.condition cnd WITH (NOLOCK) 
 			ON nrt_inv.cd = cnd.CONDITION_CD
 		LEFT JOIN dbo.D_PATIENT p WITH (NOLOCK) 
 			ON nrt.patient_treatment_uid = p.PATIENT_UID
