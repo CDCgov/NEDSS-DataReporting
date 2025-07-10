@@ -402,27 +402,19 @@ BEGIN
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
+        INSERT INTO [dbo].[job_flow_log] ( batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
         VALUES
-            (
-              @batch_id,
-              'F_PAGE_CASE'
-            ,'S_F_PAGE_CASE'
-            ,'COMPLETE'
-            ,@Proc_Step_no
-            ,@Proc_Step_name
-            ,@RowCount_no
-            ,LEFT('ID List-' + @phc_ids,500)
-            );
+        (@batch_id,'F_PAGE_CASE','S_F_PAGE_CASE','COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no,LEFT('ID List-' + @phc_ids,500));
+
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
 
 
     END TRY
@@ -440,27 +432,10 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[Error_Description]
-                                         ,[row_count]
-        )
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[Error_Description],[row_count])
         VALUES
-            (
-              @batch_id
-            ,'F_PAGE_CASE'
-            ,'S_F_PAGE_CASE'
-            ,'ERROR'
-            ,@Proc_Step_no
-            , @Proc_Step_name
-            , @FullErrorMessage
-            ,0
-            );
+        (@batch_id,'F_PAGE_CASE','S_F_PAGE_CASE','ERROR',@Proc_Step_no, @Proc_Step_name, @FullErrorMessage,0);
 
 
         SELECT

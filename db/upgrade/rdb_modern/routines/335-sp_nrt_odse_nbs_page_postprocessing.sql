@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_odse_n
 BEGIN
     DROP PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
 END
-GO
+GO 
 
 CREATE PROCEDURE [dbo].[sp_nrt_odse_nbs_page_postprocessing]
     @page_id_list nvarchar(max),
@@ -22,7 +22,7 @@ BEGIN
 	DECLARE @Package_Name VARCHAR(200) = 'sp_nrt_odse_nbs_page_postprocessing';
 
     BEGIN TRY
-
+        
 
         SET @Proc_Step_Name = 'SP_Start';
 
@@ -42,7 +42,7 @@ BEGIN
             , @Proc_Step_Name
             , 0
             , LEFT('ID List-' + @page_id_list, 500));
-
+        
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -72,7 +72,7 @@ BEGIN
             pg.nbs_page_uid IN (SELECT value FROM STRING_SPLIT(@page_id_list, ','))
             AND pg.datamart_nm IS NOT NULL
         )
-        SELECT
+        SELECT 
             datamart_nm
             , nbs_page_uid
             , nbs_ui_metadata_uid
@@ -86,7 +86,7 @@ BEGIN
         FROM ordered_rdb_metadata
         ORDER BY datamart_nm, rdb_table_nm, rdb_column_nm, last_chg_time DESC;
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
 
 
@@ -94,7 +94,7 @@ BEGIN
             SELECT * FROM #PAGEBUILDER_SCHEMA_INIT;
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
 
@@ -129,7 +129,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATE #METADATA_TABLE_RECORDS';
 
-        -- COUNT OF RECORDS IN DYN DM COLUMN METADATA TABLE
+        -- COUNT OF RECORDS IN DYN DM COLUMN METADATA TABLE 
         -- If 0, a load of the original table state must be done
         SELECT
             psi.nbs_page_uid
@@ -139,17 +139,17 @@ BEGIN
         LEFT JOIN dbo.nrt_dyn_dm_column_metadata md
             ON psi.nbs_page_uid = md.nbs_page_uid
         GROUP BY psi.nbs_page_uid;
-
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         IF @debug = 'true'
             SELECT * FROM #METADATA_TABLE_RECORDS;
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -187,7 +187,7 @@ BEGIN
             pg.nbs_page_uid IN (SELECT nbs_page_uid FROM #METADATA_TABLE_RECORDS WHERE record_count = 0)
             AND pg.datamart_nm IS NOT NULL
         )
-        SELECT
+        SELECT 
             nbs_page_uid
             , nbs_ui_metadata_uid
             , user_defined_column_nm
@@ -195,17 +195,17 @@ BEGIN
         INTO #ORIGINAL_DATAMART_STATE
         FROM ordered_rdb_metadata
         where row_num = 1;
-
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         IF @debug = 'true'
             SELECT * FROM #ORIGINAL_DATAMART_STATE;
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -227,13 +227,13 @@ BEGIN
             , block_pivot_nbr
         FROM #ORIGINAL_DATAMART_STATE;
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+        
 
 --------------------------------------------------------------------------------------------------------
 
@@ -254,23 +254,23 @@ BEGIN
         )
         SELECT
             rdb_table_nm
-            , 'CREATE TABLE dbo.' + QUOTENAME(rdb_table_nm) + '(
-            ' + rdb_table_nm + '_KEY FLOAT NULL,
-            nbs_case_answer_uid NUMERIC(21,0)
+            , 'CREATE TABLE dbo.' + QUOTENAME(rdb_table_nm) + '( 
+            ' + rdb_table_nm + '_KEY FLOAT NULL, 
+            nbs_case_answer_uid NUMERIC(21,0) 
             );' AS create_statement
         INTO #MISSING_DIMENSION_TABLES
         FROM distinct_table_cte;
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         IF @debug = 'true'
             SELECT * FROM #MISSING_DIMENSION_TABLES;
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -290,8 +290,8 @@ BEGIN
             same process in this procedure that adds columns to the already
             existing dimensions.
         */
-        SELECT
-            @create_dim_sql = STRING_AGG(CAST(create_statement AS NVARCHAR(MAX)), ' ')
+        SELECT 
+            @create_dim_sql = STRING_AGG(CAST(create_statement AS NVARCHAR(MAX)), ' ') 
         FROM #MISSING_DIMENSION_TABLES;
 
         if @debug = 'true'
@@ -299,13 +299,13 @@ BEGIN
 
         IF COALESCE(@create_dim_sql, '') != ''
             exec sp_executesql @create_dim_sql;
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 
 --------------------------------------------------------------------------------------------------------
 
@@ -333,21 +333,21 @@ BEGIN
             rdb_table_nm
             , rdb_column_nm
             , data_type
-            , 'ALTER TABLE dbo.' + QUOTENAME(rdb_table_nm) + ' ADD ' + QUOTENAME(rdb_column_nm) + ' '
+            , 'ALTER TABLE dbo.' + QUOTENAME(rdb_table_nm) + ' ADD ' + QUOTENAME(rdb_column_nm) + ' ' 
                 + IIF(data_type = 'DATE', 'DATE', 'VARCHAR(2000)') + ' NULL; ' AS alter_statement
         INTO #MISSING_DIMENSION_COLUMNS
         FROM distinct_column_cte;
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         IF @debug = 'true'
             SELECT * FROM #MISSING_DIMENSION_COLUMNS;
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -357,8 +357,8 @@ BEGIN
 
         DECLARE @alter_dim_sql NVARCHAR(MAX) = '';
 
-        SELECT
-            @alter_dim_sql = STRING_AGG(CAST(alter_statement AS NVARCHAR(MAX)), ' ')
+        SELECT 
+            @alter_dim_sql = STRING_AGG(CAST(alter_statement AS NVARCHAR(MAX)), ' ') 
         FROM #MISSING_DIMENSION_COLUMNS;
 
         if @debug = 'true'
@@ -367,13 +367,13 @@ BEGIN
         IF COALESCE(@alter_dim_sql, '') != ''
             exec sp_executesql @alter_dim_sql;
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 
 --------------------------------------------------------------------------------------------------------
 
@@ -383,7 +383,7 @@ BEGIN
             @PROC_STEP_NAME = 'CREATE #UPDATED_COL_NAMES';
 
 
-        SELECT
+        SELECT 
             psi.datamart_nm
             , psi.user_defined_column_nm as new_udcn
             , md.user_defined_column_nm as current_udcn
@@ -396,16 +396,16 @@ BEGIN
                 -- We only want the scenario when the new user_defined_column_nm (udcn) is different from the current
                 AND psi.user_defined_column_nm != COALESCE(md.user_defined_column_nm, psi.user_defined_column_nm);
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * FROM #UPDATED_COL_NAMES;
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -436,24 +436,24 @@ BEGIN
                 on COALESCE(TRY_CAST(ce.suffix as INTEGER), 999999) <= ucn.block_pivot_nbr OR ce.suffix = 'ALL'
             WHERE ucn.rdb_table_nm = 'D_INVESTIGATION_REPEAT'
         )
-        SELECT
+        SELECT 
             datamart_nm
             , new_udcn
             , current_udcn
             , CONCAT(current_udcn, '_', 'PLACEHOLDERFORSCHEMAUPDATE') as placeholder_udcn
         INTO #INV_REPEAT_COL_UPDATE
         FROM expanded_col_list;
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+    
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * FROM #INV_REPEAT_COL_UPDATE;
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -462,24 +462,24 @@ BEGIN
             @PROC_STEP_NAME = 'CREATE #PAGEBUILDER_COL_UPDATE';
 
 
-        SELECT
+        SELECT 
             datamart_nm
             , new_udcn
             , current_udcn
             , CONCAT(current_udcn, '_', 'PLACEHOLDERFORSCHEMAUPDATE') as placeholder_udcn
         INTO #PAGEBUILDER_COL_UPDATE
-        FROM #UPDATED_COL_NAMES
+        FROM #UPDATED_COL_NAMES 
         WHERE rdb_table_nm LIKE 'D_INV_%';
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * FROM #INV_REPEAT_COL_UPDATE;
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -495,7 +495,7 @@ BEGIN
                 trying to assign a duplicate column name
         */
         WITH column_update_union AS (
-            SELECT
+            SELECT 
                 datamart_nm
                 , new_udcn
                 , current_udcn
@@ -509,7 +509,7 @@ BEGIN
                 , placeholder_udcn
             FROM #PAGEBUILDER_COL_UPDATE
         )
-        SELECT
+        SELECT 
             datamart_nm
             , new_udcn
             , current_udcn
@@ -521,17 +521,17 @@ BEGIN
             ON 'DM_INV_' + UPPER(psi.datamart_nm) = UPPER(isc.TABLE_NAME)
                 AND UPPER(current_udcn) = UPPER(isc.COLUMN_NAME);
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * FROM #COLUMN_UPDATE_FINAL;
 
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+          
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -543,12 +543,12 @@ BEGIN
         DECLARE @placeholder_to_new_sql NVARCHAR(MAX) = '';
 
 
-        SELECT
-            @curr_to_placeholder_sql = STRING_AGG(CAST(rename_curr_to_placeholder_statement AS NVARCHAR(MAX)), ' ')
+        SELECT 
+            @curr_to_placeholder_sql = STRING_AGG(CAST(rename_curr_to_placeholder_statement AS NVARCHAR(MAX)), ' ') 
         FROM #COLUMN_UPDATE_FINAL;
 
-        SELECT
-            @placeholder_to_new_sql = STRING_AGG(CAST(rename_placeholder_to_new_statement AS NVARCHAR(MAX)), ' ')
+        SELECT 
+            @placeholder_to_new_sql = STRING_AGG(CAST(rename_placeholder_to_new_statement AS NVARCHAR(MAX)), ' ') 
         FROM #COLUMN_UPDATE_FINAL;
 
         if @debug = 'true'
@@ -559,12 +559,12 @@ BEGIN
 
         IF COALESCE(@placeholder_to_new_sql, '') != ''
             exec sp_executesql @placeholder_to_new_sql;
+        
 
-
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+              
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -579,8 +579,8 @@ BEGIN
                 datamart_nm
             FROM #PAGEBUILDER_SCHEMA_INIT
         )
-        SELECT
-            @update_dyn_dm_sql = STRING_AGG(CAST('EXEC dbo.sp_dyn_dm_main_postprocessing ''' + datamart_nm + ''', '''';' AS NVARCHAR(MAX)), ' ')
+        SELECT 
+            @update_dyn_dm_sql = STRING_AGG(CAST('EXEC dbo.sp_dyn_dm_main_postprocessing ''' + datamart_nm + ''', '''';' AS NVARCHAR(MAX)), ' ') 
         FROM distinct_datamart_cte;
 
         if @debug = 'true'
@@ -588,12 +588,12 @@ BEGIN
 
         IF COALESCE(@update_dyn_dm_sql, '') != ''
             exec sp_executesql @update_dyn_dm_sql;
+        
 
-
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
+              
 --------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
@@ -611,14 +611,14 @@ BEGIN
                 INNER JOIN #PAGEBUILDER_SCHEMA_INIT psi
                 ON nrt.nbs_page_uid = psi.nbs_page_uid AND nrt.nbs_ui_metadata_uid = psi.nbs_ui_metadata_uid;
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+        
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
 
         COMMIT TRANSACTION;
-
+              
 --------------------------------------------------------------------------------------------------------
 
         BEGIN TRANSACTION
@@ -639,30 +639,39 @@ BEGIN
             , psi.nbs_ui_metadata_uid
             , psi.user_defined_column_nm
             , psi.block_pivot_nbr
-        FROM #PAGEBUILDER_SCHEMA_INIT psi
+        FROM #PAGEBUILDER_SCHEMA_INIT psi 
             LEFT JOIN dbo.nrt_dyn_dm_column_metadata nrt
             ON nrt.nbs_page_uid = psi.nbs_page_uid AND nrt.nbs_ui_metadata_uid = psi.nbs_ui_metadata_uid
         WHERE nrt.nbs_ui_metadata_uid IS NULL;
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [dbo].[job_flow_log]
+        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+        
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
 
         COMMIT TRANSACTION;
-
+              
 --------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
         SELECT @ROWCOUNT_NO = 0;
 
-        INSERT INTO [dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
-
+    
 -------------------------------------------------------------------------------------------
+		SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
     END TRY
 
     BEGIN CATCH
@@ -678,7 +687,7 @@ BEGIN
                 'Error Message: ' + ERROR_MESSAGE();
 
 
-            INSERT INTO [dbo].[job_flow_log]
+            INSERT INTO [dbo].[job_flow_log] 
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 

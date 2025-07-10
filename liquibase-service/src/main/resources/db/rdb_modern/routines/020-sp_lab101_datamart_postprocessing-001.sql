@@ -1239,6 +1239,17 @@ BEGIN
 
 
         COMMIT TRANSACTION;
+
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
+
     END TRY
     BEGIN CATCH
 
@@ -1255,22 +1266,8 @@ BEGIN
             'Error Message: ' + ERROR_MESSAGE();
 
 
-        INSERT INTO [dbo].[job_flow_log] ( batch_id
-                                         , [Dataflow_Name]
-                                         , [package_Name]
-                                         , [Status_Type]
-                                         , [step_number]
-                                         , [step_name]
-                                         , [Error_Description]
-                                         , [row_count])
-        VALUES ( @batch_id
-               , 'LAB101_DATAMART'
-               , 'LAB101_DATAMART'
-               , 'ERROR'
-               , @Proc_Step_no
-               , @Proc_Step_name
-               , @FullErrorMessage
-               , 0);
+        INSERT INTO [dbo].[job_flow_log] ( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
+        VALUES ( @batch_id, 'LAB101_DATAMART', 'LAB101_DATAMART', 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 
 
         SELECT
