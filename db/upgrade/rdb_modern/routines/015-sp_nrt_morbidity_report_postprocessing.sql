@@ -73,27 +73,18 @@ BEGIN
             );
 
           IF @backfill_list IS NOT NULL
-               BEGIN
-                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
-                    @entity = 'OBSERVATION',
-                    @record_uid_list = @pMorbidityIdList,
-                    @batch_id = @batch_id,
-                    @err_description = 'Missing NRT Record: Morbidity Report -> sp_d_morbidity_report_postprocessing',
-                    @status_cd  = 'READY',
-                    @retry_count = 0
-             
-                SELECT 
+           BEGIN
+                SELECT
                     CAST(NULL AS BIGINT) AS public_health_case_uid,
                     CAST(NULL AS BIGINT) AS patient_uid,
                     CAST(NULL AS BIGINT) AS observation_uid,
-                    CAST(NULL AS VARCHAR(30)) AS datamart,
+                    'Error' AS datamart,
                     CAST(NULL AS VARCHAR(50))  AS condition_cd,
-                    CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+                    'Missing NRT Record: sp_d_morbidity_report_postprocessing' AS stored_procedure,
                     CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-               WHERE 1=0;
-               
-               RETURN;
-          END    
+                    WHERE 1=1;
+                RETURN;
+           END
         --Get map act_relationship associations for observation_uids.
         SELECT
             observation_uid
@@ -1347,24 +1338,10 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-        )
-        VALUES  				   (
-                                   @batch_id,
-                                   @Dataflow_Name
-                                 ,@Package_Name
-                                 ,'COMPLETE'
-                                 ,@Proc_Step_no
-                                 ,@Proc_Step_name
-                                 ,@RowCount_no
-                                 );
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+        VALUES
+        (@batch_id,@Dataflow_Name,@Package_Name ,'COMPLETE' ,@Proc_Step_no ,@Proc_Step_name ,@RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -1414,29 +1391,20 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[Error_Description]
-                                         ,[row_count]
-        )
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[Error_Description],[row_count])
         VALUES
-            (
-              @batch_id
-            ,@Dataflow_Name
-            ,@Package_Name
-            ,'ERROR'
-            ,@Proc_Step_no
-            ,@Proc_Step_name
-            , @FullErrorMessage
-            ,0
-            );
+        (@batch_id,@Dataflow_Name,@Package_Name,'ERROR',@Proc_Step_no,@Proc_Step_name, @FullErrorMessage,0);
 
-        RETURN -1 ;
+    SELECT
+        CAST(NULL AS BIGINT) AS public_health_case_uid,
+        CAST(NULL AS BIGINT) AS patient_uid,
+        CAST(NULL AS BIGINT) AS observation_uid,
+        'Error' AS datamart,
+        CAST(NULL AS VARCHAR(50))  AS condition_cd,
+        @FullErrorMessage AS stored_procedure,
+        CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+        WHERE 1=1;
 
     END CATCH
 

@@ -151,6 +151,29 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@vac_uids, ',')) t
+                left join #D_VACCINATION_INIT tmp
+                on tmp.vaccination_uid = t.value	
+                WHERE tmp.vaccination_uid is null	
+		);
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_d_vaccination_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+           RETURN;
+        END
 
 
 
@@ -448,29 +471,21 @@ BEGIN
 		'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
 		'Error Message: ' + ERROR_MESSAGE();
 
-		INSERT INTO [dbo].[job_flow_log] (
-			batch_id,
-			[Dataflow_Name],
-			[package_Name],
-			[Status_Type],
-			[step_number],
-			[step_name],
-			[Error_Description],
-			[row_count]
-		)
-		VALUES (
-		   @batch_id,
-		   @Dataflow_Name,
-		   @Package_Name,
-		   'ERROR' ,
-		   @Proc_Step_no,
-		   @PROC_STEP_NAME,
-		   @FullErrorMessage,
-		   0
-		);
+		INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[Error_Description],[row_count])
+		VALUES 
+        (@batch_id,@Dataflow_Name,@Package_Name,'ERROR' ,@Proc_Step_no,@PROC_STEP_NAME,@FullErrorMessage,0);
 
 
-		return -1 ;
+		SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                @FullErrorMessage AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
 
 	END CATCH
 
