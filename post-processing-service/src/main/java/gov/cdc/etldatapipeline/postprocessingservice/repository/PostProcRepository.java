@@ -61,7 +61,7 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
             @Param("notificationUids") String notificationUids,
             @Param("contactRecordUids") String contactRecordUids,
             @Param("vaccinationUids") String vaccinationUids);
-            
+
     @Procedure("sp_f_contact_record_case_postprocessing")
     void executeStoredProcForFContactRecordCase(@Param("contactUids") String contactUids);
 
@@ -122,4 +122,3 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Query(value = "EXEC sp_nrt_backfill_event :statusCd", nativeQuery = true)
     List<BackfillData> executeBackfillEvent(@Param("statusCd") String statusCd);
 }
-   
