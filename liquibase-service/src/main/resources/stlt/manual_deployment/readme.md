@@ -123,4 +123,3 @@ upgrade_db.bat [options] server database user password
 - **Invalid Parameters**: Use `--help` to check the correct syntax.
 - **No .sql Files**: Ensure `.sql` files exist in the script's directory or subdirectories.
 - **Case Sensitivity (Linux)**: Verify folder names (`tables`, `data_load`, etc.) and file extensions (`.sql`) match exactly.
-
