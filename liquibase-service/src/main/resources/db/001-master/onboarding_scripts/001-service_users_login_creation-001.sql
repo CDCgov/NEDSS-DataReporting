@@ -1,5 +1,6 @@
 -- SQL Script to create service logins for all microservices at server level
 -- This script creates logins for all microservices separately from user creation
+-- Please provide a generated password for the UserPassword field.
 
 USE [master];
 

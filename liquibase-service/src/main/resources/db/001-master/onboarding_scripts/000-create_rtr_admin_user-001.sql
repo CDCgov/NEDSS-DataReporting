@@ -1,5 +1,5 @@
--- This script to be run outside of Automation as a one time admin user creation
--- Reset password of the login when the script is run
+-- This script to be run outside of Automation as a one time admin user creation.
+-- Please provide a generated password for the PASSWORD field.
 USE [master]
 IF NOT EXISTS (SELECT name
                FROM sys.server_principals

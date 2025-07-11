@@ -1,5 +1,5 @@
--- This script to be run outside of Automation as a one time admin user creation
--- Reset password of the login when the script is run
+-- This script to be run outside of Automation as a one time admin user creation.
+-- Please provide a generated password for the PASSWORD field.
 USE [master]
 IF NOT EXISTS (SELECT name
                FROM sys.server_principals
@@ -28,7 +28,7 @@ if exists (select 1
         USE msdb;
 
         IF NOT EXISTS (SELECT name FROM master.sys.database_principals WHERE name = 'db_deploy_admin')
-            CREATE USER [db_deploy_admin] FOR LOGIN [db_deploy_admin] WITH DEFAULT_SCHEMA =[dbo];
+        CREATE USER [db_deploy_admin] FOR LOGIN [db_deploy_admin] WITH DEFAULT_SCHEMA =[dbo];
 
         GRANT EXECUTE ON msdb.dbo.rds_cdc_enable_db TO db_deploy_admin;
 
@@ -132,7 +132,7 @@ insert into dbo.Act values(2,2,3);
 insert into dbo.Act values(3,2,3);
 
 */
-    --Remove
+--Remove
 -- use nbs_odse;
 -- if exists (select 1
 --            from sys.databases
