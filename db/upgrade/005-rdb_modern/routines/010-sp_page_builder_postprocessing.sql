@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_page_build
 BEGIN
     DROP PROCEDURE [dbo].[sp_page_builder_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE dbo.sp_page_builder_postprocessing
     @phc_id_list nvarchar(max),
@@ -26,6 +26,54 @@ begin
 
         INSERT INTO [dbo].[job_flow_log](batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
         VALUES( @batch_id, 'Page builder process', LEFT(@rdb_table_name,199), 'START', 0,'Step - Page Builder tables', 0 );
+
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+        (
+            SELECT string_agg(t.value, ',')
+            FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) t
+                left join dbo.NRT_INVESTIGATION nrt
+                on nrt.public_health_case_uid = t.value
+                WHERE nrt.public_health_case_uid is null
+        );
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_page_builder_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+            RETURN;
+        END
+
+        SET @backfill_list =
+        (
+            SELECT string_agg(t.value, ',')
+            FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@phc_id_list, ',')) t
+                left join dbo.NRT_PAGE_CASE_ANSWER nrt
+                on nrt.act_uid = t.value
+                WHERE nrt.act_uid is null
+        );
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_page_builder_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+            RETURN;
+        END
+
 
 
         if  left(trim(@rdb_table_name), 6) = 'D_INV_' AND trim(@rdb_table_name) != 'D_INV_PLACE_REPEAT'
@@ -64,6 +112,15 @@ begin
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
         VALUES( @batch_id, 'Page builder process', LEFT(@rdb_table_name,199), 'COMPLETE', 0,'Step - Page Builder tables', 0 );
 
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
     end try
 
     BEGIN CATCH
@@ -91,6 +148,16 @@ begin
           , 0
         , @FullErrorMessage);
 
-        RETURN -1;
+
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
+
     END CATCH;
 END;

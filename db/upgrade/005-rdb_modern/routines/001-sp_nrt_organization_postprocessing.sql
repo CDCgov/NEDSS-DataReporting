@@ -24,30 +24,10 @@ BEGIN
 
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[create_dttm]
-                                         ,[update_dttm]
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[msg_description1]
-                                         ,[row_count]
-        )
-        VALUES (
-                 @batch_id
-               ,@create_dttm
-               ,@update_dttm
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,0
-               ,'SP_Start'
-               ,LEFT(@id_list,500)
-               ,0
-               );
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES 
+        (@batch_id,@create_dttm,@update_dttm,@dataflow_name,@package_name,'START',0,'SP_Start',LEFT(@id_list,500),0);
 
         SET @proc_step_name='Create ORGANIZATION Temp table for -'+ LEFT(@id_list,165);
         SET @proc_step_no = 1;
@@ -100,43 +80,20 @@ BEGIN
         );
         IF @backfill_list IS NOT NULL
           BEGIN
-              EXECUTE dbo.sp_nrt_backfill_postprocessing 
-              @entity = 'ORGANIZATION',
-              @record_uid_list = @id_list,
-              @batch_id = @batch_id,
-              @err_description = 'Missing NRT Record: sp_nrt_organization_postprocessing',
-              @status_cd  = 'READY',
-              @retry_count = 0
-
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_nrt_organization_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
           RETURN;
         END
 
         if @debug = 'true' select * from #temp_org_table;
 
-        /* Logging --Commented to debug
-        set @rowcount=@@rowcount
-        INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-      ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(@id_list,500)
-               );
-		*/
 
         /* D_Organization Update Operation */
         BEGIN TRANSACTION;
@@ -179,6 +136,7 @@ BEGIN
 
         SET @proc_step_name='Update D_ORGANIZATION Dimension';
         SET @proc_step_no = 3;
+
         update dbo.d_organization
         set	[ORGANIZATION_KEY]             = org.ORGANIZATION_KEY,
                [ORGANIZATION_UID]               = org.ORGANIZATION_UID,
@@ -215,6 +173,8 @@ BEGIN
             and org.organization_key = o.organization_key
             and o.organization_key is not null;
 
+        
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
@@ -244,134 +204,81 @@ BEGIN
 
         /* D_Organization Insert Operation */
         
-        begin try
 
-            insert into dbo.nrt_organization_key(organization_uid)
-            select organization_uid from #temp_org_table where organization_key is null order by organization_uid;
+          insert into dbo.nrt_organization_key(organization_uid)
+          select organization_uid from #temp_org_table where organization_key is null order by organization_uid;
 
-            insert into dbo.d_organization
-            ([ORGANIZATION_KEY]
-            ,[ORGANIZATION_UID]
-            ,[ORGANIZATION_LOCAL_ID]
-            ,[ORGANIZATION_RECORD_STATUS]
-            ,[ORGANIZATION_NAME]
-            ,[ORGANIZATION_GENERAL_COMMENTS]
-            ,[ORGANIZATION_QUICK_CODE]
-            ,[ORGANIZATION_STAND_IND_CLASS]
-            ,[ORGANIZATION_FACILITY_ID]
-            ,[ORGANIZATION_FACILITY_ID_AUTH]
-            ,[ORGANIZATION_STREET_ADDRESS_1]
-            ,[ORGANIZATION_STREET_ADDRESS_2]
-            ,[ORGANIZATION_CITY]
-            ,[ORGANIZATION_STATE]
-            ,[ORGANIZATION_STATE_CODE]
-            ,[ORGANIZATION_ZIP]
-            ,[ORGANIZATION_COUNTY]
-            ,[ORGANIZATION_COUNTY_CODE]
-            ,[ORGANIZATION_COUNTRY]
-            ,[ORGANIZATION_ADDRESS_COMMENTS]
-            ,[ORGANIZATION_PHONE_WORK]
-            ,[ORGANIZATION_PHONE_EXT_WORK]
-            ,[ORGANIZATION_EMAIL]
-            ,[ORGANIZATION_PHONE_COMMENTS]
-            ,[ORGANIZATION_ENTRY_METHOD]
-            ,[ORGANIZATION_LAST_CHANGE_TIME]
-            ,[ORGANIZATION_ADD_TIME]
-            ,[ORGANIZATION_ADDED_BY]
-            ,[ORGANIZATION_LAST_UPDATED_BY]
-            ,[ORGANIZATION_FAX])
-            SELECT  k.d_organization_key  as ORGANIZATION_KEY
-                 ,org.[ORGANIZATION_UID]
-                 ,org.[ORGANIZATION_LOCAL_ID]
-                 ,org.[ORGANIZATION_RECORD_STATUS]
-                 ,cast(org.ORGANIZATION_NAME as varchar(50)) as ORGANIZATION_NAME
-                 ,org.[ORGANIZATION_GENERAL_COMMENTS]
-                 ,isnull(NULLIF(cast(org.[ORGANIZATION_QUICK_CODE] as varchar(50)),''),NULL) as ORGANIZATION_QUICK_CODE
-                 ,org.[ORGANIZATION_STAND_IND_CLASS]
-                 ,cast(org.[ORGANIZATION_FACILITY_ID] as varchar(50)) as ORGANIZATION_FACILITY_ID
-                 ,cast(org.ORGANIZATION_FACILITY_ID_AUTH as varchar(50)) as ORGANIZATION_FACILITY_ID_AUTH
-                 ,case when cast (org.[ORGANIZATION_STREET_ADDRESS_1] as varchar(50)) is null then null else cast(org.[ORGANIZATION_STREET_ADDRESS_1] as varchar(50)) end
-                 ,case when cast (org.[ORGANIZATION_STREET_ADDRESS_2] as varchar(50)) is null then null else cast(org.[ORGANIZATION_STREET_ADDRESS_2] as varchar(50)) end
-                 ,isnull(NULLIF(cast(org.[ORGANIZATION_CITY] as varchar(50)),''),NULL) as ORGANIZATION_CITY
-                 ,isnull(NULLIF(org.[ORGANIZATION_STATE],''),NULL) as ORGANIZATION_STATE
-                 ,isnull(NULLIF(org.[ORGANIZATION_STATE_CODE],''),NULL) as ORGANIZATION_STATE_CODE
-                 ,isnull(NULLIF(cast(org.[ORGANIZATION_ZIP] as varchar(10)),''),NULL) as ORGANIZATION_ZIP
-                 ,isnull(NULLIF(org.[ORGANIZATION_COUNTY],''),NULL) as ORGANIZATION_COUNTY
-                 ,isnull(NULLIF(org.[ORGANIZATION_COUNTY_CODE] ,''),NULL) as ORGANIZATION_COUNTY_CODE
-                 ,isnull(NULLIF(org.[ORGANIZATION_COUNTRY],''),NULL) as ORGANIZATION_COUNTRY
-                 ,case when org.[ORGANIZATION_ADDRESS_COMMENTS] is null then null else RTRIM(LTRIM(org.[ORGANIZATION_ADDRESS_COMMENTS])) end
-                 ,case when org.[ORGANIZATION_PHONE_WORK]is  null then null else org.[ORGANIZATION_PHONE_WORK] end
-                 ,case when org.[ORGANIZATION_PHONE_EXT_WORK] is null then null else org.[ORGANIZATION_PHONE_EXT_WORK] end
-                 ,isnull(NULLIF(cast(org.[ORGANIZATION_EMAIL] as varchar(50)),''),NULL) as  ORGANIZATION_EMAIL
-                 ,case when org.[ORGANIZATION_PHONE_COMMENTS] is null then null else RTRIM(LTRIM(org.[ORGANIZATION_PHONE_COMMENTS])) end
-                 ,org.[ORGANIZATION_ENTRY_METHOD]
-                 ,org.[ORGANIZATION_LAST_CHANGE_TIME]
-                 ,org.[ORGANIZATION_ADD_TIME]
-                 ,org.[ORGANIZATION_ADDED_BY]
-                 ,org.[ORGANIZATION_LAST_UPDATED_BY]
-                 ,org.[ORGANIZATION_FAX]
-            FROM #temp_org_table org
-                     join dbo.nrt_organization_key k with (nolock) on org.organization_uid = k.organization_uid
-            where org.organization_key is null;
-
-        end try
-        begin catch
-            IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
-
-            /* Logging */
-            INSERT INTO [dbo].[job_flow_log] (
-                                               batch_id
-                                             ,[create_dttm]
-                                             ,[update_dttm]
-                                             ,[Dataflow_Name]
-                                             ,[package_Name]
-                                             ,[Status_Type]
-                                             ,[step_number]
-                                             ,[step_name]
-                                             ,[row_count]
-                                             ,[msg_description1]
-            )
-            VALUES
-                (
-                  @batch_id
-                ,current_timestamp
-                ,current_timestamp
-                ,@dataflow_name
-                ,@package_name
-                ,'ERROR'
-                ,@Proc_Step_no
-                , 'Step -' +CAST(@Proc_Step_no AS VARCHAR(3))+' -' +CAST(ERROR_MESSAGE() AS VARCHAR(500))
-                ,0
-                ,LEFT(@id_list,500)
-                );
-
-            return ERROR_MESSAGE();
-        end catch
+          insert into dbo.d_organization
+          ([ORGANIZATION_KEY]
+          ,[ORGANIZATION_UID]
+          ,[ORGANIZATION_LOCAL_ID]
+          ,[ORGANIZATION_RECORD_STATUS]
+          ,[ORGANIZATION_NAME]
+          ,[ORGANIZATION_GENERAL_COMMENTS]
+          ,[ORGANIZATION_QUICK_CODE]
+          ,[ORGANIZATION_STAND_IND_CLASS]
+          ,[ORGANIZATION_FACILITY_ID]
+          ,[ORGANIZATION_FACILITY_ID_AUTH]
+          ,[ORGANIZATION_STREET_ADDRESS_1]
+          ,[ORGANIZATION_STREET_ADDRESS_2]
+          ,[ORGANIZATION_CITY]
+          ,[ORGANIZATION_STATE]
+          ,[ORGANIZATION_STATE_CODE]
+          ,[ORGANIZATION_ZIP]
+          ,[ORGANIZATION_COUNTY]
+          ,[ORGANIZATION_COUNTY_CODE]
+          ,[ORGANIZATION_COUNTRY]
+          ,[ORGANIZATION_ADDRESS_COMMENTS]
+          ,[ORGANIZATION_PHONE_WORK]
+          ,[ORGANIZATION_PHONE_EXT_WORK]
+          ,[ORGANIZATION_EMAIL]
+          ,[ORGANIZATION_PHONE_COMMENTS]
+          ,[ORGANIZATION_ENTRY_METHOD]
+          ,[ORGANIZATION_LAST_CHANGE_TIME]
+          ,[ORGANIZATION_ADD_TIME]
+          ,[ORGANIZATION_ADDED_BY]
+          ,[ORGANIZATION_LAST_UPDATED_BY]
+          ,[ORGANIZATION_FAX])
+          SELECT  k.d_organization_key  as ORGANIZATION_KEY
+                ,org.[ORGANIZATION_UID]
+                ,org.[ORGANIZATION_LOCAL_ID]
+                ,org.[ORGANIZATION_RECORD_STATUS]
+                ,cast(org.ORGANIZATION_NAME as varchar(50)) as ORGANIZATION_NAME
+                ,org.[ORGANIZATION_GENERAL_COMMENTS]
+                ,isnull(NULLIF(cast(org.[ORGANIZATION_QUICK_CODE] as varchar(50)),''),NULL) as ORGANIZATION_QUICK_CODE
+                ,org.[ORGANIZATION_STAND_IND_CLASS]
+                ,cast(org.[ORGANIZATION_FACILITY_ID] as varchar(50)) as ORGANIZATION_FACILITY_ID
+                ,cast(org.ORGANIZATION_FACILITY_ID_AUTH as varchar(50)) as ORGANIZATION_FACILITY_ID_AUTH
+                ,case when cast (org.[ORGANIZATION_STREET_ADDRESS_1] as varchar(50)) is null then null else cast(org.[ORGANIZATION_STREET_ADDRESS_1] as varchar(50)) end
+                ,case when cast (org.[ORGANIZATION_STREET_ADDRESS_2] as varchar(50)) is null then null else cast(org.[ORGANIZATION_STREET_ADDRESS_2] as varchar(50)) end
+                ,isnull(NULLIF(cast(org.[ORGANIZATION_CITY] as varchar(50)),''),NULL) as ORGANIZATION_CITY
+                ,isnull(NULLIF(org.[ORGANIZATION_STATE],''),NULL) as ORGANIZATION_STATE
+                ,isnull(NULLIF(org.[ORGANIZATION_STATE_CODE],''),NULL) as ORGANIZATION_STATE_CODE
+                ,isnull(NULLIF(cast(org.[ORGANIZATION_ZIP] as varchar(10)),''),NULL) as ORGANIZATION_ZIP
+                ,isnull(NULLIF(org.[ORGANIZATION_COUNTY],''),NULL) as ORGANIZATION_COUNTY
+                ,isnull(NULLIF(org.[ORGANIZATION_COUNTY_CODE] ,''),NULL) as ORGANIZATION_COUNTY_CODE
+                ,isnull(NULLIF(org.[ORGANIZATION_COUNTRY],''),NULL) as ORGANIZATION_COUNTRY
+                ,case when org.[ORGANIZATION_ADDRESS_COMMENTS] is null then null else RTRIM(LTRIM(org.[ORGANIZATION_ADDRESS_COMMENTS])) end
+                ,case when org.[ORGANIZATION_PHONE_WORK]is  null then null else org.[ORGANIZATION_PHONE_WORK] end
+                ,case when org.[ORGANIZATION_PHONE_EXT_WORK] is null then null else org.[ORGANIZATION_PHONE_EXT_WORK] end
+                ,isnull(NULLIF(cast(org.[ORGANIZATION_EMAIL] as varchar(50)),''),NULL) as  ORGANIZATION_EMAIL
+                ,case when org.[ORGANIZATION_PHONE_COMMENTS] is null then null else RTRIM(LTRIM(org.[ORGANIZATION_PHONE_COMMENTS])) end
+                ,org.[ORGANIZATION_ENTRY_METHOD]
+                ,org.[ORGANIZATION_LAST_CHANGE_TIME]
+                ,org.[ORGANIZATION_ADD_TIME]
+                ,org.[ORGANIZATION_ADDED_BY]
+                ,org.[ORGANIZATION_LAST_UPDATED_BY]
+                ,org.[ORGANIZATION_FAX]
+          FROM #temp_org_table org
+                    join dbo.nrt_organization_key k with (nolock) on org.organization_uid = k.organization_uid
+          where org.organization_key is null;
 
         /* Logging */
         set @rowcount=@@rowcount
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(@id_list,500)
-               );
-
-        select 'Success';
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES 
+        ( @batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
 
         COMMIT TRANSACTION;
@@ -379,30 +286,18 @@ BEGIN
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 4;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[create_dttm]
-                                         ,[update_dttm]
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,current_timestamp
-               ,current_timestamp
-               ,@dataflow_name
-               ,@package_name
-               ,'COMPLETE'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,0
-               ,LEFT(@id_list,500)
-               );
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'COMPLETE',@proc_step_no,@proc_step_name,0,LEFT(@id_list,500));
+
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
 
     END TRY
 
@@ -418,35 +313,20 @@ BEGIN
             'Error Message: ' + ERROR_MESSAGE();
 
         /* Logging */
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[create_dttm]
-                                         ,[update_dttm]
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-                                         ,[Error_Description]
-        )
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1],[Error_Description])
         VALUES
-            (
-              @batch_id
-            ,current_timestamp
-            ,current_timestamp
-            ,@dataflow_name
-            ,@package_name
-            ,'ERROR'
-            ,@proc_Step_no
-            ,@proc_step_name
-            ,0
-            ,LEFT(@id_list,500)
-            ,@FullErrorMessage
-            );
+        (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'ERROR',@proc_Step_no,@proc_step_name,0,LEFT(@id_list,500),@FullErrorMessage);
 
-        return @FullErrorMessage;
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
 
     END CATCH
 
