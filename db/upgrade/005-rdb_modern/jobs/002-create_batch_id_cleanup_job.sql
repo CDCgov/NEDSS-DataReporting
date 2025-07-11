@@ -12,9 +12,18 @@ DECLARE
     */
     @ScheduleName NVARCHAR(128) = N'BatchIdCleanupSchedule',
     @ProcName NVARCHAR(256) = N'sp_batch_id_cleanup_postprocessing',
-    @DatabaseName NVARCHAR(128) = N'rdb_modern',
     @ServerName NVARCHAR(128) = N'(LOCAL)', -- (LOCAL) is a reference to the server running the script
     @JobDescription NVARCHAR(512) = N'Batch Id Cleanup Job';
+
+    DECLARE @DatabaseName NVARCHAR(128);
+    IF EXISTS(SELECT 1 FROM DBO.nrt_odse_NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
+        BEGIN
+            SET @DatabaseName = N'rdb_modern'
+        END
+    ELSE
+        BEGIN
+            SET @DatabaseName = N'rdb'
+        END
 
 DECLARE @JobCommand NVARCHAR(MAX);
 SET @JobCommand = N'EXEC ' + QUOTENAME(@DatabaseName) + N'.dbo.' + QUOTENAME(@ProcName) + N';';
