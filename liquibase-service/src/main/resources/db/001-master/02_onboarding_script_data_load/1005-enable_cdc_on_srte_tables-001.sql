@@ -1,4 +1,6 @@
 -- Enable CDC for tables
+USE NBS_SRTE;
+
 IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'Anatomic_site_code' AND is_tracked_by_cdc = 1)
     BEGIN
         EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'Anatomic_site_code',@role_name = NULL;

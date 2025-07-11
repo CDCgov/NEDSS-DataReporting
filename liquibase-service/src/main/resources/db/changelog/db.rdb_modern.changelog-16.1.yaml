@@ -2835,13 +2835,12 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
-      id: 910
+      id: 999
       author: liquibase
-      runOnChange: true
       runOrder:  last
       runAlways:  true
       changes:
         - sqlFile:
-            path: 999-database_object_permission_grants-001.sql
+            path: 999-rdbm_database_object_permission_grants-001.sql
             splitStatements: true
             endDelimiter: GO

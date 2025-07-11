@@ -157,24 +157,6 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
 -- RDB USER CREATION
 -- ==========================================
 
---Provision for environment where both rdb and rdb_modern exist. Create Post-processing service user in RDB.
-IF EXISTS(SELECT 1 FROM NBS_ODSE.DBO.NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
-    BEGIN
-        USE [rdb];
-        PRINT 'Switched to database [rdb]'
-        -- POST PROCESSING SERVICE USER CREATION
-        IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
-            BEGIN
-                DECLARE @CreateUserPostRDBSQL NVARCHAR(MAX) = 'CREATE USER [' + @PostUserName + '] FOR LOGIN [' + @PostUserName + ']';
-                EXEC sp_executesql @CreateUserPostRDBSQL;
-                PRINT 'Created database user [' + @PostUserName + '] in rdb';
-            END
-    END
-
--- ==========================================
--- RDB USER CREATION
--- ==========================================
-
 IF EXISTS(SELECT 1 FROM NBS_ODSE.DBO.NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
     BEGIN
         USE [rdb_modern];

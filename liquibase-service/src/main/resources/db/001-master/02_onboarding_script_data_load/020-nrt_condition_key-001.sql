@@ -2,7 +2,7 @@
      AND EXISTS (SELECT 1 FROM sysobjects WHERE name = 'CONDITION' and xtype = 'U')
     BEGIN
         
-        --copy already existing (CONDITION_KEY, CONDITION_CD, PROGRAM_AREA_CD) from LAB_TEST
+        --copy already existing (CONDITION_KEY, CONDITION_CD, PROGRAM_AREA_CD) from CONDITION
 
         SET IDENTITY_INSERT [dbo].nrt_condition_key ON
 

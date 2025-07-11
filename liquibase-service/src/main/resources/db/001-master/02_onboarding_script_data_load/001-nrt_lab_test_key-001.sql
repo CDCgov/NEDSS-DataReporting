@@ -12,7 +12,7 @@
         )
         SELECT 
 			lt.LAB_TEST_KEY, 
-			lt.LAB_TEST_UID 
+			lt.LAB_TEST_UID
         FROM [dbo].LAB_TEST lt WITH(NOLOCK) 
         LEFT JOIN [dbo].nrt_lab_test_key k
           ON k.LAB_TEST_KEY = lt.LAB_TEST_KEY AND k.LAB_TEST_UID= lt.LAB_TEST_UID

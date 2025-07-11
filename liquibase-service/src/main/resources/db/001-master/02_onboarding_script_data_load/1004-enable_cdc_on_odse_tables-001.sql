@@ -1,5 +1,6 @@
-
 -- Enable CDC for tables
+USE NBS_ODSE;
+
 IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'Act_relationship' and is_tracked_by_cdc = 1)
     BEGIN
         EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'Act_relationship',@role_name = NULL;
