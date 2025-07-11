@@ -74,7 +74,7 @@ BEGIN
                                  ON rd.date_key = src.NOTIFICATION_SEND_DT_KEY
                  LEFT OUTER JOIN dbo.RDB_DATE RD1 with (nolock)
                                  ON rd1.DATE_MM_DD_YYYY = I.EARLIEST_RPT_TO_STATE_DT
-                 INNER JOIN dbo.v_condition_dim c with (nolock)
+                 INNER JOIN dbo.condition c with (nolock)
                             ON c.CONDITION_KEY = src.CONDITION_KEY
                  LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
                                  ON cc.INVESTIGATION_KEY = I.INVESTIGATION_KEY

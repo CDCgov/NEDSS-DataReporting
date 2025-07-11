@@ -161,7 +161,7 @@ BEGIN
                  LEFT JOIN dbo.nrt_summary_case_group_key skey ON skey.public_health_case_uid = i.case_uid
                  LEFT JOIN dbo.RDB_DATE dt1 with (nolock)
                            ON dt1.DATE_MM_DD_YYYY = CAST(tmp.NOTIFICATION_SEND_DT AS DATE)
-                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_CD = tmp.CONDITION_CD
+                 LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_CD = tmp.CONDITION_CD
                  LEFT JOIN dbo.RDB_DATE dt2 with (nolock) ON dt2.DATE_MM_DD_YYYY = CAST(tmp.LAST_CHG_TIME AS DATE);
 
         if @debug = 'true' select @PROC_STEP_NAME as step, * from #temp_SUMMARY_REPORT_CASE;

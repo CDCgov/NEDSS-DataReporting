@@ -44,5 +44,7 @@ service:
   fixed-delay:
     cached-ids: ${FIXED_DELAY_ID:20000}
     datamart: ${FIXED_DELAY_DM:60000}
+    backfill: ${FIXED_DELAY_BF:600000}
+  max-retries: ${MAX_RETRIES:3}
 server:
   port: '8095'

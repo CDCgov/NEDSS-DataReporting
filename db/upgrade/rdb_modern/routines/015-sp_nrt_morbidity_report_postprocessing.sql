@@ -62,6 +62,38 @@ BEGIN
             observation_uid IN (SELECT value FROM STRING_SPLIT(@pMorbidityIdList, ','));
 
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@pMorbidityIdList, ',')) t
+                        left join #nrt_morbidity_observation tmp
+                        on tmp.observation_uid = t.value	
+                        WHERE tmp.observation_uid is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity = 'OBSERVATION',
+                    @record_uid_list = @pMorbidityIdList,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: Morbidity Report -> sp_d_morbidity_report_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+             
+                SELECT 
+                    CAST(NULL AS BIGINT) AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    CAST(NULL AS VARCHAR(30)) AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+               WHERE 1=0;
+               
+               RETURN;
+          END    
         --Get map act_relationship associations for observation_uids.
         SELECT
             observation_uid
@@ -909,7 +941,7 @@ BEGIN
         FROM '+@tmp_Morbidity_Report+' rpt
                  inner join #morb_obs_reference n ON rpt.morb_rpt_uid = n.observation_uid
                  left join dbo.d_patient AS pat WITH (NOLOCK) ON n.patient_id = pat.patient_uid
-                 left join dbo.v_condition_dim AS con WITH (NOLOCK) ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
+                 left join dbo.condition AS con WITH (NOLOCK) ON  rpt.condition_cd = con.condition_cd	AND rtrim(con.condition_cd) != ''''
      			 left join dbo.d_Organization AS org1 WITH (NOLOCK) ON org1.Organization_uid = n.health_care_id
             /*HSPTL_DISCHARGE_DT_KEY*/
                  left join dbo.rdb_date	as dt3	WITH (NOLOCK) on rpt.temp_hsptl_discharge_dt_key = dt3.date_mm_dd_yyyy
@@ -1348,7 +1380,7 @@ BEGIN
                  INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
                  JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
                  LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+                 LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
                  JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
                  JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
         WHERE mre.INVESTIGATION_KEY <> 1

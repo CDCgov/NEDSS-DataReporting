@@ -244,7 +244,7 @@ BEGIN
         from #TMP_CLDM_ALL_CASE as GC with (nolock)
                  left join dbo.D_PATIENT as p with (nolock)
                            ON GC.PATIENT_KEY = p.PATIENT_key
-                 left join dbo.v_condition_dim as C with (nolock)
+                 left join dbo.condition as C with (nolock)
                            ON C.CONDITION_KEY = GC.CONDITION_KEY
                                AND P.PATIENT_KEY <> 1;
 
@@ -420,7 +420,7 @@ BEGIN
                cast(null as varchar(200)) as EVENT_DATE_TYPE
         INTO #TMP_CLDM_GEN_PATINFO_INV_PHY_RPTSRC_COND
         FROM #TMP_CLDM_GEN_PATCOMPL_INV_INVESTIGATOR AS GPIPR with (nolock)
-                 LEFT JOIN dbo.v_condition_dim AS C with (nolock)
+                 LEFT JOIN dbo.condition AS C with (nolock)
                            ON GPIPR.CONDITION_KEY = C.CONDITION_KEY
                  LEFT JOIN
              (SELECT

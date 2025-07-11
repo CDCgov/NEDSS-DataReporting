@@ -89,6 +89,28 @@ BEGIN
                  left join dbo.d_organization o with (nolock) on o.organization_uid = nrt.organization_uid
         where nrt.organization_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+        ( 
+          SELECT string_agg(t.value, ',')
+          FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                    left join #temp_org_table tmp
+                    on tmp.organization_uid = t.value	
+                    WHERE tmp.organization_uid is null	
+        );
+        IF @backfill_list IS NOT NULL
+          BEGIN
+              EXECUTE dbo.sp_nrt_backfill_postprocessing 
+              @entity = 'ORGANIZATION',
+              @record_uid_list = @id_list,
+              @batch_id = @batch_id,
+              @err_description = 'Missing NRT Record: sp_nrt_organization_postprocessing',
+              @status_cd  = 'READY',
+              @retry_count = 0
+
+          RETURN;
+        END
+
         if @debug = 'true' select * from #temp_org_table;
 
         /* Logging --Commented to debug

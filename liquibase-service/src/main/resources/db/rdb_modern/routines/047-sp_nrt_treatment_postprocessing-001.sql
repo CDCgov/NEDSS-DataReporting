@@ -136,6 +136,28 @@ BEGIN
 				ON nrt.treatment_uid = tk.treatment_uid
 				AND COALESCE(nrt.public_health_case_uid, 1) = COALESCE(tk.public_health_case_uid, 1)
 
+		declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@treatment_uids, ',')) t
+                        left join #treatment tmp
+                        on tmp.treatment_uid = t.value	
+                        WHERE tmp.treatment_uid is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+               BEGIN
+                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
+                    @entity = 'TREATMENT',
+                    @record_uid_list = @treatment_uids,
+                    @batch_id = @batch_id,
+                    @err_description = 'Missing NRT Record: sp_nrt_treatment_postprocessing',
+                    @status_cd  = 'READY',
+                    @retry_count = 0
+               RETURN;
+          END  
+		
 		SELECT @RowCount_no = @@ROWCOUNT;
 
         IF @debug = 'true' 
@@ -177,7 +199,7 @@ BEGIN
 			ON nrt.public_health_case_uid = inv.CASE_UID
 		LEFT JOIN dbo.nrt_investigation nrt_inv WITH (NOLOCK)
 			ON nrt.public_health_case_uid = nrt_inv.public_health_case_uid
-		LEFT JOIN dbo.v_condition_dim cnd WITH (NOLOCK) 
+		LEFT JOIN dbo.condition cnd WITH (NOLOCK) 
 			ON nrt_inv.cd = cnd.CONDITION_CD
 		LEFT JOIN dbo.D_PATIENT p WITH (NOLOCK) 
 			ON nrt.patient_treatment_uid = p.PATIENT_UID

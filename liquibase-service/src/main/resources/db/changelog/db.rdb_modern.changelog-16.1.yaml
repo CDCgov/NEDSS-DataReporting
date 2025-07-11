@@ -217,15 +217,6 @@ databaseChangeLog:
             path: 027-create_nrt_srte_Program_area_code-001.sql
             splitStatements: false
   - changeSet:
-      id: 20.03
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 008-v_condition_dim-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
       id: 20.04
       author: liquibase
       runOnChange: true
@@ -481,6 +472,23 @@ databaseChangeLog:
         - sqlFile:
             path: 225-create_nrt_srte_Race_code-001.sql
             splitStatements: false
+  - changeSet:
+      id: 20.40
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 255-create_nrt_backfill-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 20.41
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 355-sp_nrt_backfill_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
   - changeSet:
       id: 21
       author: liquibase
@@ -2132,7 +2140,7 @@ databaseChangeLog:
         - sqlFile:
             path: 185-sp_nrt_d_move_state_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO        
+            endDelimiter: GO
   - changeSet:
       id: 480
       author: liquibase
@@ -2618,7 +2626,7 @@ databaseChangeLog:
         - sqlFile:
             path: 285-sp_ldf_bmird_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO 
+            endDelimiter: GO
   - changeSet:
       id: 790
       author: liquibase
@@ -2635,7 +2643,7 @@ databaseChangeLog:
         - sqlFile:
             path: 290-sp_ldf_foodborne_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO 
+            endDelimiter: GO
   - changeSet:
       id: 800
       author: liquibase
@@ -2669,7 +2677,7 @@ databaseChangeLog:
         - sqlFile:
             path: 300-sp_ldf_tetanus_datamart_postprocessing-001.sql
             splitStatements: true
-            endDelimiter: GO             
+            endDelimiter: GO
   - changeSet:
       id: 820
       author: liquibase
@@ -2800,19 +2808,29 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
-      id: 890
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 039-alter_table_add_index-001.sql
-            splitStatements: false
-  - changeSet:
       id: 895
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
             path: 345-sp_event_metric_cleanup_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 900
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 350-sp_batch_id_cleanup_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 905
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 360-sp_nrt_backfill_event-001.sql
             splitStatements: true
             endDelimiter: GO

@@ -148,7 +148,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 			INNER JOIN dbo.MUMPS_CASE GEN  with (nolock) 
 			ON  
 				GEN.INVESTIGATION_KEY=INV.INVESTIGATION_KEY 
-			INNER JOIN dbo.V_CONDITION_DIM  with (nolock) 
+			INNER JOIN dbo.condition  with (nolock) 
 			ON  
 				CONDITION.CONDITION_KEY= GEN.CONDITION_KEY 
 			INNER JOIN dbo.D_PATIENT PATIENT  with (nolock) 
