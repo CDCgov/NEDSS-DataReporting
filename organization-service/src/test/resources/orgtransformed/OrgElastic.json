@@ -252,6 +252,7 @@
     "entity_uid": 10036000,
     "entity_id_seq": "2",
     "assigning_authority_cd": null,
+    "facility_id_auth": "CLIA (CMS)",
     "addr_elp_cd": "O",
     "addr_elp_use_cd": "WP",
     "addr_pl_uid": 10036001,

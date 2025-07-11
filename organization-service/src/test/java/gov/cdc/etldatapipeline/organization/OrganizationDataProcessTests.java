@@ -91,6 +91,7 @@ class OrganizationDataProcessTests {
                 .rootExtensionTxt("A4646")
                 .entityIdSeq("1")
                 .assigningAuthorityCd("OTH")
+                .facilityIdAuth("CLIA (CMS)")
                 .build();
 
         assertNotNull(ets);
