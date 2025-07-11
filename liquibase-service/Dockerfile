@@ -13,26 +13,27 @@ RUN wget "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2
 #changelog
 COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
 #master
-COPY liquibase-service/src/main/resources/db/master /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/master/routines /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/master/functions /liquibase/changelog
-#odse
-COPY liquibase-service/src/main/resources/db/odse /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/odse/routines /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/odse/functions /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/odse/views /liquibase/changelog
-#rdb_modern
-COPY liquibase-service/src/main/resources/db/rdb_modern /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/rdb_modern/routines /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/rdb_modern/functions /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/rdb_modern/tables /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/rdb_modern/views /liquibase/changelog
-#rdb
-COPY liquibase-service/src/main/resources/db/rdb /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/rdb/tables /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/001-master /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/001-master/routines /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/001-master/functions /liquibase/changelog
 # srte
-COPY liquibase-service/src/main/resources/db/srte /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/srte/tables /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/002-srte /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/002-srte/tables /liquibase/changelog
+#odse
+COPY liquibase-service/src/main/resources/db/003-odse /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/003-odse/routines /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/003-odse/functions /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/003-odse/views /liquibase/changelog
+#rdb
+COPY liquibase-service/src/main/resources/db/004-rdb /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/004-rdb/tables /liquibase/changelog
+#rdb_modern
+COPY liquibase-service/src/main/resources/db/005-rdb_modern /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/routines /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
+
 
 #Set the Working Directory
 WORKDIR /liquibase/changelog
