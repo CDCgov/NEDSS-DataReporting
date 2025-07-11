@@ -2834,3 +2834,14 @@ databaseChangeLog:
             path: 360-sp_nrt_backfill_event-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 910
+      author: liquibase
+      runOnChange: true
+      runOrder:  last
+      runAlways:  true
+      changes:
+        - sqlFile:
+            path: 999-database_object_permission_grants-001.sql
+            splitStatements: true
+            endDelimiter: GO
