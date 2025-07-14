@@ -59,8 +59,8 @@ PRINT 'Debezium service user permission grants completed.';
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
 BEGIN
-    DECLARE @AddRoleMemberSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @OrgUserName + '''';
-    EXEC sp_executesql @AddRoleMemberSRTESQL;
+    DECLARE @AddRoleMemberOrgSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @OrgUserName + '''';
+    EXEC sp_executesql @AddRoleMemberOrgSRTESQL;
     PRINT 'Added [' + @OrgUserName + '] to db_datareader role in NBS_SRTE';
 END
 PRINT 'Organization service user permission grants completed.';
