@@ -40,6 +40,22 @@ BEGIN
             , @Proc_Step_Name
             , 0);
         
+
+/*
+    NOTE:
+    Add events and delete events are not necessarily mutually exclusive.
+
+    Scenario:
+
+    1. Congifuration parameter starts at 730 days
+    2. Someone changes the parameter to 1000 days
+    3. A record 999 days old is updated in ODSE, so it is added to dbo.EVENT_METRIC
+    4. Before the next run of the cleanup script, the parameter is set back down to 800 days
+    5. Upon the next cleanup run, the 999 day old record needs to be deleted, and records between
+        730 and 800 days old need to be added
+
+*/        
+
 --------------------------------------------------------------------------------------------------------
 
 
@@ -63,90 +79,35 @@ BEGIN
 
 
 --------------------------------------------------------------------------------------------------------
-
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'GET COUNT IN dbo.EVENT_METRIC_INC';
-
         
-        DECLARE @em_inc_current_records INTEGER = (
-            SELECT COUNT(*) FROM dbo.EVENT_METRIC_INC WITH (NOLOCK)
-                WHERE DATEDIFF(day, ADD_TIME, GETDATE()) <= @metrics_gobackby_days
-        );
-        
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
+        BEGIN TRANSACTION
 
-        IF @debug = 'true'
-            SELECT @Proc_Step_Name, @em_inc_current_records AS em_inc_current_records;
+            SET
+                    @PROC_STEP_NO = @PROC_STEP_NO + 1;
+            SET
+                    @PROC_STEP_NAME = 'DELETE OLD EVENTS FROM dbo.EVENT_METRIC';
 
-        INSERT INTO [dbo].[job_flow_log] 
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+                
+            DELETE em 
+            FROM dbo.EVENT_METRIC em
+            WHERE DATEDIFF(day, ADD_TIME, GETDATE()) > @metrics_gobackby_days;
+                
+            SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 
+            IF @debug = 'true'
+                SELECT @Proc_Step_Name, @RowCount_no AS deleted_rows;
+
+            INSERT INTO [dbo].[job_flow_log] 
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+
+        COMMIT TRANSACTION;
 
 --------------------------------------------------------------------------------------------------------
 
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'GET COUNT IN dbo.EVENT_METRIC';
-
-        
-        DECLARE @em_current_records INTEGER = (
-            SELECT COUNT(*) FROM dbo.EVENT_METRIC WITH (NOLOCK)
-        );
-        
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-
-        IF @debug = 'true'
-            SELECT @Proc_Step_Name, @em_current_records AS em_current_records;
-
-        INSERT INTO [dbo].[job_flow_log] 
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
-
---------------------------------------------------------------------------------------------------------
-
-
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'CREATE LOAD FLAG';
-
-        /*
-            If the number of records that would be valid in EVENT_METRIC is greater in
-            EVENT_METRIC_INC.
-
-            When records need to be loaded, we will SKIP the delete step. The states
-            where records need to be loaded and records need to be deleted should be
-            mutually exclusive.
-        */
-        DECLARE @load_records bit;
-        SET @load_records = CASE 
-                                WHEN @em_inc_current_records > @em_current_records THEN 1
-                                ELSE 0
-                            END;
-        
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-
-        IF @debug = 'true'
-            SELECT @Proc_Step_Name, @load_records AS load_flag;
-
-        INSERT INTO [dbo].[job_flow_log] 
-		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
-
---------------------------------------------------------------------------------------------------------
-
-        IF (@load_records = 1)
-        BEGIN
 
         BEGIN TRANSACTION
+
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -231,32 +192,9 @@ BEGIN
             INSERT INTO [dbo].[job_flow_log] 
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
+            
         COMMIT TRANSACTION;
 
-        END
-        ELSE 
-
-        BEGIN
-            SET
-                @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET
-                @PROC_STEP_NAME = 'DELETE OLD EVENTS FROM dbo.EVENT_METRIC';
-
-            
-            DELETE em 
-            FROM dbo.EVENT_METRIC em
-            WHERE DATEDIFF(day, ADD_TIME, GETDATE()) > @metrics_gobackby_days;
-            
-            SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
-
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name, @RowCount_no AS deleted_rows;
-
-            INSERT INTO [dbo].[job_flow_log] 
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
-
-        END;
 
 --------------------------------------------------------------------------------------------------------
 
