@@ -45,9 +45,15 @@ DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @KafkaUserName)
     BEGIN
+        -- Grant data writer role (INSERT, UPDATE, DELETE)
         DECLARE @AddRoleMemberKafkaRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @KafkaUserName + '''';
         EXEC sp_executesql @AddRoleMemberKafkaRDBModernWriterSQL;
         PRINT 'Added [' + @KafkaUserName + '] to db_datawriter role in rdb_modern';
+
+        -- Grant data reader role (SELECT)
+        DECLARE @AddRoleMemberKafkaRDBModernReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @KafkaUserName + '''';
+        EXEC sp_executesql @AddRoleMemberKafkaRDBModernReaderSQL;
+        PRINT 'Added [' + @KafkaUserName + '] to db_datareader role in rdb_modern';
     END
 
 PRINT 'Kafka sync connector service permission grants completed.';
