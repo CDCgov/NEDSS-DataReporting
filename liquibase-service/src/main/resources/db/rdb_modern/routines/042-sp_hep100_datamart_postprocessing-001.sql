@@ -1,42 +1,33 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_hep100_datamart_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_hep100_datamart_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_hep100_datamart_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_hep100_datamart_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE dbo.sp_hep100_datamart_postprocessing @phc_uids nvarchar(max),
-                                                                @pat_uids nvarchar(max),
-                                                                @prov_uids nvarchar(max),
-                                                                @org_uids nvarchar(max),
-                                                                @debug bit = 'false'
-as
+                                                       @pat_uids nvarchar(max),
+                                                       @prov_uids nvarchar(max),
+                                                       @org_uids nvarchar(max),
+                                                       @debug bit = 'false'
+AS
 
 BEGIN
 
-    DECLARE
-        @RowCount_no INT;
-    DECLARE
-        @Proc_Step_no FLOAT = 0;
-    DECLARE
-        @Proc_Step_Name VARCHAR(200) = '';
-    DECLARE
-        @batch_id BIGINT;
-    SET
-        @batch_id = cast((format(getdate(), 'yyyyMMddHHmmssffff')) as bigint);
+    DECLARE @RowCount_no INT;
+    DECLARE @Proc_Step_no FLOAT = 0;
+    DECLARE @Proc_Step_Name VARCHAR(200) = '';
+    DECLARE @batch_id BIGINT;
+    SET @batch_id = cast((format(getdate(), 'yyyyMMddHHmmssffff')) as bigint);
 
     -- used in the logging statements
-    DECLARE 
-        @datamart_nm VARCHAR(100) = 'HEP100_DATAMART';
-
-
+    DECLARE @datamart_nm VARCHAR(100) = 'HEP100_DATAMART';
 
     BEGIN TRY
 
         SET @Proc_Step_no = 1;
-        SET
-            @Proc_Step_Name = 'SP_Start';
+        SET @Proc_Step_Name = 'SP_Start';
 
         BEGIN
             TRANSACTION;
@@ -78,34 +69,35 @@ BEGIN
                 @PROC_STEP_NAME = 'GENERATING #HEP100_INIT';
 
             IF OBJECT_ID('#HEP100_INIT', 'U') IS NOT NULL
-            drop table #HEP100_INIT;
+                drop table #HEP100_INIT;
 
 
-                            /*
-                    From the classic SAS ETL:
-                    "
-                    Derive the event date using following algorithm
-                    1. Illness_onset_dt
-                    2. Diagnosis_Dt
-                    3. The earliest of the following dates:
-                        Earliest_rpt_to_cnty_dt,
-                        Earliest_rpt_to_state_dt,
-                        Inv_rpt_dt
-                        Inv_start_dt,
-                        ALT_Result_dt,
-                        AST_result_dt,
-                        HSPTL_Admission_dt,
-                        Hsptl_discharge_dt
-                    "
+            /*
+            From the classic SAS ETL:
+            "
+            Derive the event date using following algorithm
+            1. Illness_onset_dt
+            2. Diagnosis_Dt
+            3. The earliest of the following dates:
+                Earliest_rpt_to_cnty_dt,
+                Earliest_rpt_to_state_dt,
+                Inv_rpt_dt
+                Inv_start_dt,
+                ALT_Result_dt,
+                AST_result_dt,
+                HSPTL_Admission_dt,
+                Hsptl_discharge_dt
+            "
 
-                    INV_ADD_TIME is not mentioned in the comment, but it is
-                    used in the computations related to EVENT_DATE 
+            INV_ADD_TIME is not mentioned in the comment, but it is
+            used in the computations related to EVENT_DATE
 
-                */
+        */
 
-            SELECT 
+
+            SELECT
                 GETDATE() AS REFRESH_DATETIME,
-                HC.INVESTIGATION_KEY, 
+                HC.INVESTIGATION_KEY,
                 HC.HEP_A_TOTAL_ANTIBODY,
                 HC.HEP_A_IGM_ANTIBODY,
                 HC.HEP_B_SURFACE_ANTIGEN,
@@ -227,38 +219,38 @@ BEGIN
                     WHEN I.ILLNESS_ONSET_DT IS NOT NULL THEN I.ILLNESS_ONSET_DT
                     WHEN I.DIAGNOSIS_DT IS NOT NULL THEN I.DIAGNOSIS_DT
                     WHEN COALESCE(
-                        I.EARLIEST_RPT_TO_CNTY_DT, 
-                        I.EARLIEST_RPT_TO_STATE_DT, 
-                        I.INV_RPT_DT, 
-                        I.INV_START_DT, 
-                        HC.ALT_RESULT_DT, 
-                        HC.AST_RESULT_DT, 
-                        I.HSPTL_ADMISSION_DT, 
-                        I.HSPTL_DISCHARGE_DT, 
-                        P.PATIENT_ADD_TIME
-                        ) IS NOT NULL THEN (
+                            I.EARLIEST_RPT_TO_CNTY_DT,
+                            I.EARLIEST_RPT_TO_STATE_DT,
+                            I.INV_RPT_DT,
+                            I.INV_START_DT,
+                            HC.ALT_RESULT_DT,
+                            HC.AST_RESULT_DT,
+                            I.HSPTL_ADMISSION_DT,
+                            I.HSPTL_DISCHARGE_DT,
+                            P.PATIENT_ADD_TIME
+                         ) IS NOT NULL THEN (
                         SELECT TOP 1 dt FROM (
-                            SELECT COALESCE(I.EARLIEST_RPT_TO_CNTY_DT, '9999-12-31') AS dt
-                            UNION ALL
-                            SELECT COALESCE(I.EARLIEST_RPT_TO_STATE_DT, '9999-12-31')
-                            UNION ALL
-                            SELECT COALESCE(I.INV_RPT_DT, '9999-12-31')
-                            UNION ALL
-                            SELECT COALESCE(I.INV_START_DT, '9999-12-31')
-                            UNION ALL
-                            SELECT COALESCE(HC.ALT_RESULT_DT, '9999-12-31')
-                            UNION ALL
-                            SELECT COALESCE(HC.AST_RESULT_DT, '9999-12-31')
-                            UNION ALL
-                            SELECT COALESCE(I.HSPTL_ADMISSION_DT, '9999-12-31')
-                            UNION ALL
-                            SELECT COALESCE(I.HSPTL_DISCHARGE_DT, '9999-12-31')
-                            UNION ALL
-                            SELECT COALESCE(P.PATIENT_ADD_TIME, '9999-12-31')
-                        ) AS dtlist ORDER BY dt ASC
+                                                 SELECT COALESCE(I.EARLIEST_RPT_TO_CNTY_DT, '9999-12-31') AS dt
+                                                 UNION ALL
+                                                 SELECT COALESCE(I.EARLIEST_RPT_TO_STATE_DT, '9999-12-31')
+                                                 UNION ALL
+                                                 SELECT COALESCE(I.INV_RPT_DT, '9999-12-31')
+                                                 UNION ALL
+                                                 SELECT COALESCE(I.INV_START_DT, '9999-12-31')
+                                                 UNION ALL
+                                                 SELECT COALESCE(HC.ALT_RESULT_DT, '9999-12-31')
+                                                 UNION ALL
+                                                 SELECT COALESCE(HC.AST_RESULT_DT, '9999-12-31')
+                                                 UNION ALL
+                                                 SELECT COALESCE(I.HSPTL_ADMISSION_DT, '9999-12-31')
+                                                 UNION ALL
+                                                 SELECT COALESCE(I.HSPTL_DISCHARGE_DT, '9999-12-31')
+                                                 UNION ALL
+                                                 SELECT COALESCE(P.PATIENT_ADD_TIME, '9999-12-31')
+                                             ) AS dtlist ORDER BY dt ASC
                     )
-                ELSE NULL
-                END AS EVENT_DATE,
+                    ELSE NULL
+                    END AS EVENT_DATE,
                 HC.HEP_MULTI_VAL_GRP_KEY,
                 HC.HEP_B_E_ANTIGEN,
                 HC.HEP_B_DNA,
@@ -304,7 +296,7 @@ BEGIN
                 P.PATIENT_CURRENT_SEX AS PATIENT_CURR_GENDER,
                 P.PATIENT_ENTRY_METHOD AS PATIENT_ELECTRONIC_IND,
                 P.PATIENT_UID AS PATIENT_UID,
-                dbo.fn_get_proper_case(P.PATIENT_CITY) AS PATIENT_CITY,
+                NULLIF(dbo.fn_get_proper_case(P.PATIENT_CITY),'') AS PATIENT_CITY,
                 P.PATIENT_STATE,
                 P.PATIENT_ZIP AS PATIENT_ZIP_CODE,
                 P.PATIENT_COUNTY,
@@ -313,20 +305,20 @@ BEGIN
                 P.PATIENT_ADD_TIME AS INV_ADD_TIME,
                 P.PATIENT_RACE_CALC_DETAILS AS RACE,
                 P.PATIENT_LAST_CHANGE_TIME,
-                COALESCE(TRIM(P.PATIENT_STREET_ADDRESS_1) + ',', '')
-                    + COALESCE(TRIM(P.PATIENT_STREET_ADDRESS_2) + ',', '')
-                    + COALESCE(TRIM(P.PATIENT_CITY) + ',', '')
-                    + COALESCE(TRIM(P.PATIENT_COUNTY) + ',', '')
-                    + COALESCE(TRIM(P.PATIENT_ZIP) + ',', '')
-                    + COALESCE(TRIM(P.PATIENT_STATE), '') AS PATIENT_ADDRESS,
+                NULLIF(COALESCE(TRIM(P.PATIENT_STREET_ADDRESS_1) + ',', '')
+                           + COALESCE(TRIM(P.PATIENT_STREET_ADDRESS_2) + ',', '')
+                           + COALESCE(TRIM(P.PATIENT_CITY) + ',', '')
+                           + COALESCE(TRIM(P.PATIENT_COUNTY) + ',', '')
+                           + COALESCE(TRIM(P.PATIENT_ZIP) + ',', '')
+                           + COALESCE(TRIM(P.PATIENT_STATE), ''),'') AS PATIENT_ADDRESS,
                 CASE
                     WHEN LEN(COALESCE(TRIM(P.PATIENT_STREET_ADDRESS_2),TRIM(P.PATIENT_CITY),TRIM(P.PATIENT_COUNTY),TRIM(P.PATIENT_ZIP),TRIM(P.PATIENT_STATE), '')) > 0 THEN 'Home'
-                    ELSE ''
-                END AS ADDR_USE_CD_DESC,
+                    ELSE NULL
+                    END AS ADDR_USE_CD_DESC,
                 CASE
                     WHEN LEN(COALESCE(TRIM(P.PATIENT_STREET_ADDRESS_2),TRIM(P.PATIENT_CITY),TRIM(P.PATIENT_COUNTY),TRIM(P.PATIENT_ZIP),TRIM(P.PATIENT_STATE), '')) > 0 THEN 'House'
-                    ELSE ''
-                END AS ADDR_CD_DESC,
+                    ELSE NULL
+                    END AS ADDR_CD_DESC,
                 PROV.PROVIDER_LOCAL_ID,
                 PROV.PROVIDER_FIRST_NAME AS PHYSICIAN_FIRST_NM,
                 PROV.PROVIDER_MIDDLE_NAME AS PHYSICIAN_MIDDLE_NM,
@@ -348,26 +340,26 @@ BEGIN
                 REPTORG.ORGANIZATION_UID AS REPORTING_SOURCE_UID,
                 COALESCE(TRIM(PROV.PROVIDER_FIRST_NAME), ' ') + ',' + COALESCE(TRIM(prov.PROVIDER_MIDDLE_NAME), ' ') + ',' + COALESCE(TRIM(prov.PROVIDER_LAST_NAME), ' ') AS PHYSICIAN_NAME,
                 COALESCE(TRIM(INVGTR.PROVIDER_FIRST_NAME), ' ') + ',' + COALESCE(TRIM(INVGTR.PROVIDER_MIDDLE_NAME), ' ') + ',' + COALESCE(TRIM(INVGTR.PROVIDER_LAST_NAME), ' ') AS INVESTIGATOR_NAME,
-                CASE 
-                    WHEN LEN(TRIM(COALESCE(PROV.PROVIDER_CITY, '')) + TRIM(COALESCE(PROV.PROVIDER_STATE, '')) + TRIM(COALESCE(PROV.PROVIDER_COUNTY, ''))) > 0 
-                    THEN 'Primary Work Place' 
-                    ELSE NULL 
-                END AS PHYSICIAN_ADDRESS_USE_DESC,
-                CASE 
-                    WHEN LEN(TRIM(COALESCE(PROV.PROVIDER_CITY, '')) + TRIM(COALESCE(PROV.PROVIDER_STATE, '')) + TRIM(COALESCE(PROV.PROVIDER_COUNTY, ''))) > 0 
-                    THEN 'Office' 
-                    ELSE NULL 
-                END AS PHYSICIAN_ADDRESS_TYPE_DESC,
-                CASE 
-                    WHEN LEN(TRIM(COALESCE(REPTORG.ORGANIZATION_COUNTY, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_STATE, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_CITY, ''))) > 0 
-                    THEN 'Primary Work Place' 
-                    ELSE NULL 
-                END AS REPORTING_SOURCE_ADDRESS_USE,
-                CASE 
-                    WHEN LEN(TRIM(COALESCE(REPTORG.ORGANIZATION_COUNTY, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_STATE, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_CITY, ''))) > 0 
-                    THEN 'Office' 
-                    ELSE NULL 
-                END AS REPORTING_SOURCE_ADDRESS_TYPE
+                CASE
+                    WHEN LEN(TRIM(COALESCE(PROV.PROVIDER_CITY, '')) + TRIM(COALESCE(PROV.PROVIDER_STATE, '')) + TRIM(COALESCE(PROV.PROVIDER_COUNTY, ''))) > 0
+                        THEN 'Primary Work Place'
+                    ELSE NULL
+                    END AS PHYSICIAN_ADDRESS_USE_DESC,
+                CASE
+                    WHEN LEN(TRIM(COALESCE(PROV.PROVIDER_CITY, '')) + TRIM(COALESCE(PROV.PROVIDER_STATE, '')) + TRIM(COALESCE(PROV.PROVIDER_COUNTY, ''))) > 0
+                        THEN 'Office'
+                    ELSE NULL
+                    END AS PHYSICIAN_ADDRESS_TYPE_DESC,
+                CASE
+                    WHEN LEN(TRIM(COALESCE(REPTORG.ORGANIZATION_COUNTY, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_STATE, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_CITY, ''))) > 0
+                        THEN 'Primary Work Place'
+                    ELSE NULL
+                    END AS REPORTING_SOURCE_ADDRESS_USE,
+                CASE
+                    WHEN LEN(TRIM(COALESCE(REPTORG.ORGANIZATION_COUNTY, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_STATE, '')) + TRIM(COALESCE(REPTORG.ORGANIZATION_CITY, ''))) > 0
+                        THEN 'Office'
+                    ELSE NULL
+                    END AS REPORTING_SOURCE_ADDRESS_TYPE
             INTO #HEP100_INIT
             FROM dbo.HEPATITIS_CASE hc WITH (NOLOCK)
             INNER JOIN dbo.investigation I WITH (NOLOCK)
@@ -420,7 +412,7 @@ BEGIN
                 @PROC_STEP_NAME = 'UPDATE dbo.HEP100';
 
             UPDATE tgt
-            SET 
+            SET
                 tgt.PATIENT_LOCAL_ID = src.PATIENT_LOCAL_ID,
                 tgt.PROGRAM_JURISDICTION_OID = src.PROGRAM_JURISDICTION_OID,
                 tgt.PATIENT_FIRST_NM = src.PATIENT_FIRST_NM,
@@ -1013,7 +1005,6 @@ BEGIN
             WHERE tgt.INVESTIGATION_KEY IS NULL;
 
 
-
             SELECT @RowCount_no = @@ROWCOUNT;
 
 
@@ -1023,7 +1014,6 @@ BEGIN
                     @RowCount_no);
 
         COMMIT TRANSACTION;
-        
 
 
         INSERT INTO [dbo].[job_flow_log]
