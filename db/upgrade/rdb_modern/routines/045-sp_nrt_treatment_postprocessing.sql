@@ -147,14 +147,16 @@ BEGIN
             );
 
           IF @backfill_list IS NOT NULL
-               BEGIN
-                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
-                    @entity = 'TREATMENT',
-                    @record_uid_list = @treatment_uids,
-                    @batch_id = @batch_id,
-                    @err_description = 'Missing NRT Record: sp_nrt_treatment_postprocessing',
-                    @status_cd  = 'READY',
-                    @retry_count = 0
+            BEGIN
+                SELECT
+                    CAST(NULL AS BIGINT) AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    'Error' AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    'Missing NRT Record: sp_nrt_treatment_postprocessing' AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                    WHERE 1=1;
                RETURN;
           END  
 		
@@ -531,7 +533,15 @@ BEGIN
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
 
 		--------------------------------------------------------------------------------------------------------
-
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
     END TRY
 
     BEGIN CATCH
@@ -548,6 +558,14 @@ BEGIN
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
 		VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 
-        RETURN -1;
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
     END CATCH
 END;

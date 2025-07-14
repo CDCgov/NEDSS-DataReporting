@@ -35,26 +35,9 @@ BEGIN
         set @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
         INSERT INTO [dbo].[job_flow_log]
-        (batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[msg_description1]
-        ,[row_count])
-        VALUES (@batch_id
-               ,@create_dttm
-               ,@update_dttm
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,0
-               ,'SP_Start'
-               ,LEFT(@id_list, 500)
-               ,0);
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES 
+        (@batch_id,@create_dttm,@update_dttm,@dataflow_name,@package_name,'START',0,'SP_Start',LEFT(@id_list, 500),0);
 
         SET @proc_step_name = 'Create INVESTIGATION Temp table -' + LEFT(@id_list, 160);
         SET @proc_step_no = 1;
@@ -158,28 +141,19 @@ BEGIN
                 WHERE tmp.case_uid is null	
 		);
 
-          IF @backfill_list IS NOT NULL
-               BEGIN
-                    EXECUTE dbo.sp_nrt_backfill_postprocessing 
-                    @entity = 'INVESTIGATION',
-                    @record_uid_list = @id_list,
-                    @batch_id = @batch_id,
-                    @err_description = 'Missing NRT Record: sp_nrt_investigation_postprocessing',
-                    @status_cd  = 'READY',
-                    @retry_count = 0
-
-                SELECT 
-                    CAST(NULL AS BIGINT) AS public_health_case_uid,
-                    CAST(NULL AS BIGINT) AS patient_uid,
-                    CAST(NULL AS BIGINT) AS observation_uid,
-                    CAST(NULL AS VARCHAR(30)) AS datamart,
-                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
-                    CAST(NULL AS VARCHAR(200)) AS stored_procedure,
-                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-               WHERE 1=0;
-               
-               RETURN;
-          END
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_nrt_investigation_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+            RETURN;
+        END
         
         IF @debug = 'true' SELECT * FROM #temp_inv_table;
 
@@ -910,26 +884,8 @@ BEGIN
         SET @proc_step_no = 6;
 
         INSERT INTO [dbo].[job_flow_log]
-        (batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1])
-        VALUES (@batch_id
-               ,current_timestamp
-               ,current_timestamp
-               ,@dataflow_name
-               ,@package_name
-               ,'COMPLETE'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,0
-               ,LEFT(@id_list, 500));
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'COMPLETE',@proc_step_no,@proc_step_name,0,LEFT(@id_list, 500));
 
 
         SELECT nrt.CASE_UID                                     AS public_health_case_uid,
@@ -973,32 +929,20 @@ BEGIN
             'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log]
-        (batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        ,[Error_Description])
-
-        VALUES (@batch_id
-               ,current_timestamp
-               ,current_timestamp
-               ,@dataflow_name
-               ,@package_name
-               ,'ERROR'
-               ,@Proc_Step_no
-               ,@proc_step_name
-               ,0
-               ,LEFT(@id_list, 500)
-               ,@FullErrorMessage);
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1],[Error_Description])
+        VALUES 
+        (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'ERROR',@Proc_Step_no,@proc_step_name,0,LEFT(@id_list, 500),@FullErrorMessage);
 
 
-        return -1;
+    SELECT
+        CAST(NULL AS BIGINT) AS public_health_case_uid,
+        CAST(NULL AS BIGINT) AS patient_uid,
+        CAST(NULL AS BIGINT) AS observation_uid,
+        'Error' AS datamart,
+        CAST(NULL AS VARCHAR(50))  AS condition_cd,
+        @FullErrorMessage AS stored_procedure,
+        CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+        WHERE 1=1;
 
     END CATCH
 

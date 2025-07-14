@@ -17,20 +17,16 @@ BEGIN
     DECLARE @Proc_Step_Name varchar(200)= '';
     DECLARE @batch_start_time datetime2(7)= NULL;
     DECLARE @batch_end_time datetime2(7)= NULL;
+    declare @dataflow_name varchar(200) = 'INVESTIGATION_REPEAT';
+    declare @package_name varchar(200) = 'sp_sld_investigation_repeat_postprocessing';
 
     BEGIN TRY
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
-
-        BEGIN TRANSACTION;
-
-        INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, 0 );
-
-
-        COMMIT TRANSACTION;
+        INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count],[Msg_Description1] )
+        VALUES( @batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, 0, LEFT(@phc_id_list, 500) );
 
 
         BEGIN TRANSACTION;
@@ -93,7 +89,7 @@ BEGIN
         SELECT @RowCount_no = @@ROWCOUNT;
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
 
         COMMIT TRANSACTION;
@@ -229,7 +225,7 @@ BEGIN
         EXEC sp_executesql @sql;
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -488,7 +484,7 @@ ON #CODED_TABLE_REPT
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -519,7 +515,7 @@ ON #CODED_TABLE_REPT
 
             SELECT @RowCount_no = @@ROWCOUNT;
             INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-            VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+            VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         END
 
@@ -615,7 +611,7 @@ ON #CODED_TABLE_REPT
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -737,7 +733,7 @@ ON #CODED_TABLE_REPT
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -872,7 +868,7 @@ ON #CODED_TABLE_REPT
             FROM #NUMERIC_DATA_TRANS_REPT;
             SELECT @RowCount_no = @@ROWCOUNT;
             INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-            VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+            VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         END;
 
@@ -906,7 +902,7 @@ ON #CODED_TABLE_REPT
 
             SELECT @RowCount_no = @@ROWCOUNT;
             INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-            VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+            VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         END
 
@@ -947,7 +943,7 @@ ON #CODED_TABLE_REPT
         EXEC sp_executesql @sql;
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -1026,7 +1022,7 @@ ON #CODED_TABLE_REPT
         exec sp_executesql @staging_step;
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -1126,7 +1122,7 @@ ON #CODED_TABLE_REPT
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -1188,7 +1184,7 @@ ON #CODED_TABLE_REPT
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
@@ -1291,7 +1287,7 @@ ON #CODED_TABLE_REPT
 
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
 
         COMMIT TRANSACTION;
@@ -1368,20 +1364,17 @@ ON #CODED_TABLE_REPT
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'SLD_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+        VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
         COMMIT TRANSACTION;
 
-
-
-        BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
-        VALUES( @Batch_id, 'INVESTIGATION_REPEAT', 'D_INVESTIGATION_REPEAT', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
-        COMMIT TRANSACTION;
+        VALUES( @Batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
+
 
     END TRY
     BEGIN CATCH
@@ -1402,8 +1395,8 @@ ON #CODED_TABLE_REPT
 
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count] )
         VALUES( @Batch_id
-          , 'INVESTIGATION_REPEAT'
-          , 'D_INVESTIGATION_REPEAT'
+          ,  @dataflow_name
+          , @package_name
           , 'ERROR'
           , @Proc_Step_no
           , @Proc_Step_name

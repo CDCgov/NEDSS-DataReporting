@@ -24,6 +24,8 @@ public class Entity implements OrgExtension {
     private String rootExtensionTxt;
     private String entityIdSeq;
     private String assigningAuthorityCd;
+    private String facilityIdAuth;
+
 
     public <T> T updateOrg(T org) {
         if (org.getClass() == OrganizationReporting.class) {
@@ -33,7 +35,7 @@ public class Entity implements OrgExtension {
                     orgReporting.setQuickCode(rootExtensionTxt);
                 } else if (typeCd.equalsIgnoreCase("FI")) { // Facility ID
                     orgReporting.setFacilityId(rootExtensionTxt);
-                    orgReporting.setFacilityIdAuth(assigningAuthorityCd);
+                    orgReporting.setFacilityIdAuth(facilityIdAuth);
                 }
             }
         } else if (org.getClass() == OrganizationElasticSearch.class) {
