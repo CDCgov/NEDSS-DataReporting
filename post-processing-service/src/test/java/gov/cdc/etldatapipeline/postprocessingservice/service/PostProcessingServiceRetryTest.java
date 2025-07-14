@@ -6,6 +6,7 @@ import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.PostProcRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,6 @@ class PostProcessingServiceRetryTest {
     private AutoCloseable closeable;
 
     private final String errorMsg = "Test Error";
-
 
     @BeforeEach
     void setUp() {
@@ -168,6 +168,22 @@ class PostProcessingServiceRetryTest {
 
     }
 
+    @Test
+    void testProcessIdCacheError() {
+        String patTopic = "dummy_provider";
+        String patKey = "{\"payload\":{\"provider_uid\":123}}";
+
+        when(postProcRepositoryMock.executeStoredProcForProviderIds("123"))
+                .thenReturn(getDatamartErr());
+
+        postProcessingServiceMock.processNrtMessage(patTopic, patKey, patKey);
+        postProcessingServiceMock.processCachedIds();
+
+        assertFalse(postProcessingServiceMock.retryCache.isEmpty());
+        Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
+        assertEquals(errorMsg, postProcessingServiceMock.errorMap.get(batchId));
+    }
+
     private List<BackfillData> getBackfills() {
         List<BackfillData> backfills = new ArrayList<>();
         BackfillData backfill = new BackfillData();
@@ -181,5 +197,14 @@ class PostProcessingServiceRetryTest {
 
         backfills.add(backfill);
         return backfills;
+    }
+
+    protected List<DatamartData> getDatamartErr() {
+        List<DatamartData> datamartDataLst = new ArrayList<>();
+        DatamartData datamartData = new DatamartData();
+        datamartData.setDatamart("Error");
+        datamartData.setStoredProcedure(errorMsg);
+        datamartDataLst.add(datamartData);
+        return datamartDataLst;
     }
 }

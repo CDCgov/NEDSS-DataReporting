@@ -362,32 +362,32 @@ BEGIN
                     END AS REPORTING_SOURCE_ADDRESS_TYPE
             INTO #HEP100_INIT
             FROM dbo.HEPATITIS_CASE hc WITH (NOLOCK)
-                     INNER JOIN dbo.investigation I WITH (NOLOCK)
-                                ON HC.investigation_key = I.investigation_key
-                     LEFT JOIN dbo.nrt_investigation inv WITH (NOLOCK)
-                               on I.CASE_UID = inv.public_health_case_uid
-                     LEFT JOIN dbo.D_PATIENT P WITH (NOLOCK)
-                               ON HC.PATIENT_KEY = P.PATIENT_KEY
-                     LEFT JOIN dbo.D_PROVIDER PROV WITH (NOLOCK)
-                               ON HC.PHYSICIAN_KEY = PROV.PROVIDER_KEY
-                     LEFT JOIN dbo.D_PROVIDER INVGTR WITH (NOLOCK)
-                               ON HC.INVESTIGATOR_KEY = INVGTR.PROVIDER_KEY
-                     LEFT JOIN dbo.D_ORGANIZATION REPTORG WITH (NOLOCK)
-                               ON HC.RPT_SRC_ORG_KEY = REPTORG.ORGANIZATION_KEY
-                     LEFT JOIN dbo.condition con WITH (NOLOCK)
-                               ON inv.cd = con.condition_cd
-            WHERE
-                (I.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-                    OR
-                 P.PATIENT_UID IN (SELECT value FROM STRING_SPLIT(@pat_uids, ','))
-                    OR
-                 PROV.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
-                    OR
-                 INVGTR.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
-                    OR
-                 REPTORG.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ',')))
-              AND I.RECORD_STATUS_CD = 'ACTIVE';
-
+            INNER JOIN dbo.investigation I WITH (NOLOCK)
+                ON HC.investigation_key = I.investigation_key
+            LEFT JOIN dbo.nrt_investigation inv WITH (NOLOCK)
+                on I.CASE_UID = inv.public_health_case_uid
+            LEFT JOIN dbo.D_PATIENT P WITH (NOLOCK)
+                ON HC.PATIENT_KEY = P.PATIENT_KEY
+            LEFT JOIN dbo.D_PROVIDER PROV WITH (NOLOCK)
+                ON HC.PHYSICIAN_KEY = PROV.PROVIDER_KEY
+            LEFT JOIN dbo.D_PROVIDER INVGTR WITH (NOLOCK)
+                ON HC.INVESTIGATOR_KEY = INVGTR.PROVIDER_KEY
+            LEFT JOIN dbo.D_ORGANIZATION REPTORG WITH (NOLOCK)
+                ON HC.RPT_SRC_ORG_KEY = REPTORG.ORGANIZATION_KEY
+            LEFT JOIN dbo.condition con WITH (NOLOCK)
+                ON inv.cd = con.condition_cd
+            WHERE 
+            (I.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
+            OR
+            P.PATIENT_UID IN (SELECT value FROM STRING_SPLIT(@pat_uids, ','))
+            OR
+            PROV.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+            OR
+            INVGTR.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+            OR
+            REPTORG.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ',')))
+            AND I.RECORD_STATUS_CD = 'ACTIVE';
+            
 
             if
                 @debug = 'true'
@@ -601,7 +601,7 @@ BEGIN
                 tgt.REPORTING_SOURCE_UID = src.REPORTING_SOURCE_UID,
                 tgt.PLACE_OF_BIRTH = src.PLACE_OF_BIRTH
             FROM #HEP100_INIT src
-                     LEFT JOIN dbo.HEP100 tgt WITH (NOLOCK) ON src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY;
+            LEFT JOIN dbo.HEP100 tgt WITH (NOLOCK) ON src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY;
 
 
             SELECT @RowCount_no = @@ROWCOUNT;
@@ -615,7 +615,7 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        BEGIN TRANSACTION
+                BEGIN TRANSACTION
             SET
                 @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
@@ -1000,8 +1000,8 @@ BEGIN
                 src.REPORTING_SOURCE_UID,
                 src.PLACE_OF_BIRTH
             FROM #HEP100_INIT src
-                     LEFT JOIN dbo.HEP100 tgt WITH (NOLOCK)
-                               on src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY
+            LEFT JOIN dbo.HEP100 tgt WITH (NOLOCK)
+                on src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY
             WHERE tgt.INVESTIGATION_KEY IS NULL;
 
 

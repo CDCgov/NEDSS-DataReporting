@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_case_c
 BEGIN
     DROP PROCEDURE [dbo].[sp_nrt_case_count_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE [dbo].[sp_nrt_case_count_postprocessing] @phc_id_list nvarchar(max)
 AS
@@ -71,7 +71,7 @@ BEGIN
         into #CASE_COUNT
         from dbo.NRT_INVESTIGATION cc with(nolock)
                  inner join dbo.INVESTIGATION i with(nolock) on cc.public_health_case_uid = i.case_uid
-                 inner join dbo.v_condition_dim con with(nolock) on	con.condition_cd = cc.CD
+                 inner join dbo.condition con with(nolock) on	con.condition_cd = cc.CD
                  left outer join dbo.D_PATIENT dpat with(nolock) on cc.patient_id = dpat.patient_uid
                  left outer join dbo.D_PROVIDER dpro1 with(nolock) on cc.investigator_id = dpro1.provider_uid
                  left outer join dbo.D_PROVIDER dpro2 with(nolock) on cc.physician_id = dpro2.provider_uid
@@ -182,6 +182,15 @@ BEGIN
             (@batch_id,@dataflow_name, @package_name,'COMPLETE',@Proc_Step_no,@Proc_Step_name,@RowCount_no);
 
 
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
 
     END TRY
 
@@ -222,7 +231,16 @@ BEGIN
             );
 
 
-        return -1 ;
+
+    SELECT
+        CAST(NULL AS BIGINT) AS public_health_case_uid,
+        CAST(NULL AS BIGINT) AS patient_uid,
+        CAST(NULL AS BIGINT) AS observation_uid,
+        'Error' AS datamart,
+        CAST(NULL AS VARCHAR(50))  AS condition_cd,
+        @FullErrorMessage AS stored_procedure,
+        CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+        WHERE 1=1;
 
     END CATCH
 
