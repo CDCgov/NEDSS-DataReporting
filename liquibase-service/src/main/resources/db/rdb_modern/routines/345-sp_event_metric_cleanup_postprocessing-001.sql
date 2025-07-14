@@ -83,9 +83,9 @@ BEGIN
         BEGIN TRANSACTION
 
             SET
-                    @PROC_STEP_NO = @PROC_STEP_NO + 1;
+                @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET
-                    @PROC_STEP_NAME = 'DELETE OLD EVENTS FROM dbo.EVENT_METRIC';
+                @PROC_STEP_NAME = 'DELETE OLD EVENTS FROM dbo.EVENT_METRIC';
 
                 
             DELETE em 
