@@ -848,12 +848,10 @@ TRANSACTION;
 
     This variable stores the maximum age in days of an event for it to be valid in EVENT_METRIC.
     All new records are inserted in EVENT_METRIC_INC, but if a record is too old, it is not valid
-    for EVENT_METRIC. This value should be stored in an NRT table that mirrors NBS_ODSE.dbo.NBS_configuration.
-    When this table is brought in, change this value to the result of a query that references whatever
-    is in the aforementioned table as opposed to the hardcoded value.
+    for EVENT_METRIC.
 */
-        DECLARE
-@lookback_days BIGINT = 730;
+        DECLARE @lookback_days BIGINT = CAST((SELECT MAX(config_value) FROM dbo.nrt_odse_NBS_configuration WITH (NOLOCK)
+                                        WHERE config_key = 'METRICS_GOBACKBY_DAYS') AS INTEGER);
 
 
         IF
