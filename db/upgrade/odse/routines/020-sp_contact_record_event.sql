@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_contact_re
 BEGIN
     DROP PROCEDURE [dbo].[sp_contact_record_event]
 END
-GO 
+GO
 
 CREATE PROCEDURE [dbo].[sp_contact_record_event] @cc_uids nvarchar(max),
                                                      @debug bit = 'false'
@@ -65,7 +65,7 @@ BEGIN
         cc.CONTACT_ENTITY_UID AS CONTACT_ENTITY_UID ,
         cc.CONTACT_REFERRAL_BASIS_CD,
         case
-            when (cc.CONTACT_STATUS is not null or cc.CONTACT_STATUS != '') 
+            when (cc.CONTACT_STATUS is not null and cc.CONTACT_STATUS != '')
                 then (select * from nbs_odse.dbo.fn_get_value_by_cd_codeset(cc.CONTACT_STATUS, 'INV109'))
             end as CTT_STATUS,
         cc.CT_CONTACT_UID,
@@ -111,7 +111,10 @@ BEGIN
         cc.TXT AS CTT_NOTES,
         pac.prog_area_desc_txt as CTT_PROGRAM_AREA,
         jc.code_desc_txt as CTT_JURISDICTION_NM ,
-        case when cvg1.code_short_desc_txt is null  then cc.SHARED_IND_CD else cvg1.code_short_desc_txt end as CTT_SHARED_IND,
+        case
+            when cvg1.code_short_desc_txt is null  then cc.SHARED_IND_CD
+            else cvg1.code_short_desc_txt
+        end as CTT_SHARED_IND,
         cvg2.code_short_desc_txt as CTT_SYMP_IND,
         cvg3.code_short_desc_txt as CTT_RISK_IND ,
         cvg4.code_short_desc_txt as CTT_EVAL_COMPLETED ,
@@ -1032,12 +1035,12 @@ BEGIN
     SET
         @PROC_STEP_NAME = 'GENERATING #DATE_DATA';
 
-    SELECT 
+    SELECT
         RDB_COLUMN_NM,
         CT_CONTACT_UID,
-        case 
+        case
             when trim(ANSWER_TXT)='' then ''
-            else FORMAT(TRY_CAST(ANSWER_TXT AS datetime2), 'yyyy-MM-dd HH:mm:ss.fff') 
+            else FORMAT(TRY_CAST(ANSWER_TXT AS datetime2), 'yyyy-MM-dd HH:mm:ss.fff')
         end as ANSWER_TXT1
     INTO #DATE_DATA
     FROM (

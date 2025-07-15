@@ -65,7 +65,7 @@ BEGIN
         cc.CONTACT_ENTITY_UID AS CONTACT_ENTITY_UID ,
         cc.CONTACT_REFERRAL_BASIS_CD,
         case
-            when (cc.CONTACT_STATUS is not null or cc.CONTACT_STATUS != '')
+            when (cc.CONTACT_STATUS is not null and cc.CONTACT_STATUS != '')
                 then (select * from nbs_odse.dbo.fn_get_value_by_cd_codeset(cc.CONTACT_STATUS, 'INV109'))
             end as CTT_STATUS,
         cc.CT_CONTACT_UID,
@@ -111,7 +111,10 @@ BEGIN
         cc.TXT AS CTT_NOTES,
         pac.prog_area_desc_txt as CTT_PROGRAM_AREA,
         jc.code_desc_txt as CTT_JURISDICTION_NM ,
-        case when cvg1.code_short_desc_txt is null  then cc.SHARED_IND_CD else cvg1.code_short_desc_txt end as CTT_SHARED_IND,
+        case
+            when cvg1.code_short_desc_txt is null  then cc.SHARED_IND_CD
+            else cvg1.code_short_desc_txt
+        end as CTT_SHARED_IND,
         cvg2.code_short_desc_txt as CTT_SYMP_IND,
         cvg3.code_short_desc_txt as CTT_RISK_IND ,
         cvg4.code_short_desc_txt as CTT_EVAL_COMPLETED ,
