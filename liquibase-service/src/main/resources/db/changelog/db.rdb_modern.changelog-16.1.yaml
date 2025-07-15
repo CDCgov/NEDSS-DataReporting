@@ -2837,7 +2837,7 @@ databaseChangeLog:
   - changeSet:
       id: 999
       author: liquibase
-      comment: "Permission script will run last."
+      comment: "Permission script will always execute last."
       runOrder:  last
       runAlways:  true
       changes:

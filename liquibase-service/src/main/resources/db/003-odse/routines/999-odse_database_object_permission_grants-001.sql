@@ -1,32 +1,32 @@
--- DEBEZIUM SERVICE PERMISSIONS
+-- 1. DEBEZIUM SERVICE PERMISSIONS
 DECLARE @DebeziumServiceName NVARCHAR(100) = 'debezium_service';
 DECLARE @DebeziumUserName NVARCHAR(150) = @DebeziumServiceName + '_rdb';
 
--- KAFKA SYNC CONNECTOR SERVICE PERMISSIONS (Not required for ODSE/SRTE)
--- DECLARE @KafkaServiceName NVARCHAR(100) = 'kafka_sync_connector_service';
--- DECLARE @KafkaUserName NVARCHAR(150) = @KafkaServiceName + '_rdb';
-
--- ORGANIZATION SERVICE PERMISSIONS
+-- 2. ORGANIZATION SERVICE PERMISSIONS
 DECLARE @OrgServiceName NVARCHAR(100) = 'organization_service';
 DECLARE @OrgUserName NVARCHAR(150) = @OrgServiceName + '_rdb';
 
--- PERSON SERVICE PERMISSIONS
+-- 3. PERSON SERVICE PERMISSIONS
 DECLARE @PersonServiceName NVARCHAR(100) = 'person_service';
 DECLARE @PersonUserName NVARCHAR(150) = @PersonServiceName + '_rdb';
 
--- OBSERVATION SERVICE PERMISSIONS
+-- 4. OBSERVATION SERVICE PERMISSIONS
 DECLARE @ObsServiceName NVARCHAR(100) = 'observation_service';
 DECLARE @ObsUserName NVARCHAR(150) = @ObsServiceName + '_rdb';
 
--- INVESTIGATION SERVICE PERMISSIONS
+-- 5. INVESTIGATION SERVICE PERMISSIONS
 DECLARE @InvServiceName NVARCHAR(100) = 'investigation_service';
 DECLARE @InvUserName NVARCHAR(150) = @InvServiceName + '_rdb';
 
--- LDF SERVICE PERMISSIONS
+-- 6. LDF SERVICE PERMISSIONS
 DECLARE @LdfServiceName NVARCHAR(100) = 'ldf_service';
 DECLARE @LdfUserName NVARCHAR(150) = @LdfServiceName + '_rdb';
 
--- -- POST PROCESSING SERVICE PERMISSIONS (Not required for ODSE)
+-- 7. KAFKA SYNC CONNECTOR SERVICE PERMISSIONS (Not required for ODSE/SRTE)
+-- DECLARE @KafkaServiceName NVARCHAR(100) = 'kafka_sync_connector_service';
+-- DECLARE @KafkaUserName NVARCHAR(150) = @KafkaServiceName + '_rdb';
+
+-- 8. POST PROCESSING SERVICE PERMISSIONS (Not required for ODSE)
 -- DECLARE @PostServiceName NVARCHAR(100) = 'post_processing_service';
 -- DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 
@@ -61,15 +61,15 @@ PRINT 'Debezium service user permission grants completed.';
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
-BEGIN
-    DECLARE @AddRoleMemberODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @OrgUserName + '''';
-    EXEC sp_executesql @AddRoleMemberODSESQL;
-    PRINT 'Added [' + @OrgUserName + '] to db_datareader role in NBS_ODSE';
+    BEGIN
+        DECLARE @AddRoleMemberOrgODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @OrgUserName + '''';
+        EXEC sp_executesql @AddRoleMemberOrgODSESQL;
+        PRINT 'Added [' + @OrgUserName + '] to db_datareader role in NBS_ODSE';
 
-    DECLARE @GrantExecSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_organization_event] TO [' + @OrgUserName + ']';
-    EXEC sp_executesql @GrantExecSPSQL;
-    PRINT 'Granted EXECUTE permission on [dbo].[sp_organization_event] to [' + @OrgUserName + ']';
-END
+        DECLARE @GrantExecOrgSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_organization_event] TO [' + @OrgUserName + ']';
+        EXEC sp_executesql @GrantExecOrgSPSQL;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_organization_event] to [' + @OrgUserName + ']';
+    END
 PRINT 'Organization service user permission grants completed.';
 
 -- PERSON SERVICE PERMISSIONS
@@ -132,7 +132,6 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
     END
 
 PRINT 'Observation service permission grants completed.';
-
 
 -- INVESTIGATION SERVICE PERMISSIONS
 -- Special permissions: db_datawriter on ODSE (writes to PublicHealthCaseFact and SubjectRaceInfo)

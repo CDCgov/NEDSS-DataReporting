@@ -54,8 +54,8 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserN
 -- ORGANIZATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
     BEGIN
-        DECLARE @CreateUserODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
-        EXEC sp_executesql @CreateUserODSESQL;
+        DECLARE @CreateUserOrgODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
+        EXEC sp_executesql @CreateUserOrgODSESQL;
         PRINT 'Created database user [' + @OrgUserName + '] in NBS_ODSE';
     END
 
@@ -108,8 +108,8 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserN
 -- ORGANIZATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
     BEGIN
-        DECLARE @CreateUserSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
-        EXEC sp_executesql @CreateUserSRTESQL;
+        DECLARE @CreateUserOrgSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
+        EXEC sp_executesql @CreateUserOrgSRTESQL;
         PRINT 'Created database user [' + @OrgUserName + '] in NBS_SRTE';
     END
 
@@ -223,4 +223,3 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
         EXEC sp_executesql @CreateUserPostRDBSQL;
         PRINT 'Created database user [' + @PostUserName + '] in rdb';
     END
-
