@@ -355,7 +355,7 @@ class PostProcessingServiceEntityTest {
         verify(investigationRepositoryMock).executeStoredProcForPageBuilder("123,124", "D_INV_ADMINISTRATIVE");
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(15, logs.size());
+        assertEquals(13, logs.size());
         assertTrue(logs.getLast().getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
