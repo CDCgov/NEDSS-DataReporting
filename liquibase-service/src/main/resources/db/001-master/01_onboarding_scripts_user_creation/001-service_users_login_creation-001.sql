@@ -6,7 +6,7 @@ USE [master];
 
 -- Create login for debezium service
 DECLARE @ServiceName NVARCHAR(100) = 'debezium_service';
-DECLARE @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+DECLARE @UserPassword NVARCHAR(128) = N'<to_be_reset_later>'; --Please provide your generated password.
 DECLARE @UserName NVARCHAR(150) = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating
@@ -24,7 +24,7 @@ ELSE
 
 -- Create login for kafka sync connector service
 SET @ServiceName = 'kafka_sync_connector_service';
-SET @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+SET @UserPassword = N'<to_be_reset_later>'; --Please provide your generated password.
 SET @UserName = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating
@@ -42,7 +42,7 @@ ELSE
 
 -- Create login for post processing service
 SET @ServiceName = 'post_processing_service';
-SET @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+SET @UserPassword = N'<to_be_reset_later>'; --Please provide your generated password.
 SET @UserName = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating
@@ -60,7 +60,7 @@ ELSE
 
 -- Create login for ldf service
 SET @ServiceName = 'ldf_service';
-SET @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+SET @UserPassword = N'<to_be_reset_later>'; --Please provide your generated password.
 SET @UserName = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating
@@ -78,7 +78,7 @@ ELSE
 
 -- Create login for investigation service
 SET @ServiceName = 'investigation_service';
-SET @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+SET @UserPassword = N'<to_be_reset_later>'; --Please provide your generated password.
 SET @UserName = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating
@@ -96,7 +96,7 @@ ELSE
 
 -- Create login for person service
 SET @ServiceName = 'person_service';
-SET @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+SET @UserPassword = N'<to_be_reset_later>'; --Please provide your generated password.
 SET @UserName = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating
@@ -114,7 +114,7 @@ ELSE
 
 -- Create login for observation service
 SET @ServiceName = 'observation_service';
-SET @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+SET @UserPassword = N'<to_be_reset_later>'; --Please provide your generated password.
 SET @UserName = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating
@@ -132,7 +132,7 @@ ELSE
 
 -- Create login for organization service
 SET @ServiceName = 'organization_service';
-SET @UserPassword NVARCHAR(100) = N'<to_be_reset_later>'; --Please provide your generated password.
+SET @UserPassword = N'<to_be_reset_later>'; --Please provide your generated password.
 SET @UserName = @ServiceName + '_rdb';
 
 -- Check if login already exists before creating

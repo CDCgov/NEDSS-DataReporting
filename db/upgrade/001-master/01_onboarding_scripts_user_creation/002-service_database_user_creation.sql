@@ -3,35 +3,35 @@
 -- Scripts create required users in each database.
 -- ====================================================
 
--- DEBEZIUM SERVICE USER
+-- 1. DEBEZIUM SERVICE USER
 DECLARE @DebeziumServiceName NVARCHAR(100) = 'debezium_service';
 DECLARE @DebeziumUserName NVARCHAR(150) = @DebeziumServiceName + '_rdb';
 
--- KAFKA SYNC CONNECTOR SERVICE USER
+-- 2. KAFKA SYNC CONNECTOR SERVICE USER
 DECLARE @KafkaServiceName NVARCHAR(100) = 'kafka_sync_connector_service';
 DECLARE @KafkaUserName NVARCHAR(150) = @KafkaServiceName + '_rdb';
 
--- ORGANIZATION SERVICE USER
+-- 3. ORGANIZATION SERVICE USER
 DECLARE @OrgServiceName NVARCHAR(100) = 'organization_service';
 DECLARE @OrgUserName NVARCHAR(150) = @OrgServiceName + '_rdb';
 
--- PERSON SERVICE USER
+-- 4. PERSON SERVICE USER
 DECLARE @PersonServiceName NVARCHAR(100) = 'person_service';
 DECLARE @PersonUserName NVARCHAR(150) = @PersonServiceName + '_rdb';
 
--- OBSERVATION SERVICE USER
+-- 5. OBSERVATION SERVICE USER
 DECLARE @ObsServiceName NVARCHAR(100) = 'observation_service';
 DECLARE @ObsUserName NVARCHAR(150) = @ObsServiceName + '_rdb';
 
--- INVESTIGATION SERVICE USER
+-- 6. INVESTIGATION SERVICE USER
 DECLARE @InvServiceName NVARCHAR(100) = 'investigation_service';
 DECLARE @InvUserName NVARCHAR(150) = @InvServiceName + '_rdb';
 
--- LDF SERVICE USER
+-- 7. LDF SERVICE USER
 DECLARE @LdfServiceName NVARCHAR(100) = 'ldf_service';
 DECLARE @LdfUserName NVARCHAR(150) = @LdfServiceName + '_rdb';
 
--- POST PROCESSING SERVICE USER
+-- 8. POST PROCESSING SERVICE USER
 DECLARE @PostServiceName NVARCHAR(100) = 'post_processing_service';
 DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 
@@ -43,7 +43,7 @@ DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 USE [NBS_ODSE];
 PRINT 'Switched to database [NBS_ODSE]';
 
--- DEBEZIUM SERVICE USER CREATION
+-- 1. DEBEZIUM SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserName)
     BEGIN
         DECLARE @CreateUserDebeziumODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @DebeziumUserName + '] FOR LOGIN [' + @DebeziumUserName + ']';
@@ -51,7 +51,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserN
         PRINT 'Created database user [' + @DebeziumUserName + '] in NBS_ODSE';
     END
 
--- ORGANIZATION SERVICE USER CREATION
+-- 2. ORGANIZATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
     BEGIN
         DECLARE @CreateUserOrgODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
@@ -59,7 +59,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
         PRINT 'Created database user [' + @OrgUserName + '] in NBS_ODSE';
     END
 
--- PERSON SERVICE USER CREATION
+-- 3. PERSON SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
     BEGIN
         DECLARE @CreateUserPersonODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @PersonUserName + '] FOR LOGIN [' + @PersonUserName + ']';
@@ -67,7 +67,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserNam
         PRINT 'Created database user [' + @PersonUserName + '] in NBS_ODSE';
     END
 
--- OBSERVATION SERVICE USER CREATION
+-- 4. OBSERVATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
     BEGIN
         DECLARE @CreateUserObsODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @ObsUserName + '] FOR LOGIN [' + @ObsUserName + ']';
@@ -75,7 +75,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
         PRINT 'Created database user [' + @ObsUserName + '] in NBS_ODSE';
     END
 
--- INVESTIGATION SERVICE USER CREATION
+-- 5. INVESTIGATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
     BEGIN
         DECLARE @CreateUserInvODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
@@ -83,7 +83,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
         PRINT 'Created database user [' + @InvUserName + '] in NBS_ODSE';
     END
 
--- LDF SERVICE USER CREATION
+-- 6. LDF SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
     BEGIN
         DECLARE @CreateUserLdfODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
@@ -97,7 +97,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
 USE [NBS_SRTE];
 PRINT 'Switched to database [NBS_SRTE]';
 
--- DEBEZIUM SERVICE USER CREATION
+-- 1. DEBEZIUM SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserName)
     BEGIN
         DECLARE @CreateUserDebeziumSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @DebeziumUserName + '] FOR LOGIN [' + @DebeziumUserName + ']';
@@ -105,7 +105,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserN
         PRINT 'Created database user [' + @DebeziumUserName + '] in NBS_SRTE';
     END
 
--- ORGANIZATION SERVICE USER CREATION
+-- 2. ORGANIZATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
     BEGIN
         DECLARE @CreateUserOrgSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
@@ -113,7 +113,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
         PRINT 'Created database user [' + @OrgUserName + '] in NBS_SRTE';
     END
 
--- PERSON SERVICE USER CREATION
+-- 3. PERSON SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
     BEGIN
         DECLARE @CreateUserPersonSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @PersonUserName + '] FOR LOGIN [' + @PersonUserName + ']';
@@ -121,7 +121,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserNam
         PRINT 'Created database user [' + @PersonUserName + '] in NBS_SRTE';
     END
 
--- OBSERVATION SERVICE USER CREATION
+-- 4. OBSERVATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
     BEGIN
         DECLARE @CreateUserObsSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @ObsUserName + '] FOR LOGIN [' + @ObsUserName + ']';
@@ -129,7 +129,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
         PRINT 'Created database user [' + @ObsUserName + '] in NBS_SRTE';
     END
 
--- INVESTIGATION SERVICE USER CREATION
+-- 5. INVESTIGATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
     BEGIN
         DECLARE @CreateUserInvSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
@@ -137,7 +137,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
         PRINT 'Created database user [' + @InvUserName + '] in NBS_SRTE';
     END
 
--- LDF SERVICE USER CREATION
+-- 6. LDF SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
     BEGIN
         DECLARE @CreateUserLdfSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
@@ -145,7 +145,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
         PRINT 'Created database user [' + @LdfUserName + '] in NBS_SRTE';
     END
 
--- POST PROCESSING SERVICE USER CREATION
+-- 7. POST PROCESSING SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
     BEGIN
         DECLARE @CreateUserPostNBSSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @PostUserName + '] FOR LOGIN [' + @PostUserName + ']';
@@ -168,7 +168,7 @@ ELSE
         PRINT 'Switched to database [rdb]';
     END
 
--- KAFKA SYNC CONNECTOR SERVICE USER CREATION
+-- 1. KAFKA SYNC CONNECTOR SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @KafkaUserName)
     BEGIN
         DECLARE @CreateUserKafkaRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @KafkaUserName + '] FOR LOGIN [' + @KafkaUserName + ']';
@@ -176,7 +176,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @KafkaUserName
         PRINT 'Created database user [' + @KafkaUserName + '] in rdb';
     END
 
--- ORGANIZATION SERVICE USER CREATION
+-- 2. ORGANIZATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
     BEGIN
         DECLARE @CreateUserRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
@@ -184,7 +184,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
         PRINT 'Created database user [' + @OrgUserName + '] in rdb';
     END
 
--- PERSON SERVICE USER CREATION
+-- 3. PERSON SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
     BEGIN
         DECLARE @CreateUserPersonRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @PersonUserName + '] FOR LOGIN [' + @PersonUserName + ']';
@@ -192,7 +192,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserNam
         PRINT 'Created database user [' + @PersonUserName + '] in rdb';
     END
 
--- OBSERVATION SERVICE USER CREATION
+-- 4. OBSERVATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
     BEGIN
         DECLARE @CreateUserObsRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @ObsUserName + '] FOR LOGIN [' + @ObsUserName + ']';
@@ -200,7 +200,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
         PRINT 'Created database user [' + @ObsUserName + '] in rdb';
     END
 
--- INVESTIGATION SERVICE USER CREATION
+-- 5. INVESTIGATION SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
     BEGIN
         DECLARE @CreateUserInvRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
@@ -208,7 +208,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
         PRINT 'Created database user [' + @InvUserName + '] in rdb';
     END
 
--- LDF SERVICE USER CREATION
+-- 6. LDF SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
     BEGIN
         DECLARE @CreateUserLdfRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
@@ -216,7 +216,7 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
         PRINT 'Created database user [' + @LdfUserName + '] in rdb';
     END
 
--- POST PROCESSING SERVICE USER CREATION
+-- 7. POST PROCESSING SERVICE USER CREATION
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
     BEGIN
         DECLARE @CreateUserPostRDBSQL NVARCHAR(MAX) = 'CREATE USER [' + @PostUserName + '] FOR LOGIN [' + @PostUserName + ']';

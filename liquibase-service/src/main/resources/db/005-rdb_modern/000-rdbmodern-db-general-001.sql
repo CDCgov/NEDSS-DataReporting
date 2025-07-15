@@ -1,13 +1,8 @@
 -- Query update to run against RDB with RDB_modern compatibility
 -- Upgrade compatibility level to allow inbuilt functions such as StringSplit
-IF NOT EXISTS(SELECT 1 FROM sys.databases WHERE name = 'RDB_MODERN')
+DECLARE @CURRENT_DB NVARCHAR(128) = db_name()
+IF (SELECT COMPATIBILITY_LEVEL FROM sys.databases WHERE name =  @CURRENT_DB)<150
     BEGIN
-        IF NOT EXISTS(SELECT 1 FROM sys.databases WHERE name = 'RDB' AND COMPATIBILITY_LEVEL = 130)
-            BEGIN
-                ALTER DATABASE RDB SET COMPATIBILITY_LEVEL = 130;
-            END
-    END
-ELSE IF NOT EXISTS(SELECT 1 FROM sys.databases WHERE name = 'RDB_MODERN' AND COMPATIBILITY_LEVEL = 130)
-    BEGIN
-        ALTER DATABASE RDB_MODERN SET COMPATIBILITY_LEVEL = 130;
+        EXEC('ALTER DATABASE '+@CURRENT_DB+' SET COMPATIBILITY_LEVEL = 150');
+        PRINT 'Updated ' + @CURRENT_DB + ' to compatibility level 150.'
     END

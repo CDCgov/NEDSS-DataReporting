@@ -146,9 +146,13 @@ PRINT 'Observation service permission grants completed.';
 -- Note: Using db_datawriter because investigation service writes to PublicHealthCaseFact and SubjectRaceInfo tables
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
     BEGIN
-        DECLARE @AddRoleMemberInvODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @InvUserName + '''';
-        EXEC sp_executesql @AddRoleMemberInvODSESQL;
+        DECLARE @AddRoleMemberInvWriterODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @InvUserName + '''';
+        EXEC sp_executesql @AddRoleMemberInvWriterODSESQL;
         PRINT 'Added [' + @InvUserName + '] to db_datawriter role in NBS_ODSE';
+
+        DECLARE @AddRoleMemberInvReaderODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @InvUserName + '''';
+        EXEC sp_executesql @AddRoleMemberInvReaderODSESQL;
+        PRINT 'Added [' + @InvUserName + '] to db_datareader role in NBS_ODSE';
 
         -- Grant EXECUTE permissions on stored procedures
         DECLARE @GrantExecInvestigationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_investigation_event] TO [' + @InvUserName + ']';
@@ -188,14 +192,6 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
         EXEC sp_executesql @GrantWritePHCFactSQL;
         PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact] to [' + @InvUserName + ']';
 
-        -- Grant write permissions on MODERN tables
-        DECLARE @GrantWriteSubjectRaceModernSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[SubjectRaceInfo_Modern] TO [' + @InvUserName + ']';
-        EXEC sp_executesql @GrantWriteSubjectRaceModernSQL;
-        PRINT 'Granted write permissions on [dbo].[SubjectRaceInfo_Modern] to [' + @InvUserName + ']';
-
-        DECLARE @GrantWritePHCFactModernSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[PublicHealthCaseFact_Modern] TO [' + @InvUserName + ']';
-        EXEC sp_executesql @GrantWritePHCFactModernSQL;
-        PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact_Modern] to [' + @InvUserName + ']';
     END
 
 PRINT 'Investigation service permission grants completed.';
