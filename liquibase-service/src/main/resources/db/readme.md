@@ -17,7 +17,7 @@ export DB_RDB=RDB_MODERN
 
 * Make sure you are in the following project
 
-    * `/NEDSS-DataAccess/liquibase-service`
+    * `/NEDSS-DataReporting/liquibase-service`
 
 * Run following to execute liquibase
 
