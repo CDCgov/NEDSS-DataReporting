@@ -130,23 +130,3 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
         PRINT 'Added [' + @LdfUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 PRINT 'LDF service permission grants completed.';
-
--- POST PROCESSING SERVICE PERMISSIONS
--- Special permissions:
--- - db_datareader on NBS_SRTE (access to information schema for stored procedures)
--- IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
---     BEGIN
---         DECLARE @CreateUserPostNBSSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @PostUserName + '] FOR LOGIN [' + @PostUserName + ']';
---         EXEC sp_executesql @CreateUserPostNBSSRTESQL;
---         PRINT 'Created database user [' + @PostUserName + '] in ' +@SRTE_DB;
---     END
-
-IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
-    BEGIN
-        DECLARE @AddRoleMemberPostNBSSRTEReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @PostUserName + '''';
-        EXEC sp_executesql @AddRoleMemberPostNBSSRTEReaderSQL;
-        PRINT 'Added [' + @PostUserName + '] to db_datareader role in ' +@SRTE_DB;
-    END
-
-PRINT '- db_datareader permissions on NBS_SRTE database (for information schema access)';
-
