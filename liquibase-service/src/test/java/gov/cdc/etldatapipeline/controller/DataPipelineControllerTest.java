@@ -25,13 +25,13 @@ class DataPipelineControllerTest {
     private AutoCloseable closeable;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         closeable = MockitoAnnotations.openMocks(this);
         controller = new DataPipelineController(dataPipelineStatusService);
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         closeable.close();
     }
 

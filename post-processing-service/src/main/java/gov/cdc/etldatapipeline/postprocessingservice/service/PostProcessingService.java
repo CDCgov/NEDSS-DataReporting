@@ -1143,7 +1143,6 @@ public class PostProcessingService {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
         String idString = listToLogString(ids);
-        prepareAndLog(keyTopic, idString, entity.getEntityName(), name);
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", name, keyTopic,
                 entity.getStoredProcedure(), idString, vals);
         List<T> result = repositoryMethod.apply(idString, vals);
