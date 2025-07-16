@@ -65,7 +65,7 @@ BEGIN
         SET @backfill_list = (
             SELECT value
             FROM #LDF_UID_LIST t
-                LEFT JOIN nrt_ldf_data nrt ON nrt.ldf_uid = t.value
+                LEFT JOIN nrt_ldf_data nrt with (nolock) ON nrt.ldf_uid = t.value
             WHERE nrt.ldf_uid is null
         );
 
