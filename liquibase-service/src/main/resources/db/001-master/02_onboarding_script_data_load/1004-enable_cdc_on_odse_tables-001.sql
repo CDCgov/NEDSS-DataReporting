@@ -95,3 +95,8 @@ IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'NBS_configuration' and is_t
     BEGIN
         EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'NBS_configuration',@role_name = NULL;
     END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'LOOKUP_QUESTION' and is_tracked_by_cdc = 1)
+    BEGIN
+        EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'LOOKUP_QUESTION',@role_name = NULL;
+    END;

@@ -14,19 +14,7 @@ else
     begin
         exec sys.sp_cdc_enable_db 'nbs_odse'
     end;
+
 select name, is_cdc_enabled
-FROM sys.databases
-WHERE name = 'nbs_odse';
-
-
-if not exists (SELECT name, is_tracked_by_cdc
-               FROM sys.tables
-               WHERE is_tracked_by_cdc = 1
-                 and name = 'Act')
-    begin
-        exec sys.sp_cdc_enable_table @source_schema = N'dbo', @source_name = N'Act', @role_name = NULL;
-    end;
-
-SELECT name, is_tracked_by_cdc
-FROM sys.tables
-WHERE is_tracked_by_cdc = 1;
+from sys.databases
+where name = 'nbs_odse';

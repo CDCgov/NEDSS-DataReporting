@@ -31,6 +31,7 @@ DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 -- DECLARE @KafkaServiceName NVARCHAR(100) = 'kafka_sync_connector_service';
 -- DECLARE @KafkaUserName NVARCHAR(150) = @KafkaServiceName + '_rdb';
 
+DECLARE @SRTE_DB NVARCHAR(128) = db_name();
 -- ==========================================
 -- PERMISSION GRANTS
 -- ==========================================
@@ -40,13 +41,13 @@ DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 -- BEGIN
 --     DECLARE @CreateUserDebeziumSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @DebeziumUserName + '] FOR LOGIN [' + @DebeziumUserName + ']';
 --     EXEC sp_executesql @CreateUserDebeziumSRTESQL;
---     PRINT 'Created database user [' + @DebeziumUserName + '] in NBS_SRTE';
+--     PRINT 'Created database user [' + @DebeziumUserName + '] in ' +@SRTE_DB;
 -- END
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserName)
     BEGIN
         DECLARE @AddRoleMemberDebeziumSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @DebeziumUserName + '''';
         EXEC sp_executesql @AddRoleMemberDebeziumSRTESQL;
-        PRINT 'Added [' + @DebeziumUserName + '] to db_datareader role in NBS_SRTE';
+        PRINT 'Added [' + @DebeziumUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 PRINT 'Debezium service user permission grants completed.';
 
@@ -55,14 +56,14 @@ PRINT 'Debezium service user permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
 --     EXEC sp_executesql @CreateUserSRTESQL;
---     PRINT 'Created database user [' + @OrgUserName + '] in NBS_SRTE';
+--     PRINT 'Created database user [' + @OrgUserName + '] in ' +@SRTE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
     BEGIN
         DECLARE @AddRoleMemberOrgSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @OrgUserName + '''';
         EXEC sp_executesql @AddRoleMemberOrgSRTESQL;
-        PRINT 'Added [' + @OrgUserName + '] to db_datareader role in NBS_SRTE';
+        PRINT 'Added [' + @OrgUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 PRINT 'Organization service user permission grants completed.';
 
@@ -71,14 +72,14 @@ PRINT 'Organization service user permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserPersonSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @PersonUserName + '] FOR LOGIN [' + @PersonUserName + ']';
 --     EXEC sp_executesql @CreateUserPersonSRTESQL;
---     PRINT 'Created database user [' + @PersonUserName + '] in NBS_SRTE';
+--     PRINT 'Created database user [' + @PersonUserName + '] in ' +@SRTE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
     BEGIN
         DECLARE @AddRoleMemberPersonSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @PersonUserName + '''';
         EXEC sp_executesql @AddRoleMemberPersonSRTESQL;
-        PRINT 'Added [' + @PersonUserName + '] to db_datareader role in NBS_SRTE';
+        PRINT 'Added [' + @PersonUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 PRINT 'Person service user permission grants completed.';
 
@@ -87,14 +88,14 @@ PRINT 'Person service user permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserObsSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @ObsUserName + '] FOR LOGIN [' + @ObsUserName + ']';
 --     EXEC sp_executesql @CreateUserObsSRTESQL;
---     PRINT 'Created database user [' + @ObsUserName + '] in NBS_SRTE';
+--     PRINT 'Created database user [' + @ObsUserName + '] in ' +@SRTE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
     BEGIN
         DECLARE @AddRoleMemberObsSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @ObsUserName + '''';
         EXEC sp_executesql @AddRoleMemberObsSRTESQL;
-        PRINT 'Added [' + @ObsUserName + '] to db_datareader role in NBS_SRTE';
+        PRINT 'Added [' + @ObsUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 PRINT 'Observation service permission grants completed.';
 
@@ -103,14 +104,14 @@ PRINT 'Observation service permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserInvSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
 --     EXEC sp_executesql @CreateUserInvSRTESQL;
---     PRINT 'Created database user [' + @InvUserName + '] in NBS_SRTE';
+--     PRINT 'Created database user [' + @InvUserName + '] in ' +@SRTE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
     BEGIN
         DECLARE @AddRoleMemberInvSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @InvUserName + '''';
         EXEC sp_executesql @AddRoleMemberInvSRTESQL;
-        PRINT 'Added [' + @InvUserName + '] to db_datareader role in NBS_SRTE';
+        PRINT 'Added [' + @InvUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 PRINT 'Investigation service permission grants completed.';
 
@@ -119,14 +120,14 @@ PRINT 'Investigation service permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserLdfSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
 --     EXEC sp_executesql @CreateUserLdfSRTESQL;
---     PRINT 'Created database user [' + @LdfUserName + '] in NBS_SRTE';
+--     PRINT 'Created database user [' + @LdfUserName + '] in ' +@SRTE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
     BEGIN
         DECLARE @AddRoleMemberLdfSRTESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @LdfUserName + '''';
         EXEC sp_executesql @AddRoleMemberLdfSRTESQL;
-        PRINT 'Added [' + @LdfUserName + '] to db_datareader role in NBS_SRTE';
+        PRINT 'Added [' + @LdfUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 PRINT 'LDF service permission grants completed.';
 
@@ -137,14 +138,14 @@ PRINT 'LDF service permission grants completed.';
 --     BEGIN
 --         DECLARE @CreateUserPostNBSSRTESQL NVARCHAR(MAX) = 'CREATE USER [' + @PostUserName + '] FOR LOGIN [' + @PostUserName + ']';
 --         EXEC sp_executesql @CreateUserPostNBSSRTESQL;
---         PRINT 'Created database user [' + @PostUserName + '] in NBS_SRTE';
+--         PRINT 'Created database user [' + @PostUserName + '] in ' +@SRTE_DB;
 --     END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
     BEGIN
         DECLARE @AddRoleMemberPostNBSSRTEReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @PostUserName + '''';
         EXEC sp_executesql @AddRoleMemberPostNBSSRTEReaderSQL;
-        PRINT 'Added [' + @PostUserName + '] to db_datareader role in NBS_SRTE';
+        PRINT 'Added [' + @PostUserName + '] to db_datareader role in ' +@SRTE_DB;
     END
 
 PRINT '- db_datareader permissions on NBS_SRTE database (for information schema access)';

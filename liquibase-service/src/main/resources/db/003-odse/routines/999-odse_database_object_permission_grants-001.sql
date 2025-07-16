@@ -30,6 +30,8 @@ DECLARE @LdfUserName NVARCHAR(150) = @LdfServiceName + '_rdb';
 -- DECLARE @PostServiceName NVARCHAR(100) = 'post_processing_service';
 -- DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 
+DECLARE @ODSE_DB NVARCHAR(64) = db_name();
+
 -- ==========================================
 -- PERMISSION GRANTS
 -- ==========================================
@@ -40,14 +42,14 @@ DECLARE @LdfUserName NVARCHAR(150) = @LdfServiceName + '_rdb';
 -- BEGIN
 --     DECLARE @CreateUserDebeziumODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @DebeziumUserName + '] FOR LOGIN [' + @DebeziumUserName + ']';
 --     EXEC sp_executesql @CreateUserDebeziumODSESQL;
---     PRINT 'Created database user [' + @DebeziumUserName + '] in NBS_ODSE';
+--     PRINT 'Created database user [' + @DebeziumUserName + '] in ' +@ODSE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @DebeziumUserName)
     BEGIN
         DECLARE @AddRoleMemberDebeziumODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @DebeziumUserName + '''';
         EXEC sp_executesql @AddRoleMemberDebeziumODSESQL;
-        PRINT 'Added [' + @DebeziumUserName + '] to db_datareader role in NBS_ODSE';
+        PRINT 'Added [' + @DebeziumUserName + '] to db_datareader role in ' +@ODSE_DB;
     END
 PRINT 'Debezium service user permission grants completed.';
 
@@ -57,14 +59,14 @@ PRINT 'Debezium service user permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
 --     EXEC sp_executesql @CreateUserODSESQL;
---     PRINT 'Created database user [' + @OrgUserName + '] in NBS_ODSE';
+--     PRINT 'Created database user [' + @OrgUserName + '] in ' +@ODSE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
     BEGIN
         DECLARE @AddRoleMemberOrgODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @OrgUserName + '''';
         EXEC sp_executesql @AddRoleMemberOrgODSESQL;
-        PRINT 'Added [' + @OrgUserName + '] to db_datareader role in NBS_ODSE';
+        PRINT 'Added [' + @OrgUserName + '] to db_datareader role in ' +@ODSE_DB;
 
         DECLARE @GrantExecOrgSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_organization_event] TO [' + @OrgUserName + ']';
         EXEC sp_executesql @GrantExecOrgSPSQL;
@@ -78,14 +80,14 @@ PRINT 'Organization service user permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserPersonODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @PersonUserName + '] FOR LOGIN [' + @PersonUserName + ']';
 --     EXEC sp_executesql @CreateUserPersonODSESQL;
---     PRINT 'Created database user [' + @PersonUserName + '] in NBS_ODSE';
+--     PRINT 'Created database user [' + @PersonUserName + '] in ' +@ODSE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
     BEGIN
         DECLARE @AddRoleMemberPersonODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @PersonUserName + '''';
         EXEC sp_executesql @AddRoleMemberPersonODSESQL;
-        PRINT 'Added [' + @PersonUserName + '] to db_datareader role in NBS_ODSE';
+        PRINT 'Added [' + @PersonUserName + '] to db_datareader role in ' +@ODSE_DB;
 
         DECLARE @GrantExecPatientSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_patient_event] TO [' + @PersonUserName + ']';
         EXEC sp_executesql @GrantExecPatientSPSQL;
@@ -113,14 +115,14 @@ PRINT 'Person service user permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserObsODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @ObsUserName + '] FOR LOGIN [' + @ObsUserName + ']';
 --     EXEC sp_executesql @CreateUserObsODSESQL;
---     PRINT 'Created database user [' + @ObsUserName + '] in NBS_ODSE';
+--     PRINT 'Created database user [' + @ObsUserName + '] in ' +@ODSE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
     BEGIN
         DECLARE @AddRoleMemberObsODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @ObsUserName + '''';
         EXEC sp_executesql @AddRoleMemberObsODSESQL;
-        PRINT 'Added [' + @ObsUserName + '] to db_datareader role in NBS_ODSE';
+        PRINT 'Added [' + @ObsUserName + '] to db_datareader role in ' +@ODSE_DB;
 
         DECLARE @GrantExecObsSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_observation_event] TO [' + @ObsUserName + ']';
         EXEC sp_executesql @GrantExecObsSPSQL;
@@ -140,7 +142,7 @@ PRINT 'Observation service permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserInvODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
 --     EXEC sp_executesql @CreateUserInvODSESQL;
---     PRINT 'Created database user [' + @InvUserName + '] in NBS_ODSE';
+--     PRINT 'Created database user [' + @InvUserName + '] in ' +@ODSE_DB;
 -- END
 
 -- Note: Using db_datawriter because investigation service writes to PublicHealthCaseFact and SubjectRaceInfo tables
@@ -148,11 +150,11 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
     BEGIN
         DECLARE @AddRoleMemberInvWriterODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @InvUserName + '''';
         EXEC sp_executesql @AddRoleMemberInvWriterODSESQL;
-        PRINT 'Added [' + @InvUserName + '] to db_datawriter role in NBS_ODSE';
+        PRINT 'Added [' + @InvUserName + '] to db_datawriter role in ' +@ODSE_DB;
 
         DECLARE @AddRoleMemberInvReaderODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @InvUserName + '''';
         EXEC sp_executesql @AddRoleMemberInvReaderODSESQL;
-        PRINT 'Added [' + @InvUserName + '] to db_datareader role in NBS_ODSE';
+        PRINT 'Added [' + @InvUserName + '] to db_datareader role in ' +@ODSE_DB;
 
         -- Grant EXECUTE permissions on stored procedures
         DECLARE @GrantExecInvestigationSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_investigation_event] TO [' + @InvUserName + ']';
@@ -202,14 +204,14 @@ PRINT 'Investigation service permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserLdfODSESQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
 --     EXEC sp_executesql @CreateUserLdfODSESQL;
---     PRINT 'Created database user [' + @LdfUserName + '] in NBS_ODSE';
+--     PRINT 'Created database user [' + @LdfUserName + '] in ' +@ODSE_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
     BEGIN
         DECLARE @AddRoleMemberLdfODSESQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @LdfUserName + '''';
         EXEC sp_executesql @AddRoleMemberLdfODSESQL;
-        PRINT 'Added [' + @LdfUserName + '] to db_datareader role in NBS_ODSE';
+        PRINT 'Added [' + @LdfUserName + '] to db_datareader role in ' +@ODSE_DB;
 
         -- Grant EXECUTE permissions on stored procedures
         DECLARE @GrantExecLdfDataSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_data_event] TO [' + @LdfUserName + ']';

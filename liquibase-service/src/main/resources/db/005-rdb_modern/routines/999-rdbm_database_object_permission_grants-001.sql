@@ -30,6 +30,8 @@ DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 -- DECLARE @DebeziumServiceName NVARCHAR(100) = 'debezium_service';
 -- DECLARE @DebeziumUserName NVARCHAR(150) = @DebeziumServiceName + '_rdb';
 
+DECLARE @RDB_DB NVARCHAR(64) = db_name();
+
 -- ==========================================
 -- PERMISSION GRANTS
 -- ==========================================
@@ -40,7 +42,7 @@ DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 -- BEGIN
 --     DECLARE @CreateUserKafkaRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @KafkaUserName + '] FOR LOGIN [' + @KafkaUserName + ']';
 --     EXEC sp_executesql @CreateUserKafkaRDBModernSQL;
---     PRINT 'Created database user [' + @KafkaUserName + '] in rdb_modern';
+--     PRINT 'Created database user [' + @KafkaUserName + '] in ' +@RDB_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @KafkaUserName)
@@ -48,12 +50,12 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @KafkaUserName)
         -- Grant data writer role (INSERT, UPDATE, DELETE)
         DECLARE @AddRoleMemberKafkaRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @KafkaUserName + '''';
         EXEC sp_executesql @AddRoleMemberKafkaRDBModernWriterSQL;
-        PRINT 'Added [' + @KafkaUserName + '] to db_datawriter role in rdb_modern';
+        PRINT 'Added [' + @KafkaUserName + '] to db_datawriter role in ' +@RDB_DB;
 
         -- Grant data reader role (SELECT)
         DECLARE @AddRoleMemberKafkaRDBModernReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @KafkaUserName + '''';
         EXEC sp_executesql @AddRoleMemberKafkaRDBModernReaderSQL;
-        PRINT 'Added [' + @KafkaUserName + '] to db_datareader role in rdb_modern';
+        PRINT 'Added [' + @KafkaUserName + '] to db_datareader role in ' +@RDB_DB;
     END
 
 PRINT 'Kafka sync connector service permission grants completed.';
@@ -64,7 +66,7 @@ PRINT 'Kafka sync connector service permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @OrgUserName + '] FOR LOGIN [' + @OrgUserName + ']';
 --     EXEC sp_executesql @CreateUserRDBModernSQL;
---     PRINT 'Created database user [' + @OrgUserName + '] in rdb_modern';
+--     PRINT 'Created database user [' + @OrgUserName + '] in ' +@RDB_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
@@ -82,7 +84,7 @@ PRINT 'Organization service permission grants completed.';
 --     BEGIN
 --         DECLARE @CreateUserPersonRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @PersonUserName + '] FOR LOGIN [' + @PersonUserName + ']';
 --         EXEC sp_executesql @CreateUserPersonRDBModernSQL;
---         PRINT 'Created database user [' + @PersonUserName + '] in rdb_modern';
+--         PRINT 'Created database user [' + @PersonUserName + '] in ' +@RDB_DB;
 --     END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
@@ -100,7 +102,7 @@ PRINT 'Person service permission grants completed.';
 --     BEGIN
 --         DECLARE @CreateUserObsRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @ObsUserName + '] FOR LOGIN [' + @ObsUserName + ']';
 --         EXEC sp_executesql @CreateUserObsRDBModernSQL;
---         PRINT 'Created database user [' + @ObsUserName + '] in rdb';
+--         PRINT 'Created database user [' + @ObsUserName + '] in ' +@RDB_DB;
 --     END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
@@ -119,7 +121,7 @@ PRINT 'Observation service permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserInvRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @InvUserName + '] FOR LOGIN [' + @InvUserName + ']';
 --     EXEC sp_executesql @CreateUserInvRDBModernSQL;
---     PRINT 'Created database user [' + @InvUserName + '] in rdb';
+--     PRINT 'Created database user [' + @InvUserName + '] in ' +@RDB_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
@@ -127,12 +129,12 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
         -- Grant data writer role
         DECLARE @AddRoleMemberInvRDBModernWriterSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datawriter'', ''' + @InvUserName + '''';
         EXEC sp_executesql @AddRoleMemberInvRDBModernWriterSQL;
-        PRINT 'Added [' + @InvUserName + '] to db_datawriter role in rdb';
+        PRINT 'Added [' + @InvUserName + '] to db_datawriter role in ' +@RDB_DB;
 
         -- Grant data reader role (required because db_datawriter doesn't include read permissions)
         DECLARE @AddRoleMemberInvRDBModernReaderSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @InvUserName + '''';
         EXEC sp_executesql @AddRoleMemberInvRDBModernReaderSQL;
-        PRINT 'Added [' + @InvUserName + '] to db_datareader role in rdb';
+        PRINT 'Added [' + @InvUserName + '] to db_datareader role in ' +@RDB_DB;
     END
 
 PRINT 'Investigation service permission grants completed.';
@@ -143,7 +145,7 @@ PRINT 'Investigation service permission grants completed.';
 -- BEGIN
 --     DECLARE @CreateUserLdfRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @LdfUserName + '] FOR LOGIN [' + @LdfUserName + ']';
 --     EXEC sp_executesql @CreateUserLdfRDBModernSQL;
---     PRINT 'Created database user [' + @LdfUserName + '] in rdb';
+--     PRINT 'Created database user [' + @LdfUserName + '] in ' +@RDB_DB;
 -- END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
@@ -162,14 +164,14 @@ PRINT 'LDF service permission grants completed.';
 --     BEGIN
 --         DECLARE @CreateUserPostRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @PostUserName + '] FOR LOGIN [' + @PostUserName + ']';
 --         EXEC sp_executesql @CreateUserPostRDBModernSQL;
---         PRINT 'Created database user [' + @PostUserName + '] in rdb';
+--         PRINT 'Created database user [' + @PostUserName + '] in ' +@RDB_DB;
 --     END
 
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
     BEGIN
         DECLARE @AddRoleMemberPostRDBModernOwnerSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_owner'', ''' + @PostUserName + '''';
         EXEC sp_executesql @AddRoleMemberPostRDBModernOwnerSQL;
-        PRINT 'Added [' + @PostUserName + '] to db_owner role in rdb';
+        PRINT 'Added [' + @PostUserName + '] to db_owner role in ' +@RDB_DB;
     END
 
 PRINT 'Post-processing service permission grants completed:';
