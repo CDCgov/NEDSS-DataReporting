@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_ldf_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_ldf_postprocessing]')
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
     DROP PROCEDURE [dbo].[sp_nrt_ldf_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE dbo.sp_nrt_ldf_postprocessing @ldf_uid_list nvarchar(max), @debug bit = 'false'
 AS
@@ -57,9 +57,32 @@ BEGIN
         IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL
 			    DROP TABLE #LDF_UID_LIST;
 
-        SELECT distinct TRIM(value) AS value  
+        SELECT distinct TRIM(value) AS value
         INTO  #LDF_UID_LIST
         FROM STRING_SPLIT(@ldf_uid_list, ',')
+
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list = (
+            SELECT value
+            FROM #LDF_UID_LIST t
+                LEFT JOIN nrt_ldf_data nrt ON nrt.ldf_uid = t.value
+            WHERE nrt.ldf_uid is null
+        );
+
+        IF @backfill_list IS NOT NULL
+            BEGIN
+                SELECT
+                    0 AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    'Error' AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    'Missing NRT Record: sp_nrt_ldf_postprocessing' AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+                RETURN;
+            END
+        ------------------------------------------------------------------------------------------------------------------------------------------
 
         if @debug = 'true' select * from #LDF_UID_LIST;
         /* Logging */
@@ -98,12 +121,12 @@ BEGIN
         from dbo.ldf_data ld with (nolock)
         inner join dbo.nrt_ldf_data_key nld with (nolock)
           on nld.d_ldf_data_key = ld.LDF_DATA_KEY
-        inner join #LDF_UID_LIST ldf_uid_list with (nolock) 
+        inner join #LDF_UID_LIST ldf_uid_list with (nolock)
           on ldf_uid_list.value = nld.ldf_uid
-        inner join dbo.nrt_ldf_data nrt_ldf_data with (nolock) 
-          on nrt_ldf_data.ldf_uid = nld.ldf_uid and 
+        inner join dbo.nrt_ldf_data nrt_ldf_data with (nolock)
+          on nrt_ldf_data.ldf_uid = nld.ldf_uid and
           nrt_ldf_data.business_object_uid = nld.business_object_uid
-        inner join dbo.nrt_odse_state_defined_field_metadata sdfmd with (nolock) 
+        inner join dbo.nrt_odse_state_defined_field_metadata sdfmd with (nolock)
           on sdfmd.ldf_uid = nld.ldf_uid
         where nrt_ldf_data.RECORD_STATUS_CD is null
         or sdfmd.active_ind = 'N';
@@ -132,43 +155,19 @@ BEGIN
                ,@rowcount
                ,LEFT(@ldf_uid_list,500)
                );
-               
-------------------------------------------------------------------------------------------------------
-        declare @backfill_list nvarchar(max);  
-        SET @backfill_list = 
-        ( 
-          SELECT string_agg(t.value, ',')
-          FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@ldf_uid_list, ',')) t
-                    left join #DEL_LDF_DATA_KEY tmp
-                    on tmp.ldf_uid = t.value	
-                    WHERE tmp.ldf_uid is null	
-        );
 
-        IF @backfill_list IS NOT NULL
-        BEGIN
-            SELECT
-                0 AS public_health_case_uid,
-                CAST(NULL AS BIGINT) AS patient_uid,
-                CAST(NULL AS BIGINT) AS observation_uid,
-                'Error' AS datamart,
-                CAST(NULL AS VARCHAR(50))  AS condition_cd,
-                'Missing NRT Record: sp_nrt_ldf_postprocessing' AS stored_procedure,
-                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-                WHERE 1=1;
-           RETURN;
-        END
-		------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------
 
         SET @proc_step_name='Delete Records from nrt_ldf_data_key';
         SET @proc_step_no = @proc_step_no +1;
 
         BEGIN TRANSACTION
 
-        delete T 
+        delete T
         from dbo.nrt_ldf_data_key T with (nolock)
         inner join #DEL_LDF_DATA_KEY dldk
           on dldk.LDF_DATA_KEY = T.d_ldf_data_key
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -201,11 +200,11 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        delete T 
+        delete T
         from dbo.ldf_data T with (nolock)
         inner join #DEL_LDF_DATA_KEY dldk
           on dldk.LDF_DATA_KEY = T.LDF_DATA_KEY
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -235,11 +234,11 @@ BEGIN
         SET @proc_step_name='Create #DEL_GROUP_KEY';
         SET @proc_step_no = @proc_step_no +1;
 
-        
+
         IF OBJECT_ID('#DEL_GROUP_KEY', 'U') IS NOT NULL
           DROP TABLE #DEL_GROUP_KEY;
 
-        select distinct lg.ldf_group_key 
+        select distinct lg.ldf_group_key
         into #DEL_GROUP_KEY
         from dbo.ldf_group lg with (nolock)
         left join (select distinct ldf_group_key from dbo.LDF_DATA with (nolock)) nld
@@ -277,11 +276,11 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        delete T from 
+        delete T from
         dbo.nrt_ldf_group_key T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.d_ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -314,11 +313,11 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        delete T from 
+        delete T from
         dbo.PATIENT_LDF_GROUP T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -351,11 +350,11 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        delete T from 
+        delete T from
         dbo.ORGANIZATION_LDF_GROUP T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -388,11 +387,11 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        delete T from 
+        delete T from
         dbo.PROVIDER_LDF_GROUP T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -426,12 +425,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.BMIRD_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -464,12 +463,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.CRS_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -502,12 +501,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.GENERIC_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -539,12 +538,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.HEPATITIS_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -576,12 +575,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.MEASLES_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -613,12 +612,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.RUBELLA_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -650,12 +649,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.PERTUSSIS_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -686,12 +685,12 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        update T 
+        update T
         set ldf_group_key = 1
         from dbo.SUMMARY_REPORT_CASE T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -723,11 +722,11 @@ BEGIN
 
         BEGIN TRANSACTION
 
-        delete T from 
+        delete T from
         dbo.ldf_group T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
         on T.ldf_group_key = dldk.ldf_group_key;
-        
+
         COMMIT TRANSACTION;
 
         set @rowcount=@@rowcount
@@ -799,7 +798,7 @@ BEGIN
         SET @proc_step_no = @proc_step_no +1;
 
 
-        delete d  
+        delete d
         from dbo.ldf_data d with (nolock)
         inner join dbo.ldf_group lg with (nolock)
           on d.LDF_GROUP_KEY = lg.LDF_GROUP_KEY
@@ -832,7 +831,7 @@ BEGIN
                ,LEFT(@ldf_uid_list,500)
                );
       COMMIT TRANSACTION;
---------------------------------------------------------------------------------------------------------              
+--------------------------------------------------------------------------------------------------------
       BEGIN TRANSACTION;
         SET @proc_step_name='Create LDF_DATA Temp tables-'+ LEFT(@ldf_uid_list,105);
         SET @proc_step_no = @proc_step_no +1;
@@ -867,9 +866,9 @@ BEGIN
                  left join dbo.nrt_ldf_data_key nldk with (nolock) ON ld.ldf_uid = nldk.ldf_uid and ld.business_object_uid = nldk.business_object_uid
                  left join dbo.nrt_ldf_group_key lgk with (nolock) ON lgk.business_object_uid = ld.business_object_uid
                  left join dbo.ldf_data ldf with (nolock) ON nldk.d_ldf_data_key = ldf.ldf_data_key and nldk.d_ldf_group_key = ldf.ldf_group_key
-        inner join dbo.nrt_odse_state_defined_field_metadata sdfmd with (nolock) 
+        inner join dbo.nrt_odse_state_defined_field_metadata sdfmd with (nolock)
           on sdfmd.ldf_uid = ld.ldf_uid
-        inner join #LDF_UID_LIST ldf_uid_list 
+        inner join #LDF_UID_LIST ldf_uid_list
           on ldf_uid_list.value = ld.ldf_uid
         where ld.RECORD_STATUS_CD is not null
         and sdfmd.active_ind <> 'N';
@@ -903,15 +902,15 @@ BEGIN
                );
 
       COMMIT TRANSACTION;
-  --------------------------------------------------------------------------------------------------------              
+  --------------------------------------------------------------------------------------------------------
         BEGIN TRANSACTION;
 
         SET @proc_step_name='Update nrt_ldf_data_key updated_dttm';
         SET @proc_step_no = @proc_step_no +1;
 
-        UPDATE tgt 
+        UPDATE tgt
         SET tgt.[updated_dttm] = GETDATE()
-        FROM [dbo].nrt_ldf_data_key tgt 
+        FROM [dbo].nrt_ldf_data_key tgt
         INNER JOIN #tmp_ldf_data tmp
             on tmp.ldf_data_key = tgt.d_ldf_data_key;
 
@@ -940,18 +939,18 @@ BEGIN
                );
 
       COMMIT TRANSACTION;
---------------------------------------------------------------------------------------------------------              
+--------------------------------------------------------------------------------------------------------
       BEGIN TRANSACTION;
         SET @proc_step_name='Update nrt_ldf_group_key updated_dttm';
         SET @proc_step_no = @proc_step_no +1;
 
-        UPDATE tgt 
+        UPDATE tgt
         SET tgt.[updated_dttm] = GETDATE()
-        FROM [dbo].nrt_ldf_group_key tgt 
+        FROM [dbo].nrt_ldf_group_key tgt
         INNER JOIN #tmp_ldf_data tmp
             on tmp.ldf_group_key = tgt.d_ldf_group_key;
 
-       
+
         if @debug = 'true' select * from #DEL_LDF_DATA_KEY;
         /* Logging */
         set @rowcount=@@rowcount
@@ -977,9 +976,9 @@ BEGIN
                ,LEFT(@ldf_uid_list,500)
                );
 
-      COMMIT TRANSACTION;         
---------------------------------------------------------------------------------------------------------                   
-        
+      COMMIT TRANSACTION;
+--------------------------------------------------------------------------------------------------------
+
         BEGIN TRANSACTION;
         SET @proc_step_name='Update LDF_DATA Dimension';
         SET @proc_step_no = @proc_step_no +1;
@@ -1119,7 +1118,7 @@ BEGIN
              ,tld.ldf_column_type
              ,tld.condition_cd
              ,tld.condition_desc_txt
-             ,tld.cdc_national_id  
+             ,tld.cdc_national_id
              ,tld.class_cd
              ,tld.code_set_nm
              ,tld.business_object_nm
@@ -1287,7 +1286,7 @@ BEGIN
         	inner join (select distinct business_object_uid from #tmp_ldf_data) ld on ldf.business_object_uid = ld.business_object_uid
           inner join dbo.ORGANIZATION_LDF_GROUP plg with (nolock) on plg.organization_key = d.organization_key and plg.LDF_GROUP_KEY = ldf.ldf_group_key; --join on UID with nrt_ldf_data_key
 
-	      
+
         SET @proc_step_name='Insert into ORGANIZATION_LDF_GROUP Dimension';
         SET @proc_step_no = @proc_step_no +1;
 
