@@ -6,6 +6,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_covid_lab_
     END
 GO
 
+
 CREATE PROCEDURE [dbo].[sp_covid_lab_datamart_postprocessing]
     @observation_id_list nvarchar(max),       -- List of observation IDs to process (comma-separated)
     @debug bit = 'false'                       -- Flag to enable debug output
@@ -22,26 +23,8 @@ BEGIN
     SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
     -- Initialize logging
-    INSERT INTO [dbo].[job_flow_log] (
-                                       batch_id
-                                     ,[Dataflow_Name]
-                                     ,[package_Name]
-                                     ,[Status_Type]
-                                     ,[step_number]
-                                     ,[step_name]
-                                     ,[msg_description1]
-                                     ,[row_count]
-    )
-    VALUES (
-             @batch_id
-           ,@dataflow_name
-           ,@package_name
-           ,'START'
-           ,0
-           ,'SP_Start'
-           ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
-           ,0
-           );
+    INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+    VALUES (@batch_id,@dataflow_name,@package_name,'START',0,'SP_Start',LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
     BEGIN TRY
         SET @proc_step_name = 'Create COVID_LAB_TEMP_DATA';
@@ -67,34 +50,15 @@ BEGIN
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
-               );
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
         /* Debug output if requested */
-        IF @debug = 'true'
-            SELECT  @proc_step_name, * FROM #COVID_OBSERVATIONS_TO_PROCESS;
+        IF @debug = 'true' SELECT  @proc_step_name, * FROM #COVID_OBSERVATIONS_TO_PROCESS;
 
         /* Create the next session table to hold text results */
         SET @proc_step_name = 'Extract Text Results';
-        SET @proc_step_no = 2;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
         SELECT DISTINCT
             o_order.observation_uid,
@@ -153,26 +117,8 @@ BEGIN
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
-               );
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
         /* Debug output if requested */
         IF @debug = 'true'
@@ -180,7 +126,7 @@ BEGIN
 
         /* Create the core lab data table */
         SET @proc_step_name = 'Create COVID_LAB_CORE_DATA';
-        SET @proc_step_no = 3;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
         SELECT DISTINCT
@@ -279,26 +225,8 @@ BEGIN
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
-               );
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
         /* Debug output if requested */
         IF @debug = 'true'
@@ -306,7 +234,7 @@ BEGIN
 
         /* Create result type classification */
         SET @proc_step_name = 'Create COVID_LAB_RSLT_TYPE';
-        SET @proc_step_no = 4;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
         SELECT
             core.Observation_UID AS RT_Observation_UID,
@@ -351,30 +279,13 @@ BEGIN
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
-               );
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
+
 
         /* Create patient data */
         SET @proc_step_name = 'Create COVID_LAB_PATIENT_DATA';
-        SET @proc_step_no = 5;
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
         -- Patient Data
         SELECT DISTINCT
@@ -408,33 +319,12 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state WITH(NOLOCK) ON dim_state.state_cd = d_patient.PATIENT_STATE_CODE
                  LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code;
 
-
-        IF @debug = 'true'
-            SELECT @proc_step_name, * FROM #COVID_LAB_PATIENT_DATA;
-
+        IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_PATIENT_DATA;
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
-               );
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
         /* Create entities data */
         SET @proc_step_name = 'Create COVID_LAB_ENTITIES_DATA';
@@ -509,171 +399,134 @@ BEGIN
         ;
 
 
-        IF @debug = 'true'
-            SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;
-
+        IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                           batch_id
-                                         ,[Dataflow_Name]
-                                         ,[package_Name]
-                                         ,[Status_Type]
-                                         ,[step_number]
-                                         ,[step_name]
-                                         ,[row_count]
-                                         ,[msg_description1]
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
+
+        /* Create associations data */
+        SET @proc_step_name = 'Create COVID_LAB_ASSOCIATIONS';
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+
+        SELECT DISTINCT core.observation_uid  AS assoc_observation_uid,
+                        o.associated_phc_uids AS associated_case_id
+        INTO            #covid_lab_associations
+        FROM            #covid_lab_core_data core
+                            INNER JOIN      dbo.nrt_observation o WITH(nolock)
+                                            ON              o.observation_uid = core.observation_uid;
+
+        IF @debug = 'true'
+            SELECT @proc_step_name,
+                   *
+            FROM   #covid_lab_associations;
+
+        /* Logging */
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
+
+        /* Create AOE data table - FIXED: Create outside of IF block to fix scope issue */
+        SET @proc_step_name = 'Create COVID_LAB_AOE_DATA';
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+
+        -- Create the AOE table structure outside of conditional logic to fix scope issue
+        IF OBJECT_ID('tempdb..#COVID_LAB_AOE_DATA', 'U') IS NOT NULL
+            DROP TABLE #covid_lab_aoe_data;
+
+        CREATE TABLE #covid_lab_aoe_data
+        (
+            aoe_observation_uid BIGINT NULL
+        );
+
+        -- Insert observations into AOE table
+        INSERT INTO #covid_lab_aoe_data
+        (
+            aoe_observation_uid
         )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(ISNULL(@observation_id_list, 'NULL'),500)
-               );
+        SELECT DISTINCT observation_uid
+        FROM            #covid_observations_to_process;
 
-         /* Create associations data */
-              SET @proc_step_name = 'Create COVID_LAB_ASSOCIATIONS';
-              SET @proc_step_no = 7;
-              SELECT DISTINCT core.observation_uid  AS assoc_observation_uid,
-                              o.associated_phc_uids AS associated_case_id
-              INTO            #covid_lab_associations
-              FROM            #covid_lab_core_data core
-              INNER JOIN      dbo.nrt_observation o WITH(nolock)
-              ON              o.observation_uid = core.observation_uid;
-
-               IF @debug = 'true'
-              SELECT @proc_step_name,
-                     *
-              FROM   #covid_lab_associations;
-
-              /* Logging */
-              SET @rowcount = @@ROWCOUNT;
-              INSERT INTO [dbo].[job_flow_log]
-                          (
-                                      batch_id ,
-                                      [Dataflow_Name] ,
-                                      [package_Name] ,
-                                      [Status_Type] ,
-                                      [step_number] ,
-                                      [step_name] ,
-                                      [row_count] ,
-                                      [msg_description1]
-                          )
-                          VALUES
-                          (
-                                      @batch_id ,
-                                      @dataflow_name ,
-                                      @package_name ,
-                                      'START' ,
-                                      @proc_step_no ,
-                                      @proc_step_name ,
-                                      @rowcount ,
-                                      LEFT(Isnull(@observation_id_list, 'NULL'),500)
-                          );
-
-              /* Create AOE data table - FIXED: Create outside of IF block to fix scope issue */
-              SET @proc_step_name = 'Create COVID_LAB_AOE_DATA';
-              SET @proc_step_no = 7.1;
-              -- Create the AOE table structure outside of conditional logic to fix scope issue
-              IF Object_id('tempdb..#COVID_LAB_AOE_DATA', 'U') IS NOT NULL
-              DROP TABLE #covid_lab_aoe_data;
-
-              CREATE TABLE #covid_lab_aoe_data
-                           (
-                                        aoe_observation_uid BIGINT NULL
-                           );
-
-              -- Insert observations into AOE table
-              INSERT INTO #covid_lab_aoe_data
-                          (
-                                      aoe_observation_uid
-                          )
-              SELECT DISTINCT observation_uid
-              FROM            #covid_observations_to_process;
-
-              -- Check if nrt_odse_lookup_question table has data for LAB_REPORT form
-              IF EXISTS
-              (
-                     SELECT 1
-                     FROM   dbo.nrt_odse_lookup_question
-                     WHERE  from_form_cd = 'LAB_REPORT')
-              BEGIN
+        -- Check if nrt_odse_lookup_question table has data for LAB_REPORT form
+        IF EXISTS
+            (
+                SELECT 1
+                FROM   dbo.nrt_odse_lookup_question
+                WHERE  from_form_cd = 'LAB_REPORT')
+            BEGIN
                 -- AOE metadata exists, proceed with full AOE processing
                 -- Create staging table (following original COVID_LAB_AOE_ST pattern)
                 IF Object_id('tempdb..#COVID_LAB_AOE_ST', 'U') IS NOT NULL
-                DROP TABLE #covid_lab_aoe_st;
+                    DROP TABLE #covid_lab_aoe_st;
 
                 SELECT DISTINCT o.observation_uid AS aoe_observation_uid,
                                 o1.cd,
                                 lq.rdb_column_nm,
                                 CASE
-                                                WHEN ovn.ovn_numeric_value_1 IS NOT NULL THEN Cast(ovn.ovn_numeric_value_1 AS VARCHAR(20)) + '^' + Isnull(ovn.ovn_numeric_unit_cd, '')
-                                                WHEN not2.ovt_value_txt IS NOT NULL THEN not2.ovt_value_txt
-                                                WHEN noc.ovc_code IS NOT NULL THEN cvg.code_short_desc_txt
-                                END AS answer_txt
+                                    WHEN ovn.ovn_numeric_value_1 IS NOT NULL THEN Cast(ovn.ovn_numeric_value_1 AS VARCHAR(20)) + '^' + Isnull(ovn.ovn_numeric_unit_cd, '')
+                                    WHEN not2.ovt_value_txt IS NOT NULL THEN not2.ovt_value_txt
+                                    WHEN noc.ovc_code IS NOT NULL THEN cvg.code_short_desc_txt
+                                    END AS answer_txt
                 INTO            #covid_lab_aoe_st
                 FROM            dbo.nrt_odse_lookup_question lq
-                LEFT OUTER JOIN dbo.nrt_observation o1 WITH(nolock)
-                ON              o1.cd = lq.from_question_identifier
-                AND             o1.obs_domain_cd_st_1 = 'Result'
-                LEFT OUTER JOIN dbo.nrt_observation o WITH(nolock)
-                ON              EXISTS
-                                (
-                                       SELECT 1
-                                       FROM   String_split(Isnull(Cast(o1.report_observation_uid AS VARCHAR(max)), ''), ',')
-                                       WHERE  try_cast(Ltrim(Rtrim(value)) as bigint) = o.observation_uid )
-                LEFT OUTER JOIN dbo.nrt_observation_coded noc WITH(nolock)
-                ON              noc.observation_uid = o1.observation_uid
-                AND             isnull(o1.batch_id, 1) = isnull(noc.batch_id, 1)
-                LEFT OUTER JOIN dbo.nrt_observation_txt not2 WITH(nolock)
-                ON              not2.observation_uid = o1.observation_uid
-                AND             (
-                                                not2.ovt_txt_type_cd = 'O'
-                                OR              not2.ovt_txt_type_cd IS NULL)
-                AND             isnull(o1.batch_id, 1) = isnull(not2.batch_id, 1)
-                LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(nolock)
-                ON              ovn.observation_uid = o1.observation_uid
-                AND             isnull(o1.batch_id, 1) = isnull(ovn.batch_id, 1)
-                LEFT OUTER JOIN dbo.nrt_srte_code_value_general cvg WITH(nolock)
-                ON              cvg.code_set_nm = lq.from_code_set
-                AND             noc.ovc_code = cvg.code
+                                    LEFT OUTER JOIN dbo.nrt_observation o1 WITH(nolock)
+                                                    ON              o1.cd = lq.from_question_identifier
+                                                        AND             o1.obs_domain_cd_st_1 = 'Result'
+                                    LEFT OUTER JOIN dbo.nrt_observation o WITH(nolock)
+                                                    ON              EXISTS
+                                                        (
+                                                            SELECT 1
+                                                            FROM   String_split(Isnull(Cast(o1.report_observation_uid AS VARCHAR(max)), ''), ',')
+                                                            WHERE  try_cast(Ltrim(Rtrim(value)) as bigint) = o.observation_uid )
+                                    LEFT OUTER JOIN dbo.nrt_observation_coded noc WITH(nolock)
+                                                    ON              noc.observation_uid = o1.observation_uid
+                                                        AND             isnull(o1.batch_id, 1) = isnull(noc.batch_id, 1)
+                                    LEFT OUTER JOIN dbo.nrt_observation_txt not2 WITH(nolock)
+                                                    ON              not2.observation_uid = o1.observation_uid
+                                                        AND             (
+                                                                        not2.ovt_txt_type_cd = 'O'
+                                                                            OR              not2.ovt_txt_type_cd IS NULL)
+                                                        AND             isnull(o1.batch_id, 1) = isnull(not2.batch_id, 1)
+                                    LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(nolock)
+                                                    ON              ovn.observation_uid = o1.observation_uid
+                                                        AND             isnull(o1.batch_id, 1) = isnull(ovn.batch_id, 1)
+                                    LEFT OUTER JOIN dbo.nrt_srte_code_value_general cvg WITH(nolock)
+                                                    ON              cvg.code_set_nm = lq.from_code_set
+                                                        AND             noc.ovc_code = cvg.code
                 WHERE           o.observation_uid IN
                                 (
-                                       SELECT observation_uid
-                                       FROM   #covid_observations_to_process)
-                and             lq.from_form_cd = 'LAB_REPORT';
+                                    SELECT observation_uid
+                                    FROM   #covid_observations_to_process)
+                  and             lq.from_form_cd = 'LAB_REPORT';
+
 
                 -- Get list of columns to add to AOE table and add them
-                -- Get list of columns to add to AOE table and add them
-        DECLARE @aoe_columns NVARCHAR(MAX);
-        DECLARE @aoe_sql NVARCHAR(MAX);
-        SET @aoe_columns = N'';
 
-        SELECT @aoe_columns += N',[' + LTRIM(RTRIM([RDB_COLUMN_NM])) + '] VARCHAR(MAX) NULL'
-        FROM (
-         SELECT DISTINCT [RDB_COLUMN_NM]
-         FROM dbo.nrt_odse_lookup_question AS p WITH(NOLOCK)
-         WHERE FROM_FORM_CD = 'LAB_REPORT'
-         AND LTRIM(RTRIM([RDB_COLUMN_NM])) IS NOT NULL
-         AND LTRIM(RTRIM([RDB_COLUMN_NM])) <> ''
-        ) AS x;
+                DECLARE @aoe_columns NVARCHAR(MAX);
+                DECLARE @aoe_sql NVARCHAR(MAX);
+                SET @aoe_columns = N'';
 
-        -- Add columns to AOE table if any exist
-        IF LEN(@aoe_columns) > 0
-        BEGIN
-         -- Remove leading comma
-         SET @aoe_columns = SUBSTRING(@aoe_columns, 2, LEN(@aoe_columns));
-         SET @aoe_sql = N'ALTER TABLE #COVID_LAB_AOE_DATA ADD ' + @aoe_columns;
-         EXEC sp_executesql @aoe_sql;
+                SELECT @aoe_columns += N',[' + LTRIM(RTRIM([RDB_COLUMN_NM])) + '] VARCHAR(MAX) NULL'
+                FROM (
+                         SELECT DISTINCT [RDB_COLUMN_NM]
+                         FROM dbo.nrt_odse_lookup_question AS p WITH(NOLOCK)
+                         WHERE FROM_FORM_CD = 'LAB_REPORT'
+                           AND LTRIM(RTRIM([RDB_COLUMN_NM])) IS NOT NULL
+                           AND LTRIM(RTRIM([RDB_COLUMN_NM])) <> ''
+                     ) AS x;
 
-          IF @debug = 'true'
-         PRINT 'AOE columns added : ' + @aoe_sql;
-        END
+                -- Add columns to AOE table if any exist
+                IF LEN(@aoe_columns) > 0
+                    BEGIN
+                        -- Remove leading comma
+                        SET @aoe_columns = SUBSTRING(@aoe_columns, 2, LEN(@aoe_columns));
+                        SET @aoe_sql = N'ALTER TABLE #COVID_LAB_AOE_DATA ADD ' + @aoe_columns;
+                        EXEC sp_executesql @aoe_sql;
+
+                        IF @debug = 'true'
+                            PRINT 'AOE columns added : ' + @aoe_sql;
+                    END
 
                 -- Update AOE table with data using dynamic pivot
                 DECLARE @pivot_columns NVARCHAR(max);
@@ -681,458 +534,301 @@ BEGIN
                 SET @pivot_columns = N'';
                 SELECT @pivot_columns += N', [' + Ltrim(Rtrim([RDB_COLUMN_NM])) + ']'
                 FROM   (
-                                       SELECT DISTINCT [RDB_COLUMN_NM]
-                                       FROM            dbo.nrt_odse_lookup_question AS p WITH(nolock)
-                                       WHERE           from_form_cd = 'LAB_REPORT'
-                                       AND             Ltrim(Rtrim([RDB_COLUMN_NM])) IS NOT NULL
-                                       AND             Ltrim(Rtrim([RDB_COLUMN_NM])) <> '' ) AS x;
+                           SELECT DISTINCT [RDB_COLUMN_NM]
+                           FROM            dbo.nrt_odse_lookup_question AS p WITH(nolock)
+                           WHERE           from_form_cd = 'LAB_REPORT'
+                             AND             Ltrim(Rtrim([RDB_COLUMN_NM])) IS NOT NULL
+                             AND             Ltrim(Rtrim([RDB_COLUMN_NM])) <> '' ) AS x;
 
                 -- Update AOE table with pivoted data if columns exist
                 IF Len(@pivot_columns) > 0
-                BEGIN
-                  SET @pivot_sql = N'  UPDATE aoe  SET ' + Stuff(@pivot_columns, 1, 2, '') + N'  FROM #COVID_LAB_AOE_DATA aoe  INNER JOIN (  SELECT [AOE_Observation_uid]' + @pivot_columns + N'  FROM (  SELECT [AOE_Observation_uid], answer_txt, [RDB_COLUMN_NM]  FROM #COVID_LAB_AOE_ST AS p WITH (NOLOCK)  GROUP BY [AOE_Observation_uid], [answer_txt], [RDB_COLUMN_NM]  ) AS j  PIVOT (MAX(answer_txt) FOR [RDB_COLUMN_NM] IN (' + Stuff(@pivot_columns, 1, 2, '') + N')) AS p  ) AS pivoted ON aoe.AOE_Observation_uid = pivoted.AOE_Observation_uid';
-                  -- Remove column assignments from SET clause for UPDATE
-                  SET @pivot_sql = Replace(@pivot_sql, 'SET [', 'SET [');
-                  SET @pivot_sql = Replace(@pivot_sql, '], [', '] = pivoted.[' + Char(13) + Char(10) + ', [');
-                  SET @pivot_sql = Replace(@pivot_sql, 'SET [', 'SET [');
-                  -- Fix the SET clause properly
-                  DECLARE @set_clause NVARCHAR(max) = '';
-                  SELECT @set_clause += N', [' + Ltrim(Rtrim([RDB_COLUMN_NM])) + '] = pivoted.[' + Ltrim(Rtrim([RDB_COLUMN_NM])) + ']'
-                  FROM   (
-                 SELECT DISTINCT [RDB_COLUMN_NM]
-                                         FROM            dbo.nrt_odse_lookup_question AS p WITH(nolock)
-                                         WHERE           from_form_cd = 'LAB_REPORT'
-                                         AND             Ltrim(Rtrim([RDB_COLUMN_NM])) IS NOT NULL
-                                         AND             Ltrim(Rtrim([RDB_COLUMN_NM])) <> '' ) AS x;
+                    BEGIN
+                        SET @pivot_sql = N'  UPDATE aoe  SET ' + Stuff(@pivot_columns, 1, 2, '') + N'  FROM #COVID_LAB_AOE_DATA aoe  INNER JOIN (  SELECT [AOE_Observation_uid]' + @pivot_columns + N'  FROM (  SELECT [AOE_Observation_uid], answer_txt, [RDB_COLUMN_NM]  FROM #COVID_LAB_AOE_ST AS p WITH (NOLOCK)  GROUP BY [AOE_Observation_uid], [answer_txt], [RDB_COLUMN_NM]  ) AS j  PIVOT (MAX(answer_txt) FOR [RDB_COLUMN_NM] IN (' + Stuff(@pivot_columns, 1, 2, '') + N')) AS p  ) AS pivoted ON aoe.AOE_Observation_uid = pivoted.AOE_Observation_uid';
+                        -- Remove column assignments from SET clause for UPDATE
+                        SET @pivot_sql = Replace(@pivot_sql, 'SET [', 'SET [');
+                        SET @pivot_sql = Replace(@pivot_sql, '], [', '] = pivoted.[' + Char(13) + Char(10) + ', [');
+                        SET @pivot_sql = Replace(@pivot_sql, 'SET [', 'SET [');
+                        -- Fix the SET clause properly
+                        DECLARE @set_clause NVARCHAR(max) = '';
+                        SELECT @set_clause += N', [' + Ltrim(Rtrim([RDB_COLUMN_NM])) + '] = pivoted.[' + Ltrim(Rtrim([RDB_COLUMN_NM])) + ']'
+                        FROM   (
+                                   SELECT DISTINCT [RDB_COLUMN_NM]
+                                   FROM            dbo.nrt_odse_lookup_question AS p WITH(nolock)
+                                   WHERE           from_form_cd = 'LAB_REPORT'
+                                     AND             Ltrim(Rtrim([RDB_COLUMN_NM])) IS NOT NULL
+                                     AND             Ltrim(Rtrim([RDB_COLUMN_NM])) <> '' ) AS x;
 
-                  SET @pivot_sql = N'  UPDATE aoe  SET ' + Stuff(@set_clause, 1, 2, '') + N'  FROM #COVID_LAB_AOE_DATA aoe  INNER JOIN (  SELECT [AOE_Observation_uid]' + @pivot_columns + N'  FROM (  SELECT [AOE_Observation_uid], answer_txt, [RDB_COLUMN_NM]  FROM #COVID_LAB_AOE_ST AS p WITH (NOLOCK)  GROUP BY [AOE_Observation_uid], [answer_txt], [RDB_COLUMN_NM]  ) AS j  PIVOT (MAX(answer_txt) FOR [RDB_COLUMN_NM] IN (' + Stuff(@pivot_columns, 1, 2, '') + N')) AS p  ) AS pivoted ON aoe.AOE_Observation_uid = pivoted.AOE_Observation_uid';
-                  EXEC sp_executesql
-                    @pivot_sql;
-                   IF @debug = 'true'
-                  PRINT 'AOE pivot update completed: ' + @pivot_sql;
-                END
-                 IF @debug = 'true'
-                SELECT 'Full AOE processing completed' AS debug_message;
+                        SET @pivot_sql = N'  UPDATE aoe  SET ' + Stuff(@set_clause, 1, 2, '') + N'  FROM #COVID_LAB_AOE_DATA aoe  INNER JOIN (  SELECT [AOE_Observation_uid]' + @pivot_columns + N'  FROM (  SELECT [AOE_Observation_uid], answer_txt, [RDB_COLUMN_NM]  FROM #COVID_LAB_AOE_ST AS p WITH (NOLOCK)  GROUP BY [AOE_Observation_uid], [answer_txt], [RDB_COLUMN_NM]  ) AS j  PIVOT (MAX(answer_txt) FOR [RDB_COLUMN_NM] IN (' + Stuff(@pivot_columns, 1, 2, '') + N')) AS p  ) AS pivoted ON aoe.AOE_Observation_uid = pivoted.AOE_Observation_uid';
+                        EXEC sp_executesql
+                             @pivot_sql;
+                        IF @debug = 'true'
+                            PRINT 'AOE pivot update completed: ' + @pivot_sql;
+                    END
+                IF @debug = 'true'
+                    SELECT 'Full AOE processing completed' AS debug_message;
 
-              END
-              ELSE
-              BEGIN
-                 IF @debug = 'true'
-                SELECT 'No AOE metadata - minimal structure maintained' AS debug_message;
+            END
+        ELSE
+            BEGIN
+                IF @debug = 'true'
+                    SELECT 'No AOE metadata - minimal structure maintained' AS debug_message;
 
-              END
-              /* Logging */
-              SET @rowcount = @@ROWCOUNT;
-              INSERT INTO [dbo].[job_flow_log]
-                          (
-                                      batch_id,
-                                      [Dataflow_Name],
-                                      [package_Name],
-                                      [Status_Type],
-                                      [step_number],
-                                      [step_name],
-                                      [row_count],
-                                      [msg_description1]
-                          )
-                          VALUES
-                          (
-                                      @batch_id,
-                                      @dataflow_name,
-                                      @package_name,
-                                      'START',
-                                      @proc_step_no,
-                                      @proc_step_name,
-                                      @rowcount,
-                                      LEFT(Isnull(@observation_id_list, 'NULL'),500)
-                          );
+            END
+        /* Logging */
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
-              SET @proc_step_name = 'Alter Datamart Columns for All Temp Tables';
-              SET @proc_step_no = 7.2;
-              DECLARE @TEMP_QUERY_TABLE TABLE
-                                              (
-                                                                              id         INT IDENTITY(1, 1),
-                                                                              query_stmt VARCHAR(5000)
-                                              );
 
-              DECLARE @column_query  VARCHAR(5000);
-              DECLARE @Max_Query_No  INT;
-              DECLARE @Curr_Query_No INT;
-              -- FIXED: Generate ALTER statements only for columns that truly don't exist
-              INSERT INTO @Temp_Query_Table
-              SELECT     'ALTER TABLE dbo.COVID_LAB_DATAMART ADD [' + c.NAME + '] ' + Upper(t.NAME) +
-                         CASE
-                                    WHEN t.NAME IN('char',
-                                                   'varchar',
-                                                   'nchar',
-                                                   'nvarchar') THEN ' (' +
-                                               CASE
-                                                          WHEN c.max_length = -1 THEN 'MAX'
-                                                          WHEN t.NAME IN ('nchar',
-                                                                          'nvarchar') THEN Cast(c.max_length/2 AS VARCHAR(10))
-                                                          ELSE Cast(c.max_length AS                               VARCHAR(10))
-                                               END + ')'
-                                    ELSE ''
-                         END +
-                         CASE
-                                    WHEN c.is_nullable = 0 THEN ' NOT NULL'
-                                ELSE ' NULL'
-                         END
-              FROM       tempdb.sys.tables st
-              INNER JOIN tempdb.sys.columns c
-              ON         st.object_id = c.object_id
-              INNER JOIN tempdb.sys.types t
-              ON         c.user_type_id = t.user_type_id
-              WHERE      (
-                                    st.NAME LIKE '#COVID_LAB_CORE_DATA%'
-                         OR         st.NAME LIKE '#COVID_LAB_RSLT_TYPE%'
-                         OR         st.NAME LIKE '#COVID_LAB_PATIENT_DATA%'
-                         OR         st.NAME LIKE '#COVID_LAB_ENTITIES_DATA%'
-                         OR         st.NAME LIKE '#COVID_LAB_ASSOCIATIONS%'
-                         OR         st.NAME LIKE '#COVID_LAB_AOE_DATA%')
-              AND        NOT EXISTS
-                         (
-                                SELECT 1
-                                FROM   information_schema.columns dc
-                                WHERE  dc.table_name = 'COVID_LAB_DATAMART'
-                                AND    dc.table_schema = 'dbo'
-                                AND    dc.column_name = c.NAME )
-              /*AND        c.NAME NOT IN( 'AOE_Observation_uid',
-                                       'RT_Observation_UID',
-                                       'Pat_Observation_UID',
-                                       'Entity_Observation_uid',
-                                       'ASSOC_OBSERVATION_UID' )*/
-             AND NOT (
-          --  (st.NAME LIKE '#COVID_LAB_CORE_DATA%' AND  c.NAME IN ('observation_uid', 'record_status_cd'))
-                (st.NAME LIKE '#COVID_LAB_CORE_DATA%' AND  c.NAME = 'record_status_cd')
+        SET @proc_step_name = 'Alter Datamart Columns for All Temp Tables';
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
-            OR (st.NAME LIKE '#COVID_LAB_RSLT_TYPE%' AND c.NAME = 'rt_observation_uid')
-            OR (st.NAME LIKE '#COVID_LAB_PATIENT_DATA%' AND c.NAME = 'pat_observation_uid')
-            OR (st.NAME LIKE '#COVID_LAB_ENTITIES_DATA%' AND c.NAME = 'entity_observation_uid')
-            OR (st.NAME LIKE '#COVID_LAB_ASSOCIATIONS%' AND c.NAME = 'assoc_observation_uid')
-            OR (st.NAME LIKE '#COVID_LAB_AOE_DATA%' AND c.NAME = 'aoe_observation_uid')
-        )
-              AND        st.NAME IN
-                         (
-                                SELECT NAME
-                                FROM   tempdb.sys.tables
-                                WHERE  Object_id('tempdb..' + NAME) IS NOT NULL );
+        DECLARE @TEMP_QUERY_TABLE TABLE
+                                  (
+                                      id         INT IDENTITY(1, 1),
+                                      query_stmt VARCHAR(5000)
+                                  );
 
-              -- Execute ALTER statements using corrected loop logic
-              SET @Max_Query_No =
-              (
-                     SELECT Max(id)
-                     FROM   @Temp_Query_Table);
-              SET @Curr_Query_No = 0;
-              WHILE @Curr_Query_No < @Max_Query_No
-              BEGIN
+        DECLARE @column_query  VARCHAR(5000);
+        DECLARE @Max_Query_No  INT;
+        DECLARE @Curr_Query_No INT;
+
+        -- FIXED: Generate ALTER statements only for columns that truly don't exist
+        INSERT INTO @Temp_Query_Table
+        SELECT     'ALTER TABLE dbo.COVID_LAB_DATAMART ADD [' + c.NAME + '] ' + Upper(t.NAME) +
+                   CASE
+                       WHEN t.NAME IN('char',
+                                      'varchar',
+                                      'nchar',
+                                      'nvarchar') THEN ' (' +
+                                                       CASE
+                                                           WHEN c.max_length = -1 THEN 'MAX'
+                                                           WHEN t.NAME IN ('nchar',
+                                                                           'nvarchar') THEN Cast(c.max_length/2 AS VARCHAR(10))
+                                                           ELSE Cast(c.max_length AS                               VARCHAR(10))
+                                                           END + ')'
+                       ELSE ''
+                       END +
+                   CASE
+                       WHEN c.is_nullable = 0 THEN ' NOT NULL'
+                       ELSE ' NULL'
+                       END
+        FROM       tempdb.sys.tables st
+                       INNER JOIN tempdb.sys.columns c
+                                  ON         st.object_id = c.object_id
+                       INNER JOIN tempdb.sys.types t
+                                  ON         c.user_type_id = t.user_type_id
+        WHERE      (
+            st.NAME LIKE '#COVID_LAB_CORE_DATA%'
+                OR         st.NAME LIKE '#COVID_LAB_PATIENT_DATA%'
+                OR         st.NAME LIKE '#COVID_LAB_ENTITIES_DATA%'
+                OR         st.NAME LIKE '#COVID_LAB_ASSOCIATIONS%'
+                OR         st.NAME LIKE '#COVID_LAB_AOE_DATA%')
+          AND        NOT EXISTS
+            (
+                SELECT 1
+                FROM   information_schema.columns dc
+                WHERE  dc.table_name = 'COVID_LAB_DATAMART'
+                  AND    dc.table_schema = 'dbo'
+                  AND    dc.column_name = c.NAME )
+            /*AND        c.NAME NOT IN( 'AOE_Observation_uid',
+                                     'RT_Observation_UID',
+                                     'Pat_Observation_UID',
+                                     'Entity_Observation_uid',
+                     'ASSOC_OBSERVATION_UID' )*/
+          AND NOT (
+            --  (st.NAME LIKE '#COVID_LAB_CORE_DATA%' AND  c.NAME IN ('observation_uid', 'record_status_cd'))
+            (st.NAME LIKE '#COVID_LAB_CORE_DATA%' AND  c.NAME = 'record_status_cd')
+                OR (st.NAME LIKE '#COVID_LAB_PATIENT_DATA%' AND c.NAME = 'pat_observation_uid')
+                OR (st.NAME LIKE '#COVID_LAB_ENTITIES_DATA%' AND c.NAME = 'entity_observation_uid')
+                OR (st.NAME LIKE '#COVID_LAB_ASSOCIATIONS%' AND c.NAME = 'assoc_observation_uid')
+                OR (st.NAME LIKE '#COVID_LAB_AOE_DATA%' AND c.NAME = 'aoe_observation_uid')
+            )
+          AND        st.NAME IN
+                     (
+                         SELECT NAME
+                         FROM   tempdb.sys.tables
+                         WHERE  Object_id('tempdb..' + NAME) IS NOT NULL );
+
+        -- Execute ALTER statements using corrected loop logic
+        SET @Max_Query_No =
+                (
+                    SELECT Max(id)
+                    FROM   @Temp_Query_Table);
+        SET @Curr_Query_No = 0;
+        WHILE @Curr_Query_No < @Max_Query_No
+            BEGIN
                 SET @Curr_Query_No = @Curr_Query_No + 1;
                 SET @column_query =
-                (
-                       SELECT query_stmt
-                       FROM   @Temp_Query_Table
-                       WHERE  id = @Curr_Query_No);
+                        (
+                            SELECT query_stmt
+                            FROM   @Temp_Query_Table
+                            WHERE  id = @Curr_Query_No);
                 BEGIN try
-                  EXEC (@column_query);
-                   IF @debug = 'true'
-                  PRINT 'Executed: ' + @column_query;
+                    EXEC (@column_query);
+                    IF @debug = 'true'
+                        PRINT 'Executed: ' + @column_query;
                 END try
                 BEGIN catch
-                   IF @debug = 'true'
-                  PRINT 'Error executing: ' + @column_query + ' - ' + Error_message();
-                  -- Continue processing other columns even if one fails
+                    IF @debug = 'true'
+                        PRINT 'Error executing: ' + @column_query + ' - ' + Error_message();
+                    -- Continue processing other columns even if one fails
                 END catch
-              END
-               IF @debug = 'true'
-              SELECT 'Dynamic column check completed for all temp tables' AS debug_message,
-                     Isnull(@Max_Query_No, 0)                             AS total_alter_statements;
+            END
+        IF @debug = 'true'
+            SELECT 'Dynamic column check completed for all temp tables' AS debug_message,
+                   Isnull(@Max_Query_No, 0)                             AS total_alter_statements;
 
-              /* Logging */
-              INSERT INTO [dbo].[job_flow_log]
-                          (
-                                      batch_id,
-                                      [Dataflow_Name],
-                                      [package_Name],
-                                      [Status_Type],
-                                      [step_number],
-                                      [step_name],
-                                      [row_count],
-                                      [msg_description1]
-                          )
-                          VALUES
-                          (
-                                      @batch_id,
-                                      @dataflow_name,
-                                      @package_name,
-                                      'START',
-                                      @proc_step_no,
-                                      @proc_step_name,
-                                      Isnull(@Max_Query_No, 0),
-                                      LEFT(Isnull(@observation_id_list, 'NULL'),500)
-                          );
+        /* Logging */
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
-              /* Start transaction for the actual update to the datamart */
-              SET @proc_step_name = 'Update COVID_LAB_DATAMART';
-              SET @proc_step_no = 8;
-              BEGIN TRANSACTION;
-              /* Delete existing records for these observations */
-              DELETE
-              FROM   dbo.covid_lab_datamart
-              WHERE  observation_uid IN
-                     (
-                            SELECT observation_uid
-                            FROM   #covid_lab_core_data);
 
-              /* Logging */
-              SET @rowcount = @@ROWCOUNT;
-              INSERT INTO [dbo].[job_flow_log]
-                          (
-                                      batch_id ,
-                                      [Dataflow_Name] ,
-                                      [package_Name] ,
-                                      [Status_Type] ,
-                                      [step_number] ,
-                                      [step_name] ,
-                                      [row_count] ,
-                                      [msg_description1]
-                          )
-                          VALUES
-                          (
-                                      @batch_id ,
-                                      @dataflow_name ,
-                                      @package_name ,
-                                      'START' ,
-                                      @proc_step_no ,
-                                      @proc_step_name + ' - Delete' ,
-                                      @rowcount ,
-                                      LEFT(Isnull(@observation_id_list, 'NULL'),500)
-                          );
+        /* Start transaction for the actual update to the datamart */
+        SET @proc_step_name = 'Update COVID_LAB_DATAMART';
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
-              /* Insert updated records - FIXED: Using dynamic INSERT to handle AOE columns */
-              DECLARE @insert_columns NVARCHAR(max) = '';
-              DECLARE @select_columns NVARCHAR(max) = '';
-              DECLARE @insert_sql     NVARCHAR(max);
-              -- Build base column lists
-              SET @insert_columns = 'Observation_UID,Lab_Local_ID,Ordered_Test_Cd,Ordered_Test_Desc,Ordered_Test_Code_System,ORDER_TEST_DATE,Electronic_Ind,Program_Area_Cd,Jurisdiction_Cd,Lab_Report_Dt,Lab_Rpt_Received_By_PH_Dt,Order_result_status,Jurisdiction_Nm,Specimen_Cd,Specimen_Desc,Specimen_type_free_text,Specimen_Id,SPECIMEN_SOURCE_SITE_CD,SPECIMEN_SOURCE_SITE_DESC,Testing_Lab_Accession_Number,Lab_Added_Dt,Lab_Update_Dt,Specimen_Coll_Dt,COVID_LAB_DATAMART_KEY,Resulted_Test_Cd,Resulted_Test_Desc,Resulted_Test_Code_System,DEVICE_INSTANCE_ID_1,DEVICE_INSTANCE_ID_2,Test_result_status,Test_Method_Desc,Device_Type_Id_1,Device_Type_Id_2,Perform_Facility_Name,Testing_lab_Address_One,Testing_lab_Address_Two,Testing_lab_Country,Testing_lab_county,Testing_lab_county_Desc,Testing_lab_City,Testing_lab_State_Cd,Testing_lab_State,Testing_lab_Zip_Cd,Result_Cd,Result_Cd_Sys,Result_Desc,Text_Result_Desc,Numeric_Comparator_Cd,Numeric_Value_1,Numeric_Value_2,Numeric_Unit_Cd,Numeric_Low_Range,Numeric_High_Range,Numeric_Separator_Cd,Interpretation_Cd,Interpretation_Desc,Result_Comments,Result,Result_Category,Last_Name,Middle_Name,First_Name,Patient_Local_ID,Current_Sex_Cd,Age_Reported,Age_Unit_Cd,Birth_Dt,PATIENT_DEATH_DATE,PATIENT_DEATH_IND,Phone_Number,Address_One,Address_Two,City,State_Cd,State,Zip_Code,County_Cd,County_Desc,PATIENT_RACE_CALC,PATIENT_ETHNICITY,Reporting_Facility_Name,Reporting_Facility_Address_One,Reporting_Facility_Address_Two,Reporting_Facility_Country,Reporting_Facility_County,Reporting_Facility_County_Desc,Reporting_Facility_City,Reporting_Facility_State_Cd,Reporting_Facility_State,Reporting_Facility_Zip_Cd,Reporting_Facility_Clia,Reporting_Facility_Phone_Nbr,Reporting_Facility_Phone_Ext,Ordering_Facility_Name,Ordering_Facility_Address_One,Ordering_Facility_Address_Two,Ordering_Facility_Country,Ordering_Facility_County,Ordering_Facility_County_Desc,Ordering_Facility_City,Ordering_Facility_State_Cd,Ordering_Facility_State,Ordering_Facility_Zip_Cd,Ordering_Facility_Phone_Nbr,Ordering_Facility_Phone_Ext,Ordering_Provider_First_Name,Ordering_Provider_Last_Name,Ordering_Provider_Address_One,Ordering_Provider_Address_Two,Ordering_Provider_Country,Ordering_Provider_County,Ordering_Provider_County_Desc,Ordering_Provider_City,Ordering_Provider_State_Cd,Ordering_Provider_State,Ordering_Provider_Zip_Cd,Ordering_Provider_Phone_Nbr,Ordering_Provider_Phone_Ext,ORDERING_PROVIDER_ID,Associated_Case_ID';
-              SET @select_columns = 'core.Observation_UID,core.Lab_Local_ID,core.Ordered_Test_Cd,core.Ordered_Test_Desc,core.Ordered_Test_Code_System,core.ORDER_TEST_DATE,core.Electronic_Ind,core.Program_Area_Cd,core.Jurisdiction_Cd,core.Lab_Report_Dt,core.Lab_Rpt_Received_By_PH_Dt,core.Order_result_status,core.Jurisdiction_Nm,LEFT(core.Specimen_Cd,50),LEFT(core.Specimen_Desc,100),LEFT(core.Specimen_type_free_text,1000),LEFT(core.Specimen_Id,100),LEFT(core.SPECIMEN_SOURCE_SITE_CD,20),LEFT(core.SPECIMEN_SOURCE_SITE_DESC,100),LEFT(core.Testing_Lab_Accession_Number,199),core.Lab_Added_Dt,core.Lab_Update_Dt,core.Specimen_Coll_Dt,core.COVID_LAB_DATAMART_KEY,LEFT(core.Resulted_Test_Cd,50),LEFT(core.Resulted_Test_Desc,1000),LEFT(core.Resulted_Test_Code_System,300),LEFT(core.DEVICE_INSTANCE_ID_1,199),LEFT(core.DEVICE_INSTANCE_ID_2,199),LEFT(core.Test_result_status,100),LEFT(core.Test_Method_Desc,2000),LEFT(core.Device_Type_Id_1,199),LEFT(core.Device_Type_Id_2,199),LEFT(core.Perform_Facility_Name,100),LEFT(core.Testing_lab_Address_One,100),LEFT(core.Testing_lab_Address_Two,100),LEFT(core.Testing_lab_Country,20),LEFT(core.Testing_lab_county,20),LEFT(core.Testing_lab_county_Desc,255),LEFT(core.Testing_lab_City,100),LEFT(core.Testing_lab_State_Cd,20),LEFT(core.Testing_lab_State,2),LEFT(core.Testing_lab_Zip_Cd,20),LEFT(core.Result_Cd,20),LEFT(core.Result_Cd_Sys,300),LEFT(core.Result_Desc,300),core.Text_Result_Desc,LEFT(core.Numeric_Comparator_Cd,20),core.Numeric_Value_1,core.Numeric_Value_2,LEFT(core.Numeric_Unit_Cd,20),LEFT(core.Numeric_Low_Range,20),LEFT(core.Numeric_High_Range,20),LEFT(core.Numeric_Separator_Cd,10),LEFT(core.Interpretation_Cd,20),LEFT(core.Interpretation_Desc,100),core.Result_Comments,core.Result,LEFT(rslt.Result_Category,13),pat.Last_Name,pat.Middle_Name,pat.First_Name,pat.Patient_Local_ID,pat.Current_Sex_Cd,LEFT(pat.Age_Reported,10),LEFT(pat.Age_Unit_Cd,20),pat.Birth_Dt,pat.PATIENT_DEATH_DATE,LEFT(pat.PATIENT_DEATH_IND,20),LEFT(pat.Phone_Number,20),LEFT(pat.Address_One,100),LEFT(pat.Address_Two,100),LEFT(pat.City,100),LEFT(pat.State_Cd,20),LEFT(pat.State,2),LEFT(pat.Zip_Code,20),LEFT(pat.County_Cd,20),LEFT(pat.County_Desc,255),pat.PATIENT_RACE_CALC,LEFT(pat.PATIENT_ETHNICITY,20),LEFT(ent.Reporting_Facility_Name,100),LEFT(ent.Reporting_Facility_Address_One,100),LEFT(ent.Reporting_Facility_Address_Two,100),LEFT(ent.Reporting_Facility_Country,20),LEFT(ent.Reporting_Facility_County,20),LEFT(ent.Reporting_Facility_County_Desc,255),LEFT(ent.Reporting_Facility_City,100),LEFT(ent.Reporting_Facility_State_Cd,20),LEFT(ent.Reporting_Facility_State,2),LEFT(ent.Reporting_Facility_Zip_Cd,20),LEFT(ent.Reporting_Facility_Clia,20),LEFT(ent.Reporting_Facility_Phone_Nbr,20),LEFT(ent.Reporting_Facility_Phone_Ext,20),ent.Ordering_Facility_Name,ent.Ordering_Facility_Address_One,ent.Ordering_Facility_Address_Two,ent.Ordering_Facility_Country,ent.Ordering_Facility_County,ent.Ordering_Facility_County_Desc,ent.Ordering_Facility_City,LEFT(ent.Ordering_Facility_State_Cd,20),LEFT(ent.Ordering_Facility_State,2),ent.Ordering_Facility_Zip_Cd,ent.Ordering_Facility_Phone_Nbr,ent.Ordering_Facility_Phone_Ext,ent.Ordering_Provider_First_Name,ent.Ordering_Provider_Last_Name,ent.Ordering_Provider_Address_One,ent.Ordering_Provider_Address_Two,ent.Ordering_Provider_Country,ent.Ordering_Provider_County,ent.Ordering_Provider_County_Desc,ent.Ordering_Provider_City,ent.Ordering_Provider_State_Cd,LEFT(ent.Ordering_Provider_State,2),ent.Ordering_Provider_Zip_Cd,ent.Ordering_Provider_Phone_Nbr,ent.Ordering_Provider_Phone_Ext,LEFT(ent.ORDERING_PROVIDER_ID,199),assoc.Associated_Case_ID';
-              -- Add AOE columns if they exist
-              DECLARE @aoe_insert_columns NVARCHAR(max) = '';
-              DECLARE @aoe_select_columns NVARCHAR(max) = '';
-              SELECT @aoe_insert_columns += N',[' + Ltrim(Rtrim(column_name)) + ']',
-                     @aoe_select_columns += N',aoe.[' + Ltrim(Rtrim(column_name)) + ']'
-              FROM   information_schema.columns
-              WHERE  table_name = 'COVID_LAB_DATAMART'
-              AND    table_schema = 'dbo'
-              AND    column_name NOT IN ( 'Observation_UID',
-                                         'Lab_Local_ID',
-                                         'Ordered_Test_Cd',
-                                         'Ordered_Test_Desc',
-                                         'Ordered_Test_Code_System',
-                                         'ORDER_TEST_DATE',
-                                         'Electronic_Ind',
-                                         'Program_Area_Cd',
-                                         'Jurisdiction_Cd',
-                                         'Lab_Report_Dt',
-                                         'Lab_Rpt_Received_By_PH_Dt',
-                                         'Order_result_status',
-                                         'Jurisdiction_Nm',
-                                         'Specimen_Cd',
-                                         'Specimen_Desc',
-                                         'Specimen_type_free_text',
-                                         'Specimen_Id',
-                                         'SPECIMEN_SOURCE_SITE_CD',
-                                         'SPECIMEN_SOURCE_SITE_DESC',
-                                         'Testing_Lab_Accession_Number',
-                                         'Lab_Added_Dt',
-                                         'Lab_Update_Dt',
-                                         'Specimen_Coll_Dt',
-                                         'COVID_LAB_DATAMART_KEY',
-                                         'Resulted_Test_Cd',
-                                         'Resulted_Test_Desc',
-                                         'Resulted_Test_Code_System',
-                                         'DEVICE_INSTANCE_ID_1',
-                                         'DEVICE_INSTANCE_ID_2',
-                                         'Test_result_status',
-                                         'Test_Method_Desc',
-                                         'Device_Type_Id_1',
-                                         'Device_Type_Id_2',
-                                         'Perform_Facility_Name',
-                                         'Testing_lab_Address_One',
-                                         'Testing_lab_Address_Two',
-                                         'Testing_lab_Country',
-                                         'Testing_lab_county',
-                                         'Testing_lab_county_Desc',
-                                         'Testing_lab_City',
-                                         'Testing_lab_State_Cd',
-                                         'Testing_lab_State',
-                                         'Testing_lab_Zip_Cd',
-                                         'Result_Cd',
-                                         'Result_Cd_Sys',
-                                         'Result_Desc',
-                                         'Text_Result_Desc',
-                                         'Numeric_Comparator_Cd',
-                                         'Numeric_Value_1',
-                                         'Numeric_Value_2',
-                                         'Numeric_Unit_Cd',
-                                         'Numeric_Low_Range',
-                                         'Numeric_High_Range',
-                                         'Numeric_Separator_Cd',
-                                         'Interpretation_Cd',
-                                         'Interpretation_Desc',
-                                         'Result_Comments',
-                                         'Result',
-                                         'Result_Category',
-                                         'Last_Name',
-                                         'Middle_Name',
-                                         'First_Name',
-                                         'Patient_Local_ID',
-                                         'Current_Sex_Cd',
-                                         'Age_Reported',
-                                         'Age_Unit_Cd',
-                                         'Birth_Dt',
-                                         'PATIENT_DEATH_DATE',
-                      'PATIENT_DEATH_IND',
-                                         'Phone_Number',
-                                         'Address_One',
-                                         'Address_Two',
-                                         'City',
-                                         'State_Cd',
-                                         'State',
-                                         'Zip_Code',
-                                         'County_Cd',
-                                         'County_Desc',
-                                         'PATIENT_RACE_CALC',
-                                         'PATIENT_ETHNICITY',
-                                         'Reporting_Facility_Name',
-                                         'Reporting_Facility_Address_One',
-                                         'Reporting_Facility_Address_Two',
-                                         'Reporting_Facility_Country',
-                                         'Reporting_Facility_County',
-                                         'Reporting_Facility_County_Desc',
-                                         'Reporting_Facility_City',
-                                         'Reporting_Facility_State_Cd',
-                                         'Reporting_Facility_State',
-                                         'Reporting_Facility_Zip_Cd',
-                                         'Reporting_Facility_Clia',
-                                         'Reporting_Facility_Phone_Nbr',
-                                         'Reporting_Facility_Phone_Ext',
-                                         'Ordering_Facility_Name',
-                                         'Ordering_Facility_Address_One',
-                                         'Ordering_Facility_Address_Two',
-                                         'Ordering_Facility_Country',
-                                         'Ordering_Facility_County',
-                                         'Ordering_Facility_County_Desc',
-                                         'Ordering_Facility_City',
-                                         'Ordering_Facility_State_Cd',
-                                         'Ordering_Facility_State',
-                                         'Ordering_Facility_Zip_Cd',
-                                         'Ordering_Facility_Phone_Nbr',
-                                         'Ordering_Facility_Phone_Ext',
-                                         'Ordering_Provider_First_Name',
-                                         'Ordering_Provider_Last_Name',
-                                         'Ordering_Provider_Address_One',
-                                         'Ordering_Provider_Address_Two',
-                                         'Ordering_Provider_Country',
-                                         'Ordering_Provider_County',
-                                         'Ordering_Provider_County_Desc',
-                                         'Ordering_Provider_City',
-                                         'Ordering_Provider_State_Cd',
-                                         'Ordering_Provider_State',
-                                         'Ordering_Provider_Zip_Cd',
-                                         'Ordering_Provider_Phone_Nbr',
-                                         'Ordering_Provider_Phone_Ext',
-                                         'ORDERING_PROVIDER_ID',
-                                         'Associated_Case_ID',
-                                         'record_status_cd',
-                                         'rt_result');
+        BEGIN TRANSACTION;
+        /* Delete existing records for these observations */
+        DELETE
+        FROM   dbo.covid_lab_datamart
+        WHERE  observation_uid IN
+               (
+                   SELECT observation_uid
+                   FROM   #covid_lab_core_data);
 
-              -- Build final INSERT statement
-              SET @insert_sql = N'  INSERT INTO dbo.COVID_LAB_DATAMART (' + @insert_columns + @aoe_insert_columns + ')  SELECT DISTINCT ' + @select_columns + @aoe_select_columns + '  FROM #COVID_LAB_CORE_DATA core  LEFT JOIN #COVID_LAB_RSLT_TYPE rslt ON core.Observation_UID = rslt.RT_Observation_UID  AND core.Result = rslt.RT_Result  LEFT JOIN #COVID_LAB_PATIENT_DATA pat ON core.Observation_UID = pat.Pat_Observation_UID  LEFT JOIN #COVID_LAB_ENTITIES_DATA ent ON core.Observation_UID = ent.Entity_Observation_uid  LEFT JOIN #COVID_LAB_ASSOCIATIONS assoc ON core.Observation_UID = assoc.assoc_observation_uid  LEFT JOIN #COVID_LAB_AOE_DATA aoe ON core.observation_UID = aoe.AOE_observation_uid';
-              EXEC sp_executesql
-                @insert_sql;
-              /* Logging for insert operation */
-              SET @rowcount = @@ROWCOUNT;
-              INSERT INTO [dbo].[job_flow_log]
-                          (
-                                      batch_id ,
-                                      [Dataflow_Name] ,
-                                      [package_Name] ,
-                                      [Status_Type] ,
-                                      [step_number] ,
-                                      [step_name] ,
-                                      [row_count] ,
-                                      [msg_description1]
-                          )
-                          VALUES
-                          (
-                                      @batch_id ,
-                                      @dataflow_name ,
-                                      @package_name ,
-                                      'START' ,
-                                      @proc_step_no ,
-                                      @proc_step_name + ' - Insert' ,
-                                      @rowcount ,
-                                      LEFT(Isnull(@observation_id_list, 'NULL'),500)
-                          );
+        /* Logging */
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
-              /* Commit the transaction */
-              COMMIT TRANSACTION;
-              /* Final logging */
-              SET @proc_step_name = 'SP_COMPLETE';
-              SET @proc_step_no = 999;
-              INSERT INTO [dbo].[job_flow_log]
-                          (
-                                      batch_id ,
-                                      [Dataflow_Name] ,
-                                      [package_Name] ,
-                                      [Status_Type] ,
-                                      [step_number] ,
-                                      [step_name] ,
-                                      [row_count] ,
-                                      [msg_description1]
-                          )
-                          VALUES
-                          (
-                                      @batch_id ,
-                                      @dataflow_name ,
-                                      @package_name ,
-                                      'COMPLETE' ,
-                                      @proc_step_no ,
-                                      @proc_step_name ,
-                                      0 ,
-                                      LEFT(Isnull(@observation_id_list, 'NULL'),500)
-                          );
+        DECLARE @insert_query NVARCHAR(MAX);
+        SET @insert_query =
+                (
+                    SELECT 'INSERT INTO  [dbo].[COVID_LAB_DATAMART]( ' + STUFF(
+                            (
+                                SELECT ', [' + name + ']'
+                                FROM tempdb.sys.columns
+                                WHERE object_id = OBJECT_ID('#COVID_LAB_CORE_DATA')
+                                  AND NAME NOT IN('record_status_cd') FOR XML PATH('')
+                            ), 1, 1, '') + ', [Result_Category], ' + STUFF(
+                                   (
+                                       SELECT ', [' + name + ']'
+                                       FROM tempdb.sys.columns
+                                       WHERE object_id = OBJECT_ID('#COVID_LAB_PATIENT_DATA')
+                                         AND NAME NOT IN('Pat_Observation_UID') FOR XML PATH('')
+                                   ), 1, 1, '') + ',' + STUFF(
+                                   (
+                                       SELECT ', [' + name + ']'
+                                       FROM tempdb.sys.columns
+                                       WHERE object_id = OBJECT_ID('#COVID_LAB_ENTITIES_DATA')
+                                         AND NAME NOT IN('Entity_Observation_uid') FOR XML PATH('')
+                                   ), 1, 1, '') + ',' + STUFF(
+                                   (
+                                       SELECT ', [' + name + ']'
+                                       FROM tempdb.sys.columns
+                                       WHERE object_id = OBJECT_ID('#COVID_LAB_AOE_DATA')
+                                         AND NAME NOT IN('AOE_Observation_uid') FOR XML PATH('')
+                                   ), 1, 1, '') + ', [Associated_Case_ID]' + ' ) select distinct ' + STUFF(
+                                   (
+                                       SELECT ', [' + name + ']'
+                                       FROM tempdb.sys.columns
+                                       WHERE object_id = OBJECT_ID('#COVID_LAB_CORE_DATA')
+                                         AND NAME NOT IN('record_status_cd') FOR XML PATH('')
+                                   ), 1, 1, '') + ', [Result_Category], ' + STUFF(
+                                   (
+                                       SELECT ', [' + name + ']'
+                                       FROM tempdb.sys.columns
+                                       WHERE object_id = OBJECT_ID('#COVID_LAB_PATIENT_DATA')
+                                         AND NAME NOT IN('Pat_Observation_UID') FOR XML PATH('')
+                                   ), 1, 1, '') + ',' + STUFF(
+                                   (
+                                       SELECT ', [' + name + ']'
+                                       FROM tempdb.sys.columns
+                                       WHERE object_id = OBJECT_ID('#COVID_LAB_ENTITIES_DATA')
+                                         AND NAME NOT IN('Entity_Observation_uid') FOR XML PATH('')
+                                   ), 1, 1, '') + ',' + STUFF(
+                                   (
+                                       SELECT ', [' + name + ']'
+                                       FROM tempdb.sys.columns
+                                       WHERE object_id = OBJECT_ID('#COVID_LAB_AOE_DATA')
+                                         AND NAME NOT IN('AOE_Observation_uid') FOR XML PATH('')
+                                   ), 1, 1, '') + ', [Associated_Case_ID] ' + '
+	           FROM #COVID_LAB_CORE_DATA
+                 LEFT OUTER JOIN #COVID_LAB_RSLT_TYPE ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_RSLT_TYPE.RT_Observation_UID
+                                                                AND COVID_LAB_CORE_DATA.Result = COVID_LAB_RSLT_TYPE.RT_Result
+                 INNER JOIN #COVID_LAB_PATIENT_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_PATIENT_DATA.Pat_Observation_UID
+                 LEFT OUTER JOIN #COVID_LAB_ENTITIES_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_ENTITIES_DATA.Entity_Observation_uid
+				 LEFT OUTER JOIN #COVID_LAB_AOE_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_AOE_DATA.AOE_Observation_uid
+                 LEFT OUTER JOIN #COVID_LAB_ASSOCIATIONS ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_ASSOCIATIONS.ASSOC_OBSERVATION_UID;'
+                );
 
-            END try
-            BEGIN catch
-              IF @@TRANCOUNT > 0
-              ROLLBACK TRANSACTION;
-              DECLARE @FullErrorMessage NVARCHAR(4000) = 'Error Number: ' + Cast(Error_number() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error Severity: ' + Cast(Error_severity() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error State: ' + Cast(Error_state() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error Line: ' + Cast(Error_line() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error Message: ' + Error_message();
-              /* Logging */
-              INSERT INTO [dbo].[job_flow_log]
-                          (
-                                      batch_id ,
-                                      [Dataflow_Name] ,
-                                      [package_Name] ,
-                                      [Status_Type] ,
-                                      [step_number] ,
-                                      [step_name] ,
-                                      [row_count] ,
-                                      [msg_description1] ,
-                                      [Error_Description]
-                          )
-                          VALUES
-                          (
-                                      @batch_id ,
-                                      @dataflow_name ,
-                                      @package_name ,
-                                      'ERROR' ,
-                                      @proc_Step_no ,
-                                      @proc_step_name ,
-                                      0 ,
-                                      LEFT(Isnull(@observation_id_list, 'NULL'),500) ,
-                                      @FullErrorMessage
-                          );
+        /* Logging for insert operation */
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(ISNULL(@observation_id_list, 'NULL'),500),0);
 
-              RETURN Error_number();
-            END catch;
-          END;
+
+        /* Commit the transaction */
+        COMMIT TRANSACTION;
+        /* Final logging */
+        SET @proc_step_name = 'SP_COMPLETE';
+        SET @proc_step_no = 999;
+        INSERT INTO [dbo].[job_flow_log]
+        (
+            batch_id ,
+            [Dataflow_Name] ,
+            [package_Name] ,
+            [Status_Type] ,
+            [step_number] ,
+            [step_name] ,
+            [row_count] ,
+            [msg_description1]
+        )
+        VALUES
+            (
+                @batch_id ,
+                @dataflow_name ,
+                @package_name ,
+                'COMPLETE' ,
+                @proc_step_no ,
+                @proc_step_name ,
+                0 ,
+                LEFT(Isnull(@observation_id_list, 'NULL'),500)
+            );
+
+    END try
+    BEGIN catch
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        DECLARE @FullErrorMessage NVARCHAR(4000) = 'Error Number: ' + Cast(Error_number() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error Severity: ' + Cast(Error_severity() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error State: ' + Cast(Error_state() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error Line: ' + Cast(Error_line() AS VARCHAR(10)) + Char(13) + Char(10) + 'Error Message: ' + Error_message();
+        /* Logging */
+        INSERT INTO [dbo].[job_flow_log]
+        (
+            batch_id ,
+            [Dataflow_Name] ,
+            [package_Name] ,
+            [Status_Type] ,
+            [step_number] ,
+            [step_name] ,
+            [row_count] ,
+            [msg_description1] ,
+            [Error_Description]
+        )
+        VALUES
+            (
+                @batch_id ,
+                @dataflow_name ,
+                @package_name ,
+                'ERROR' ,
+                @proc_Step_no ,
+                @proc_step_name ,
+                0 ,
+                LEFT(Isnull(@observation_id_list, 'NULL'),500) ,
+                @FullErrorMessage
+            );
+
+        RETURN Error_number();
+    END catch;
+END;
