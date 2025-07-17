@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_d_contact_
 BEGIN
     DROP PROCEDURE [dbo].[sp_d_contact_record_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE dbo.sp_d_contact_record_postprocessing (
     @contact_uids NVARCHAR(MAX),
@@ -51,41 +51,22 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #NEW_COLUMNS';
+        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_CONTACT_RECORD';
 
         SELECT RDB_COLUMN_NM
         INTO #NEW_COLUMNS
         FROM dbo.NRT_METADATA_COLUMNS
-        WHERE NEW_FLAG = 1
+        WHERE TABLE_NAME = 'D_CONTACT_RECORD'
         AND RDB_COLUMN_NM NOT IN (
           SELECT COLUMN_NAME
                 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = 'D_CONTACT_RECORD'
                     AND TABLE_SCHEMA = 'dbo');
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-        if
-            @debug = 'true'
-            select @Proc_Step_Name as step, *
-            from #NEW_COLUMNS;
-
-        BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'ADDING COLUMNS TO D_CONTACT_RECORD';
-
         SELECT @ColumnAdd_sql =
                STRING_AGG('ALTER TABLE dbo.D_CONTACT_RECORD ADD ' + QUOTENAME(RDB_COLUMN_NM) + ' VARCHAR(50);',
                           CHAR(13) + CHAR(10))
         FROM #NEW_COLUMNS;
-
 
         -- if there aren't any new columns to add, sp_executesql won't fire
         IF @ColumnAdd_sql IS NOT NULL
@@ -98,19 +79,8 @@ BEGIN
             select @Proc_Step_Name as step, @ColumnAdd_sql
             ;
 
-        UPDATE dbo.NRT_METADATA_COLUMNS
-        SET NEW_FLAG = 0
-        WHERE NEW_FLAG = 1
-        AND TABLE_NAME = 'D_CONTACT_RECORD'
-        AND RDB_COLUMN_NM in (
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'D_CONTACT_RECORD'
-              AND TABLE_SCHEMA = 'dbo'
-        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID,@Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
@@ -235,16 +205,16 @@ BEGIN
         VALUES (@BATCH_ID,@Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
         COMMIT TRANSACTION;
-   
+
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'Update nrt_contact_key updated_dttm';
 
-        UPDATE tgt 
+        UPDATE tgt
         SET tgt.[updated_dttm] = GETDATE()
-        FROM [dbo].NRT_CONTACT_KEY tgt 
-        INNER JOIN #CONTACT_INIT ci 
+        FROM [dbo].NRT_CONTACT_KEY tgt
+        INNER JOIN #CONTACT_INIT ci
             ON ci.d_contact_record_key = tgt.d_contact_record_key;
 
         SELECT @RowCount_no = @@ROWCOUNT;
@@ -255,7 +225,7 @@ BEGIN
 
 
         COMMIT TRANSACTION;
-   
+
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;

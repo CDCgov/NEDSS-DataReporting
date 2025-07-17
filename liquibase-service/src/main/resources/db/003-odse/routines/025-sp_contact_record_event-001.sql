@@ -1143,7 +1143,6 @@ BEGIN
     WITH ordered_list AS (
         SELECT RDB_TABLE_NM as TABLE_NAME,
             RDB_COLUMN_NM,
-            1                                                                          AS NEW_FLAG,
             LAST_CHG_TIME,
             LAST_CHG_USER_ID,
             ROW_NUMBER() OVER (PARTITION BY RDB_COLUMN_NM ORDER BY LAST_CHG_TIME DESC) AS rn
@@ -1153,7 +1152,6 @@ BEGIN
     )
     SELECT distinct TABLE_NAME,
            RDB_COLUMN_NM,
-           NEW_FLAG,
            LAST_CHG_TIME,
            LAST_CHG_USER_ID
     INTO #D_CONTACT_RECORD_COLUMNS
@@ -1264,7 +1262,6 @@ BEGIN
                         FOR json path,INCLUDE_NULL_VALUES) AS answers) AS answers,
             (SELECT (SELECT TABLE_NAME,
                            RDB_COLUMN_NM,
-                           NEW_FLAG,
                            LAST_CHG_TIME,
                            LAST_CHG_USER_ID
                     FROM #D_CONTACT_RECORD_COLUMNS
