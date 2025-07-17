@@ -39,10 +39,12 @@ spring:
     url: ${DB_RDB_URL:jdbc:sqlserver://localhost:1433;databaseName=:RDB;encrypt=true;trustServerCertificate=true;}
   jpa:
     properties:
-      javax.persistence.query.timeout: -1
+      jakarta.persistence.query.timeout: -1
 service:
   fixed-delay:
     cached-ids: ${FIXED_DELAY_ID:20000}
     datamart: ${FIXED_DELAY_DM:60000}
+    backfill: ${FIXED_DELAY_BF:600000}
+  max-retries: ${MAX_RETRIES:3}
 server:
   port: '8095'

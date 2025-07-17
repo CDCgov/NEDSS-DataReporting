@@ -132,7 +132,7 @@ SELECT
 FROM [dbo].nrt_investigation inv WITH (NOLOCK)
 INNER JOIN [dbo].INVESTIGATION i WITH (NOLOCK) 
     ON inv.public_health_case_uid = i.case_uid
-INNER JOIN [dbo].v_condition_dim con WITH (NOLOCK) 
+INNER JOIN [dbo].condition con WITH (NOLOCK) 
     ON con.condition_cd = inv.CD
 LEFT OUTER JOIN [dbo].LDF_GROUP lg WITH (NOLOCK) 
     ON lg.BUSINESS_OBJECT_UID = inv.public_health_case_uid

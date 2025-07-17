@@ -327,7 +327,6 @@ class InvestigationDataProcessingTests {
         metadataColumnValue.setTableName(tbl_name);
         metadataColumnValue.setLastChgTime("2024-05-23T15:42:41.317");
         metadataColumnValue.setLastChgUserId(10000000L);
-        metadataColumnValue.setNewFlag(1);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());

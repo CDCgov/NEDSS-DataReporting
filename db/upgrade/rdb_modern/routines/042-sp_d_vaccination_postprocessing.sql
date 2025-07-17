@@ -45,36 +45,23 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #NEW_COLUMNS';
+        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_VACCINATION';
 
         SELECT RDB_COLUMN_NM
         INTO #NEW_COLUMNS
         FROM dbo.NRT_METADATA_COLUMNS
-        WHERE NEW_FLAG = 1
+        WHERE TABLE_NAME = 'D_VACCINATION'
         AND RDB_COLUMN_NM NOT IN (
           SELECT COLUMN_NAME
                 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = 'D_VACCINATION'
                     AND TABLE_SCHEMA = 'dbo');
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_VACCINATION';
 
         SELECT @ColumnAdd_sql =
                STRING_AGG('ALTER TABLE dbo.D_VACCINATION ADD ' + QUOTENAME(RDB_COLUMN_NM) + ' VARCHAR(50);',
                           CHAR(13) + CHAR(10))
         FROM #NEW_COLUMNS;
-
 
         -- if there aren't any new columns to add, sp_executesql won't fire
         IF @ColumnAdd_sql IS NOT NULL
@@ -87,16 +74,6 @@ BEGIN
             select @Proc_Step_Name as step, @ColumnAdd_sql
             ;
 
-        UPDATE dbo.NRT_METADATA_COLUMNS
-        SET NEW_FLAG = 0
-        WHERE NEW_FLAG = 1
-        AND TABLE_NAME = 'D_VACCINATION'
-        AND RDB_COLUMN_NM in (
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'D_VACCINATION'
-              AND TABLE_SCHEMA = 'dbo'
-        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
@@ -151,6 +128,29 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@vac_uids, ',')) t
+                left join #D_VACCINATION_INIT tmp
+                on tmp.vaccination_uid = t.value	
+                WHERE tmp.vaccination_uid is null	
+		);
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                0 AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_d_vaccination_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+           RETURN;
+        END
 
 
 
@@ -240,10 +240,10 @@ BEGIN
         UPDATE dl
         SET
         	dl.D_VACCINATION_KEY = ix.D_VACCINATION_KEY,
-           	dl.ADD_TIME = ix.ADD_TIME ,
+           	dl.ADD_TIME = ix.ADD_TIME,
 			dl.ADD_USER_ID = ix.ADD_USER_ID,
-			dl.AGE_AT_VACCINATION = ix.AGE_AT_VACCINATION ,
-			dl.AGE_AT_VACCINATION_UNIT = ix.AGE_AT_VACCINATION_UNIT ,
+			dl.AGE_AT_VACCINATION = ix.AGE_AT_VACCINATION,
+			dl.AGE_AT_VACCINATION_UNIT = NULLIF(ix.AGE_AT_VACCINATION_UNIT, ''''),
 			dl.LAST_CHG_TIME = ix.LAST_CHG_TIME,
 			dl.LAST_CHG_USER_ID = ix.LAST_CHG_USER_ID,
 			dl.LOCAL_ID = ix.LOCAL_ID,
@@ -251,13 +251,13 @@ BEGIN
 			dl.RECORD_STATUS_TIME = ix.RECORD_STATUS_TIME,
 			dl.VACCINE_ADMINISTERED_DATE = ix.VACCINE_ADMINISTERED_DATE,
 			dl.VACCINE_DOSE_NBR = ix.VACCINE_DOSE_NBR,
-			dl.VACCINATION_ADMINISTERED_NM = ix.VACCINATION_ADMINISTERED_NM ,
-			dl.VACCINATION_ANATOMICAL_SITE = ix.VACCINATION_ANATOMICAL_SITE ,
-			dl.VACCINATION_UID = ix.VACCINATION_UID ,
+			dl.VACCINATION_ADMINISTERED_NM = NULLIF(ix.VACCINATION_ADMINISTERED_NM, ''''),
+			dl.VACCINATION_ANATOMICAL_SITE = NULLIF(ix.VACCINATION_ANATOMICAL_SITE, ''''),
+			dl.VACCINATION_UID = ix.VACCINATION_UID,
 			dl.VACCINE_EXPIRATION_DT = ix.VACCINE_EXPIRATION_DT,
-			dl.VACCINE_INFO_SOURCE = ix.VACCINE_INFO_SOURCE,
+			dl.VACCINE_INFO_SOURCE = NULLIF(ix.VACCINE_INFO_SOURCE, ''''),
 			dl.VACCINE_LOT_NUMBER_TXT = ix.VACCINE_LOT_NUMBER_TXT,
-			dl.VACCINE_MANUFACTURER_NM = ix.VACCINE_MANUFACTURER_NM ,
+			dl.VACCINE_MANUFACTURER_NM = NULLIF(ix.VACCINE_MANUFACTURER_NM, ''''),
 			dl.VERSION_CTRL_NBR = ix.VERSION_CTRL_NBR,
 			dl.ELECTRONIC_IND = ix.ELECTRONIC_IND
         ' + CASE
@@ -322,10 +322,10 @@ BEGIN
         SET @Insert_sql = '
         INSERT INTO dbo.D_VACCINATION (
             D_VACCINATION_KEY,
-            ADD_TIME ,
+            ADD_TIME,
             ADD_USER_ID,
             AGE_AT_VACCINATION ,
-            AGE_AT_VACCINATION_UNIT ,
+            AGE_AT_VACCINATION_UNIT,
             LAST_CHG_TIME,
             LAST_CHG_USER_ID,
             LOCAL_ID,
@@ -333,13 +333,13 @@ BEGIN
             RECORD_STATUS_TIME,
             VACCINE_ADMINISTERED_DATE,
             VACCINE_DOSE_NBR,
-            VACCINATION_ADMINISTERED_NM ,
-            VACCINATION_ANATOMICAL_SITE ,
-            VACCINATION_UID ,
+            VACCINATION_ADMINISTERED_NM,
+            VACCINATION_ANATOMICAL_SITE,
+            VACCINATION_UID,
             VACCINE_EXPIRATION_DT,
             VACCINE_INFO_SOURCE,
             VACCINE_LOT_NUMBER_TXT,
-            VACCINE_MANUFACTURER_NM ,
+            VACCINE_MANUFACTURER_NM,
             VERSION_CTRL_NBR,
             ELECTRONIC_IND
             ' + CASE
@@ -347,10 +347,10 @@ BEGIN
             ELSE ')' end +
             ' SELECT
                 ixk.D_VACCINATION_KEY,
-                ix.ADD_TIME ,
+                ix.ADD_TIME,
                 ix.ADD_USER_ID,
-                ix.AGE_AT_VACCINATION ,
-                ix.AGE_AT_VACCINATION_UNIT ,
+                ix.AGE_AT_VACCINATION,
+                NULLIF(ix.AGE_AT_VACCINATION_UNIT, ''''),
                 ix.LAST_CHG_TIME,
                 ix.LAST_CHG_USER_ID,
                 ix.LOCAL_ID,
@@ -358,13 +358,13 @@ BEGIN
                 ix.RECORD_STATUS_TIME,
                 ix.VACCINE_ADMINISTERED_DATE,
                 ix.VACCINE_DOSE_NBR,
-                ix.VACCINATION_ADMINISTERED_NM ,
-                ix.VACCINATION_ANATOMICAL_SITE ,
-                ix.VACCINATION_UID ,
+                NULLIF(ix.VACCINATION_ADMINISTERED_NM, ''''),
+                NULLIF(ix.VACCINATION_ANATOMICAL_SITE, ''''),
+                ix.VACCINATION_UID,
                 ix.VACCINE_EXPIRATION_DT,
-                ix.VACCINE_INFO_SOURCE,
+                NULLIF(ix.VACCINE_INFO_SOURCE, ''''),
                 ix.VACCINE_LOT_NUMBER_TXT,
-                ix.VACCINE_MANUFACTURER_NM ,
+                NULLIF(ix.VACCINE_MANUFACTURER_NM, ''''),
                 ix.VERSION_CTRL_NBR,
                 ix.ELECTRONIC_IND
                 ' + CASE
@@ -448,29 +448,21 @@ BEGIN
 		'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
 		'Error Message: ' + ERROR_MESSAGE();
 
-		INSERT INTO [dbo].[job_flow_log] (
-			batch_id,
-			[Dataflow_Name],
-			[package_Name],
-			[Status_Type],
-			[step_number],
-			[step_name],
-			[Error_Description],
-			[row_count]
-		)
-		VALUES (
-		   @batch_id,
-		   @Dataflow_Name,
-		   @Package_Name,
-		   'ERROR' ,
-		   @Proc_Step_no,
-		   @PROC_STEP_NAME,
-		   @FullErrorMessage,
-		   0
-		);
+		INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[Error_Description],[row_count])
+		VALUES 
+        (@batch_id,@Dataflow_Name,@Package_Name,'ERROR' ,@Proc_Step_no,@PROC_STEP_NAME,@FullErrorMessage,0);
 
 
-		return -1 ;
+		SELECT
+                0 AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                @FullErrorMessage AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
 
 	END CATCH
 

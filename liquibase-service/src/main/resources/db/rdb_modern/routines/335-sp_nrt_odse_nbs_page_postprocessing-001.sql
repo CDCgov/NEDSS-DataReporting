@@ -100,6 +100,30 @@ BEGIN
 
 --------------------------------------------------------------------------------------------------------
 
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+        (
+          SELECT string_agg(t.value, ',')
+          FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@page_id_list, ',')) t
+                    left join #PAGEBUILDER_SCHEMA_INIT tmp
+                    on tmp.nbs_page_uid = t.value
+                    WHERE tmp.nbs_page_uid is null
+        );
+        IF @backfill_list IS NOT NULL
+        BEGIN
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            'Missing NRT Record: sp_nrt_odse_nbs_page_postprocessing' AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
+        RETURN;
+        END
+--------------------------------------------------------------------------------------------------------
+
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET
@@ -267,7 +291,7 @@ BEGIN
             existing dimensions.
         */
         SELECT 
-            @create_dim_sql = STRING_AGG(create_statement, ' ') 
+            @create_dim_sql = STRING_AGG(CAST(create_statement AS NVARCHAR(MAX)), ' ') 
         FROM #MISSING_DIMENSION_TABLES;
 
         if @debug = 'true'
@@ -282,6 +306,7 @@ BEGIN
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
           
+
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -333,7 +358,7 @@ BEGIN
         DECLARE @alter_dim_sql NVARCHAR(MAX) = '';
 
         SELECT 
-            @alter_dim_sql = STRING_AGG(alter_statement, ' ') 
+            @alter_dim_sql = STRING_AGG(CAST(alter_statement AS NVARCHAR(MAX)), ' ') 
         FROM #MISSING_DIMENSION_COLUMNS;
 
         if @debug = 'true'
@@ -349,6 +374,7 @@ BEGIN
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_name, @RowCount_no);
           
+
 --------------------------------------------------------------------------------------------------------
 
         SET
@@ -518,11 +544,11 @@ BEGIN
 
 
         SELECT 
-            @curr_to_placeholder_sql = STRING_AGG(rename_curr_to_placeholder_statement, ' ') 
+            @curr_to_placeholder_sql = STRING_AGG(CAST(rename_curr_to_placeholder_statement AS NVARCHAR(MAX)), ' ') 
         FROM #COLUMN_UPDATE_FINAL;
 
         SELECT 
-            @placeholder_to_new_sql = STRING_AGG(rename_placeholder_to_new_statement, ' ') 
+            @placeholder_to_new_sql = STRING_AGG(CAST(rename_placeholder_to_new_statement AS NVARCHAR(MAX)), ' ') 
         FROM #COLUMN_UPDATE_FINAL;
 
         if @debug = 'true'
@@ -554,7 +580,7 @@ BEGIN
             FROM #PAGEBUILDER_SCHEMA_INIT
         )
         SELECT 
-            @update_dyn_dm_sql = STRING_AGG('EXEC dbo.sp_dyn_dm_main_postprocessing ''' + datamart_nm + ''', '''';', ' ') 
+            @update_dyn_dm_sql = STRING_AGG(CAST('EXEC dbo.sp_dyn_dm_main_postprocessing ''' + datamart_nm + ''', '''';' AS NVARCHAR(MAX)), ' ') 
         FROM distinct_datamart_cte;
 
         if @debug = 'true'
@@ -637,6 +663,15 @@ BEGIN
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
     
 -------------------------------------------------------------------------------------------
+		SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
     END TRY
 
     BEGIN CATCH
@@ -656,7 +691,15 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 
-        return -1 ;
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
 
     END CATCH
 

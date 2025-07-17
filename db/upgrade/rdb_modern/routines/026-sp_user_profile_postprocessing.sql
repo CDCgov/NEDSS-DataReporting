@@ -44,7 +44,6 @@ BEGIN
 
 -------------------------------------------------1. CREATE TABLE TMP_PROVIDER_USER_DIMENSION---------------------------------------------------------------------------
 
-        BEGIN TRANSACTION;
         SET @Proc_Step_name = 'Create #TMP_PROVIDER_USER_DIMENSION';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
@@ -62,6 +61,30 @@ BEGIN
         WHERE A.auth_user_uid IN (SELECT value FROM STRING_SPLIT(@id_list, ','))
         ORDER BY NEDSS_ENTRY_ID;
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                        left join dbo.nrt_auth_user tmp with(nolock)
+                        on tmp.auth_user_uid = t.value	
+                        WHERE tmp.auth_user_uid is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+            BEGIN
+                SELECT
+                    0 AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    'Error' AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    'Missing NRT Record: sp_user_profile_postprocessing' AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                    WHERE 1=1;
+               
+               RETURN;
+          END   
 
         IF @debug = 'true' SELECT * FROM #TMP_PROVIDER_USER_DIMENSION;
 
@@ -71,7 +94,6 @@ BEGIN
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @dataflow_name, @package_name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
         --Select * from TMP_PROVIDER_USER_DIMENSION
 -------------------------------------------------2. CREATE TABLE TMP_USER_PROVIDER---------------------------------------------------
         BEGIN TRANSACTION;
@@ -281,6 +303,16 @@ BEGIN
 
 
         COMMIT TRANSACTION;
+        
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
     END TRY
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
     BEGIN CATCH
@@ -298,27 +330,20 @@ BEGIN
 
 
         INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [Error_Description]
-        , [row_count])
-        VALUES ( @batch_id
-               , @dataflow_name
-               , @package_name
-               , 'ERROR'
-               , @Proc_Step_no
-               , @Proc_Step_name
-               , @FullErrorMessage
-               , 0);
+        ( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
+        VALUES ( @batch_id, @dataflow_name, @package_name, 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 
 
-        return -1;
+    SELECT
+        0 AS public_health_case_uid,
+        CAST(NULL AS BIGINT) AS patient_uid,
+        CAST(NULL AS BIGINT) AS observation_uid,
+        'Error' AS datamart,
+        CAST(NULL AS VARCHAR(50))  AS condition_cd,
+        @FullErrorMessage AS stored_procedure,
+        CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+        WHERE 1=1;
 
     END CATCH
 
 END;
-

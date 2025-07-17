@@ -25,28 +25,9 @@ BEGIN
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         INSERT INTO [dbo].[job_flow_log]
-        (     batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[msg_description1]
-        ,[row_count])
-        VALUES (
-                 @batch_id
-               , @create_dttm
-               , @update_dttm
-               , @dataflow_name
-               , @package_name
-               , 'START'
-               , 0
-               , 'SP_Start'
-               , LEFT (@id_list, 500)
-               , 0
-               );
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES 
+        (@batch_id, @create_dttm, @update_dttm, @dataflow_name, @package_name, 'START', 0, 'SP_Start', LEFT (@id_list, 500), 0);
 
         SET @proc_step_name='Create PROVIDER Temp tables for -'+ LEFT(@id_list,165);
         SET @proc_step_no = 1;
@@ -99,6 +80,30 @@ BEGIN
         from dbo.nrt_provider nrt with (nolock)
                  left join dbo.d_provider p with (nolock) on p.provider_uid = nrt.provider_uid
         where nrt.provider_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
+
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+		( 
+			SELECT string_agg(t.value, ',')
+			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                left join #temp_prv_table tmp
+                on tmp.provider_uid = t.value	
+                WHERE tmp.provider_uid is null	
+		);
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                0 AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_nrt_provider_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+           RETURN;
+        END
 
         if @debug = 'true' select * from #temp_prv_table;
 
@@ -296,28 +301,10 @@ BEGIN
         set
             @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(@id_list,500)
-               );
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES 
+        (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
-        select 'Success';
 
         COMMIT TRANSACTION;
 
@@ -325,28 +312,19 @@ BEGIN
         SET @proc_step_no = 4;
 
         INSERT INTO [dbo].[job_flow_log]
-        (     batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1])
-        VALUES (
-                 @batch_id
-               , current_timestamp
-               , current_timestamp
-               , @dataflow_name
-               , @package_name
-               , 'COMPLETE'
-               , @proc_step_no
-               , @proc_step_name
-               , 0
-               , LEFT (@id_list, 500)
-               );
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES 
+        (@batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'COMPLETE', @proc_step_no, @proc_step_name, 0, LEFT (@id_list, 500));
+
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
 
     END TRY
 
@@ -364,33 +342,19 @@ BEGIN
             'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log]
-        (     batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        ,[Error_Description])
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1],[Error_Description])
         VALUES
-            (
-              @batch_id
-            , current_timestamp
-            , current_timestamp
-            , @dataflow_name
-            , @package_name
-            , 'ERROR'
-            , @Proc_Step_no
-            , @proc_step_name
-            , 0
-            , LEFT (@id_list, 500)
-            , @FullErrorMessage
-            );
+        (@batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'ERROR', @Proc_Step_no, @proc_step_name, 0, LEFT (@id_list, 500), @FullErrorMessage);
 
-        return @FullErrorMessage;
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
 
     END CATCH
 

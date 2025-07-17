@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_contact_re
 BEGIN
     DROP PROCEDURE [dbo].[sp_contact_record_event]
 END
-GO 
+GO
 
 CREATE PROCEDURE [dbo].[sp_contact_record_event] @cc_uids nvarchar(max),
                                                      @debug bit = 'false'
@@ -64,7 +64,10 @@ BEGIN
         cc.CONTACT_ENTITY_PHC_UID AS CONTACT_ENTITY_PHC_UID ,
         cc.CONTACT_ENTITY_UID AS CONTACT_ENTITY_UID ,
         cc.CONTACT_REFERRAL_BASIS_CD,
-        cc.CONTACT_STATUS as CTT_STATUS,
+        case
+            when (cc.CONTACT_STATUS is not null and cc.CONTACT_STATUS != '')
+                then (select * from nbs_odse.dbo.fn_get_value_by_cd_codeset(cc.CONTACT_STATUS, 'INV109'))
+            end as CTT_STATUS,
         cc.CT_CONTACT_UID,
         cc.DISPOSITION_CD,
         cc.DISPOSITION_DATE AS CTT_DISPO_DT,
@@ -108,7 +111,10 @@ BEGIN
         cc.TXT AS CTT_NOTES,
         pac.prog_area_desc_txt as CTT_PROGRAM_AREA,
         jc.code_desc_txt as CTT_JURISDICTION_NM ,
-        cvg1.code_short_desc_txt as CTT_SHARED_IND,
+        case
+            when cvg1.code_short_desc_txt is null  then cc.SHARED_IND_CD
+            else cvg1.code_short_desc_txt
+        end as CTT_SHARED_IND,
         cvg2.code_short_desc_txt as CTT_SYMP_IND,
         cvg3.code_short_desc_txt as CTT_RISK_IND ,
         cvg4.code_short_desc_txt as CTT_EVAL_COMPLETED ,
@@ -1029,9 +1035,13 @@ BEGIN
     SET
         @PROC_STEP_NAME = 'GENERATING #DATE_DATA';
 
-    SELECT RDB_COLUMN_NM,
-           CT_CONTACT_UID,
-           FORMAT(TRY_CAST(ANSWER_TXT AS datetime2), 'yyyy-MM-dd HH:mm:ss.fff') AS ANSWER_TXT1
+    SELECT
+        RDB_COLUMN_NM,
+        CT_CONTACT_UID,
+        case
+            when trim(ANSWER_TXT)='' then ''
+            else FORMAT(TRY_CAST(ANSWER_TXT AS datetime2), 'yyyy-MM-dd HH:mm:ss.fff')
+        end as ANSWER_TXT1
     INTO #DATE_DATA
     FROM (
     	SELECT DISTINCT
@@ -1133,7 +1143,6 @@ BEGIN
     WITH ordered_list AS (
         SELECT RDB_TABLE_NM as TABLE_NAME,
             RDB_COLUMN_NM,
-            1                                                                          AS NEW_FLAG,
             LAST_CHG_TIME,
             LAST_CHG_USER_ID,
             ROW_NUMBER() OVER (PARTITION BY RDB_COLUMN_NM ORDER BY LAST_CHG_TIME DESC) AS rn
@@ -1143,7 +1152,6 @@ BEGIN
     )
     SELECT distinct TABLE_NAME,
            RDB_COLUMN_NM,
-           NEW_FLAG,
            LAST_CHG_TIME,
            LAST_CHG_USER_ID
     INTO #D_CONTACT_RECORD_COLUMNS
@@ -1254,7 +1262,6 @@ BEGIN
                         FOR json path,INCLUDE_NULL_VALUES) AS answers) AS answers,
             (SELECT (SELECT TABLE_NAME,
                            RDB_COLUMN_NM,
-                           NEW_FLAG,
                            LAST_CHG_TIME,
                            LAST_CHG_USER_ID
                     FROM #D_CONTACT_RECORD_COLUMNS

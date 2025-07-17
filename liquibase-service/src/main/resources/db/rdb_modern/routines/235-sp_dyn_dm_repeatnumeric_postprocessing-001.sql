@@ -471,9 +471,9 @@ BEGIN
             c.DISEASE_GRP_CD
         into #tmp_DynDm_SUMM_DATAMART
         FROM dbo.INV_SUMM_DATAMART isd with ( nolock)
-                 INNER JOIN dbo.V_CONDITION_DIM c with (nolock) ON isd.DISEASE_CD = c.CONDITION_CD
+                 INNER JOIN dbo.condition c with (nolock) ON isd.DISEASE_CD = c.CONDITION_CD
             and CAST(c.DISEASE_GRP_CD AS VARCHAR(200)) = @nbs_page_form_cd
-            --INNER JOIN dbo.V_CONDITION_DIM c with ( nolock) ON isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
+            --INNER JOIN dbo.condition c with ( nolock) ON isd.DISEASE_CD = c.CONDITION_CD and c.DISEASE_GRP_CD = @nbs_page_form_cd
             --INNER JOIN dbo.INVESTIGATION inv with (nolock) ON isd.investigation_key = inv.investigation_key
 
                  INNER JOIN dbo.INVESTIGATION inv with (nolock) ON isd.investigation_key = inv.investigation_key

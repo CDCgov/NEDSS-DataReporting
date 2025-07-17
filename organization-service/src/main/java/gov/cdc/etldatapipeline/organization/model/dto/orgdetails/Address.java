@@ -42,7 +42,7 @@ public class Address implements OrgExtension {
             orgRep.setZip(zip);
             orgRep.setCounty(county);
             orgRep.setCountyCode(cntyCd);
-            orgRep.setCountry(cntryCd);
+            orgRep.setCountry(country);
             orgRep.setAddressComments(addressComments);
         } else if (org.getClass() == OrganizationElasticSearch.class) {
             OrganizationElasticSearch orgElastic = (OrganizationElasticSearch) org;

@@ -136,6 +136,30 @@ BEGIN
 				ON nrt.treatment_uid = tk.treatment_uid
 				AND COALESCE(nrt.public_health_case_uid, 1) = COALESCE(tk.public_health_case_uid, 1)
 
+		declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@treatment_uids, ',')) t
+                        left join #treatment tmp
+                        on tmp.treatment_uid = t.value	
+                        WHERE tmp.treatment_uid is null	
+            );
+
+          IF @backfill_list IS NOT NULL
+            BEGIN
+                SELECT
+                    0 AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    'Error' AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    'Missing NRT Record: sp_nrt_treatment_postprocessing' AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                    WHERE 1=1;
+               RETURN;
+          END  
+		
 		SELECT @RowCount_no = @@ROWCOUNT;
 
         IF @debug = 'true' 
@@ -177,7 +201,7 @@ BEGIN
 			ON nrt.public_health_case_uid = inv.CASE_UID
 		LEFT JOIN dbo.nrt_investigation nrt_inv WITH (NOLOCK)
 			ON nrt.public_health_case_uid = nrt_inv.public_health_case_uid
-		LEFT JOIN dbo.v_condition_dim cnd WITH (NOLOCK) 
+		LEFT JOIN dbo.condition cnd WITH (NOLOCK) 
 			ON nrt_inv.cd = cnd.CONDITION_CD
 		LEFT JOIN dbo.D_PATIENT p WITH (NOLOCK) 
 			ON nrt.patient_treatment_uid = p.PATIENT_UID
@@ -509,7 +533,15 @@ BEGIN
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
 
 		--------------------------------------------------------------------------------------------------------
-
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
     END TRY
 
     BEGIN CATCH
@@ -526,6 +558,14 @@ BEGIN
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [Error_Description], [row_count])
 		VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'ERROR', @Proc_Step_no, @Proc_Step_name, @FullErrorMessage, 0);
 
-        RETURN -1;
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
     END CATCH
 END;

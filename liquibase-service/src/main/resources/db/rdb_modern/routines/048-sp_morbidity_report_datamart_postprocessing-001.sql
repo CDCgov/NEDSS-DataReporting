@@ -642,7 +642,7 @@ BEGIN TRY
             ON src.SUSPECT_FOOD_WTRBORNE_ILLNESS = cvg10.CODE AND cvg10.CODE_SET_NM = 'YNU'
         LEFT JOIN #SRTLOOKUP cvg11
             ON src.PATIENT_NAME_SUFFIX = cvg11.CODE AND cvg11.CODE_SET_NM = 'P_NM_SFX'
-        LEFT JOIN dbo.v_condition_dim con WITH (NOLOCK)
+        LEFT JOIN dbo.condition con WITH (NOLOCK)
             ON con.condition_key = src.CONDITION_KEY
         LEFT JOIN dbo.RDB_DATE d1 WITH (NOLOCK)
             ON src.MORB_RPT_DT_KEY = d1.DATE_KEY

@@ -25,30 +25,9 @@ BEGIN
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
         INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[msg_description1]
-        ,[row_count]
-        )
-        VALUES (
-                 @batch_id
-               ,@create_dttm
-               ,@update_dttm
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,0
-               ,'SP_Start'
-               ,LEFT(@notification_uids,500)
-               ,0
-               );
+        ( batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
+        VALUES 
+        (@batch_id,@create_dttm,@update_dttm,@dataflow_name,@package_name,'START',0,'SP_Start',LEFT(@notification_uids,500),0);
 
         SET @proc_step_name='Create NOTIFICATION and NOTIFICATION_EVENT Temp tables-'+ LEFT(@notification_uids,105);
         SET @proc_step_no = 1;
@@ -66,6 +45,30 @@ BEGIN
                  LEFT JOIN dbo.nrt_notification_key nk with (nolock) ON nrt.notification_uid = nk.notification_uid
         WHERE nrt.notification_uid in (SELECT value FROM STRING_SPLIT(@notification_uids, ','));
 
+        declare @backfill_list nvarchar(max);  
+        SET @backfill_list = 
+            ( 
+              SELECT string_agg(t.value, ',')
+              FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@notification_uids, ',')) t
+                        left join #temp_ntf_table tmp
+                        on tmp.notification_uid = t.value	
+                        WHERE tmp.notification_uid is null	
+            );
+
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                0 AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_nrt_notification_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+           RETURN;
+        END
+        
         /* Temp notification_event table creation */
         SELECT nrt.notification_uid,
                COALESCE(p.PATIENT_KEY, 1) AS PATIENT_KEY,
@@ -85,7 +88,7 @@ BEGIN
                  LEFT JOIN dbo.RDB_DATE drpt with (nolock) ON CAST(nrt.rpt_sent_time AS DATE) = drpt.DATE_MM_DD_YYYY
                  LEFT JOIN dbo.RDB_DATE dsub with (nolock) ON CAST(nrt.notif_add_time AS DATE) = dsub.DATE_MM_DD_YYYY
                  LEFT JOIN dbo.RDB_DATE dupd with (nolock) ON CAST(nrt.notif_last_chg_time AS DATE) = dupd.DATE_MM_DD_YYYY
-                 LEFT JOIN dbo.v_condition_dim cnd with (nolock) ON nrt.condition_cd = cnd.CONDITION_CD
+                 LEFT JOIN dbo.condition cnd with (nolock) ON nrt.condition_cd = cnd.CONDITION_CD
         WHERE nrt.notification_uid in (SELECT value FROM STRING_SPLIT(@notification_uids, ','));
 
         /* Logging */
@@ -367,7 +370,7 @@ BEGIN
                null                               AS investigation_form_cd
         FROM #temp_ntf_event_table ntf
                  LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ntf.INVESTIGATION_KEY
-                 LEFT JOIN dbo.v_condition_dim c with (nolock) ON c.CONDITION_KEY = ntf.CONDITION_KEY
+                 LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_KEY = ntf.CONDITION_KEY
                  LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = ntf.PATIENT_KEY
                  INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
         WHERE dtm.Datamart NOT IN ('Covid_Contact_Datamart','Covid_Lab_Datamart','Covid_Vaccination_Datamart');
@@ -388,36 +391,20 @@ BEGIN
 
         /* Logging */
         INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[create_dttm]
-        ,[update_dttm]
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[msg_description1]
-        ,[Error_Description]
-        )
+        (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1],[Error_Description])
         VALUES
-            (
-              @batch_id
-            ,current_timestamp
-            ,current_timestamp
-            ,@dataflow_name
-            ,@package_name
-            ,'ERROR'
-            ,@Proc_Step_no
-            ,@proc_step_name
-            ,0
-            ,LEFT(@notification_uids,500)
-            ,@FullErrorMessage
-            );
+        (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'ERROR',@Proc_Step_no,@proc_step_name,0,LEFT(@notification_uids,500),@FullErrorMessage);
 
 
-        RETURN -1;
+    SELECT
+        0 AS public_health_case_uid,
+        CAST(NULL AS BIGINT) AS patient_uid,
+        CAST(NULL AS BIGINT) AS observation_uid,
+        'Error' AS datamart,
+        CAST(NULL AS VARCHAR(50))  AS condition_cd,
+        @FullErrorMessage AS stored_procedure,
+        CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+        WHERE 1=1;
 
     END CATCH
 END;

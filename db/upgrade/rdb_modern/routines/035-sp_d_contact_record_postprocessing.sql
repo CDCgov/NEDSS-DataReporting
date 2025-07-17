@@ -51,41 +51,22 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #NEW_COLUMNS';
+        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_CONTACT_RECORD';
 
         SELECT RDB_COLUMN_NM
         INTO #NEW_COLUMNS
         FROM dbo.NRT_METADATA_COLUMNS
-        WHERE NEW_FLAG = 1
+        WHERE TABLE_NAME = 'D_CONTACT_RECORD'
         AND RDB_COLUMN_NM NOT IN (
           SELECT COLUMN_NAME
                 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = 'D_CONTACT_RECORD'
                     AND TABLE_SCHEMA = 'dbo');
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-        if
-            @debug = 'true'
-            select @Proc_Step_Name as step, *
-            from #NEW_COLUMNS;
-
-        BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'ADDING COLUMNS TO D_CONTACT_RECORD';
-
         SELECT @ColumnAdd_sql =
                STRING_AGG('ALTER TABLE dbo.D_CONTACT_RECORD ADD ' + QUOTENAME(RDB_COLUMN_NM) + ' VARCHAR(50);',
                           CHAR(13) + CHAR(10))
         FROM #NEW_COLUMNS;
-
 
         -- if there aren't any new columns to add, sp_executesql won't fire
         IF @ColumnAdd_sql IS NOT NULL
@@ -98,19 +79,8 @@ BEGIN
             select @Proc_Step_Name as step, @ColumnAdd_sql
             ;
 
-        UPDATE dbo.NRT_METADATA_COLUMNS
-        SET NEW_FLAG = 0
-        WHERE NEW_FLAG = 1
-        AND TABLE_NAME = 'D_CONTACT_RECORD'
-        AND RDB_COLUMN_NM in (
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'D_CONTACT_RECORD'
-              AND TABLE_SCHEMA = 'dbo'
-        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID,@Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
@@ -187,7 +157,29 @@ BEGIN
         COMMIT TRANSACTION;
 
 
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+        (
+            SELECT string_agg(t.value, ',')
+            FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@contact_uids, ',')) t
+                left join #CONTACT_INIT tmp
+                on tmp.contact_uid = t.value
+                WHERE tmp.contact_uid is null
+        );
 
+        IF @backfill_list IS NOT NULL
+        BEGIN
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            'Missing NRT Record: sp_d_contact_record_postprocessing' AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
+        RETURN;
+        END
 
         BEGIN TRANSACTION;
 
@@ -567,7 +559,15 @@ BEGIN
                , 0);
 
 
-        return -1;
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
 
     END CATCH
 

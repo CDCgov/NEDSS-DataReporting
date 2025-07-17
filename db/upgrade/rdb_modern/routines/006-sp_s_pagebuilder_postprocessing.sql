@@ -1410,16 +1410,16 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]( batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count] )
         VALUES( @Batch_id, @category, 'S_'+@category, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no );
 
-
         COMMIT TRANSACTION;
 
         if @debug = 'true'
-            select * from #STAGING_KEY_INV_CAT_FINAL;
-        EXEC ('select * from '+@numeric_output_table_name);
-        EXEC ('select * from '+@date_output_table_name);
-        EXEC ('select * from '+@coded_output_table_name);
-        EXEC ('select * from '+@text_output_table_name);
-
+            begin
+                select * from #STAGING_KEY_INV_CAT_FINAL;
+                EXEC ('select * from '+@numeric_output_table_name);
+                EXEC ('select * from '+@date_output_table_name);
+                EXEC ('select * from '+@coded_output_table_name);
+                EXEC ('select * from '+@text_output_table_name);
+            end;
 
 
         BEGIN TRANSACTION;

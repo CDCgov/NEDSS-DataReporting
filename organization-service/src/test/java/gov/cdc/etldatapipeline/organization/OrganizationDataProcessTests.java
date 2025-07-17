@@ -24,7 +24,7 @@ class OrganizationDataProcessTests {
     OrganizationSp orgSp;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         orgSp = deserializePayload(readFileData("orgcdc/orgSp.json"), OrganizationSp.class);
     }
 
@@ -56,6 +56,7 @@ class OrganizationDataProcessTests {
                 .cntryCd("840")
                 .state_desc("Alabama")
                 .county("Autauga County")
+                .country("United States")
                 .addressComments("Testing address Comments!")
                 .build();
 
@@ -91,6 +92,7 @@ class OrganizationDataProcessTests {
                 .rootExtensionTxt("A4646")
                 .entityIdSeq("1")
                 .assigningAuthorityCd("OTH")
+                .facilityIdAuth("CLIA (CMS)")
                 .build();
 
         assertNotNull(ets);

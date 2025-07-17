@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_d_intervie
 BEGIN
     DROP PROCEDURE [dbo].[sp_d_interview_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE dbo.sp_d_interview_postprocessing(
     @interview_uids NVARCHAR(MAX),
@@ -44,36 +44,22 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #NEW_COLUMNS';
+        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_INTERVIEW';
 
         SELECT RDB_COLUMN_NM
         INTO #NEW_COLUMNS
-        FROM dbo.nrt_metadata_columns
-        WHERE NEW_FLAG = 1
+        FROM dbo.NRT_METADATA_COLUMNS
+        WHERE TABLE_NAME = 'D_INTERVIEW'
           AND RDB_COLUMN_NM NOT IN (SELECT COLUMN_NAME
                                     FROM INFORMATION_SCHEMA.COLUMNS
                                     WHERE TABLE_NAME = 'D_INTERVIEW'
                                       AND TABLE_SCHEMA = 'dbo');
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'ADDING COLUMNS TO D_INTERVIEW';
 
         SELECT @ColumnAdd_sql =
                STRING_AGG('ALTER TABLE dbo.D_INTERVIEW ADD ' + QUOTENAME(RDB_COLUMN_NM) + ' VARCHAR(50);',
                           CHAR(13) + CHAR(10))
         FROM #NEW_COLUMNS;
-
 
         -- if there aren't any new columns to add, sp_executesql won't fire
         IF @ColumnAdd_sql IS NOT NULL
@@ -81,19 +67,8 @@ BEGIN
                 EXEC sp_executesql @ColumnAdd_sql;
             END
 
-        UPDATE dbo.nrt_metadata_columns
-        SET NEW_FLAG = 0
-        WHERE NEW_FLAG = 1
-        AND TABLE_NAME = 'D_INTERVIEW'
-        AND RDB_COLUMN_NM IN (
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'D_INTERVIEW'
-              AND TABLE_SCHEMA = 'dbo'
-        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
@@ -144,7 +119,30 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+        (
+            SELECT string_agg(t.value, ',')
+            FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@interview_uids, ',')) t
+                left join #INTERVIEW_INIT tmp
+                on tmp.interview_uid = t.value
+                WHERE tmp.interview_uid is null
+        );
 
+        IF @backfill_list IS NOT NULL
+        BEGIN
+            SELECT
+                0 AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_d_interview_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+            RETURN;
+
+        END
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -534,6 +532,16 @@ BEGIN
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'D_INTERVIEW', 'D_INTERVIEW', 'COMPLETE', 999, 'COMPLETE', 0);
 
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
+
     END TRY
     BEGIN CATCH
 
@@ -567,7 +575,15 @@ BEGIN
                , 0);
 
 
-        return -1;
+         SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
 
     END CATCH
 

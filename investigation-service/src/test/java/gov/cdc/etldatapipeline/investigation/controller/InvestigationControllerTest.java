@@ -34,13 +34,13 @@ class InvestigationControllerTest {
     private AutoCloseable closeable;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(investigationController).build();
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         closeable.close();
     }
 
