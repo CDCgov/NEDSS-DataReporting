@@ -10,3 +10,12 @@ CREATE TABLE dbo.nrt_metadata_columns
     max_datetime     datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
+
+--removing column as it is no more needed
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_metadata_columns' and xtype = 'U')
+BEGIN
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'new_flag' AND Object_ID = Object_ID(N'nrt_metadata_columns'))
+        BEGIN
+            ALTER TABLE dbo.nrt_metadata_columns DROP COLUMN new_flag;
+        END;
+END;

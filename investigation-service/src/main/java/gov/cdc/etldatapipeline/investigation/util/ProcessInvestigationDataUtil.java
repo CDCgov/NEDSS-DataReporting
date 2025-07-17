@@ -698,7 +698,6 @@ public class ProcessInvestigationDataUtil {
                 MetadataColumn metadataColumn = new MetadataColumn();
                 metadataColumn.setTableName(tableName);
                 metadataColumn.setRdbColumnNm(columnName);
-                metadataColumn.setNewFlag(node.path("NEW_FLAG").asInt());
                 metadataColumn.setLastChgTime(node.path("LAST_CHG_TIME").asText());
                 metadataColumn.setLastChgUserId(node.get("LAST_CHG_USER_ID").asLong());
 
