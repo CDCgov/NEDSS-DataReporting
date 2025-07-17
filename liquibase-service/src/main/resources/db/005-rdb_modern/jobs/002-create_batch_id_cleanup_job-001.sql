@@ -16,7 +16,7 @@ DECLARE
     @JobDescription NVARCHAR(512) = N'Batch Id Cleanup Job';
 
     DECLARE @DatabaseName NVARCHAR(128);
-    IF EXISTS(SELECT 1 FROM DBO.nrt_odse_NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
+    IF EXISTS(SELECT 1 FROM NBS_ODSE.DBO.NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
         BEGIN
             SET @DatabaseName = N'rdb_modern'
         END

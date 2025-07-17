@@ -26,9 +26,9 @@ DECLARE @LdfUserName NVARCHAR(150) = @LdfServiceName + '_rdb';
 -- DECLARE @KafkaServiceName NVARCHAR(100) = 'kafka_sync_connector_service';
 -- DECLARE @KafkaUserName NVARCHAR(150) = @KafkaServiceName + '_rdb';
 
--- 8. POST PROCESSING SERVICE PERMISSIONS (Not required for ODSE)
--- DECLARE @PostServiceName NVARCHAR(100) = 'post_processing_service';
--- DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
+--8. POST PROCESSING SERVICE PERMISSIONS
+DECLARE @PostServiceName NVARCHAR(100) = 'post_processing_service';
+DECLARE @PostUserName NVARCHAR(150) = @PostServiceName + '_rdb';
 
 DECLARE @ODSE_DB NVARCHAR(64) = db_name();
 
@@ -244,3 +244,22 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @LdfUserName)
     END
 
 PRINT 'LDF service permission grants completed.';
+
+
+-- POST PROCESSING SERVICE PERMISSIONS
+
+-- IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
+--     BEGIN
+--         DECLARE @CreateUserPostRDBModernSQL NVARCHAR(MAX) = 'CREATE USER [' + @PostUserName + '] FOR LOGIN [' + @PostUserName + ']';
+--         EXEC sp_executesql @CreateUserPostRDBModernSQL;
+--         PRINT 'Created database user [' + @PostUserName + '] in ' +@RDB_DB;
+--     END
+
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PostUserName)
+    BEGIN
+        DECLARE @AddRoleMemberPostRDBModernOwnerSQL NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @PostUserName + '''';
+        EXEC sp_executesql @AddRoleMemberPostRDBModernOwnerSQL;
+        PRINT 'Added [' + @PostUserName + '] to db_datareader role in ' +@ODSE_DB;
+    END
+
+PRINT 'Post-processing service permission grants completed:';
