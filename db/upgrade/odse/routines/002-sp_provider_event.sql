@@ -83,7 +83,7 @@ BEGIN
                                                   scc.code_desc_txt                       county,
                                                   pl.within_city_limits_ind               within_city_limits_ind,
                                                   case 
-                                                    when cc.code_short_desc_txt is null and pl.cntry_cd = 'US' 
+                                                    when cc.code_short_desc_txt is null and (pl.cntry_cd = 'US' or pl.cntry_cd = 'United States')
                                                         then  pl.cntry_cd
                                                     else cc.code_short_desc_txt  
                                                   end as country,
