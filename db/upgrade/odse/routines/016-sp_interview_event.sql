@@ -4,7 +4,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_interview_
 BEGIN
     DROP PROCEDURE [dbo].[sp_interview_event]
 END
-GO 
+GO
 
 CREATE PROCEDURE [dbo].[sp_interview_event] @ix_uids nvarchar(max),
                                                      @debug bit = 'false'
@@ -1160,7 +1160,6 @@ BEGIN
 
         WITH ordered_list AS (SELECT 'D_INTERVIEW'                                                              AS TABLE_NAME,
                                      RDB_COLUMN_NM,
-                                     1                                                                          AS NEW_FLAG,
                                      LAST_CHG_TIME,
                                      LAST_CHG_USER_ID,
                                      ROW_NUMBER() OVER (PARTITION BY RDB_COLUMN_NM ORDER BY LAST_CHG_TIME DESC) AS rn
@@ -1176,7 +1175,6 @@ BEGIN
                                   ))
         SELECT TABLE_NAME,
                RDB_COLUMN_NM,
-               NEW_FLAG,
                LAST_CHG_TIME,
                LAST_CHG_USER_ID
         INTO #D_INTERVIEW_COLUMNS
@@ -1250,7 +1248,6 @@ BEGIN
                                             FOR json path,INCLUDE_NULL_VALUES) AS notes) AS notes,
                                    (SELECT (SELECT TABLE_NAME,
                                                    RDB_COLUMN_NM,
-                                                   NEW_FLAG,
                                                    LAST_CHG_TIME,
                                                    LAST_CHG_USER_ID
                                             FROM #D_INTERVIEW_COLUMNS

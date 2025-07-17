@@ -12,7 +12,6 @@ import lombok.Data;
 public class MetadataColumn {
     private String tableName;
     private String rdbColumnNm;
-    private Integer newFlag;
     private String lastChgTime;
     private Long lastChgUserId;
 

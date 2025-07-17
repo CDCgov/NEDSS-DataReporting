@@ -44,36 +44,22 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #NEW_COLUMNS';
+        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_INTERVIEW';
 
         SELECT RDB_COLUMN_NM
         INTO #NEW_COLUMNS
-        FROM dbo.nrt_metadata_columns
-        WHERE NEW_FLAG = 1
+        FROM dbo.NRT_METADATA_COLUMNS
+        WHERE TABLE_NAME = 'D_INTERVIEW'
           AND RDB_COLUMN_NM NOT IN (SELECT COLUMN_NAME
                                     FROM INFORMATION_SCHEMA.COLUMNS
                                     WHERE TABLE_NAME = 'D_INTERVIEW'
                                       AND TABLE_SCHEMA = 'dbo');
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'ADDING COLUMNS TO D_INTERVIEW';
 
         SELECT @ColumnAdd_sql =
                STRING_AGG('ALTER TABLE dbo.D_INTERVIEW ADD ' + QUOTENAME(RDB_COLUMN_NM) + ' VARCHAR(50);',
                           CHAR(13) + CHAR(10))
         FROM #NEW_COLUMNS;
-
 
         -- if there aren't any new columns to add, sp_executesql won't fire
         IF @ColumnAdd_sql IS NOT NULL
@@ -81,19 +67,8 @@ BEGIN
                 EXEC sp_executesql @ColumnAdd_sql;
             END
 
-        UPDATE dbo.nrt_metadata_columns
-        SET NEW_FLAG = 0
-        WHERE NEW_FLAG = 1
-        AND TABLE_NAME = 'D_INTERVIEW'
-        AND RDB_COLUMN_NM IN (
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'D_INTERVIEW'
-              AND TABLE_SCHEMA = 'dbo'
-        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, 'D_INTERVIEW', 'D_INTERVIEW', 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
