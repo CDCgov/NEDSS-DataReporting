@@ -71,6 +71,10 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
         DECLARE @GrantExecOrgSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_organization_event] TO [' + @OrgUserName + ']';
         EXEC sp_executesql @GrantExecOrgSPSQL;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_organization_event] to [' + @OrgUserName + ']';
+
+        DECLARE @GrantExecPlaceSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_place_event] TO [' + @OrgUserName + ']';
+        EXEC sp_executesql @GrantExecPlaceSPSQL;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_place_event] to [' + @OrgUserName + ']';
     END
 PRINT 'Organization service user permission grants completed.';
 
@@ -127,10 +131,6 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @ObsUserName)
         DECLARE @GrantExecObsSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_observation_event] TO [' + @ObsUserName + ']';
         EXEC sp_executesql @GrantExecObsSPSQL;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_observation_event] to [' + @ObsUserName + ']';
-
-        DECLARE @GrantExecPlaceSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_place_event] TO [' + @ObsUserName + ']';
-        EXEC sp_executesql @GrantExecPlaceSPSQL;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_place_event] to [' + @ObsUserName + ']';
     END
 
 PRINT 'Observation service permission grants completed.';
