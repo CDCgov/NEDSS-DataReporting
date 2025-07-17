@@ -572,13 +572,12 @@ BEGIN
                                      AND             Ltrim(Rtrim([RDB_COLUMN_NM])) <> '' ) AS x;
 
                         SET @pivot_sql = N'  UPDATE aoe  SET ' + Stuff(@set_clause, 1, 2, '') + N'  FROM #COVID_LAB_AOE_DATA aoe  INNER JOIN (  SELECT [AOE_Observation_uid]' + @pivot_columns + N'  FROM (  SELECT [AOE_Observation_uid], answer_txt, [RDB_COLUMN_NM]  FROM #COVID_LAB_AOE_ST AS p WITH (NOLOCK)  GROUP BY [AOE_Observation_uid], [answer_txt], [RDB_COLUMN_NM]  ) AS j  PIVOT (MAX(answer_txt) FOR [RDB_COLUMN_NM] IN (' + Stuff(@pivot_columns, 1, 2, '') + N')) AS p  ) AS pivoted ON aoe.AOE_Observation_uid = pivoted.AOE_Observation_uid';
-                        EXEC sp_executesql
-                             @pivot_sql;
+                        EXEC sp_executesql @pivot_sql;
                         IF @debug = 'true'
                             PRINT 'AOE pivot update completed: ' + @pivot_sql;
                     END
-                IF @debug = 'true'
-                    SELECT 'Full AOE processing completed' AS debug_message;
+
+                IF @debug = 'true' SELECT 'Full AOE processing completed' AS debug_message;
 
             END
         ELSE
@@ -668,6 +667,7 @@ BEGIN
                 (
                     SELECT Max(id)
                     FROM   @Temp_Query_Table);
+
         SET @Curr_Query_No = 0;
         WHILE @Curr_Query_No < @Max_Query_No
             BEGIN
@@ -683,8 +683,7 @@ BEGIN
                         PRINT 'Executed: ' + @column_query;
                 END try
                 BEGIN catch
-                    IF @debug = 'true'
-                        PRINT 'Error executing: ' + @column_query + ' - ' + Error_message();
+                    IF @debug = 'true'  PRINT 'Error executing: ' + @column_query + ' - ' + Error_message();
                     -- Continue processing other columns even if one fails
                 END catch
             END
@@ -719,59 +718,62 @@ BEGIN
                             (
                                 SELECT ', [' + name + ']'
                                 FROM tempdb.sys.columns
-                                WHERE object_id = OBJECT_ID('#COVID_LAB_CORE_DATA')
+                                WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_CORE_DATA')
                                   AND NAME NOT IN('record_status_cd') FOR XML PATH('')
                             ), 1, 1, '') + ', [Result_Category], ' + STUFF(
                                    (
                                        SELECT ', [' + name + ']'
                                        FROM tempdb.sys.columns
-                                       WHERE object_id = OBJECT_ID('#COVID_LAB_PATIENT_DATA')
+                                       WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_PATIENT_DATA')
                                          AND NAME NOT IN('Pat_Observation_UID') FOR XML PATH('')
                                    ), 1, 1, '') + ',' + STUFF(
                                    (
                                        SELECT ', [' + name + ']'
                                        FROM tempdb.sys.columns
-                                       WHERE object_id = OBJECT_ID('#COVID_LAB_ENTITIES_DATA')
+                                       WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_ENTITIES_DATA')
                                          AND NAME NOT IN('Entity_Observation_uid') FOR XML PATH('')
                                    ), 1, 1, '') + ',' + STUFF(
                                    (
                                        SELECT ', [' + name + ']'
                                        FROM tempdb.sys.columns
-                                       WHERE object_id = OBJECT_ID('#COVID_LAB_AOE_DATA')
+                                       WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_AOE_DATA')
                                          AND NAME NOT IN('AOE_Observation_uid') FOR XML PATH('')
                                    ), 1, 1, '') + ', [Associated_Case_ID]' + ' ) select distinct ' + STUFF(
                                    (
                                        SELECT ', [' + name + ']'
                                        FROM tempdb.sys.columns
-                                       WHERE object_id = OBJECT_ID('#COVID_LAB_CORE_DATA')
+                                       WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_CORE_DATA')
                                          AND NAME NOT IN('record_status_cd') FOR XML PATH('')
                                    ), 1, 1, '') + ', [Result_Category], ' + STUFF(
                                    (
                                        SELECT ', [' + name + ']'
                                        FROM tempdb.sys.columns
-                                       WHERE object_id = OBJECT_ID('#COVID_LAB_PATIENT_DATA')
+                                       WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_PATIENT_DATA')
                                          AND NAME NOT IN('Pat_Observation_UID') FOR XML PATH('')
                                    ), 1, 1, '') + ',' + STUFF(
                                    (
                                        SELECT ', [' + name + ']'
                                        FROM tempdb.sys.columns
-                                       WHERE object_id = OBJECT_ID('#COVID_LAB_ENTITIES_DATA')
+                                       WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_ENTITIES_DATA')
                                          AND NAME NOT IN('Entity_Observation_uid') FOR XML PATH('')
                                    ), 1, 1, '') + ',' + STUFF(
                                    (
                                        SELECT ', [' + name + ']'
                                        FROM tempdb.sys.columns
-                                       WHERE object_id = OBJECT_ID('#COVID_LAB_AOE_DATA')
+                                       WHERE object_id = OBJECT_ID('tempdb..#COVID_LAB_AOE_DATA')
                                          AND NAME NOT IN('AOE_Observation_uid') FOR XML PATH('')
                                    ), 1, 1, '') + ', [Associated_Case_ID] ' + '
-	           FROM #COVID_LAB_CORE_DATA
-                 LEFT OUTER JOIN #COVID_LAB_RSLT_TYPE ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_RSLT_TYPE.RT_Observation_UID
+	           FROM #COVID_LAB_CORE_DATA COVID_LAB_CORE_DATA
+                 LEFT OUTER JOIN #COVID_LAB_RSLT_TYPE COVID_LAB_RSLT_TYPE ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_RSLT_TYPE.RT_Observation_UID
                                                                 AND COVID_LAB_CORE_DATA.Result = COVID_LAB_RSLT_TYPE.RT_Result
-                 INNER JOIN #COVID_LAB_PATIENT_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_PATIENT_DATA.Pat_Observation_UID
-                 LEFT OUTER JOIN #COVID_LAB_ENTITIES_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_ENTITIES_DATA.Entity_Observation_uid
-				 LEFT OUTER JOIN #COVID_LAB_AOE_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_AOE_DATA.AOE_Observation_uid
-                 LEFT OUTER JOIN #COVID_LAB_ASSOCIATIONS ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_ASSOCIATIONS.ASSOC_OBSERVATION_UID;'
+                 INNER JOIN #COVID_LAB_PATIENT_DATA COVID_LAB_PATIENT_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_PATIENT_DATA.Pat_Observation_UID
+                 LEFT OUTER JOIN #COVID_LAB_ENTITIES_DATA COVID_LAB_ENTITIES_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_ENTITIES_DATA.Entity_Observation_uid
+				 LEFT OUTER JOIN #COVID_LAB_AOE_DATA COVID_LAB_AOE_DATA ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_AOE_DATA.AOE_Observation_uid
+                 LEFT OUTER JOIN #COVID_LAB_ASSOCIATIONS COVID_LAB_ASSOCIATIONS ON COVID_LAB_CORE_DATA.Observation_UID = COVID_LAB_ASSOCIATIONS.ASSOC_OBSERVATION_UID;'
                 );
+
+        IF @debug = 'true' PRINT 'Insert Query: ' + @insert_query;
+        EXEC sp_executesql @insert_query;
 
         /* Logging for insert operation */
         SET @rowcount = @@ROWCOUNT;
