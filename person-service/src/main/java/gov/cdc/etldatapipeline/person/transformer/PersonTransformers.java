@@ -123,7 +123,7 @@ public class PersonTransformers {
                 .ageReported(p.getAgeReported())
                 .ageReportedUnit(p.getAgeReportedUnit())
                 .addTime(p.getAddTime())
-                .birth_sex(p.getBirthSex())
+                .birthSex(p.getBirthSex())
                 .dob(p.getBirthTime())
                 .currentSex(p.getCurrentSex())
                 .deceasedIndicator(p.getDeceasedInd())
