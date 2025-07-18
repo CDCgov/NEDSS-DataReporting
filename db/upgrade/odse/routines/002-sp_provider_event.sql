@@ -82,7 +82,11 @@ BEGIN
                                                   sc.code_desc_txt                        state_desc,
                                                   scc.code_desc_txt                       county,
                                                   pl.within_city_limits_ind               within_city_limits_ind,
-                                                  cc.code_short_desc_txt                  country,
+                                                  case 
+                                                    when cc.code_short_desc_txt is null and (pl.cntry_cd = 'US' or pl.cntry_cd = 'United States')
+                                                        then  pl.cntry_cd
+                                                    else cc.code_short_desc_txt  
+                                                  end as country,
                                                   elp.locator_desc_txt                    address_comments
                                            FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
                                                     LEFT OUTER JOIN nbs_odse.dbo.Postal_locator pl WITH (NOLOCK)
@@ -190,7 +194,7 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-                -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
@@ -216,7 +220,6 @@ BEGIN
                ,0
                 ,LEFT(@user_id_list, 199)
                ,@FullErrorMessage);
-
         return @FullErrorMessage;
 
     END CATCH

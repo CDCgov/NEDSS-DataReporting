@@ -75,7 +75,7 @@ BEGIN
           IF @backfill_list IS NOT NULL
            BEGIN
                 SELECT
-                    CAST(NULL AS BIGINT) AS public_health_case_uid,
+                    0 AS public_health_case_uid,
                     CAST(NULL AS BIGINT) AS patient_uid,
                     CAST(NULL AS BIGINT) AS observation_uid,
                     'Error' AS datamart,
@@ -1397,7 +1397,7 @@ BEGIN
         (@batch_id,@Dataflow_Name,@Package_Name,'ERROR',@Proc_Step_no,@Proc_Step_name, @FullErrorMessage,0);
 
     SELECT
-        CAST(NULL AS BIGINT) AS public_health_case_uid,
+        0 AS public_health_case_uid,
         CAST(NULL AS BIGINT) AS patient_uid,
         CAST(NULL AS BIGINT) AS observation_uid,
         'Error' AS datamart,

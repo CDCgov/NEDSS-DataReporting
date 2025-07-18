@@ -12,10 +12,10 @@ import java.util.List;
 
 @Repository
 public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
-    @Query(value = "EXEC sp_nrt_organization_postprocessing: organizationUids", nativeQuery = true)
+    @Query(value = "EXEC sp_nrt_organization_postprocessing :organizationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForOrganizationIds(@Param("organizationUids") String organizationUids);
 
-    @Query(value = "EXEC sp_nrt_provider_postprocessing: providerUids", nativeQuery = true)
+    @Query(value = "EXEC sp_nrt_provider_postprocessing :providerUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForProviderIds(@Param("providerUids") String providerUids);
 
     @Query(value = "EXEC sp_nrt_patient_postprocessing :patientUids", nativeQuery = true)

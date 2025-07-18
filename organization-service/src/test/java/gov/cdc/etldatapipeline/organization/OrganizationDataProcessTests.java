@@ -24,7 +24,7 @@ class OrganizationDataProcessTests {
     OrganizationSp orgSp;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         orgSp = deserializePayload(readFileData("orgcdc/orgSp.json"), OrganizationSp.class);
     }
 

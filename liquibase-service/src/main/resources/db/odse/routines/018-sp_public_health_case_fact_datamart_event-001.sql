@@ -23,7 +23,7 @@ BEGIN
 
 
     BEGIN TRY
-        --EXEC @return_value = [rdb_modern].[dbo].[sp_nbs_batch_start] @type_code
+        --EXEC @return_value = rdb.[dbo].[sp_nbs_batch_start] @type_code
         --	,@type_description;
 
         -- SELECT 'Return Value TEST ' = @return_value;
@@ -32,7 +32,7 @@ BEGIN
             SELECT @batch_id = batch_id
                 ,@batch_start_time = batch_start_dttm --,
                 --  @batch_end_time = batch_end_dttm
-            FROM [rdb_modern].[dbo].[job_batch_log]
+            FROM rdb.[dbo].[job_batch_log]
             WHERE type_code = 'PHCMartETL'
                 AND status_type = 'start'
 
@@ -81,7 +81,7 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -93,7 +93,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -160,7 +160,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -172,7 +172,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -322,7 +322,7 @@ BEGIN
         PRINT '1. endtime' + LEFT(CONVERT(VARCHAR, @batch_end_time, 120), 10)
 
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -334,7 +334,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -403,7 +403,7 @@ BEGIN
                  LEFT JOIN NBS_ODSE.DBO.OBS_VALUE_DATE  WITH (NOLOCK) ON OBSERVATION2.OBSERVATION_UID =OBS_VALUE_DATE.OBSERVATION_UID
         WHERE OBSERVATION2.CD IN ('INV132', 'INV133') AND ACT_RELATIONSHIP.TYPE_CD ='PHCInvForm';
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -415,7 +415,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -439,7 +439,7 @@ BEGIN
                  INNER JOIN NBS_ODSE.DBO.OBS_VALUE_CODED  WITH (NOLOCK) ON ACT_RELATIONSHIP2.SOURCE_ACT_UID =OBS_VALUE_CODED.OBSERVATION_UID
         WHERE OBSERVATION2.CD IN ('INV128') AND ACT_RELATIONSHIP.TYPE_CD ='PHCInvForm';
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -451,7 +451,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -613,7 +613,7 @@ BEGIN
 		WHERE HOSPITALIZED_IND = LTRIM(RTRIM(''));
 */
         ALTER TABLE #TEMP_PHCINFO1 DROP column LEGACY_HSPTL_DISCHARGE_DT, LEGACY_HSPTL_ADMISSION_DT;
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -625,7 +625,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -638,31 +638,31 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Remove Updated records';
 
-        IF OBJECT_ID('NBS_ODSE.DBO.SubjectRaceInfo_Modern') IS NULL
+       /* IF OBJECT_ID('NBS_ODSE.DBO.SubjectRaceInfo_Modern') IS NULL
             select *
             into NBS_ODSE.DBO.SubjectRaceInfo_Modern
             from NBS_ODSE.DBO.SubjectRaceInfo;
-
+		*/
         DELETE
-        FROM NBS_ODSE.DBO.SubjectRaceInfo_Modern
+        FROM NBS_ODSE.DBO.SubjectRaceInfo
         WHERE public_health_case_uid IN (
             SELECT public_health_case_uid
             FROM #TEMP_PHCINFO1
         );
 
-        IF OBJECT_ID('NBS_ODSE.DBO.PublicHealthCaseFact_Modern') IS NULL
+        /*IF OBJECT_ID('NBS_ODSE.DBO.PublicHealthCaseFact_Modern') IS NULL
             select *
             into NBS_ODSE.DBO.PublicHealthCaseFact_Modern
-            from NBS_ODSE.DBO.PublicHealthCaseFact;
+            from NBS_ODSE.DBO.PublicHealthCaseFact;*/
 
         DELETE
-        FROM NBS_ODSE.DBO.PublicHealthCaseFact_Modern
+        FROM NBS_ODSE.DBO.PublicHealthCaseFact
         WHERE public_health_case_uid IN (
             SELECT public_health_case_uid
             FROM #TEMP_PHCINFO1
         );
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -674,7 +674,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -706,7 +706,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -718,7 +718,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -748,7 +748,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -760,7 +760,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -780,7 +780,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -792,7 +792,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1024,7 +1024,7 @@ BEGIN
             AND FLAG2=1; /* Optimization */
 
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1036,7 +1036,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1052,7 +1052,7 @@ BEGIN
 
 
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1064,7 +1064,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -1162,7 +1162,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1174,7 +1174,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1220,7 +1220,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1232,7 +1232,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1293,7 +1293,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1305,7 +1305,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1445,7 +1445,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1457,7 +1457,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1497,7 +1497,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1509,7 +1509,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1595,7 +1595,7 @@ BEGIN
         UPDATE #TEMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = NOTIFCREATEDCOUNT-1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT>0;
         UPDATE #TEMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = 1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT=0 and NOTIFREJECTEDCOUNT=0;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1607,7 +1607,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -1653,7 +1653,7 @@ BEGIN
         WHERE ROWN > 1
         --IF OBJECT_ID ('TEMP_PHCFACT') IS NOT NULL DROP TABLE TEMP_PHCFACT;
         --IF OBJECT_ID ('TEMP_MIN_MAX_NOTIFICATION') IS NOT NULL DROP TABLE TEMP_MIN_MAX_NOTIFICATION;
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1665,7 +1665,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1716,7 +1716,7 @@ BEGIN
             AND CODE_SET_NM= 'PHC_CONF_M'
         where t.INVESTIGATION_FORM_CD NOT LIKE 'PG_%' or INVESTIGATION_FORM_CD is null
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1728,7 +1728,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1768,7 +1768,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1780,7 +1780,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1807,7 +1807,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1819,7 +1819,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1940,7 +1940,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1952,7 +1952,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1984,7 +1984,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1996,7 +1996,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2060,7 +2060,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2072,7 +2072,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2111,7 +2111,7 @@ BEGIN
 
         -- ALTER TABLE #TEMP_PHC_FACT ADD MART_RECORD_CREATION_TIME DATETIME;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2123,7 +2123,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -2236,7 +2236,7 @@ BEGIN
         -- UPDATE #TEMP_PHC_FACT SET cntry_cd = NULL WHERE cntry_cd = LTRIM(RTRIM(''));
 
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2248,7 +2248,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2327,7 +2327,7 @@ BEGIN
 		IF OBJECT_ID('#TEMP_PHCPERSONRACE_CONCAT') IS NOT NULL
 			DROP TABLE #TEMP_PHCPERSONRACE_CONCAT;
 */
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2339,7 +2339,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'STEP-AVOIDED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -2351,9 +2351,9 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Updating PublicHealthCaseFact_Modern';
+        SET @Proc_Step_Name = 'Updating PublicHealthCaseFact';
 
-        INSERT INTO NBS_ODSE.DBO.PublicHealthCaseFact_Modern (
+        INSERT INTO NBS_ODSE.DBO.PublicHealthCaseFact (
                                                         PUBLIC_HEALTH_CASE_UID
                                                       ,ADULTS_IN_HOUSE_NBR
                                                       ,HSPTL_ADMISSION_DT
@@ -2674,7 +2674,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2686,7 +2686,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2698,9 +2698,9 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_Name = 'Updating SubjectRaceInfo_Modern';
+        SET @Proc_Step_Name = 'Updating SubjectRaceInfo';
 
-        INSERT INTO NBS_ODSE.DBO.SubjectRaceInfo_Modern (
+        INSERT INTO NBS_ODSE.DBO.SubjectRaceInfo (
                                                    PUBLIC_HEALTH_CASE_UID
                                                  ,MORBREPORT_UID
                                                  ,RACE_CD
@@ -2718,7 +2718,7 @@ BEGIN
         IF OBJECT_ID('#TEMP_PHC_FACT') IS NOT NULL
             DROP TABLE #TEMP_PHC_FACT;
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2730,7 +2730,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact_Modern'
+               ,'NBS_ODSE.PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -2744,7 +2744,7 @@ BEGIN
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2765,7 +2765,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        --EXEC [rdb_modern].[dbo].[sp_nbs_batch_complete] @type_code;
+        --EXEC rdb.[dbo].[sp_nbs_batch_complete] @type_code;
 
         Select 'SUCCESS'
     END TRY
@@ -2782,7 +2782,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (
+        INSERT INTO rdb.[dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]

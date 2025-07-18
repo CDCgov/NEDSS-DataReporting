@@ -45,36 +45,23 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #NEW_COLUMNS';
+        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_VACCINATION';
 
         SELECT RDB_COLUMN_NM
         INTO #NEW_COLUMNS
         FROM dbo.NRT_METADATA_COLUMNS
-        WHERE NEW_FLAG = 1
+        WHERE TABLE_NAME = 'D_VACCINATION'
         AND RDB_COLUMN_NM NOT IN (
           SELECT COLUMN_NAME
                 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = 'D_VACCINATION'
                     AND TABLE_SCHEMA = 'dbo');
 
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION;
-
-        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' ADDING COLUMNS TO D_VACCINATION';
 
         SELECT @ColumnAdd_sql =
                STRING_AGG('ALTER TABLE dbo.D_VACCINATION ADD ' + QUOTENAME(RDB_COLUMN_NM) + ' VARCHAR(50);',
                           CHAR(13) + CHAR(10))
         FROM #NEW_COLUMNS;
-
 
         -- if there aren't any new columns to add, sp_executesql won't fire
         IF @ColumnAdd_sql IS NOT NULL
@@ -87,16 +74,6 @@ BEGIN
             select @Proc_Step_Name as step, @ColumnAdd_sql
             ;
 
-        UPDATE dbo.NRT_METADATA_COLUMNS
-        SET NEW_FLAG = 0
-        WHERE NEW_FLAG = 1
-        AND TABLE_NAME = 'D_VACCINATION'
-        AND RDB_COLUMN_NM in (
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'D_VACCINATION'
-              AND TABLE_SCHEMA = 'dbo'
-        );
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
@@ -164,7 +141,7 @@ BEGIN
         IF @backfill_list IS NOT NULL
         BEGIN
             SELECT
-                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                0 AS public_health_case_uid,
                 CAST(NULL AS BIGINT) AS patient_uid,
                 CAST(NULL AS BIGINT) AS observation_uid,
                 'Error' AS datamart,
@@ -478,7 +455,7 @@ BEGIN
 
 
 		SELECT
-                CAST(NULL AS BIGINT) AS public_health_case_uid,
+                0 AS public_health_case_uid,
                 CAST(NULL AS BIGINT) AS patient_uid,
                 CAST(NULL AS BIGINT) AS observation_uid,
                 'Error' AS datamart,
