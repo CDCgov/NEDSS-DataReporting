@@ -10,6 +10,7 @@ RUN wget "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2
 
 
 #Copy sources
+
 #changelog
 COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
 #master
