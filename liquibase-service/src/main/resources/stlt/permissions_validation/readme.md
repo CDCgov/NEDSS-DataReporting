@@ -158,26 +158,27 @@ PRINT 'Validation completed. Review results above.';
 ## Microservice Permission Summary
 
 ### Complete Service Permissions Matrix
+**Note**: Permissions are run against either RDB or rdb_modern. If rdb_modern is created, the permission scripts will be run against it. 
 
-| Service | Databases | Permissions |
-|---------|-----------|-------------|
-| **Organization** | NBS_ODSE, NBS_SRTE, rdb_modern | `db_datareader` + `sp_organization_event` + `job_flow_log INSERT` |
-| **Observation** | NBS_ODSE, NBS_SRTE, rdb_modern | `db_datareader` + 2 SPs + `job_flow_log INSERT` |
-| **Person** | NBS_ODSE, NBS_SRTE, rdb_modern | `db_datareader` + 4 SPs + `job_flow_log INSERT` |
-| **Investigation** | NBS_ODSE, NBS_SRTE, rdb_modern | `db_datawriter` on ODSE + full READ/WRITE on rdb_modern |
-| **LDF** | NBS_ODSE, NBS_SRTE, rdb_modern | `db_datareader` + 7 SPs + `job_flow_log INSERT` |
-| **Post Processing** | rdb, rdb_modern, NBS_SRTE | `db_owner` on rdb/rdb_modern + `db_datareader` on SRTE |
-| **Kafka Sync** | rdb_modern | `db_datareader` + `db_datawriter` (full READ/WRITE) |
-| **Debezium** | NBS_ODSE, NBS_SRTE | `db_datareader` only |
+| Service | Databases | Permissions                                                                                                     |
+|---------|-----------|-----------------------------------------------------------------------------------------------------------------|
+| **Organization** | NBS_ODSE, NBS_SRTE, rdb_modern | `SRTE/ODSE:db_datareader` + `ODSE: sp_organization_event` + `ODSE: sp_place_event` + `RDB/rdb_modern: job_flow_log INSERT` |
+| **Observation** | NBS_ODSE, NBS_SRTE, rdb_modern | `SRTE/ODSE:db_datareader` + `ODSE:sp_observation_event` + `RDB/rdb_modern: job_flow_log INSERT`                            |
+| **Person** | NBS_ODSE, NBS_SRTE, rdb_modern | `SRTE/ODSE:db_datareader` + `ODSE:4 SPs` + `RDB/rdb_modern: job_flow_log INSERT`                                           |
+| **Investigation** | NBS_ODSE, NBS_SRTE, rdb_modern | `db_datawriter/db_datareader` on ODSE + full READ/WRITE on rdb/rdb_modern                                       |
+| **LDF** | NBS_ODSE, NBS_SRTE, rdb_modern | `db_datareader` + 7 SPs + `job_flow_log INSERT`                                                                 |
+| **Post Processing** | rdb, rdb_modern, NBS_SRTE | `ODSEdb_datareader`,`db_owner` on RDB/rdb_modern + `db_datareader` on SRTE                                                 |
+| **Kafka Sync** | rdb_modern | `db_datareader/db_datawriter` (full READ/WRITE)                                                                 |
+| **Debezium** | NBS_ODSE, NBS_SRTE | `db_datareader` only                                                                                            |
 
 ## Stored Procedures by Service
 
 ### Organization Service
 - `sp_organization_event`
+- `sp_place_event`
 
 ### Observation Service
 - `sp_observation_event`
-- `sp_place_event`
 
 ### Person Service
 - `sp_patient_event`
