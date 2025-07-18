@@ -1,6 +1,0 @@
---LAB_TEST STARTS KEY GENERATION FROM 1.
-IF EXISTS (SELECT 1 FROM [dbo].nrt_lab_test_key with (nolock) WHERE LAB_TEST_KEY = 1 AND LAB_TEST_UID IS NULL)
-    BEGIN
-        DELETE FROM [dbo].nrt_lab_test_key
-        WHERE LAB_TEST_KEY = 1 AND LAB_TEST_UID IS NULL;
-    END;

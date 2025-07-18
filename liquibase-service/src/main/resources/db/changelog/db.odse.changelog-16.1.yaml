@@ -304,3 +304,14 @@ databaseChangeLog:
             path: 006-fn_get_value_to_pascal_case-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 999
+      author: liquibase
+      comment: "Permission script will always execute last."
+      runOrder: last
+      runAlways: true
+      changes:
+        - sqlFile:
+            path: 999-odse_database_object_permission_grants-001.sql
+            splitStatements: true
+            endDelimiter: GO

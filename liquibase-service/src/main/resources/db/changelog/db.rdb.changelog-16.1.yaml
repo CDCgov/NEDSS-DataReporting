@@ -15,3 +15,14 @@ databaseChangeLog:
         - sqlFile:
             path: 001-alter_lab_test-001.sql
             splitStatements: false
+  - changeSet:
+      id: 999
+      author: liquibase
+      comment: "Permission script will always execute last."
+      runOrder: last
+      runAlways: true
+      changes:
+        - sqlFile:
+            path: 999-rdb_database_object_permission_grants-001.sql
+            splitStatements: true
+            endDelimiter: GO
