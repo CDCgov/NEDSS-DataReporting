@@ -2844,26 +2844,6 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
-      id: 910
-      author: liquibase
-      runOnChange: true
-      comment: "Create Event Metric Cleanup Job/Schedule"
-      changes:
-        - sqlFile:
-            path: 001-create_event_metric_cleanup_job-001.sql
-            splitStatements: false
-            endDelimiter: GO
-  - changeSet:
-      id: 915
-      author: liquibase
-      runOnChange: true
-      comment: "Create Batch Id Cleanup Job/Schedule"
-      changes:
-        - sqlFile:
-            path: 002-create_batch_id_cleanup_job-001.sql
-            splitStatements: false
-            endDelimiter: GO
-  - changeSet:
       id: 999
       author: liquibase
       comment: "Permission script will always execute last."
