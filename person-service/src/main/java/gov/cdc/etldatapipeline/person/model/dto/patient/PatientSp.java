@@ -50,6 +50,8 @@ public class PatientSp {
     private String asOfDateSex;
     @Column(name = "birth_gender_cd")
     private String birthGenderCd;
+    @Column(name = "birth_sex")
+    private String birthSex;
     @Column(name = "birth_order_nbr")
     private String birthOrderNbr;
     @Column(name = "birth_time")

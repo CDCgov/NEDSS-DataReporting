@@ -26,7 +26,7 @@ public class PatientReporting implements PersonExtendedProps {
     private String ageReportedUnit;
     private String addTime;
     private Long addUserId;
-    private String birth_sex;
+    private String birthSex;
     private String dob;
     private String currentSex;
     private String deceasedIndicator;

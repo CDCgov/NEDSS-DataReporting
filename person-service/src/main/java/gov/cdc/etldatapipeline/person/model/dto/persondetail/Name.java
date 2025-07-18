@@ -29,6 +29,8 @@ public class Name implements ExtendPerson {
     @JsonProperty("name_suffix")    
     private String nameSuffix;
     private String nmPrefix;
+    @JsonProperty("name_prefix")
+    private String namePrefix;
     private String nmDegree;
     @JsonProperty("pn_person_uid")
     private Long personUid;
@@ -42,7 +44,7 @@ public class Name implements ExtendPerson {
         person.setMiddleNm(this.middleNm);
         person.setFirstNm(this.firstNm);
         person.setNmSuffix(this.nameSuffix);
-        person.setNmPrefix(this.nmPrefix);
+        person.setNmPrefix(this.namePrefix);
         person.setPnPersonUid(this.personUid);
         person.setPersonNmSeq(this.personNmSeq);
         person.setNmUseCd(this.nmUseCd);
