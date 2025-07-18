@@ -213,6 +213,7 @@ No specific stored procedures (use role-based permissions for direct table acces
 
 #### Solution
 Re-run the permission script:
+
 ```bash
 sqlcmd -S [SERVER] -d [DATABASE] -U [USER] -P [PASSWORD] -i "routines/001-service_users_login_creation.sql"
 ```
