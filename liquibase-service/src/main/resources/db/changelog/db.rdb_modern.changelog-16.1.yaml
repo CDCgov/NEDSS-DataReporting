@@ -2770,7 +2770,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 256-nrt_odse_lookup_question-001.sql
+            path: 256-create_nrt_odse_lookup_question-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
