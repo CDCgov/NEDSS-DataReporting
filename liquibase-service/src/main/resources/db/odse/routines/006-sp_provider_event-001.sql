@@ -82,7 +82,11 @@ BEGIN
                                                   sc.code_desc_txt                        state_desc,
                                                   scc.code_desc_txt                       county,
                                                   pl.within_city_limits_ind               within_city_limits_ind,
-                                                  cc.code_short_desc_txt                  country,
+                                                  case 
+                                                    when cc.code_short_desc_txt is null and (pl.cntry_cd = 'US' or pl.cntry_cd = 'United States')
+                                                        then  pl.cntry_cd
+                                                    else cc.code_short_desc_txt  
+                                                  end as country,
                                                   elp.locator_desc_txt                    address_comments
                                            FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
                                                     LEFT OUTER JOIN nbs_odse.dbo.Postal_locator pl WITH (NOLOCK)
