@@ -1,3 +1,5 @@
+--Script to grant user permissions for rdb/rdb_modern
+
 --1. KAFKA SYNC CONNECTOR SERVICE PERMISSIONS
 DECLARE @KafkaServiceName NVARCHAR(100) = 'kafka_sync_connector_service';
 DECLARE @KafkaUserName NVARCHAR(150) = @KafkaServiceName + '_rdb';
