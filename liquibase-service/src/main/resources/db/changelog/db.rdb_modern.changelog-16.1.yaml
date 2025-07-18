@@ -2765,6 +2765,15 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 866
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 252-nrt_odse_lookup_question-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: 870
       author: liquibase
       runOnChange: true

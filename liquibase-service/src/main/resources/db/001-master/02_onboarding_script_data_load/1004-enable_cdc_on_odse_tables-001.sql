@@ -45,7 +45,7 @@ IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'Notification' AND is_tracke
     BEGIN
         EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'Notification',@role_name = NULL;
     END;
-
+    
 IF NOT EXISTS(SELECT 1 FROM sys.tables WHERE name = 'Observation' AND is_tracked_by_cdc = 1)
     BEGIN
         EXEC sys.sp_cdc_enable_table @source_schema = N'dbo',@source_name = N'Observation',@role_name = NULL;
