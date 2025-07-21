@@ -132,7 +132,7 @@ for path in "${PATHS[@]}"; do
             [[ -f "$file" ]] || continue
             echo "Executing $file..."
             echo "[$(date '+%F %T')] Executing $file..." >> "$LOG_FILE"
-            sqlcmd -S "$SERVER_NAME" -d "$DATABASE" -U "$DB_USER" -P "$DB_PASS" -i "$file" -b -C >> "$LOG_FILE" 2>&1
+            sqlcmd -S "$SERVER_NAME" -d "$DATABASE" -U "$DB_USER" -P "$DB_PASS" -i "$file" -I -b -C >> "$LOG_FILE" 2>&1
             CURRENT_ERROR=$?
             if [[ $CURRENT_ERROR -ne 0 ]]; then
                 echo "Error executing $file. Error code: $CURRENT_ERROR"
