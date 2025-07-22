@@ -490,6 +490,14 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 20.50
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 019-create_nrt_datamart_metadata-001.sql
+            splitStatements: false
+  - changeSet:
       id: 21
       author: liquibase
       runOnChange: true
@@ -662,14 +670,6 @@ databaseChangeLog:
             path: 013-sp_hepatitis_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
-  - changeSet:
-      id: 33
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 019-create_nrt_datamart_metadata-001.sql
-            splitStatements: false
   - changeSet:
       id: 34
       author: liquibase

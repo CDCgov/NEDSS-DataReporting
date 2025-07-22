@@ -5,7 +5,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and
             condition_cd       varchar(20)  NOT NULL,
             condition_desc_txt varchar(300) NULL,
             Datamart           varchar(18)  NOT NULL,
-            Stored_Procedure   varchar(36)  NOT NULL
+            Stored_Procedure   varchar(36)  NOT NULL,
+            legacy_form_cd     varchar(50)  NULL
         );
     END;
 
@@ -155,7 +156,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
             END;
 
         /*BMIRD_Case Datamart condition code addition script.*/
-        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Bmird_Case_Datamart')
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'BMIRD_Case')
             BEGIN
                 INSERT INTO dbo.nrt_datamart_metadata
                 SELECT condition_cd,
@@ -348,5 +349,33 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                             (SELECT 1
                             FROM dbo.nrt_datamart_metadata ndm
                             WHERE ndm.condition_cd = hep_codes.condition_cd and ndm.Datamart = 'Covid_Vaccination_Datamart');
+            END;
+
+        -- CNDE-2709 add legacy_form_cd to metadata table and update with current value of investigation_form_cd
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'legacy_form_cd' AND Object_ID = Object_ID(N'nrt_datamart_metadata'))
+            BEGIN
+                ALTER TABLE dbo.nrt_datamart_metadata
+                    ADD legacy_form_cd varchar(50) NULL;
+            END;
+
+        IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'legacy_form_cd' AND Object_ID = Object_ID(N'nrt_datamart_metadata'))
+            BEGIN
+                EXEC('
+                UPDATE ndm
+                SET legacy_form_cd = cc.investigation_form_cd
+                FROM dbo.nrt_datamart_metadata ndm
+                    INNER JOIN NBS_SRTE.dbo.Condition_code cc WITH (NOLOCK)
+                        ON cc.condition_cd = ndm.condition_cd
+                WHERE (
+                    (ndm.Datamart = ''Generic_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_GEN%'') OR
+                    (ndm.Datamart = ''CRS_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_CRS%'') OR
+                    (ndm.Datamart = ''Rubella_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_RUB%'') OR
+                    (ndm.Datamart = ''Measles_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_MEA%'') OR
+                    (ndm.Datamart = ''BMIRD_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_BMD%'') OR
+                    (ndm.Datamart = ''Hepatitis_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_HEP%'') OR
+                    (ndm.Datamart = ''Pertussis_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_PER%'') OR
+                    (ndm.Datamart = ''TB_Datamart'' AND cc.investigation_form_cd LIKE ''INV_FORM_RVCT%'') OR
+                    (ndm.Datamart = ''VAR_Datamart'' AND cc.investigation_form_cd LIKE ''INV_FORM_VAR%'')
+                )');
             END;
     END;

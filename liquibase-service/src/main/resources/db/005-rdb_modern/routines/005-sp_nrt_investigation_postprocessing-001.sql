@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_investigation_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_investigation_postprocessing]')
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
     DROP PROCEDURE [dbo].[sp_nrt_investigation_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE dbo.sp_nrt_investigation_postprocessing @id_list nvarchar(max),@debug bit = 'false'
 AS
@@ -896,10 +896,12 @@ BEGIN
                dtm.Stored_Procedure                             AS stored_procedure,
                nrt.investigation_form_cd                        AS investigation_form_cd
         FROM #temp_inv_table nrt
-                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
-                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
-                 INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nrt.cd
-                 LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nrt.cd
+            LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nrt.cd
+            INNER JOIN dbo.nrt_srte_Condition_code ccd with (nolock) ON
+                ccd.condition_cd = dtm.condition_cd AND ISNULL(dtm.legacy_form_cd, ccd.investigation_form_cd) = ccd.investigation_form_cd
+            LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nrt.cd
         WHERE dtm.Datamart NOT IN ('Covid_Contact_Datamart','Covid_Lab_Datamart','Covid_Vaccination_Datamart')
         UNION
         SELECT nrt.CASE_UID                                     AS public_health_case_uid,
@@ -910,9 +912,9 @@ BEGIN
                dtm.Stored_Procedure                             AS stored_procedure,
                nrt.investigation_form_cd                        AS investigation_form_cd
         FROM #temp_inv_table nrt
-                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
-                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
-                 INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart';
+            LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.CASE_UID = nrt.CASE_UID
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.patient_id
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart';
 
     END TRY
     BEGIN CATCH
