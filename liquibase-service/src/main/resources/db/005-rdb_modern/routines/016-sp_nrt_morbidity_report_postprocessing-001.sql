@@ -1353,13 +1353,15 @@ BEGIN
                dtm.Stored_Procedure             AS stored_procedure,
                null                             AS investigation_form_cd
         FROM #nrt_morbidity_observation nrt
-                 INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
-                 INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
-                 JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
-                 LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
-                 JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
-                 JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
+            INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
+            INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
+            JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
+            LEFT JOIN dbo.CASE_COUNT cc with (nolock) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
+            JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
+            INNER JOIN dbo.nrt_srte_Condition_code ccd with (nolock) ON
+                ccd.condition_cd = dtm.condition_cd AND ISNULL(dtm.legacy_form_cd, ccd.investigation_form_cd) = ccd.investigation_form_cd
         WHERE mre.INVESTIGATION_KEY <> 1
         UNION
         SELECT inv.CASE_UID                     AS public_health_case_uid,
@@ -1370,11 +1372,11 @@ BEGIN
                dtm.Stored_Procedure             AS stored_procedure,
                null                             AS investigation_form_cd
         FROM #nrt_morbidity_observation nrt
-                 INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
-                 INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
-                 LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
-                 LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
-                 INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
+            INNER JOIN dbo.MORBIDITY_REPORT mr with (nolock) ON mr.MORB_RPT_UID = nrt.observation_uid
+            INNER JOIN dbo.MORBIDITY_REPORT_EVENT mre with (nolock) ON mre.MORB_RPT_KEY = mr.MORB_RPT_KEY
+            LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_KEY = mre.PATIENT_KEY
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Case_Lab_Datamart'
         WHERE mre.INVESTIGATION_KEY <> 1;
 
     END TRY

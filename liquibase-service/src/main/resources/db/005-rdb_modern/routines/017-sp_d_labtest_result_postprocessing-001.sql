@@ -1865,14 +1865,16 @@ BEGIN
                dtm.Stored_Procedure AS stored_procedure,
                null                 AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
-                 INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
-                 JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
-                 LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
-                 LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
-                 JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.condition_cd = c.CONDITION_CD
+            INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+            JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+            LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+            JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.condition_cd = c.CONDITION_CD
+            INNER JOIN dbo.nrt_srte_Condition_code ccd WITH (NOLOCK) ON
+                ccd.condition_cd = dtm.condition_cd AND ISNULL(dtm.legacy_form_cd, ccd.investigation_form_cd) = ccd.investigation_form_cd
         WHERE ltr.INVESTIGATION_KEY <> 1
-          AND dtm.Datamart NOT IN ('Covid_Case_Datamart', 'Covid_Contact_Datamart',
+            AND dtm.Datamart NOT IN ('Covid_Case_Datamart', 'Covid_Contact_Datamart',
                                    'Covid_Vaccination_Datamart', 'Covid_Lab_Datamart')
         /* Case 2: Return Investigations for case_lab_datamart update.*/
         UNION
@@ -1884,12 +1886,12 @@ BEGIN
                         dtm.Stored_Procedure AS stored_procedure,
                         null                 AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
-                 INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
-                 JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
-                 LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
-                 LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
-                 JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.Datamart = 'Case_Lab_Datamart'
+            INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+            JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+            LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+            JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.Datamart = 'Case_Lab_Datamart'
         WHERE ltr.INVESTIGATION_KEY <> 1
         /*Case 3: Return distinct Investigations for covid case and covid lab datamart postprocessing.
          * + Covid vaccination and contact are excluded as they can be independently associated to an investigation. */
@@ -1902,12 +1904,12 @@ BEGIN
                         dtm.Stored_Procedure AS stored_procedure,
                         null                 AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
-                 INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
-                 INNER JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
-                 LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-                 LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
-                 LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
-                 LEFT JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.condition_cd = c.CONDITION_CD
+            INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+            INNER JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+            LEFT JOIN dbo.CASE_COUNT cc WITH (NOLOCK) ON cc.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+            LEFT JOIN dbo.condition c WITH (NOLOCK) ON c.CONDITION_KEY = cc.CONDITION_KEY
+            LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+            LEFT JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.condition_cd = c.CONDITION_CD
         WHERE dtm.Datamart IN ('Covid_Case_Datamart', 'Covid_Lab_Datamart')
           AND ltr.INVESTIGATION_KEY <> 1
         /*CASE 4: Return covid labs that are unassociated to investigations.
@@ -1919,13 +1921,13 @@ BEGIN
                         tmp.root_ordered_test_pntr AS observation_uid,
                         dtm.Datamart               AS datamart,
                         dtm.condition_cd           AS condition_cd,
-                        dtm.Stored_Procedure   AS stored_procedure,
+                        dtm.Stored_Procedure       AS stored_procedure,
                         null                       AS investigation_form_cd
         FROM #TMP_D_LAB_TEST_N tmp
-                 INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
-                 LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
-                 LEFT JOIN dbo.nrt_srte_Loinc_condition lc WITH (NOLOCK) ON lc.loinc_cd = tmp.LAB_TEST_CD
-                 LEFT JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.Datamart = 'Covid_Lab_Datamart'
+            INNER JOIN dbo.LAB_TEST_RESULT ltr WITH (NOLOCK) ON ltr.LAB_TEST_UID = tmp.lab_test_uid
+            LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = ltr.PATIENT_KEY
+            LEFT JOIN dbo.nrt_srte_Loinc_condition lc WITH (NOLOCK) ON lc.loinc_cd = tmp.LAB_TEST_CD
+            LEFT JOIN dbo.nrt_datamart_metadata dtm WITH (NOLOCK) ON dtm.Datamart = 'Covid_Lab_Datamart'
         WHERE lc.condition_cd = dtm.condition_cd;
 
 
