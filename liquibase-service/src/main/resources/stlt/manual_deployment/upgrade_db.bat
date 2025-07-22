@@ -100,7 +100,7 @@ for %%p in (!PATHS!) do (
         for %%F in ("!f_dir!\*.sql") do (
             echo Executing %%F...
             echo [%date% %time%] Executing %%F... >> "!LOG_FILE!"
-            sqlcmd -S %SERVER_NAME% -d %DATABASE% -U %DB_USER% -P %DB_PASS% -i "%%F" -b -C >> "!LOG_FILE!" 2>&1
+            sqlcmd -S %SERVER_NAME% -d %DATABASE% -U %DB_USER% -P %DB_PASS% -i "%%F" -I -b -C >> "!LOG_FILE!" 2>&1
             set "CURRENT_ERROR=!errorlevel!"
             if !CURRENT_ERROR! neq 0 (
                 echo Error executing %%F. Errorlevel: !CURRENT_ERROR!
