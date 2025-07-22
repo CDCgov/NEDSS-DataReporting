@@ -1393,7 +1393,8 @@ BEGIN
 
         COMMIT TRANSACTION;
 		--------------------------------------------------------------------------------------------------------------------------------------------
-
+        --WRAPPING every operation related to LAB_RESULT_COMMENT and RESULT_COMMENT_GROUP
+		--in one transaction
         BEGIN TRANSACTION;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -1421,11 +1422,7 @@ BEGIN
 			VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
-        COMMIT TRANSACTION;
 
-		--------------------------------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'INSERTING INTO RESULT_COMMENT_GROUP ';
@@ -1460,11 +1457,7 @@ BEGIN
 			(BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
 			VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
 
-		--------------------------------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'DELETE LAB_RESULT_COMMENT ';
@@ -1501,11 +1494,6 @@ BEGIN
 			(BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
 			VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-		--------------------------------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'DELETE RESULT_COMMENT_GROUP ';
@@ -1533,10 +1521,6 @@ BEGIN
 			(BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
 			VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-		--------------------------------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'UPDATE LAB_RESULT_COMMENT ';
@@ -1559,13 +1543,7 @@ BEGIN
 			VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
 
-        COMMIT TRANSACTION;
-
-		--------------------------------------------------------------------------------------------------------------------------------------------
-
-         /*update key for LAB_RESULT_COMMENT*/
-
-		 BEGIN TRANSACTION 
+		    /*update key for LAB_RESULT_COMMENT*/
 
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'UPDATING [dbo].nrt_lab_result_comment_key table';
@@ -1588,12 +1566,6 @@ BEGIN
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
             VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
 
-		COMMIT TRANSACTION
-
-		--------------------------------------------------------------------------------------------------------------------------------------------
-
-
-        BEGIN TRANSACTION;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'INSERTING INTO LAB_RESULT_COMMENT ';
@@ -1631,7 +1603,8 @@ BEGIN
         COMMIT TRANSACTION;
 
 		--------------------------------------------------------------------------------------------------------------------------------------------
-
+        --WRAPPING every operation related to LAB_TEST_RESULT
+        --in one transaction
 
         BEGIN TRANSACTION;
 
@@ -1651,11 +1624,6 @@ BEGIN
 			(BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
 			VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-        COMMIT TRANSACTION;
-
-		----------------------------------------------------------------------------------------------------------------------------------------------
-
-        BEGIN TRANSACTION;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'INSERTING INTO LAB_TEST_RESULT';
