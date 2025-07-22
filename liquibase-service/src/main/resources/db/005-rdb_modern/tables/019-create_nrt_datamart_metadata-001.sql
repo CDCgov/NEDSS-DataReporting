@@ -360,7 +360,8 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
 
         IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'legacy_form_cd' AND Object_ID = Object_ID(N'nrt_datamart_metadata'))
             BEGIN
-                EXEC('
+                DECLARE @update_sql nvarchar(max);
+                SET @update_sql ='
                 UPDATE ndm
                 SET legacy_form_cd = cc.investigation_form_cd
                 FROM dbo.nrt_datamart_metadata ndm
@@ -376,6 +377,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
                     (ndm.Datamart = ''Pertussis_Case'' AND cc.investigation_form_cd LIKE ''INV_FORM_PER%'') OR
                     (ndm.Datamart = ''TB_Datamart'' AND cc.investigation_form_cd LIKE ''INV_FORM_RVCT%'') OR
                     (ndm.Datamart = ''VAR_Datamart'' AND cc.investigation_form_cd LIKE ''INV_FORM_VAR%'')
-                )');
+                )';
+                EXEC sp_executesql @update_sql;
             END;
     END;
