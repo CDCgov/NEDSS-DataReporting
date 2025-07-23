@@ -1000,13 +1000,10 @@ BEGIN
         -- Process CONFIRMATION_METHOD_BASE (replacing first DATA step)
         SELECT
             *,
-            CONCAT_WS(' | ', COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13) AS CONFIRMATION_METHOD_ALL_TEMP,
             CASE
-                WHEN CHARINDEX(' | .', CONCAT_WS(' | ', COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13)) > 0
-                    THEN LEFT(
-                        CONCAT_WS(' | ', COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13),
-                        CHARINDEX(' | .', CONCAT_WS(' | ', COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13)) - 1
-                         )
+                WHEN CONCAT_WS(' | ', COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13) IS NULL
+                    OR CONCAT_WS(' | ', COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13) = ''
+                    THEN '.'
                 ELSE CONCAT_WS(' | ', COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13)
                 END AS CONFIRMATION_METHOD_ALL
         INTO #CONFIRMATION_METHOD_BASE_TEMP
