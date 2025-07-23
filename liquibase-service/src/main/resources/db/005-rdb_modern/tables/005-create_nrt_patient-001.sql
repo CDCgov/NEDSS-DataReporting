@@ -101,4 +101,9 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient' and xtype = 'U')
                 ALTER TABLE dbo.nrt_patient
                     ADD status_name_cd varchar(1);
             END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'ethnic_group_ind' AND Object_ID = Object_ID(N'nrt_patient'))
+            BEGIN
+            ALTER TABLE dbo.nrt_patient
+                ADD ethnic_group_ind varchar(20);
+            END;
     END;

@@ -131,6 +131,7 @@ public class PersonTransformers {
                 .generalComments(p.getDescription())
                 .entryMethod(p.getElectronicInd())
                 .ethnicity(p.getEthnicity())
+                .ethnicGroupInd(p.getEthnicGroupInd())
                 .unkEthnicRsn(p.getEthnicUnkReason())
                 .lastChgUserId(p.getLastChgUserId())
                 .lastChgTime(p.getLastChgTime())

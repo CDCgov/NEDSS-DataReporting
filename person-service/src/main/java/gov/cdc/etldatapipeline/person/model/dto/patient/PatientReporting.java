@@ -34,6 +34,7 @@ public class PatientReporting implements PersonExtendedProps {
     private String generalComments;
     private String entryMethod;
     private String ethnicity;
+    private String ethnicGroupInd;
     private String unkEthnicRsn;
     private Long lastChgUserId;
     private String lastChgTime;
