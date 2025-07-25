@@ -458,7 +458,15 @@ BEGIN
                    @proc_step_no, @proc_step_name, 0, LEFT(ISNULL(@phcid_list, 'NULL'),500)
                );
 
-        SELECT 'Success' AS Result;
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
 
     END TRY
     BEGIN CATCH
@@ -482,6 +490,15 @@ BEGIN
                    @proc_Step_no, @proc_step_name, 0, LEFT(ISNULL(@phcid_list, 'NULL'),500), @FullErrorMessage
                );
 
-        RETURN ERROR_NUMBER();
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
+            
     END CATCH;
 END;

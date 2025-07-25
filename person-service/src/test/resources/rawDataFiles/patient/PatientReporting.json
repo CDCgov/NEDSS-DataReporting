@@ -25,6 +25,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "age_reported_unit_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "add_time"
       },
       {
@@ -50,7 +55,17 @@
       {
         "type": "string",
         "optional": true,
+        "field": "curr_sex_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "deceased_indicator"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "deceased_ind_cd"
       },
       {
         "type": "string",
@@ -71,6 +86,11 @@
         "type": "string",
         "optional": true,
         "field": "ethnicity"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "ethnic_group_ind"
       },
       {
         "type": "string",
@@ -429,16 +449,20 @@
     "addl_gender_info": null,
     "age_reported": null,
     "age_reported_unit": null,
+    "age_reported_unit_cd": null,
     "add_time": null,
     "add_user_id": null,
     "birth_sex": null,
     "dob": null,
     "current_sex": null,
+    "curr_sex_cd": null,
     "deceased_indicator": null,
+    "deceased_ind_cd": null,
     "deceased_date": null,
     "general_comments": null,
     "entry_method": null,
     "ethnicity": null,
+    "ethnic_group_ind": null,
     "unk_ethnic_rsn": null,
     "last_chg_user_id": null,
     "last_chg_time": null,

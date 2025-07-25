@@ -299,12 +299,12 @@ BEGIN
             COALESCE(d_patient.PATIENT_MIDDLE_NAME,p.middle_name) AS Middle_Name,
             COALESCE(d_patient.PATIENT_FIRST_NAME,p.first_name) AS First_Name,
             COALESCE(d_patient.PATIENT_LOCAL_ID,p.local_id) AS Patient_Local_ID,
-            cvg1.CODE_VAL AS Current_Sex_Cd, --CNDE-2751: Sex Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
+            p.curr_sex_cd AS Current_Sex_Cd,
             COALESCE(d_patient.PATIENT_AGE_REPORTED,p.age_reported) AS Age_Reported,
-            COALESCE(d_patient.PATIENT_AGE_REPORTED_UNIT,p.age_reported_unit) AS Age_Unit_Cd,
+            p.age_reported_unit_cd AS Age_Unit_Cd,
             COALESCE(d_patient.PATIENT_DOB,p.dob) AS Birth_Dt,
             COALESCE(d_patient.PATIENT_DECEASED_DATE,p.deceased_date) AS PATIENT_DEATH_DATE,
-            cvg2.CODE_VAL AS PATIENT_DEATH_IND, --Death Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
+            p.deceased_ind_cd AS PATIENT_DEATH_IND, 
             COALESCE(d_patient.PATIENT_PHONE_HOME,p.phone_home) AS Phone_Number,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_1,p.street_address_1) AS Address_One,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_2,p.street_address_2) AS Address_Two,
@@ -315,21 +315,14 @@ BEGIN
             COALESCE(d_patient.PATIENT_COUNTY_CODE,p.county_code) AS County_Cd,
             COALESCE(d_patient.PATIENT_COUNTY,p.county) AS County_Desc,
             COALESCE(d_patient.PATIENT_RACE_CALCULATED,p.race_calculated) AS PATIENT_RACE_CALC,
-            COALESCE(d_patient.PATIENT_ETHNICITY,p.ethnicity) AS PATIENT_ETHNICITY
+            p.ethnic_group_ind AS PATIENT_ETHNICITY
         INTO #COVID_LAB_PATIENT_DATA
         FROM #COVID_OBSERVATIONS_TO_PROCESS o
                  INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.observation_uid = obs.observation_uid
                  LEFT JOIN dbo.d_patient d_patient WITH(NOLOCK) ON obs.patient_id = d_patient.PATIENT_UID
                  LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
                  LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state WITH(NOLOCK) ON dim_state.state_cd = d_patient.PATIENT_STATE_CODE
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code
-                 OUTER APPLY (
-            SELECT
-                COALESCE(d_patient.PATIENT_CURRENT_SEX,p.current_sex) AS PATIENT_CURRENT_SEX,
-                COALESCE(d_patient.PATIENT_DECEASED_INDICATOR,p.deceased_indicator) AS PATIENT_DECEASED_INDICATOR
-        ) AS pd
-                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'             --Person.PERSON_CURR_GENDER
-                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg2.cd='DEM127';     --Person.PATIENT_DECEASED_IND
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code;
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_PATIENT_DATA;
 
@@ -411,8 +404,7 @@ BEGIN
                  OUTER APPLY (
             SELECT COALESCE(d_provider_order.PROVIDER_COUNTRY,provider_order.country) AS Provider_Country
         ) AS pd
-                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.Provider_Country AND cvg1.cd='DEM126';  --Location.PSL_CNTRY
-
+                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.Provider_Country AND cvg1.cd='DEM126';--Location.PSL_CNTRY
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;
 
@@ -427,10 +419,13 @@ BEGIN
 
         SELECT DISTINCT
             core.Observation_UID AS ASSOC_OBSERVATION_UID,
-            o.associated_phc_uids AS Associated_Case_ID
+            STRING_AGG(i.local_id,', ') AS Associated_Case_ID
         INTO #COVID_LAB_ASSOCIATIONS
         FROM #COVID_LAB_CORE_DATA core
-                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON o.observation_uid = core.Observation_UID;
+                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON o.observation_uid = core.Observation_UID
+                 CROSS APPLY string_split(rtrim(ltrim(associated_phc_uids)),',') AS associatedPHC
+                 LEFT JOIN nrt_investigation i ON i.public_health_case_uid = associatedPHC.value
+        group by core.Observation_UID ;
 
         IF @debug = 'true'
             SELECT @proc_step_name, * FROM #COVID_LAB_ASSOCIATIONS;
@@ -808,7 +803,17 @@ BEGIN
                 LEFT(Isnull(@observation_id_list, 'NULL'),500)
             );
 
-    END try
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
+
+    END TRY
     BEGIN catch
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
@@ -839,6 +844,15 @@ BEGIN
                 @FullErrorMessage
             );
 
-        RETURN Error_number();
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
+            
     END catch;
 END;
