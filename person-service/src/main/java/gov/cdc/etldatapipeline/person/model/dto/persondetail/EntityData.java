@@ -39,12 +39,18 @@ public class EntityData implements ExtendPerson {
                 personFull.setProviderRegistrationNumAuth(assigningAuthorityCd);
             }
         }
-        // ElasticSearch related data
-        personFull.setEntityUid(entityUid);
-        personFull.setEntityIdSeq(entityIdSeq);
-        personFull.setTypeCd(typeCd);
-        personFull.setEntityRecordStatusCd(recordStatusCd);
-        personFull.setAssigningAuthorityCd(assigningAuthorityCd);
+
+        if (typeCd.equalsIgnoreCase("NPI")) {
+            personFull.setProviderNpiRegistrationNum(rootExtensionTxt);
+        } else {
+            // ElasticSearch related data
+            personFull.setEntityUid(entityUid);
+            personFull.setEntityIdSeq(entityIdSeq);
+            personFull.setTypeCd(typeCd);
+            personFull.setEntityRecordStatusCd(recordStatusCd);
+            personFull.setAssigningAuthorityCd(assigningAuthorityCd);
+        }
+
         return personFull;
     }
 }

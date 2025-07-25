@@ -175,6 +175,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "provider_npi_registration_num"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "provider_registration_num_auth"
       }
     ]
@@ -214,6 +219,7 @@
     "email_work": "someone2@email.com",
     "quick_code": "12314286",
     "provider_registration_num": "86741517517",
+    "provider_npi_registration_num": "356537",
     "provider_registration_num_auth": "3.16.740.1.113883.3.1147.1.1002"
   }
 }

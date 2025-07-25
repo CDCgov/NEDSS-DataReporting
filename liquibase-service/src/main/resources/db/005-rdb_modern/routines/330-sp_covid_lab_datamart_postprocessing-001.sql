@@ -301,7 +301,8 @@ BEGIN
             COALESCE(d_patient.PATIENT_LOCAL_ID,p.local_id) AS Patient_Local_ID,
             cvg1.CODE_VAL AS Current_Sex_Cd, --CNDE-2751: Sex Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
             COALESCE(d_patient.PATIENT_AGE_REPORTED,p.age_reported) AS Age_Reported,
-            COALESCE(d_patient.PATIENT_AGE_REPORTED_UNIT,p.age_reported_unit) AS Age_Unit_Cd,
+            cvg3.CODE_VAL AS Age_Unit_Cd,
+            --COALESCE(d_patient.PATIENT_AGE_REPORTED_UNIT,p.age_reported_unit) AS Age_Unit_Cd,
             COALESCE(d_patient.PATIENT_DOB,p.dob) AS Birth_Dt,
             COALESCE(d_patient.PATIENT_DECEASED_DATE,p.deceased_date) AS PATIENT_DEATH_DATE,
             cvg2.CODE_VAL AS PATIENT_DEATH_IND, --Death Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
@@ -315,7 +316,7 @@ BEGIN
             COALESCE(d_patient.PATIENT_COUNTY_CODE,p.county_code) AS County_Cd,
             COALESCE(d_patient.PATIENT_COUNTY,p.county) AS County_Desc,
             COALESCE(d_patient.PATIENT_RACE_CALCULATED,p.race_calculated) AS PATIENT_RACE_CALC,
-            COALESCE(d_patient.PATIENT_ETHNICITY,p.ethnicity) AS PATIENT_ETHNICITY
+            p.ethnic_group_ind AS PATIENT_ETHNICITY
         INTO #COVID_LAB_PATIENT_DATA
         FROM #COVID_OBSERVATIONS_TO_PROCESS o
                  INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.observation_uid = obs.observation_uid
@@ -326,10 +327,13 @@ BEGIN
                  OUTER APPLY (
             SELECT
                 COALESCE(d_patient.PATIENT_CURRENT_SEX,p.current_sex) AS PATIENT_CURRENT_SEX,
-                COALESCE(d_patient.PATIENT_DECEASED_INDICATOR,p.deceased_indicator) AS PATIENT_DECEASED_INDICATOR
+                COALESCE(d_patient.PATIENT_DECEASED_INDICATOR,p.deceased_indicator) AS PATIENT_DECEASED_INDICATOR,
+                COALESCE(d_patient.PATIENT_AGE_REPORTED_UNIT,p.age_reported_unit) AS Age_Unit_Cd
         ) AS pd
                  LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'             --Person.PERSON_CURR_GENDER
-                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg2.cd='DEM127';     --Person.PATIENT_DECEASED_IND
+                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg2.cd='DEM127'      --Person.PATIENT_DECEASED_IND
+                 LEFT JOIN dbo.v_code_value_general cvg3 WITH (NOLOCK) ON cvg3.CODE_DESC = pd.Age_Unit_Cd AND cvg3.cd='DEM218';
+
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_PATIENT_DATA;
 
@@ -352,7 +356,7 @@ BEGIN
             COALESCE(d_org_author.ORGANIZATION_NAME,org_author.organization_name) AS Reporting_Facility_Name,
             COALESCE(d_org_author.ORGANIZATION_STREET_ADDRESS_1, org_author.street_address_1) AS Reporting_Facility_Address_One,
             COALESCE(d_org_author.ORGANIZATION_STREET_ADDRESS_2, org_author.street_address_2) AS Reporting_Facility_Address_Two,
-            COALESCE(d_org_author.ORGANIZATION_COUNTRY,org_author.country) AS Reporting_Facility_Country,
+            cvg2.code_val AS Reporting_Facility_Country, --Country Code is not recorded in D_ORGANIZATION nor nrt_organization. Temporary solution.
             COALESCE(d_org_author.ORGANIZATION_COUNTY_CODE, org_author.county_code) AS Reporting_Facility_County,
             COALESCE(d_org_author.ORGANIZATION_COUNTY, org_author.county) AS Reporting_Facility_County_Desc,
             COALESCE(d_org_author.ORGANIZATION_CITY, org_author.city) AS Reporting_Facility_City,
@@ -365,7 +369,7 @@ BEGIN
             COALESCE(d_org_order.ORGANIZATION_NAME, org_order.organization_name) AS Ordering_Facility_Name,
             COALESCE(d_org_order.ORGANIZATION_STREET_ADDRESS_1, org_order.street_address_1) AS Ordering_Facility_Address_One,
             COALESCE(d_org_order.ORGANIZATION_STREET_ADDRESS_2, org_order.street_address_2) AS Ordering_Facility_Address_Two,
-            COALESCE(d_org_order.ORGANIZATION_COUNTRY, org_order.country) AS Ordering_Facility_Country,
+            cvg3.code_val AS Ordering_Facility_Country, --Country Code is not recorded in D_ORGANIZATION nor nrt_organization. Temporary solution.
             COALESCE(d_org_order.ORGANIZATION_COUNTY_CODE, org_order.county_code) AS Ordering_Facility_County,
             COALESCE(d_org_order.ORGANIZATION_COUNTY, org_order.county) AS Ordering_Facility_County_Desc,
             COALESCE(d_org_order.ORGANIZATION_CITY, org_order.city) AS Ordering_Facility_City,
@@ -387,7 +391,7 @@ BEGIN
             COALESCE(d_provider_order.PROVIDER_ZIP,provider_order.zip) AS Ordering_Provider_Zip_Cd,
             COALESCE(d_provider_order.PROVIDER_PHONE_WORK,provider_order.phone_work) AS Ordering_Provider_Phone_Nbr,
             COALESCE(d_provider_order.PROVIDER_PHONE_EXT_WORK,provider_order.phone_ext_work) AS Ordering_Provider_Phone_Ext,
-            COALESCE(d_provider_order.PROVIDER_LOCAL_ID,provider_order.local_id) AS ORDERING_PROVIDER_ID
+            provider_order.provider_npi_registration_num AS ORDERING_PROVIDER_ID
         INTO #COVID_LAB_ENTITIES_DATA
         FROM #COVID_LAB_CORE_DATA o
                  LEFT JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.Observation_UID = obs.observation_uid
@@ -409,10 +413,13 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_provider_order WITH(NOLOCK) ON dim_state_provider_order.state_cd = d_provider_order.PROVIDER_STATE_CODE
                  LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_provider_order WITH(NOLOCK) ON nrt_state_provider_order.state_cd = provider_order.state_code
                  OUTER APPLY (
-            SELECT COALESCE(d_provider_order.PROVIDER_COUNTRY,provider_order.country) AS Provider_Country
+            SELECT COALESCE(d_provider_order.PROVIDER_COUNTRY,provider_order.country) AS Provider_Country,
+                   COALESCE(d_org_author.ORGANIZATION_COUNTRY,org_author.country) AS Reporting_Facility_Country,
+                   COALESCE(d_org_order.ORGANIZATION_COUNTRY, org_order.country) AS Ordering_Facility_Country
         ) AS pd
-                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.Provider_Country AND cvg1.cd='DEM126';  --Location.PSL_CNTRY
-
+                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.Provider_Country AND cvg1.cd='DEM126'  --Location.PSL_CNTRY
+                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.Reporting_Facility_Country AND cvg2.cd='DEM126'
+                 LEFT JOIN dbo.v_code_value_general cvg3 WITH (NOLOCK) ON cvg3.CODE_DESC = pd.Ordering_Facility_Country AND cvg3.cd='DEM126';
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;
 
@@ -427,10 +434,13 @@ BEGIN
 
         SELECT DISTINCT
             core.Observation_UID AS ASSOC_OBSERVATION_UID,
-            o.associated_phc_uids AS Associated_Case_ID
+            STRING_AGG(i.local_id,', ') AS Associated_Case_ID
         INTO #COVID_LAB_ASSOCIATIONS
         FROM #COVID_LAB_CORE_DATA core
-                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON o.observation_uid = core.Observation_UID;
+                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON o.observation_uid = core.Observation_UID
+                 CROSS APPLY string_split(rtrim(ltrim(associated_phc_uids)),',') AS associatedPHC
+                 LEFT JOIN nrt_investigation i ON i.public_health_case_uid = associatedPHC.value
+        group by core.Observation_UID ;
 
         IF @debug = 'true'
             SELECT @proc_step_name, * FROM #COVID_LAB_ASSOCIATIONS;

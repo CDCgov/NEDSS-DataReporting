@@ -40,3 +40,14 @@ CREATE TABLE dbo.nrt_provider
     max_datetime                   datetime2 generated always as row end hidden not null,
     period for system_time (refresh_datetime,max_datetime)
 );
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_provider' and xtype = 'U')
+    BEGIN
+        --CNDE-2498
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nm_use_cd' AND Object_ID = Object_ID(N'nrt_provider'))
+            BEGIN
+                ALTER TABLE dbo.nrt_provider
+                ADD provider_npi_registration_num varchar(50);
+            END;
+    END;
+

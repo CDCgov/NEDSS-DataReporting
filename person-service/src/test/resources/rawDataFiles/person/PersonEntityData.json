@@ -72,6 +72,14 @@
     "assigning_authority_cd": "3.16.740.1.113883.3.1147.1.1002"
   },
   {
+    "entity_uid": 242790996,
+    "typeCd": "NPI",
+    "recordStatusCd": "ACTIVE",
+    "rootExtensionTxt": "356537",
+    "entity_id_seq": 7,
+    "assigning_authority_cd": "CMS"
+  },
+  {
     "entity_uid": 242790995,
     "typeCd": "INVALID",
     "entity_id_seq": 10

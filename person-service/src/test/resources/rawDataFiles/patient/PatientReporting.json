@@ -75,6 +75,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "ethnic_group_ind"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "unk_ethnic_rsn"
       },
       {
@@ -439,6 +444,7 @@
     "general_comments": null,
     "entry_method": null,
     "ethnicity": null,
+    "ethnic_group_ind": null,
     "unk_ethnic_rsn": null,
     "last_chg_user_id": null,
     "last_chg_time": null,

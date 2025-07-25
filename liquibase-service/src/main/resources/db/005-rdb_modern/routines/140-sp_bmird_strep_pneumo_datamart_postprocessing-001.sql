@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_bmird_strep_pneumo_datamart_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_bmird_strep_pneumo_datamart_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_bmird_strep_pneumo_datamart_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_bmird_strep_pneumo_datamart_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE [dbo].[sp_bmird_strep_pneumo_datamart_postprocessing]
     @phc_uids nvarchar(max),
@@ -48,7 +48,7 @@ BEGIN
         FROM
             dbo.BMIRD_CASE BC with (nolock)
                 INNER JOIN
-            dbo.condition C with (nolock) ON BC.CONDITION_KEY = C.CONDITION_KEY
+            dbo.v_condition_dim C with (nolock) ON BC.CONDITION_KEY = C.CONDITION_KEY
                 INNER JOIN
             dbo.INVESTIGATION I with (nolock) ON BC.INVESTIGATION_KEY = I.INVESTIGATION_KEY
         WHERE (BC.INVESTIGATION_KEY <> 1) AND (C.CONDITION_CD in ('11723','11717','11720'))
@@ -152,7 +152,7 @@ BEGIN
         from #INVKEYS BC
                  left join dbo.D_PATIENT as P with (nolock)
                            on BC.PATIENT_KEY = P.PATIENT_key
-                 left join dbo.condition as C with (nolock)
+                 left join dbo.v_condition_dim as C with (nolock)
                            on C.CONDITION_KEY = BC.CONDITION_KEY
                                AND P.PATIENT_KEY <> 1
         ;
@@ -867,6 +867,8 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
         WHERE _mark_ = 1
         GROUP BY INVESTIGATION_KEY;
 
+        if @debug = 'true' select @Proc_Step_Name as step, * from #TYPE_INFECTION_INFO;
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
@@ -899,6 +901,8 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
         WHERE _mark_ = 0
         GROUP BY INVESTIGATION_KEY;
 
+        if @debug = 'true' select @Proc_Step_Name as step, * from #TYPE_INFECTION_INFO_OTHERS;
+
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
@@ -914,15 +918,15 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
         -- Step 5: Merge the new table with the BMIRD_ANTIMICRO table to build BMIRD_ANTIMICRO_5
         SELECT
             b.*,
-            c.TYPE_INFECTION_BACTEREMIA,
-            c.TYPE_INFECTION_PNEUMONIA,
-            c.TYPE_INFECTION_MENINGITIS,
-            c.TYPE_INFECTION_EMPYEMA,
-            c.TYPE_INFECTION_CELLULITIS,
-            c.TYPE_INFECTION_PERITONITIS,
-            c.TYPE_INFECTION_PERICARDITIS,
-            c.TYPE_INFECTION_PUERPERAL_SEP,
-            c.TYPE_INFECTION_SEP_ARTHRITIS,
+            COALESCE(c.TYPE_INFECTION_BACTEREMIA,d.TYPE_INFECTION_BACTEREMIA) AS TYPE_INFECTION_BACTEREMIA,
+            COALESCE(c.TYPE_INFECTION_PNEUMONIA,d.TYPE_INFECTION_PNEUMONIA) AS TYPE_INFECTION_PNEUMONIA,
+            COALESCE(c.TYPE_INFECTION_MENINGITIS,d.TYPE_INFECTION_MENINGITIS) AS TYPE_INFECTION_MENINGITIS,
+            COALESCE(c.TYPE_INFECTION_EMPYEMA,d.TYPE_INFECTION_EMPYEMA) AS TYPE_INFECTION_EMPYEMA,
+            COALESCE(c.TYPE_INFECTION_CELLULITIS,d.TYPE_INFECTION_CELLULITIS) AS TYPE_INFECTION_CELLULITIS,
+            COALESCE(c.TYPE_INFECTION_PERITONITIS,d.TYPE_INFECTION_PERITONITIS) AS TYPE_INFECTION_PERITONITIS,
+            COALESCE(c.TYPE_INFECTION_PERICARDITIS,d.TYPE_INFECTION_PERICARDITIS) AS TYPE_INFECTION_PERICARDITIS,
+            COALESCE(c.TYPE_INFECTION_PUERPERAL_SEP,d.TYPE_INFECTION_PUERPERAL_SEP) AS TYPE_INFECTION_PUERPERAL_SEP,
+            COALESCE(c.TYPE_INFECTION_SEP_ARTHRITIS,d.TYPE_INFECTION_SEP_ARTHRITIS) AS TYPE_INFECTION_SEP_ARTHRITIS,
             d.TYPE_INFECTION_OTHERS_CONCAT
         INTO #BMIRD_ANTIMICRO_5
         FROM #BMIRD_ANTIMICRO_4 b
@@ -948,7 +952,7 @@ Sterile Sites Data Processing -
 BMD122 'Sterile Sites from which Organism Isolated' pivot to 7 columns
 Step 1: Create a dataset of all sterile sites
 Step 2: Create a new table with the columns (based on a set of conditions).
-        For rows that doesn't fall into that condition, they are marked as 0 and 1
+    For rows that doesn't fall into that condition, they are marked as 0 and 1
 Step 3: Create a new table with the columns transposed for marked as 1
 Step 4: Create a new table with the columns concatenated for marked as 0
 Step 5: Merge the new table with the BMIRD_ANTIMICRO table
@@ -1068,12 +1072,12 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
         -- Step 5: Merge the new table with the BMIRD_ANTIMICRO table to build BMIRD_ANTIMICRO_6
         SELECT
             b.*,
-            c.STERILE_SITE_BLOOD,
-            c.STERILE_SITE_CEREBRAL_SF,
-            c.STERILE_SITE_PLEURAL_FLUID,
-            c.STERILE_SITE_PERITONEAL_FLUID,
-            c.STERILE_SITE_PERICARDIAL_FLUID,
-            c.STERILE_SITE_JOINT_FLUID,
+            COALESCE(c.STERILE_SITE_BLOOD,d.STERILE_SITE_BLOOD) AS STERILE_SITE_BLOOD,
+            COALESCE(c.STERILE_SITE_CEREBRAL_SF,d.STERILE_SITE_CEREBRAL_SF) AS STERILE_SITE_CEREBRAL_SF,
+            COALESCE(c.STERILE_SITE_PLEURAL_FLUID,d.STERILE_SITE_PLEURAL_FLUID) AS STERILE_SITE_PLEURAL_FLUID,
+            COALESCE(c.STERILE_SITE_PERITONEAL_FLUID,d.STERILE_SITE_PERITONEAL_FLUID) AS STERILE_SITE_PERITONEAL_FLUID,
+            COALESCE(c.STERILE_SITE_PERICARDIAL_FLUID,d.STERILE_SITE_PERICARDIAL_FLUID) AS STERILE_SITE_PERICARDIAL_FLUID,
+            COALESCE(c.STERILE_SITE_JOINT_FLUID,d.STERILE_SITE_JOINT_FLUID) AS STERILE_SITE_JOINT_FLUID,
             d.STERILE_SITE_OTHERS_CONCAT
         INTO #BMIRD_ANTIMICRO_6
         FROM #BMIRD_ANTIMICRO_5 b

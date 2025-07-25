@@ -232,6 +232,9 @@ public interface PersonExtendedProps {
     default void setProviderRegistrationNum(String providerRegistrationNum) {
     }
 
+    default void setProviderNpiRegistrationNum(String providerNpiRegistrationNum) {
+    }
+
     default void setProviderRegistrationNumAuth(String providerRegistrationNumAuth) {
     }
 

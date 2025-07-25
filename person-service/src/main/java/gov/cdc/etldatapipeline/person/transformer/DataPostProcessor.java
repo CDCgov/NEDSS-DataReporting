@@ -133,6 +133,8 @@ public class DataPostProcessor {
                     && e.getTypeCd().equalsIgnoreCase("QEC"));
             entityDataTypeCdFn.apply(e -> StringUtils.hasText(e.getTypeCd())
                     && e.getTypeCd().equalsIgnoreCase("PRN"));
+            entityDataTypeCdFn.apply(e -> StringUtils.hasText(e.getTypeCd())
+                    && e.getTypeCd().equalsIgnoreCase("NPI"));
         }
     }
 
