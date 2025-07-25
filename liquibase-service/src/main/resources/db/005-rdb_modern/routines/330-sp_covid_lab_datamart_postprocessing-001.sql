@@ -304,7 +304,7 @@ BEGIN
             p.age_reported_unit_cd AS Age_Unit_Cd,
             COALESCE(d_patient.PATIENT_DOB,p.dob) AS Birth_Dt,
             COALESCE(d_patient.PATIENT_DECEASED_DATE,p.deceased_date) AS PATIENT_DEATH_DATE,
-            p.deceased_ind_cd AS PATIENT_DEATH_IND, --Death Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
+            p.deceased_ind_cd AS PATIENT_DEATH_IND, 
             COALESCE(d_patient.PATIENT_PHONE_HOME,p.phone_home) AS Phone_Number,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_1,p.street_address_1) AS Address_One,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_2,p.street_address_2) AS Address_Two,
