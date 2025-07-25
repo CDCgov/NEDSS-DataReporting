@@ -112,4 +112,19 @@ IF EXISTS (SELECT 1
                 ALTER TABLE dbo.nrt_patient
                     ADD ethnic_group_ind varchar(20);
             END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'deceased_ind_cd' AND Object_ID = Object_ID(N'nrt_patient'))
+            BEGIN
+                ALTER TABLE dbo.nrt_patient
+                    ADD deceased_ind_cd varchar(20);
+            END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'curr_sex_cd' AND Object_ID = Object_ID(N'nrt_patient'))
+            BEGIN
+                ALTER TABLE dbo.nrt_patient
+                    ADD curr_sex_cd varchar(20);
+            END;
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'age_reported_unit_cd' AND Object_ID = Object_ID(N'nrt_patient'))
+            BEGIN
+                ALTER TABLE dbo.nrt_patient
+                    ADD age_reported_unit_cd varchar(20);
+            END;
     END;

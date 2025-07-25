@@ -24,12 +24,15 @@ public class PatientReporting implements PersonExtendedProps {
     private String addlGenderInfo;
     private String ageReported;
     private String ageReportedUnit;
+    private String ageReportedUnitCd;
     private String addTime;
     private Long addUserId;
     private String birthSex;
     private String dob;
     private String currentSex;
+    private String currSexCd;
     private String deceasedIndicator;
+    private String deceasedIndCd;
     private String deceasedDate;
     private String generalComments;
     private String entryMethod;

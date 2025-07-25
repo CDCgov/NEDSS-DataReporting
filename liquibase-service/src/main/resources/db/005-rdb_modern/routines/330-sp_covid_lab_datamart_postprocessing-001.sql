@@ -299,12 +299,12 @@ BEGIN
             COALESCE(d_patient.PATIENT_MIDDLE_NAME,p.middle_name) AS Middle_Name,
             COALESCE(d_patient.PATIENT_FIRST_NAME,p.first_name) AS First_Name,
             COALESCE(d_patient.PATIENT_LOCAL_ID,p.local_id) AS Patient_Local_ID,
-            cvg1.CODE_VAL AS Current_Sex_Cd, --CNDE-2751: Sex Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
+            p.curr_sex_cd AS Current_Sex_Cd,
             COALESCE(d_patient.PATIENT_AGE_REPORTED,p.age_reported) AS Age_Reported,
-            cvg3.CODE_VAL AS Age_Unit_Cd,
+            p.age_reported_unit_cd AS Age_Unit_Cd,
             COALESCE(d_patient.PATIENT_DOB,p.dob) AS Birth_Dt,
             COALESCE(d_patient.PATIENT_DECEASED_DATE,p.deceased_date) AS PATIENT_DEATH_DATE,
-            cvg2.CODE_VAL AS PATIENT_DEATH_IND, --Death Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
+            p.deceased_ind_cd AS PATIENT_DEATH_IND, --Death Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
             COALESCE(d_patient.PATIENT_PHONE_HOME,p.phone_home) AS Phone_Number,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_1,p.street_address_1) AS Address_One,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_2,p.street_address_2) AS Address_Two,
@@ -322,17 +322,7 @@ BEGIN
                  LEFT JOIN dbo.d_patient d_patient WITH(NOLOCK) ON obs.patient_id = d_patient.PATIENT_UID
                  LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
                  LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state WITH(NOLOCK) ON dim_state.state_cd = d_patient.PATIENT_STATE_CODE
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code
-                 OUTER APPLY (
-            SELECT
-                COALESCE(d_patient.PATIENT_CURRENT_SEX,p.current_sex) AS PATIENT_CURRENT_SEX,
-                COALESCE(d_patient.PATIENT_DECEASED_INDICATOR,p.deceased_indicator) AS PATIENT_DECEASED_INDICATOR,
-                COALESCE(d_patient.PATIENT_AGE_REPORTED_UNIT,p.age_reported_unit) AS Age_Unit_Cd
-        ) AS pd
-                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'             --Person.PERSON_CURR_GENDER
-                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg2.cd='DEM127'      --Person.PATIENT_DECEASED_IND
-                 LEFT JOIN dbo.v_code_value_general cvg3 WITH (NOLOCK) ON cvg3.CODE_DESC = pd.Age_Unit_Cd AND cvg3.cd='DEM218';
-
+                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code;
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_PATIENT_DATA;
 
