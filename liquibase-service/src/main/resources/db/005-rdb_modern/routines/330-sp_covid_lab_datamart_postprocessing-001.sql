@@ -355,7 +355,7 @@ BEGIN
             COALESCE(d_org_author.ORGANIZATION_NAME,org_author.organization_name) AS Reporting_Facility_Name,
             COALESCE(d_org_author.ORGANIZATION_STREET_ADDRESS_1, org_author.street_address_1) AS Reporting_Facility_Address_One,
             COALESCE(d_org_author.ORGANIZATION_STREET_ADDRESS_2, org_author.street_address_2) AS Reporting_Facility_Address_Two,
-            cvg2.code_val AS Reporting_Facility_Country, --Country Code is not recorded in D_ORGANIZATION nor nrt_organization. Temporary solution.
+            COALESCE(d_org_author.ORGANIZATION_COUNTRY,org_author.country) AS Reporting_Facility_Country,
             COALESCE(d_org_author.ORGANIZATION_COUNTY_CODE, org_author.county_code) AS Reporting_Facility_County,
             COALESCE(d_org_author.ORGANIZATION_COUNTY, org_author.county) AS Reporting_Facility_County_Desc,
             COALESCE(d_org_author.ORGANIZATION_CITY, org_author.city) AS Reporting_Facility_City,
@@ -368,7 +368,7 @@ BEGIN
             COALESCE(d_org_order.ORGANIZATION_NAME, org_order.organization_name) AS Ordering_Facility_Name,
             COALESCE(d_org_order.ORGANIZATION_STREET_ADDRESS_1, org_order.street_address_1) AS Ordering_Facility_Address_One,
             COALESCE(d_org_order.ORGANIZATION_STREET_ADDRESS_2, org_order.street_address_2) AS Ordering_Facility_Address_Two,
-            cvg3.code_val AS Ordering_Facility_Country, --Country Code is not recorded in D_ORGANIZATION nor nrt_organization. Temporary solution.
+            COALESCE(d_org_order.ORGANIZATION_COUNTRY, org_order.country) AS Ordering_Facility_Country,
             COALESCE(d_org_order.ORGANIZATION_COUNTY_CODE, org_order.county_code) AS Ordering_Facility_County,
             COALESCE(d_org_order.ORGANIZATION_COUNTY, org_order.county) AS Ordering_Facility_County_Desc,
             COALESCE(d_org_order.ORGANIZATION_CITY, org_order.city) AS Ordering_Facility_City,
@@ -412,13 +412,9 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_provider_order WITH(NOLOCK) ON dim_state_provider_order.state_cd = d_provider_order.PROVIDER_STATE_CODE
                  LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_provider_order WITH(NOLOCK) ON nrt_state_provider_order.state_cd = provider_order.state_code
                  OUTER APPLY (
-            SELECT COALESCE(d_provider_order.PROVIDER_COUNTRY,provider_order.country) AS Provider_Country,
-                   COALESCE(d_org_author.ORGANIZATION_COUNTRY,org_author.country) AS Reporting_Facility_Country,
-                   COALESCE(d_org_order.ORGANIZATION_COUNTRY, org_order.country) AS Ordering_Facility_Country
+            SELECT COALESCE(d_provider_order.PROVIDER_COUNTRY,provider_order.country) AS Provider_Country
         ) AS pd
-                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.Provider_Country AND cvg1.cd='DEM126'  --Location.PSL_CNTRY
-                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.Reporting_Facility_Country AND cvg2.cd='DEM126'
-                 LEFT JOIN dbo.v_code_value_general cvg3 WITH (NOLOCK) ON cvg3.CODE_DESC = pd.Ordering_Facility_Country AND cvg3.cd='DEM126';
+                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.Provider_Country AND cvg1.cd='DEM126';--Location.PSL_CNTRY
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;
 
