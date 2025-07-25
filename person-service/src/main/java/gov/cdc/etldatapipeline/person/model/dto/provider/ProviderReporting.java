@@ -75,6 +75,5 @@ public class ProviderReporting implements PersonExtendedProps {
     @JsonProperty("quick_code")
     private String providerQuickCode;
     private String providerRegistrationNum;
-    private String providerNpiRegistrationNum;
     private String providerRegistrationNumAuth;
 }

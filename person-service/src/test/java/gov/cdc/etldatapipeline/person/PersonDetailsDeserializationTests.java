@@ -82,7 +82,7 @@ class PersonDetailsDeserializationTests {
                 .build();
 
         assertNotNull(entityData);
-        assertEquals(12, entityData.length);
+        assertEquals(11, entityData.length);
         assertEquals(expected.toString(), entityData[0].toString());
     }
 
