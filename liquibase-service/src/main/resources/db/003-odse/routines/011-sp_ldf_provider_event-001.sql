@@ -6,11 +6,32 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_ldf_provider_event @ldf_uid_list nvarchar(max), @bus_obj_uid_list nvarchar(max)
+CREATE PROCEDURE dbo.sp_ldf_provider_event @ldf_uid_list nvarchar(max), @bus_obj_uid_list nvarchar(max), @batch_id BIGINT
 AS
 Begin
 
     BEGIN TRY
+
+        DECLARE @dataflow_name NVARCHAR(200) = 'ldf_provider PRE-Processing Event';
+        DECLARE @package_name NVARCHAR(200) = 'NBS_ODSE.sp_ldf_provider_event';
+        
+        INSERT INTO [rdb].[dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                , @dataflow_name
+                , @package_name
+                , 'START'
+                , 0
+                , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
+                , 0
+                , LEFT(@bus_obj_uid_list, 199));
 
         /*select * from dbo.v_ldf_provider ldf
          WHERE ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
@@ -64,6 +85,24 @@ Begin
             and p.cd='PRV'
         Order By business_object_uid, display_order_nbr ;
 
+        INSERT INTO [rdb].[dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                , @dataflow_name
+                , @package_name
+                , 'COMPLETE'
+                , 0
+                , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
+                , 0
+                , LEFT(@bus_obj_uid_list, 199));
+
     end try
 
     BEGIN CATCH
@@ -71,9 +110,36 @@ Begin
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @FullErrorMessage VARCHAR(8000) =
+            'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
+            'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error State: ' + CAST(ERROR_STATE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
+            'Error Message: ' + ERROR_MESSAGE();
 
-        return @ErrorMessage;
+        INSERT INTO [rdb].[dbo].[job_flow_log]
+        ( batch_id
+        , [Dataflow_Name]
+        , [package_Name]
+        , [Status_Type]
+        , [step_number]
+        , [step_name]
+        , [row_count]
+        , [Msg_Description1]
+        , [Error_Description]
+        )
+        VALUES ( @batch_id
+               , @dataflow_name
+               , @package_name
+               , 'ERROR'
+               , 0
+               , @dataflow_name
+               , 0
+               , LEFT(@bus_obj_uid_list, 199)
+               , @FullErrorMessage
+               );
+
+        return @FullErrorMessage;
 
     END CATCH
 

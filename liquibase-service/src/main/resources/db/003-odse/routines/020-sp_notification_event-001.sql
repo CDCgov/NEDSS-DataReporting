@@ -16,7 +16,7 @@ BEGIN
 
 
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -114,7 +114,7 @@ BEGIN
 
 
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         (      batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -150,7 +150,7 @@ BEGIN
             'Error Message: ' + ERROR_MESSAGE();
 
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         (      batch_id
         , [Dataflow_Name]
         , [package_Name]
