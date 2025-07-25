@@ -48,7 +48,7 @@ BEGIN
         FROM
             dbo.BMIRD_CASE BC with (nolock)
                 INNER JOIN
-            dbo.v_condition_dim C with (nolock) ON BC.CONDITION_KEY = C.CONDITION_KEY
+            dbo.CONDITION C with (nolock) ON BC.CONDITION_KEY = C.CONDITION_KEY
                 INNER JOIN
             dbo.INVESTIGATION I with (nolock) ON BC.INVESTIGATION_KEY = I.INVESTIGATION_KEY
         WHERE (BC.INVESTIGATION_KEY <> 1) AND (C.CONDITION_CD in ('11723','11717','11720'))
@@ -152,7 +152,7 @@ BEGIN
         from #INVKEYS BC
                  left join dbo.D_PATIENT as P with (nolock)
                            on BC.PATIENT_KEY = P.PATIENT_key
-                 left join dbo.v_condition_dim as C with (nolock)
+                 left join dbo.CONDITION as C with (nolock)
                            on C.CONDITION_KEY = BC.CONDITION_KEY
                                AND P.PATIENT_KEY <> 1
         ;

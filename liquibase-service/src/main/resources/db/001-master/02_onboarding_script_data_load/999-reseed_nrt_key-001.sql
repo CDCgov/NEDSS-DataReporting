@@ -1,6 +1,6 @@
+declare @max bigint;
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization_key' and xtype = 'U')
     BEGIN   
-        declare @max bigint;
         select @max=max(organization_key)+1 from dbo.D_ORGANIZATION ;
         select @max;
         if @max IS NULL   --check when max is returned as null
