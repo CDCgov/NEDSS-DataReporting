@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.util.StringUtils;
 
 @Data
 @Builder
@@ -30,13 +29,11 @@ public class Entity implements OrgExtension {
     public <T> T updateOrg(T org) {
         if (org.getClass() == OrganizationReporting.class) {
             OrganizationReporting orgReporting = (OrganizationReporting) org;
-            if (StringUtils.hasText(typeCd)) {
-                if (typeCd.equalsIgnoreCase("QEC")) { // Quick Code
-                    orgReporting.setQuickCode(rootExtensionTxt);
-                } else if (typeCd.equalsIgnoreCase("FI")) { // Facility ID
-                    orgReporting.setFacilityId(rootExtensionTxt);
-                    orgReporting.setFacilityIdAuth(facilityIdAuth);
-                }
+            if ("QEC".equalsIgnoreCase(typeCd)) { // Quick Code
+                orgReporting.setQuickCode(rootExtensionTxt);
+            } else if ("FI".equalsIgnoreCase(typeCd)) { // Facility ID
+                orgReporting.setFacilityId(rootExtensionTxt);
+                orgReporting.setFacilityIdAuth(facilityIdAuth);
             }
         } else if (org.getClass() == OrganizationElasticSearch.class) {
             OrganizationElasticSearch orgElastic = (OrganizationElasticSearch) org;

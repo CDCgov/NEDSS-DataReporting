@@ -182,7 +182,7 @@ BEGIN
             COALESCE(d_org_perform.ORGANIZATION_NAME, org_perform.organization_name) AS Perform_Facility_Name,
             COALESCE(d_org_perform.ORGANIZATION_STREET_ADDRESS_1, org_perform.street_address_1) AS Testing_lab_Address_One,
             COALESCE(d_org_perform.ORGANIZATION_STREET_ADDRESS_2, org_perform.street_address_2) AS Testing_lab_Address_Two,
-            COALESCE(d_org_perform.ORGANIZATION_COUNTRY, org_perform.country) AS Testing_lab_Country,
+            org_perform.country_code AS Testing_lab_Country,
             COALESCE(d_org_perform.ORGANIZATION_COUNTY_CODE, org_perform.county_code) AS Testing_lab_county,
             COALESCE(d_org_perform.ORGANIZATION_COUNTY, org_perform.county) AS Testing_lab_county_Desc,
             COALESCE(d_org_perform.ORGANIZATION_CITY, org_perform.city) AS Testing_lab_City,
@@ -352,7 +352,7 @@ BEGIN
             COALESCE(d_org_author.ORGANIZATION_NAME,org_author.organization_name) AS Reporting_Facility_Name,
             COALESCE(d_org_author.ORGANIZATION_STREET_ADDRESS_1, org_author.street_address_1) AS Reporting_Facility_Address_One,
             COALESCE(d_org_author.ORGANIZATION_STREET_ADDRESS_2, org_author.street_address_2) AS Reporting_Facility_Address_Two,
-            COALESCE(d_org_author.ORGANIZATION_COUNTRY,org_author.country) AS Reporting_Facility_Country,
+            org_author.country_code AS Reporting_Facility_Country,
             COALESCE(d_org_author.ORGANIZATION_COUNTY_CODE, org_author.county_code) AS Reporting_Facility_County,
             COALESCE(d_org_author.ORGANIZATION_COUNTY, org_author.county) AS Reporting_Facility_County_Desc,
             COALESCE(d_org_author.ORGANIZATION_CITY, org_author.city) AS Reporting_Facility_City,
@@ -365,7 +365,7 @@ BEGIN
             COALESCE(d_org_order.ORGANIZATION_NAME, org_order.organization_name) AS Ordering_Facility_Name,
             COALESCE(d_org_order.ORGANIZATION_STREET_ADDRESS_1, org_order.street_address_1) AS Ordering_Facility_Address_One,
             COALESCE(d_org_order.ORGANIZATION_STREET_ADDRESS_2, org_order.street_address_2) AS Ordering_Facility_Address_Two,
-            COALESCE(d_org_order.ORGANIZATION_COUNTRY, org_order.country) AS Ordering_Facility_Country,
+            org_order.country_code AS Ordering_Facility_Country,
             COALESCE(d_org_order.ORGANIZATION_COUNTY_CODE, org_order.county_code) AS Ordering_Facility_County,
             COALESCE(d_org_order.ORGANIZATION_COUNTY, org_order.county) AS Ordering_Facility_County_Desc,
             COALESCE(d_org_order.ORGANIZATION_CITY, org_order.city) AS Ordering_Facility_City,
@@ -408,9 +408,6 @@ BEGIN
                 ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv WHERE cast(nprv.value AS BIGINT) = d_provider_order.provider_uid)
             LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_provider_order WITH(NOLOCK) ON dim_state_provider_order.state_cd = d_provider_order.PROVIDER_STATE_CODE
             LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_provider_order WITH(NOLOCK) ON nrt_state_provider_order.state_cd = provider_order.state_code
-            OUTER APPLY (
-            SELECT COALESCE(d_provider_order.PROVIDER_COUNTRY,provider_order.country) AS Provider_Country
-            ) AS pd
 
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;

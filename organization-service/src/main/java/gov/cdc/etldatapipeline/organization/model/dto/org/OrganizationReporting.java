@@ -37,6 +37,7 @@ public class OrganizationReporting {
     private String county;
     private String countyCode;
     private String country;
+    private String countryCode;
     private String addressComments;
     private String phoneWork;
     private String phoneExtWork;

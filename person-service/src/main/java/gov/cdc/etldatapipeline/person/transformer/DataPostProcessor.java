@@ -117,11 +117,14 @@ public class DataPostProcessor {
 
     public <T extends PersonExtendedProps> void processPersonEntityData(String entityData, T pf) {
         if (!ObjectUtils.isEmpty(entityData)) {
+
+            // deserialize once, guarantee non-null
+            EntityData[] allData = requireNonNull(deserializePayload(entityData, EntityData[].class));
+
             Function<Predicate<? super EntityData>, T> entityDataTypeCdFn =
-                    (Predicate<? super EntityData> p) -> Arrays.stream(
-                                    requireNonNull(deserializePayload(entityData, EntityData[].class)))
-                            .filter(p)
+                    p -> Arrays.stream(allData)
                             .filter(e -> !ObjectUtils.isEmpty(e.getEntityIdSeq()))
+                            .filter(p)
                             .max(Comparator.comparing(EntityData::getEntityIdSeq))
                             .map(n -> n.updatePerson(pf))
                             .orElse(null);

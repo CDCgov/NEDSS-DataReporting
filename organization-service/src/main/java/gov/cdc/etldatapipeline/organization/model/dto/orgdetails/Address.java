@@ -25,7 +25,7 @@ public class Address implements OrgExtension {
     private String cntyCd;
     private String state;
     private String cntryCd;
-    private String state_desc;
+    private String stateDesc;
     private String county;
     private String withinCityLimitsInd;
     private String country;
@@ -38,11 +38,12 @@ public class Address implements OrgExtension {
             orgRep.setStreetAddress2(streetAddr2);
             orgRep.setCity(city);
             orgRep.setStateCode(state);
-            orgRep.setState(state_desc);
+            orgRep.setState(stateDesc);
             orgRep.setZip(zip);
             orgRep.setCounty(county);
             orgRep.setCountyCode(cntyCd);
             orgRep.setCountry(country);
+            orgRep.setCountryCode(cntryCd);
             orgRep.setAddressComments(addressComments);
         } else if (org.getClass() == OrganizationElasticSearch.class) {
             OrganizationElasticSearch orgElastic = (OrganizationElasticSearch) org;
@@ -50,7 +51,7 @@ public class Address implements OrgExtension {
             orgElastic.setStreetAddr2(streetAddr2);
             orgElastic.setCity(city);
             orgElastic.setState(state);
-            orgElastic.setState(state_desc);
+            orgElastic.setState(stateDesc);
             orgElastic.setZip(zip);
             orgElastic.setCntyCd(cntyCd);
             orgElastic.setCntryCd(cntryCd);
