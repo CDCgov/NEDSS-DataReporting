@@ -49,7 +49,7 @@ public interface PersonExtendedProps {
     default void setCounty(String county) {
     }
 
-    void setCountyCode(String county_code);
+    void setCountyCode(String countyCode);
 
     default void setCountryCode(String countryCode) {
     }
@@ -233,6 +233,9 @@ public interface PersonExtendedProps {
     }
 
     default void setProviderRegistrationNumAuth(String providerRegistrationNumAuth) {
+    }
+
+    default void setProviderNpi(String providerNpi) {
     }
 
     default void setEntityUid(Long entityUid) {

@@ -318,18 +318,18 @@ BEGIN
             COALESCE(d_patient.PATIENT_ETHNICITY,p.ethnicity) AS PATIENT_ETHNICITY
         INTO #COVID_LAB_PATIENT_DATA
         FROM #COVID_OBSERVATIONS_TO_PROCESS o
-                 INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.observation_uid = obs.observation_uid
-                 LEFT JOIN dbo.d_patient d_patient WITH(NOLOCK) ON obs.patient_id = d_patient.PATIENT_UID
-                 LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state WITH(NOLOCK) ON dim_state.state_cd = d_patient.PATIENT_STATE_CODE
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code
-                 OUTER APPLY (
+            INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.observation_uid = obs.observation_uid
+            LEFT JOIN dbo.d_patient d_patient WITH(NOLOCK) ON obs.patient_id = d_patient.PATIENT_UID
+            LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
+            LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state WITH(NOLOCK) ON dim_state.state_cd = d_patient.PATIENT_STATE_CODE
+            LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code
+            OUTER APPLY (
             SELECT
                 COALESCE(d_patient.PATIENT_CURRENT_SEX,p.current_sex) AS PATIENT_CURRENT_SEX,
                 COALESCE(d_patient.PATIENT_DECEASED_INDICATOR,p.deceased_indicator) AS PATIENT_DECEASED_INDICATOR
-        ) AS pd
-                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'             --Person.PERSON_CURR_GENDER
-                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg2.cd='DEM127';     --Person.PATIENT_DECEASED_IND
+            ) AS pd
+            LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'             --Person.PERSON_CURR_GENDER
+            LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg2.cd='DEM127';     --Person.PATIENT_DECEASED_IND
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_PATIENT_DATA;
 
@@ -378,7 +378,7 @@ BEGIN
             COALESCE(d_provider_order.PROVIDER_LAST_NAME,provider_order.last_name) AS Ordering_Provider_Last_Name,
             COALESCE(d_provider_order.PROVIDER_STREET_ADDRESS_1,provider_order.street_address_1) AS Ordering_Provider_Address_One,
             COALESCE(d_provider_order.PROVIDER_STREET_ADDRESS_2,provider_order.street_address_2) AS Ordering_Provider_Address_Two,
-            cvg1.code_val AS Ordering_Provider_Country, --Country Code is not recorded in D_PROVIDER nor nrt_provider. Temporary solution.
+            provider_order.country_code AS Ordering_Provider_Country,
             COALESCE(d_provider_order.PROVIDER_COUNTY_CODE,provider_order.county_code) AS Ordering_Provider_County,
             COALESCE(d_provider_order.PROVIDER_COUNTY,provider_order.county) AS Ordering_Provider_County_Desc,
             COALESCE(d_provider_order.PROVIDER_CITY,provider_order.city) AS Ordering_Provider_City,
@@ -387,31 +387,30 @@ BEGIN
             COALESCE(d_provider_order.PROVIDER_ZIP,provider_order.zip) AS Ordering_Provider_Zip_Cd,
             COALESCE(d_provider_order.PROVIDER_PHONE_WORK,provider_order.phone_work) AS Ordering_Provider_Phone_Nbr,
             COALESCE(d_provider_order.PROVIDER_PHONE_EXT_WORK,provider_order.phone_ext_work) AS Ordering_Provider_Phone_Ext,
-            COALESCE(d_provider_order.PROVIDER_LOCAL_ID,provider_order.local_id) AS ORDERING_PROVIDER_ID
+            provider_order.provider_npi AS ORDERING_PROVIDER_ID
         INTO #COVID_LAB_ENTITIES_DATA
         FROM #COVID_LAB_CORE_DATA o
-                 LEFT JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.Observation_UID = obs.observation_uid
+            LEFT JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.Observation_UID = obs.observation_uid
             /*Auth Org*/
-                 LEFT JOIN dbo.nrt_organization org_author WITH(NOLOCK) ON obs.author_organization_id = org_author.organization_uid
-                 LEFT JOIN dbo.D_Organization d_org_author WITH(NOLOCK) ON obs.author_organization_id = d_org_author.ORGANIZATION_UID
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_org_author WITH(NOLOCK) ON dim_state_org_author.state_cd = d_org_author.ORGANIZATION_STATE_CODE
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_org_author WITH(NOLOCK) ON nrt_state_org_author.state_cd = org_author.state_code
+            LEFT JOIN dbo.nrt_organization org_author WITH(NOLOCK) ON obs.author_organization_id = org_author.organization_uid
+            LEFT JOIN dbo.D_Organization d_org_author WITH(NOLOCK) ON obs.author_organization_id = d_org_author.ORGANIZATION_UID
+            LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_org_author WITH(NOLOCK) ON dim_state_org_author.state_cd = d_org_author.ORGANIZATION_STATE_CODE
+            LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_org_author WITH(NOLOCK) ON nrt_state_org_author.state_cd = org_author.state_code
             /*Ordering Org*/
-                 LEFT JOIN dbo.nrt_organization org_order WITH(NOLOCK) ON obs.ordering_organization_id = org_order.organization_uid
-                 LEFT JOIN dbo.D_Organization d_org_order WITH(NOLOCK) ON obs.ordering_organization_id = d_org_order.ORGANIZATION_UID
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_org_order WITH(NOLOCK) ON dim_state_org_order.state_cd = d_org_order.ORGANIZATION_STATE_CODE
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_org_order WITH(NOLOCK) ON nrt_state_org_order.state_cd = org_order.state_code
+            LEFT JOIN dbo.nrt_organization org_order WITH(NOLOCK) ON obs.ordering_organization_id = org_order.organization_uid
+            LEFT JOIN dbo.D_Organization d_org_order WITH(NOLOCK) ON obs.ordering_organization_id = d_org_order.ORGANIZATION_UID
+            LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_org_order WITH(NOLOCK) ON dim_state_org_order.state_cd = d_org_order.ORGANIZATION_STATE_CODE
+            LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_org_order WITH(NOLOCK) ON nrt_state_org_order.state_cd = org_order.state_code
             /*Ordering Provider*/
-                 LEFT JOIN dbo.nrt_provider 	AS provider_order with (nolock)
-                           ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv WHERE cast(nprv.value AS BIGINT) = provider_order.provider_uid)
-                 LEFT JOIN dbo.D_PROVIDER AS d_provider_order with (nolock)
-                           ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv WHERE cast(nprv.value AS BIGINT) = d_provider_order.provider_uid)
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_provider_order WITH(NOLOCK) ON dim_state_provider_order.state_cd = d_provider_order.PROVIDER_STATE_CODE
-                 LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_provider_order WITH(NOLOCK) ON nrt_state_provider_order.state_cd = provider_order.state_code
-                 OUTER APPLY (
+            LEFT JOIN dbo.nrt_provider AS provider_order with (nolock)
+                ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv WHERE cast(nprv.value AS BIGINT) = provider_order.provider_uid)
+            LEFT JOIN dbo.D_PROVIDER AS d_provider_order with (nolock)
+                ON EXISTS (SELECT 1 FROM STRING_SPLIT(obs.ordering_person_id, ',') nprv WHERE cast(nprv.value AS BIGINT) = d_provider_order.provider_uid)
+            LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_provider_order WITH(NOLOCK) ON dim_state_provider_order.state_cd = d_provider_order.PROVIDER_STATE_CODE
+            LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_provider_order WITH(NOLOCK) ON nrt_state_provider_order.state_cd = provider_order.state_code
+            OUTER APPLY (
             SELECT COALESCE(d_provider_order.PROVIDER_COUNTRY,provider_order.country) AS Provider_Country
-        ) AS pd
-                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.Provider_Country AND cvg1.cd='DEM126';  --Location.PSL_CNTRY
+            ) AS pd
 
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;

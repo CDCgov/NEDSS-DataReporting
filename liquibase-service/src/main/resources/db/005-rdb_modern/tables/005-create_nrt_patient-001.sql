@@ -10,6 +10,8 @@ create table dbo.nrt_patient
     middle_name           varchar(50)                                  null,
     last_name             varchar(50)                                  null,
     name_suffix           varchar(50)                                  null,
+    nm_use_cd             varchar(20)                                  null,
+    status_name_cd        varchar(1)                                   null,
     alias_nickname        varchar(50)                                  null,
     street_address_1      varchar(50)                                  null,
     street_address_2      varchar(50)                                  null,
@@ -20,6 +22,7 @@ create table dbo.nrt_patient
     county                varchar(50)                                  null,
     county_code           varchar(50)                                  null,
     country               varchar(50)                                  null,
+    country_code          varchar(50)                                  null,
     within_city_limits    varchar(10)                                  null,
     phone_home            varchar(50)                                  null,
     phone_ext_home        varchar(50)                                  null,
@@ -90,15 +93,19 @@ create table dbo.nrt_patient
 
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient' and xtype = 'U')
     BEGIN
---CNDE-2498
+        --CNDE-2498
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nm_use_cd' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD nm_use_cd varchar(20);
+                ALTER TABLE dbo.nrt_patient ADD nm_use_cd varchar(20);
             END;
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'status_name_cd' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD status_name_cd varchar(1);
+                ALTER TABLE dbo.nrt_patient ADD status_name_cd varchar(1);
+            END;
+
+        --CNDE-2838
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'country_code' AND Object_ID = Object_ID(N'nrt_patient'))
+            BEGIN
+                ALTER TABLE dbo.nrt_patient ADD country_code VARCHAR(50);
             END;
     END;

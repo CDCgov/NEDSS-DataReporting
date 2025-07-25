@@ -37,6 +37,8 @@ public class EntityData implements ExtendPerson {
             } else if (typeCd.equalsIgnoreCase("PRN")) { // Provider Only Data
                 personFull.setProviderRegistrationNum(rootExtensionTxt);
                 personFull.setProviderRegistrationNumAuth(assigningAuthorityCd);
+            } else if (typeCd.equalsIgnoreCase("NPI")) { // Provider Only Data
+                personFull.setProviderNpi(rootExtensionTxt);
             }
         }
         // ElasticSearch related data

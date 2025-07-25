@@ -540,10 +540,10 @@
     "race_code_desc_txt": null,
     "race_code_parent_is_cd": null,
     "pr_person_uid": 11126300,
-    "typeCd": "PRN",
+    "typeCd": "NPI",
     "recordStatusCd": "ACTIVE",
     "entity_uid": 242790995,
-    "entity_id_seq": 6,
-    "assigning_authority_cd": "3.16.740.1.113883.3.1147.1.1002"
+    "entity_id_seq": 7,
+    "assigning_authority_cd": "CMS"
   }
 }

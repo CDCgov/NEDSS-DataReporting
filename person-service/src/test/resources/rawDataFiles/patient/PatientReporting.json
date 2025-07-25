@@ -225,6 +225,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "country_code"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "within_city_limits"
       },
       {
@@ -469,6 +474,7 @@
     "county": "Gwinnett County",
     "county_code": "13135",
     "country": "United States",
+    "country_code": "840",
     "within_city_limits": "Y",
     "birth_country": "Canada",
     "census_tract": "3389.45",
