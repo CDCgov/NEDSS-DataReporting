@@ -9,7 +9,6 @@ import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderReporting;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -68,21 +67,23 @@ public class DataPostProcessor {
 
     public <T extends PersonExtendedProps> void processPersonAddress(String address, T pf) {
         if (!ObjectUtils.isEmpty(address)) {
+
+            // deserialize once, guarantee non-null, pre-filter out payloads without postal locator
+            List<Address> addrData = Arrays.stream(requireNonNull(deserializePayload(address, Address[].class)))
+                    .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())).toList();
+
             if(pf.getClass() == PatientReporting.class || pf.getClass() == PatientElasticSearch.class) {
-                Arrays.stream(requireNonNull(deserializePayload(address, Address[].class)))
-                        .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
-                                && (pa.getUseCd().equalsIgnoreCase("H")))
+                addrData.stream()
+                        .filter(pa -> "H".equalsIgnoreCase(pa.getUseCd()))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
                         .ifPresent(n -> n.updatePerson(pf));
-                Arrays.stream(requireNonNull(deserializePayload(address, Address[].class)))
-                        .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
-                                && pa.getUseCd().equalsIgnoreCase("BIR"))
+                addrData.stream()
+                        .filter(pa -> "BIR".equalsIgnoreCase(pa.getUseCd()))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
                         .ifPresent(n -> n.updatePerson(pf));
             } else if (pf.getClass() == ProviderReporting.class || pf.getClass() == ProviderElasticSearch.class) {
-                Arrays.stream(requireNonNull(deserializePayload(address, Address[].class)))
-                        .filter(pa -> !ObjectUtils.isEmpty(pa.getPostalLocatorUid())
-                                && pa.getUseCd().equalsIgnoreCase("WP"))
+                addrData.stream()
+                        .filter(pa -> "WP".equalsIgnoreCase(pa.getUseCd()))
                         .max(Comparator.comparing(Address::getPostalLocatorUid))
                         .ifPresent(n -> n.updatePerson(pf));
             }
@@ -100,18 +101,20 @@ public class DataPostProcessor {
 
     public <T extends PersonExtendedProps> void processPersonTelephone(String telephone, T pf) {
         if (!ObjectUtils.isEmpty(telephone)) {
-            Function<String, T> personPhoneFn =
-                    code -> Arrays.stream(requireNonNull(deserializePayload(telephone, Phone[].class)))
-                            .filter(phone -> (StringUtils.hasText(phone.getUseCd())
-                                    && phone.getUseCd().equalsIgnoreCase(code)) ||
-                                    (StringUtils.hasText(phone.getCd())
-                                            && phone.getCd().equalsIgnoreCase(code)))
+
+            // deserialize once, guarantee non-null
+            Phone[] allData = requireNonNull(deserializePayload(telephone, Phone[].class));
+
+            Function<Predicate<? super Phone>, T> personPhoneFn =
+                    p -> Arrays.stream(allData)
+                            .filter(p)
                             .max(Comparator.comparing(Phone::getTeleLocatorUid))
                             .map(n -> n.updatePerson(pf))
                             .orElse(null);
-            personPhoneFn.apply("WP");
-            personPhoneFn.apply("H");
-            personPhoneFn.apply("CP");
+
+            personPhoneFn.apply(p -> "WP".equalsIgnoreCase(p.getUseCd()));
+            personPhoneFn.apply(p -> "H".equalsIgnoreCase(p.getUseCd()));
+            personPhoneFn.apply(p -> "CP".equalsIgnoreCase(p.getCd()));
         }
     }
 
@@ -128,16 +131,11 @@ public class DataPostProcessor {
                             .max(Comparator.comparing(EntityData::getEntityIdSeq))
                             .map(n -> n.updatePerson(pf))
                             .orElse(null);
-            entityDataTypeCdFn.apply(e -> StringUtils.hasText(e.getAssigningAuthorityCd())
-                    && e.getAssigningAuthorityCd().equalsIgnoreCase("SSA"));
-            entityDataTypeCdFn.apply(e -> StringUtils.hasText(e.getTypeCd())
-                    && e.getTypeCd().equalsIgnoreCase("PN"));
-            entityDataTypeCdFn.apply(e -> StringUtils.hasText(e.getTypeCd())
-                    && e.getTypeCd().equalsIgnoreCase("QEC"));
-            entityDataTypeCdFn.apply(e -> StringUtils.hasText(e.getTypeCd())
-                    && e.getTypeCd().equalsIgnoreCase("PRN"));
-            entityDataTypeCdFn.apply(e -> StringUtils.hasText(e.getTypeCd())
-                    && e.getTypeCd().equalsIgnoreCase("NPI"));
+            entityDataTypeCdFn.apply(e -> "SSA".equalsIgnoreCase(e.getAssigningAuthorityCd()));
+            entityDataTypeCdFn.apply(e -> "PN".equalsIgnoreCase(e.getTypeCd()));
+            entityDataTypeCdFn.apply(e -> "QEC".equalsIgnoreCase(e.getTypeCd()));
+            entityDataTypeCdFn.apply(e -> "PRN".equalsIgnoreCase(e.getTypeCd()));
+            entityDataTypeCdFn.apply(e -> "NPI".equalsIgnoreCase(e.getTypeCd()));
         }
     }
 

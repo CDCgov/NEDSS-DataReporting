@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.util.StringUtils;
 
 @Data
 @Builder
@@ -46,8 +45,7 @@ public class Address implements ExtendPerson {
     private String censusTract;
 
     public <T extends PersonExtendedProps> T updatePerson(T personFull) {
-        if (!StringUtils.hasText(useCd)) return personFull;
-        if (useCd.equalsIgnoreCase("H") || useCd.equalsIgnoreCase("WP")) {
+        if ("H".equalsIgnoreCase(useCd) || "WP".equalsIgnoreCase(useCd)) {
             personFull.setStreetAddress1(streetAddr1);
             personFull.setStreetAddress2(streetAddr2);
             personFull.setCity(city);
@@ -66,7 +64,7 @@ public class Address implements ExtendPerson {
             personFull.setAddrPlUid(postalLocatorUid);
             personFull.setCensusTract(censusTract);
         }
-        if (useCd.equalsIgnoreCase("BIR")) {
+        if ("BIR".equalsIgnoreCase(useCd)) {
             personFull.setBirthCountry(birthCountry);
         }
         return personFull;
