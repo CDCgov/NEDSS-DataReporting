@@ -81,6 +81,7 @@ public class PatientReporting implements PersonExtendedProps {
     private String countyCode;
     @JsonProperty("country")
     private String homeCountry;
+    private String countryCode;
     private String withinCityLimits;
     private String birthCountry;
     private String censusTract;
@@ -90,8 +91,8 @@ public class PatientReporting implements PersonExtendedProps {
     private String phoneWork;
     private String phoneExtWork;
     private String phoneHome;
-    private String PhoneExtHome;
-    private String PhoneCell;
+    private String phoneExtHome;
+    private String phoneCell;
 
     //Email
     private String email;

@@ -20,6 +20,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization' and xtyp
             county             varchar(50)                                     NULL,
             county_code        varchar(50)                                     NULL,
             country            varchar(50)                                     NULL,
+            country_code       varchar(50)                                     NULL,
             address_comments   varchar(2000)                                   NULL,
             phone_work         varchar(50)                                     NULL,
             phone_ext_work     varchar(50)                                     NULL,
@@ -43,4 +44,15 @@ IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id =
     BEGIN
         ALTER TABLE dbo.nrt_organization
         ADD CONSTRAINT pk_nrt_organization PRIMARY KEY (organization_uid);
+    END;
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization' and xtype = 'U')
+    BEGIN
+
+        --CNDE-2838
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'country_code' AND Object_ID = Object_ID(N'nrt_organization'))
+            BEGIN
+                ALTER TABLE dbo.nrt_organization ADD country_code VARCHAR(50);
+            END;
+
     END;

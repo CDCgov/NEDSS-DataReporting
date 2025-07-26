@@ -54,7 +54,7 @@ class OrganizationDataProcessTests {
                 .cntyCd("01001")
                 .state("01")
                 .cntryCd("840")
-                .state_desc("Alabama")
+                .stateDesc("Alabama")
                 .county("Autauga County")
                 .country("United States")
                 .addressComments("Testing address Comments!")

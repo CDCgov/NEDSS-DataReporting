@@ -58,6 +58,7 @@ public class ProviderReporting implements PersonExtendedProps {
     private String county;
     private String countyCode;
     private String country;
+    private String countryCode;
     private String addressComments;
 
 
@@ -76,4 +77,5 @@ public class ProviderReporting implements PersonExtendedProps {
     private String providerQuickCode;
     private String providerRegistrationNum;
     private String providerRegistrationNumAuth;
+    private String providerNpi;
 }

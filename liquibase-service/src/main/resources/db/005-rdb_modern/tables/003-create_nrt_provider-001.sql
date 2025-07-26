@@ -14,6 +14,7 @@ CREATE TABLE dbo.nrt_provider
     quick_code                     varchar(50)                                  null,
     provider_registration_num      varchar(50)                                  null,
     provider_registration_num_auth varchar(199)                                 null,
+    provider_npi                   varchar(50)                                  null,
     street_address_1               varchar(50)                                  null,
     street_address_2               varchar(50)                                  null,
     city                           varchar(50)                                  null,
@@ -23,6 +24,7 @@ CREATE TABLE dbo.nrt_provider
     county                         varchar(50)                                  null,
     county_code                    varchar(50)                                  null,
     country                        varchar(50)                                  null,
+    country_code                   varchar(50)                                  null,
     address_comments               varchar(2000)                                null,
     phone_work                     varchar(50)                                  null,
     phone_ext_work                 varchar(50)                                  null,
@@ -40,3 +42,19 @@ CREATE TABLE dbo.nrt_provider
     max_datetime                   datetime2 generated always as row end hidden not null,
     period for system_time (refresh_datetime,max_datetime)
 );
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_provider' and xtype = 'U')
+    BEGIN
+
+        --CNDE-2838
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'country_code' AND Object_ID = Object_ID(N'nrt_provider'))
+            BEGIN
+                ALTER TABLE dbo.nrt_provider ADD country_code VARCHAR(50);
+            END;
+
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'provider_npi' AND Object_ID = Object_ID(N'nrt_provider'))
+            BEGIN
+                ALTER TABLE dbo.nrt_provider ADD provider_npi VARCHAR(50);
+            END;
+
+    END;

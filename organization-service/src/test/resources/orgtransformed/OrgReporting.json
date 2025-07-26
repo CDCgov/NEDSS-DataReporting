@@ -115,6 +115,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "country_code"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "city"
       },
       {
@@ -179,6 +184,7 @@
     "county": "Autauga County",
     "county_code": "01001",
     "country": "United States",
+    "country_code": "840",
     "address_comments": "Testing address Comments!",
     "phone_work": "3343613743",
     "phone_ext_work": "1234",

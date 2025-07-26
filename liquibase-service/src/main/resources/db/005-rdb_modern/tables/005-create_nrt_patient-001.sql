@@ -11,6 +11,8 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient' and xtype = '
             middle_name           varchar(50)                                  null,
             last_name             varchar(50)                                  null,
             name_suffix           varchar(50)                                  null,
+            nm_use_cd             varchar(20)                                  null,
+            status_name_cd        varchar(1)                                   null,
             alias_nickname        varchar(50)                                  null,
             street_address_1      varchar(50)                                  null,
             street_address_2      varchar(50)                                  null,
@@ -21,6 +23,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient' and xtype = '
             county                varchar(50)                                  null,
             county_code           varchar(50)                                  null,
             country               varchar(50)                                  null,
+            country_code          varchar(50)                                  null,
             within_city_limits    varchar(10)                                  null,
             phone_home            varchar(50)                                  null,
             phone_ext_home        varchar(50)                                  null,
@@ -31,9 +34,12 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient' and xtype = '
             dob                   datetime                                     null,
             age_reported          numeric(18, 0)                               null,
             age_reported_unit     varchar(20)                                  null,
+            age_reported_unit_cd  varchar(20)                                  null,
             birth_sex             varchar(50)                                  null,
             current_sex           varchar(50)                                  null,
+            curr_sex_cd           varchar(20)                                  null,
             deceased_indicator    varchar(50)                                  null,
+            deceased_ind_cd       varchar(20)                                  null,
             deceased_date         datetime                                     null,
             marital_status        varchar(50)                                  null,
             ssn                   varchar(50)                                  null,
@@ -91,40 +97,38 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient' and xtype = '
         );
     END
 
-IF EXISTS (SELECT 1
-           FROM sysobjects
-           WHERE name = 'nrt_patient'
-             and xtype = 'U')
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient' and xtype = 'U')
     BEGIN
         --CNDE-2498
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'nm_use_cd' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD nm_use_cd varchar(20);
+                ALTER TABLE dbo.nrt_patient ADD nm_use_cd varchar(20);
             END;
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'status_name_cd' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD status_name_cd varchar(1);
+                ALTER TABLE dbo.nrt_patient ADD status_name_cd varchar(1);
             END;
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'ethnic_group_ind' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD ethnic_group_ind varchar(20);
+                ALTER TABLE dbo.nrt_patient ADD ethnic_group_ind varchar(20);
             END;
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'deceased_ind_cd' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD deceased_ind_cd varchar(20);
+                ALTER TABLE dbo.nrt_patient ADD deceased_ind_cd varchar(20);
             END;
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'curr_sex_cd' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD curr_sex_cd varchar(20);
+                ALTER TABLE dbo.nrt_patient ADD curr_sex_cd varchar(20);
             END;
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'age_reported_unit_cd' AND Object_ID = Object_ID(N'nrt_patient'))
             BEGIN
-                ALTER TABLE dbo.nrt_patient
-                    ADD age_reported_unit_cd varchar(20);
+                ALTER TABLE dbo.nrt_patient ADD age_reported_unit_cd varchar(20);
+            END;
+
+        --CNDE-2838
+        IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'country_code' AND Object_ID = Object_ID(N'nrt_patient'))
+            BEGIN
+                ALTER TABLE dbo.nrt_patient ADD country_code VARCHAR(50);
             END;
     END;
