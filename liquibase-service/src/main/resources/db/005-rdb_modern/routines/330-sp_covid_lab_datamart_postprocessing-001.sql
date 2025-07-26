@@ -104,11 +104,13 @@ BEGIN
             replace(replace(otxt_comment.ovt_value_txt, CHAR(13), ' '), CHAR(10), ' ') AS Result_Comments
         INTO #COVID_TEXT_RESULT_LIST
         FROM #COVID_RESULT_LIST cp --Order
-                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON cp.target_observation_uid = o.observation_uid
-                 LEFT OUTER JOIN dbo.nrt_observation_txt otxt WITH(NOLOCK) ON o.observation_uid = otxt.observation_uid AND isnull(o.batch_id,1) = isnull(otxt.batch_id,1)
-            AND (otxt.ovt_txt_type_cd = 'O' OR otxt.ovt_txt_type_cd IS NULL)
-                 LEFT OUTER JOIN dbo.nrt_observation_txt otxt_comment WITH(NOLOCK) ON o.observation_uid = otxt_comment.observation_uid AND isnull(o.batch_id,1) = isnull(otxt_comment.batch_id,1)
-            AND otxt_comment.ovt_txt_type_cd = 'N'
+            INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON cp.target_observation_uid = o.observation_uid
+            LEFT OUTER JOIN dbo.nrt_observation_txt otxt WITH(NOLOCK) ON
+                o.observation_uid = otxt.observation_uid AND isnull(o.batch_id,1) = isnull(otxt.batch_id,1)
+                    AND (otxt.ovt_txt_type_cd = 'O' OR otxt.ovt_txt_type_cd IS NULL)
+            LEFT OUTER JOIN dbo.nrt_observation_txt otxt_comment WITH(NOLOCK) ON
+                o.observation_uid = otxt_comment.observation_uid AND isnull(o.batch_id,1) = isnull(otxt_comment.batch_id,1)
+                    AND otxt_comment.ovt_txt_type_cd = 'N'
         ;
 
         IF @debug = 'true' SELECT '#COVID_TEXT_RESULT_LIST',*
@@ -149,17 +151,15 @@ BEGIN
             mat.material_desc AS Specimen_Desc,
             mat.material_details AS Specimen_type_free_text,
             CASE
-                WHEN o.accession_number IS NULL
-                    OR o.accession_number = ''
-                    THEN o.local_id
+                WHEN o.accession_number IS NULL OR o.accession_number = ''
+                THEN o.local_id
                 ELSE o.accession_number
-                END AS Specimen_Id,
+            END AS Specimen_Id,
             CASE
-                WHEN o.accession_number IS NULL
-                    OR o.accession_number = ''
-                    THEN o.local_id
+                WHEN o.accession_number IS NULL OR o.accession_number = ''
+                THEN o.local_id
                 ELSE o.accession_number
-                END AS Testing_Lab_Accession_Number,
+            END AS Testing_Lab_Accession_Number,
             o.add_time AS Lab_Added_Dt,
             o.last_chg_time AS Lab_Update_Dt,
             o.effective_from_time AS Specimen_Coll_Dt,
@@ -171,14 +171,16 @@ BEGIN
             o1.device_instance_id_2 AS DEVICE_INSTANCE_ID_2,
             cvg2.code_short_desc_txt AS Test_result_status,
             o1.method_desc_txt AS Test_Method_Desc,
-            CASE WHEN o1.method_cd LIKE '%**%'
-                     THEN LEFT(o1.method_cd, CHARINDEX('**', o1.method_cd)-1)
-                 ELSE o1.method_cd
-                END AS Device_Type_Id_1,
-            CASE WHEN o1.method_cd LIKE '%**%'
-                     THEN SUBSTRING(o1.method_cd, CHARINDEX('**', o1.method_cd)+2, LEN(o1.method_cd))
-                 ELSE NULL
-                END AS Device_Type_Id_2,
+            CASE
+                WHEN o1.method_cd LIKE '%**%'
+                THEN LEFT(o1.method_cd, CHARINDEX('**', o1.method_cd)-1)
+                ELSE o1.method_cd
+            END AS Device_Type_Id_1,
+            CASE
+                WHEN o1.method_cd LIKE '%**%'
+                THEN SUBSTRING(o1.method_cd, CHARINDEX('**', o1.method_cd)+2, LEN(o1.method_cd))
+                ELSE NULL
+            END AS Device_Type_Id_2,
             COALESCE(d_org_perform.ORGANIZATION_NAME, org_perform.organization_name) AS Perform_Facility_Name,
             COALESCE(d_org_perform.ORGANIZATION_STREET_ADDRESS_1, org_perform.street_address_1) AS Testing_lab_Address_One,
             COALESCE(d_org_perform.ORGANIZATION_STREET_ADDRESS_2, org_perform.street_address_2) AS Testing_lab_Address_Two,
@@ -206,26 +208,26 @@ BEGIN
             LTRIM(ISNULL(ovc.ovc_display_name, '') + ' ' + ISNULL(Text_Result_Desc, '') + ' ' + ISNULL(Result_Comments, ' ')) AS Result
         INTO #COVID_LAB_CORE_DATA
         FROM #COVID_TEXT_RESULT_LIST ctr
-                 LEFT JOIN dbo.nrt_observation o WITH(NOLOCK) ON ctr.observation_uid = o.observation_uid
-                 LEFT JOIN dbo.nrt_observation o1 WITH(NOLOCK) ON ctr.target_observation_uid = o1.observation_uid --Result
-            AND o1.obs_domain_cd_st_1 = 'Result'
-                 LEFT OUTER JOIN dbo.nrt_observation_coded ovc WITH(NOLOCK) ON o1.observation_uid = ovc.observation_uid
-            AND isnull(o1.batch_id,1) = isnull(ovc.batch_id,1)
-                 LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_code WITH(NOLOCK) ON j_code.code = o.jurisdiction_cd
-                 LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg1 WITH(NOLOCK) ON cvg1.code = o.status_cd
-            AND cvg1.code_set_nm = 'ACT_OBJ_ST'
-                 LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg2 WITH(NOLOCK) ON cvg2.code = o1.status_cd
-            AND cvg2.code_set_nm = 'ACT_OBJ_ST'
-                 LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(NOLOCK) ON o1.observation_uid = ovn.observation_uid
-            AND isnull(o1.batch_id,1) = isnull(ovn.batch_id,1)
-                 LEFT OUTER JOIN dbo.nrt_observation_material mat WITH(NOLOCK) ON o.material_id = mat.material_id
-                 LEFT OUTER JOIN dbo.nrt_organization org_perform WITH(NOLOCK) ON o1.performing_organization_id = org_perform.organization_uid
+            LEFT JOIN dbo.nrt_observation o WITH(NOLOCK) ON ctr.observation_uid = o.observation_uid
+            LEFT JOIN dbo.nrt_observation o1 WITH(NOLOCK) ON ctr.target_observation_uid = o1.observation_uid --Result
+                AND o1.obs_domain_cd_st_1 = 'Result'
+            LEFT OUTER JOIN dbo.nrt_observation_coded ovc WITH(NOLOCK) ON o1.observation_uid = ovc.observation_uid
+                AND isnull(o1.batch_id,1) = isnull(ovc.batch_id,1)
+            LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_code WITH(NOLOCK) ON j_code.code = o.jurisdiction_cd
+            LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg1 WITH(NOLOCK) ON cvg1.code = o.status_cd
+                AND cvg1.code_set_nm = 'ACT_OBJ_ST'
+            LEFT OUTER JOIN dbo.nrt_srte_Code_value_general cvg2 WITH(NOLOCK) ON cvg2.code = o1.status_cd
+                AND cvg2.code_set_nm = 'ACT_OBJ_ST'
+            LEFT OUTER JOIN dbo.nrt_observation_numeric ovn WITH(NOLOCK) ON o1.observation_uid = ovn.observation_uid
+                AND isnull(o1.batch_id,1) = isnull(ovn.batch_id,1)
+            LEFT OUTER JOIN dbo.nrt_observation_material mat WITH(NOLOCK) ON o.material_id = mat.material_id
+            LEFT OUTER JOIN dbo.nrt_organization org_perform WITH(NOLOCK) ON o1.performing_organization_id = org_perform.organization_uid
             --LEFT JOIN dbo.nrt_organization_key orgk WITH(NOLOCK) ON orgk.organization_uid = org_perform.organization_uid
-                 LEFT OUTER JOIN dbo.D_Organization d_org_perform WITH(NOLOCK) ON o1.performing_organization_id = d_org_perform.ORGANIZATION_UID
-                 OUTER APPLY  (
+            LEFT OUTER JOIN dbo.D_Organization d_org_perform WITH(NOLOCK) ON o1.performing_organization_id = d_org_perform.ORGANIZATION_UID
+            OUTER APPLY  (
             SELECT COALESCE(d_org_perform.ORGANIZATION_STATE, org_perform.state) Testing_lab_State
-        ) AS ld
-                 LEFT JOIN dbo.nrt_srte_State_code dim_state_testing_lab WITH(NOLOCK) ON dim_state_testing_lab.code_desc_txt = ld.Testing_lab_State;
+            ) AS ld
+            LEFT JOIN dbo.nrt_srte_State_code dim_state_testing_lab WITH(NOLOCK) ON dim_state_testing_lab.code_desc_txt = ld.Testing_lab_State;
 
 
         /* Logging */
@@ -253,7 +255,7 @@ BEGIN
                     OR Result LIKE 'the specimen is negative for sars-cov%'
                     OR Result LIKE '%not detected%'
                     OR Result LIKE 'undetected%'
-                    THEN 'Negative'
+                THEN 'Negative'
                 -- Modify the logic (add additional variables) to determine positive labs
                 WHEN Result IN('***DETECTED***', 'Presum-Pos', 'present')
                     OR Result LIKE 'abnormal%'
@@ -264,14 +266,14 @@ BEGIN
                     OR Result LIKE '%positive%'
                     OR Result LIKE 'presumptive pos%'
                     OR Result LIKE 'the specimen is positive for sars-cov%'
-                    THEN 'Positive'
+                THEN 'Positive'
                 -- Modify the logic (add additional variables) to determine Indeterminate labs
                 WHEN Result IN('Inconclusive', 'Indeterminate', 'Invalid', 'not det', 'Not Performed', 'pendingPUI', 'unknown', 'unknowninconclusive')
                     OR Result LIKE '%INCONCLUSIVE by RT%'
                     OR Result LIKE '%Inconclusive%'
                     OR Result LIKE '%Indeterminate%'
                     OR Result LIKE '%unresolved%'
-                    THEN 'Indeterminate'
+                THEN 'Indeterminate'
                 ELSE NULL
                 END AS Result_Category
         INTO #COVID_LAB_RSLT_TYPE
@@ -299,12 +301,12 @@ BEGIN
             COALESCE(d_patient.PATIENT_MIDDLE_NAME,p.middle_name) AS Middle_Name,
             COALESCE(d_patient.PATIENT_FIRST_NAME,p.first_name) AS First_Name,
             COALESCE(d_patient.PATIENT_LOCAL_ID,p.local_id) AS Patient_Local_ID,
-            cvg1.CODE_VAL AS Current_Sex_Cd, --CNDE-2751: Sex Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
+            p.curr_sex_cd AS Current_Sex_Cd,
             COALESCE(d_patient.PATIENT_AGE_REPORTED,p.age_reported) AS Age_Reported,
-            COALESCE(d_patient.PATIENT_AGE_REPORTED_UNIT,p.age_reported_unit) AS Age_Unit_Cd,
+            p.age_reported_unit_cd AS Age_Unit_Cd,
             COALESCE(d_patient.PATIENT_DOB,p.dob) AS Birth_Dt,
             COALESCE(d_patient.PATIENT_DECEASED_DATE,p.deceased_date) AS PATIENT_DEATH_DATE,
-            cvg2.CODE_VAL AS PATIENT_DEATH_IND, --Death Code is not recorded in D_PATIENT nor nrt_patient. Temporary solution.
+            p.deceased_ind_cd AS PATIENT_DEATH_IND,
             COALESCE(d_patient.PATIENT_PHONE_HOME,p.phone_home) AS Phone_Number,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_1,p.street_address_1) AS Address_One,
             COALESCE(d_patient.PATIENT_STREET_ADDRESS_2,p.street_address_2) AS Address_Two,
@@ -315,21 +317,14 @@ BEGIN
             COALESCE(d_patient.PATIENT_COUNTY_CODE,p.county_code) AS County_Cd,
             COALESCE(d_patient.PATIENT_COUNTY,p.county) AS County_Desc,
             COALESCE(d_patient.PATIENT_RACE_CALCULATED,p.race_calculated) AS PATIENT_RACE_CALC,
-            COALESCE(d_patient.PATIENT_ETHNICITY,p.ethnicity) AS PATIENT_ETHNICITY
+            p.ethnic_group_ind AS PATIENT_ETHNICITY
         INTO #COVID_LAB_PATIENT_DATA
         FROM #COVID_OBSERVATIONS_TO_PROCESS o
             INNER JOIN dbo.nrt_observation obs WITH(NOLOCK) ON o.observation_uid = obs.observation_uid
             LEFT JOIN dbo.d_patient d_patient WITH(NOLOCK) ON obs.patient_id = d_patient.PATIENT_UID
             LEFT JOIN dbo.nrt_patient p WITH(NOLOCK) ON obs.patient_id = p.patient_uid
             LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state WITH(NOLOCK) ON dim_state.state_cd = d_patient.PATIENT_STATE_CODE
-            LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code
-            OUTER APPLY (
-            SELECT
-                COALESCE(d_patient.PATIENT_CURRENT_SEX,p.current_sex) AS PATIENT_CURRENT_SEX,
-                COALESCE(d_patient.PATIENT_DECEASED_INDICATOR,p.deceased_indicator) AS PATIENT_DECEASED_INDICATOR
-            ) AS pd
-            LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK) ON cvg1.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'             --Person.PERSON_CURR_GENDER
-            LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK) ON cvg2.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg2.cd='DEM127';     --Person.PATIENT_DECEASED_IND
+            LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state WITH(NOLOCK) ON nrt_state.state_cd = p.state_code;
 
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_PATIENT_DATA;
 
@@ -409,7 +404,6 @@ BEGIN
             LEFT OUTER JOIN dbo.nrt_srte_State_code dim_state_provider_order WITH(NOLOCK) ON dim_state_provider_order.state_cd = d_provider_order.PROVIDER_STATE_CODE
             LEFT OUTER JOIN dbo.nrt_srte_State_code nrt_state_provider_order WITH(NOLOCK) ON nrt_state_provider_order.state_cd = provider_order.state_code
 
-
         IF @debug = 'true' SELECT @proc_step_name, * FROM #COVID_LAB_ENTITIES_DATA;
 
         /* Logging */
@@ -423,10 +417,13 @@ BEGIN
 
         SELECT DISTINCT
             core.Observation_UID AS ASSOC_OBSERVATION_UID,
-            o.associated_phc_uids AS Associated_Case_ID
+            STRING_AGG(i.local_id,', ') AS Associated_Case_ID
         INTO #COVID_LAB_ASSOCIATIONS
         FROM #COVID_LAB_CORE_DATA core
-                 INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON o.observation_uid = core.Observation_UID;
+            INNER JOIN dbo.nrt_observation o WITH(NOLOCK) ON o.observation_uid = core.Observation_UID
+            CROSS APPLY string_split(rtrim(ltrim(associated_phc_uids)),',') AS associatedPHC
+            LEFT JOIN nrt_investigation i ON i.public_health_case_uid = associatedPHC.value
+        group by core.Observation_UID ;
 
         IF @debug = 'true'
             SELECT @proc_step_name, * FROM #COVID_LAB_ASSOCIATIONS;
@@ -804,7 +801,17 @@ BEGIN
                 LEFT(Isnull(@observation_id_list, 'NULL'),500)
             );
 
-    END try
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
+
+    END TRY
     BEGIN catch
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
@@ -835,6 +842,15 @@ BEGIN
                 @FullErrorMessage
             );
 
-        RETURN Error_number();
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
+
     END catch;
 END;
