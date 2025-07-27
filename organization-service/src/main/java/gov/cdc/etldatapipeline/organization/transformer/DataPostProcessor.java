@@ -7,10 +7,10 @@ import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceEntity;
 import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceReporting;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
 import static java.util.Objects.requireNonNull;
@@ -41,17 +41,15 @@ public class DataPostProcessor {
                         .max(Comparator.comparing(Entity::getEntityIdSeq))
                         .ifPresent(n -> n.updateOrg(org));
             } else {
-
-                Function<String, T> entityFn = (String typeCd) ->
-                        Arrays.stream(allData)
-                                .filter(e -> !ObjectUtils.isEmpty(e.getEntityIdSeq())
-                                        && StringUtils.hasText(e.getTypeCd())
-                                        && e.getTypeCd().equalsIgnoreCase(typeCd))
+                Function<Predicate<? super Entity>, T> entityFn =
+                        p -> Arrays.stream(allData)
+                                .filter(e -> !ObjectUtils.isEmpty(e.getEntityIdSeq()))
+                                .filter(p)
                                 .max(Comparator.comparing(Entity::getEntityIdSeq))
                                 .map(n -> n.updateOrg(org))
                                 .orElse(null);
-                entityFn.apply("QEC"); // Quick Code
-                entityFn.apply("FI"); // Facility Id
+                entityFn.apply(e -> "QEC".equalsIgnoreCase(e.getTypeCd())); // Quick Code
+                entityFn.apply(e -> "FI".equalsIgnoreCase(e.getTypeCd())); // Facility Id
             }
         }
     }
