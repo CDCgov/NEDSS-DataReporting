@@ -5,7 +5,7 @@ if exists (select 1
            where name = 'rdsadmin') -- for aws
     begin
 
-        if not exists (select 1 FROM sys.databases WHERE is_cdc_enabled = 1 and name = 'nbs_odse')
+        if not exists (select 1 FROM sys.databases WHERE is_cdc_enabled = 1 and name = 'nbs_srte')
             begin
                 exec msdb.dbo.rds_cdc_enable_db 'nbs_srte';
             end;

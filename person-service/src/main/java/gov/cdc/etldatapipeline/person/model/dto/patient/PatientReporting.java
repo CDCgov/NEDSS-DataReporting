@@ -24,16 +24,20 @@ public class PatientReporting implements PersonExtendedProps {
     private String addlGenderInfo;
     private String ageReported;
     private String ageReportedUnit;
+    private String ageReportedUnitCd;
     private String addTime;
     private Long addUserId;
     private String birthSex;
     private String dob;
     private String currentSex;
+    private String currSexCd;
     private String deceasedIndicator;
+    private String deceasedIndCd;
     private String deceasedDate;
     private String generalComments;
     private String entryMethod;
     private String ethnicity;
+    private String ethnicGroupInd;
     private String unkEthnicRsn;
     private Long lastChgUserId;
     private String lastChgTime;
@@ -77,6 +81,7 @@ public class PatientReporting implements PersonExtendedProps {
     private String countyCode;
     @JsonProperty("country")
     private String homeCountry;
+    private String countryCode;
     private String withinCityLimits;
     private String birthCountry;
     private String censusTract;
@@ -86,8 +91,8 @@ public class PatientReporting implements PersonExtendedProps {
     private String phoneWork;
     private String phoneExtWork;
     private String phoneHome;
-    private String PhoneExtHome;
-    private String PhoneCell;
+    private String phoneExtHome;
+    private String phoneCell;
 
     //Email
     private String email;

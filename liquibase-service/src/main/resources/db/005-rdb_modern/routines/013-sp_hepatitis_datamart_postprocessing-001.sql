@@ -2884,18 +2884,6 @@ BEGIN
         COMMIT TRANSACTION;
 
 
----------------------------------------------------------------------------Dropping All TMP Tables------------------------------------------------------------
-
-        SELECT 'Transaction_count',@@TRANCOUNT;
-
-        IF @@TRANCOUNT > 0
-            BEGIN
-                select 'COMMIT 1';
-
-                COMMIT TRANSACTION;
-            END;
-
-        -------------------------------------------------------------------------------------------------------------------------
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 999;
@@ -2907,6 +2895,16 @@ BEGIN
 
 
         COMMIT TRANSACTION;
+
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
 
 
     END TRY
@@ -2929,7 +2927,15 @@ BEGIN
         VALUES( @Batch_id, 'HEPATITIS_DATAMART', 'Hepatitis_Case_DATAMART', 'ERROR', @Proc_Step_no,  @Proc_Step_name,  @FullErrorMessage,0
               );
 
-        RETURN -1;
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
 
     END CATCH;
 
