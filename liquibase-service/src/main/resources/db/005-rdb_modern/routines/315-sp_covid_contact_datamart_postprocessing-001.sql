@@ -58,7 +58,7 @@ BEGIN
             pat.PATIENT_STATE_CODE                                  AS 'SRC_PATIENT_STATE',
             pat.PATIENT_ZIP                                         AS 'SRC_PATIENT_ZIP',
             pat.PATIENT_COUNTY_CODE                                 AS 'SRC_PATIENT_COUNTY',
-            cvg3.CODE_VAL                                           AS 'SRC_PATIENT_COUNTRY',
+            nrt_pat.country_code                                    AS 'SRC_PATIENT_COUNTRY',
             j_inv.code_desc_txt                                     AS 'SRC_INV_JURISDICTION_NM',
             inv.activity_from_time                                  AS 'SRC_INV_START_DT',
             inv.investigation_status_cd                             AS 'SRC_INV_STATUS',
@@ -234,14 +234,14 @@ BEGIN
             LEFT OUTER JOIN dbo.D_PATIENT pat WITH (NOLOCK)
                 ON pat.PATIENT_UID = inv.patient_id
 
+            LEFT OUTER JOIN dbo.nrt_patient nrt_pat WITH (NOLOCK)
+                ON nrt_pat.patient_uid = inv.patient_id
+
             LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK)
                 ON cvg1.CODE_DESC = pat.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'           --Person.PERSON_CURR_GENDER
 
             LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK)
                 ON pat.PATIENT_DECEASED_INDICATOR = cvg2.CODE_DESC AND cvg2.cd='DEM127'    --Person.PATIENT_DECEASED_IND
-
-            LEFT JOIN dbo.v_code_value_general cvg3 WITH (NOLOCK)
-                ON pat.PATIENT_COUNTRY = cvg3.CODE_DESC AND cvg3.cd='DEM126'               --Location.PSL_CNTRY
 
             -- These replace CT_CONTACT_ANSWER joins in original with corresponding question identifiers
             LEFT OUTER JOIN dbo.nrt_contact_answer con_ans1 WITH (NOLOCK)
@@ -458,7 +458,15 @@ BEGIN
                    @proc_step_no, @proc_step_name, 0, LEFT(ISNULL(@phcid_list, 'NULL'),500)
                );
 
-        SELECT 'Success' AS Result;
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
 
     END TRY
     BEGIN CATCH
@@ -482,6 +490,15 @@ BEGIN
                    @proc_Step_no, @proc_step_name, 0, LEFT(ISNULL(@phcid_list, 'NULL'),500), @FullErrorMessage
                );
 
-        RETURN ERROR_NUMBER();
+        SELECT
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=1;
+            
     END CATCH;
 END;
