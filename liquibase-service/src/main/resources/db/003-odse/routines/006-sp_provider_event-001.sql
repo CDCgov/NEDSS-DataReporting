@@ -102,7 +102,8 @@ BEGIN
                                            FOR json path, INCLUDE_NULL_VALUES) AS address) AS address,
                                   -- person phone
                                   (SELECT (
-                                        SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
+                                        SELECT ph_tl_uid, ph_elp_cd, ph_elp_use_cd, telephoneNbr, extensionTxt, phone_comments
+                                        FROM (SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
                                               elp.cd              AS                               [ph_elp_cd],
                                               elp.use_cd          AS                               [ph_elp_use_cd],
                                               REPLACE(tl.phone_nbr_txt, ' ', '') 				   telephoneNbr,
@@ -129,7 +130,7 @@ BEGIN
                                         WHERE elp.entity_uid = p.person_uid
                                              AND elp.CLASS_CD = 'TELE'
                                              AND elp.CD IN ('CP')
-                                             AND tl.phone_nbr_txt IS NOT NULL
+                                             AND tl.phone_nbr_txt IS NOT NULL ) t
                                         FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone,
                                   -- person email
                                   (SELECT (SELECT tl.tele_locator_uid AS                  [email_tl_uid],
