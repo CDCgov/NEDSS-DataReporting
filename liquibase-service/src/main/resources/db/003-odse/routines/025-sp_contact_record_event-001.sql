@@ -32,7 +32,7 @@ BEGIN
             @debug = 'true'
             select @batch_id as Batch_id;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     ( batch_id
     , [Dataflow_Name]
     , [package_Name]
@@ -165,7 +165,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -248,7 +248,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -292,7 +292,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -335,7 +335,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -399,7 +399,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -439,7 +439,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -484,7 +484,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -531,7 +531,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -578,7 +578,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -635,7 +635,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -676,7 +676,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -708,7 +708,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -753,7 +753,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -805,7 +805,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -864,7 +864,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -903,7 +903,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -943,7 +943,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -989,7 +989,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1021,7 +1021,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1073,7 +1073,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1123,7 +1123,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1166,7 +1166,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1271,7 +1271,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1280,7 +1280,7 @@ BEGIN
     COMMIT TRANSACTION;
 
 
-    INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+    INSERT INTO [rdb].[dbo].[job_flow_log]
     ( batch_id
     , [Dataflow_Name]
     , [package_Name]
@@ -1311,7 +1311,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]

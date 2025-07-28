@@ -15,7 +15,7 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         (batch_id
         ,[Dataflow_Name]
         ,[package_Name]
@@ -102,7 +102,8 @@ BEGIN
                                            FOR json path, INCLUDE_NULL_VALUES) AS address) AS address,
                                   -- person phone
                                   (SELECT (
-                                        SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
+                                        SELECT ph_tl_uid, ph_elp_cd, ph_elp_use_cd, telephoneNbr, extensionTxt, phone_comments
+                                        FROM (SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
                                               elp.cd              AS                               [ph_elp_cd],
                                               elp.use_cd          AS                               [ph_elp_use_cd],
                                               REPLACE(tl.phone_nbr_txt, ' ', '') 				   telephoneNbr,
@@ -129,7 +130,7 @@ BEGIN
                                         WHERE elp.entity_uid = p.person_uid
                                              AND elp.CLASS_CD = 'TELE'
                                              AND elp.CD IN ('CP')
-                                             AND tl.phone_nbr_txt IS NOT NULL
+                                             AND tl.phone_nbr_txt IS NOT NULL ) t
                                         FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone,
                                   -- person email
                                   (SELECT (SELECT tl.tele_locator_uid AS                  [email_tl_uid],
@@ -186,7 +187,7 @@ BEGIN
         WHERE p.person_uid in (SELECT value FROM STRING_SPLIT(@user_id_list, ','))
           AND p.cd = 'PRV';
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (batch_id
+        INSERT INTO [rdb].[dbo].[job_flow_log] (batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
                                                       ,[Status_Type]
@@ -217,7 +218,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (batch_id
+        INSERT INTO [rdb].[dbo].[job_flow_log] (batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
                                                       ,[Status_Type]

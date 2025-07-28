@@ -22,6 +22,26 @@ BEGIN
         SET @Proc_Step_Name = 'SP_Start';
         DECLARE @batch_id bigint;
         SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
+        DECLARE @dataflow_name NVARCHAR(200) = 'USER_REPORT_PERMISSIONS';
+        DECLARE @package_name NVARCHAR(200) = 'USER_REPORT_PERMISSIONS';
+        
+        INSERT INTO [rdb].[dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                , @dataflow_name
+                , @package_name
+                , 'START'
+                , 0
+                , LEFT('Pre ID-' + @user_ids, 199)
+                , 0
+                , LEFT(@user_ids, 199));
 
         select distinct
         [user].user_id                  as [user],
@@ -71,7 +91,24 @@ BEGIN
                 )
                 and [operation_type].bus_op_nm in ('VIEWREPORTPRIVATE', 'VIEWREPORTPUBLIC', 'VIEWREPORTREPORTINGFACILITY', 'VIEWREPORTTEMPLATE')
 
-    
+        INSERT INTO [rdb].[dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                , @dataflow_name
+                , @package_name
+                , 'COMPLETE'
+                , 0
+                , LEFT('Pre ID-' + @user_ids, 199)
+                , 0
+                , LEFT(@user_ids, 199));
+
     END TRY
     BEGIN CATCH
 
@@ -87,7 +124,7 @@ BEGIN
         'Error Message: ' + ERROR_MESSAGE();
 
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] ( batch_id
+        INSERT INTO [rdb].[dbo].[job_flow_log] ( batch_id
                                          , [Dataflow_Name]
                                          , [package_Name]
                                          , [Status_Type]
@@ -97,8 +134,8 @@ BEGIN
                                          , [row_count]
                                          , [Msg_Description1])
         VALUES ( @batch_id
-               , 'USER_REPORT_PERMISSIONS'
-               , 'USER_REPORT_PERMISSIONS'
+               , @dataflow_name
+               , @package_name
                , 'ERROR'
                , @Proc_Step_no
                , @Proc_Step_name
