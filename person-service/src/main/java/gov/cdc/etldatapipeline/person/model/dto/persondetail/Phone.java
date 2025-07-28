@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.util.StringUtils;
 
 @Data
 @Builder
@@ -30,20 +29,18 @@ public class Phone implements ExtendPerson {
         personFull.setPhElpCd(cd);
         personFull.setPhElpUseCd(useCd);
         personFull.setPhTlUid(teleLocatorUid);
-        if (StringUtils.hasText(useCd)) {
-            if (useCd.equalsIgnoreCase("WP")) {
-                personFull.setPhoneWork(telephoneNbr);
-                personFull.setPhoneExtWork(extensionTxt);
-                personFull.setPhoneComments(phoneComments);
-            } else if (useCd.equalsIgnoreCase("H")) {
-                personFull.setPhoneHome(telephoneNbr);
-                personFull.setPhoneExtHome(extensionTxt);
-            }
+
+        if (useCd.equalsIgnoreCase("WP")) {
+            personFull.setPhoneWork(telephoneNbr);
+            personFull.setPhoneExtWork(extensionTxt);
+            personFull.setPhoneComments(phoneComments);
+        } else if (useCd.equalsIgnoreCase("H")) {
+            personFull.setPhoneHome(telephoneNbr);
+            personFull.setPhoneExtHome(extensionTxt);
         }
-        if (StringUtils.hasText(cd))  {
-            if (cd.equalsIgnoreCase("CP")) {
-                personFull.setPhoneCell(telephoneNbr);
-            }
+
+        if (cd.equalsIgnoreCase("CP")) {
+            personFull.setPhoneCell(telephoneNbr);
         }
         return personFull;
     }

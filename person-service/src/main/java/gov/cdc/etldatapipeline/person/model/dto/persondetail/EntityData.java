@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.util.StringUtils;
 
 @Data
 @AllArgsConstructor
@@ -26,17 +25,24 @@ public class EntityData implements ExtendPerson {
     private String assigningAuthorityCd;
 
     public <T extends PersonExtendedProps> T updatePerson(T personFull) {
-        if (StringUtils.hasText(assigningAuthorityCd) && assigningAuthorityCd.equalsIgnoreCase("SSA")) {
+
+        if ("SSA".equalsIgnoreCase(assigningAuthorityCd)) {
             personFull.setSsn(rootExtensionTxt);
-        } else if (StringUtils.hasText(typeCd)) {
-            if (typeCd.equalsIgnoreCase("PN")) { // Patient Only Data
-                personFull.setPatientNumber(rootExtensionTxt);
-                personFull.setPatientNumberAuth(assigningAuthorityCd);
-            } else if (typeCd.equalsIgnoreCase("QEC")) { // Provider only Data
-                personFull.setProviderQuickCode(rootExtensionTxt);
-            } else if (typeCd.equalsIgnoreCase("PRN")) { // Provider Only Data
-                personFull.setProviderRegistrationNum(rootExtensionTxt);
-                personFull.setProviderRegistrationNumAuth(assigningAuthorityCd);
+        } else {
+            switch (typeCd.trim().toUpperCase()) {
+                case "PN" -> { // Patient Only Data
+                    personFull.setPatientNumber(rootExtensionTxt);
+                    personFull.setPatientNumberAuth(assigningAuthorityCd);
+                }
+                case "QEC" -> personFull.setProviderQuickCode(rootExtensionTxt);  // Provider only Data
+                case "PRN" -> { // Provider Only Data
+                    personFull.setProviderRegistrationNum(rootExtensionTxt);
+                    personFull.setProviderRegistrationNumAuth(assigningAuthorityCd);
+                }
+                case "NPI" -> personFull.setProviderNpi(rootExtensionTxt);  // Provider Only Data
+                default -> {
+                    // no-op: unsupported typeCd, unreachable
+                }
             }
         }
         // ElasticSearch related data

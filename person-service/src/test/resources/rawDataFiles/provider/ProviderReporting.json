@@ -135,6 +135,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "country_code"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "address_comments"
       },
       {
@@ -176,6 +181,11 @@
         "type": "string",
         "optional": true,
         "field": "provider_registration_num_auth"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "provider_npi"
       }
     ]
   },
@@ -206,6 +216,7 @@
     "county": null,
     "county_code": "",
     "country": "United States",
+    "country_code": "840",
     "address_comments": "",
     "phone_work": "2323222422",
     "phone_ext_work": "232",
@@ -214,6 +225,7 @@
     "email_work": "someone2@email.com",
     "quick_code": "12314286",
     "provider_registration_num": "86741517517",
-    "provider_registration_num_auth": "3.16.740.1.113883.3.1147.1.1002"
+    "provider_registration_num_auth": "3.16.740.1.113883.3.1147.1.1002",
+    "provider_npi": "12345"
   }
 }
