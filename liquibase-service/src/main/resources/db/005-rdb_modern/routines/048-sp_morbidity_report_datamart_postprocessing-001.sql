@@ -33,9 +33,7 @@ BEGIN
         DECLARE @batch_id bigint;
         SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
 
-        if
-            @debug = 'true'
-            select @batch_id;
+        if @debug = 'true' select @batch_id;
 
 
         SELECT @ROWCOUNT_NO = 0;
