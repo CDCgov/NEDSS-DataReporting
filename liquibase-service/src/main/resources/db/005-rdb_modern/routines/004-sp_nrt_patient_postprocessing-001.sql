@@ -225,6 +225,39 @@ BEGIN
           SET @proc_step_name='Update D_PATIENT Dimension';
           SET @proc_step_no = 3;
 
+          -- Check for updates in the patient table that are valid for downstream datamarts
+        select p.*
+        into #PATIENT_UPDATE_LIST
+        from dbo.d_patient p with (nolock)
+                  inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
+            and p.patient_key is not null and (
+               tpt.PATIENT_FIRST_NAME <> p.PATIENT_FIRST_NAME or
+               tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
+               tpt.PATIENT_LAST_NAME <> p.PATIENT_LAST_NAME or
+               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX or
+               tpt.PATIENT_ALIAS_NICKNAME <> p.PATIENT_ALIAS_NICKNAME or
+               substring(tpt.[PATIENT_STREET_ADDRESS_1],1,50) <> p.PATIENT_STREET_ADDRESS_1 or
+               substring(tpt.[PATIENT_STREET_ADDRESS_2],1,50) <> p.PATIENT_STREET_ADDRESS_2 or
+               tpt.PATIENT_CITY <> p.PATIENT_CITY or
+               tpt.PATIENT_STATE <> p.PATIENT_STATE or
+               tpt.PATIENT_STATE_CODE <> p.PATIENT_STATE_CODE or
+               tpt.PATIENT_ZIP <> p.PATIENT_ZIP or
+               tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
+               tpt.PATIENT_COUNTY_CODE <> p.PATIENT_COUNTY_CODE or
+               tpt.PATIENT_COUNTRY <> p.PATIENT_COUNTRY or
+               tpt.PATIENT_WITHIN_CITY_LIMITS <> p.PATIENT_WITHIN_CITY_LIMITS or
+               tpt.PATIENT_PHONE_HOME <> p.PATIENT_PHONE_HOME or
+               tpt.PATIENT_PHONE_EXT_HOME <> p.PATIENT_PHONE_EXT_HOME or
+               tpt.PATIENT_PHONE_WORK <> p.PATIENT_PHONE_WORK or
+               tpt.PATIENT_PHONE_EXT_WORK <> p.PATIENT_PHONE_EXT_WORK or
+               tpt.PATIENT_PHONE_CELL <> p.PATIENT_PHONE_CELL or
+               tpt.PATIENT_EMAIL <> p.PATIENT_EMAIL or
+               tpt.PATIENT_DOB <> p.PATIENT_DOB or
+               tpt.PATIENT_AGE_REPORTED <> p.PATIENT_AGE_REPORTED or
+               substring(tpt.[PATIENT_AGE_REPORTED_UNIT] ,1,20)	 <> p.PATIENT_AGE_REPORTED_UNIT or
+               substring(tpt.[PATIENT_CURRENT_SEX] ,1,50) <> p.PATIENT_CURRENT_SEX or
+               tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD
+            );
 
         update dbo.d_patient
         set	[PATIENT_KEY]	=	tpt.[PATIENT_KEY]	,
@@ -312,11 +345,7 @@ BEGIN
             and tpt.patient_key = p.patient_key
             and p.patient_key is not null;
 
-          select p.patient_key
-          into #patient_update_list
-          from dbo.d_patient p with (nolock)
-          inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
-          and p.patient_key is not null;
+
 
         /* Logging */
         set @rowcount=@@rowcount
@@ -571,57 +600,32 @@ BEGIN
                ,LEFT(@id_list,500)
                );
 
+
+          /** Datamart Update Operations **/
+
+          -- Building a mapping table for investigations and patients which can be used later 
+          -- multiple times in the procedure
+          select i.INVESTIGATION_KEY, d.PATIENT_KEY 
+          into #INVESTIGATION_PATIENT_MAPPING
+          from dbo.F_STD_PAGE_CASE i inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
+          union all
+          select i.INVESTIGATION_KEY, d.PATIENT_KEY 
+          from dbo.F_PAGE_CASE i inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
+
+          SET @proc_step_name='Update CASE_LAB_DATAMART';
+          SET @proc_step_no = 5;
+
+         
           /**
           Update Patient attributes in CASE_LAB_DATAMART
           -- Since PATIENT_LOCAL_ID is not unique and nullable in CASE_LAB_DATAMART,
-          we need to find all applicable investigations via the fact tables
+          we need to use the investigation keys found earlier
           -- Check if INVESTIGATION is in CASE_LAB_DATAMART
           -- if yes, update the rows in CASE_LAB_DATAMART for matching PATIENT_LOCAL_ID and INV KEY
           */
-          select 
-          	tmp.*
-          into #PATIENT_DATA_FOR_CASE_LAB_DATAMART
-          from (
-	          select i.PATIENT_KEY, d.*  from dbo.F_STD_PAGE_CASE i inner join dbo.CASE_LAB_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
-	          union all
-	          select i.PATIENT_KEY, d.*  from dbo.F_PAGE_CASE i inner join dbo.CASE_LAB_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
-	      ) dm
-          inner join (
-               select dp.* 
-               from dbo.D_PATIENT dp with (nolock) 
-               inner join #patient_update_list plist on plist.patient_key = dp.patient_key
-          ) tmp 
-          on dm.PATIENT_KEY = tmp.PATIENT_KEY
-          where (
-               dm.PATIENT_LOCAL_ID is not null
-          ) and (
-               dm.PATIENT_FIRST_NM <> tmp.PATIENT_FIRST_NAME or
-               dm.PATIENT_MIDDLE_NM <> tmp.PATIENT_MIDDLE_NAME or
-               dm.PATIENT_LAST_NM <> tmp.PATIENT_LAST_NAME or 
-               dm.PATIENT_HOME_PHONE <>  (
-               	CASE
-                    WHEN tmp.PATIENT_PHONE_HOME <> '' AND tmp.PATIENT_PHONE_EXT_HOME <> ''
-                        THEN rtrim(tmp.PATIENT_PHONE_HOME) + ' ext. ' + rtrim(tmp.PATIENT_PHONE_EXT_HOME)
-                    WHEN tmp.PATIENT_PHONE_HOME <> '' AND tmp.PATIENT_PHONE_EXT_HOME = ''
-                        THEN rtrim(tmp.PATIENT_PHONE_HOME)
-                    WHEN tmp.PATIENT_PHONE_HOME = '' AND tmp.PATIENT_PHONE_EXT_HOME <> ''
-                        THEN 'ext. ' + rtrim(tmp.PATIENT_PHONE_EXT_HOME)
-                    ELSE tmp.PATIENT_PHONE_HOME
-                    END ) or
-               dm.PATIENT_STREET_ADDRESS_1 <> tmp.PATIENT_STREET_ADDRESS_1 or
-               dm.PATIENT_STREET_ADDRESS_2 <> tmp.PATIENT_STREET_ADDRESS_2 or
-               dm.PATIENT_CITY <> tmp.PATIENT_CITY or
-               dm.PATIENT_STATE <> tmp.PATIENT_STATE or
-               dm.PATIENT_ZIP <> tmp.PATIENT_ZIP or         
-               dm.RACE <> tmp.PATIENT_RACE_CALCULATED or
-               dm.PATIENT_COUNTY <> tmp.PATIENT_COUNTY or
-               dm.PATIENT_DOB <> tmp.PATIENT_DOB or
-               dm.AGE_REPORTED <> tmp.PATIENT_AGE_REPORTED or
-               dm.AGE_REPORTED_UNIT <> tmp.PATIENT_AGE_REPORTED_UNIT or
-               dm.PATIENT_CURRENT_SEX <> tmp.PATIENT_CURRENT_SEX 
-          );
+         
           
-          IF EXISTS (SELECT 1 FROM #PATIENT_DATA_FOR_CASE_LAB_DATAMART)
+          IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY)
           BEGIN
                update dbo.CASE_LAB_DATAMART 
                set PATIENT_FIRST_NM = tmp.PATIENT_FIRST_NAME,
@@ -649,7 +653,13 @@ BEGIN
                     PATIENT_AGE_REPORTED_UNIT = tmp.PATIENT_REPORTED_AGE_UNIT,
                     PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX,
                     PATIENT_ENTRY_METHOD = tmp.PATIENT_ENTRY_METHOD
-               from  #PATIENT_DATA_FOR_CASE_LAB_DATAMART tmp
+               from  ( 
+                    select map.INVESTIGATION_KEY 
+                    from #INVESTIGATION_PATIENT_MAPPING map
+                    inner join 
+                    #PATIENT_UPDATE_LIST pt
+                    on map.PATIENT_KEY = pt.PATIENT_KEY
+                    ) tmp
                where 
                     dbo.CASE_LAB_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
                     and dbo.CASE_LAB_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID;    
@@ -657,117 +667,7 @@ BEGIN
           ;
 
          
-         /**
-          Update Patient attributes in BMIRD_STREP_PNEUMO_DATAMART
-          -- Since PATIENT_LOCAL_ID is not unique and nullable in BMIRD_STREP_PNEUMO_DATAMART,
-          we need to find all applicable investigations via the fact tables
-          -- Check if INVESTIGATION is in BMIRD_STREP_PNEUMO_DATAMART
-          -- if yes, update the rows in BMIRD_STREP_PNEUMO_DATAMART for matching PATIENT_LOCAL_ID and INV KEY
-          */
-          select
-              tmp.*
-          into #PATIENT_DATA_FOR_BMIRD_DATAMART
-          from (
-	          select i.PATIENT_KEY, d.*  from dbo.F_STD_PAGE_CASE i inner join dbo.BMIRD_STREP_PNEUMO_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
-	          union all
-	          select i.PATIENT_KEY, d.*  from dbo.F_PAGE_CASE i inner join dbo.BMIRD_STREP_PNEUMO_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
-	      ) dm
-          inner join ( 
-               select dp.* 
-               from dbo.D_PATIENT dp with (nolock) 
-               inner join #patient_update_list plist on plist.patient_key = dp.patient_key
-          ) tmp 
-          on dm.PATIENT_KEY = tmp.PATIENT_KEY
-          where (
-               dm.PATIENT_LOCAL_ID is not null
-          ) and (
-               dm.PATIENT_FIRST_NM <> tmp.PATIENT_FIRST_NAME or
-               dm.PATIENT_LAST_NM <> tmp.PATIENT_LAST_NAME or 
-               dm.PATIENT_DOB <> tmp.PATIENT_DOB or
-               dm.PATIENT_CURRENT_SEX <> tmp.PATIENT_CURRENT_SEX or
-               dm.AGE_REPORTED <> tmp.PATIENT_AGE_REPORTED or
-               dm.AGE_REPORTED_UNIT <> tmp.PATIENT_AGE_REPORTED_UNIT or
-               dm.PATIENT_ETHNICITY <> tmp.PATIENT_ETHNICITY or
-               dm.PATIENT_ADDRESS <>  ''+
-                CASE
-                    WHEN LEN(TRIM(PATIENT_STREET_ADDRESS_2)) > 0 THEN TRIM(PATIENT_STREET_ADDRESS_2)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_CITY)) > 0 THEN ',' + TRIM(PATIENT_CITY)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_COUNTY)) > 0 THEN ',' + TRIM(PATIENT_COUNTY)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_ZIP)) > 0 THEN ',' + TRIM(PATIENT_ZIP)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_STATE)) > 0 THEN ',' + TRIM(PATIENT_STATE)
-                    ELSE ''
-               END  or
-               dm.PATIENT_STREET_ADDRESS_2 <> tmp.PATIENT_STREET_ADDRESS_2 or
-               dm.PATIENT_CITY <> tmp.PATIENT_CITY or
-               dm.PATIENT_STATE <> tmp.PATIENT_STATE or
-               dm.PATIENT_ZIP <> tmp.PATIENT_ZIP or
-               dm.PATIENT_COUNTY <> tmp.PATIENT_COUNTY or
-               dm.RACE_CALCULATED <> tmp.RACE_CALCULATED or
-               dm.RACE_CALC_DETAILS <> tmp.RACE_CALC_DETAILS or
-               dm.PATIENT_ADDRESS <> tmp.PATIENT_ADDRESS
-          );
-
-
-
-          IF EXISTS (SELECT 1 FROM #PATIENT_DATA_FOR_BMIRD_DATAMART)
-          BEGIN
-               update dbo.BMIRD_STREP_PNEUMO_DATAMART 
-               set 
-               PATIENT_FIRST_NM = tmp.PATIENT_FIRST_NAME,
-               PATIENT_LAST_NM = tmp.PATIENT_LAST_NAME, 
-               PATIENT_DOB = tmp.PATIENT_DOB,
-               PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX,
-               AGE_REPORTED = tmp.PATIENT_AGE_REPORTED,
-               AGE_REPORTED_UNIT = tmp.PATIENT_AGE_REPORTED_UNIT,
-               PATIENT_ETHNICITY = tmp.PATIENT_ETHNICITY,
-               PATIENT_ADDRESS =  ''+
-                CASE
-                    WHEN LEN(TRIM(tmp.PATIENT_STREET_ADDRESS_2)) > 0 THEN TRIM(tmp.PATIENT_STREET_ADDRESS_2)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(tmp.PATIENT_CITY)) > 0 THEN ',' + TRIM(tmp.PATIENT_CITY)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(tmp.PATIENT_COUNTY)) > 0 THEN ',' + TRIM(tmp.PATIENT_COUNTY)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(tmp.PATIENT_ZIP)) > 0 THEN ',' + TRIM(tmp.PATIENT_ZIP)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(tmp.PATIENT_STATE)) > 0 THEN ',' + TRIM(tmp.PATIENT_STATE)
-                    ELSE ''
-               END,
-               PATIENT_STREET_ADDRESS_2 = tmp.PATIENT_STREET_ADDRESS_2,
-               PATIENT_CITY = tmp.PATIENT_CITY,
-               PATIENT_STATE = tmp.PATIENT_STATE,
-               PATIENT_ZIP = tmp.PATIENT_ZIP,
-               PATIENT_COUNTY = tmp.PATIENT_COUNTY,
-               RACE_CALCULATED = tmp.RACE_CALCULATED,
-               RACE_CALC_DETAILS = tmp.RACE_CALC_DETAILS,
-               PATIENT_ADDRESS = tmp.PATIENT_ADDRESS
-               from  #PATIENT_DATA_FOR_BMIRD_DATAMART tmp
-               where 
-                    dbo.BMIRD_STREP_PNEUMO_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-                    and dbo.BMIRD_STREP_PNEUMO_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID;    
-          END
-          ;
-
+         
 
           SELECT nri.public_health_case_uid                       AS public_health_case_uid,
                nrt.PATIENT_UID                                  AS patient_uid,
