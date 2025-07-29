@@ -626,11 +626,11 @@ BEGIN
 
           -- Building a mapping table for investigations and patients which can be used later 
           -- multiple times in the procedure
-          select i.INVESTIGATION_KEY, d.PATIENT_KEY 
+          select i.INVESTIGATION_KEY, d.* 
           into #INVESTIGATION_PATIENT_MAPPING
           from dbo.F_STD_PAGE_CASE i inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
           union all
-          select i.INVESTIGATION_KEY, d.PATIENT_KEY 
+          select i.INVESTIGATION_KEY, d.* 
           from dbo.F_PAGE_CASE i inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
 
           if @debug = 'true'
@@ -648,8 +648,9 @@ BEGIN
           -- if yes, update the rows in CASE_LAB_DATAMART for matching PATIENT_LOCAL_ID and INV KEY
           */
           
-          IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY) AND
-                EXISTS (SELECT 1 FROM #PATIENT_UPDATE_LIST pt where datamart_update+case_lab_datamart_update >= 1)
+          IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm 
+                    inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
+                    where datamart_update+case_lab_datamart_update >= 1)
           BEGIN
                update dbo.CASE_LAB_DATAMART 
                set PATIENT_FIRST_NM = tmp.PATIENT_FIRST_NAME,
@@ -676,17 +677,12 @@ BEGIN
                     AGE_REPORTED = tmp.PATIENT_AGE_REPORTED,
                     AGE_REPORTED_UNIT = tmp.PATIENT_AGE_REPORTED_UNIT,
                     PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX
-               from  ( 
-                    select map.INVESTIGATION_KEY, pt.* 
-                    from #INVESTIGATION_PATIENT_MAPPING map
-                    inner join 
-                    #PATIENT_UPDATE_LIST pt
-                    on map.PATIENT_KEY = pt.PATIENT_KEY
-                    where datamart_update+case_lab_datamart_update >= 1
-               ) tmp
+               from   
+                    #INVESTIGATION_PATIENT_MAPPING tmp
                where 
                     dbo.CASE_LAB_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-                    and dbo.CASE_LAB_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID;     
+                    and dbo.CASE_LAB_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID
+                    and datamart_update+case_lab_datamart_update >= 1;     
           END
           
           SET @proc_step_name=' Update BMIRD_STREP_PNEUMO_DATAMART';
@@ -701,8 +697,9 @@ BEGIN
           */
           
             
-          IF EXISTS (SELECT 1 FROM dbo.BMIRD_STREP_PNEUMO_DATAMART dm inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY) AND
-                EXISTS (SELECT 1 FROM #PATIENT_UPDATE_LIST pt where datamart_update+bmird_strep_pneumo_datamart_update >= 1)
+          IF EXISTS (SELECT 1 FROM dbo.BMIRD_STREP_PNEUMO_DATAMART dm 
+                    inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
+                    where datamart_update+bmird_strep_pneumo_datamart_update >= 1)
           BEGIN
                update dbo.BMIRD_STREP_PNEUMO_DATAMART 
                set 
@@ -721,17 +718,12 @@ BEGIN
                PATIENT_COUNTY = tmp.PATIENT_COUNTY,
                RACE_CALCULATED = tmp.PATIENT_RACE_CALCULATED,
                RACE_CALC_DETAILS = tmp.PATIENT_RACE_CALC_DETAILS
-               from  (
-                    select map.INVESTIGATION_KEY, pt.* 
-                    from #INVESTIGATION_PATIENT_MAPPING map
-                    inner join 
-                    #PATIENT_UPDATE_LIST pt
-                    on map.PATIENT_KEY = pt.PATIENT_KEY
-                    where datamart_update+bmird_strep_pneumo_datamart_update >= 1
-               ) tmp
+               from  
+                    #INVESTIGATION_PATIENT_MAPPING tmp
                where 
                     dbo.BMIRD_STREP_PNEUMO_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-                    and dbo.BMIRD_STREP_PNEUMO_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID;    
+                    and dbo.BMIRD_STREP_PNEUMO_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID
+                    and datamart_update+bmird_strep_pneumo_datamart_update >= 1;    
           END
           
 
