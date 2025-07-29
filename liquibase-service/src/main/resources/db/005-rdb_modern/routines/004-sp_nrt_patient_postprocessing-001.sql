@@ -270,6 +270,7 @@ BEGIN
           inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
      ;
 
+     if @debug = 'true'
      select * from #PATIENT_UPDATE_LIST;
 
      SET @proc_step_name='Update D_PATIENT Dimension';
@@ -632,10 +633,11 @@ BEGIN
           select i.INVESTIGATION_KEY, d.PATIENT_KEY 
           from dbo.F_PAGE_CASE i inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
 
+          if @debug = 'true'
           select * from #INVESTIGATION_PATIENT_MAPPING;
           
-          SET @proc_step_name='Update CASE_LAB_DATAMART';
-          SET @proc_step_no = 5;
+          SET @proc_step_name=' Update CASE_LAB_DATAMART';
+          SET @proc_step_no = 5.1;
 
      
           /**
@@ -686,37 +688,90 @@ BEGIN
                     dbo.CASE_LAB_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
                     and dbo.CASE_LAB_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID;     
           END
-          ;
+          
+          SET @proc_step_name=' Update BMIRD_STREP_PNEUMO_DATAMART';
+          SET @proc_step_no = 5.2;
+
+          /**
+          Update Patient attributes in BMIRD_STREP_PNEUMO_DATAMART
+          -- Since PATIENT_LOCAL_ID is not unique and nullable in BMIRD_STREP_PNEUMO_DATAMART,
+          we need to find all applicable investigations via the fact tables
+          -- Check if INVESTIGATION is in BMIRD_STREP_PNEUMO_DATAMART
+          -- if yes, update the rows in BMIRD_STREP_PNEUMO_DATAMART for matching PATIENT_LOCAL_ID and INV KEY
+          */
+          
+            
+          IF EXISTS (SELECT 1 FROM dbo.BMIRD_STREP_PNEUMO_DATAMART dm inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY) AND
+                EXISTS (SELECT 1 FROM #PATIENT_UPDATE_LIST pt where datamart_update+bmird_strep_pneumo_datamart_update >= 1)
+          BEGIN
+               update dbo.BMIRD_STREP_PNEUMO_DATAMART 
+               set 
+               PATIENT_FIRST_NAME = tmp.PATIENT_FIRST_NAME,
+               PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME, 
+               PATIENT_DOB = tmp.PATIENT_DOB,
+               PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX,
+               AGE_REPORTED = tmp.PATIENT_AGE_REPORTED,
+               AGE_REPORTED_UNIT = tmp.PATIENT_AGE_REPORTED_UNIT,
+               PATIENT_ETHNICITY = tmp.PATIENT_ETHNICITY,
+               PATIENT_STREET_ADDRESS_1 = tmp.PATIENT_STREET_ADDRESS_1,
+               PATIENT_STREET_ADDRESS_2 = tmp.PATIENT_STREET_ADDRESS_2,
+               PATIENT_CITY = tmp.PATIENT_CITY,
+               PATIENT_STATE = tmp.PATIENT_STATE,
+               PATIENT_ZIP = tmp.PATIENT_ZIP,
+               PATIENT_COUNTY = tmp.PATIENT_COUNTY,
+               RACE_CALCULATED = tmp.PATIENT_RACE_CALCULATED,
+               RACE_CALC_DETAILS = tmp.PATIENT_RACE_CALC_DETAILS
+               from  (
+                    select map.INVESTIGATION_KEY, pt.* 
+                    from #INVESTIGATION_PATIENT_MAPPING map
+                    inner join 
+                    #PATIENT_UPDATE_LIST pt
+                    on map.PATIENT_KEY = pt.PATIENT_KEY
+                    where datamart_update+bmird_strep_pneumo_datamart_update >= 1
+               ) tmp
+               where 
+                    dbo.BMIRD_STREP_PNEUMO_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+                    and dbo.BMIRD_STREP_PNEUMO_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID;    
+          END
+          
+
+         
+         /**
+          Update Patient attributes in HEP100
+          -- Since PATIENT_UID exists in HEP100, we can directly update the rows
+          */
+          --TODO
 
 
           
      END
-     ;
-          SELECT nri.public_health_case_uid                       AS public_health_case_uid,
-               nrt.PATIENT_UID                                  AS patient_uid,
-               null                                             AS observation_uid,
-               CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
-               nri.cd                                           AS condition_cd,
-               dtm.Stored_Procedure                             AS stored_procedure,
-               nri.investigation_form_cd                        AS investigation_form_cd
-          FROM #temp_patient_table nrt
-               INNER JOIN dbo.nrt_investigation nri with (nolock) ON nrt.PATIENT_UID = nri.patient_id
-               LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.PATIENT_UID
-               INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nri.cd AND dtm.Datamart = 'Covid_Case_Datamart'
-               LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nri.cd
-          UNION
-          SELECT
-               vac.vaccination_uid                                 AS public_health_case_uid,
-               vac.patient_uid                                     AS patient_uid,
-               null                                                AS observation_uid,
-               dtm.Datamart                                        AS datamart,
-               dtm.condition_cd                                    AS condition_cd,
-               dtm.Stored_Procedure                                AS stored_procedure,
-               null                                                AS investigation_form_cd
-          FROM #temp_patient_table nrt with (nolock)
-               INNER JOIN dbo.nrt_vaccination vac with (nolock) on nrt.patient_uid = vac.patient_uid
-               INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Vaccination_Datamart'
-          WHERE vac.material_cd IN('207', '208', '213');
+     
+
+     SELECT nri.public_health_case_uid                       AS public_health_case_uid,
+          nrt.PATIENT_UID                                  AS patient_uid,
+          null                                             AS observation_uid,
+          CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
+          nri.cd                                           AS condition_cd,
+          dtm.Stored_Procedure                             AS stored_procedure,
+          nri.investigation_form_cd                        AS investigation_form_cd
+     FROM #temp_patient_table nrt
+          INNER JOIN dbo.nrt_investigation nri with (nolock) ON nrt.PATIENT_UID = nri.patient_id
+          LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.PATIENT_UID
+          INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nri.cd AND dtm.Datamart = 'Covid_Case_Datamart'
+          LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nri.cd
+     UNION
+     SELECT
+          vac.vaccination_uid                                 AS public_health_case_uid,
+          vac.patient_uid                                     AS patient_uid,
+          null                                                AS observation_uid,
+          dtm.Datamart                                        AS datamart,
+          dtm.condition_cd                                    AS condition_cd,
+          dtm.Stored_Procedure                                AS stored_procedure,
+          null                                                AS investigation_form_cd
+     FROM #temp_patient_table nrt with (nolock)
+          INNER JOIN dbo.nrt_vaccination vac with (nolock) on nrt.patient_uid = vac.patient_uid
+          INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Vaccination_Datamart'
+     WHERE vac.material_cd IN('207', '208', '213');
 
 
     END TRY
