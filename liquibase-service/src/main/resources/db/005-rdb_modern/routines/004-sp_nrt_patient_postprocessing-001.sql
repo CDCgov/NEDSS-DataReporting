@@ -48,9 +48,9 @@ BEGIN
             name_suffix AS PATIENT_NAME_SUFFIX,
             alias_nickname AS PATIENT_ALIAS_NICKNAME,
             case when rtrim(ltrim(street_address_1)) = '' then null
-                 else street_address_1 end AS PATIENT_STREET_ADDRESS_1,
+                 else substring([street_address_1],1,50) end AS PATIENT_STREET_ADDRESS_1,
             case when rtrim(ltrim(street_address_2)) = '' then null
-                 else street_address_2 end AS PATIENT_STREET_ADDRESS_2,
+                 else substring([street_address_2],1,50) end AS PATIENT_STREET_ADDRESS_2,
             case when rtrim(ltrim(city)) = '' then null
                  else city end AS PATIENT_CITY,
             state AS PATIENT_STATE,
@@ -77,16 +77,16 @@ BEGIN
             email AS PATIENT_EMAIL,
             dob AS PATIENT_DOB,
             age_reported AS PATIENT_AGE_REPORTED,
-            age_reported_unit AS PATIENT_AGE_REPORTED_UNIT,
+            substring(age_reported_unit ,1,20) AS PATIENT_AGE_REPORTED_UNIT,
             birth_sex AS PATIENT_BIRTH_SEX,
-            current_sex AS PATIENT_CURRENT_SEX,
-            deceased_indicator AS PATIENT_DECEASED_INDICATOR,
+            substring(current_sex ,1,50)  AS PATIENT_CURRENT_SEX,
+            substring(deceased_indicator ,1,50) AS PATIENT_DECEASED_INDICATOR,
             deceased_date AS PATIENT_DECEASED_DATE,
-            marital_status AS PATIENT_MARITAL_STATUS,
+            substring(marital_status ,1,50) AS PATIENT_MARITAL_STATUS,
             case when rtrim(ltrim(ssn)) = '' then null
-                 else ssn end AS PATIENT_SSN,
+                 else substring(ssn ,1,50) end AS PATIENT_SSN,
             ethnicity AS PATIENT_ETHNICITY,
-            race_calculated AS PATIENT_RACE_CALCULATED,
+            substring(race_calculated ,1,50) AS PATIENT_RACE_CALCULATED,
             race_calc_details AS PATIENT_RACE_CALC_DETAILS,
             race_amer_ind_1 AS PATIENT_RACE_AMER_IND_1,
             race_amer_ind_2 AS PATIENT_RACE_AMER_IND_2,
@@ -231,16 +231,15 @@ BEGIN
           case 
                when tpt.PATIENT_FIRST_NAME <> p.PATIENT_FIRST_NAME or
                tpt.PATIENT_LAST_NAME <> p.PATIENT_LAST_NAME or
-               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX or
-               substring(tpt.[PATIENT_STREET_ADDRESS_1],1,50) <> p.PATIENT_STREET_ADDRESS_1 or
-               substring(tpt.[PATIENT_STREET_ADDRESS_2],1,50) <> p.PATIENT_STREET_ADDRESS_2 or
+               tpt.PATIENT_STREET_ADDRESS_1 <> p.PATIENT_STREET_ADDRESS_1 or
+               tpt.PATIENT_STREET_ADDRESS_2 <> p.PATIENT_STREET_ADDRESS_2 or
                tpt.PATIENT_CITY <> p.PATIENT_CITY or
                tpt.PATIENT_STATE <> p.PATIENT_STATE or
                tpt.PATIENT_ZIP <> p.PATIENT_ZIP or
                tpt.PATIENT_DOB <> p.PATIENT_DOB or
                tpt.PATIENT_AGE_REPORTED <> p.PATIENT_AGE_REPORTED or
-               substring(tpt.[PATIENT_AGE_REPORTED_UNIT] ,1,20)	 <> p.PATIENT_AGE_REPORTED_UNIT or
-               substring(tpt.[PATIENT_CURRENT_SEX] ,1,50) <> p.PATIENT_CURRENT_SEX
+               tpt.PATIENT_AGE_REPORTED_UNIT <> p.PATIENT_AGE_REPORTED_UNIT or
+               tpt.PATIENT_CURRENT_SEX <> p.PATIENT_CURRENT_SEX
                then 1 
                else 0
           end as datamart_update, 
@@ -255,7 +254,7 @@ BEGIN
                then 1
                else 0
           end as case_lab_datamart_update,
-           -- additional cases for bmird_strep_pneumo_datamart datamart
+          -- additional cases for bmird_strep_pneumo_datamart datamart
           case
                when
                tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
@@ -265,7 +264,7 @@ BEGIN
                then 1
                else 0
           end as bmird_strep_pneumo_datamart_update,
-           -- additional cases for hep100 datamart
+          -- additional cases for hep100 datamart
           case
                when
                tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
@@ -275,7 +274,30 @@ BEGIN
                tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD
                then 1
                else 0
-          end as hep100_datamart_update
+          end as hep100_datamart_update,
+          -- additional cases for morbidity_report_datamart
+          case
+               when
+               tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
+               tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
+               tpt.PATIENT_COUNTRY <> p.PATIENT_COUNTRY or
+               tpt.PATIENT_PHONE_HOME <> p.PATIENT_PHONE_HOME or
+               tpt.PATIENT_PHONE_EXT_HOME <> p.PATIENT_PHONE_EXT_HOME or
+               tpt.PATIENT_PHONE_WORK <> p.PATIENT_PHONE_WORK or
+               tpt.PATIENT_PHONE_EXT_WORK <> p.PATIENT_PHONE_EXT_WORK or
+               tpt.PATIENT_RACE_CALCULATED <> p.PATIENT_RACE_CALCULATED or
+               tpt.PATIENT_RACE_CALC_DETAILS <> p.PATIENT_RACE_CALC_DETAILS or
+               tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD or
+               tpt.PATIENT_ETHNICITY <> p.PATIENT_ETHNICITY or
+               tpt.PATIENT_GENERAL_COMMENTS <> p.PATIENT_GENERAL_COMMENTS or
+               tpt.PATIENT_DECEASED_DATE <> p.PATIENT_DECEASED_DATE or
+               tpt.PATIENT_DECEASED_INDICATOR <> p.PATIENT_DECEASED_INDICATOR or
+               tpt.PATIENT_MARITAL_STATUS <> p.PATIENT_MARITAL_STATUS or
+               tpt.PATIENT_SSN <> p.PATIENT_SSN or
+               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX
+               then 1
+               else 0
+          end as morbidity_report_datamart_update
      into #PATIENT_UPDATE_LIST 
      from dbo.D_PATIENT p with (nolock)
           inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
@@ -646,13 +668,10 @@ BEGIN
 
           if @debug = 'true'
           select * from #INVESTIGATION_PATIENT_MAPPING;
+
           
-          SET @proc_step_name=' Update CASE_LAB_DATAMART';
+          SET @proc_step_name=' Update Patient attributes in CASE_LAB_DATAMART';
           SET @proc_step_no = 5.1;
-
-     
-
-          -- Update Patient attributes in CASE_LAB_DATAMART
 
           IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm 
                     inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
@@ -691,11 +710,8 @@ BEGIN
                     and datamart_update+case_lab_datamart_update >= 1;     
           END
           
-          SET @proc_step_name=' Update BMIRD_STREP_PNEUMO_DATAMART';
+          SET @proc_step_name=' Update Patient attributes in BMIRD_STREP_PNEUMO_DATAMART';
           SET @proc_step_no = 5.2;
-
-
-          -- Update Patient attributes in BMIRD_STREP_PNEUMO_DATAMART
 
           IF EXISTS (SELECT 1 FROM dbo.BMIRD_STREP_PNEUMO_DATAMART dm 
                     inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
@@ -726,7 +742,9 @@ BEGIN
                     and datamart_update+bmird_strep_pneumo_datamart_update >= 1;    
           END
 
-          -- Update Patient attributes in HEP100
+          SET @proc_step_name=' Update Patient attributes in HEP100';
+          SET @proc_step_no = 5.2;
+
 
           IF EXISTS (SELECT 1 FROM dbo.HEP100 dm 
                     inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
