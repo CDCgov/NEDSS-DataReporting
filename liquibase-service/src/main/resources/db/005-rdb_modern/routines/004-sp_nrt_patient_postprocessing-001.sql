@@ -312,6 +312,12 @@ BEGIN
             and tpt.patient_key = p.patient_key
             and p.patient_key is not null;
 
+          select p.patient_key
+          into #patient_update_list
+          from dbo.d_patient p with (nolock)
+          inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
+          and p.patient_key is not null;
+
         /* Logging */
         set @rowcount=@@rowcount
         INSERT INTO [dbo].[job_flow_log] (
@@ -573,30 +579,18 @@ BEGIN
           -- if yes, update the rows in CASE_LAB_DATAMART for matching PATIENT_LOCAL_ID and INV KEY
           */
           select 
-          	dm.PATIENT_KEY, 
-          	dm.PATIENT_LOCAL_ID,
-               dm.INVESTIGATION_KEY,
-               dm.PATIENT_FIRST_NM, 
-               dm.PATIENT_MIDDLE_NM, 
-               dm.PATIENT_HOME_PHONE,
-               dm.PATIENT_STREET_ADDRESS_1,
-               dm.PATIENT_STREET_ADDRESS_2,
-               dm.PATIENT_CITY,
-               dm.PATIENT_STATE,
-               dm.PATIENT_ZIP,
-               dm.RACE,
-               dm.PATIENT_COUNTY,
-               dm.PATIENT_DOB,
-               dm.AGE_REPORTED,
-               dm.AGE_REPORTED_UNIT,
-               dm.PATIENT_CURRENT_SEX
+          	tmp.*
           into #PATIENT_DATA_FOR_CASE_LAB_DATAMART
           from (
 	          select i.PATIENT_KEY, d.*  from dbo.F_STD_PAGE_CASE i inner join dbo.CASE_LAB_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
 	          union all
 	          select i.PATIENT_KEY, d.*  from dbo.F_PAGE_CASE i inner join dbo.CASE_LAB_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
 	      ) dm
-          inner join #temp_patient_table tmp 
+          inner join (
+               select dp.* 
+               from dbo.D_PATIENT dp with (nolock) 
+               inner join #patient_update_list plist on plist.patient_key = dp.patient_key
+          ) tmp 
           on dm.PATIENT_KEY = tmp.PATIENT_KEY
           where (
                dm.PATIENT_LOCAL_ID is not null
@@ -662,60 +656,6 @@ BEGIN
           END
           ;
 
-          select 
-          	dm.PATIENT_KEY, 
-          	dm.PATIENT_LOCAL_ID,
-               dm.INVESTIGATION_KEY,
-               dm.PATIENT_FIRST_NM, 
-               dm.PATIENT_MIDDLE_NM, 
-               dm.PATIENT_HOME_PHONE,
-               dm.PATIENT_STREET_ADDRESS_1,
-               dm.PATIENT_STREET_ADDRESS_2,
-               dm.PATIENT_CITY,
-               dm.PATIENT_STATE,
-               dm.PATIENT_ZIP,
-               dm.RACE,
-               dm.PATIENT_COUNTY,
-               dm.PATIENT_DOB,
-               dm.AGE_REPORTED,
-               dm.AGE_REPORTED_UNIT,
-               dm.PATIENT_CURRENT_SEX
-          into #PATIENT_DATA_FOR_CASE_LAB_DATAMART
-          from (
-	          select i.PATIENT_KEY, d.*  from dbo.F_STD_PAGE_CASE i inner join dbo.CASE_LAB_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
-	          union all
-	          select i.PATIENT_KEY, d.*  from dbo.F_PAGE_CASE i inner join dbo.CASE_LAB_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
-	      ) dm
-          inner join #temp_patient_table tmp 
-          on dm.PATIENT_KEY = tmp.PATIENT_KEY
-          where (
-               dm.PATIENT_LOCAL_ID is not null
-          ) and (
-               dm.PATIENT_FIRST_NM <> tmp.PATIENT_FIRST_NAME or
-               dm.PATIENT_MIDDLE_NM <> tmp.PATIENT_MIDDLE_NAME or
-               dm.PATIENT_LAST_NM <> tmp.PATIENT_LAST_NAME or 
-               dm.PATIENT_HOME_PHONE <>  (
-               	CASE
-                    WHEN tmp.PATIENT_PHONE_HOME <> '' AND tmp.PATIENT_PHONE_EXT_HOME <> ''
-                        THEN rtrim(tmp.PATIENT_PHONE_HOME) + ' ext. ' + rtrim(tmp.PATIENT_PHONE_EXT_HOME)
-                    WHEN tmp.PATIENT_PHONE_HOME <> '' AND tmp.PATIENT_PHONE_EXT_HOME = ''
-                        THEN rtrim(tmp.PATIENT_PHONE_HOME)
-                    WHEN tmp.PATIENT_PHONE_HOME = '' AND tmp.PATIENT_PHONE_EXT_HOME <> ''
-                        THEN 'ext. ' + rtrim(tmp.PATIENT_PHONE_EXT_HOME)
-                    ELSE tmp.PATIENT_PHONE_HOME
-                    END ) or
-               dm.PATIENT_STREET_ADDRESS_1 <> tmp.PATIENT_STREET_ADDRESS_1 or
-               dm.PATIENT_STREET_ADDRESS_2 <> tmp.PATIENT_STREET_ADDRESS_2 or
-               dm.PATIENT_CITY <> tmp.PATIENT_CITY or
-               dm.PATIENT_STATE <> tmp.PATIENT_STATE or
-               dm.PATIENT_ZIP <> tmp.PATIENT_ZIP or         
-               dm.RACE <> tmp.PATIENT_RACE_CALCULATED or
-               dm.PATIENT_COUNTY <> tmp.PATIENT_COUNTY or
-               dm.PATIENT_DOB <> tmp.PATIENT_DOB or
-               dm.AGE_REPORTED <> tmp.PATIENT_AGE_REPORTED or
-               dm.AGE_REPORTED_UNIT <> tmp.PATIENT_AGE_REPORTED_UNIT or
-               dm.PATIENT_CURRENT_SEX <> tmp.PATIENT_CURRENT_SEX 
-          );
          
          /**
           Update Patient attributes in BMIRD_STREP_PNEUMO_DATAMART
@@ -725,30 +665,18 @@ BEGIN
           -- if yes, update the rows in BMIRD_STREP_PNEUMO_DATAMART for matching PATIENT_LOCAL_ID and INV KEY
           */
           select
-               dm.PATIENT_LOCAL_ID,
-               dm.PATIENT_FIRST_NAME,
-               dm.PATIENT_LAST_NAME,
-               dm.PATIENT_DOB,
-               dm.PATIENT_CURRENT_SEX,
-               dm.AGE_REPORTED,
-               dm.AGE_REPORTED_UNIT,
-               dm.PATIENT_ETHNICITY ,
-               dm.PATIENT_STREET_ADDRESS_1,
-               dm.PATIENT_STREET_ADDRESS_2,
-               dm.PATIENT_CITY,
-               dm.PATIENT_STATE,
-               dm.PATIENT_ZIP,
-               dm.PATIENT_COUNTY,
-               dm.RACE_CALCULATED,
-               dm.RACE_CALC_DETAILS,
-               dm.PATIENT_ADDRESS
+              tmp.*
           into #PATIENT_DATA_FOR_BMIRD_DATAMART
           from (
 	          select i.PATIENT_KEY, d.*  from dbo.F_STD_PAGE_CASE i inner join dbo.BMIRD_STREP_PNEUMO_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
 	          union all
 	          select i.PATIENT_KEY, d.*  from dbo.F_PAGE_CASE i inner join dbo.BMIRD_STREP_PNEUMO_DATAMART d on i.INVESTIGATION_KEY = d.INVESTIGATION_KEY 
 	      ) dm
-          inner join #temp_patient_table tmp 
+          inner join ( 
+               select dp.* 
+               from dbo.D_PATIENT dp with (nolock) 
+               inner join #patient_update_list plist on plist.patient_key = dp.patient_key
+          ) tmp 
           on dm.PATIENT_KEY = tmp.PATIENT_KEY
           where (
                dm.PATIENT_LOCAL_ID is not null
