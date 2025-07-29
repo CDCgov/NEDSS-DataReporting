@@ -259,6 +259,50 @@ BEGIN
                tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD
             );
 
+
+        select 
+          p.*,
+          case 
+               when tpt.PATIENT_FIRST_NAME <> p.PATIENT_FIRST_NAME or
+               tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
+               tpt.PATIENT_LAST_NAME <> p.PATIENT_LAST_NAME or
+               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX or
+               tpt.PATIENT_ALIAS_NICKNAME <> p.PATIENT_ALIAS_NICKNAME or
+               substring(tpt.[PATIENT_STREET_ADDRESS_1],1,50) <> p.PATIENT_STREET_ADDRESS_1 or
+               substring(tpt.[PATIENT_STREET_ADDRESS_2],1,50) <> p.PATIENT_STREET_ADDRESS_2 or
+               tpt.PATIENT_CITY <> p.PATIENT_CITY or
+               tpt.PATIENT_STATE <> p.PATIENT_STATE or
+               tpt.PATIENT_STATE_CODE <> p.PATIENT_STATE_CODE or
+               tpt.PATIENT_ZIP <> p.PATIENT_ZIP or
+               tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
+               tpt.PATIENT_COUNTY_CODE <> p.PATIENT_COUNTY_CODE or
+               tpt.PATIENT_COUNTRY <> p.PATIENT_COUNTRY or
+               tpt.PATIENT_WITHIN_CITY_LIMITS <> p.PATIENT_WITHIN_CITY_LIMITS or
+               tpt.PATIENT_PHONE_HOME <> p.PATIENT_PHONE_HOME or
+               tpt.PATIENT_PHONE_EXT_HOME <> p.PATIENT_PHONE_EXT_HOME or
+               tpt.PATIENT_PHONE_WORK <> p.PATIENT_PHONE_WORK or
+               tpt.PATIENT_PHONE_EXT_WORK <> p.PATIENT_PHONE_EXT_WORK or
+               tpt.PATIENT_PHONE_CELL <> p.PATIENT_PHONE_CELL or
+               tpt.PATIENT_EMAIL <> p.PATIENT_EMAIL or
+               tpt.PATIENT_DOB <> p.PATIENT_DOB or
+               tpt.PATIENT_AGE_REPORTED <> p.PATIENT_AGE_REPORTED or
+               substring(tpt.[PATIENT_AGE_REPORTED_UNIT] ,1,20)	 <> p.PATIENT_AGE_REPORTED_UNIT or
+               substring(tpt.[PATIENT_CURRENT_SEX] ,1,50) <> p.PATIENT_CURRENT_SEX or
+               tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD 
+               then 1 
+               else 0
+          end as case_lab_bmird_update, -- common case for multiple datamarts
+          case 
+               when tpt.PATIENT_CITY <> p.PATIENT_CITY or
+               tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
+               tpt.PATIENT_DOB <> p.PATIENT_DOB
+               then 1 
+               else 0
+          end as heb100_update -- specific to HEP100 datamart
+     into #PATIENT_UPDATE_LIST
+     from dbo.D_PATIENT p with (nolock)
+                  inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
+     ;
         update dbo.d_patient
         set	[PATIENT_KEY]	=	tpt.[PATIENT_KEY]	,
                [PATIENT_MPR_UID]	=	tpt.[PATIENT_MPR_UID]	,
@@ -601,7 +645,11 @@ BEGIN
                );
 
 
-          /** Datamart Update Operations **/
+     /** Datamart Update Operations **/
+     
+     -- Enter only if there are updates in the patient table that are valid for downstream datamarts
+     if exists (select 1 from #PATIENT_UPDATE_LIST where case_lab_bmird_update = 1 or heb100_update = 1)
+     begin
 
           -- Building a mapping table for investigations and patients which can be used later 
           -- multiple times in the procedure
@@ -615,7 +663,7 @@ BEGIN
           SET @proc_step_name='Update CASE_LAB_DATAMART';
           SET @proc_step_no = 5;
 
-         
+     
           /**
           Update Patient attributes in CASE_LAB_DATAMART
           -- Since PATIENT_LOCAL_ID is not unique and nullable in CASE_LAB_DATAMART,
@@ -623,9 +671,9 @@ BEGIN
           -- Check if INVESTIGATION is in CASE_LAB_DATAMART
           -- if yes, update the rows in CASE_LAB_DATAMART for matching PATIENT_LOCAL_ID and INV KEY
           */
-         
           
-          IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY)
+          IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY) AND
+                EXISTS (SELECT 1 FROM #PATIENT_UPDATE_LIST pt where case_lab_bmird_update = 1)
           BEGIN
                update dbo.CASE_LAB_DATAMART 
                set PATIENT_FIRST_NM = tmp.PATIENT_FIRST_NAME,
@@ -667,7 +715,12 @@ BEGIN
           ;
 
          
-         
+         /**
+          Update Patient attributes in HEP100
+          -- Since PATIENT_UID exists in HEP100, we can directly update the rows
+          */
+          --TODO
+          
 
           SELECT nri.public_health_case_uid                       AS public_health_case_uid,
                nrt.PATIENT_UID                                  AS patient_uid,
