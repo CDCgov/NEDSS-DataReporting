@@ -37,7 +37,7 @@ if /i "%DATABASE%"=="master" (
     set "SCRIPT_DIR=db\005-rdb_modern"
 ) else if /i "%DATABASE%"=="rdb" (
     echo Selected RDB database.
-    choice /m "Do you want to run rdb_modern scripts in the RDB database? Enter Y to run 005-rdb_modern scripts in RDB. Select N to run 004-rdb scripts in RDB."
+    choice /m "Would you like to run the rdb_modern scripts on the RDB database? Enter Y to run 005-rdb_modern scripts in RDB. Select N to run 004-rdb scripts in RDB."
 	if errorlevel 2 (
 		echo User selected 'No'. Running RDB scripts.
 		set "SCRIPT_DIR=db\004-rdb"
