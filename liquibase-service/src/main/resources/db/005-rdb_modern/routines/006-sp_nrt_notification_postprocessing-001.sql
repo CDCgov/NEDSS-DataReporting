@@ -375,6 +375,7 @@ BEGIN
             INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
             INNER JOIN dbo.nrt_srte_Condition_code ccd with (nolock) ON
                 ccd.condition_cd = dtm.condition_cd AND ISNULL(dtm.legacy_form_cd, ccd.investigation_form_cd) = ccd.investigation_form_cd
+            LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = dtm.condition_cd
         WHERE dtm.Datamart NOT IN ('Covid_Contact_Datamart','Covid_Lab_Datamart','Covid_Vaccination_Datamart');
 
     END TRY
