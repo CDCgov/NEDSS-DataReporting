@@ -15,7 +15,7 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         (batch_id
         ,[Dataflow_Name]
         ,[package_Name]
@@ -122,7 +122,7 @@ BEGIN
                                            FOR json path, INCLUDE_NULL_VALUES) AS tele) AS tele) AS nested
         WHERE p.place_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (batch_id
+        INSERT INTO [rdb].[dbo].[job_flow_log] (batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
                                                       ,[Status_Type]
@@ -152,7 +152,7 @@ BEGIN
         'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
         'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (batch_id
+        INSERT INTO [rdb].[dbo].[job_flow_log] (batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
                                                       ,[Status_Type]

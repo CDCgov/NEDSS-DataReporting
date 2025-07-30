@@ -904,7 +904,7 @@ BEGIN
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         (
           batch_id
         ,[Dataflow_Name]

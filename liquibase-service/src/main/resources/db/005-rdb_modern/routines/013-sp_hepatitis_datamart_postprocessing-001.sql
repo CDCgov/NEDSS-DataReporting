@@ -2884,18 +2884,6 @@ BEGIN
         COMMIT TRANSACTION;
 
 
----------------------------------------------------------------------------Dropping All TMP Tables------------------------------------------------------------
-
-        SELECT 'Transaction_count',@@TRANCOUNT;
-
-        IF @@TRANCOUNT > 0
-            BEGIN
-                select 'COMMIT 1';
-
-                COMMIT TRANSACTION;
-            END;
-
-        -------------------------------------------------------------------------------------------------------------------------
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = 999;
