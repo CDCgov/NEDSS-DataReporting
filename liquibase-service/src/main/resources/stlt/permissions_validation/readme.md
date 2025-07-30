@@ -22,23 +22,6 @@ When database objects (stored procedures, functions, views) are dropped and recr
 
 ## Permission Restoration Process
 
-### Step 1: Execute Permission Script
-
-After any database deployment, run the microservice permission script:
-
-```bash
-sqlcmd -S [SERVER] -d [DATABASE] -U [USER] -P [PASSWORD] -i "routines/001-service_users_login_creation.sql"
-```
-
-#### Example
-```bash
-sqlcmd -S myserver -d rdb_modern -U admin_user -P mypassword -i "routines/001-service_users_login_creation.sql"
-```
-
-### Step 2: Validate Permissions
-
-Run the comprehensive validation script below to verify all permissions are correctly configured.
-
 ## Comprehensive Validation Script
 
 ```sql
@@ -223,7 +206,8 @@ sqlcmd -S [SERVER] -d [DATABASE] -U [USER] -P [PASSWORD] -i "routines/001-servic
 #### Expected Counts
 - **NBS_ODSE:** 6 users (all except Kafka and Post Processing)
 - **NBS_SRTE:** 7 users (all except Kafka)
-- **rdb_modern:** 7 users (all except Debezium)
+- **RDB:** 7 users (all except Debezium) is expected if RDB is the default reporting database for Real Time Reporting. 
+- **rdb_modern:** 7 users (all except Debezium) is expected if RDB is created as reporting database for Real Time Reporting.
 
 #### Solution
 Check for extra/missing users and remove/create as needed

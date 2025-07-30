@@ -1,4 +1,5 @@
  # Database Upgrade Script
+ 
 
 ## Overview
 
@@ -18,14 +19,24 @@ Both, (Windows and Linux) scripts support the same functionality:
 - Views, Functions, and Stored Pocedures SQL scrips are designed to drop and recreate the corresponding element.
 
 ## Pre-requisites
-- **Database**: For RDB_MODERN database `nrt_<>` tables should not exist the first time the script is executed.
+- Required environment variable has been inserted into NBS_ODSE's NBS_Configuration to run scripts against the selected reporting database. 
+- **Database**: The following databases should exist-
+  - **master**: Scripts under [001-master](../../db/001-master) are intended to be run manually and require admin permissions to run against NBS_ODSE, NBS_SRTE and the reporting database. 
+    - Please review the Onboarding: Create Admin and Service Users steps under [readme.md](../../../../../readme.md) to create the necessary users. 
+  - **NBS_SRTE**: Scripts under [002-srte](../../db/002-srte) will be run with the NBS_SRTE database server name. 
+  - **NBS_ODSE**: Scripts under [003-odse](../../db/003-odse) will be run with the NBS_ODSE database server name.
+  - Reporting Database:
+    - **RDB**: If RDB is selected as the default reporting database, please ensure that scripts for RDB_MODERN are run against the RDB database server. 
+    - **RDB_MODERN**: 
+      - If RDB_MODERN is selected as the reporting database, please run both scripts under [004-rdb](../../db/004-rdb) with the RDB server_name and [005-rdb_modern](../../db/005-rdb_modern) with RDB_MODERN server_name. 
+      - `nrt_<>` tables should not exist the first time the scripts are executed.
 
 ## Requirements
 
 ### Common Requirements
 - **Database**: SQL Server 2016 or higher.
 - **Database Client**: Microsoft SQL Server `sqlcmd`.
-- **Permissions**: The database user must have permissions to create and delete objects in the specified database.
+- **Permissions**: The database user must have permissions to create and delete objects in the specified database. 
 - **Directory Structure**: The script expects `.sql` files in its directory and optional subdirectories: `tables`, `views`, `functions`, `routines`, `remove`, and `data_load`. Folder names are case-sensitive on Linux.
 
 ### Windows-Specific Requirements
