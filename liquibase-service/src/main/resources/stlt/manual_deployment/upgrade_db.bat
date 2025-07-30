@@ -33,10 +33,18 @@ if /i "%DATABASE%"=="master" (
     set "SCRIPT_DIR=db\002-srte"
 ) else if /i "%DATABASE%"=="nbs_odse" (
     set "SCRIPT_DIR=db\003-odse"
-) else if /i "%DATABASE%"=="rdb" (
-    set "SCRIPT_DIR=db\004-rdb"
-) else if /i "%DATABASE%"=="rdb_modern" (
+) else if /i "%DATABASE%"=="rdb_modern_1" (
     set "SCRIPT_DIR=db\005-rdb_modern"
+) else if /i "%DATABASE%"=="rdb" (
+    echo Selected RDB database.
+    choice /m "Do you want to run rdb_modern scripts in the RDB database? Enter Y to run 005-rdb_modern scripts in RDB. Select N to run 004-rdb scripts in RDB."
+	if errorlevel 2 (
+		echo User selected 'No'. Running RDB scripts.
+		set "SCRIPT_DIR=db\004-rdb"
+	) else (
+		echo User selected 'Yes'. Running modern scripts in RDB.
+		set "SCRIPT_DIR=db\005-rdb_modern"
+        )
 ) else (
     echo Unknown database: %DATABASE%
     exit /b 1
@@ -69,7 +77,7 @@ if not exist logs mkdir logs
 set "LOG_FILE=logs\manual_run_log_!LOG_DATE!_%DATABASE%.log"
 
 REM Determine paths to search for scripts
-set "PATHS=tables views functions routines jobs remove"
+set "PATHS=tables views functions routines remove"
 if /i "!load_data!"=="true" (
     set "PATHS=."
 )

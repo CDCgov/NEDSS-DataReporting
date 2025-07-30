@@ -98,7 +98,7 @@ if [[ "$load_data" == "true" ]]; then
         exit 1
     fi
 else
-    PATHS=("tables" "views" "functions" "routines" "jobs" "remove")
+    PATHS=("tables" "views" "functions" "routines" "remove")
 fi
 
 # Generate log filename (yyyymmddss format)

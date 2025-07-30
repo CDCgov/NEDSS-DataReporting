@@ -12,10 +12,9 @@ A comprehensive collection of database objects required for implementation of re
 
 The onboarding process involves a combination of manual and automated steps. Required scripts are located under the `liquibase-service/src/main/resources/db` directory. 
 
-Follow the sequence below to prepare the environment:
+
 
 ---
-
 #### 1. Onboarding: Create Admin and Service Users (Manual Only)
 Run the three scripts located under the following directory manually. This creates the admin user and individual service users with necessary permissions to create required database objects.
 
@@ -52,46 +51,45 @@ Automated deployment using Liquibase ensures consistent and traceable changes to
       - RDB: If RDB is selected as the default reporting database, please ensure that scripts for [db.rdb_modern.changelog-16.1.yaml](changelog/db.rdb_modern.changelog-16.1.yaml) are run against the `RDB` database server.
       - RDB_MODERN: If RDB_MODERN is selected as the reporting database, please run both scripts under [db.rdb.changelog-16.1.yaml](changelog/db.rdb.changelog-16.1.yaml) with the `RDB` server_name and [db.rdb_modern.changelog-16.1.yaml](changelog/db.rdb_modern.changelog-16.1.yaml) with `RDB_MODERN` server_name.
 
-    ```sql
-    --Last script executed should be 999-<database_name>_database_object_permission_grants-001.sql.
-    USE NBS_ODSE;
-    SELECT TOP 1 *
-    FROM NBS_ODSE.DBO.DATABASECHANGELOG
-    ORDER BY DATEEXECUTED DESC;
-    
-    USE NBS_SRTE;
-    SELECT TOP 1 *
-    FROM NBS_SRTE.DBO.DATABASECHANGELOG
-    ORDER BY DATEEXECUTED DESC;
-    
-    USE RDB;
-    SELECT TOP 1 *
-    FROM RDB.DBO.DATABASECHANGELOG
-    ORDER BY DATEEXECUTED DESC;
-    
-    USE RDB_MODERN;
-    SELECT TOP 1 *
-    FROM RDB_MODERN.DBO.DATABASECHANGELOG
-    ORDER BY DATEEXECUTED DESC;
-    
-    ```
+      ```sql
+      --Last script executed should be 999-<database_name>_database_object_permission_grants-001.sql.
+      USE NBS_ODSE;
+      SELECT TOP 1 *
+      FROM NBS_ODSE.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      
+      USE NBS_SRTE;
+      SELECT TOP 1 *
+      FROM NBS_SRTE.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      
+      USE RDB;
+      SELECT TOP 1 *
+      FROM RDB.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      
+      USE RDB_MODERN;
+      SELECT TOP 1 *
+      FROM RDB_MODERN.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      ```
 #### Option 2: Manual Deployment
 
-Manual deployment allows for more granular control and is suitable for environments without Liquibase.
+Manual deployment allows for more granular control and is suitable for environments without Liquibase. Please review the documentation for information on order of script execution and optional `upgrade_db.bat` file to run all scripts. 
 
-- [Manual Deployment Documentation](liquibase-service/src/main/resources/stlt/manual_deployment/readme.md)
+- [Manual Deployment Documentation](src/main/resources/stlt/manual_deployment/readme.md)
 
 ---
 #### 3. Onboarding: Load Data and Start CDC (Manual or Batch Script)
 
-After all objects have been successfully deployed, run the following scripts to complete database setup.
+After all objects have been successfully deployed, run the scripts under the following directory to complete database onboarding.
 
 - [02_onboarding_script_data_load](src/main/resources/db/001-master/02_onboarding_script_data_load)
 
-This loads key-uid mapping onto key tables for RTR and activates **Change Data Capture** for required tables in NBS_ODSE and NBS_SRTE.
+These scripts load metadata and key tables for RTR. Additionally, **Change Data Capture** for required tables in NBS_ODSE and NBS_SRTE is enabled.
 
 > This can be automated via a **batch script** with the `--load-data` flag for the master database schema.  
-> Note: Liquibase does **not** support this step directly.
+> Note: Liquibase does **not** support this step.
 
 ---
 

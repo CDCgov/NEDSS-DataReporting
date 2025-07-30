@@ -90,22 +90,42 @@ upgrade_db.bat [options] server database user password
    ```
    
 #### Linux
-1. **Basic Execution** (excludes `data_load` folder):
+1. **Basic Execution** (excludes `data_load` folder): 
    ```bash
-   ./upgrade_db.sh server_name rdb_modern my_user my_password
+   ./upgrade_db.sh server_name nbs_odse my_user my_password
    ```
 2. **Include `data_load` Scripts**:
    ```bash
-   ./upgrade_db.sh --load-data server_name rdb_modern my_user my_password
+   ./upgrade_db.sh --load-data server_name master my_user my_password
    ```
 3. **Flexible Flag Positioning**:
    ```bash
-   ./upgrade_db.sh --load-data server_name rdb_modern my_user my_password 
+   ./upgrade_db.sh --load-data server_name master my_user my_password 
     ```
    ```bash
-   ./upgrade_db.sh server_name rdb_modern my_user my_password --load-data
+   ./upgrade_db.sh server_name master my_user my_password --load-data
    ```
-4. **Display Help**:
+4. **Run 005-rdb_modern scripts against rdb database**: Required for environments where rdb is the default Real Time Reporting database.
+   ```bash
+   ./upgrade_db.sh server_name rdb my_user my_password
+   ```
+   Follow the prompts after selecting rdb. 
+    ```text
+   Selected RDB database.
+   Do you want to run rdb_modern scripts in the RDB database? Enter Y to run 005-rdb_modern scripts in RDB. Select N to run 004-rdb scripts in RDB. [Y,N]?
+   ```
+   If 005-rdb_modern scripts are required in RDB, please select Y. 
+   ```text
+   Y
+   User selected 'Yes'. Running modern scripts in RDB.
+    ```
+
+   If scripts are not required in RDB, please select N. This will run minimal required scripts (004-rdb) for RDB. 
+   ```text
+   N
+   User selected 'No'. Running RDB scripts.
+    ```
+6. **Display Help**:
    ```bash
    ./upgrade_db.sh --help | -h | /h
    ```
@@ -124,7 +144,7 @@ upgrade_db.bat [options] server database user password
   - Linux: `export DB_PASS="my$password"; ./upgrade_db.sh server_name rdb_modern my_user "$DB_PASS"`
 - **Case Sensitivity**: Folder names and file extensions (`.sql`) are case-sensitive on Linux but not on Windows.
 - **Error Handling**: The scripts stop executing subdirectory scripts if any `.sql` file in the main directory fails. Failed scripts are listed in the log and console output.
-- **SQL Scripts**: Scripts are executed from current directory and subdirectories (`tables`, `views`, `functions`, `routines`, `remove`, and optionally `data_load`). Inside each subdirectory, scripts are execuetd by alphabetical order. To solve script dependencies just reorder scripts in the subdirectory.
+- **SQL Scripts**: Scripts are executed from liquibase-service\src\main\resources\ directory and subdirectories (`tables`, `views`, `functions`, `routines`, `remove`, and optionally `data_load`) based on the database specified. Inside each subdirectory, scripts are executed in alphabetical order. To solve script dependencies just reorder scripts in the subdirectory.
 
 ## Troubleshooting
 - **sqlcmd not found**:
