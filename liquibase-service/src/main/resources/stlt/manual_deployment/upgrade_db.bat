@@ -33,7 +33,7 @@ if /i "%DATABASE%"=="master" (
     set "SCRIPT_DIR=db\002-srte"
 ) else if /i "%DATABASE%"=="nbs_odse" (
     set "SCRIPT_DIR=db\003-odse"
-) else if /i "%DATABASE%"=="rdb_modern_1" (
+) else if /i "%DATABASE%"=="rdb_modern" (
     set "SCRIPT_DIR=db\005-rdb_modern"
 ) else if /i "%DATABASE%"=="rdb" (
     echo Selected RDB database.
