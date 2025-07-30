@@ -224,7 +224,7 @@ BEGIN
 
 
 
-          -- Check for updates in the patient table that are valid for downstream datamarts
+     -- Check for updates in the patient table that are valid for downstream datamarts
      select 
           p.*,
           -- common case for multiple datamarts
@@ -294,7 +294,13 @@ BEGIN
                tpt.PATIENT_DECEASED_INDICATOR <> p.PATIENT_DECEASED_INDICATOR or
                tpt.PATIENT_MARITAL_STATUS <> p.PATIENT_MARITAL_STATUS or
                tpt.PATIENT_SSN <> p.PATIENT_SSN or
-               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX
+               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX or
+               tpt.PATIENT_ADDL_GENDER_INFO <> p.PATIENT_ADDL_GENDER_INFO or
+               tpt.PATIENT_ALIAS_NICKNAME <> p.PATIENT_ALIAS_NICKNAME or
+               tpt.PATIENT_BIRTH_COUNTRY <> p.PATIENT_BIRTH_COUNTRY or
+               tpt.PATIENT_BIRTH_SEX <> p.PATIENT_BIRTH_SEX or
+               tpt.PATIENT_CENSUS_TRACT <> p.PATIENT_CENSUS_TRACT or
+               tpt.PATIENT_CURR_SEX_UNK_RSN <> p.PATIENT_CURR_SEX_UNK_RSN
                then 1
                else 0
           end as morbidity_report_datamart_update
@@ -742,9 +748,9 @@ BEGIN
                     and datamart_update+bmird_strep_pneumo_datamart_update >= 1;    
           END
 
-          SET @proc_step_name=' Update Patient attributes in HEP100';
-          SET @proc_step_no = 5.2;
 
+          SET @proc_step_name=' Update Patient attributes in HEP100';
+          SET @proc_step_no = 5.3;
 
           IF EXISTS (SELECT 1 FROM dbo.HEP100 dm 
                     inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
@@ -781,6 +787,144 @@ BEGIN
                     and datamart_update+hep100_datamart_update >= 1;    
           END
           
+
+          SET @proc_step_name=' Update Patient attributes in Morbidity Report';
+          SET @proc_step_no = 5.4;
+
+
+          IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm 
+                    inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
+                    where datamart_update+morbidity_report_datamart_update >= 1)
+          BEGIN
+               update dbo.MORBIDITY_REPORT_DATAMART 
+               set 
+               [CALC_5_YEAR_AGE_GROUP]	 = 	CASE
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 0
+                         AND tmp.PATIENT_AGE_REPORTED <= 4
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 1'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 5
+                         AND tmp.PATIENT_AGE_REPORTED <= 9
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 2'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 10
+                         AND tmp.PATIENT_AGE_REPORTED <= 14
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 3'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 15
+                         AND tmp.PATIENT_AGE_REPORTED <= 19
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 4'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 20
+                         AND tmp.PATIENT_AGE_REPORTED <= 24
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 5'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 25
+                         AND tmp.PATIENT_AGE_REPORTED <= 29
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 6'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 30
+                         AND tmp.PATIENT_AGE_REPORTED <= 34
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 7'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 35
+                         AND tmp.PATIENT_AGE_REPORTED <= 39
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 8'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 40
+                         AND tmp.PATIENT_AGE_REPORTED <= 44
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN ' 9'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 45
+                         AND tmp.PATIENT_AGE_REPORTED <= 49
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '10'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 50
+                         AND tmp.PATIENT_AGE_REPORTED <= 54
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '11'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 55
+                         AND tmp.PATIENT_AGE_REPORTED <= 59
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '12'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 60
+                         AND tmp.PATIENT_AGE_REPORTED <= 64
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '13'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 65
+                         AND tmp.PATIENT_AGE_REPORTED <= 69
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '14'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 70
+                         AND tmp.PATIENT_AGE_REPORTED <= 74
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '15'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 75
+                         AND tmp.PATIENT_AGE_REPORTED <= 79
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '16'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 80
+                         AND tmp.PATIENT_AGE_REPORTED <= 84
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '17'
+                    WHEN tmp.PATIENT_AGE_REPORTED >= 85
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
+                         THEN '18'
+                    ELSE NULL END
+               ,[PATIENT_AGE_REPORTED] = CASE
+                    WHEN tmp.PATIENT_AGE_REPORTED IS NULL
+                         AND tmp.PATIENT_AGE_REPORTED_UNIT IS NULL THEN '           .'
+                    WHEN tmp.PATIENT_AGE_REPORTED IS NULL THEN RTRIM('           .'+ ' ' + tmp.PATIENT_AGE_REPORTED_UNIT)
+                    WHEN tmp.PATIENT_AGE_REPORTED_UNIT IS NULL THEN (SELECT RIGHT('            ' + CAST(tmp.PATIENT_AGE_REPORTED AS VARCHAR(50)), 12))
+                    ELSE (SELECT RIGHT('            ' + CAST(tmp.PATIENT_AGE_REPORTED AS VARCHAR(50)), 12) + ' ' + tmp.PATIENT_AGE_REPORTED_UNIT)
+               END
+               ,[PATIENT_ALIAS]	 = 	tmp.PATIENT_ALIAS_NICKNAME
+               ,[PATIENT_BIRTH_COUNTRY]	 = 	tmp.PATIENT_BIRTH_COUNTRY
+               ,[PATIENT_BIRTH_SEX]	 = 	tmp.PATIENT_BIRTH_SEX
+               ,[PATIENT_CENSUS_TRACT]	 = 	tmp.PATIENT_CENSUS_TRACT
+               ,[PATIENT_CITY]	 = 	tmp.PATIENT_CITY
+               ,[PATIENT_COUNTRY]	 = 	tmp.PATIENT_COUNTRY
+               ,[PATIENT_COUNTY]	 = 	tmp.PATIENT_COUNTY
+               ,[PATIENT_CURR_SEX_UNK_RSN]	 = 	tmp.PATIENT_CURR_SEX_UNK_RSN
+               ,[PATIENT_CURRENT_SEX]	 = 	tmp.PATIENT_CURRENT_SEX
+               ,[PATIENT_DECEASED_DATE]	 = 	CAST(FORMAT(tmp.PATIENT_DECEASED_DATE, 'yyyy-MM-dd') AS datetime)
+               ,[PATIENT_DECEASED_INDICATOR]	 = 	tmp.PATIENT_DECEASED_INDICATOR
+               ,[PATIENT_DOB]	 = 	CAST(FORMAT(tmp.PATIENT_DOB, 'yyyy-MM-dd') AS datetime)
+               ,[PATIENT_EMAIL]	 = 	tmp.PATIENT_EMAIL
+               ,[PATIENT_ETHNICITY]	 = 	tmp.PATIENT_ETHNICITY
+               ,[PATIENT_LOCAL_ID]	 = 	tmp.PATIENT_LOCAL_ID
+               ,[PATIENT_MARITAL_STATUS]	 = 	tmp.PATIENT_MARITAL_STATUS
+               ,[PATIENT_NAME]	 = 	RTRIM((ISNULL(RTRIM(LTRIM(tmp.PATIENT_LAST_NAME)), ' ') + ', ' +
+                                             ISNULL(RTRIM(LTRIM(tmp.PATIENT_FIRST_NAME)), ' ') + ' ' +
+                                             ISNULL(RTRIM(LTRIM(tmp.PATIENT_MIDDLE_NAME)), '')))
+               ,[PATIENT_PHONE_CELL]	 = 	tmp.PATIENT_PHONE_CELL
+               ,[PATIENT_PHONE_HOME]	 = 	CASE
+                    WHEN tmp.PATIENT_PHONE_EXT_HOME IS NULL THEN tmp.PATIENT_PHONE_HOME
+                    ELSE ISNULL(tmp.PATIENT_PHONE_HOME, ' ') + ' Ext ' + tmp.PATIENT_PHONE_EXT_HOME
+               END
+               ,[PATIENT_PHONE_WORK]	 = 	CASE
+                    WHEN tmp.PATIENT_PHONE_EXT_WORK IS NULL THEN tmp.PATIENT_PHONE_WORK
+                    ELSE ISNULL(tmp.PATIENT_PHONE_WORK, ' ') + ' Ext ' + tmp.PATIENT_PHONE_EXT_WORK
+               END
+               ,[PATIENT_PREFERRED_GENDER]	 = 	tmp.PATIENT_PREFERRED_GENDER
+               ,[PATIENT_PREGNANT_IND]	 = 	INV.PATIENT_PREGNANT_IND
+               ,[PATIENT_RACE]	 = 	tmp.PATIENT_RACE_CALCULATED
+               ,[PATIENT_SEX]	 = 	CASE
+                    WHEN tmp.PATIENT_PREFERRED_GENDER IS NULL THEN ISNULL(tmp.PATIENT_CURR_SEX_UNK_RSN, tmp.PATIENT_CURRENT_SEX)
+                    ELSE tmp.PATIENT_PREFERRED_GENDER
+               END
+               ,[PATIENT_STATE]	 = 	tmp.PATIENT_STATE
+               ,[PATIENT_STREET_ADDRESS_1]	 = 	tmp.PATIENT_STREET_ADDRESS_1
+               ,[PATIENT_STREET_ADDRESS_2]	 = 	tmp.PATIENT_STREET_ADDRESS_2
+               ,[PATIENT_UNK_ETHNIC_RSN]	 = 	tmp.PATIENT_UNK_ETHNIC_RSN
+               ,[PATIENT_ZIP]	 = 	tmp.PATIENT_ZIP
+               from  
+                    #INVESTIGATION_PATIENT_MAPPING tmp
+               where 
+                    dbo.MORBIDITY_REPORT_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+                    and dbo.MORBIDITY_REPORT_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID
+                    and datamart_update+morbidity_report_datamart_update >= 1;    
+          END
 
 
           

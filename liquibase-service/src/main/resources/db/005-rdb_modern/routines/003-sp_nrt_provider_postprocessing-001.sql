@@ -168,6 +168,35 @@ BEGIN
                ,LEFT(@id_list,500)
                );
 
+           
+     -- Check for updates in the provider table that are valid for downstream datamarts
+     select 
+          p.*,
+          -- common case for multiple datamarts
+          case 
+               when tpt.PROVIDER_LAST_NAME <> p.PROVIDER_LAST_NAME or
+               tpt.PROVIDER_FIRST_NAME <> p.PROVIDER_FIRST_NAME or
+               tpt.PROVIDER_STREET_ADDRESS_1 <> p.PROVIDER_STREET_ADDRESS_1 or
+               tpt.PROVIDER_STREET_ADDRESS_2 <> p.PROVIDER_STREET_ADDRESS_2 or
+               tpt.PROVIDER_CITY <> p.PROVIDER_CITY or
+               tpt.PROVIDER_STATE <> p.PROVIDER_STATE or
+               tpt.PROVIDER_ZIP <> p.PROVIDER_ZIP or
+               tpt.PROVIDER_PHONE_WORK <> p.PROVIDER_PHONE_WORK or
+               tpt.PROVIDER_PHONE_EXT_WORK <> p.PROVIDER_PHONE_EXT_WORK
+               then 1 
+               else 0
+          end as datamart_update,
+          -- specific case for std_hiv_datamart
+          case
+               when tpt.PROVIDER_QUICK_CODE <> p.PROVIDER_QUICK_CODE 
+               then 1
+               else 0
+          end as std_hiv_datamart_update,
+     into #PROVIDER_UPDATE_LIST 
+     from dbo.D_PROVIDER p with (nolock)
+          inner join #temp_prv_table tpt on tpt.provider_key = p.provider_key
+     ;
+
 
         SET @proc_step_name='Update D_PROVIDER Dimension';
         SET @proc_step_no = 3;
@@ -307,6 +336,129 @@ BEGIN
 
 
         COMMIT TRANSACTION;
+
+
+
+         /** Datamart Update Operations **/
+     
+     -- Enter only if there are updates in the provider table that are valid for downstream datamarts
+     IF EXISTS (select 1 from #PROVIDER_UPDATE_LIST where datamart_update >= 1)
+     BEGIN
+
+          -- Building a mapping table for investigations and providers which can be used later 
+          -- multiple times in the procedure when needed
+          select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physican' as provider_type, d.* 
+          into #INVESTIGATION_PROVIDER_MAPPING
+          from  #PROVIDER_UPDATE_LIST d inner join dbo.F_STD_PAGE_CASE i  
+          on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  order by i.INVESTIGATION_KEY
+          union all
+          select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physican' as provider_type, d.* 
+          from  #PROVIDER_UPDATE_LIST d inner join dbo.F_PAGE_CASE i  
+          on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  order by i.INVESTIGATION_KEY;
+
+          if @debug = 'true'
+          select * from #INVESTIGATION_PROVIDER_MAPPING;
+
+          -- Updates to MORBIDITY_REPORT_DATAMART
+          IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm 
+                    inner join #INVESTIGATION_PROVIDER_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
+                    where datamart_update >= 1)
+          BEGIN
+               update dbo.MORBIDITY_REPORT_DATAMART 
+               set 
+               PROVIDER_LAST_NAME = tmp.PROVIDER_LAST_NAME,
+               PROVIDER_FIRST_NAME = tmp.PROVIDER_FIRST_NAME,
+               PROVIDER_STREET_ADDRESS_1 = tmp.PROVIDER_STREET_ADDRESS_1,
+               PROVIDER_STREET_ADDRESS_2 = tmp.PROVIDER_STREET_ADDRESS_2,
+               PROVIDER_CITY = tmp.PROVIDER_CITY,
+               PROVIDER_STATE = tmp.PROVIDER_STATE,
+               PROVIDER_ZIP = tmp.PROVIDER_ZIP,
+               PROVIDER_PHONE_WORK = tmp.PROVIDER_PHONE_WORK,
+               PROVIDER_PHONE_EXT_WORK = tmp.PROVIDER_PHONE_EXT_WORK
+               from  
+                    #INVESTIGATION_PROVIDER_MAPPING tmp
+               where 
+                    dbo.MORBIDITY_REPORT_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+                    and datamart_update >= 1;    
+          END
+
+          -- Updates to STD_HIV_DATAMART
+          UPDATE dm
+          SET 
+          INVESTIGATOR_CLOSED_QC = CASE 
+               WHEN dm.INVESTIGATOR_CLOSED_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_CLOSED_QC 
+          END,
+          INVESTIGATOR_CURRENT_QC = CASE 
+               WHEN dm.INVESTIGATOR_CURRENT_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_CURRENT_QC 
+          END,
+          INVESTIGATOR_DISP_FL_FUP_QC = CASE 
+               WHEN dm.INVESTIGATOR_DISP_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_DISP_FL_FUP_QC 
+          END,
+          INVESTIGATOR_FL_FUP_QC = CASE 
+               WHEN dm.INVESTIGATOR_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_FL_FUP_QC 
+          END,
+          INVESTIGATOR_INIT_INTRVW_QC = CASE 
+               WHEN dm.INVESTIGATOR_INIT_INTRVW_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_INIT_INTRVW_QC 
+          END,
+          INVESTIGATOR_INIT_FL_FUP_QC = CASE 
+               WHEN dm.INVESTIGATOR_INIT_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_INIT_FL_FUP_QC 
+          END,
+          INVESTIGATOR_INITIAL_QC = CASE 
+               WHEN dm.INVESTIGATOR_INITIAL_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_INITIAL_QC 
+          END,
+          INVESTIGATOR_INTERVIEW_QC = CASE 
+               WHEN dm.INVESTIGATOR_INTERVIEW_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_INTERVIEW_QC 
+          END,
+          INVESTIGATOR_SUPER_CASE_QC = CASE 
+               WHEN dm.INVESTIGATOR_SUPER_CASE_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE
+               ELSE dm.INVESTIGATOR_SUPER_CASE_QC
+          END,
+          INVESTIGATOR_SUPER_FL_FUP_QC = CASE 
+               WHEN dm.INVESTIGATOR_SUPER_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_SUPER_FL_FUP_QC
+          END,
+          INVESTIGATOR_SURV_QC = CASE 
+               WHEN dm.INVESTIGATOR_SURV_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+                    THEN tmp.PROVIDER_QUICK_CODE 
+               ELSE dm.INVESTIGATOR_SURV_QC
+          END          
+          FROM dbo.STD_HIV_DATAMART dm
+          JOIN #PROVIDER_UPDATE_LIST tmp 
+          ON dm.std_hiv_datamart_update >= 1 
+          AND (
+               dm.INVESTIGATOR_CLOSED_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_CURRENT_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_DISP_FL_FUP_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_FL_FUP_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_INIT_INTRVW_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_INIT_FL_FUP_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_INITIAL_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_INTERVIEW_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_SUPER_CASE_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_SUPER_FL_FUP_KEY = tmp.PROVIDER_KEY or
+               dm.INVESTIGATOR_SURV_KEY = tmp.PROVIDER_KEY
+          );
+
+          
+
 
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 4;
