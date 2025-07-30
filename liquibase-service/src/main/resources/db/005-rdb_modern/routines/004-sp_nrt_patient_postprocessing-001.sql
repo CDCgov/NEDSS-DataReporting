@@ -287,7 +287,6 @@ BEGIN
                tpt.PATIENT_PHONE_EXT_WORK <> p.PATIENT_PHONE_EXT_WORK or
                tpt.PATIENT_RACE_CALCULATED <> p.PATIENT_RACE_CALCULATED or
                tpt.PATIENT_RACE_CALC_DETAILS <> p.PATIENT_RACE_CALC_DETAILS or
-               tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD or
                tpt.PATIENT_ETHNICITY <> p.PATIENT_ETHNICITY or
                tpt.PATIENT_GENERAL_COMMENTS <> p.PATIENT_GENERAL_COMMENTS or
                tpt.PATIENT_DECEASED_DATE <> p.PATIENT_DECEASED_DATE or
@@ -303,7 +302,29 @@ BEGIN
                tpt.PATIENT_CURR_SEX_UNK_RSN <> p.PATIENT_CURR_SEX_UNK_RSN
                then 1
                else 0
-          end as morbidity_report_datamart_update
+          end as morbidity_report_datamart_update,
+          -- additional cases for var_datamart
+          case
+               when
+               tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
+               tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
+               tpt.PATIENT_COUNTRY <> p.PATIENT_COUNTRY or
+               tpt.PATIENT_PHONE_HOME <> p.PATIENT_PHONE_HOME or
+               tpt.PATIENT_PHONE_EXT_HOME <> p.PATIENT_PHONE_EXT_HOME or
+               tpt.PATIENT_PHONE_WORK <> p.PATIENT_PHONE_WORK or
+               tpt.PATIENT_PHONE_EXT_WORK <> p.PATIENT_PHONE_EXT_WORK or
+               tpt.PATIENT_RACE_CALCULATED <> p.PATIENT_RACE_CALCULATED or
+               tpt.PATIENT_RACE_CALC_DETAILS <> p.PATIENT_RACE_CALC_DETAILS or
+               tpt.PATIENT_ETHNICITY <> p.PATIENT_ETHNICITY or
+               tpt.PATIENT_GENERAL_COMMENTS <> p.PATIENT_GENERAL_COMMENTS or
+               tpt.PATIENT_DECEASED_DATE <> p.PATIENT_DECEASED_DATE or
+               tpt.PATIENT_DECEASED_INDICATOR <> p.PATIENT_DECEASED_INDICATOR or
+               tpt.PATIENT_MARITAL_STATUS <> p.PATIENT_MARITAL_STATUS or
+               tpt.PATIENT_SSN <> p.PATIENT_SSN or
+               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX
+               then 1
+               else 0
+          end as var_datamart_update
      into #PATIENT_UPDATE_LIST 
      from dbo.D_PATIENT p with (nolock)
           inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
@@ -926,7 +947,50 @@ BEGIN
                     and datamart_update+morbidity_report_datamart_update >= 1;    
           END
 
+          SET @proc_step_name=' Update Patient attributes in VAR_DATAMART';
+          SET @proc_step_no = 5.5;
 
+          IF EXISTS (SELECT 1 FROM dbo.VAR_DATAMART dm 
+                    inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
+                    where datamart_update+var_datamart_update >= 1)
+          BEGIN
+               update dbo.VAR_DATAMART 
+               set 
+               PATIENT_PHONE_NUMBER_HOME = tmp.PATIENT_FIRST_NAME
+               ,PATIENT_PHONE_EXT_HOME = tmp.PATIENT_PHONE_EXT_HOME
+               ,PATIENT_PHONE_NUMBER_WORK = tmp.PATIENT_PHONE_WORK
+               ,PATIENT_PHONE_EXT_WORK = tmp.PATIENT_PHONE_EXT_WORK
+               ,PATIENT_GENERAL_COMMENTS = tmp.PATIENT_GENERAL_COMMENTS
+               ,PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME 
+               ,PATIENT_FIRST_NAME = tmp.PATIENT_FIRST_NAME 
+               ,PATIENT_MIDDLE_NAME = tmp.PATIENT_MIDDLE_NAME 
+               ,PATIENT_NAME_SUFFIX = tmp.PATIENT_NAME_SUFFIX 
+               ,PATIENT_DOB = tmp.PATIENT_DOB 
+               ,PATIENT_AGE_REPORTED = tmp.PATIENT_AGE_REPORTED 
+               ,AGE_REPORTED_UNIT = tmp.PATIENT_AGE_REPORTED_UNIT
+               ,PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX 
+               ,PATIENT_DECEASED_INDICATOR = tmp.PATIENT_DECEASED_INDICATOR 
+               ,PATIENT_DECEASED_DATE = tmp.PATIENT_DECEASED_DATE 
+               ,PATIENT_MARITAL_STATUS = tmp.PATIENT_MARITAL_STATUS 
+               ,PATIENT_SSN= tmp.PATIENT_SSN
+               ,PATIENT_ETHNICITY = tmp.PATIENT_ETHNICITY 
+               ,PATIENT_STREET_ADDRESS_1 = tmp.PATIENT_STREET_ADDRESS_1 
+               ,PATIENT_STREET_ADDRESS_2 = tmp.PATIENT_STREET_ADDRESS_2 
+               ,PATIENT_CITY = tmp.PATIENT_CITY 
+               ,PATIENT_STATE = tmp.PATIENT_STATE 
+               ,PATIENT_ZIP = tmp.PATIENT_ZIP 
+               ,PATIENT_COUNTY = tmp.PATIENT_COUNTY 
+               ,PATIENT_COUNTRY = tmp.PATIENT_COUNTRY 
+               ,WITHIN_CITY_LIMITS = tmp.PATIENT_WITHIN_CITY_LIMITS
+               ,RACE_CALC_DETAILS = tmp.PATIENT_RACE_CALC_DETAILS 
+               ,RACE_CALCULATED = tmp.PATIENT_RACE_CALCULATED
+               from  
+                    #INVESTIGATION_PATIENT_MAPPING tmp
+               where 
+                    dbo.VAR_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
+                    and dbo.VAR_DATAMART.PATIENT_LOCAL_ID = tmp.PATIENT_LOCAL_ID
+                    and datamart_update+var_datamart_update >= 1;    
+          END
           
      END
      
