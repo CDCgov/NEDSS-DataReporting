@@ -15,7 +15,7 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log]
+        INSERT INTO [rdb].[dbo].[job_flow_log]
         (batch_id
         ,[Dataflow_Name]
         ,[package_Name]
@@ -101,21 +101,37 @@ BEGIN
                                              AND elp.USE_CD = 'WP'
                                            FOR json path, INCLUDE_NULL_VALUES) AS address) AS address,
                                   -- person phone
-                                  (SELECT (SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
-                                                  elp.cd              AS                               [ph_elp_cd],
-                                                  elp.use_cd          AS                               [ph_elp_use_cd],
-                                                  REPLACE(tl.phone_nbr_txt, ' ', '') 				   telephoneNbr,
-                                                  tl.extension_txt                                     extensionTxt,
-                                                  elp.locator_desc_txt                                 phone_comments
-                                           FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
-                                                    JOIN nbs_odse.dbo.Tele_locator tl WITH (NOLOCK)
-                                                         ON elp.locator_uid = tl.tele_locator_uid
-                                           WHERE elp.entity_uid = p.person_uid
+                                  (SELECT (
+                                        SELECT ph_tl_uid, ph_elp_cd, ph_elp_use_cd, telephoneNbr, extensionTxt, phone_comments
+                                        FROM (SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
+                                              elp.cd              AS                               [ph_elp_cd],
+                                              elp.use_cd          AS                               [ph_elp_use_cd],
+                                              REPLACE(tl.phone_nbr_txt, ' ', '') 				   telephoneNbr,
+                                              tl.extension_txt                                     extensionTxt,
+                                              elp.locator_desc_txt                                 phone_comments
+                                        FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
+                                        JOIN nbs_odse.dbo.Tele_locator tl WITH (NOLOCK)
+                                            ON elp.locator_uid = tl.tele_locator_uid
+                                        WHERE elp.entity_uid = p.person_uid
                                              AND elp.CLASS_CD = 'TELE'
-                                             AND elp.CD IN ('O', 'CP')
+                                             AND elp.CD IN ('O')
                                              AND elp.RECORD_STATUS_CD = 'ACTIVE'
                                              AND tl.phone_nbr_txt IS NOT NULL
-                                           FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone,
+                                        UNION ALL
+                                        SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
+                                              elp.cd              AS                               [ph_elp_cd],
+                                              elp.use_cd          AS                               [ph_elp_use_cd],
+                                              REPLACE(tl.phone_nbr_txt, ' ', '') 				   telephoneNbr,
+                                              tl.extension_txt                                     extensionTxt,
+                                              elp.locator_desc_txt                                 phone_comments
+                                        FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
+                                        JOIN nbs_odse.dbo.Tele_locator tl WITH (NOLOCK)
+                                            ON elp.locator_uid = tl.tele_locator_uid
+                                        WHERE elp.entity_uid = p.person_uid
+                                             AND elp.CLASS_CD = 'TELE'
+                                             AND elp.CD IN ('CP')
+                                             AND tl.phone_nbr_txt IS NOT NULL ) t
+                                        FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone,
                                   -- person email
                                   (SELECT (SELECT tl.tele_locator_uid AS                  [email_tl_uid],
                                                   elp.cd              AS                  [email_elp_cd],
@@ -171,7 +187,7 @@ BEGIN
         WHERE p.person_uid in (SELECT value FROM STRING_SPLIT(@user_id_list, ','))
           AND p.cd = 'PRV';
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (batch_id
+        INSERT INTO [rdb].[dbo].[job_flow_log] (batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
                                                       ,[Status_Type]
@@ -202,7 +218,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb_modern].[dbo].[job_flow_log] (batch_id
+        INSERT INTO [rdb].[dbo].[job_flow_log] (batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
                                                       ,[Status_Type]
