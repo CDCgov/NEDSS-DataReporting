@@ -1,15 +1,16 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_invest_form_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_invest_form_postprocessing_CNDE3066]') 
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_dyn_dm_invest_form_postprocessing]
+    DROP PROCEDURE [dbo].[sp_dyn_dm_invest_form_postprocessing_CNDE3066]
 END
 GO 
 
-CREATE PROCEDURE [dbo].sp_dyn_dm_invest_form_postprocessing
+CREATE PROCEDURE [dbo].sp_dyn_dm_invest_form_postprocessing_CNDE3066
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100),
     @phc_id_list nvarchar(max),
+    @patient_only bit = 'false',
     @debug bit = 'false'
 AS
 BEGIN
@@ -73,6 +74,9 @@ BEGIN
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
+    IF @patient_only = 'false'
+    BEGIN
+    
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = ' GENERATING  '+ @tmp_DynDm_INACTIVE_INVESTIGATIONS;
 
@@ -217,6 +221,8 @@ BEGIN
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO dbo.job_flow_log ( batch_id ,[Dataflow_Name] ,[package_Name] ,[Status_Type] ,[step_number] ,[step_name] ,[row_count] )
         VALUES ( @batch_id ,@Dataflow_Name ,@Package_Name  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,@ROWCOUNT_NO );
+
+    END;
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 

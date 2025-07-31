@@ -1,12 +1,12 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_patient_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_patient_postprocessing_CNDE3066]') 
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_nrt_patient_postprocessing]
+    DROP PROCEDURE [dbo].[sp_nrt_patient_postprocessing_CNDE3066]
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_nrt_patient_postprocessing @id_list nvarchar(max), @debug bit = 'false'
+CREATE PROCEDURE dbo.sp_nrt_patient_postprocessing_CNDE3066 @id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 
@@ -21,8 +21,14 @@ BEGIN
         declare @update_dttm datetime2(7) = current_timestamp ;
         declare @dataflow_name varchar(200) = 'Patient POST-Processing';
         declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_patient_postprocessing';
+        declare @datamart_error nvarchar(MAX) = 'The following datamart updates had an error:';
+        declare @return_code INT = 0;
+        declare @error_flag INT = 0;
+        declare @sql NVARCHAR(MAX) = '';
+
 
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
+        declare @dimension_update_tbl_nm VARCHAR(200) = 'DYN_DM_D_PATIENT_UPDATE_' + CAST(@batch_id AS VARCHAR(200));
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
@@ -537,8 +543,78 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        SET @proc_step_name='GENERATE DYNAMIC DATAMART PATIENTS TABLE';
+        SET @proc_step_no = 5;
+
+        SET @sql = '
+        SELECT
+               pg.datamart_nm
+               , ''tmp_DynDm_Patient_Data_'' + pg.datamart_nm + ''_' + CAST(@batch_id AS VARCHAR(200)) + ''' AS tbl_nm 
+               , STRING_AGG(CAST(dinv.case_uid AS NVARCHAR(MAX)), '','') AS phc_uid_list 
+        INTO dbo.' + @dimension_update_tbl_nm + ' 
+        FROM (select i.INVESTIGATION_KEY, d.PATIENT_KEY 
+          from dbo.F_STD_PAGE_CASE i with (NOLOCK) inner join #temp_patient_table d on i.PATIENT_KEY = d.PATIENT_KEY  
+          union all 
+          select i.INVESTIGATION_KEY, d.PATIENT_KEY 
+          from dbo.F_PAGE_CASE i with (NOLOCK) inner join #temp_patient_table d on i.PATIENT_KEY = d.PATIENT_KEY) p 
+          INNER JOIN dbo.INVESTIGATION dinv with (NOLOCK) 
+               ON dinv.investigation_key = p.INVESTIGATION_KEY 
+          INNER JOIN dbo.INV_SUMM_DATAMART invsum 
+               ON invsum.INVESTIGATION_KEY = dinv.investigation_key 
+          INNER JOIN dbo.condition c with (NOLOCK) 
+               ON c.CONDITION_CD = invsum.DISEASE_CD 
+          INNER JOIN dbo.nrt_odse_NBS_page pg with (NOLOCK) 
+               ON c.DISEASE_GRP_CD = pg.form_cd 
+          GROUP BY pg.datamart_nm; 
+';
+          
+          exec sp_executesql @sql;
+
+          if @debug = 'true'
+               BEGIN
+                    select @sql;
+                    DECLARE @sql_statement_DEBUG NVARCHAR(MAX) = 'SELECT * FROM dbo.' + @dimension_update_tbl_nm + ';';
+                    exec sp_executesql @sql_statement_DEBUG;
+               END;
+
+          exec dbo.sp_dyn_dm_dimension_update 'D_PATIENT', @dimension_update_tbl_nm, @batch_id, @debug;
+
+
+          IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+               BEGIN
+                    SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                    exec sp_executesql @sql;
+               END
+
+
+        /* Logging */
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log] (
+                   batch_id
+                 ,[Dataflow_Name]
+                 ,[package_Name]
+                 ,[Status_Type]
+                 ,[step_number]
+                 ,[step_name]
+                 ,[row_count]
+                 ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+              
+
+
+
         SET @proc_step_name='SP_COMPLETE';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -622,6 +698,17 @@ BEGIN
                 @FullErrorMessage AS stored_procedure,
                 CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
                 WHERE 1=1;
+          
+          /*
+               Cleanup process for the scenario in which
+               one or more of the dynamic datamart operations fail
+          */
+          IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+               BEGIN
+                    SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                    exec sp_executesql @sql;
+               END
+          
 
     END CATCH
 

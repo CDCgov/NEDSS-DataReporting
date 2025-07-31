@@ -1,12 +1,12 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_organization_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_organization_postprocessing_CNDE3066]') 
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_nrt_organization_postprocessing]
+    DROP PROCEDURE [dbo].[sp_nrt_organization_postprocessing_CNDE3066]
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_nrt_organization_postprocessing @id_list nvarchar(max), @debug bit = 'false'
+CREATE PROCEDURE dbo.sp_nrt_organization_postprocessing_CNDE3066 @id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 
@@ -282,6 +282,32 @@ BEGIN
 
 
         COMMIT TRANSACTION;
+
+        SET @proc_step_name='GENERATE #DYN_DM_ORGS';
+        SET @proc_step_no = 5;
+
+        SELECT
+               pg.datamart_nm
+               , 'tmp_DynDm_Organization_' + pg.datamart_nm + '_' + CAST(@batch_id AS VARCHAR(200)) AS tbl_nm
+               , STRING_AGG(CAST(dinv.case_uid AS NVARCHAR(MAX)), ',') AS phc_uid_list
+        INTO #DYN_DM_ORGS
+        FROM (select i.INVESTIGATION_KEY, d.PATIENT_KEY
+          from dbo.F_STD_PAGE_CASE i with (NOLOCK) inner join #temp_patient_table d on i.PATIENT_KEY = d.PATIENT_KEY 
+          union all
+          select i.INVESTIGATION_KEY, d.PATIENT_KEY
+          from dbo.F_PAGE_CASE i with (NOLOCK) inner join #temp_patient_table d on i.PATIENT_KEY = d.PATIENT_KEY) p
+          INNER JOIN dbo.INVESTIGATION dinv with (NOLOCK)
+               ON dinv.investigation_key = p.INVESTIGATION_KEY
+          INNER JOIN dbo.INV_SUMM_DATAMART invsum
+               ON invsum.INVESTIGATION_KEY = dinv.investigation_key
+          INNER JOIN dbo.condition c with (NOLOCK)
+               ON c.CONDITION_CD = invsum.DISEASE_CD
+          INNER JOIN dbo.nrt_odse_NBS_page pg with (NOLOCK)
+               ON c.DISEASE_GRP_CD = pg.form_cd
+          GROUP BY pg.datamart_nm;
+
+          if @debug = 'true'
+               SELECT @proc_step_name, * from #DYN_DM_PATIENTS;
 
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 4;
