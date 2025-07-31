@@ -1,4 +1,5 @@
  # Database Upgrade Script
+ 
 
 ## Overview
 
@@ -18,14 +19,24 @@ Both, (Windows and Linux) scripts support the same functionality:
 - Views, Functions, and Stored Pocedures SQL scrips are designed to drop and recreate the corresponding element.
 
 ## Pre-requisites
-- **Database**: For RDB_MODERN database `nrt_<>` tables should not exist the first time the script is executed.
+- Required environment variable has been inserted into NBS_ODSE's NBS_Configuration to run scripts against the selected reporting database. 
+- **Database**: The following databases should exist-
+  - **master**: Scripts under [001-master](../../db/001-master) are intended to be run manually and require admin permissions to run against NBS_ODSE, NBS_SRTE and the reporting database. 
+    - Please review the Onboarding: Create Admin and Service Users steps under [readme.md](../../../../../readme.md) to create the necessary users. 
+  - **NBS_SRTE**: Scripts under [002-srte](../../db/002-srte) will be run with the NBS_SRTE database server name. 
+  - **NBS_ODSE**: Scripts under [003-odse](../../db/003-odse) will be run with the NBS_ODSE database server name.
+  - Reporting Database:
+    - **RDB**: If RDB is selected as the default reporting database, please ensure that scripts for RDB_MODERN are run against the RDB database server. 
+    - **RDB_MODERN**: 
+      - If RDB_MODERN is selected as the reporting database, please run both scripts under [004-rdb](../../db/004-rdb) with the RDB server_name and [005-rdb_modern](../../db/005-rdb_modern) with RDB_MODERN server_name. 
+      - `nrt_<>` tables should not exist the first time the scripts are executed.
 
 ## Requirements
 
 ### Common Requirements
 - **Database**: SQL Server 2016 or higher.
 - **Database Client**: Microsoft SQL Server `sqlcmd`.
-- **Permissions**: The database user must have permissions to create and delete objects in the specified database.
+- **Permissions**: The database user must have permissions to create and delete objects in the specified database. 
 - **Directory Structure**: The script expects `.sql` files in its directory and optional subdirectories: `tables`, `views`, `functions`, `routines`, `remove`, and `data_load`. Folder names are case-sensitive on Linux.
 
 ### Windows-Specific Requirements
@@ -79,22 +90,42 @@ upgrade_db.bat [options] server database user password
    ```
    
 #### Linux
-1. **Basic Execution** (excludes `data_load` folder):
+1. **Basic Execution** (excludes `data_load` folder): 
    ```bash
-   ./upgrade_db.sh server_name rdb_modern my_user my_password
+   ./upgrade_db.sh server_name nbs_odse my_user my_password
    ```
 2. **Include `data_load` Scripts**:
    ```bash
-   ./upgrade_db.sh --load-data server_name rdb_modern my_user my_password
+   ./upgrade_db.sh --load-data server_name master my_user my_password
    ```
 3. **Flexible Flag Positioning**:
    ```bash
-   ./upgrade_db.sh --load-data server_name rdb_modern my_user my_password 
+   ./upgrade_db.sh --load-data server_name master my_user my_password 
     ```
    ```bash
-   ./upgrade_db.sh server_name rdb_modern my_user my_password --load-data
+   ./upgrade_db.sh server_name master my_user my_password --load-data
    ```
-4. **Display Help**:
+4. **Run 005-rdb_modern scripts against rdb database**: Required for environments where rdb is the default Real Time Reporting database.
+   ```bash
+   ./upgrade_db.sh server_name rdb my_user my_password
+   ```
+   Follow the prompts after selecting rdb. 
+    ```text
+   Selected RDB database.
+   Do you want to run rdb_modern scripts in the RDB database? Enter Y to run 005-rdb_modern scripts in RDB. Select N to run 004-rdb scripts in RDB. [Y,N]?
+   ```
+   If 005-rdb_modern scripts are required in RDB, please select Y. 
+   ```text
+   Y
+   User selected 'Yes'. Running modern scripts in RDB.
+    ```
+
+   If scripts are not required in RDB, please select N. This will run minimal required scripts (004-rdb) for RDB. 
+   ```text
+   N
+   User selected 'No'. Running RDB scripts.
+    ```
+6. **Display Help**:
    ```bash
    ./upgrade_db.sh --help | -h | /h
    ```
@@ -113,7 +144,7 @@ upgrade_db.bat [options] server database user password
   - Linux: `export DB_PASS="my$password"; ./upgrade_db.sh server_name rdb_modern my_user "$DB_PASS"`
 - **Case Sensitivity**: Folder names and file extensions (`.sql`) are case-sensitive on Linux but not on Windows.
 - **Error Handling**: The scripts stop executing subdirectory scripts if any `.sql` file in the main directory fails. Failed scripts are listed in the log and console output.
-- **SQL Scripts**: Scripts are executed from current directory and subdirectories (`tables`, `views`, `functions`, `routines`, `remove`, and optionally `data_load`). Inside each subdirectory, scripts are execuetd by alphabetical order. To solve script dependencies just reorder scripts in the subdirectory.
+- **SQL Scripts**: Scripts are executed from liquibase-service\src\main\resources\ directory and subdirectories (`tables`, `views`, `functions`, `routines`, `remove`, and optionally `data_load`) based on the database specified. Inside each subdirectory, scripts are executed in alphabetical order. To solve script dependencies just reorder scripts in the subdirectory.
 
 ## Troubleshooting
 - **sqlcmd not found**:

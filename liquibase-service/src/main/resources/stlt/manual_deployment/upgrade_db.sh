@@ -1,19 +1,11 @@
 #!/bin/bash
 
-# This script is designed to be executed on Unix/Linux (e.g., Ubuntu, CentOS)
-# Parameters:
-#     server: Server Name or IP address 
-#     database: Database Name
-#     user: User Name
-#     password: User Password
-# Optional Parameters:
-#     --load-data: Include or not the load_data subdirectory
-
+# upgrade_db.sh
+# Executes SQL scripts to upgrade the specified database.
 # Usage:
-# ./upgrade_db.sh server_name rdb my_user my_password
-# ./upgrade_db.sh --load-data server_name rdb my_user my_password
+#   ./upgrade_db.sh [options] server database user password
+#   ./upgrade_db.sh --load-data server database user password
 
-# Initialize variables
 load_data="false"
 param_count=0
 SERVER_NAME=""
@@ -38,7 +30,7 @@ print_help() {
     echo ""
     echo "Examples:"
     echo "  $0 server_name rdb my_user my_password"
-    echo "  $0 --load-data server_name rdb my_user my_password"
+    echo "  $0 --load-data server_name master my_user my_password"
 }
 
 # Parse command-line arguments
@@ -65,6 +57,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if ! command -v sqlcmd &> /dev/null; then
+    echo "Error: sqlcmd is not installed or not found in PATH."
+    exit 1
+fi
+
 # Check required parameters
 if [[ $param_count -lt 4 ]]; then
     echo "Usage: $0 [options] server database user password"
@@ -72,25 +69,59 @@ if [[ $param_count -lt 4 ]]; then
     exit 1
 fi
 
-# Resolve script base directory
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Resolve SQL folder based on database
-case "${DATABASE,,}" in
-    master) SCRIPT_DIR="$BASE_DIR/db/001-master" ;;
-    nbs_srte) SCRIPT_DIR="$BASE_DIR/db/002-srte" ;;
-    nbs_odse) SCRIPT_DIR="$BASE_DIR/db/003-odse" ;;
-    rdb) SCRIPT_DIR="$BASE_DIR/db/004-rdb" ;;
-    rdb_modern) SCRIPT_DIR="$BASE_DIR/db/005-rdb_modern" ;;
+DB_DIR="$BASE_DIR/../db"
+
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$BASE_DIR/../.." && pwd)"
+echo "Detected PROJECT_ROOT: $PROJECT_ROOT"
+echo "Detected BASE_DIR: $BASE_DIR"
+lower_db=$(echo "$DATABASE" | tr '[:upper:]' '[:lower:]')
+# Resolve SCRIPT_DIR
+SCRIPT_DIR=""
+case "$lower_db" in
+    master)
+        SCRIPT_DIR="$PROJECT_ROOT/db/001-master"
+        ;;
+    nbs_srte)
+        SCRIPT_DIR="$PROJECT_ROOT/db/002-srte"
+        ;;
+    nbs_odse)
+        SCRIPT_DIR="$PROJECT_ROOT/db/003-odse"
+        ;;
+    rdb_modern)
+        SCRIPT_DIR="$PROJECT_ROOT/db/005-rdb_modern"
+        ;;
+    rdb)
+        echo "Selected RDB database."
+        while true; do
+            read -p "Would you like to run the rdb_modern scripts on the RDB database? (Y/N): " yn
+            case $yn in
+                [Yy]*)
+                    echo "User selected 'Yes'. Running modern scripts in RDB."
+                    SCRIPT_DIR="$PROJECT_ROOT/db/005-rdb_modern"
+                    break
+                    ;;
+                [Nn]*)
+                    echo "User selected 'No'. Running RDB scripts."
+                    SCRIPT_DIR="$PROJECT_ROOT/db/004-rdb"
+                    break
+                    ;;
+                *)
+                    echo "Please answer Y or N."
+                    ;;
+            esac
+        done
+        ;;
     *)
         echo "Unknown database: $DATABASE"
         exit 1
         ;;
 esac
 
-# Load data support only for 'master'
+# Load data option handling
 if [[ "$load_data" == "true" ]]; then
-    if [[ "${DATABASE,,}" == "master" ]]; then
+    if [[ "$lower_db" == "master" ]]; then
         SCRIPT_DIR="$SCRIPT_DIR/02_onboarding_script_data_load"
         PATHS=(".")
     else
@@ -98,33 +129,35 @@ if [[ "$load_data" == "true" ]]; then
         exit 1
     fi
 else
-    PATHS=("tables" "views" "functions" "routines" "jobs" "remove")
+    PATHS=("tables" "views" "functions" "routines" "remove")
 fi
 
-# Generate log filename (yyyymmddss format)
-timestamp=$(date +%Y%m%d%S)
-LOG_FILE="$BASE_DIR/db/manual_run_log_${timestamp}_${DATABASE}.log"
+# Create logs directory and log file
+mkdir -p "$PROJECT_ROOT/logs"
+timestamp=$(date +%Y%m%d%H%M%S)
+LOG_FILE="$PROJECT_ROOT/logs/manual_run_log_${timestamp}_${DATABASE}.log"
+
 
 ERROR_COUNT=0
 FAILED_SCRIPTS=()
 
-# Initialize log
+# Start log
 echo "[$(date '+%F %T')] Starting script execution..." >> "$LOG_FILE"
 if [[ "$load_data" == "true" ]]; then
-    echo "[$(date '+%F %T')] Load Data scripts have been included" >> "$LOG_FILE"
+    echo "[$(date '+%F %T')] Load Data scripts included" >> "$LOG_FILE"
 else
-    echo "[$(date '+%F %T')] Load Data scripts have been excluded" >> "$LOG_FILE"
+    echo "[$(date '+%F %T')] Load Data scripts excluded" >> "$LOG_FILE"
 fi
-echo "[$(date '+%F %T')] Executing SQL scripts from: $SCRIPT_DIR (${PATHS[*]})" >> "$LOG_FILE"
+echo "[$(date '+%F %T')] Executing SQL scripts from: $SCRIPT_DIR" >> "$LOG_FILE"
 
-# Check script dir
+# Check script directory
 if [[ ! -d "$SCRIPT_DIR" ]]; then
     echo "Directory not found: $SCRIPT_DIR"
     echo "[$(date '+%F %T')] Directory not found: $SCRIPT_DIR" >> "$LOG_FILE"
     exit 1
 fi
 
-# Execute SQL files
+# Execute scripts
 for path in "${PATHS[@]}"; do
     f_dir="$SCRIPT_DIR/$path"
     if [[ -d "$f_dir" ]]; then
@@ -132,7 +165,7 @@ for path in "${PATHS[@]}"; do
             [[ -f "$file" ]] || continue
             echo "Executing $file..."
             echo "[$(date '+%F %T')] Executing $file..." >> "$LOG_FILE"
-            sqlcmd -S "$SERVER_NAME" -d "$DATABASE" -U "$DB_USER" -P "$DB_PASS" -i "$file" -I -b -C >> "$LOG_FILE" 2>&1
+            sqlcmd -S "$SERVER_NAME" -d "$lower_db" -U "$DB_USER" -P "$DB_PASS" -i "$file" -I -b -C >> "$LOG_FILE" 2>&1
             CURRENT_ERROR=$?
             if [[ $CURRENT_ERROR -ne 0 ]]; then
                 echo "Error executing $file. Error code: $CURRENT_ERROR"
@@ -144,10 +177,10 @@ for path in "${PATHS[@]}"; do
     fi
 done
 
-# Summary
+# Final summary
 if [[ $ERROR_COUNT -eq 0 ]]; then
     echo ""
-    echo "Summary: All scripts executed successfully..."
+    echo "Summary: All scripts executed successfully."
     echo "[$(date '+%F %T')] All scripts executed successfully." >> "$LOG_FILE"
 else
     echo ""
