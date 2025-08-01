@@ -26,7 +26,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -43,6 +42,8 @@ import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.ProcessDatamartData.MULTI_ID_DATAMART;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.ProcessDatamartData.STATUS_READY;
 
 @Service
 @RequiredArgsConstructor
@@ -75,9 +76,6 @@ public class PostProcessingService {
 
     // set of caches for retrying failed topics/IDs and tracking retry attempts
     final Map<Long, Map<String, Queue<Long>>> retryCache = new ConcurrentHashMap<>();
-    final Map<Long, String> errorMap = new ConcurrentHashMap<>();
-    private final Map<Long, Integer> retryAttempts = new ConcurrentHashMap<>();
-    private final Map<Long, Integer> backfillAttempts = new ConcurrentHashMap<>();
 
     @Value("${service.max-retries}")
     private int maxRetries;
@@ -85,7 +83,7 @@ public class PostProcessingService {
     private final PostProcRepository postProcRepository;
     private final InvestigationRepository investigationRepository;
 
-    private final ProcessDatamartData datamartProcessor;
+    private final ProcessDatamartData dmProcessor;
 
     static final String PAYLOAD = "payload";
     static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
@@ -99,10 +97,6 @@ public class PostProcessingService {
     static final String CASE_TYPE_SUM = "Summary";
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
-
-    static final String STATUS_READY = "READY";
-    static final String STATUS_COMPLETE = "COMPLETE";
-    static final String STATUS_SUSPENDED = "SUSPENDED";
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
@@ -352,8 +346,17 @@ public class PostProcessingService {
         }
     }
 
+    /**
+     * Scheduled task to reprocess failed entities by iterating through retry cache and invoking {@link #processIdCache(Map, Map, Map, Long)}
+     * with snapshots of the cached IDs.
+     * <ul>1. Updates backfill records, manages retry attempts</ul>
+     * <ul>2. Clear caches on success</ul>
+     * <ul>3. Persists remaining IDs when the maximum retry limit is reached</ul>
+     */
     @Scheduled(fixedDelayString = "${service.fixed-delay.cached-ids}")
     protected void processRetryCache() {
+        Map<Long, Integer> retryAttempts = dmProcessor.retryAttempts;
+        Map<Long, String> errorMap = dmProcessor.errorMap;
 
         for(Entry<Long, Map<String, Queue<Long>>> retryEntry : retryCache.entrySet()) {
 
@@ -390,23 +393,8 @@ public class PostProcessingService {
             boolean processed = processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, batchId);
 
             // update backfill batch record(s) if exists
-            if (backfillAttempts.containsKey(batchId)) {
+            if (dmProcessor.updateBackfills(batchId, processed)) {
                 retryCache.remove(batchId);
-                retryAttempts.remove(batchId);
-
-                String status = processed ? STATUS_COMPLETE : STATUS_READY;
-                int bfAttempt = backfillAttempts.get(batchId) + 1;
-                if (bfAttempt >= maxRetries) {
-                    logger.info("Reached max backfill retries for batch id: {}. Suspend further processing.", batchId);
-                    status = STATUS_SUSPENDED;
-                    bfAttempt = 0;
-                }
-
-                postProcRepository.executeStoredProcForBackfill(null, null, batchId,
-                        errorMap.get(batchId), status, bfAttempt);
-
-                backfillAttempts.remove(batchId);
-                errorMap.remove(batchId);
                 continue;
             }
 
@@ -421,27 +409,13 @@ public class PostProcessingService {
                     retryAttempts.remove(batchId);
                     retryCache.remove(batchId);
 
-                    processBackfills(idCacheSnapshot, key -> getEntityByTopic(key).getEntityName().toUpperCase(), batchId);
-                    processBackfills(pbCacheSnapshot, key -> "PB^" + key, batchId);
-                    processBackfills(obsCacheSnapshot, key -> "OBS^" + key, batchId);
+                    dmProcessor.processBackfills(idCacheSnapshot, key -> getEntityByTopic(key).getEntityName().toUpperCase(), batchId);
+                    dmProcessor.processBackfills(pbCacheSnapshot, key -> "PB^" + key, batchId);
+                    dmProcessor.processBackfills(obsCacheSnapshot, key -> "OBS^" + key, batchId);
 
                     errorMap.remove(batchId);
                 }
             }
-        }
-    }
-
-    private void processBackfills(Map<String, List<Long>> cache, UnaryOperator<String> nameOp, Long batchId) {
-
-        for (Entry<String, List<Long>> entry : cache.entrySet()) {
-            postProcRepository.executeStoredProcForBackfill(
-                    nameOp.apply(entry.getKey()),
-                    listToParameterString(entry.getValue()),
-                    batchId,
-                    errorMap.get(batchId),
-                    STATUS_READY,
-                    backfillAttempts.getOrDefault(batchId, 0)
-            );
         }
     }
 
@@ -464,17 +438,21 @@ public class PostProcessingService {
             Long batchId = bf.getBatchId();
 
             String bfe = bf.getEntity();
-            String entity = bfe.contains("^") ? bfe : "nrt_" + bfe.toLowerCase();
-            Queue<Long> queue = Arrays.stream(bf.getRecordUidList().split(","))
-                    .map(Long::valueOf)
-                    .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
-            retryCacheLocal
-                .computeIfAbsent(batchId, k -> new HashMap<>())
-                .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
-                .addAll(queue);
-            backfillAttempts.put(batchId, bf.getRetryCount());
-            retryAttempts.put(batchId, bf.getRetryCount());
-            errorMap.put(batchId, bf.getErrDescription());
+            if (bfe.startsWith("DM^")) {
+                dmProcessor.updateRetryCache(batchId, bf);
+            } else {
+                String entity = bfe.contains("^") ? bfe : "nrt_" + bfe.toLowerCase();
+                Queue<Long> queue = Arrays.stream(bf.getRecordUidList().split(","))
+                        .map(Long::valueOf)
+                        .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
+                retryCacheLocal
+                        .computeIfAbsent(batchId, k -> new HashMap<>())
+                        .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
+                        .addAll(queue);
+                dmProcessor.backfillAttempts.put(batchId, bf.getRetryCount());
+                dmProcessor.retryAttempts.put(batchId, bf.getRetryCount());
+                dmProcessor.errorMap.put(batchId, bf.getErrDescription());
+            }
         });
 
         // Merge into the main retryCache for reprocessing, preserving batch IDs
@@ -484,7 +462,8 @@ public class PostProcessingService {
                 batchMap.computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>()).addAll(queue)
             );
         });
-        logger.info("Re-queued {} backfill batch(es) into retryCache", retryCacheLocal.size());
+
+        logger.info("Re-queued {} backfill batch(es) into retryCache", backfills.size());
     }
 
     private boolean processIdCache(
@@ -523,7 +502,7 @@ public class PostProcessingService {
                 logger.info(PROCESSING_IDS_LOG_MSG, ids.size(), keyTopic);
             } else {
                 logger.info("Retrying {} id(s) from topic: {}, attempt #{} for batch id: {}",
-                        ids.size(), keyTopic, retryAttempts.getOrDefault(batchId, 0)+1, batchId);
+                        ids.size(), keyTopic, dmProcessor.retryAttempts.getOrDefault(batchId, 0)+1, batchId);
             }
 
             Entity entity = getEntityByTopic(keyTopic);
@@ -602,7 +581,7 @@ public class PostProcessingService {
                         break;
                 }
             } catch (Exception e) {
-                logger.error(errorMessage(entity.getEntityName(), listToLogString(ids), new Exception(e.getClass().getSimpleName())));
+                logger.error(errorMessage(entity.getEntityName(), listToParameterString(ids), new Exception(e.getClass().getSimpleName())));
                 processingFailed = true;
                 batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
             }
@@ -611,7 +590,7 @@ public class PostProcessingService {
         // process METRIC_EVENT datamart since multiple datamarts depend on it
         processMetricEventDatamart(newDmMulti);
         processSummaryCases();
-        datamartProcessor.process(dmData);
+        dmProcessor.process(dmData);
 
         // merge entity IDs collections from temporary map newDmMulti into main datamart cache
         synchronized (cacheLock) {
@@ -779,22 +758,10 @@ public class PostProcessingService {
             return null;
         }
 
-        if (batchId == null) {
-            batchId = (System.currentTimeMillis() << 10) | INSTANCE_ID;
-            retryAttempts.put(batchId, 0);
-        } else {
-            retryAttempts.merge(batchId, 1, Integer::sum);
-        }
+        batchId = dmProcessor.getBatchId(batchId, e);
 
         Map<String, Queue<Long>> retryMap = retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
         retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-
-        Throwable cause = e;
-        while (cause.getCause() != null) {
-            cause = cause.getCause(); // unwrap nested exceptions
-        }
-        String errorMsg = cause.getMessage();
-        errorMap.put(batchId, errorMsg);
 
         pbCache.forEach((tbl, queue) ->
                 retryMap.computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>()).addAll(queue));
@@ -839,10 +806,6 @@ public class PostProcessingService {
         return Optional.ofNullable(inputList)
                 .map(list -> list.stream().map(String::valueOf).distinct().collect(Collectors.joining(",")))
                 .orElse("");
-    }
-
-    private String listToLogString(Collection<Long> inputList) {
-        return inputList.stream().map(String::valueOf).distinct().collect(Collectors.joining(","));
     }
 
     @PreDestroy
@@ -899,7 +862,7 @@ public class PostProcessingService {
                                      Function<String, List<T>> repositoryMethod, Consumer<List<T>> checkResult,
                                      String... names) {
         String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
-        String idString = listToLogString(ids);
+        String idString = listToParameterString(ids);
         prepareAndLog(keyTopic, idString, entity.getEntityName(), spName);
         List<T> result = repositoryMethod.apply(idString);
         checkResult.accept(result);
@@ -911,7 +874,7 @@ public class PostProcessingService {
                                   BiFunction<String, String, List<T>> repositoryMethod, Consumer<List<T>> checkResult) {
         String name = entity.getEntityName();
         name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
-        String idString = listToLogString(ids);
+        String idString = listToParameterString(ids);
         logger.info("Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'", name, keyTopic,
                 entity.getStoredProcedure(), idString, vals);
         List<T> result = repositoryMethod.apply(idString, vals);

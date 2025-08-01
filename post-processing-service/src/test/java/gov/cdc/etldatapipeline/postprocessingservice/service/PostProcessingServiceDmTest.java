@@ -56,9 +56,11 @@ class PostProcessingServiceDmTest {
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor));
 
-        Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         listAppender.start();
-        logger.addAppender(listAppender);
+        Logger serviceLogger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
+        serviceLogger.addAppender(listAppender);
+        Logger procLogger = (Logger) LoggerFactory.getLogger(ProcessDatamartData.class);
+        procLogger.addAppender(listAppender);
     }
 
     @AfterEach
@@ -171,10 +173,11 @@ class PostProcessingServiceDmTest {
     @MethodSource("datamartTestData")
     void testProcessDmMessage(DatamartTestCase testCase) {
         String topic = "dummy_datamart";
+
         postProcessingServiceMock.processDmMessage(topic, testCase.msg);
+        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         postProcessingServiceMock.processDatamartIds();
         testCase.verificationStep.accept(investigationRepositoryMock);
-        assertTrue(postProcessingServiceMock.dmCache.containsKey(testCase.datamartEntityName));
         List<ILoggingEvent> logs = listAppender.list;
         assertEquals(testCase.logSize, logs.size());
         assertEquals(logs.getLast().getFormattedMessage(),
