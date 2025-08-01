@@ -2844,6 +2844,24 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 910
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 365-sp_patient_delta_update.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+    id: 915
+    author: liquibase
+    runOnChange: true
+    changes:
+      - sqlFile:
+          path: 370-sp_provider_delta_update.sql
+          splitStatements: true
+          endDelimiter: GO
+  - changeSet:
       id: 999
       author: liquibase
       comment: "Permission script will always execute last."

@@ -121,33 +121,7 @@ BEGIN
                 P.PATIENT_ZIP AS PATIENT_ZIP,
                 P.PATIENT_COUNTY AS PATIENT_COUNTY,
                 P.PATIENT_RACE_CALCULATED AS RACE_CALCULATED,
-                P.PATIENT_RACE_CALC_DETAILS AS  RACE_CALC_DETAILS,
-                ''+
-                CASE
-                    WHEN LEN(TRIM(PATIENT_STREET_ADDRESS_2)) > 0
-                        THEN TRIM(PATIENT_STREET_ADDRESS_2)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_CITY)) > 0
-                        THEN ',' + TRIM(PATIENT_CITY)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_COUNTY)) > 0
-                        THEN ',' + TRIM(PATIENT_COUNTY)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_ZIP)) > 0
-                        THEN ',' + TRIM(PATIENT_ZIP)
-                    ELSE ''
-                    END +
-                CASE
-                    WHEN LEN(TRIM(PATIENT_STATE)) > 0
-                        THEN ',' + TRIM(PATIENT_STATE)
-                    ELSE ''
-                    END as PATIENT_ADDRESS
+                P.PATIENT_RACE_CALC_DETAILS AS  RACE_CALC_DETAILS
         into #BMIRD_PATIENT1
         from #INVKEYS BC
                  left join dbo.D_PATIENT as P with (nolock)
