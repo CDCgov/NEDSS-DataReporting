@@ -74,62 +74,62 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_aggregate_report_datamart_postprocessing")
     void executeStoredProcForAggregateReport(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_tb_pam_postprocessing")
-    void executeStoredProcForDTbPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_tb_pam_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDTbPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_disease_site_postprocessing")
-    void executeStoredProcForDDiseaseSite(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_disease_site_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDDiseaseSite(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_addl_risk_postprocessing")
-    void executeStoredProcForDAddlRisk(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_addl_risk_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDAddlRisk(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_tb_hiv_postprocessing")
-    void executeStoredProcForDTbHiv(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_tb_hiv_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDTbHiv(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_move_cntry_postprocessing")
-    void executeStoredProcForDMoveCntry(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_move_cntry_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDMoveCntry(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_move_cnty_postprocessing")
-    void executeStoredProcForDMoveCnty(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_move_cnty_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDMoveCnty(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_move_state_postprocessing")
-    void executeStoredProcForDMoveState(@Param("publicHealthCaseUids") String publicHealthCaseUids);
-    
-    @Procedure("sp_nrt_d_out_of_cntry_postprocessing")
-    void executeStoredProcForDOutOfCntry(@Param("publicHealthCaseUids") String publicHealthCaseUids);    
-   
-    @Procedure("sp_nrt_d_moved_where_postprocessing")
-    void executeStoredProcForDMovedWhere(@Param("publicHealthCaseUids") String publicHealthCaseUids);
-    
-    @Procedure("sp_nrt_d_gt_12_reas_postprocessing")
-    void executeStoredProcForDGt12Reas(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_move_state_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDMoveState(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_hc_prov_ty_3_postprocessing")
-    void executeStoredProcForDHcProvTy3(@Param("publicHealthCaseUids") String publicHealthCaseUids);
-    
-    @Procedure("sp_nrt_d_smr_exam_ty_postprocessing")
-    void executeStoredProcForDSmrExamTy(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
-    
-    @Procedure("sp_f_tb_pam_postprocessing")
-    void executeStoredProcForFTbPam(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
-    
-    @Procedure("sp_nrt_tb_pam_ldf_postprocessing")
-    void executeStoredProcForTbPamLdf(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
-    
-    @Procedure("sp_nrt_d_var_pam_postprocessing")
-    void executeStoredProcForDVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids); 
+    @Query(value = "EXEC sp_nrt_d_out_of_cntry_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDOutOfCntry(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_d_rash_loc_gen_postprocessing")
-    void executeStoredProcForDRashLocGen(@Param("publicHealthCaseUids") String publicHealthCaseUids);
-    
-    @Procedure("sp_nrt_d_pcr_source_postprocessing")
-    void executeStoredProcForDPcrSource(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_moved_where_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDMovedWhere(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_nrt_var_pam_ldf_postprocessing")
-    void executeStoredProcForVarPamLdf(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_gt_12_reas_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDGt12Reas(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_f_var_pam_postprocessing")
-    void executeStoredProcForFVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_nrt_d_hc_prov_ty_3_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDHcProvTy3(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_nrt_d_smr_exam_ty_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDSmrExamTy(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_f_tb_pam_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForFTbPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_nrt_tb_pam_ldf_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForTbPamLdf(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_nrt_d_var_pam_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_nrt_d_rash_loc_gen_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDRashLocGen(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_nrt_d_pcr_source_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForDPcrSource(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_nrt_var_pam_ldf_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForVarPamLdf(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
+    @Query(value = "EXEC sp_f_var_pam_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForFVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Query(value = "EXEC sp_tb_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForTbDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);

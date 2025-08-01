@@ -653,20 +653,20 @@ public class PostProcessingService {
 
         if(!pamUids.isEmpty()){
             //TB
-            processTopic(keyTopic, D_TB_PAM, pamUids, investigationRepository::executeStoredProcForDTbPam);
-            processTopic(keyTopic, D_ADDL_RISK, pamUids, investigationRepository::executeStoredProcForDAddlRisk);
-            processTopic(keyTopic, D_DISEASE_SITE, pamUids, investigationRepository::executeStoredProcForDDiseaseSite);
-            processTopic(keyTopic, D_TB_HIV, pamUids, investigationRepository::executeStoredProcForDTbHiv);
-            processTopic(keyTopic, D_GT_12_REAS, pamUids, investigationRepository::executeStoredProcForDGt12Reas);
-            processTopic(keyTopic, D_MOVE_CNTRY, pamUids, investigationRepository::executeStoredProcForDMoveCntry);
-            processTopic(keyTopic, D_MOVE_CNTY, pamUids, investigationRepository::executeStoredProcForDMoveCnty);
-            processTopic(keyTopic, D_MOVE_STATE, pamUids, investigationRepository::executeStoredProcForDMoveState);
-            processTopic(keyTopic, D_MOVED_WHERE, pamUids, investigationRepository::executeStoredProcForDMovedWhere);
-            processTopic(keyTopic, D_HC_PROV_TY_3, pamUids, investigationRepository::executeStoredProcForDHcProvTy3);
-            processTopic(keyTopic, D_OUT_OF_CNTRY, pamUids, investigationRepository::executeStoredProcForDOutOfCntry);
-            processTopic(keyTopic, D_SMR_EXAM_TY, pamUids, investigationRepository::executeStoredProcForDSmrExamTy);
-            processTopic(keyTopic, F_TB_PAM, pamUids, investigationRepository::executeStoredProcForFTbPam);
-            processTopic(keyTopic, TB_PAM_LDF, pamUids, investigationRepository::executeStoredProcForTbPamLdf);
+            processTopic(keyTopic, D_TB_PAM, pamUids, investigationRepository::executeStoredProcForDTbPam, dmProcessor::checkResult);
+            processTopic(keyTopic, D_ADDL_RISK, pamUids, investigationRepository::executeStoredProcForDAddlRisk, dmProcessor::checkResult);
+            processTopic(keyTopic, D_DISEASE_SITE, pamUids, investigationRepository::executeStoredProcForDDiseaseSite, dmProcessor::checkResult);
+            processTopic(keyTopic, D_TB_HIV, pamUids, investigationRepository::executeStoredProcForDTbHiv, dmProcessor::checkResult);
+            processTopic(keyTopic, D_GT_12_REAS, pamUids, investigationRepository::executeStoredProcForDGt12Reas, dmProcessor::checkResult);
+            processTopic(keyTopic, D_MOVE_CNTRY, pamUids, investigationRepository::executeStoredProcForDMoveCntry, dmProcessor::checkResult);
+            processTopic(keyTopic, D_MOVE_CNTY, pamUids, investigationRepository::executeStoredProcForDMoveCnty, dmProcessor::checkResult);
+            processTopic(keyTopic, D_MOVE_STATE, pamUids, investigationRepository::executeStoredProcForDMoveState, dmProcessor::checkResult);
+            processTopic(keyTopic, D_MOVED_WHERE, pamUids, investigationRepository::executeStoredProcForDMovedWhere, dmProcessor::checkResult);
+            processTopic(keyTopic, D_HC_PROV_TY_3, pamUids, investigationRepository::executeStoredProcForDHcProvTy3, dmProcessor::checkResult);
+            processTopic(keyTopic, D_OUT_OF_CNTRY, pamUids, investigationRepository::executeStoredProcForDOutOfCntry, dmProcessor::checkResult);
+            processTopic(keyTopic, D_SMR_EXAM_TY, pamUids, investigationRepository::executeStoredProcForDSmrExamTy, dmProcessor::checkResult);
+            processTopic(keyTopic, F_TB_PAM, pamUids, investigationRepository::executeStoredProcForFTbPam, dmProcessor::checkResult);
+            processTopic(keyTopic, TB_PAM_LDF, pamUids, investigationRepository::executeStoredProcForTbPamLdf, dmProcessor::checkResult);
         }
 
         //VAR
@@ -676,11 +676,11 @@ public class PostProcessingService {
         .collect(Collectors.toSet());
 
         if(!pamUids.isEmpty()){
-            processTopic(keyTopic, D_VAR_PAM, pamUids, investigationRepository::executeStoredProcForDVarPam);
-            processTopic(keyTopic, D_RASH_LOC_GEN, pamUids, investigationRepository::executeStoredProcForDRashLocGen);
-            processTopic(keyTopic, D_PCR_SOURCE, pamUids, investigationRepository::executeStoredProcForDPcrSource);
-            processTopic(keyTopic, F_VAR_PAM, pamUids, investigationRepository::executeStoredProcForFVarPam);
-            processTopic(keyTopic, VAR_PAM_LDF, pamUids, investigationRepository::executeStoredProcForVarPamLdf);
+            processTopic(keyTopic, D_VAR_PAM, pamUids, investigationRepository::executeStoredProcForDVarPam, dmProcessor::checkResult);
+            processTopic(keyTopic, D_RASH_LOC_GEN, pamUids, investigationRepository::executeStoredProcForDRashLocGen, dmProcessor::checkResult);
+            processTopic(keyTopic, D_PCR_SOURCE, pamUids, investigationRepository::executeStoredProcForDPcrSource, dmProcessor::checkResult);
+            processTopic(keyTopic, F_VAR_PAM, pamUids, investigationRepository::executeStoredProcForFVarPam, dmProcessor::checkResult);
+            processTopic(keyTopic, VAR_PAM_LDF, pamUids, investigationRepository::executeStoredProcForVarPamLdf, dmProcessor::checkResult);
         }
     }
 

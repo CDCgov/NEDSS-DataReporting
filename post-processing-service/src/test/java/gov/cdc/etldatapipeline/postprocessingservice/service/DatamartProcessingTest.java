@@ -164,5 +164,4 @@ class DatamartProcessingTest {
         JsonNode dmNode = objectMapper.readTree(dmJson);
         return objectMapper.readValue(dmNode.get(PAYLOAD).toString(), Datamart.class);
     }
-
 }
