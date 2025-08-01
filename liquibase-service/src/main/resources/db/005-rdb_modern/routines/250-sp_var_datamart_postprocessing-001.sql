@@ -968,7 +968,7 @@ BEGIN
         INTO #CONFIRMATION_METHOD_BASE
         FROM (
                  SELECT investigation_key, confirmation_dt, CONFIRMATION_METHOD_DESC,
-                        'COL' + CAST(ROW_NUMBER() OVER (PARTITION BY investigation_key ORDER BY CONFIRMATION_METHOD_DESC) AS VARCHAR) AS col
+                        'COL' + CAST(ROW_NUMBER() OVER (PARTITION BY investigation_key ORDER BY CONFIRMATION_METHOD_KEY ASC) AS VARCHAR) AS col
                  FROM #CONFIRMATION_METHOD
              ) AS SourceTable
                  PIVOT (
