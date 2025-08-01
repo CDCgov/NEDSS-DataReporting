@@ -448,7 +448,7 @@ BEGIN
           where datamart_update+tb_datamart_update+morbidity_datamart_update+std_hiv_datamart_update+hep100_datamart_update >= 1
      )
      BEGIN
-          exec sp_provider_delta_update @debug;         
+          exec sp_provider_delta_update @batch_id, @debug;         
      END     
 
 

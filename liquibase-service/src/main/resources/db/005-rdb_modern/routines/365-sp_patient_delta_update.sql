@@ -5,12 +5,17 @@ BEGIN
     DROP PROCEDURE [dbo].[sp_patient_delta_update]
 END
 GO 
-CREATE PROCEDURE [dbo].[sp_patient_delta_update] @debug bit = 'false'
+CREATE PROCEDURE [dbo].[sp_patient_delta_update] @batch_id bigint, @debug bit = 'false'
 AS
 BEGIN
 
+    declare @rowcount bigint;
     declare @proc_step_no float = 0;
     declare @proc_step_name varchar(200) = '';
+    declare @create_dttm datetime2(7) = current_timestamp ;
+    declare @update_dttm datetime2(7) = current_timestamp ;
+    declare @dataflow_name varchar(200) = 'Patient POST-Processing';
+    declare @package_name varchar(200) = 'sp_patient_delta_update';
 
     -- Building a mapping table for investigations and patients which can be used later 
     -- multiple times in the procedure
@@ -66,6 +71,12 @@ BEGIN
             dbo.CASE_LAB_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
             and datamart_update+case_lab_datamart_update >= 1;     
     END
+
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
     
     SET @proc_step_name=' Update Patient attributes in BMIRD_STREP_PNEUMO_DATAMART';
     SET @proc_step_no = 5.2;
@@ -101,6 +112,11 @@ BEGIN
             and datamart_update+bmird_strep_pneumo_datamart_update >= 1;    
     END
 
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
     SET @proc_step_name=' Update Patient attributes in HEP100';
     SET @proc_step_no = 5.3;
@@ -142,6 +158,11 @@ BEGIN
             and datamart_update+hep100_datamart_update >= 1;    
     END
     
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
     SET @proc_step_name=' Update Patient attributes in Morbidity Report';
     SET @proc_step_no = 5.4;
@@ -282,6 +303,12 @@ BEGIN
             and datamart_update+morbidity_report_datamart_update >= 1;    
     END
 
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
     SET @proc_step_name=' Update Patient attributes in VAR_DATAMART';
     SET @proc_step_no = 5.5;
 
@@ -325,6 +352,15 @@ BEGIN
             dbo.VAR_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
             and datamart_update+var_datamart_update >= 1;    
     END
+
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+    SET @proc_step_name=' Update Patient attributes in TB_DATAMART';
+    SET @proc_step_no = 5.6;
 
     IF EXISTS (SELECT 1 FROM dbo.TB_DATAMART dm 
             inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
@@ -470,6 +506,15 @@ BEGIN
             and dbo.TB_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
             ;
 
+        set @rowcount=@@rowcount;
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+        VALUES 
+        (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+        SET @proc_step_name=' Update Patient attributes in TB_HIV_DATAMART';
+        SET @proc_step_no = 5.7;
+
         update dbo.TB_HIV_DATAMART
         set
             PATIENT_PHONE_NUMBER_HOME   = tb.PATIENT_PHONE_NUMBER_HOME   
@@ -522,6 +567,12 @@ BEGIN
         where 
             tb.INVESTIGATION_KEY = dbo.TB_HIV_DATAMART.INVESTIGATION_KEY
         ;
+
+        set @rowcount=@@rowcount;
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+        VALUES 
+        (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
     END
  

@@ -163,7 +163,6 @@ BEGIN
             add_time                 AS PATIENT_ADD_TIME,
             last_chg_user_name       AS PATIENT_LAST_UPDATED_BY,
             last_chg_time            AS PATIENT_LAST_CHANGE_TIME
-        into #temp_patient_table
         from dbo.nrt_patient nrt with (nolock)
                 left join dbo.d_patient p with (nolock) on p.patient_uid = nrt.patient_uid
         where
@@ -250,6 +249,7 @@ BEGIN
             PATIENT_ADD_TIME,
             PATIENT_LAST_UPDATED_BY,
             PATIENT_LAST_CHANGE_TIME
+        into #temp_patient_table
         from src;
 
         declare @backfill_list nvarchar(max);  
@@ -783,6 +783,17 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+
+        /** Datamart Update Operations **/
+        
+        -- Enter only if there are updates in the patient table that are valid for downstream datamarts
+        IF EXISTS (select 1 from #PATIENT_UPDATE_LIST 
+            where datamart_update+case_lab_datamart_update+bmird_strep_pneumo_datamart_update+hep100_datamart_update+morbidity_report_datamart_update+var_datamart_update+tb_datamart_update >= 1)
+        BEGIN
+            exec sp_patient_delta_update @batch_id, @debug;
+        END
+          
+
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 4;
 
@@ -813,15 +824,6 @@ BEGIN
 
 
 
-     /** Datamart Update Operations **/
-     
-     -- Enter only if there are updates in the patient table that are valid for downstream datamarts
-     IF EXISTS (select 1 from #PATIENT_UPDATE_LIST 
-          where datamart_update+case_lab_datamart_update+bmird_strep_pneumo_datamart_update >= 1)
-     BEGIN
-          exec sp_patient_delta_update @debug;
-     END
-          
      
 
      SELECT nri.public_health_case_uid                       AS public_health_case_uid,

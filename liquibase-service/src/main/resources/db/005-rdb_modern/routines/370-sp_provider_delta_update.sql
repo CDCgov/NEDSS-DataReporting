@@ -5,12 +5,16 @@ BEGIN
     DROP PROCEDURE [dbo].[sp_provider_delta_update]
 END
 GO 
-CREATE PROCEDURE [dbo].[sp_provider_delta_update] @debug bit = 'false'
+CREATE PROCEDURE [dbo].[sp_provider_delta_update] @batch_id bigint, @debug bit = 'false'
 AS
 BEGIN
-
+    declare @rowcount bigint;
     declare @proc_step_no float = 0;
     declare @proc_step_name varchar(200) = '';
+    declare @create_dttm datetime2(7) = current_timestamp ;
+    declare @update_dttm datetime2(7) = current_timestamp ;
+    declare @dataflow_name varchar(200) = 'Provider POST-Processing';
+    declare @package_name varchar(200) = 'sp_provider_delta_update';
 
     -- Building a mapping table for investigations and providers which can be used later 
     -- multiple times in the procedure when needed
@@ -76,6 +80,13 @@ BEGIN
             dbo.MORBIDITY_REPORT_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
             and datamart_update+morbidity_datamart_update >= 1;    
     END
+
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
 
     SET @proc_step_name=' Update Provider attributes in STD_HIV_DATAMART';
     SET @proc_step_no = 5.5;
@@ -175,10 +186,17 @@ BEGIN
         );
     END
 
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
     SET @proc_step_name=' Update Provider attributes in HEP100_DATAMART';
     SET @proc_step_no = 5.5;
 
     -- Updates to HEP100_DATAMART
+
     IF EXISTS (SELECT 1 from dbo.HEP100 dm
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
         ON dm.PHYSICIAN_UID = tmp.PHYSICIAN_UID
@@ -233,9 +251,14 @@ BEGIN
             where dm.INVESTIGATOR_UID is not null and dm.INVESTIGATOR_UID <> '';
     END
 
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
     SET @proc_step_name=' Update Provider attributes in TB_DATAMART and TB_HIV_DATAMART';
-    SET @proc_step_no = 5.5;
+    SET @proc_step_no = 5.6;
 
     IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm
         INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
@@ -334,5 +357,11 @@ BEGIN
         ;
 
     END
+    
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
 END
