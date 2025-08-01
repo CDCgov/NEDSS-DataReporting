@@ -34,7 +34,7 @@ class PostProcessingServiceEntityTest {
     @Mock
     private PostProcRepository postProcRepositoryMock;
     @Mock
-    private static InvestigationRepository investigationRepositoryMock;
+    private InvestigationRepository investigationRepositoryMock;
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
@@ -45,7 +45,7 @@ class PostProcessingServiceEntityTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        ProcessDatamartData datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+        ProcessDatamartData datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor));
 
@@ -110,7 +110,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForProviderIds(expectedProviderIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(6, logs.size());
+        assertEquals(5, logs.size());
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -832,7 +832,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForTreatment(expectedTreatmentIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(8, logs.size());
+        assertEquals(5, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(TREATMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }

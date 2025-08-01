@@ -21,8 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.STATUS_READY;
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.STATUS_SUSPENDED;
+import static gov.cdc.etldatapipeline.postprocessingservice.service.ProcessDatamartData.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -41,6 +40,8 @@ class PostProcessingServiceRetryTest {
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
 
+    private ProcessDatamartData datamartProcessor;
+
     private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
     private AutoCloseable closeable;
 
@@ -49,10 +50,11 @@ class PostProcessingServiceRetryTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        ProcessDatamartData datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor));
         postProcessingServiceMock.setMaxRetries(2);
+        datamartProcessor.setMaxRetries(2);
 
         Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         listAppender.start();
@@ -67,7 +69,7 @@ class PostProcessingServiceRetryTest {
     }
 
     @Test
-    void testProcessRetryCache() {
+    void testProcessRetryEntity() {
         String patTopic = "dummy_patient";
         String patKey = "{\"payload\":{\"patient_uid\":123}}";
         String invTopic = "dummy_investigation";
@@ -86,10 +88,10 @@ class PostProcessingServiceRetryTest {
         postProcessingServiceMock.processCachedIds();
 
         assertFalse(postProcessingServiceMock.retryCache.isEmpty());
-        assertFalse(postProcessingServiceMock.errorMap.isEmpty());
+        assertFalse(datamartProcessor.errorMap.isEmpty());
 
         Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
-        assertEquals(errorMsg, postProcessingServiceMock.errorMap.get(batchId));
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
         assertEquals(6, postProcessingServiceMock.retryCache.get(batchId).size());
 
         postProcessingServiceMock.processRetryCache();
@@ -104,7 +106,7 @@ class PostProcessingServiceRetryTest {
     }
 
     @Test
-    void testProcessRetryCacheSuccess() {
+    void testProcessRetryEntitySuccess() {
         String patTopic = "dummy_patient";
         String patKey = "{\"payload\":{\"patient_uid\":123}}";
 
@@ -118,10 +120,10 @@ class PostProcessingServiceRetryTest {
         postProcessingServiceMock.processCachedIds();
 
         assertFalse(postProcessingServiceMock.retryCache.isEmpty());
-        assertFalse(postProcessingServiceMock.errorMap.isEmpty());
+        assertFalse(datamartProcessor.errorMap.isEmpty());
 
         Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
-        assertEquals(errorMsg, postProcessingServiceMock.errorMap.get(batchId));
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
 
         postProcessingServiceMock.processRetryCache();
         verify(postProcRepositoryMock, never()).executeStoredProcForBackfill(
@@ -131,7 +133,7 @@ class PostProcessingServiceRetryTest {
     }
 
     @Test
-    void testProcessRetryCacheDisabled() {
+    void testProcessRetryDisabled() {
         String patTopic = "dummy_patient";
         String patKey = "{\"payload\":{\"patient_uid\":123}}";
 
@@ -148,6 +150,114 @@ class PostProcessingServiceRetryTest {
     }
 
     @Test
+    void testProcessRetryDatamart() {
+        String investigationKey = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String notificationKey = "{\"payload\":{\"notification_uid\":124}}";
+        String observationKey = "{\"payload\":{\"observation_uid\":130}}";
+
+        String invTopic = "dummy_investigation";
+        String notTopic = "dummy_notification";
+        String obsTopic = "dummy_observation";
+
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey, investigationKey);
+        postProcessingServiceMock.processNrtMessage(notTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.processNrtMessage(obsTopic, observationKey, observationKey);
+        postProcessingServiceMock.processCachedIds();
+
+        String topic = "dummy_datamart";
+        String hepDmMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
+        String genDmMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
+
+        String phcUid = "123";
+        when(investigationRepositoryMock.executeStoredProcForHepDatamart(phcUid)).thenThrow(new RuntimeException(errorMsg));
+
+        postProcessingServiceMock.processDmMessage(topic, hepDmMsg);
+        postProcessingServiceMock.processDmMessage(topic, genDmMsg);
+        postProcessingServiceMock.processDatamartIds();
+
+        assertFalse(datamartProcessor.retryCache.isEmpty());
+        assertFalse(datamartProcessor.errorMap.isEmpty());
+
+        Long batchId = datamartProcessor.retryCache.entrySet().iterator().next().getKey();
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
+        assertEquals(3, datamartProcessor.retryCache.get(batchId).size());
+        assertTrue(datamartProcessor.retryCache.get(batchId).containsKey(MULTI_ID_DATAMART));
+
+        String dmEntity = "DM^" + Entity.HEPATITIS_DATAMART.getEntityName();
+        datamartProcessor.processRetryCache();
+        verify(postProcRepositoryMock, never()).executeStoredProcForBackfill(
+                eq(dmEntity), contains(phcUid), eq(batchId), eq(errorMsg), eq(STATUS_READY), eq(0));
+
+        datamartProcessor.processRetryCache();
+        verify(postProcRepositoryMock).executeStoredProcForBackfill(
+                eq(dmEntity), contains(phcUid), eq(batchId), eq(errorMsg), eq(STATUS_READY), eq(0));
+
+        verify(investigationRepositoryMock, times(3)).executeStoredProcForHepDatamart(anyString());
+    }
+
+    @Test
+    void testProcessRetryMultiId() {
+        String investigationKey = "{\"payload\":{\"public_health_case_uid\":123}}";
+        String notificationKey = "{\"payload\":{\"notification_uid\":124}}";
+        String observationKey = "{\"payload\":{\"observation_uid\":130}}";
+
+        String invTopic = "dummy_investigation";
+        String notTopic = "dummy_notification";
+        String obsTopic = "dummy_observation";
+
+        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey, investigationKey);
+        postProcessingServiceMock.processNrtMessage(notTopic, notificationKey, notificationKey);
+        postProcessingServiceMock.processNrtMessage(obsTopic, observationKey, observationKey);
+        postProcessingServiceMock.processCachedIds();
+
+        when(postProcRepositoryMock.executeStoredProcForInvSummaryDatamart("123", "124", "130")).thenThrow(new RuntimeException(errorMsg));
+        postProcessingServiceMock.processDatamartIds();
+
+        assertFalse(datamartProcessor.retryCache.isEmpty());
+        Long batchId = datamartProcessor.retryCache.entrySet().iterator().next().getKey();
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
+        assertTrue(datamartProcessor.retryCache.get(batchId).containsKey(MULTI_ID_DATAMART));
+    }
+
+    @Test
+    void testProcessRetryDatamartSuccess() {
+        String topic = "dummy_datamart";
+        String hepDmMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
+                "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
+        String genDmMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
+
+        String phcUid = "123";
+        when(investigationRepositoryMock.executeStoredProcForHepDatamart(phcUid))
+                .thenThrow(new RuntimeException(errorMsg))
+                .thenReturn(Collections.emptyList());
+
+        postProcessingServiceMock.processDmMessage(topic, hepDmMsg);
+        postProcessingServiceMock.processDmMessage(topic, genDmMsg);
+        postProcessingServiceMock.processDatamartIds();
+
+        assertFalse(datamartProcessor.retryCache.isEmpty());
+        assertFalse(datamartProcessor.errorMap.isEmpty());
+
+        Long batchId = datamartProcessor.retryCache.entrySet().iterator().next().getKey();
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
+
+        String dmEntity = "DM^" + Entity.HEPATITIS_DATAMART.getEntityName();
+        datamartProcessor.processRetryCache();
+
+        assertTrue(datamartProcessor.retryAttempts.isEmpty());
+        assertTrue(datamartProcessor.errorMap.isEmpty());
+        assertTrue(datamartProcessor.retryCache.isEmpty());
+        verify(postProcRepositoryMock, never()).executeStoredProcForBackfill(
+                eq(dmEntity), contains(phcUid), eq(batchId), eq(errorMsg), eq(STATUS_READY), eq(0));
+
+        verify(investigationRepositoryMock, times(2)).executeStoredProcForHepDatamart(anyString());
+        verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(anyString());
+    }
+
+    @Test
     void testProcessBackfillEvent() {
         when(postProcRepositoryMock.executeBackfillEvent(STATUS_READY))
                 .thenReturn(getBackfills())
@@ -156,16 +266,21 @@ class PostProcessingServiceRetryTest {
         postProcessingServiceMock.backfillEvent();
 
         assertFalse(postProcessingServiceMock.retryCache.isEmpty());
-        assertFalse(postProcessingServiceMock.errorMap.isEmpty());
-        assertEquals(errorMsg, postProcessingServiceMock.errorMap.get(123123L));
+        assertFalse(datamartProcessor.retryCache.isEmpty());
+        assertFalse(datamartProcessor.errorMap.isEmpty());
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(123123L));
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(123456L));
 
         postProcessingServiceMock.processRetryCache();
         verify(postProcRepositoryMock).executeStoredProcForBackfill(
                 null, null, 123123L, errorMsg, STATUS_SUSPENDED, 0);
 
+        datamartProcessor.processRetryCache();
+        verify(postProcRepositoryMock).executeStoredProcForBackfill(
+                null, null, 123456L, errorMsg, STATUS_SUSPENDED, 0);
+
         postProcessingServiceMock.backfillEvent();
         assertTrue(postProcessingServiceMock.retryCache.isEmpty());
-
     }
 
     @Test
@@ -181,11 +296,10 @@ class PostProcessingServiceRetryTest {
 
         assertFalse(postProcessingServiceMock.retryCache.isEmpty());
         Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
-        assertEquals(errorMsg, postProcessingServiceMock.errorMap.get(batchId));
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
     }
 
     private List<BackfillData> getBackfills() {
-        List<BackfillData> backfills = new ArrayList<>();
         BackfillData backfill = new BackfillData();
         backfill.setRecordKey(12L);
         backfill.setBatchId(123123L);
@@ -195,8 +309,16 @@ class PostProcessingServiceRetryTest {
         backfill.setErrDescription(errorMsg);
         backfill.setRetryCount(2);
 
-        backfills.add(backfill);
-        return backfills;
+        BackfillData backfillDm = new BackfillData();
+        backfillDm.setRecordKey(13L);
+        backfillDm.setBatchId(123456L);
+        backfillDm.setEntity("DM^"+Entity.GENERIC_CASE.getEntityName());
+        backfillDm.setRecordUidList("patient:100123 investigation:123124");
+        backfillDm.setStatusCd(STATUS_READY);
+        backfillDm.setErrDescription(errorMsg);
+        backfillDm.setRetryCount(2);
+
+        return new ArrayList<>(List.of(backfill, backfillDm));
     }
 
     protected List<DatamartData> getDatamartErr() {
