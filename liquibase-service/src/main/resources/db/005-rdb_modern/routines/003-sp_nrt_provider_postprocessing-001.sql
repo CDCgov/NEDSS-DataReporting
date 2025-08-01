@@ -33,7 +33,9 @@ BEGIN
         SET @proc_step_no = 1;
 
         /* Temp Provider Table*/
-        select PROVIDER_KEY,
+        with src as (
+          select 
+               PROVIDER_KEY,
                nrt.provider_uid                             as PROVIDER_UID,
                local_id                                     as PROVIDER_LOCAL_ID,
                record_status                                as PROVIDER_RECORD_STATUS,
@@ -44,31 +46,46 @@ BEGIN
                name_suffix                                  as PROVIDER_NAME_SUFFIX,
                name_degree                                  as PROVIDER_NAME_DEGREE,
                general_comments                             as PROVIDER_GENERAL_COMMENTS,
-               case when rtrim(ltrim(quick_code)) = '' then null
-                    else quick_code end                     AS PROVIDER_QUICK_CODE,
-               nrt.provider_registration_num                as PROVIDER_REGISTRATION_NUM,
-               case when rtrim(ltrim(provider_registration_num_auth)) = '' then null
-                    else provider_registration_num_auth end AS PROVIDER_REGISRATION_NUM_AUTH,
-               case when rtrim(ltrim(street_address_1)) = '' then null
-                    else street_address_1 end               AS PROVIDER_STREET_ADDRESS_1,
-               case when rtrim(ltrim(street_address_2)) = '' then null
-                    else street_address_2 end               AS PROVIDER_STREET_ADDRESS_2,
-               city                                         as PROVIDER_CITY,
+               case 
+                    when rtrim(ltrim(quick_code)) = '' then NULL
+                    else quick_code 
+               end                                          as PROVIDER_QUICK_CODE,
+               case 
+                    when rtrim(ltrim(nrt.provider_registration_num)) = '' then NULL
+                    else  nrt.provider_registration_num
+               end                                          as PROVIDER_REGISTRATION_NUM,
+               case 
+                    when rtrim(ltrim(provider_registration_num_auth)) = '' then NULL
+                    else provider_registration_num_auth 
+               end                                          as PROVIDER_REGISRATION_NUM_AUTH,
+               case 
+                    when rtrim(ltrim(street_address_1)) = '' then NULL
+                    else street_address_1 
+               end                                          as PROVIDER_STREET_ADDRESS_1,
+               case 
+                    when rtrim(ltrim(street_address_2)) = '' then NULL
+                    else street_address_2 
+               end                                          as PROVIDER_STREET_ADDRESS_2,
+               case 
+                    when rtrim(ltrim(city)) = '' then NULL
+                    else city    
+               end                                          as PROVIDER_CITY,
                state                                        as PROVIDER_STATE,
                state_code                                   as PROVIDER_STATE_CODE,
                zip                                          as PROVIDER_ZIP,
                county                                       as PROVIDER_COUNTY,
-               case when rtrim(ltrim(county_code)) = '' then null
+               case when rtrim(ltrim(county_code)) = '' then NULL
                     else county_code end                    AS PROVIDER_COUNTY_CODE,
                country                                      as PROVIDER_COUNTRY,
-               case when rtrim(ltrim(address_comments)) = '' then null
+               case when rtrim(ltrim(address_comments)) = '' then NULL
                     else address_comments end               AS PROVIDER_ADDRESS_COMMENTS,
-               case when rtrim(ltrim(phone_work)) = '' then null
+               case when rtrim(ltrim(phone_work)) = '' then NULL
                     else phone_work end                     AS PROVIDER_PHONE_WORK,
-               case when rtrim(ltrim(phone_ext_work)) = '' then null
+               case when rtrim(ltrim(phone_ext_work)) = '' then NULL
                     else phone_ext_work end                 AS PROVIDER_PHONE_EXT_WORK,
-               email_work                                   as PROVIDER_EMAIL_WORK,
-               case when rtrim(ltrim(phone_comments)) = '' then null
+               case when rtrim(ltrim(email_work)) = '' then NULL
+                    else email_work end                     as PROVIDER_EMAIL_WORK,
+               case when rtrim(ltrim(phone_comments)) = '' then NULL
                     else phone_comments end                 AS PROVIDER_PHONE_COMMENTS,
                phone_cell                                   as PROVIDER_PHONE_CELL,
                entry_method                                 as PROVIDER_ENTRY_METHOD,
@@ -76,10 +93,48 @@ BEGIN
                add_time                                     as PROVIDER_ADD_TIME,
                last_chg_user_name                           as PROVIDER_LAST_UPDATED_BY,
                last_chg_time                                as PROVIDER_LAST_CHANGE_TIME
-        into #temp_prv_table
-        from dbo.nrt_provider nrt with (nolock)
-                 left join dbo.d_provider p with (nolock) on p.provider_uid = nrt.provider_uid
-        where nrt.provider_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
+          from dbo.nrt_provider nrt with (nolock)
+                    left join dbo.d_provider p with (nolock) on p.provider_uid = nrt.provider_uid
+          where nrt.provider_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
+          )
+          select 
+          [PROVIDER_UID]
+          ,[PROVIDER_KEY]
+          ,[PROVIDER_LOCAL_ID]
+          ,[PROVIDER_RECORD_STATUS]
+          ,[PROVIDER_NAME_PREFIX]
+          ,[PROVIDER_FIRST_NAME]
+          ,[PROVIDER_MIDDLE_NAME]
+          ,[PROVIDER_LAST_NAME]
+          ,[PROVIDER_NAME_SUFFIX]
+          ,[PROVIDER_NAME_DEGREE]
+          ,[PROVIDER_GENERAL_COMMENTS]
+          ,substring ([PROVIDER_QUICK_CODE], 1, 50) as [PROVIDER_QUICK_CODE]
+          ,substring ([PROVIDER_REGISTRATION_NUM], 1, 50) as [PROVIDER_REGISTRATION_NUM]
+          ,substring ([PROVIDER_REGISRATION_NUM_AUTH], 1, 50) as [PROVIDER_REGISRATION_NUM_AUTH]
+          ,substring ([PROVIDER_STREET_ADDRESS_1], 1, 50) as [PROVIDER_STREET_ADDRESS_1]
+          ,substring ([PROVIDER_STREET_ADDRESS_2], 1, 50) as [PROVIDER_STREET_ADDRESS_2]
+          ,substring ([PROVIDER_CITY], 1, 50) as [PROVIDER_CITY]
+          ,[PROVIDER_STATE]
+          ,[PROVIDER_ZIP]
+          ,[PROVIDER_COUNTY]
+          ,[PROVIDER_COUNTRY]
+          ,[PROVIDER_ADDRESS_COMMENTS]
+          ,[PROVIDER_PHONE_WORK]
+          ,[PROVIDER_PHONE_EXT_WORK]
+          ,substring ([PROVIDER_EMAIL_WORK], 1, 50) as [PROVIDER_EMAIL_WORK]
+          ,[PROVIDER_PHONE_COMMENTS]
+          ,[PROVIDER_PHONE_CELL]
+          ,[PROVIDER_ENTRY_METHOD]
+          ,[PROVIDER_LAST_CHANGE_TIME]
+          ,[PROVIDER_ADD_TIME]
+          ,[PROVIDER_ADDED_BY]
+          ,[PROVIDER_LAST_UPDATED_BY]
+          ,[PROVIDER_STATE_CODE]
+          ,[PROVIDER_COUNTY_CODE]
+          into #temp_prv_table
+        from src;
+          ;
 
         declare @backfill_list nvarchar(max);  
         SET @backfill_list = 
@@ -171,7 +226,7 @@ BEGIN
            
      -- Check for updates in the provider table that are valid for downstream datamarts
      select 
-          p.*,
+          tpt.*,
           -- common case for multiple datamarts
           case 
                when tpt.PROVIDER_LAST_NAME <> p.PROVIDER_LAST_NAME or
@@ -222,7 +277,40 @@ BEGIN
         SET @proc_step_no = 3;
 
         update dbo.d_provider
-        set [PROVIDER_UID] = prv.[PROVIDER_UID], [PROVIDER_KEY] = prv.[PROVIDER_KEY], [PROVIDER_LOCAL_ID] = prv.[PROVIDER_LOCAL_ID], [PROVIDER_RECORD_STATUS] = prv.[PROVIDER_RECORD_STATUS], [PROVIDER_NAME_PREFIX] = prv.[PROVIDER_NAME_PREFIX], [PROVIDER_FIRST_NAME] = prv.[PROVIDER_FIRST_NAME], [PROVIDER_MIDDLE_NAME] = prv.[PROVIDER_MIDDLE_NAME], [PROVIDER_LAST_NAME] = prv.[PROVIDER_LAST_NAME], [PROVIDER_NAME_SUFFIX] = prv.[PROVIDER_NAME_SUFFIX], [PROVIDER_NAME_DEGREE] = prv.[PROVIDER_NAME_DEGREE], [PROVIDER_GENERAL_COMMENTS] = prv.[PROVIDER_GENERAL_COMMENTS], [PROVIDER_QUICK_CODE] = substring (prv.[PROVIDER_QUICK_CODE], 1, 50), [PROVIDER_REGISTRATION_NUM] = substring (prv.[PROVIDER_REGISTRATION_NUM], 1, 50), [PROVIDER_REGISRATION_NUM_AUTH] = substring (prv.[PROVIDER_REGISRATION_NUM_AUTH], 1, 50), [PROVIDER_STREET_ADDRESS_1] = substring (prv.[PROVIDER_STREET_ADDRESS_1], 1, 50), [PROVIDER_STREET_ADDRESS_2] = substring (prv.[PROVIDER_STREET_ADDRESS_2], 1, 50), [PROVIDER_CITY] = substring (prv.[PROVIDER_CITY], 1, 50), [PROVIDER_STATE] = prv.[PROVIDER_STATE], [PROVIDER_STATE_CODE] = prv.[PROVIDER_STATE_CODE], [PROVIDER_ZIP] = prv.[PROVIDER_ZIP], [PROVIDER_COUNTY] = prv.[PROVIDER_COUNTY], [PROVIDER_COUNTY_CODE] = prv.[PROVIDER_COUNTY_CODE], [PROVIDER_COUNTRY] = prv.[PROVIDER_COUNTRY], [PROVIDER_ADDRESS_COMMENTS] = prv.[PROVIDER_ADDRESS_COMMENTS], [PROVIDER_PHONE_WORK] = prv.[PROVIDER_PHONE_WORK], [PROVIDER_PHONE_EXT_WORK] = prv.[PROVIDER_PHONE_EXT_WORK], [PROVIDER_EMAIL_WORK] = substring (prv.[PROVIDER_EMAIL_WORK], 1, 50), [PROVIDER_PHONE_COMMENTS] = prv.[PROVIDER_PHONE_COMMENTS], [PROVIDER_PHONE_CELL] = prv.[PROVIDER_PHONE_CELL], [PROVIDER_ENTRY_METHOD] = prv.[PROVIDER_ENTRY_METHOD], [PROVIDER_LAST_CHANGE_TIME] = prv.[PROVIDER_LAST_CHANGE_TIME], [PROVIDER_ADD_TIME] = prv.[PROVIDER_ADD_TIME], [PROVIDER_ADDED_BY] = prv.[PROVIDER_ADDED_BY], [PROVIDER_LAST_UPDATED_BY] = prv.[PROVIDER_LAST_UPDATED_BY]
+        set [PROVIDER_UID] = prv.[PROVIDER_UID],
+         [PROVIDER_KEY] = prv.[PROVIDER_KEY],
+         [PROVIDER_LOCAL_ID] = prv.[PROVIDER_LOCAL_ID],
+         [PROVIDER_RECORD_STATUS] = prv.[PROVIDER_RECORD_STATUS],
+         [PROVIDER_NAME_PREFIX] = prv.[PROVIDER_NAME_PREFIX],
+         [PROVIDER_FIRST_NAME] = prv.[PROVIDER_FIRST_NAME],
+         [PROVIDER_MIDDLE_NAME] = prv.[PROVIDER_MIDDLE_NAME],
+         [PROVIDER_LAST_NAME] = prv.[PROVIDER_LAST_NAME],
+         [PROVIDER_NAME_SUFFIX] = prv.[PROVIDER_NAME_SUFFIX],
+         [PROVIDER_NAME_DEGREE] = prv.[PROVIDER_NAME_DEGREE],
+         [PROVIDER_GENERAL_COMMENTS] = prv.[PROVIDER_GENERAL_COMMENTS],
+         [PROVIDER_QUICK_CODE] = prv.[PROVIDER_QUICK_CODE],
+         [PROVIDER_REGISTRATION_NUM] = prv.[PROVIDER_REGISTRATION_NUM],
+         [PROVIDER_REGISRATION_NUM_AUTH] = prv.[PROVIDER_REGISRATION_NUM_AUTH],
+         [PROVIDER_STREET_ADDRESS_1] = prv.[PROVIDER_STREET_ADDRESS_1],
+         [PROVIDER_STREET_ADDRESS_2] = prv.[PROVIDER_STREET_ADDRESS_2],
+         [PROVIDER_CITY] = prv.[PROVIDER_CITY],
+         [PROVIDER_STATE] = prv.[PROVIDER_STATE],
+         [PROVIDER_STATE_CODE] = prv.[PROVIDER_STATE_CODE],
+         [PROVIDER_ZIP] = prv.[PROVIDER_ZIP],
+         [PROVIDER_COUNTY] = prv.[PROVIDER_COUNTY],
+         [PROVIDER_COUNTY_CODE] = prv.[PROVIDER_COUNTY_CODE],
+         [PROVIDER_COUNTRY] = prv.[PROVIDER_COUNTRY],
+         [PROVIDER_ADDRESS_COMMENTS] = prv.[PROVIDER_ADDRESS_COMMENTS],
+         [PROVIDER_PHONE_WORK] = prv.[PROVIDER_PHONE_WORK],
+         [PROVIDER_PHONE_EXT_WORK] = prv.[PROVIDER_PHONE_EXT_WORK],
+         [PROVIDER_EMAIL_WORK] = prv.[PROVIDER_EMAIL_WORK],
+         [PROVIDER_PHONE_COMMENTS] = prv.[PROVIDER_PHONE_COMMENTS],
+         [PROVIDER_PHONE_CELL] = prv.[PROVIDER_PHONE_CELL],
+         [PROVIDER_ENTRY_METHOD] = prv.[PROVIDER_ENTRY_METHOD],
+         [PROVIDER_LAST_CHANGE_TIME] = prv.[PROVIDER_LAST_CHANGE_TIME],
+         [PROVIDER_ADD_TIME] = prv.[PROVIDER_ADD_TIME],
+         [PROVIDER_ADDED_BY] = prv.[PROVIDER_ADDED_BY],
+         [PROVIDER_LAST_UPDATED_BY] = prv.[PROVIDER_LAST_UPDATED_BY]
         from #temp_prv_table prv
                  inner join dbo.d_provider p with (nolock)
                             on prv.provider_uid = p.provider_uid
@@ -312,28 +400,21 @@ BEGIN
              , prv.[PROVIDER_NAME_SUFFIX]
              , prv.[PROVIDER_NAME_DEGREE]
              , prv.[PROVIDER_GENERAL_COMMENTS]
-             , case when cast(prv.PROVIDER_QUICK_CODE as varchar(50)) = '' then null
-                    else cast(prv.PROVIDER_QUICK_CODE as varchar(50)) end
-             , case when cast(prv.[PROVIDER_REGISTRATION_NUM] as varchar(50)) = '' then null
-                    else cast(prv.[PROVIDER_REGISTRATION_NUM] as varchar(50)) end
-             , case when cast(prv.[PROVIDER_REGISRATION_NUM_AUTH] as varchar(50)) = '' then null
-                    else cast(prv.[PROVIDER_REGISRATION_NUM_AUTH] as varchar(50)) end
-             , case when cast(prv.[PROVIDER_STREET_ADDRESS_1] as varchar(50)) = '' then null
-                    else cast(prv.[PROVIDER_STREET_ADDRESS_1] as varchar(50)) end
-             , case when cast(prv.[PROVIDER_STREET_ADDRESS_2] as varchar(50)) = '' then null
-                    else cast(prv.[PROVIDER_STREET_ADDRESS_2] as varchar(50)) end
-             , case when cast(prv.[PROVIDER_CITY] as varchar(50)) = '' then null
-                    else cast(prv.[PROVIDER_CITY] as varchar(50)) end
+             , prv.[PROVIDER_QUICK_CODE]
+             , prv.[PROVIDER_REGISTRATION_NUM]
+             , prv.[PROVIDER_REGISRATION_NUM_AUTH]
+             , prv.[PROVIDER_STREET_ADDRESS_1]
+             , prv.[PROVIDER_STREET_ADDRESS_2]
+             , prv.[PROVIDER_CITY]
              , prv.[PROVIDER_STATE]
              , prv.[PROVIDER_ZIP]
              , prv.[PROVIDER_COUNTY]
              , prv.[PROVIDER_COUNTRY]
-             , case when prv.[PROVIDER_ADDRESS_COMMENTS] = '' then null else prv.[PROVIDER_ADDRESS_COMMENTS] end
-             , case when prv.[PROVIDER_PHONE_WORK] = '' then null else prv.[PROVIDER_PHONE_WORK] end
-             , case when prv.[PROVIDER_PHONE_EXT_WORK] = '' then null else prv.[PROVIDER_PHONE_EXT_WORK] end
-             , case when cast(prv.[PROVIDER_EMAIL_WORK] as varchar(50)) = '' then null
-                    else cast(prv.[PROVIDER_EMAIL_WORK] as varchar(50)) end
-             , case when prv.[PROVIDER_PHONE_COMMENTS] = '' then null else prv.[PROVIDER_PHONE_COMMENTS] end
+             , prv.[PROVIDER_ADDRESS_COMMENTS]
+             , prv.[PROVIDER_PHONE_WORK]
+             , prv.[PROVIDER_PHONE_EXT_WORK]
+             , prv.[PROVIDER_EMAIL_WORK]
+             , prv.[PROVIDER_PHONE_COMMENTS]
              , prv.[PROVIDER_PHONE_CELL]
              , prv.[PROVIDER_ENTRY_METHOD]
              , prv.[PROVIDER_LAST_CHANGE_TIME]
@@ -341,7 +422,7 @@ BEGIN
              , prv.[PROVIDER_ADDED_BY]
              , prv.[PROVIDER_LAST_UPDATED_BY]
              , prv.[PROVIDER_STATE_CODE]
-             , case when prv.[PROVIDER_COUNTY_CODE] = '' then null else prv.[PROVIDER_COUNTY_CODE] end
+             , prv.[PROVIDER_COUNTY_CODE]
         FROM #temp_prv_table prv
                  join dbo.nrt_provider_key k with (nolock) on prv.provider_uid = k.provider_uid
         where prv.provider_key is null;
@@ -362,7 +443,10 @@ BEGIN
          /** Datamart Update Operations **/
      
      -- Enter only if there are updates in the provider table that are valid for downstream datamarts
-     IF EXISTS (select 1 from #PROVIDER_UPDATE_LIST where datamart_update+tb_datamart_update+morbidity_datamart_update+std_hiv_datamart_update+hep100_datamart_update >= 1)
+     IF EXISTS (
+          select 1 from #PROVIDER_UPDATE_LIST 
+          where datamart_update+tb_datamart_update+morbidity_datamart_update+std_hiv_datamart_update+hep100_datamart_update >= 1
+     )
      BEGIN
           exec sp_provider_delta_update @debug;         
      END     
