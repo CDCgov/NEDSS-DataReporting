@@ -38,7 +38,7 @@ public class ProcessDatamartData {
     private static final Logger logger = LoggerFactory.getLogger(ProcessDatamartData.class);
 
     // unique per instance, randomly assigned once
-    static final int INSTANCE_ID = new Random(System.identityHashCode(PostProcessingService.class))
+    static final int INSTANCE_ID = new Random(System.identityHashCode(ProcessDatamartData.class))
             .nextInt(1 << 10); // 10-bit random ID
 
     private static int nProc = Runtime.getRuntime().availableProcessors();
