@@ -32,38 +32,38 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Query(value = "EXEC sp_f_std_page_case_postprocessing :publicHealthCaseUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForFStdPageCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_hepatitis_datamart_postprocessing")
-    void executeStoredProcForHepDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_hepatitis_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForHepDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_std_hiv_datamart_postprocessing")
-    void executeStoredProcForStdHIVDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_std_hiv_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForStdHIVDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_generic_case_datamart_postprocessing")
-    void executeStoredProcForGenericCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_generic_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForGenericCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_crs_case_datamart_postprocessing")
-    void executeStoredProcForCRSCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_crs_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForCRSCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_rubella_case_datamart_postprocessing")
-    void executeStoredProcForRubellaCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_rubella_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForRubellaCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_measles_case_datamart_postprocessing")
-    void executeStoredProcForMeaslesCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_measles_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForMeaslesCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_case_lab_datamart_postprocessing")
-    void executeStoredProcForCaseLabDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_case_lab_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForCaseLabDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_bmird_case_datamart_postprocessing")
-    void executeStoredProcForBmirdCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_bmird_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForBmirdCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_hepatitis_case_datamart_postprocessing")
-    void executeStoredProcForHepatitisCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_hepatitis_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForHepatitisCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_pertussis_case_datamart_postprocessing")
-    void executeStoredProcForPertussisCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_pertussis_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForPertussisCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_bmird_strep_pneumo_datamart_postprocessing")
-    void executeStoredProcForBmirdStrepPneumoDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_bmird_strep_pneumo_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForBmirdStrepPneumoDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Procedure("sp_summary_report_case_postprocessing")
     void executeStoredProcForSummaryReportCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
@@ -131,48 +131,48 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Procedure("sp_f_var_pam_postprocessing")
     void executeStoredProcForFVarPam(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_tb_datamart_postprocessing")
-    void executeStoredProcForTbDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_tb_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForTbDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     
-    @Procedure("sp_tb_hiv_datamart_postprocessing")
-    void executeStoredProcForTbHivDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_tb_hiv_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForTbHivDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     
-    @Procedure("sp_var_datamart_postprocessing")
-    void executeStoredProcForVarDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_var_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForVarDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_ldf_generic_datamart_postprocessing")
-    void executeStoredProcForLdfGenericDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_ldf_generic_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfGenericDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_ldf_bmird_datamart_postprocessing")
-    void executeStoredProcForLdfBmirdDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_ldf_bmird_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfBmirdDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
     
-    @Procedure("sp_ldf_foodborne_datamart_postprocessing")
-    void executeStoredProcForLdfFoodBorneDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_ldf_foodborne_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfFoodBorneDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_ldf_mumps_datamart_postprocessing")
-    void executeStoredProcForLdfMumpsDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_ldf_mumps_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfMumpsDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_ldf_tetanus_datamart_postprocessing")
-    void executeStoredProcForLdfTetanusDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_ldf_tetanus_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfTetanusDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_ldf_vaccine_prevent_diseases_datamart_postprocessing")
-    void executeStoredProcForLdfVacPreventDiseasesDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_ldf_vaccine_prevent_diseases_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfVacPreventDiseasesDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_ldf_hepatitis_datamart_postprocessing")
-    void executeStoredProcForLdfHepatitisDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_ldf_hepatitis_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForLdfHepatitisDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_covid_case_datamart_postprocessing")
-    void executeStoredProcForCovidCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_covid_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForCovidCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_covid_contact_datamart_postprocessing")
-    void executeStoredProcForCovidContactDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+    @Query(value = "EXEC sp_covid_contact_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForCovidContactDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
-    @Procedure("sp_covid_vaccination_datamart_postprocessing")
-    void executeStoredProcForCovidVacDatamart(@Param("vacUids") String vacUids, @Param("patientUids") String patientUids);
+    @Query(value = "EXEC sp_covid_vaccination_datamart_postprocessing :vacUids, :patientUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForCovidVacDatamart(@Param("vacUids") String vacUids, @Param("patientUids") String patientUids);
 
-    @Procedure("sp_covid_lab_datamart_postprocessing")
-    void executeStoredProcForCovidLabDatamart(@Param("observationUids") String observationUids);
+    @Query(value = "EXEC sp_covid_lab_datamart_postprocessing :observationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForCovidLabDatamart(@Param("observationUids") String observationUids);
 
-    @Procedure("sp_covid_lab_celr_datamart_postprocessing")
-    void executeStoredProcForCovidLabCelrDatamart(@Param("observationUids") String observationUids);
+    @Query(value = "EXEC sp_covid_lab_celr_datamart_postprocessing :observationUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForCovidLabCelrDatamart(@Param("observationUids") String observationUids);
 }

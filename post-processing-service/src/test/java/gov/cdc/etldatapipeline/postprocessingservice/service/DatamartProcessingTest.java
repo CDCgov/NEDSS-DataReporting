@@ -3,6 +3,8 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.InvestigationRepository;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.PostProcRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
@@ -32,12 +34,15 @@ class DatamartProcessingTest {
 
     @Captor
     private ArgumentCaptor<String> topicCaptor;
-
     @Captor
     private ArgumentCaptor<String> keyCaptor;
-
     @Captor
     private ArgumentCaptor<String> messageCaptor;
+
+    @Mock
+    private PostProcRepository postProcRepositoryMock;
+    @Mock
+    private InvestigationRepository investigationRepositoryMock;
 
     private static final String FILE_PREFIX = "rawDataFiles/";
     private static final String PAYLOAD = "payload";
@@ -49,7 +54,7 @@ class DatamartProcessingTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
     }
 
     @AfterEach

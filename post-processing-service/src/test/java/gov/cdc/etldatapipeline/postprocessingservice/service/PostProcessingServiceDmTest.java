@@ -31,12 +31,11 @@ import static org.mockito.Mockito.*;
 class PostProcessingServiceDmTest {
     @InjectMocks
     @Spy
-
     private PostProcessingService postProcessingServiceMock;
     @Mock
     private PostProcRepository postProcRepositoryMock;
     @Mock
-    private static InvestigationRepository investigationRepositoryMock;
+    private InvestigationRepository investigationRepositoryMock;
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
@@ -53,7 +52,7 @@ class PostProcessingServiceDmTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor));
 

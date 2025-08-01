@@ -39,7 +39,6 @@ import java.util.Arrays;
 import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
@@ -51,10 +50,6 @@ import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
 @EnableScheduling
 public class PostProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PostProcessingService.class);
-
-    // unique per instance, randomly assigned once
-    private static final int INSTANCE_ID = new Random(System.identityHashCode(PostProcessingService.class))
-            .nextInt(1 << 10); // 10-bit random ID
 
     // cache to store ids from nrt topics that needs to be processed for loading dims and facts
     // a map of nrt topic name and its associated ids
@@ -87,9 +82,6 @@ public class PostProcessingService {
     @Value("${service.max-retries}")
     private int maxRetries;
 
-    private static int nProc = Runtime.getRuntime().availableProcessors();
-    private final ExecutorService dynDmExecutor = Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
-
     private final PostProcRepository postProcRepository;
     private final InvestigationRepository investigationRepository;
 
@@ -97,9 +89,6 @@ public class PostProcessingService {
 
     static final String PAYLOAD = "payload";
     static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
-    static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG = "Processing {} message topic. Calling stored proc: {} '{}'";
-    static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG_2 = "Processing {} message topic. Calling stored proc: {} '{}', '{}";
-    static final String MULTI_ID_DATAMART = "MultiId_Datamart";
     static final String UNKNOWN_TOPIC_LOG_MSG = "Unknown topic: {} cannot be processed";
     static final String PROCESSING_IDS_LOG_MSG = "Processing {} id(s) from topic: {}";
 
@@ -541,26 +530,26 @@ public class PostProcessingService {
             try {
                 switch (entity) {
                     case PAGE:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage, dmProcessor::checkResult);
                         break;
                     case ORGANIZATION:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds, dmProcessor::checkResult);
                         newDmMulti.computeIfAbsent(ORGANIZATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case PROVIDER:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds, dmProcessor::checkResult);
                         newDmMulti.computeIfAbsent(PROVIDER.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case PATIENT:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds, this::checkResult);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds, dmProcessor::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case AUTH_USER:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile, dmProcessor::checkResult);
                         break;
                     case D_PLACE:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace, dmProcessor::checkResult);
                         break;
                     case INVESTIGATION:
                         dmDataSp = processInvestigation(keyTopic, entity, ids, pbCache);
@@ -569,42 +558,42 @@ public class PostProcessingService {
                         processByInvFormCode(dmData, keyTopic);
                         break;
                     case CONTACT:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord, this::checkResult);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord, dmProcessor::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFContactRecordCase, this::checkResult,
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFContactRecordCase, dmProcessor::checkResult,
                                 "sp_f_contact_record_case_postprocessing");
                         newDmMulti.computeIfAbsent(CONTACT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case NOTIFICATION:
-                        dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds, this::checkResult);
+                        dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds, dmProcessor::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case CASE_MANAGEMENT:
-                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement, this::checkResult);
-                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase, this::checkResult,
+                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement, dmProcessor::checkResult);
+                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase, dmProcessor::checkResult,
                                 "sp_f_std_page_case_postprocessing");
                         break;
                     case INTERVIEW:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview, this::checkResult);
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase, this::checkResult,
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview, dmProcessor::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase, dmProcessor::checkResult,
                                 "sp_f_interview_case_postprocessing");
                         break;
                     case LDF_DATA, STATE_DEFINED_FIELD_METADATA:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds, this::checkResult);
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds, dmProcessor::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, dmProcessor::checkResult);
                         break;
                     case OBSERVATION:
                         dmData = processObservation(keyTopic, entity, dmData, obsCache);
                         newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case TREATMENT:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment, this::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment, dmProcessor::checkResult);
                         break;
                     case VACCINATION:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination, this::checkResult);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination, dmProcessor::checkResult);
                         dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFVaccination, this::checkResult,
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFVaccination, dmProcessor::checkResult,
                                 "sp_f_vaccination_postprocessing");
                         newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
@@ -719,13 +708,13 @@ public class PostProcessingService {
     private List<DatamartData> processInvestigation(
             String keyTopic, Entity entity, List<Long> ids, Map<String, List<Long>> pbCache) {
         List<DatamartData> dmData;
-        dmData = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForPublicHealthCaseIds, this::checkResult);
+        dmData = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForPublicHealthCaseIds, dmProcessor::checkResult);
 
         pbCache.forEach((tbl, uids) -> processTopic(keyTopic, CASE_ANSWERS, uids, tbl,
-                investigationRepository::executeStoredProcForPageBuilder, this::checkResult));
+                investigationRepository::executeStoredProcForPageBuilder, dmProcessor::checkResult));
 
-        processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase, this::checkResult);
-        processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount, this::checkResult);
+        processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase, dmProcessor::checkResult);
+        processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount, dmProcessor::checkResult);
                                        
         return dmData;
     }
@@ -740,37 +729,45 @@ public class PostProcessingService {
 
         if (!morbIds.isEmpty()) {
             List<DatamartData> dmDataM = processTopic(keyTopic, entity, morbIds,
-                    postProcRepository::executeStoredProcForMorbReport, this::checkResult,
+                    postProcRepository::executeStoredProcForMorbReport, dmProcessor::checkResult,
                     "sp_d_morbidity_report_postprocessing");
             dmData = Stream.concat(dmData.stream(), dmDataM.stream()).distinct().toList();
         }
 
         if (!labIds.isEmpty()) {
             processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLabTest, this::checkResult,
+                    postProcRepository::executeStoredProcForLabTest, dmProcessor::checkResult,
                     "sp_d_lab_test_postprocessing");
 
             List<DatamartData> dmDataL = processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLabTestResult, this::checkResult,
+                    postProcRepository::executeStoredProcForLabTestResult, dmProcessor::checkResult,
                     "sp_d_labtest_result_postprocessing");
             dmData = Stream.concat(dmData.stream(), dmDataL.stream()).distinct().toList();
 
             processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLab100Datamart, this::checkResult,
+                    postProcRepository::executeStoredProcForLab100Datamart, dmProcessor::checkResult,
                     "sp_lab100_datamart_postprocessing");
             processTopic(keyTopic, entity, labIds,
-                    postProcRepository::executeStoredProcForLab101Datamart, this::checkResult,
+                    postProcRepository::executeStoredProcForLab101Datamart, dmProcessor::checkResult,
                     "sp_lab101_datamart_postprocessing");
         }
         return dmData;
     }
 
-    private void checkResult(List<DatamartData> dmData) throws DataProcessingException {
-        if (!dmData.isEmpty()) {
-            DatamartData dme = dmData.getFirst();
-            if ("Error".equals(dme.getDatamart())) {
-                throw new DataProcessingException(dme.getStoredProcedure());
-            }
+    private void processMetricEventDatamart(Map<String, Queue<Long>> dmMulti) {
+        String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
+        String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
+        String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
+        String ctrString = listToParameterString(dmMulti.get(CONTACT.getEntityName()));
+        String vaxString = listToParameterString(dmMulti.get(VACCINATION.getEntityName()));
+
+        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
+                + ctrString.length() + vaxString.length();
+
+        if (totalLengthEventMetric > 0) {
+            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString, vaxString);
+        } else {
+            logger.info("No updates to EVENT_METRIC Datamart");
         }
     }
 
@@ -819,256 +816,28 @@ public class PostProcessingService {
      */
     @Scheduled(fixedDelayString = "${service.fixed-delay.datamart}")
     protected void processDatamartIds() {
-        List<Long> ldfUids = new ArrayList<>();
-        for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
-            String dmKey = entry.getKey();
-            Map<String, Queue<Long>> dmValues = entry.getValue();
 
-            if (dmValues.isEmpty() || MULTI_ID_DATAMART.equals(dmKey)) {
-                continue;
+        Map<String, Map<String, List<Long>>> dmCacheSnapshot;
+        synchronized (cacheLock) {
+            dmCacheSnapshot = new HashMap<>();
+            for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
+                Map<String, List<Long>> idMap = new HashMap<>();
+                for (Map.Entry<String, Queue<Long>> inner : entry.getValue().entrySet()) {
+                    idMap.put(inner.getKey(), new ArrayList<>(inner.getValue()));
+                }
+                dmCacheSnapshot.put(entry.getKey(), idMap);
             }
-
-            // for complex value (e.g. "GENERIC_CASE,LDF_GENERIC") the key should be parsed
-            String[] dmTypes = dmKey.split(",");
-            String dmType =  dmTypes[0];
-            String ldfType = dmTypes.length > 1 ? dmTypes[1] : "UNKNOWN" ;
-
-            List<Long> uids = Optional.ofNullable(dmValues.get(INVESTIGATION.getEntityName()))
-                    .map(ArrayList::new).orElseGet(ArrayList::new);
-
-            List<Long> patUids = Optional.ofNullable(dmValues.get(PATIENT.getEntityName()))
-                    .map(ArrayList::new).orElseGet(ArrayList::new);
-
-            List<Long> obsUids = Optional.ofNullable(dmValues.get(OBSERVATION.getEntityName()))
-                    .map(ArrayList::new).orElseGet(ArrayList::new);
-
-            if (ldfType.equalsIgnoreCase(LDF_VACCINE_PREVENT_DISEASES.getEntityName())) {
-                ldfUids.addAll(uids);
-            }
-
-            dmCache.put(dmKey, new ConcurrentHashMap<>());
-
-            // list of phc uids are concatenated together with ',' to be passed as input for the stored procs
-            // for COVID_VAC_DATAMART it actually contains vaccination uids
-            String cases = uids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-
-            // make sure the entity names for datamart enum values follows the same naming
-            // as the enum itself
-            switch (Entity.valueOf(dmType.toUpperCase())) {
-                case HEPATITIS_DATAMART:
-                    executeDatamartProc(CASE_LAB_DATAMART,
-                            investigationRepository::executeStoredProcForCaseLabDatamart, cases);
-                    executeDatamartProc(HEPATITIS_DATAMART,
-                            investigationRepository::executeStoredProcForHepDatamart, cases);
-                    break;
-                case STD_HIV_DATAMART:
-                    executeDatamartProc(STD_HIV_DATAMART,
-                            investigationRepository::executeStoredProcForStdHIVDatamart, cases);
-                    break;
-                case GENERIC_CASE:
-                    executeDatamartProc(GENERIC_CASE,
-                        investigationRepository::executeStoredProcForGenericCaseDatamart, cases);
-                    processLdfLegacy(ldfType, cases);
-                    break;
-                case CRS_CASE:
-                    executeDatamartProc(CRS_CASE,
-                            investigationRepository::executeStoredProcForCRSCaseDatamart, cases);
-                    break;
-                case RUBELLA_CASE:
-                    executeDatamartProc(RUBELLA_CASE,
-                            investigationRepository::executeStoredProcForRubellaCaseDatamart, cases);
-                    break;
-                case MEASLES_CASE:
-                    executeDatamartProc(MEASLES_CASE,
-                            investigationRepository::executeStoredProcForMeaslesCaseDatamart, cases);
-                    break;
-                case CASE_LAB_DATAMART:
-                    executeDatamartProc(CASE_LAB_DATAMART,
-                            investigationRepository::executeStoredProcForCaseLabDatamart, cases);
-                    break;
-                case BMIRD_CASE:
-                    executeDatamartProc(BMIRD_CASE,
-                            investigationRepository::executeStoredProcForBmirdCaseDatamart, cases);
-                    executeDatamartProc(BMIRD_STREP_PNEUMO_DATAMART,
-                            investigationRepository::executeStoredProcForBmirdStrepPneumoDatamart, cases);
-                    processLdfLegacy(ldfType, cases);
-                    break;
-                case HEPATITIS_CASE:
-                    executeDatamartProc(HEPATITIS_CASE,
-                            investigationRepository::executeStoredProcForHepatitisCaseDatamart, cases);
-                    processLdfLegacy(ldfType, cases);
-                    break;
-                case PERTUSSIS_CASE:
-                    executeDatamartProc(PERTUSSIS_CASE,
-                            investigationRepository::executeStoredProcForPertussisCaseDatamart, cases);
-                    break;
-                case TB_DATAMART:
-                    executeDatamartProc(TB_DATAMART,
-                            investigationRepository::executeStoredProcForTbDatamart, cases);
-
-                    executeDatamartProc(TB_HIV_DATAMART,
-                            investigationRepository::executeStoredProcForTbHivDatamart, cases);
-                    break;
-                case VAR_DATAMART:
-                    executeDatamartProc(VAR_DATAMART,
-                        investigationRepository::executeStoredProcForVarDatamart, cases);
-                    break;
-                case COVID_CASE_DATAMART:
-                    executeDatamartProc(COVID_CASE_DATAMART,
-                            investigationRepository::executeStoredProcForCovidCaseDatamart, cases);
-                    break;
-                case COVID_CONTACT_DATAMART:
-                    executeDatamartProc(COVID_CONTACT_DATAMART,
-                            investigationRepository::executeStoredProcForCovidContactDatamart, cases);
-                    break;
-                case COVID_VACCINATION_DATAMART:
-                    String pats = patUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-
-                    executeDatamartProc(COVID_VACCINATION_DATAMART,
-                            investigationRepository::executeStoredProcForCovidVacDatamart, cases, pats);
-                    break;
-                case COVID_LAB_DATAMART:
-                    String labs = obsUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-
-                    executeDatamartProc(COVID_LAB_DATAMART,
-                            investigationRepository::executeStoredProcForCovidLabDatamart, labs);
-                    executeDatamartProc(COVID_LAB_CELR_DATAMART,
-                            investigationRepository::executeStoredProcForCovidLabCelrDatamart, labs);
-                    break;
-                default:
-                    logger.info("No associated datamart processing logic found for the key: {} ", dmType);
-            }
+            dmCache.clear();
         }
 
-        String cases = ldfUids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-        executeDatamartProc(LDF_VACCINE_PREVENT_DISEASES,
-                investigationRepository::executeStoredProcForLdfVacPreventDiseasesDatamart, cases);
-
-        Optional.ofNullable(dmCache.get(MULTI_ID_DATAMART)).ifPresent(multi -> {
-            dmCache.put(MULTI_ID_DATAMART, new ConcurrentHashMap<>());
-            processMultiIdDatamart(multi);
-        });
-    }
-
-    private void processLdfLegacy(String ldfType, String cases) {
-        switch (Entity.valueOf(ldfType.toUpperCase())) {
-            case LDF_GENERIC:
-                executeDatamartProc(LDF_GENERIC, investigationRepository::executeStoredProcForLdfGenericDatamart, cases);
-                break;
-            case LDF_FOODBORNE:
-                executeDatamartProc(LDF_FOODBORNE, investigationRepository::executeStoredProcForLdfFoodBorneDatamart, cases);
-                break;
-            case LDF_TETANUS:
-                // to test this, Tetanus must be added as a legacy page and
-                // [dbo].nrt_datamart_metadata table must be updated adding TETANUS
-                executeDatamartProc(LDF_TETANUS, investigationRepository::executeStoredProcForLdfTetanusDatamart, cases);
-                break;
-            case LDF_MUMPS:
-                executeDatamartProc(LDF_MUMPS, investigationRepository::executeStoredProcForLdfMumpsDatamart, cases);
-                break;
-            case LDF_BMIRD:
-                executeDatamartProc(LDF_BMIRD, investigationRepository::executeStoredProcForLdfBmirdDatamart, cases);
-                break;
-            case LDF_HEPATITIS:
-                executeDatamartProc(LDF_HEPATITIS, investigationRepository::executeStoredProcForLdfHepatitisDatamart, cases);
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void executeDatamartProc(Entity dmEntity, Consumer<String> repositoryMethod, String ids) {
-        if (!ids.isEmpty()) {
-            logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmEntity.getEntityName(), dmEntity.getStoredProcedure(), ids);
-            repositoryMethod.accept(ids);
-            completeLog(dmEntity.getStoredProcedure());
-        }
-    }
-
-    private void executeDatamartProc(Entity dmEntity, BiConsumer<String, String> repositoryMethod, String ids, String pids) {
-        if (!ids.isEmpty() && !pids.isEmpty()) {
-            logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG_2, dmEntity.getEntityName(), dmEntity.getStoredProcedure(), ids, pids);
-            repositoryMethod.accept(ids, pids);
-            completeLog(dmEntity.getStoredProcedure());
-        }
-    }
-
-    private void processMetricEventDatamart(Map<String, Queue<Long>> dmMulti) {
-        String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
-        String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
-        String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
-        String ctrString = listToParameterString(dmMulti.get(CONTACT.getEntityName()));
-        String vaxString = listToParameterString(dmMulti.get(VACCINATION.getEntityName()));
-
-        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
-                + ctrString.length() + vaxString.length();
-
-        if (totalLengthEventMetric > 0) {
-            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString, vaxString);
-        } else {
-            logger.info("No updates to EVENT_METRIC Datamart");
-        }
-    }
-
-    /**
-     * Processes cached IDs for multi-ID datamarts by executing the appropriate stored procedures.
-     * @param dmMulti
-     */
-    private void processMultiIdDatamart(Map<String, Queue<Long>> dmMulti) {
-        String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
-        String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
-        String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
-        String patString = listToParameterString(dmMulti.get(PATIENT.getEntityName()));
-        String provString = listToParameterString(dmMulti.get(PROVIDER.getEntityName()));
-        String orgString = listToParameterString(dmMulti.get(ORGANIZATION.getEntityName()));
-
-        int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
-        int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
-        int totalLengthMorbReportDM = obsString.length() + patString.length() + provString.length() + orgString.length() + invString.length();
-
-        if (totalLengthHep100 > 0) {
-            postProcRepository.executeStoredProcForHep100(invString, patString, provString, orgString);
-        } else {
-            logger.info("No updates to HEP100 Datamart");
-        }
-
-        if (totalLengthInvSummary > 0) {
-            List<DatamartData> dmDataList; //reusing the same DTO class for Dynamic Marts
-            dmDataList = postProcRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
-
-            if(!dmDataList.isEmpty()) {
-
-                Map<String, String> datamartPhcIdMap = dmDataList.stream()
-                        .collect(Collectors.groupingBy(
-                                DatamartData::getDatamart,
-                                Collectors.mapping(
-                                        dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
-                                        Collectors.joining(",")
-                                )
-                        ));
-
-                datamartPhcIdMap.forEach((datamart, phcIds) ->
-                            CompletableFuture.runAsync(() -> postProcRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
-                                    .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart))
-                );
-
-            } else {
-                logger.info("No updates to Dynamic Datamarts");
-            }
-        } else {
-            logger.info("No updates to INV_SUMMARY Datamart");
-        }
-
-        if (totalLengthMorbReportDM > 0) {
-            postProcRepository.executeStoredProcForMorbidityReportDatamart(obsString, patString, provString, orgString, invString);
-        } else {
-            logger.info("No updates to MORBIDITY_REPORT_DATAMART");
+        if (!dmCacheSnapshot.isEmpty()) {
+            dmProcessor.processDmCache(dmCacheSnapshot, null);
         }
     }
 
     private String listToParameterString(Collection<Long> inputList) {
         return Optional.ofNullable(inputList)
-                .map(list -> list.stream().map(String::valueOf).collect(Collectors.joining(",")))
+                .map(list -> list.stream().map(String::valueOf).distinct().collect(Collectors.joining(",")))
                 .orElse("");
     }
 

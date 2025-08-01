@@ -49,7 +49,7 @@ class PostProcessingServiceRetryTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        ProcessDatamartData datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor));
         postProcessingServiceMock.setMaxRetries(2);
