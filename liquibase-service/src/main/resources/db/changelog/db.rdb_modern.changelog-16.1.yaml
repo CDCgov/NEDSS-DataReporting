@@ -904,12 +904,36 @@ databaseChangeLog:
             path: 026-create_nrt_srte_IMRDBMapping-001.sql
             splitStatements: false  
   - changeSet:
-      id: 70.7
+      id: 70.3
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
             path: 187-create_nrt_srte_State_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.4
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 095-create_nrt_srte_State_county_code_value-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.5
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 096-create_nrt_srte_Country_code-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 70.6
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 097-create_nrt_srte_jurisdiction_code-001.sql
             splitStatements: false
   - changeSet:
       id: 71
@@ -1048,30 +1072,6 @@ databaseChangeLog:
         - sqlFile:
             path: 094-create_nrt_srte_Codeset_Group_Metadata-001.sql
             splitStatements: false
-  - changeSet:
-      id: 89.4
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 095-create_nrt_srte_State_county_code_value-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 89.5
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 096-create_nrt_srte_Country_code-001.sql
-            splitStatements: false
-  - changeSet:
-      id: 89.6
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 097-create_nrt_srte_jurisdiction_code-001.sql
-            splitStatements: false            
   - changeSet:
       id: 90
       author: liquibase
