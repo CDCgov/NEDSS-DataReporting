@@ -512,11 +512,13 @@ public class PostProcessingService {
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage, dmProcessor::checkResult);
                         break;
                     case ORGANIZATION:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds, dmProcessor::checkResult);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds, dmProcessor::checkResult);
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(ORGANIZATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case PROVIDER:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds, dmProcessor::checkResult);
+                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds, dmProcessor::checkResult);
+                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
                         newDmMulti.computeIfAbsent(PROVIDER.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
                         break;
                     case PATIENT:
