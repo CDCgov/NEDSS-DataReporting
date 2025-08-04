@@ -564,7 +564,7 @@ BEGIN
           INNER JOIN dbo.condition c with (NOLOCK) 
                ON c.CONDITION_CD = invsum.DISEASE_CD 
           INNER JOIN dbo.nrt_odse_NBS_page pg with (NOLOCK) 
-               ON c.DISEASE_GRP_CD = pg.form_cd 
+               ON c.DISEASE_GRP_CD = pg.form_cd AND pg.datamart_nm IS NOT NULL 
           GROUP BY pg.datamart_nm; 
 ';
           
