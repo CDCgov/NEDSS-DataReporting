@@ -99,7 +99,7 @@ EXEC sp_add_schedule
      @schedule_name = @ScheduleName,
      @freq_type = 8,              -- Weekly
      @freq_interval = 1,          -- Sunday
-	 @freq_recurrence_factor = 1, -- Every week
+	 @freq_recurrence_factor = 2, -- Every other week
      @freq_subday_type = 1,       -- At a specified time
      @active_start_time = 000000, -- Midnight
      @enabled = 1;
