@@ -38,14 +38,39 @@ IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE name = @JobName)
     END
 
 -- Drop schedule separately in case it's not tied to only this job
--- This only works for instances not running on AWS RDS
-IF NOT EXISTS (SELECT 1 FROM sys.databases where name = 'rdsadmin')
-    BEGIN
-        IF EXISTS (SELECT 1 FROM msdb.dbo.sysschedules WHERE name = @ScheduleName)
-            BEGIN
-                EXEC sp_delete_schedule @schedule_name = @ScheduleName;
-            END
-    END;
+
+CREATE TABLE #ScheduleInfo (
+	schedule_id INT,
+	schedule_uid UNIQUEIDENTIFIER,
+	name NVARCHAR(128),
+	enabled TINYINT,
+	freq_type TINYINT,
+	freq_interval INT,
+	freq_subday_type TINYINT,
+	freq_subday_interval INT,
+	freq_relative_interval TINYINT,
+	freq_recurrence_factor INT,
+	active_start_date INT,
+	active_end_date INT,
+	active_start_time INT,
+	active_end_time INT,
+	date_created DATETIME,
+	schedule_description NVARCHAR(512),
+	job_count INT
+);
+
+INSERT INTO #ScheduleInfo
+EXEC msdb.dbo.sp_help_schedule;
+
+DECLARE @sql NVARCHAR(MAX);
+
+SELECT @sql = STRING_AGG(CAST('
+EXEC msdb.dbo.sp_delete_schedule @schedule_id = ' + CAST(schedule_id AS NVARCHAR(10)) + ';
+' AS NVARCHAR(MAX)), CHAR(13) + CHAR(10))
+FROM #ScheduleInfo
+WHERE name = @ScheduleName;
+
+EXEC sp_executesql @sql;
 
 -------------------------------------------------------------------------------------
 -- Step 1: Create the Job
@@ -74,6 +99,7 @@ EXEC sp_add_schedule
      @schedule_name = @ScheduleName,
      @freq_type = 8,              -- Weekly
      @freq_interval = 1,          -- Sunday
+	 @freq_recurrence_factor = 1, -- Every week
      @freq_subday_type = 1,       -- At a specified time
      @active_start_time = 000000, -- Midnight
      @enabled = 1;
