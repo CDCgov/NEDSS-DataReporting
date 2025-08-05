@@ -544,7 +544,7 @@ BEGIN
                   where datamart_update+tb_datamart_update+morbidity_datamart_update+std_hiv_datamart_update+hep100_datamart_update >= 1
              )
             BEGIN
-            exec sp_provider_delta_update @batch_id, @debug;
+                exec sp_provider_dim_columns_update_to_datamart @batch_id, @debug;
             END
 
         SET @proc_step_name='SP_COMPLETE';

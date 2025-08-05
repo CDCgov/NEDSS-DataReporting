@@ -1,13 +1,24 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_patient_delta_update]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_patient_dim_columns_update_to_datamart]')
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_patient_delta_update]
+    DROP PROCEDURE [dbo].[sp_patient_dim_columns_update_to_datamart]
 END
 GO 
-CREATE PROCEDURE [dbo].[sp_patient_delta_update] @batch_id bigint, @debug bit = 'false'
+CREATE PROCEDURE [dbo].[sp_patient_dim_columns_update_to_datamart] @batch_id bigint, @debug bit = 'false'
 AS
 BEGIN
+ /*
+     * [Description]
+     * This stored procedure updates specific patient fields available in the datamarts listed below
+     * 1. CASE_LAB_DATAMART
+     * 2. BMIRD_STREP_PNEUMO_DATAMART
+     * 3. HEP100
+     * 4. MORBIDITY_REPORT_DATAMART
+     * 5. VAR_DATAMART
+     * 6. TB_DATAMART
+     * 7. TB_HIV_DATAMART
+*/
 
     declare @rowcount bigint;
     declare @proc_step_no float = 0;

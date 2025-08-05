@@ -883,7 +883,7 @@ BEGIN
         IF EXISTS (select 1 from #PATIENT_UPDATE_LIST
                     where datamart_update+case_lab_datamart_update+bmird_strep_pneumo_datamart_update+hep100_datamart_update+morbidity_report_datamart_update+var_datamart_update+tb_datamart_update >= 1)
         BEGIN
-        exec sp_patient_delta_update @batch_id, @debug;
+            exec sp_patient_dim_columns_update_to_datamart @batch_id, @debug;
         END
 
 
