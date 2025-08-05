@@ -382,7 +382,7 @@ BEGIN
             END
 
         SET @proc_step_name='SP_COMPLETE';
-        SET @proc_step_no = 8;
+        SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log] (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
         VALUES (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'COMPLETE',@proc_step_no,@proc_step_name,0,LEFT(@id_list,500));

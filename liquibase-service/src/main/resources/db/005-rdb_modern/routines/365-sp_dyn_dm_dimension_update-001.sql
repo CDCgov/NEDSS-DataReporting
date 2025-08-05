@@ -98,15 +98,25 @@ BEGIN
 
                     IF @dimension_nm = 'D_PATIENT'
                         BEGIN
-                            exec [dbo].sp_dyn_dm_invest_form_postprocessing @batch_id, @datamart_nm, @phc_uid_list, 'true';
+                            exec [dbo].sp_dyn_dm_invest_form_postprocessing 
+                                @batch_id = @batch_id, 
+                                @datamart_name = @datamart_nm,
+                                @phc_id_list = @phc_uid_list,
+                                @patient_only = 'true';
                         END
                     ELSE IF @dimension_nm = 'D_ORGANIZATION'
                         BEGIN
-                            exec [dbo].sp_dyn_dm_org_data_postprocessing @batch_id, @datamart_nm, @phc_uid_list;
+                            exec [dbo].sp_dyn_dm_org_data_postprocessing 
+                            @batch_id = @batch_id,
+                            @datamart_name = @datamart_nm,
+                            @phc_id_list = @phc_uid_list;
                         END
                     ELSE IF @dimension_nm = 'D_PROVIDER'
                         BEGIN
-                            exec [dbo].sp_dyn_dm_provider_data_postprocessing @batch_id, @datamart_nm, @phc_uid_list;
+                            exec [dbo].sp_dyn_dm_provider_data_postprocessing 
+                            @batch_id = @batch_id, 
+                            @datamart_name = @datamart_nm,
+                            @phc_id_list = @phc_uid_list;
                         END;
 
                     if @debug = 'true'
