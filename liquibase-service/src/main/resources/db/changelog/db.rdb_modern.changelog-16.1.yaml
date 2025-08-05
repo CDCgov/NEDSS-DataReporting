@@ -498,24 +498,6 @@ databaseChangeLog:
             path: 019-create_nrt_datamart_metadata-001.sql
             splitStatements: false
   - changeSet:
-      id: 21
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 002-sp_nrt_organization_postprocessing-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
-      id: 22
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 003-sp_nrt_provider_postprocessing-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
       id: 22.01
       author: liquibase
       runOnChange: true
@@ -539,15 +521,6 @@ databaseChangeLog:
         - sqlFile:
             path: 053-create_nrt_vaccination_answer-001.sql
             splitStatements: false
-  - changeSet:
-      id: 23
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 004-sp_nrt_patient_postprocessing-001.sql
-            splitStatements: true
-            endDelimiter: GO
   - changeSet:
       id: 24
       author: liquibase
@@ -2841,6 +2814,42 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 360-sp_nrt_backfill_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 910
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 002-sp_nrt_organization_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 915
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 003-sp_nrt_provider_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 920
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 004-sp_nrt_patient_postprocessing-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 925
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 365-sp_dyn_dm_dimension_update-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
