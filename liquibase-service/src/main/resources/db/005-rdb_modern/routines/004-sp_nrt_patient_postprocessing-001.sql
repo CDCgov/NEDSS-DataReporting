@@ -634,33 +634,6 @@ BEGIN
                     exec sp_executesql @sql;
                END
 
-
-        /* Logging */
-        set @rowcount=@@rowcount
-        INSERT INTO [dbo].[job_flow_log] (
-                   batch_id
-                 ,[Dataflow_Name]
-                 ,[package_Name]
-                 ,[Status_Type]
-                 ,[step_number]
-                 ,[step_name]
-                 ,[row_count]
-                 ,[msg_description1]
-        )
-        VALUES (
-                 @batch_id
-               ,@dataflow_name
-               ,@package_name
-               ,'START'
-               ,@proc_step_no
-               ,@proc_step_name
-               ,@rowcount
-               ,LEFT(@id_list,500)
-               );
-              
-
-
-
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 999;
 

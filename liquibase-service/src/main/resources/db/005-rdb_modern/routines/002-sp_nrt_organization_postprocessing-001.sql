@@ -381,6 +381,12 @@ BEGIN
         VALUES 
         ( @batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
+        IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+            BEGIN
+                 SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                 exec sp_executesql @sql;
+            END
+
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 8;
 
