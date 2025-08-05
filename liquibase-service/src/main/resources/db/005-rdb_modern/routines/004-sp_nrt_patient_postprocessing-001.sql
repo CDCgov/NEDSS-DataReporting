@@ -23,7 +23,6 @@ BEGIN
         declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_patient_postprocessing';
         declare @datamart_error nvarchar(MAX) = 'The following datamart updates had an error:';
         declare @return_code INT = 0;
-        declare @error_flag INT = 0;
         declare @sql NVARCHAR(MAX) = '';
 
 
@@ -576,9 +575,58 @@ BEGIN
                     DECLARE @sql_statement_DEBUG NVARCHAR(MAX) = 'SELECT * FROM dbo.' + @dimension_update_tbl_nm + ';';
                     exec sp_executesql @sql_statement_DEBUG;
                END;
+          set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log] (
+                   batch_id
+                 ,[Dataflow_Name]
+                 ,[package_Name]
+                 ,[Status_Type]
+                 ,[step_number]
+                 ,[step_name]
+                 ,[row_count]
+                 ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
 
-          exec dbo.sp_dyn_dm_dimension_update 'D_PATIENT', @dimension_update_tbl_nm, @batch_id, @debug;
+        SET @proc_step_name='EXECUTE DYNAMIC DATAMART DIMENSION UPDATE';
+        SET @proc_step_no = 6;
 
+        exec @return_code = dbo.sp_dyn_dm_dimension_update 'D_PATIENT', @dimension_update_tbl_nm, @batch_id, @debug;
+
+     
+        if @return_code = -1
+           RAISERROR('Error in dynamic datamart update', 16, 1);
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log] (
+                   batch_id
+                 ,[Dataflow_Name]
+                 ,[package_Name]
+                 ,[Status_Type]
+                 ,[step_number]
+                 ,[step_name]
+                 ,[row_count]
+                 ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
 
           IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
                BEGIN

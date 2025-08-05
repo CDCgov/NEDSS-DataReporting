@@ -22,6 +22,7 @@ BEGIN
         declare @dataflow_name varchar(200) = 'Organization POST-Processing';
         declare @package_name varchar(200) = 'sp_nrt_organization_postprocessing';
         declare @sql NVARCHAR(MAX) = '';
+        declare @return_code INT = 0;
 
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
         declare @dimension_update_tbl_nm VARCHAR(200) = 'DYN_DM_D_ORGANIZATION_UPDATE_' + CAST(@batch_id AS VARCHAR(200));
@@ -358,9 +359,27 @@ BEGIN
                     DECLARE @sql_statement_DEBUG NVARCHAR(MAX) = 'SELECT * FROM dbo.' + @dimension_update_tbl_nm + ';';
                     exec sp_executesql @sql_statement_DEBUG;
                END;
+               
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES 
+        ( @batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
+        
+        SET @proc_step_name='EXECUTE DYNAMIC DATAMART DIMENSION UPDATE';
+        SET @proc_step_no = 8;
 
-        exec dbo.sp_dyn_dm_dimension_update 'D_ORGANIZATION', @dimension_update_tbl_nm, @batch_id, @debug;
+        exec @return_code = dbo.sp_dyn_dm_dimension_update 'D_ORGANIZATION', @dimension_update_tbl_nm, @batch_id, @debug;
 
+
+        if @return_code = -1
+           RAISERROR('Error in dynamic datamart update', 16, 1);
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log] 
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES 
+        ( @batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 8;
@@ -396,7 +415,17 @@ BEGIN
         (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1],[Error_Description])
         VALUES
         (@batch_id,current_timestamp,current_timestamp,@dataflow_name,@package_name,'ERROR',@proc_Step_no,@proc_step_name,0,LEFT(@id_list,500),@FullErrorMessage);
-
+     
+          /*
+               Cleanup process for the scenario in which
+               one or more of the dynamic datamart operations fail
+          */
+        
+        IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+            BEGIN
+                 SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                 exec sp_executesql @sql;
+            END
         SELECT
             0 AS public_health_case_uid,
             CAST(NULL AS BIGINT) AS patient_uid,
