@@ -291,15 +291,12 @@ BEGIN
 
         SELECT
             INVESTIGATION_KEY,
-            org1.ORGANIZATION_KEY AS HSPTL_KEY,
-            org2.ORGANIZATION_KEY AS ORG_REP_KEY
+            I.HOSPITAL_KEY,
+            i.ORG_AS_REPORTER_KEY
         INTO #F_PAGE_CASE_ORGS
         FROM dbo.F_PAGE_CASE i WITH (NOLOCK)
-            LEFT JOIN #temp_org_table org1
-                ON i.HOSPITAL_KEY = org1.ORGANIZATION_KEY
-            LEFT JOIN #temp_org_table org2
-                ON i.ORG_AS_REPORTER_KEY = org2.ORGANIZATION_KEY
-        WHERE org1.ORGANIZATION_KEY IS NOT NULL OR org2.ORGANIZATION_KEY IS NOT NULL;
+            INNER JOIN #temp_org_table org1
+                ON org1.organization_key IN (i.HOSPITAL_KEY, i.ORG_AS_REPORTER_KEY);
 
         if @debug = 'true'
             SELECT @proc_step_name, * FROM #F_PAGE_CASE_ORGS;
@@ -311,15 +308,12 @@ BEGIN
 
         SELECT
             INVESTIGATION_KEY,
-            org1.ORGANIZATION_KEY AS HSPTL_KEY,
-            org2.ORGANIZATION_KEY AS ORG_REP_KEY
+            I.HOSPITAL_KEY,
+            i.ORG_AS_REPORTER_KEY
         INTO #F_STD_PAGE_CASE_ORGS
         FROM dbo.F_STD_PAGE_CASE i WITH (NOLOCK)
-            LEFT JOIN #temp_org_table org1
-                ON i.HOSPITAL_KEY = org1.ORGANIZATION_KEY
-            LEFT JOIN #temp_org_table org2
-                ON i.ORG_AS_REPORTER_KEY = org2.ORGANIZATION_KEY
-        WHERE org1.ORGANIZATION_KEY IS NOT NULL OR org2.ORGANIZATION_KEY IS NOT NULL;
+            INNER JOIN #temp_org_table org1
+                ON org1.organization_key IN (i.HOSPITAL_KEY, i.ORG_AS_REPORTER_KEY);
 
         if @debug = 'true'
             SELECT @proc_step_name, * FROM #F_STD_PAGE_CASE_ORGS;
