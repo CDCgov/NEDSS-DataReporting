@@ -498,6 +498,24 @@ databaseChangeLog:
             path: 019-create_nrt_datamart_metadata-001.sql
             splitStatements: false
   - changeSet:
+      id: 20.55
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 365-sp_patient_delta_update.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 20.60
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 370-sp_provider_delta_update.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: 21
       author: liquibase
       runOnChange: true
@@ -2843,24 +2861,6 @@ databaseChangeLog:
             path: 360-sp_nrt_backfill_event-001.sql
             splitStatements: true
             endDelimiter: GO
-  - changeSet:
-      id: 910
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 365-sp_patient_delta_update.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
-    id: 915
-    author: liquibase
-    runOnChange: true
-    changes:
-      - sqlFile:
-          path: 370-sp_provider_delta_update.sql
-          splitStatements: true
-          endDelimiter: GO
   - changeSet:
       id: 999
       author: liquibase

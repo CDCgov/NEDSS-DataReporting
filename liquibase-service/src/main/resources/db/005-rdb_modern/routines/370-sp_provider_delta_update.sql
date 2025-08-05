@@ -21,32 +21,32 @@ BEGIN
     select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.* 
     into #INVESTIGATION_PROVIDER_MAPPING
     from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_STD_PAGE_CASE i  
+    inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
     on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
     union all
     select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.*
     from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_PAGE_CASE i  
+    inner join dbo.F_PAGE_CASE i  with (nolock) 
     on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
     union all
     select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
     from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_PAGE_CASE i  
+    inner join dbo.F_PAGE_CASE i  with (nolock) 
     on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY  
     union all
     select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
     from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_STD_PAGE_CASE i  
+    inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
     on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY
     union all
     select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
     from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_PAGE_CASE i  
+    inner join dbo.F_PAGE_CASE i  with (nolock) 
     on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY  
     union all
     select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
     from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_STD_PAGE_CASE i  
+    inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
     on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY
     ;
 
@@ -59,7 +59,7 @@ BEGIN
     SET @proc_step_no = 5.5;
 
     -- Updates to MORBIDITY_REPORT_DATAMART
-    IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm 
+    IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm with (nolock) 
             inner join #INVESTIGATION_PROVIDER_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
             where datamart_update+morbidity_datamart_update >= 1)
     BEGIN
@@ -92,7 +92,7 @@ BEGIN
     SET @proc_step_no = 5.5;
 
     -- Updates to STD_HIV_DATAMART
-    IF EXISTS (SELECT 1 from dbo.STD_HIV_DATAMART dm
+    IF EXISTS (SELECT 1 from dbo.STD_HIV_DATAMART dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
         ON dm.std_hiv_datamart_update >= 1 
         AND (
@@ -197,7 +197,7 @@ BEGIN
 
     -- Updates to HEP100_DATAMART
 
-    IF EXISTS (SELECT 1 from dbo.HEP100 dm
+    IF EXISTS (SELECT 1 from dbo.HEP100 dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
         ON dm.PHYSICIAN_UID = tmp.PHYSICIAN_UID
             where dm.datamart_update+dm.hep100_datamart_update >= 1 
@@ -231,7 +231,7 @@ BEGIN
             where dm.PHYSICIAN_UID is not null and dm.PHYSICIAN_UID <> '';
     END
 
-    IF EXISTS (SELECT 1 from dbo.HEP100 dm
+    IF EXISTS (SELECT 1 from dbo.HEP100 dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
         ON dm.INVESTIGATOR_UID = tmp.INVESTIGATOR_UID
             where dm.INVESTIGATOR_UID is not null and dm.INVESTIGATOR_UID <> ''
@@ -260,7 +260,7 @@ BEGIN
     SET @proc_step_name=' Update Provider attributes in TB_DATAMART and TB_HIV_DATAMART';
     SET @proc_step_no = 5.6;
 
-    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm
+    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
         INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
         ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY and map.provider_type = 'investigator'
             where tb_datamart_update = 1 
@@ -293,7 +293,7 @@ BEGIN
 
 
     END
-    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm
+    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
         INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
         ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY and map.provider_type = 'physician'
             where tb_datamart_update = 1 
@@ -325,7 +325,7 @@ BEGIN
         ;
 
     END
-    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm
+    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
         inner join #INVESTIGATION_PROVIDER_MAPPING map 
         ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY and map.provider_type = 'reporter'
             where tb_datamart_update = 1 

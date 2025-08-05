@@ -21,10 +21,10 @@ BEGIN
     -- multiple times in the procedure
     select i.INVESTIGATION_KEY, d.* 
     into #INVESTIGATION_PATIENT_MAPPING
-    from dbo.F_STD_PAGE_CASE i inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
+    from dbo.F_STD_PAGE_CASE i with (nolock)  inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
     union all
     select i.INVESTIGATION_KEY, d.* 
-    from dbo.F_PAGE_CASE i inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
+    from dbo.F_PAGE_CASE i with (nolock)  inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
 
     if @debug = 'true'
     select * from #INVESTIGATION_PATIENT_MAPPING;
@@ -36,7 +36,7 @@ BEGIN
     -- we use the INVESTIGATION_KEY to update the patient attributes in the CASE_LAB_DATAMART
     -- since PATIENT_LOCAL_ID is the only identifier for a patient in the CASE_LAB_DATAMART and it could be NULL
 
-    IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm 
+    IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm with (nolock) 
             inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
             where datamart_update+case_lab_datamart_update >= 1)
     BEGIN
@@ -84,7 +84,7 @@ BEGIN
     -- we use the INVESTIGATION_KEY to update the patient attributes in the BMIRD_STREP_PNEUMO_DATAMART
     -- since PATIENT_LOCAL_ID is the only identifier for a patient in the BMIRD_STREP_PNEUMO_DATAMART 
 
-    IF EXISTS (SELECT 1 FROM dbo.BMIRD_STREP_PNEUMO_DATAMART dm 
+    IF EXISTS (SELECT 1 FROM dbo.BMIRD_STREP_PNEUMO_DATAMART dm with (nolock) 
             inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
             where datamart_update+bmird_strep_pneumo_datamart_update >= 1)
     BEGIN
@@ -124,7 +124,7 @@ BEGIN
     -- we use the PATIENT_UID to update the patient attributes in the HEP100
     -- since PATIENT_UID is available and is not NULL 
 
-    IF EXISTS (SELECT 1 FROM dbo.HEP100 dm 
+    IF EXISTS (SELECT 1 FROM dbo.HEP100 dm with (nolock) 
             inner join #INVESTIGATION_PATIENT_MAPPING map on map.PATIENT_UID = dm.PATIENT_UID
             where datamart_update+hep100_datamart_update >= 1)
     BEGIN
@@ -170,7 +170,7 @@ BEGIN
     -- we use the INVESTIGATION_KEY to update the patient attributes in the MORBIDITY_REPORT_DATAMART
     -- since PATIENT_LOCAL_ID is the only identifier for a patient in the MORBIDITY_REPORT_DATAMART and it's NULLABLE
 
-    IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm 
+    IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm with (nolock) 
             inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
             where datamart_update+morbidity_report_datamart_update >= 1)
     BEGIN
@@ -312,7 +312,7 @@ BEGIN
     SET @proc_step_name=' Update Patient attributes in VAR_DATAMART';
     SET @proc_step_no = 5.5;
 
-    IF EXISTS (SELECT 1 FROM dbo.VAR_DATAMART dm 
+    IF EXISTS (SELECT 1 FROM dbo.VAR_DATAMART dm with (nolock) 
             inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
             where datamart_update+var_datamart_update >= 1)
     BEGIN
@@ -362,7 +362,7 @@ BEGIN
     SET @proc_step_name=' Update Patient attributes in TB_DATAMART';
     SET @proc_step_no = 5.6;
 
-    IF EXISTS (SELECT 1 FROM dbo.TB_DATAMART dm 
+    IF EXISTS (SELECT 1 FROM dbo.TB_DATAMART dm with (nolock) 
             inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
             where datamart_update+var_datamart_update+tb_datamart_update >= 1)
     BEGIN
