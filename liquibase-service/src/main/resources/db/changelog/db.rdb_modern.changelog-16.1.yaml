@@ -2853,15 +2853,6 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
-      id: 925
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 365-sp_dyn_dm_dimension_update-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
       id: 999
       author: liquibase
       comment: "Permission script will always execute last."
