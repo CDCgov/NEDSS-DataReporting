@@ -290,8 +290,6 @@ BEGIN
             and tb_datamart_update = 1
         where src.INVESTIGATION_KEY = dbo.TB_HIV_DATAMART.INVESTIGATION_KEY
         ;
-
-
     END
     IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
         INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
@@ -356,6 +354,25 @@ BEGIN
         where src.INVESTIGATION_KEY = dbo.TB_HIV_DATAMART.INVESTIGATION_KEY
         ;
 
+    END
+
+    SET @proc_step_name=' Update Provider attributes in AGGREGATE_REPORT_DATAMART';
+    SET @proc_step_no = 5.7;
+
+    IF EXISTS (SELECT 1 from dbo.AGGREGATE_REPORT_DATAMART dm with (nolock)
+        INNER JOIN #PROVIDER_UPDATE_LIST map
+        ON dm.PROVIDER_KEY = map.PROVIDER_KEY and map.PROVIDER_KEY <> 1
+            where std_hiv_datamart_update = 1
+    )
+    BEGIN
+        update dm
+        set
+            PROVIDER_QUICK_CODE = map.PROVIDER_QUICK_CODE
+            from dbo.AGGREGATE_REPORT_DATAMART dm
+                INNER JOIN #PROVIDER_UPDATE_LIST map
+        ON dm.PROVIDER_KEY = map.PROVIDER_KEY and map.PROVIDER_KEY <> 1
+        where tb_datamart_update = 1
+        ;
     END
     
     set @rowcount=@@rowcount;
