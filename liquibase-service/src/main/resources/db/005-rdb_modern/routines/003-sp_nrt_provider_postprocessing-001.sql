@@ -21,8 +21,11 @@ BEGIN
         declare @update_dttm datetime2(7) = current_timestamp ;
         declare @dataflow_name varchar(200) = 'Provider POST-Processing';
         declare @package_name varchar(200) = 'sp_nrt_provider_postprocessing';
+        declare @sql nvarchar(max) = '';
+        declare @return_code INT = 0;
 
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
+        declare @dimension_update_tbl_nm VARCHAR(200) = 'DYN_DM_D_PROVIDER_UPDATE_' + CAST(@batch_id AS VARCHAR(200));
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
@@ -34,7 +37,7 @@ BEGIN
 
         /* Temp Provider Table*/
         with src as (
-          select 
+          select
                PROVIDER_KEY,
                nrt.provider_uid                             as PROVIDER_UID,
                local_id                                     as PROVIDER_LOCAL_ID,
@@ -46,29 +49,29 @@ BEGIN
                name_suffix                                  as PROVIDER_NAME_SUFFIX,
                name_degree                                  as PROVIDER_NAME_DEGREE,
                general_comments                             as PROVIDER_GENERAL_COMMENTS,
-               case 
+               case
                     when rtrim(ltrim(quick_code)) = '' then NULL
-                    else quick_code 
+                    else quick_code
                end                                          as PROVIDER_QUICK_CODE,
-               case 
+               case
                     when rtrim(ltrim(nrt.provider_registration_num)) = '' then NULL
                     else  nrt.provider_registration_num
                end                                          as PROVIDER_REGISTRATION_NUM,
-               case 
+               case
                     when rtrim(ltrim(provider_registration_num_auth)) = '' then NULL
-                    else provider_registration_num_auth 
+                    else provider_registration_num_auth
                end                                          as PROVIDER_REGISRATION_NUM_AUTH,
-               case 
+               case
                     when rtrim(ltrim(street_address_1)) = '' then NULL
-                    else street_address_1 
+                    else street_address_1
                end                                          as PROVIDER_STREET_ADDRESS_1,
-               case 
+               case
                     when rtrim(ltrim(street_address_2)) = '' then NULL
-                    else street_address_2 
+                    else street_address_2
                end                                          as PROVIDER_STREET_ADDRESS_2,
-               case 
+               case
                     when rtrim(ltrim(city)) = '' then NULL
-                    else city    
+                    else city
                end                                          as PROVIDER_CITY,
                state                                        as PROVIDER_STATE,
                state_code                                   as PROVIDER_STATE_CODE,
@@ -97,7 +100,7 @@ BEGIN
                     left join dbo.d_provider p with (nolock) on p.provider_uid = nrt.provider_uid
           where nrt.provider_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
           )
-          select 
+          select
           [PROVIDER_UID]
           ,[PROVIDER_KEY]
           ,[PROVIDER_LOCAL_ID]
@@ -223,51 +226,51 @@ BEGIN
                ,LEFT(@id_list,500)
                );
 
-           
+
      -- Check for updates in the provider table that are valid for downstream datamarts
-     select 
+     select
           tpt.*,
           -- common case for multiple datamarts
-          case 
+          case
                when tpt.PROVIDER_LAST_NAME <> p.PROVIDER_LAST_NAME or
                tpt.PROVIDER_FIRST_NAME <> p.PROVIDER_FIRST_NAME or
                tpt.PROVIDER_CITY <> p.PROVIDER_CITY or
                tpt.PROVIDER_STATE <> p.PROVIDER_STATE or
                tpt.PROVIDER_ZIP <> p.PROVIDER_ZIP
-               then 1 
+               then 1
                else 0
           end as datamart_update,
           -- specific case for tb_datamart
-          case 
+          case
                when tpt.PROVIDER_LAST_NAME <> p.PROVIDER_LAST_NAME or
                tpt.PROVIDER_FIRST_NAME <> p.PROVIDER_FIRST_NAME or
                tpt.PROVIDER_PHONE_WORK <> p.PROVIDER_PHONE_WORK
-               then 1 
+               then 1
                else 0
           end as tb_datamart_update,
           -- specific case for morbidity datamart
-          case 
+          case
                when tpt.PROVIDER_STREET_ADDRESS_1 <> p.PROVIDER_STREET_ADDRESS_1 or
                tpt.PROVIDER_STREET_ADDRESS_2 <> p.PROVIDER_STREET_ADDRESS_2 or
                tpt.PROVIDER_PHONE_WORK <> p.PROVIDER_PHONE_WORK or
                tpt.PROVIDER_PHONE_EXT_WORK <> p.PROVIDER_PHONE_EXT_WORK
-               then 1 
+               then 1
                else 0
           end as morbidity_datamart_update,
           -- specific case for std_hiv_datamart
           case
-               when tpt.PROVIDER_QUICK_CODE <> p.PROVIDER_QUICK_CODE 
+               when tpt.PROVIDER_QUICK_CODE <> p.PROVIDER_QUICK_CODE
                then 1
                else 0
           end as std_hiv_datamart_update,
           -- specific case for hep100 datamarts
-          case 
+          case
                when tpt.PROVIDER_MIDDLE_NAME <> p.PROVIDER_MIDDLE_NAME or
                tpt.PROVIDER_COUNTY <> p.PROVIDER_COUNTY
-               then 1 
+               then 1
                else 0
           end as hep100_datamart_update
-     into #PROVIDER_UPDATE_LIST 
+     into #PROVIDER_UPDATE_LIST
      from dbo.D_PROVIDER p with (nolock)
           inner join #temp_prv_table tpt on tpt.provider_key = p.provider_key
      ;
@@ -437,23 +440,115 @@ BEGIN
 
 
         COMMIT TRANSACTION;
+        /** Datamart Update Operations **/
+        SET @proc_step_name='GENERATE #F_PAGE_CASE_PRVS';
+        SET @proc_step_no = 5;
+
+        SELECT
+            INVESTIGATION_KEY,
+            I.PHYSICIAN_KEY,
+            I.INVESTIGATOR_KEY,
+            I.PERSON_AS_REPORTER_KEY
+        INTO #F_PAGE_CASE_PRVS
+        FROM dbo.F_PAGE_CASE i WITH (NOLOCK)
+            INNER JOIN #temp_prv_table prv1
+               ON prv1.provider_key in (i.INVESTIGATOR_KEY, i.PERSON_AS_REPORTER_KEY, i.PHYSICIAN_KEY);
+
+
+        if @debug = 'true'
+            SELECT @proc_step_name, * FROM #F_PAGE_CASE_PRVS;
+
+
+        SET @proc_step_name='GENERATE #F_STD_PAGE_CASE_PRVS';
+        SET @proc_step_no = 6;
+
+        SELECT
+            INVESTIGATION_KEY,
+            I.PHYSICIAN_KEY,
+            I.INVESTIGATOR_KEY,
+            I.PERSON_AS_REPORTER_KEY
+        INTO #F_STD_PAGE_CASE_PRVS
+        FROM dbo.F_STD_PAGE_CASE i WITH (NOLOCK)
+            INNER JOIN #temp_prv_table prv1
+               ON prv1.provider_key in (i.INVESTIGATOR_KEY, i.PERSON_AS_REPORTER_KEY, i.PHYSICIAN_KEY);
+
+        if @debug = 'true'
+            SELECT @proc_step_name, * FROM #F_STD_PAGE_CASE_PRVS;
 
 
 
-         /** Datamart Update Operations **/
-     
-     -- Enter only if there are updates in the provider table that are valid for downstream datamarts
-     IF EXISTS (
-          select 1 from #PROVIDER_UPDATE_LIST 
-          where datamart_update+tb_datamart_update+morbidity_datamart_update+std_hiv_datamart_update+hep100_datamart_update >= 1
-     )
-     BEGIN
-          exec sp_provider_delta_update @batch_id, @debug;         
-     END     
+        SET @proc_step_name='GENERATE DYNAMIC DATAMART PROVIDERS TABLE';
+        SET @proc_step_no = 7;
 
+        SET @sql = '
+        SELECT
+               pg.datamart_nm
+               , ''tmp_DynDm_PROVIDER_'' + pg.datamart_nm + ''_' + CAST(@batch_id AS VARCHAR(200)) + ''' AS tbl_nm
+               , STRING_AGG(CAST(dinv.case_uid AS NVARCHAR(MAX)), '','') AS phc_uid_list
+        INTO dbo.' + @dimension_update_tbl_nm + '
+        FROM (select INVESTIGATION_KEY
+          from #F_PAGE_CASE_PRVS
+          union all
+          select INVESTIGATION_KEY
+          from #F_STD_PAGE_CASE_PRVS) ik
+          INNER JOIN dbo.INVESTIGATION dinv with (NOLOCK)
+               ON dinv.investigation_key = ik.INVESTIGATION_KEY
+          INNER JOIN dbo.INV_SUMM_DATAMART invsum
+               ON invsum.INVESTIGATION_KEY = dinv.investigation_key
+          INNER JOIN dbo.condition c with (NOLOCK)
+               ON c.CONDITION_CD = invsum.DISEASE_CD
+          INNER JOIN dbo.nrt_odse_NBS_page pg with (NOLOCK)
+               ON c.DISEASE_GRP_CD = pg.form_cd AND pg.datamart_nm IS NOT NULL
+          GROUP BY pg.datamart_nm;
+          ';
+
+        exec sp_executesql @sql;
+
+          if @debug = 'true'
+               BEGIN
+                    select @sql;
+                    DECLARE @sql_statement_DEBUG NVARCHAR(MAX) = 'SELECT * FROM dbo.' + @dimension_update_tbl_nm + ';';
+                    exec sp_executesql @sql_statement_DEBUG;
+               END;
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES
+        (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
+
+        SET @proc_step_name='EXECUTE DYNAMIC DATAMART DIMENSION UPDATE';
+        SET @proc_step_no = 8;
+
+        exec @return_code = dbo.sp_dyn_dm_dimension_update 'D_PROVIDER', @dimension_update_tbl_nm, @batch_id, @debug;
+
+
+        if @return_code = -1
+           RAISERROR('Error in dynamic datamart update', 16, 1);
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+        VALUES
+        (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
+
+        IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+            BEGIN
+                 SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                 exec sp_executesql @sql;
+            END
+
+              -- Enter only if there are updates in the provider table that are valid for downstream datamarts
+             IF EXISTS (
+                  select 1 from #PROVIDER_UPDATE_LIST
+                  where datamart_update+tb_datamart_update+morbidity_datamart_update+std_hiv_datamart_update+hep100_datamart_update >= 1
+             )
+            BEGIN
+            exec sp_provider_delta_update @batch_id, @debug;
+            END
 
         SET @proc_step_name='SP_COMPLETE';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
@@ -489,6 +584,16 @@ BEGIN
         (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1],[Error_Description])
         VALUES
         (@batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'ERROR', @Proc_Step_no, @proc_step_name, 0, LEFT (@id_list, 500), @FullErrorMessage);
+
+          /*
+               Cleanup process for the scenario in which
+               one or more of the dynamic datamart operations fail
+          */
+        IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+            BEGIN
+                 SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                 exec sp_executesql @sql;
+            END
 
         SELECT
             0 AS public_health_case_uid,

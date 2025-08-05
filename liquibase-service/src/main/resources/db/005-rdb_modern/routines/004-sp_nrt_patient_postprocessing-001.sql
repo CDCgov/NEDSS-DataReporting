@@ -21,8 +21,13 @@ BEGIN
         declare @update_dttm datetime2(7) = current_timestamp ;
         declare @dataflow_name varchar(200) = 'Patient POST-Processing';
         declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_patient_postprocessing';
+        declare @datamart_error nvarchar(MAX) = 'The following datamart updates had an error:';
+        declare @return_code INT = 0;
+        declare @sql NVARCHAR(MAX) = '';
+
 
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
+        declare @dimension_update_tbl_nm VARCHAR(200) = 'DYN_DM_D_PATIENT_UPDATE_' + CAST(@batch_id AS VARCHAR(200));
 
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[create_dttm],[update_dttm],[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
@@ -40,66 +45,66 @@ BEGIN
             nrt.patient_mpr_uid           AS PATIENT_MPR_UID,
             record_status                 AS PATIENT_RECORD_STATUS,
             local_id                      AS PATIENT_LOCAL_ID,
-            case 
+            case
                 when rtrim(ltrim(general_comments)) = '' then null
-                else general_comments 
+                else general_comments
             end                                AS PATIENT_GENERAL_COMMENTS,
             first_name                         AS PATIENT_FIRST_NAME,
-            case 
+            case
                 when rtrim(ltrim(middle_name)) = '' then null
-                else middle_name 
+                else middle_name
             end                                AS PATIENT_MIDDLE_NAME,
             last_name AS PATIENT_LAST_NAME,
             name_suffix AS PATIENT_NAME_SUFFIX,
             alias_nickname AS PATIENT_ALIAS_NICKNAME,
-            case 
+            case
                 when rtrim(ltrim(street_address_1)) = '' then null
-                else street_address_1 
+                else street_address_1
             end                                AS PATIENT_STREET_ADDRESS_1,
-            case 
+            case
                 when rtrim(ltrim(street_address_2)) = '' then null
-                else street_address_2 
+                else street_address_2
             end                                AS PATIENT_STREET_ADDRESS_2,
-            case 
+            case
                 when rtrim(ltrim(city)) = '' then null
                 else city end AS PATIENT_CITY,
             state                              AS PATIENT_STATE,
-            case 
+            case
                 when rtrim(ltrim(state_code)) = '' then null
-                else state_code 
+                else state_code
             end                                AS PATIENT_STATE_CODE,
-            case 
+            case
                 when rtrim(ltrim(zip)) = '' then null
-                else zip 
+                else zip
             end                                AS PATIENT_ZIP,
-            case 
+            case
                 when rtrim(ltrim(county_code)) = '' then null
-                else county_code 
+                else county_code
             end                                AS PATIENT_COUNTY_CODE,
             county                             AS PATIENT_COUNTY,
-            case 
+            case
                 when rtrim(ltrim(country)) = '' then null
-                else country 
+                else country
             end                                AS PATIENT_COUNTRY,
-            case 
+            case
                 when rtrim(ltrim(within_city_limits)) = '' then null
-                else within_city_limits 
+                else within_city_limits
             end                                AS PATIENT_WITHIN_CITY_LIMITS,
-            case 
+            case
                 when rtrim(ltrim(phone_home)) = '' then null
-                else phone_home 
+                else phone_home
             end                                AS PATIENT_PHONE_HOME,
-            case 
+            case
                 when rtrim(ltrim(phone_ext_home)) = '' then null
-                else phone_ext_home 
+                else phone_ext_home
             end                                AS PATIENT_PHONE_EXT_HOME,
-            case 
+            case
                 when rtrim(ltrim(phone_work)) = '' then null
-                else phone_work 
+                else phone_work
             end                                AS PATIENT_PHONE_WORK,
-            case 
+            case
                 when rtrim(ltrim(phone_ext_work)) = '' then null
-                else phone_ext_work 
+                else phone_ext_work
             end                                AS PATIENT_PHONE_EXT_WORK,
             phone_cell                         AS PATIENT_PHONE_CELL,
             email                              AS PATIENT_EMAIL,
@@ -111,7 +116,7 @@ BEGIN
             deceased_indicator                  AS PATIENT_DECEASED_INDICATOR,
             deceased_date                       AS PATIENT_DECEASED_DATE,
             marital_status                      AS PATIENT_MARITAL_STATUS,
-            case 
+            case
                 when rtrim(ltrim(ssn)) = '' then null
                 else ssn
             end                                AS PATIENT_SSN,
@@ -151,9 +156,9 @@ BEGIN
             curr_sex_unk_rsn         AS PATIENT_CURR_SEX_UNK_RSN,
             preferred_gender         AS PATIENT_PREFERRED_GENDER,
             addl_gender_info         AS PATIENT_ADDL_GENDER_INFO,
-            case 
+            case
                 when rtrim(ltrim(census_tract)) = '' then null
-                else census_tract 
+                else census_tract
             end                      AS PATIENT_CENSUS_TRACT,
             race_all                 AS PATIENT_RACE_ALL,
             birth_country            AS PATIENT_BIRTH_COUNTRY,
@@ -341,10 +346,10 @@ BEGIN
 
 
      -- Check for updates in the patient table that are valid for downstream datamarts
-     select 
+     select
           tpt.*,
           -- common case for multiple datamarts
-          case 
+          case
                when tpt.PATIENT_FIRST_NAME <> p.PATIENT_FIRST_NAME or
                tpt.PATIENT_LAST_NAME <> p.PATIENT_LAST_NAME or
                tpt.PATIENT_STREET_ADDRESS_1 <> p.PATIENT_STREET_ADDRESS_1 or
@@ -356,12 +361,12 @@ BEGIN
                tpt.PATIENT_AGE_REPORTED <> p.PATIENT_AGE_REPORTED or
                tpt.PATIENT_AGE_REPORTED_UNIT <> p.PATIENT_AGE_REPORTED_UNIT or
                tpt.PATIENT_CURRENT_SEX <> p.PATIENT_CURRENT_SEX
-               then 1 
+               then 1
                else 0
-          end as datamart_update, 
+          end as datamart_update,
           -- additional cases for case_lab datamart
-          case 
-               when 
+          case
+               when
                tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
                tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
                tpt.PATIENT_PHONE_HOME <> p.PATIENT_PHONE_HOME or
@@ -460,11 +465,11 @@ BEGIN
                then 1
                else 0
           end as tb_datamart_update
-     into #PATIENT_UPDATE_LIST 
+     into #PATIENT_UPDATE_LIST
      from dbo.D_PATIENT p with (nolock)
           inner join #temp_patient_table tpt on tpt.patient_key = p.patient_key
      ;
-  
+
      if @debug = 'true'
      select * from #PATIENT_UPDATE_LIST;
 
@@ -556,8 +561,6 @@ BEGIN
                  inner join dbo.d_patient p with (nolock) on tpt.patient_uid = p.patient_uid
             and tpt.patient_key = p.patient_key
             and p.patient_key is not null;
-
-
 
         /* Logging */
         set @rowcount=@@rowcount
@@ -704,7 +707,7 @@ BEGIN
                        ,tpt.[PATIENT_AGE_REPORTED]
                        ,tpt.[PATIENT_AGE_REPORTED_UNIT]
                        ,tpt.[PATIENT_BIRTH_SEX]
-                       ,tpt.[PATIENT_CURRENT_SEX] 
+                       ,tpt.[PATIENT_CURRENT_SEX]
                        ,tpt.[PATIENT_DECEASED_INDICATOR]
                        ,tpt.[PATIENT_DECEASED_DATE]
                        ,tpt.[PATIENT_MARITAL_STATUS]
@@ -783,20 +786,109 @@ BEGIN
                );
 
         COMMIT TRANSACTION;
-
-
         /** Datamart Update Operations **/
-        
+        SET @proc_step_name='GENERATE DYNAMIC DATAMART PATIENTS TABLE';
+        SET @proc_step_no = 5;
+
+        SET @sql = '
+        SELECT
+               pg.datamart_nm
+               , ''tmp_DynDm_Patient_Data_'' + pg.datamart_nm + ''_' + CAST(@batch_id AS VARCHAR(200)) + ''' AS tbl_nm
+               , STRING_AGG(CAST(dinv.case_uid AS NVARCHAR(MAX)), '','') AS phc_uid_list
+        INTO dbo.' + @dimension_update_tbl_nm + '
+        FROM (select i.INVESTIGATION_KEY, d.PATIENT_KEY
+          from dbo.F_STD_PAGE_CASE i with (NOLOCK) inner join #temp_patient_table d on i.PATIENT_KEY = d.PATIENT_KEY
+          union all
+          select i.INVESTIGATION_KEY, d.PATIENT_KEY
+          from dbo.F_PAGE_CASE i with (NOLOCK) inner join #temp_patient_table d on i.PATIENT_KEY = d.PATIENT_KEY) p
+          INNER JOIN dbo.INVESTIGATION dinv with (NOLOCK)
+               ON dinv.investigation_key = p.INVESTIGATION_KEY
+          INNER JOIN dbo.INV_SUMM_DATAMART invsum
+               ON invsum.INVESTIGATION_KEY = dinv.investigation_key
+          INNER JOIN dbo.condition c with (NOLOCK)
+               ON c.CONDITION_CD = invsum.DISEASE_CD
+          INNER JOIN dbo.nrt_odse_NBS_page pg with (NOLOCK)
+               ON c.DISEASE_GRP_CD = pg.form_cd AND pg.datamart_nm IS NOT NULL
+          GROUP BY pg.datamart_nm;
+';
+
+          exec sp_executesql @sql;
+
+          if @debug = 'true'
+               BEGIN
+                    select @sql;
+                    DECLARE @sql_statement_DEBUG NVARCHAR(MAX) = 'SELECT * FROM dbo.' + @dimension_update_tbl_nm + ';';
+                    exec sp_executesql @sql_statement_DEBUG;
+               END;
+          set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log] (
+                   batch_id
+                 ,[Dataflow_Name]
+                 ,[package_Name]
+                 ,[Status_Type]
+                 ,[step_number]
+                 ,[step_name]
+                 ,[row_count]
+                 ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+
+        SET @proc_step_name='EXECUTE DYNAMIC DATAMART DIMENSION UPDATE';
+        SET @proc_step_no = 6;
+
+        exec @return_code = dbo.sp_dyn_dm_dimension_update 'D_PATIENT', @dimension_update_tbl_nm, @batch_id, @debug;
+
+
+        if @return_code = -1
+           RAISERROR('Error in dynamic datamart update', 16, 1);
+
+        set @rowcount=@@rowcount
+        INSERT INTO [dbo].[job_flow_log] (
+                   batch_id
+                 ,[Dataflow_Name]
+                 ,[package_Name]
+                 ,[Status_Type]
+                 ,[step_number]
+                 ,[step_name]
+                 ,[row_count]
+                 ,[msg_description1]
+        )
+        VALUES (
+                 @batch_id
+               ,@dataflow_name
+               ,@package_name
+               ,'START'
+               ,@proc_step_no
+               ,@proc_step_name
+               ,@rowcount
+               ,LEFT(@id_list,500)
+               );
+
+          IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+               BEGIN
+                    SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                    exec sp_executesql @sql;
+               END
+
         -- Enter only if there are updates in the patient table that are valid for downstream datamarts
-        IF EXISTS (select 1 from #PATIENT_UPDATE_LIST 
-            where datamart_update+case_lab_datamart_update+bmird_strep_pneumo_datamart_update+hep100_datamart_update+morbidity_report_datamart_update+var_datamart_update+tb_datamart_update >= 1)
+        IF EXISTS (select 1 from #PATIENT_UPDATE_LIST
+                    where datamart_update+case_lab_datamart_update+bmird_strep_pneumo_datamart_update+hep100_datamart_update+morbidity_report_datamart_update+var_datamart_update+tb_datamart_update >= 1)
         BEGIN
-            exec sp_patient_delta_update @batch_id, @debug;
+        exec sp_patient_delta_update @batch_id, @debug;
         END
-          
+
 
         SET @proc_step_name='SP_COMPLETE';
-        SET @proc_step_no = 4;
+        SET @proc_step_no = 999;
 
         INSERT INTO [dbo].[job_flow_log] (
                                            batch_id
@@ -824,34 +916,31 @@ BEGIN
                );
 
 
-
-     
-
-     SELECT nri.public_health_case_uid                       AS public_health_case_uid,
-          nrt.PATIENT_UID                                  AS patient_uid,
-          null                                             AS observation_uid,
-          CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
-          nri.cd                                           AS condition_cd,
-          dtm.Stored_Procedure                             AS stored_procedure,
-          nri.investigation_form_cd                        AS investigation_form_cd
-     FROM #temp_patient_table nrt
-          INNER JOIN dbo.nrt_investigation nri with (nolock) ON nrt.PATIENT_UID = nri.patient_id
-          LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.PATIENT_UID
-          INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nri.cd AND dtm.Datamart = 'Covid_Case_Datamart'
-          LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nri.cd
-     UNION
-     SELECT
-          vac.vaccination_uid                                 AS public_health_case_uid,
-          vac.patient_uid                                     AS patient_uid,
-          null                                                AS observation_uid,
-          dtm.Datamart                                        AS datamart,
-          dtm.condition_cd                                    AS condition_cd,
-          dtm.Stored_Procedure                                AS stored_procedure,
-          null                                                AS investigation_form_cd
-     FROM #temp_patient_table nrt with (nolock)
-          INNER JOIN dbo.nrt_vaccination vac with (nolock) on nrt.patient_uid = vac.patient_uid
-          INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Vaccination_Datamart'
-     WHERE vac.material_cd IN('207', '208', '213');
+        SELECT nri.public_health_case_uid                       AS public_health_case_uid,
+               nrt.PATIENT_UID                                  AS patient_uid,
+               null                                             AS observation_uid,
+               CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
+               nri.cd                                           AS condition_cd,
+               dtm.Stored_Procedure                             AS stored_procedure,
+               nri.investigation_form_cd                        AS investigation_form_cd
+        FROM #temp_patient_table nrt
+            INNER JOIN dbo.nrt_investigation nri with (nolock) ON nrt.PATIENT_UID = nri.patient_id
+            LEFT JOIN dbo.D_PATIENT pat with (nolock) ON pat.PATIENT_UID = nrt.PATIENT_UID
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = nri.cd AND dtm.Datamart = 'Covid_Case_Datamart'
+            LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = nri.cd
+        UNION
+        SELECT
+            vac.vaccination_uid                                 AS public_health_case_uid,
+            vac.patient_uid                                     AS patient_uid,
+            null                                                AS observation_uid,
+            dtm.Datamart                                        AS datamart,
+            dtm.condition_cd                                    AS condition_cd,
+            dtm.Stored_Procedure                                AS stored_procedure,
+            null                                                AS investigation_form_cd
+        FROM #temp_patient_table nrt with (nolock)
+            INNER JOIN dbo.nrt_vaccination vac with (nolock) on nrt.patient_uid = vac.patient_uid
+            INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.Datamart = 'Covid_Vaccination_Datamart'
+        WHERE vac.material_cd IN('207', '208', '213');
 
 
     END TRY
@@ -883,6 +972,17 @@ BEGIN
                 @FullErrorMessage AS stored_procedure,
                 CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
                 WHERE 1=1;
+
+          /*
+               Cleanup process for the scenario in which
+               one or more of the dynamic datamart operations fail
+          */
+          IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
+               BEGIN
+                    SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+                    exec sp_executesql @sql;
+               END
+
 
     END CATCH
 
