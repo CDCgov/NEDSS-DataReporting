@@ -98,7 +98,7 @@ BEGIN
 
                     IF @dimension_nm = 'D_PATIENT'
                         BEGIN
-                            exec [dbo].sp_dyn_dm_invest_form_postprocessing_CNDE3066 @batch_id, @datamart_nm, @phc_uid_list, 'true';
+                            exec [dbo].sp_dyn_dm_invest_form_postprocessing @batch_id, @datamart_nm, @phc_uid_list, 'true';
                         END
                     ELSE IF @dimension_nm = 'D_ORGANIZATION'
                         BEGIN

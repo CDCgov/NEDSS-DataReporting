@@ -1,12 +1,12 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_patient_postprocessing_CNDE3066]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_patient_postprocessing]') 
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_nrt_patient_postprocessing_CNDE3066]
+    DROP PROCEDURE [dbo].[sp_nrt_patient_postprocessing]
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_nrt_patient_postprocessing_CNDE3066 @id_list nvarchar(max), @debug bit = 'false'
+CREATE PROCEDURE dbo.sp_nrt_patient_postprocessing @id_list nvarchar(max), @debug bit = 'false'
 AS
 BEGIN
 

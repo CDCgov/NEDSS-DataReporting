@@ -1,12 +1,12 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_invest_form_postprocessing_CNDE3066]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_invest_form_postprocessing]') 
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
-    DROP PROCEDURE [dbo].[sp_dyn_dm_invest_form_postprocessing_CNDE3066]
+    DROP PROCEDURE [dbo].[sp_dyn_dm_invest_form_postprocessing]
 END
 GO 
 
-CREATE PROCEDURE [dbo].sp_dyn_dm_invest_form_postprocessing_CNDE3066
+CREATE PROCEDURE [dbo].sp_dyn_dm_invest_form_postprocessing
     @batch_id BIGINT,
     @DATAMART_NAME VARCHAR(100),
     @phc_id_list nvarchar(max),
