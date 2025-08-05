@@ -32,12 +32,6 @@ CREATE TABLE dbo.nrt_treatment
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
 
-IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_treatment'))
-    BEGIN
-        ALTER TABLE dbo.nrt_treatment
-        ADD CONSTRAINT pk_nrt_treatment PRIMARY KEY (treatment_uid);
-    END;
-
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment' and xtype = 'U')
     BEGIN
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE name = N'morbidity_uid' AND Object_ID = Object_ID(N'nrt_treatment'))
@@ -207,4 +201,10 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_treatment' and xtype = 'U'
             BEGIN
                 ALTER TABLE dbo.nrt_treatment ALTER COLUMN last_chg_user_id bigint NULL;
             END;
+    END;
+
+IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_treatment'))
+    BEGIN
+        ALTER TABLE dbo.nrt_treatment
+            ADD CONSTRAINT pk_nrt_treatment PRIMARY KEY (treatment_uid);
     END;

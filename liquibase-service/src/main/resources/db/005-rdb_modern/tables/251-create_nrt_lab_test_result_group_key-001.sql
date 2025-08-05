@@ -8,10 +8,6 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_result_group_
 			updated_dttm DATETIME2 DEFAULT getdate()           
 		);
 
-		-- Insert Key = 1 with LAB_TEST_UID = NULL
-		INSERT INTO [dbo].nrt_lab_test_result_group_key(LAB_TEST_UID)
-		VALUES (NULL)
-
 		--RESEED [dbo].nrt_lab_test_result_group_key table 
 		DECLARE @max BIGINT;
 		SELECT @max=max(TEST_RESULT_GRP_KEY) from [dbo].TEST_RESULT_GROUPING;
@@ -21,7 +17,6 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_result_group_
 		DBCC CHECKIDENT ('[dbo].nrt_lab_test_result_group_key', RESEED, @max);
 
 	END;
-
 
 IF NOT EXISTS(SELECT 1 FROM sys.objects WHERE type = 'PK' AND parent_object_id = OBJECT_ID('dbo.nrt_lab_test_result_group_key'))
         BEGIN

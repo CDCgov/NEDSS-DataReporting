@@ -361,13 +361,13 @@ BEGIN
                );
 
 
-        SELECT inv.CASE_UID                       AS public_health_case_uid,
-               pat.PATIENT_UID                    AS patient_uid,
-               null                               AS observation_uid,
-               dtm.Datamart                       AS datamart,
-               c.CONDITION_CD                     AS condition_cd,
-               dtm.Stored_Procedure               AS stored_procedure,
-               null                               AS investigation_form_cd
+        SELECT inv.CASE_UID                                     AS public_health_case_uid,
+               pat.PATIENT_UID                                  AS patient_uid,
+               null                                             AS observation_uid,
+               CONCAT_WS(',',dtm.Datamart, ldf.datamart_name)   AS datamart,
+               c.CONDITION_CD                                   AS condition_cd,
+               dtm.Stored_Procedure                             AS stored_procedure,
+               null                                             AS investigation_form_cd
         FROM #temp_ntf_event_table ntf
             LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.INVESTIGATION_KEY = ntf.INVESTIGATION_KEY
             LEFT JOIN dbo.condition c with (nolock) ON c.CONDITION_KEY = ntf.CONDITION_KEY
@@ -375,6 +375,7 @@ BEGIN
             INNER JOIN dbo.nrt_datamart_metadata dtm with (nolock) ON dtm.condition_cd = c.CONDITION_CD
             INNER JOIN dbo.nrt_srte_Condition_code ccd with (nolock) ON
                 ccd.condition_cd = dtm.condition_cd AND ISNULL(dtm.legacy_form_cd, ccd.investigation_form_cd) = ccd.investigation_form_cd
+            LEFT JOIN dbo.LDF_DATAMART_TABLE_REF ldf with (nolock) on ldf.condition_cd = dtm.condition_cd
         WHERE dtm.Datamart NOT IN ('Covid_Contact_Datamart','Covid_Lab_Datamart','Covid_Vaccination_Datamart');
 
     END TRY
