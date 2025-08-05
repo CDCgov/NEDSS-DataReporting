@@ -53,7 +53,7 @@ BEGIN
     
 
     if @debug = 'true'
-    select * from #INVESTIGATION_PROVIDER_MAPPING;
+        select '#INVESTIGATION_PROVIDER_MAPPING', * from #INVESTIGATION_PROVIDER_MAPPING;
 
     SET @proc_step_name=' Update Provider attributes in MORBIDITY_REPORT_DATAMART';
     SET @proc_step_no = 5.5;
@@ -89,12 +89,12 @@ BEGIN
 
 
     SET @proc_step_name=' Update Provider attributes in STD_HIV_DATAMART';
-    SET @proc_step_no = 5.5;
+    SET @proc_step_no = 5.6;
 
     -- Updates to STD_HIV_DATAMART
     IF EXISTS (SELECT 1 from dbo.STD_HIV_DATAMART dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
-        ON dm.std_hiv_datamart_update >= 1 
+        ON std_hiv_datamart_update >= 1
         AND (
             dm.INVESTIGATOR_CLOSED_KEY = tmp.PROVIDER_KEY or
             dm.INVESTIGATOR_CURRENT_KEY = tmp.PROVIDER_KEY or
@@ -114,63 +114,63 @@ BEGIN
         UPDATE dm
         SET 
         INVESTIGATOR_CLOSED_QC = CASE 
-            WHEN dm.INVESTIGATOR_CLOSED_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_CLOSED_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_CLOSED_QC 
         END,
         INVESTIGATOR_CURRENT_QC = CASE 
-            WHEN dm.INVESTIGATOR_CURRENT_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_CURRENT_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_CURRENT_QC 
         END,
         INVESTIGATOR_DISP_FL_FUP_QC = CASE 
-            WHEN dm.INVESTIGATOR_DISP_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_DISP_FL_FUP_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_DISP_FL_FUP_QC 
         END,
         INVESTIGATOR_FL_FUP_QC = CASE 
-            WHEN dm.INVESTIGATOR_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_FL_FUP_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_FL_FUP_QC 
         END,
         INVESTIGATOR_INIT_INTRVW_QC = CASE 
-            WHEN dm.INVESTIGATOR_INIT_INTRVW_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_INIT_INTRVW_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_INIT_INTRVW_QC 
         END,
         INVESTIGATOR_INIT_FL_FUP_QC = CASE 
-            WHEN dm.INVESTIGATOR_INIT_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_INIT_FL_FUP_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_INIT_FL_FUP_QC 
         END,
         INVESTIGATOR_INITIAL_QC = CASE 
-            WHEN dm.INVESTIGATOR_INITIAL_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_INITIAL_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_INITIAL_QC 
         END,
         INVESTIGATOR_INTERVIEW_QC = CASE 
-            WHEN dm.INVESTIGATOR_INTERVIEW_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_INTERVIEW_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_INTERVIEW_QC 
         END,
         INVESTIGATOR_SUPER_CASE_QC = CASE 
-            WHEN dm.INVESTIGATOR_SUPER_CASE_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_SUPER_CASE_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE
             ELSE dm.INVESTIGATOR_SUPER_CASE_QC
         END,
         INVESTIGATOR_SUPER_FL_FUP_QC = CASE 
-            WHEN dm.INVESTIGATOR_SUPER_FL_FUP_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_SUPER_FL_FUP_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_SUPER_FL_FUP_QC
         END,
         INVESTIGATOR_SURV_QC = CASE 
-            WHEN dm.INVESTIGATOR_SURV_KEY = tmp.PROVIDER_KEY AND dm.std_hiv_datamart_update >= 1 
+            WHEN dm.INVESTIGATOR_SURV_KEY = tmp.PROVIDER_KEY AND std_hiv_datamart_update >= 1
                     THEN tmp.PROVIDER_QUICK_CODE 
             ELSE dm.INVESTIGATOR_SURV_QC
         END          
         FROM dbo.STD_HIV_DATAMART dm
         JOIN #PROVIDER_UPDATE_LIST tmp 
-        ON dm.std_hiv_datamart_update >= 1 
+        ON std_hiv_datamart_update >= 1
         AND (
             dm.INVESTIGATOR_CLOSED_KEY = tmp.PROVIDER_KEY or
             dm.INVESTIGATOR_CURRENT_KEY = tmp.PROVIDER_KEY or
@@ -192,28 +192,25 @@ BEGIN
     VALUES 
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
+
     SET @proc_step_name=' Update Provider attributes in HEP100_DATAMART';
-    SET @proc_step_no = 5.5;
+    SET @proc_step_no = 5.7;
 
     -- Updates to HEP100_DATAMART
 
     IF EXISTS (SELECT 1 from dbo.HEP100 dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
-        ON dm.PHYSICIAN_UID = tmp.PHYSICIAN_UID
-            where dm.datamart_update+dm.hep100_datamart_update >= 1 
-            and dm.PHYSICIAN_UID is not null and dm.PHYSICIAN_UID <> ''
+        ON dm.PHYSICIAN_UID = tmp.PROVIDER_UID
+            where datamart_update+hep100_datamart_update >= 1
+            and dm.PHYSICIAN_UID is not null
     )
     BEGIN
         UPDATE dm
-        SET 
-        PHYSICIAN_LAST_NM = tmp.PROVIDER_LAST_NAME
-        ,PHYSICIAN_FIRST_NM = tmp.PROVIDER_FIRST_NAME
-        ,PHYSICIAN_MIDDLE_NM = tmp.PROVIDER_MIDDLE_NAME
+        SET
+        PHYSICIAN_NAME = COALESCE(TRIM(tmp.PROVIDER_FIRST_NAME), ' ') + ',' + COALESCE(TRIM(tmp.PROVIDER_MIDDLE_NAME), ' ') + ',' + COALESCE(TRIM(tmp.PROVIDER_LAST_NAME), ' ')
         ,PHYSICIAN_COUNTY = tmp.PROVIDER_COUNTY
         ,PHYSICIAN_CITY = tmp.PROVIDER_CITY
         ,PHYSICIAN_STATE = tmp.PROVIDER_STATE
-        ,PHYSICIAN_ZIP = tmp.PROVIDER_ZIP
-        ,PHYSICIAN_NAME = COALESCE(TRIM(tmp.PROVIDER_FIRST_NAME), ' ') + ',' + COALESCE(TRIM(tmp.PROVIDER_MIDDLE_NAME), ' ') + ',' + COALESCE(TRIM(tmp.PROVIDER_LAST_NAME), ' ')
         ,PHYSICIAN_ADDRESS_USE_DESC = CASE
             WHEN LEN(TRIM(COALESCE(tmp.PROVIDER_CITY, '')) + TRIM(COALESCE(tmp.PROVIDER_STATE, '')) + TRIM(COALESCE(tmp.PROVIDER_COUNTY, ''))) > 0
                 THEN 'Primary Work Place'
@@ -226,29 +223,28 @@ BEGIN
             END
         FROM dbo.HEP100 dm
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
-        ON dm.datamart_update+dm.hep100_datamart_update >= 1 
-            AND dm.PHYSICIAN_UID = tmp.PHYSICIAN_UID
-            where dm.PHYSICIAN_UID is not null and dm.PHYSICIAN_UID <> '';
+        ON datamart_update+hep100_datamart_update >= 1
+            AND dm.PHYSICIAN_UID = tmp.PROVIDER_UID
+            where dm.PHYSICIAN_UID is not null
+        ;
     END
 
     IF EXISTS (SELECT 1 from dbo.HEP100 dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
-        ON dm.INVESTIGATOR_UID = tmp.INVESTIGATOR_UID
-            where dm.INVESTIGATOR_UID is not null and dm.INVESTIGATOR_UID <> ''
-            and dm.datamart_update+dm.hep100_datamart_update >= 1 
+        ON dm.INVESTIGATOR_UID = tmp.PROVIDER_UID
+            where dm.INVESTIGATOR_UID is not null
+            and datamart_update+hep100_datamart_update >= 1
     )
     BEGIN
         UPDATE dm
-        SET 
-        INVESTIGATOR_LAST_NM = tmp.PROVIDER_LAST_NAME,
-        INVESTIGATOR_FIRST_NM = tmp.PROVIDER_FIRST_NAME,
-        INVESTIGATOR_MIDDLE_NM = tmp.PROVIDER_MIDDLE_NAME,
+        SET
         INVESTIGATOR_NAME = COALESCE(TRIM(tmp.PROVIDER_FIRST_NAME), ' ') + ',' + COALESCE(TRIM(tmp.PROVIDER_MIDDLE_NAME), ' ') + ',' + COALESCE(TRIM(tmp.PROVIDER_LAST_NAME), ' ')
         FROM dbo.HEP100 dm
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
-        ON dm.datamart_update+dm.hep100_datamart_update >= 1 
-            AND dm.INVESTIGATOR_UID = tmp.INVESTIGATOR_UID
-            where dm.INVESTIGATOR_UID is not null and dm.INVESTIGATOR_UID <> '';
+        ON datamart_update+hep100_datamart_update >= 1
+            AND dm.INVESTIGATOR_UID = tmp.PROVIDER_UID
+            where dm.INVESTIGATOR_UID is not null
+        ;
     END
 
     set @rowcount=@@rowcount;
@@ -257,8 +253,9 @@ BEGIN
     VALUES 
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
+
     SET @proc_step_name=' Update Provider attributes in TB_DATAMART and TB_HIV_DATAMART';
-    SET @proc_step_no = 5.6;
+    SET @proc_step_no = 5.8;
 
     IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
         INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
@@ -357,7 +354,7 @@ BEGIN
     END
 
     SET @proc_step_name=' Update Provider attributes in AGGREGATE_REPORT_DATAMART';
-    SET @proc_step_no = 5.7;
+    SET @proc_step_no = 5.9;
 
     IF EXISTS (SELECT 1 from dbo.AGGREGATE_REPORT_DATAMART dm with (nolock)
         INNER JOIN #PROVIDER_UPDATE_LIST map

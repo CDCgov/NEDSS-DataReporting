@@ -168,8 +168,9 @@ BEGIN
         where
             nrt.patient_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','))
         )
-        select 
-            PATIENT_KEY
+        select
+            PATIENT_UID,
+            PATIENT_KEY,
             PATIENT_MPR_UID,
             PATIENT_RECORD_STATUS,
             PATIENT_LOCAL_ID,
