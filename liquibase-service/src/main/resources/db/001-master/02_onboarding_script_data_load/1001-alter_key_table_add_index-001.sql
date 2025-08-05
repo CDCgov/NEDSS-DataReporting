@@ -1,3 +1,15 @@
+-- use rdb_modern;
+IF EXISTS(SELECT 1 FROM NBS_ODSE.DBO.NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
+BEGIN
+        USE [rdb_modern];
+        PRINT 'Switched to database [rdb_modern]'
+END
+ELSE
+BEGIN
+        USE [rdb];
+        PRINT 'Switched to database [rdb]';
+END
+
 --CNDE-2859: Evaluate performance and create index if needed.
 IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'idx_nrt_addl_risk_group_key_uid' AND object_id = OBJECT_ID('dbo.nrt_addl_risk_group_key'))
 BEGIN

@@ -10,67 +10,90 @@ A comprehensive collection of database objects required for implementation of re
 
 ### Onboarding Steps
 
-The onboarding process involves a combination of manual and automated steps. Follow the sequence below to prepare the environment:
+The onboarding process involves a combination of manual and automated steps. Required scripts are located under the `liquibase-service/src/main/resources/db` directory. 
 
-#### 1. Create Admin and Service Users (Manual Only)
-Run the scripts located in the following directories manually. This step creates an admin user and individual service users:
 
-- `001-master/01_onboarding_scripts_user_creation/`
 
-These scripts set up core roles and foundational database functions.
+---
+#### 1. Onboarding: Create Admin and Service Users (Manual Only)
+Run the three scripts located under the following directory manually. This creates the admin user and individual service users with necessary permissions to create required database objects.
 
+- [01_onboarding_scripts_user_creation](src/main/resources/db/001-master/01_onboarding_scripts_user_creation)
+
+---
 #### 2. Deploy Database Objects (Liquibase or Manual)
 
-For each database (`001-master`,`002-srte`, `003-odse`, `004-rdb`, `005-rdb_modern`), deploy the following object types:
+For each database ([001-master](src/main/resources/db/001-master),[002-srte](src/main/resources/db/002-srte), [003-odse](src/main/resources/db/003-odse), [004-rdb](src/main/resources/db/004-rdb), [005-rdb_modern](src/main/resources/db/005-rdb_modern)), deploy the following object types:
 
 - `tables/`
 - `views/`
 - `functions/`
 - `routines/`
-- `jobs/`
 - `remove/`
 
 These objects can be deployed via:
 
 - **Liquibase**: For automated rollout. Changelog are provided to execute scripts in required order.
-- **Manual Execution**: For environments without Liquibase. Scripts are provided to create and update necessary objects. 
+- **Manual Execution**: For environments without Liquibase. Scripts are provided to create and update necessary objects.
 
-Future enhancements will be delivered under this section. 
+Please note:
+- [01_onboarding_scripts_user_creation](src/main/resources/db/001-master/01_onboarding_scripts_user_creation) and [02_onboarding_script_data_load](src/main/resources/db/001-master/02_onboarding_script_data_load) under the `001-master` folder are one time scripts intended to be run manually.
+- The final script under `routines/999-<database_name>_database_object_permission_grants-001.sql` provides object level permissions and grants required for each service user. Please validate logs confirming successful execution of script. They can be validated using queries under [permissions_validation](src/main/resources/stlt/permissions_validation).
 
-#### 3. Load Data and Start CDC (Manual or Batch Script)
+Future enhancements will be delivered under this section.
 
-After all objects have been successfully deployed, run the following scripts to complete database setup.
+#### Option 1:  Liquibase Deployment
 
-- `001-master/02_onboarding_script_data_load/`
+Automated deployment using Liquibase ensures consistent and traceable changes to your database schema. Please reference the [NEDSS-Helm](https://github.com/CDCgov/NEDSS-Helm) repository for required charts. 
 
-This loads key-uid mapping onto key tables for RTR and activates **Change Data Capture** for required tables in NBS_ODSE and NBS_SRTE.
+- [Liquibase Deployment](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/liquibase)
+  - Reporting Database:
+      - RDB: If RDB is selected as the default reporting database, please ensure that scripts for [db.rdb_modern.changelog-16.1.yaml](changelog/db.rdb_modern.changelog-16.1.yaml) are run against the `RDB` database server.
+      - RDB_MODERN: If RDB_MODERN is selected as the reporting database, please run both scripts under [db.rdb.changelog-16.1.yaml](changelog/db.rdb.changelog-16.1.yaml) with the `RDB` server_name and [db.rdb_modern.changelog-16.1.yaml](changelog/db.rdb_modern.changelog-16.1.yaml) with `RDB_MODERN` server_name.
+
+      ```sql
+      --Last script executed should be 999-<database_name>_database_object_permission_grants-001.sql.
+      USE NBS_ODSE;
+      SELECT TOP 1 *
+      FROM NBS_ODSE.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      
+      USE NBS_SRTE;
+      SELECT TOP 1 *
+      FROM NBS_SRTE.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      
+      USE RDB;
+      SELECT TOP 1 *
+      FROM RDB.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      
+      USE RDB_MODERN;
+      SELECT TOP 1 *
+      FROM RDB_MODERN.DBO.DATABASECHANGELOG
+      ORDER BY DATEEXECUTED DESC;
+      ```
+#### Option 2: Manual Deployment
+
+Manual deployment allows for more granular control and is suitable for environments without Liquibase. Please review the documentation for information on order of script execution and optional `upgrade_db.bat` file to run all scripts. 
+
+- [Manual Deployment Documentation](src/main/resources/stlt/manual_deployment/readme.md)
+
+---
+#### 3. Onboarding: Load Data and Start CDC (Manual or Batch Script)
+
+After all objects have been successfully deployed, run the scripts under the following directory to complete database onboarding.
+
+- [02_onboarding_script_data_load](src/main/resources/db/001-master/02_onboarding_script_data_load)
+
+These scripts load metadata and key tables for RTR. Additionally, **Change Data Capture** for required tables in NBS_ODSE and NBS_SRTE is enabled.
 
 > This can be automated via a **batch script** with the `--load-data` flag for the master database schema.  
-> Note: Liquibase does **not** support this step directly.
+> Note: Liquibase does **not** support this step.
 
 ---
 
-### Script Execution
 
-Choose your preferred deployment method below:
-
----
-
-### Option 1:  Liquibase Deployment 
-
-Automated deployment using Liquibase ensures consistent and traceable changes to your database schema.
-
-📄 [Liquibase Deployment Documentation](liquibase-service/src/main/resources/db/readme.md)
-
----
-
-### Option 2: Manual Deployment
-
-Manual deployment allows for more granular control and is suitable for environments without Liquibase.
-
-📄 [Manual Deployment Documentation](liquibase-service/src/main/resources/stlt/manual_deployment/readme.md)
-
----
 
 ## Project Tree
 
@@ -96,7 +119,6 @@ liquibase-service/
 │           │   │   ├── tables/
 │           │   ├── 005-rdb_modern/
 │           │   │   ├── functions/
-│           │   │   ├── jobs/
 │           │   │   ├── remove/
 │           │   │   ├── routines/
 │           │   │   ├── tables/

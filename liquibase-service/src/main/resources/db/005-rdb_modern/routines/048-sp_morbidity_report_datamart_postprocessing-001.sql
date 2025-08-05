@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_morbidity_report_datamart_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_morbidity_report_datamart_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_morbidity_report_datamart_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_morbidity_report_datamart_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE dbo.sp_morbidity_report_datamart_postprocessing(
     @obs_uids NVARCHAR(MAX),
@@ -13,7 +13,7 @@ CREATE PROCEDURE dbo.sp_morbidity_report_datamart_postprocessing(
     @org_uids NVARCHAR(MAX),
     @inv_uids NVARCHAR(MAX),
     @debug bit = 'false')
-    as
+as
 
 BEGIN
 
@@ -21,37 +21,35 @@ BEGIN
     DECLARE @Proc_Step_no FLOAT = 0;
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
 
-  	DECLARE @Dataflow_Name VARCHAR(200) = 'MORBIDITY_REPORT_DATAMART Post-Processing Event';
+    DECLARE @Dataflow_Name VARCHAR(200) = 'MORBIDITY_REPORT_DATAMART Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_morbidity_report_datamart_postprocessing';
 
 
 
-BEGIN TRY
+    BEGIN TRY
 
-    SET @Proc_Step_no = 1;
-    SET @Proc_Step_Name = 'SP_Start';
-    DECLARE @batch_id bigint;
-    SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
+        SET @Proc_Step_no = 1;
+        SET @Proc_Step_Name = 'SP_Start';
+        DECLARE @batch_id bigint;
+        SET @batch_id = cast((format(GETDATE(), 'yyMMddHHmmssffff')) AS bigint);
 
-    if
-        @debug = 'true'
-    select @batch_id;
+        if @debug = 'true' select @batch_id;
 
 
-    SELECT @ROWCOUNT_NO = 0;
-    INSERT INTO [DBO].[JOB_FLOW_LOG]
-    (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [msg_description1])
-    VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT('OBS_ID List-' + @obs_uids, 500));
+        SELECT @ROWCOUNT_NO = 0;
+        INSERT INTO [DBO].[JOB_FLOW_LOG]
+        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [msg_description1])
+        VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO, LEFT('OBS_ID List-' + @obs_uids, 500));
 
-    /*
-        Create temp table containing necessary codes
-    */
-    BEGIN TRANSACTION;
+        /*
+            Create temp table containing necessary codes
+        */
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #SRTLOOKUP';
-  
-        SELECT  CODE, 
+
+        SELECT  CODE,
                 CODE_DESC_TXT,
                 CODE_SET_NM,
                 CODE_SHORT_DESC_TXT
@@ -68,55 +66,55 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_EVENT_INIT';
 
-        SELECT  
-            MR.MORB_RPT_KEY AS MORBIDITY_REPORT_KEY, 
+        SELECT
+            MR.MORB_RPT_KEY AS MORBIDITY_REPORT_KEY,
             MRE.PATIENT_KEY AS PERSON_KEY,
-            MR.MORB_RPT_LOCAL_ID AS MORBIDITY_REPORT_LOCAL_ID, 
-            MR.JURISDICTION_NM AS JURISDICTION_NAME, 
-            MR.MORB_RPT_TYPE, 
-            MR.MORB_RPT_DELIVERY_METHOD, 
-            MR.PH_RECEIVE_DT AS PH_RECEIVE_DT, 
-            MR.DIAGNOSIS_DT AS DIAGNOSIS_DATE, 
-            MR.HSPTL_ADMISSION_DT AS HOSPITAL_ADMIN_DATE, 
-            MR.NURSING_HOME_ASSOCIATE_IND, 
-            MR.HEALTHCARE_ORG_ASSOCIATE_IND, 
-            MR.SUSPECT_FOOD_WTRBORNE_ILLNESS, 
-            MR.MORB_RPT_OTHER_SPECIFY AS OTHER_EPI, 
-            MR.MORB_RPT_OID AS PROGRAM_JURISDICTION_OID, 
+            MR.MORB_RPT_LOCAL_ID AS MORBIDITY_REPORT_LOCAL_ID,
+            MR.JURISDICTION_NM AS JURISDICTION_NAME,
+            MR.MORB_RPT_TYPE,
+            MR.MORB_RPT_DELIVERY_METHOD,
+            MR.PH_RECEIVE_DT AS PH_RECEIVE_DT,
+            MR.DIAGNOSIS_DT AS DIAGNOSIS_DATE,
+            MR.HSPTL_ADMISSION_DT AS HOSPITAL_ADMIN_DATE,
+            MR.NURSING_HOME_ASSOCIATE_IND,
+            MR.HEALTHCARE_ORG_ASSOCIATE_IND,
+            MR.SUSPECT_FOOD_WTRBORNE_ILLNESS,
+            MR.MORB_RPT_OTHER_SPECIFY AS OTHER_EPI,
+            MR.MORB_RPT_OID AS PROGRAM_JURISDICTION_OID,
             MR.DIE_FROM_ILLNESS_IND,
             MR.HOSPITALIZED_IND,
             MR.PREGNANT_IND,
             MR.FOOD_HANDLER_IND,
             MR.DAYCARE_IND,
             MR.MORB_RPT_COMMENTS AS MORB_RPT_COMMENTS,
-            MR.ELECTRONIC_IND AS ELECTRONIC_IND_CD, 
+            MR.ELECTRONIC_IND AS ELECTRONIC_IND_CD,
             IIF(MR.ELECTRONIC_IND = 'E', 'Yes', 'No') AS EXTERNAL_IND,
-            MR.RECORD_STATUS_CD,   
-            MRE.MORB_RPT_DT_KEY, 
-            MRE.ILLNESS_ONSET_DT_KEY, 
-            MRE.HSPTL_DISCHARGE_DT_KEY, 
+            MR.RECORD_STATUS_CD,
+            MRE.MORB_RPT_DT_KEY,
+            MRE.ILLNESS_ONSET_DT_KEY,
+            MRE.HSPTL_DISCHARGE_DT_KEY,
             MRE.CONDITION_KEY,
-            pat.PATIENT_LOCAL_ID AS PATIENT_LOCAL_ID, 
-            pat.PATIENT_GENERAL_COMMENTS AS PATIENT_GENERAL_COMMENTS, 
-            pat.PATIENT_DOB AS PATIENT_DOB, 
-            pat.PATIENT_AGE_REPORTED AS AGE_REPORTED, 
-            pat.PATIENT_AGE_REPORTED_UNIT AS AGE_REPORTED_UNIT, 
+            pat.PATIENT_LOCAL_ID AS PATIENT_LOCAL_ID,
+            pat.PATIENT_GENERAL_COMMENTS AS PATIENT_GENERAL_COMMENTS,
+            pat.PATIENT_DOB AS PATIENT_DOB,
+            pat.PATIENT_AGE_REPORTED AS AGE_REPORTED,
+            pat.PATIENT_AGE_REPORTED_UNIT AS AGE_REPORTED_UNIT,
             pat.PATIENT_CURRENT_SEX AS PATIENT_CURRENT_SEX,
-            pat.PATIENT_DECEASED_INDICATOR AS PATIENT_DECEASED_INDICATOR, 
-            pat.PATIENT_DECEASED_DATE AS PATIENT_DECEASED_DATE, 
-            pat.PATIENT_MARITAL_STATUS AS PATIENT_MARITAL_STATUS, 
-            pat.PATIENT_SSN AS PATIENT_SSN, 
-            pat.PATIENT_ETHNICITY AS PATIENT_ETHNICITY, 
-            pat.PATIENT_FIRST_NAME AS PATIENT_FIRST_NAME, 
-            pat.PATIENT_MIDDLE_NAME AS PATIENT_MIDDLE_NAME, 
-            pat.PATIENT_LAST_NAME AS PATIENT_LAST_NAME, 
+            pat.PATIENT_DECEASED_INDICATOR AS PATIENT_DECEASED_INDICATOR,
+            pat.PATIENT_DECEASED_DATE AS PATIENT_DECEASED_DATE,
+            pat.PATIENT_MARITAL_STATUS AS PATIENT_MARITAL_STATUS,
+            pat.PATIENT_SSN AS PATIENT_SSN,
+            pat.PATIENT_ETHNICITY AS PATIENT_ETHNICITY,
+            pat.PATIENT_FIRST_NAME AS PATIENT_FIRST_NAME,
+            pat.PATIENT_MIDDLE_NAME AS PATIENT_MIDDLE_NAME,
+            pat.PATIENT_LAST_NAME AS PATIENT_LAST_NAME,
             pat.PATIENT_NAME_SUFFIX AS PATIENT_NAME_SUFFIX,
             pat.PATIENT_STREET_ADDRESS_1 AS PATIENT_STREET_ADDRESS_1,
             pat.PATIENT_STREET_ADDRESS_2 AS PATIENT_STREET_ADDRESS_2,
@@ -124,114 +122,114 @@ BEGIN TRY
             pat.PATIENT_STATE AS PATIENT_STATE,
             pat.PATIENT_ZIP AS PATIENT_ZIP,
             pat.PATIENT_COUNTY AS PATIENT_COUNTY,
-            pat.PATIENT_COUNTRY AS PATIENT_COUNTRY,    
+            pat.PATIENT_COUNTRY AS PATIENT_COUNTRY,
             pat.PATIENT_PHONE_HOME AS PATIENT_PHONE_NUMBER_HOME,
             pat.PATIENT_PHONE_EXT_HOME AS PATIENT_PHONE_EXT_HOME,
             pat.PATIENT_PHONE_WORK AS PATIENT_PHONE_NUMBER_WORK,
             pat.PATIENT_PHONE_EXT_WORK AS PATIENT_PHONE_EXT_WORK,
             pat.PATIENT_RACE_CALCULATED AS RACE_CALCULATED,
             pat.PATIENT_RACE_CALC_DETAILS AS RACE_CALCULATED_DETAILS,
-            prov.PROVIDER_LAST_NAME AS PROVIDER_LAST_NAME, 
-            prov.PROVIDER_FIRST_NAME AS PROVIDER_FIRST_NAME,  
-            prov.PROVIDER_STREET_ADDRESS_1 AS PROVIDER_STREET_ADDR_1, 
-            prov.PROVIDER_STREET_ADDRESS_2 AS PROVIDER_STREET_ADDR_2, 
-            prov.PROVIDER_CITY AS PROVIDER_CITY, 
-            prov.PROVIDER_STATE AS PROVIDER_STATE, 
+            prov.PROVIDER_LAST_NAME AS PROVIDER_LAST_NAME,
+            prov.PROVIDER_FIRST_NAME AS PROVIDER_FIRST_NAME,
+            prov.PROVIDER_STREET_ADDRESS_1 AS PROVIDER_STREET_ADDR_1,
+            prov.PROVIDER_STREET_ADDRESS_2 AS PROVIDER_STREET_ADDR_2,
+            prov.PROVIDER_CITY AS PROVIDER_CITY,
+            prov.PROVIDER_STATE AS PROVIDER_STATE,
             prov.PROVIDER_ZIP AS PROVIDER_ZIP,
             prov.PROVIDER_PHONE_WORK AS PROVIDER_PHONE,
             prov.PROVIDER_PHONE_EXT_WORK AS PROVIDER_PHONE_EXT,
-            rep.PROVIDER_LAST_NAME AS REPORTER_LAST_NAME, 
-            rep.PROVIDER_FIRST_NAME AS REPORTER_FIRST_NAME,  
-            rep.PROVIDER_STREET_ADDRESS_1 AS REPORTER_STREET_ADDR_1, 
-            rep.PROVIDER_STREET_ADDRESS_2 AS REPORTER_STREET_ADDR_2, 
-            rep.PROVIDER_CITY AS REPORTER_CITY, 
-            rep.PROVIDER_STATE AS REPORTER_STATE, 
+            rep.PROVIDER_LAST_NAME AS REPORTER_LAST_NAME,
+            rep.PROVIDER_FIRST_NAME AS REPORTER_FIRST_NAME,
+            rep.PROVIDER_STREET_ADDRESS_1 AS REPORTER_STREET_ADDR_1,
+            rep.PROVIDER_STREET_ADDRESS_2 AS REPORTER_STREET_ADDR_2,
+            rep.PROVIDER_CITY AS REPORTER_CITY,
+            rep.PROVIDER_STATE AS REPORTER_STATE,
             rep.PROVIDER_ZIP AS REPORTER_ZIP,
             rep.PROVIDER_PHONE_WORK AS REPORTER_PHONE,
             rep.PROVIDER_PHONE_EXT_WORK AS REPORTER_PHONE_EXT,
-            rep_fac.ORGANIZATION_UID AS REPORTING_FACILITY_UID, 
-            rep_fac.ORGANIZATION_NAME AS REPORT_FAC_NAME, 
-            rep_fac.ORGANIZATION_STREET_ADDRESS_1 AS REPORT_FAC_STREET_ADDR_1, 
-            NULLIF(rep_fac.ORGANIZATION_STREET_ADDRESS_2, '') AS REPORT_FAC_STREET_ADDR_2, 
-            rep_fac.ORGANIZATION_CITY AS REPORT_FAC_CITY, 
-            rep_fac.ORGANIZATION_STATE AS REPORT_FAC_STATE, 
+            rep_fac.ORGANIZATION_UID AS REPORTING_FACILITY_UID,
+            rep_fac.ORGANIZATION_NAME AS REPORT_FAC_NAME,
+            rep_fac.ORGANIZATION_STREET_ADDRESS_1 AS REPORT_FAC_STREET_ADDR_1,
+            NULLIF(rep_fac.ORGANIZATION_STREET_ADDRESS_2, '') AS REPORT_FAC_STREET_ADDR_2,
+            rep_fac.ORGANIZATION_CITY AS REPORT_FAC_CITY,
+            rep_fac.ORGANIZATION_STATE AS REPORT_FAC_STATE,
             rep_fac.ORGANIZATION_ZIP AS REPORT_FAC_ZIP,
             rep_fac.ORGANIZATION_PHONE_WORK AS REPORT_FAC_PHONE,
             NULLIF(rep_fac.ORGANIZATION_PHONE_EXT_WORK, '') AS REPORT_FAC_PHONE_EXT,
             EM.PROG_AREA_DESC_TXT AS PROGRAM_AREA_DESCRIPTION,
-            hsptl.ORGANIZATION_NAME AS HOSPITAL_FAC_NAME, 
-            hsptl.ORGANIZATION_STREET_ADDRESS_1 AS HOSPITAL_FAC_STREET_ADDR_1, 
-            NULLIF(hsptl.ORGANIZATION_STREET_ADDRESS_2, '') AS HOSPITAL_FAC_STREET_ADDR_2, 
-            hsptl.ORGANIZATION_CITY AS HOSPITAL_FAC_CITY, 
-            hsptl.ORGANIZATION_STATE AS HOSPITAL_FAC_STATE, 
+            hsptl.ORGANIZATION_NAME AS HOSPITAL_FAC_NAME,
+            hsptl.ORGANIZATION_STREET_ADDRESS_1 AS HOSPITAL_FAC_STREET_ADDR_1,
+            NULLIF(hsptl.ORGANIZATION_STREET_ADDRESS_2, '') AS HOSPITAL_FAC_STREET_ADDR_2,
+            hsptl.ORGANIZATION_CITY AS HOSPITAL_FAC_CITY,
+            hsptl.ORGANIZATION_STATE AS HOSPITAL_FAC_STATE,
             hsptl.ORGANIZATION_ZIP AS HOSPITAL_FAC_ZIP,
             hsptl.ORGANIZATION_PHONE_WORK AS HOSPITAL_FAC_PHONE,
-            NULLIF(hsptl.ORGANIZATION_PHONE_EXT_WORK, '') AS HOSPITAL_FAC_PHONE_EXT, 
+            NULLIF(hsptl.ORGANIZATION_PHONE_EXT_WORK, '') AS HOSPITAL_FAC_PHONE_EXT,
             EM.ADD_TIME AS MORB_REPORT_CREATE_DATE,
             EM.ADD_USER_ID,
-            EM.LAST_CHG_TIME AS MORB_REPORT_LAST_UPDATED_DATE, 
+            EM.LAST_CHG_TIME AS MORB_REPORT_LAST_UPDATED_DATE,
             EM.LAST_CHG_USER_ID,
             inv.INV_CASE_STATUS AS CASE_STATUS,
             IIF(COALESCE(inv.INVESTIGATION_KEY, 1) = 1, 'No', 'Yes') AS INVESTIGATION_CREATED_IND,
-            inv.INVESTIGATION_KEY,
-            CASE  
-            WHEN CHARINDEX(',', EM.add_user_name) > 0  
-                THEN TRIM(LEFT(EM.add_user_name, CHARINDEX(',', EM.add_user_name) - 1))  
-                ELSE EM.add_user_name  
-            END AS add_user_last_name,  
-            CASE  
-                WHEN CHARINDEX(',', EM.add_user_name) > 0  
-                THEN TRIM(RIGHT(EM.add_user_name, LEN(EM.add_user_name) - CHARINDEX(',', EM.add_user_name)))  
-                ELSE ''  
-            END AS add_user_first_name,
+            NULLIF( inv.INVESTIGATION_KEY, 1) AS  INVESTIGATION_KEY,
             CASE
-            WHEN CHARINDEX(',', EM.last_chg_user_name) > 0  
-                THEN TRIM(LEFT(EM.last_chg_user_name, CHARINDEX(',', EM.last_chg_user_name) - 1))
-                ELSE EM.last_chg_user_name  
-            END AS last_chg_user_last_name,  
-            CASE  
-                WHEN CHARINDEX(',', EM.last_chg_user_name) > 0  
-                THEN TRIM(RIGHT(EM.last_chg_user_name, LEN(EM.last_chg_user_name) - CHARINDEX(',', EM.last_chg_user_name)))  
-                ELSE ''  
-            END AS last_chg_user_first_name,
+                WHEN CHARINDEX(',', EM.add_user_name) > 0
+                    THEN TRIM(LEFT(EM.add_user_name, CHARINDEX(',', EM.add_user_name) - 1))
+                ELSE EM.add_user_name
+                END AS add_user_last_name,
+            CASE
+                WHEN CHARINDEX(',', EM.add_user_name) > 0
+                    THEN TRIM(RIGHT(EM.add_user_name, LEN(EM.add_user_name) - CHARINDEX(',', EM.add_user_name)))
+                ELSE ''
+                END AS add_user_first_name,
+            CASE
+                WHEN CHARINDEX(',', EM.last_chg_user_name) > 0
+                    THEN TRIM(LEFT(EM.last_chg_user_name, CHARINDEX(',', EM.last_chg_user_name) - 1))
+                ELSE EM.last_chg_user_name
+                END AS last_chg_user_last_name,
+            CASE
+                WHEN CHARINDEX(',', EM.last_chg_user_name) > 0
+                    THEN TRIM(RIGHT(EM.last_chg_user_name, LEN(EM.last_chg_user_name) - CHARINDEX(',', EM.last_chg_user_name)))
+                ELSE ''
+                END AS last_chg_user_first_name,
             IIF(MRD.MORBIDITY_REPORT_KEY IS NULL, 'I', 'U') AS DML_IND
         INTO #MORB_EVENT_INIT
         FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
-        LEFT JOIN dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
-            ON MR.MORB_RPT_KEY = MRE.MORB_RPT_KEY
-        LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART MRD WITH (NOLOCK)
-            ON MR.MORB_RPT_KEY = MRD.MORBIDITY_REPORT_KEY
-        LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK)
-            ON MRE.PATIENT_KEY = pat.PATIENT_KEY
-        LEFT JOIN dbo.D_PROVIDER prov WITH (NOLOCK)
-            ON MRE.PHYSICIAN_KEY = prov.PROVIDER_KEY
-        LEFT JOIN dbo.D_PROVIDER rep WITH (NOLOCK)
-            ON MRE.REPORTER_KEY = rep.PROVIDER_KEY
-        LEFT JOIN dbo.D_ORGANIZATION rep_fac WITH (NOLOCK)
-            ON MRE.MORB_RPT_SRC_ORG_KEY = rep_fac.ORGANIZATION_KEY
-        LEFT JOIN dbo.D_ORGANIZATION hsptl WITH (NOLOCK)
-            ON MRE.HSPTL_KEY = hsptl.ORGANIZATION_KEY
-        LEFT JOIN dbo.INVESTIGATION inv WITH (NOLOCK)
-            ON MRE.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
-        LEFT JOIN dbo.EVENT_METRIC EM WITH (NOLOCK)
-            ON MR.MORB_RPT_UID = EM.EVENT_UID
+                 LEFT JOIN dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+                           ON MR.MORB_RPT_KEY = MRE.MORB_RPT_KEY
+                 LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART MRD WITH (NOLOCK)
+                           ON MR.MORB_RPT_KEY = MRD.MORBIDITY_REPORT_KEY
+                 LEFT JOIN dbo.D_PATIENT pat WITH (NOLOCK)
+                           ON MRE.PATIENT_KEY = pat.PATIENT_KEY
+                 LEFT JOIN dbo.D_PROVIDER prov WITH (NOLOCK)
+                           ON MRE.PHYSICIAN_KEY = prov.PROVIDER_KEY
+                 LEFT JOIN dbo.D_PROVIDER rep WITH (NOLOCK)
+                           ON MRE.REPORTER_KEY = rep.PROVIDER_KEY
+                 LEFT JOIN dbo.D_ORGANIZATION rep_fac WITH (NOLOCK)
+                           ON MRE.MORB_RPT_SRC_ORG_KEY = rep_fac.ORGANIZATION_KEY
+                 LEFT JOIN dbo.D_ORGANIZATION hsptl WITH (NOLOCK)
+                           ON MRE.HSPTL_KEY = hsptl.ORGANIZATION_KEY
+                 LEFT JOIN dbo.INVESTIGATION inv WITH (NOLOCK)
+                           ON MRE.INVESTIGATION_KEY = inv.INVESTIGATION_KEY
+                 LEFT JOIN dbo.EVENT_METRIC EM WITH (NOLOCK)
+                           ON MR.MORB_RPT_UID = EM.EVENT_UID
         WHERE
-           (inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@inv_uids, ','))
-            OR
-            pat.PATIENT_UID IN (SELECT value FROM STRING_SPLIT(@pat_uids, ','))
-            OR
-            prov.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
-            OR
-            rep.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
-            OR
-            rep_fac.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
-            OR
-            hsptl.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
-            OR
-            CAST(mr.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
-            )
-            AND MR.MORB_RPT_KEY <> 1 
-            AND MR.RECORD_STATUS_CD = 'ACTIVE';
+            (inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@inv_uids, ','))
+                OR
+             pat.PATIENT_UID IN (SELECT value FROM STRING_SPLIT(@pat_uids, ','))
+                OR
+             prov.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+                OR
+             rep.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+                OR
+             rep_fac.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
+                OR
+             hsptl.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
+                OR
+             CAST(mr.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
+                )
+          AND MR.MORB_RPT_KEY <> 1
+          AND MR.RECORD_STATUS_CD = 'ACTIVE';
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_EVENT_INIT;
@@ -242,21 +240,21 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #INACTIVE_MORB';
 
-        SELECT  
+        SELECT
             MR.MORB_RPT_KEY AS MORBIDITY_REPORT_KEY
         INTO #INACTIVE_MORB
         FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
-        WHERE 
-        CAST(MR.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
-        AND MR.RECORD_STATUS_CD = 'INACTIVE';
+        WHERE
+            CAST(MR.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
+          AND MR.RECORD_STATUS_CD = 'INACTIVE';
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #INACTIVE_MORB;
@@ -267,19 +265,19 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_TO_LAB_KEYS';
 
         SELECT LT.LAB_RPT_LOCAL_ID, LT.CLINICAL_INFORMATION AS SPECIMEN_SOURCE, M.MORBIDITY_REPORT_KEY, LT.LAB_TEST_TYPE,
-        LT.lab_test_key
+               LT.lab_test_key
         INTO #MORB_TO_LAB_KEYS
-		FROM #MORB_EVENT_INIT  M WITH (NOLOCK) INNER JOIN
-		dbo.LAB_TEST_RESULT LTR WITH (NOLOCK) ON M.MORBIDITY_REPORT_KEY = LTR.MORB_RPT_KEY INNER JOIN
-		dbo.LAB_TEST LT WITH (NOLOCK) ON LTR.LAB_TEST_KEY = LT.LAB_TEST_KEY
+        FROM #MORB_EVENT_INIT  M WITH (NOLOCK) INNER JOIN
+             dbo.LAB_TEST_RESULT LTR WITH (NOLOCK) ON M.MORBIDITY_REPORT_KEY = LTR.MORB_RPT_KEY INNER JOIN
+             dbo.LAB_TEST LT WITH (NOLOCK) ON LTR.LAB_TEST_KEY = LT.LAB_TEST_KEY
         WHERE M.MORBIDITY_REPORT_KEY != 1 AND M.RECORD_STATUS_CD = 'ACTIVE';
 
         if @debug = 'true'
@@ -291,46 +289,46 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    /*
-        For treatments and lab results, only three are necessary for calculations,
-        so a row number will be assigned and only the first three rows will be joined
-        back onto the original table to flatten the data.
-    */
-    BEGIN TRANSACTION;
+        /*
+            For treatments and lab results, only three are necessary for calculations,
+            so a row number will be assigned and only the first three rows will be joined
+            back onto the original table to flatten the data.
+        */
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_LAB_RESULTS';
 
-        SELECT 
+        SELECT
             m.MORBIDITY_REPORT_KEY,
             m.SPECIMEN_SOURCE,
-            LT.LAB_RPT_LOCAL_ID, 
+            LT.LAB_RPT_LOCAL_ID,
             LT.SPECIMEN_COLLECTION_DT AS SPECIMEN_COLLECTION_DATE_,
             LT.LAB_TEST_CD_DESC AS RESULTED_TEST_NAME_,
             LT.LAB_TEST_DT AS LAB_REPORT_DATE_,
             LRV.TEST_RESULT_VAL_CD_DESC AS RESULTED_TEST_RESULT_,
-            LRV.NUMERIC_RESULT, 
-            LRV.RESULT_UNITS, 
+            LRV.NUMERIC_RESULT,
+            LRV.RESULT_UNITS,
             NULLIF(CONCAT(TRIM(LRV.NUMERIC_RESULT), ' ', TRIM(LRV.RESULT_UNITS)), '') AS RESULTED_TEST_NUMERIC_CONCAT_,
-            LRV.LAB_RESULT_TXT_VAL AS RESULTED_TEST_TEXT_RESULT_, 
+            LRV.LAB_RESULT_TXT_VAL AS RESULTED_TEST_TEXT_RESULT_,
             LRC.LAB_RESULT_COMMENTS AS LAB_RESULT_COMMENTS_,
             ROW_NUMBER() OVER (PARTITION BY m.MORBIDITY_REPORT_KEY ORDER BY lt.LAB_RPT_LOCAL_ID) AS row_num
         INTO #MORB_LAB_RESULTS
-        FROM 
+        FROM
             dbo.LAB_TEST LT WITH (NOLOCK)
-        INNER JOIN 
+                INNER JOIN
             dbo.LAB_TEST_RESULT LTR WITH (NOLOCK)
-            ON LT.LAB_TEST_KEY = LTR.LAB_TEST_KEY 
-        INNER JOIN 
+            ON LT.LAB_TEST_KEY = LTR.LAB_TEST_KEY
+                INNER JOIN
             dbo.LAB_RESULT_VAL LRV WITH (NOLOCK)
-            ON LTR.TEST_RESULT_GRP_KEY = LRV.TEST_RESULT_GRP_KEY 
-        INNER JOIN 
+            ON LTR.TEST_RESULT_GRP_KEY = LRV.TEST_RESULT_GRP_KEY
+                INNER JOIN
             dbo.LAB_RESULT_COMMENT LRC WITH (NOLOCK)
             ON LTR.RESULT_COMMENT_GRP_KEY = LRC.RESULT_COMMENT_GRP_KEY
-        INNER JOIN #MORB_TO_LAB_KEYS m
-        on m.LAB_RPT_LOCAL_ID = lt.LAB_RPT_LOCAL_ID
+                INNER JOIN #MORB_TO_LAB_KEYS m
+                           on m.LAB_RPT_LOCAL_ID = lt.LAB_RPT_LOCAL_ID
         WHERE LT.LAB_TEST_TYPE = 'Result';
 
         if @debug = 'true'
@@ -342,51 +340,51 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_LAB_FLATTENED';
 
-        SELECT 
+        SELECT
             morb.MORBIDITY_REPORT_KEY,
-            ml1.SPECIMEN_COLLECTION_DATE_ AS SPECIMEN_COLLECTION_DATE_1,  
-            ml1.RESULTED_TEST_NAME_ AS RESULTED_TEST_NAME_1,  
-            ml1.LAB_REPORT_DATE_ AS LAB_REPORT_DATE_1,  
-            ml1.RESULTED_TEST_RESULT_ AS RESULTED_TEST_RESULT_1,  
-            ml1.RESULTED_TEST_TEXT_RESULT_ AS RESULTED_TEST_TEXT_RESULT_1,  
-            ml1.LAB_RESULT_COMMENTS_ AS LAB_RESULT_COMMENTS_1,  
-            ml1.RESULTED_TEST_NUMERIC_CONCAT_ AS RESULTED_TEST_NUMERIC_CONCAT_1,  
-            ml1.SPECIMEN_SOURCE AS SPECIMEN_SOURCE_1,  
-            ml2.SPECIMEN_COLLECTION_DATE_ AS SPECIMEN_COLLECTION_DATE_2,  
-            ml2.RESULTED_TEST_NAME_ AS RESULTED_TEST_NAME_2,  
-            ml2.LAB_REPORT_DATE_ AS LAB_REPORT_DATE_2,  
-            ml2.RESULTED_TEST_RESULT_ AS RESULTED_TEST_RESULT_2,  
-            ml2.RESULTED_TEST_TEXT_RESULT_ AS RESULTED_TEST_TEXT_RESULT_2,  
-            ml2.LAB_RESULT_COMMENTS_ AS LAB_RESULT_COMMENTS_2,  
-            ml2.RESULTED_TEST_NUMERIC_CONCAT_ AS RESULTED_TEST_NUMERIC_CONCAT_2,  
-            ml2.SPECIMEN_SOURCE AS SPECIMEN_SOURCE_2,  
-            ml3.SPECIMEN_COLLECTION_DATE_ AS SPECIMEN_COLLECTION_DATE_3,  
-            ml3.RESULTED_TEST_NAME_ AS RESULTED_TEST_NAME_3,  
-            ml3.LAB_REPORT_DATE_ AS LAB_REPORT_DATE_3,  
-            ml3.RESULTED_TEST_RESULT_ AS RESULTED_TEST_RESULT_3,  
-            ml3.RESULTED_TEST_TEXT_RESULT_ AS RESULTED_TEST_TEXT_RESULT_3,  
-            ml3.LAB_RESULT_COMMENTS_ AS LAB_RESULT_COMMENTS_3,  
-            ml3.RESULTED_TEST_NUMERIC_CONCAT_ AS RESULTED_TEST_NUMERIC_CONCAT_3,  
+            ml1.SPECIMEN_COLLECTION_DATE_ AS SPECIMEN_COLLECTION_DATE_1,
+            ml1.RESULTED_TEST_NAME_ AS RESULTED_TEST_NAME_1,
+            ml1.LAB_REPORT_DATE_ AS LAB_REPORT_DATE_1,
+            ml1.RESULTED_TEST_RESULT_ AS RESULTED_TEST_RESULT_1,
+            ml1.RESULTED_TEST_TEXT_RESULT_ AS RESULTED_TEST_TEXT_RESULT_1,
+            ml1.LAB_RESULT_COMMENTS_ AS LAB_RESULT_COMMENTS_1,
+            ml1.RESULTED_TEST_NUMERIC_CONCAT_ AS RESULTED_TEST_NUMERIC_CONCAT_1,
+            ml1.SPECIMEN_SOURCE AS SPECIMEN_SOURCE_1,
+            ml2.SPECIMEN_COLLECTION_DATE_ AS SPECIMEN_COLLECTION_DATE_2,
+            ml2.RESULTED_TEST_NAME_ AS RESULTED_TEST_NAME_2,
+            ml2.LAB_REPORT_DATE_ AS LAB_REPORT_DATE_2,
+            ml2.RESULTED_TEST_RESULT_ AS RESULTED_TEST_RESULT_2,
+            ml2.RESULTED_TEST_TEXT_RESULT_ AS RESULTED_TEST_TEXT_RESULT_2,
+            ml2.LAB_RESULT_COMMENTS_ AS LAB_RESULT_COMMENTS_2,
+            ml2.RESULTED_TEST_NUMERIC_CONCAT_ AS RESULTED_TEST_NUMERIC_CONCAT_2,
+            ml2.SPECIMEN_SOURCE AS SPECIMEN_SOURCE_2,
+            ml3.SPECIMEN_COLLECTION_DATE_ AS SPECIMEN_COLLECTION_DATE_3,
+            ml3.RESULTED_TEST_NAME_ AS RESULTED_TEST_NAME_3,
+            ml3.LAB_REPORT_DATE_ AS LAB_REPORT_DATE_3,
+            ml3.RESULTED_TEST_RESULT_ AS RESULTED_TEST_RESULT_3,
+            ml3.RESULTED_TEST_TEXT_RESULT_ AS RESULTED_TEST_TEXT_RESULT_3,
+            ml3.LAB_RESULT_COMMENTS_ AS LAB_RESULT_COMMENTS_3,
+            ml3.RESULTED_TEST_NUMERIC_CONCAT_ AS RESULTED_TEST_NUMERIC_CONCAT_3,
             ml3.SPECIMEN_SOURCE AS SPECIMEN_SOURCE_3,
             IIF(morb.max_row > 3, 'Yes', 'No') AS LAB_GT3_CREATED_IND
         INTO #MORB_LAB_FLATTENED
-        FROM 
+        FROM
             (SELECT MORBIDITY_REPORT_KEY, MAX(row_num) as max_row
              FROM #MORB_LAB_RESULTS
              GROUP BY MORBIDITY_REPORT_KEY) as morb
-        LEFT JOIN #MORB_LAB_RESULTS ml1
-            ON morb.MORBIDITY_REPORT_KEY = ml1.MORBIDITY_REPORT_KEY AND ml1.row_num = 1
-        LEFT JOIN #MORB_LAB_RESULTS ml2
-            ON morb.MORBIDITY_REPORT_KEY = ml2.MORBIDITY_REPORT_KEY AND ml2.row_num = 2
-        LEFT JOIN #MORB_LAB_RESULTS ml3
-            ON morb.MORBIDITY_REPORT_KEY = ml3.MORBIDITY_REPORT_KEY AND ml3.row_num = 3;
+                LEFT JOIN #MORB_LAB_RESULTS ml1
+                          ON morb.MORBIDITY_REPORT_KEY = ml1.MORBIDITY_REPORT_KEY AND ml1.row_num = 1
+                LEFT JOIN #MORB_LAB_RESULTS ml2
+                          ON morb.MORBIDITY_REPORT_KEY = ml2.MORBIDITY_REPORT_KEY AND ml2.row_num = 2
+                LEFT JOIN #MORB_LAB_RESULTS ml3
+                          ON morb.MORBIDITY_REPORT_KEY = ml3.MORBIDITY_REPORT_KEY AND ml3.row_num = 3;
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_LAB_FLATTENED;
@@ -397,26 +395,26 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_TREATMENTS';
 
-        SELECT 
-        M.MORBIDITY_REPORT_KEY, 
-		RD.DATE_MM_DD_YYYY AS TREATMENT_DATE_,
-		T.TREATMENT_NM AS TREATMENT_NAME_, 
-		T.TREATMENT_COMMENTS AS TREATMENT_COMMENTS_, 
-		T.CUSTOM_TREATMENT AS TREATMENT_CUSTOM_NAME_,
-        ROW_NUMBER() OVER (PARTITION BY m.morbidity_report_key ORDER BY T.TREATMENT_KEY) AS row_num
+        SELECT
+            M.MORBIDITY_REPORT_KEY,
+            RD.DATE_MM_DD_YYYY AS TREATMENT_DATE_,
+            T.TREATMENT_NM AS TREATMENT_NAME_,
+            T.TREATMENT_COMMENTS AS TREATMENT_COMMENTS_,
+            T.CUSTOM_TREATMENT AS TREATMENT_CUSTOM_NAME_,
+            ROW_NUMBER() OVER (PARTITION BY m.morbidity_report_key ORDER BY T.TREATMENT_KEY) AS row_num
         INTO #MORB_TREATMENTS
-		FROM dbo.TREATMENT_EVENT TE WITH (NOLOCK)
-        INNER JOIN #MORB_EVENT_INIT M ON TE.MORB_RPT_KEY = M.MORBIDITY_REPORT_KEY 
-		INNER JOIN dbo.TREATMENT T WITH (NOLOCK) ON TE.TREATMENT_KEY = T.TREATMENT_KEY 
-		INNER JOIN dbo.RDB_DATE RD WITH (NOLOCK) ON TE.TREATMENT_DT_KEY = RD.DATE_KEY;
+        FROM dbo.TREATMENT_EVENT TE WITH (NOLOCK)
+                 INNER JOIN #MORB_EVENT_INIT M ON TE.MORB_RPT_KEY = M.MORBIDITY_REPORT_KEY
+                 INNER JOIN dbo.TREATMENT T WITH (NOLOCK) ON TE.TREATMENT_KEY = T.TREATMENT_KEY
+                 INNER JOIN dbo.RDB_DATE RD WITH (NOLOCK) ON TE.TREATMENT_DT_KEY = RD.DATE_KEY;
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_TREATMENTS;
@@ -427,39 +425,39 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_TREATMENTS_FLATTENED';
 
-        SELECT 
+        SELECT
             morb.MORBIDITY_REPORT_KEY,
-            t1.TREATMENT_DATE_ AS TREATMENT_DATE_1,  
-            t1.TREATMENT_NAME_ AS TREATMENT_NAME_1,  
-            t1.TREATMENT_COMMENTS_ AS TREATMENT_COMMENTS_1,  
-            t1.TREATMENT_CUSTOM_NAME_ AS TREATMENT_CUSTOM_NAME_1,  
-            t2.TREATMENT_DATE_ AS TREATMENT_DATE_2,  
-            t2.TREATMENT_NAME_ AS TREATMENT_NAME_2,  
-            t2.TREATMENT_COMMENTS_ AS TREATMENT_COMMENTS_2,  
-            t2.TREATMENT_CUSTOM_NAME_ AS TREATMENT_CUSTOM_NAME_2,  
-            t3.TREATMENT_DATE_ AS TREATMENT_DATE_3,  
-            t3.TREATMENT_NAME_ AS TREATMENT_NAME_3,  
-            t3.TREATMENT_COMMENTS_ AS TREATMENT_COMMENTS_3,  
+            t1.TREATMENT_DATE_ AS TREATMENT_DATE_1,
+            t1.TREATMENT_NAME_ AS TREATMENT_NAME_1,
+            t1.TREATMENT_COMMENTS_ AS TREATMENT_COMMENTS_1,
+            t1.TREATMENT_CUSTOM_NAME_ AS TREATMENT_CUSTOM_NAME_1,
+            t2.TREATMENT_DATE_ AS TREATMENT_DATE_2,
+            t2.TREATMENT_NAME_ AS TREATMENT_NAME_2,
+            t2.TREATMENT_COMMENTS_ AS TREATMENT_COMMENTS_2,
+            t2.TREATMENT_CUSTOM_NAME_ AS TREATMENT_CUSTOM_NAME_2,
+            t3.TREATMENT_DATE_ AS TREATMENT_DATE_3,
+            t3.TREATMENT_NAME_ AS TREATMENT_NAME_3,
+            t3.TREATMENT_COMMENTS_ AS TREATMENT_COMMENTS_3,
             t3.TREATMENT_CUSTOM_NAME_ AS TREATMENT_CUSTOM_NAME_3,
             IIF(morb.max_row > 3, 'Yes', 'No') AS TREATMENT_GT3_CREATED_IND
         INTO #MORB_TREATMENTS_FLATTENED
-        FROM 
+        FROM
             (SELECT MORBIDITY_REPORT_KEY, MAX(row_num) as max_row
              FROM #MORB_TREATMENTS
              GROUP BY MORBIDITY_REPORT_KEY) as morb
-        LEFT JOIN #MORB_TREATMENTS t1
-            ON morb.MORBIDITY_REPORT_KEY = t1.MORBIDITY_REPORT_KEY AND t1.row_num = 1
-        LEFT JOIN #MORB_TREATMENTS t2
-            ON morb.MORBIDITY_REPORT_KEY = t2.MORBIDITY_REPORT_KEY AND t2.row_num = 2
-        LEFT JOIN #MORB_TREATMENTS t3
-            ON morb.MORBIDITY_REPORT_KEY = t3.MORBIDITY_REPORT_KEY AND t3.row_num = 3;
+                LEFT JOIN #MORB_TREATMENTS t1
+                          ON morb.MORBIDITY_REPORT_KEY = t1.MORBIDITY_REPORT_KEY AND t1.row_num = 1
+                LEFT JOIN #MORB_TREATMENTS t2
+                          ON morb.MORBIDITY_REPORT_KEY = t2.MORBIDITY_REPORT_KEY AND t2.row_num = 2
+                LEFT JOIN #MORB_TREATMENTS t3
+                          ON morb.MORBIDITY_REPORT_KEY = t3.MORBIDITY_REPORT_KEY AND t3.row_num = 3;
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_TREATMENTS_FLATTENED;
@@ -471,15 +469,15 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = ' GENERATING #MORB_EVENT_INIT';
+        SET @PROC_STEP_NAME = ' GENERATING #MORB_EVENT_FINAL';
 
-        SELECT  
+        SELECT
             src.MORBIDITY_REPORT_KEY,
             src.MORBIDITY_REPORT_LOCAL_ID,
             src.PATIENT_LOCAL_ID,
@@ -487,6 +485,7 @@ BEGIN TRY
             src.PATIENT_FIRST_NAME,
             src.PATIENT_MIDDLE_NAME,
             src.PATIENT_LAST_NAME,
+            src.PATIENT_NAME_SUFFIX,
             src.PATIENT_STREET_ADDRESS_1,
             src.PATIENT_STREET_ADDRESS_2,
             src.PATIENT_CITY,
@@ -560,42 +559,42 @@ BEGIN TRY
             src.MORB_REPORT_LAST_UPDATED_DATE,
             CONCAT(src.last_chg_user_first_name, ' ', src.last_chg_user_last_name) AS MORB_REPORT_LAST_UPDATED_BY,
             src.EXTERNAL_IND,
-            t.TREATMENT_DATE_1,  
-            t.TREATMENT_NAME_1,  
-            t.TREATMENT_COMMENTS_1,  
-            t.TREATMENT_CUSTOM_NAME_1,  
-            t.TREATMENT_DATE_2,  
-            t.TREATMENT_NAME_2,  
-            t.TREATMENT_COMMENTS_2,  
-            t.TREATMENT_CUSTOM_NAME_2,  
-            t.TREATMENT_DATE_3,  
-            t.TREATMENT_NAME_3,  
-            t.TREATMENT_COMMENTS_3,  
+            t.TREATMENT_DATE_1,
+            t.TREATMENT_NAME_1,
+            t.TREATMENT_COMMENTS_1,
+            t.TREATMENT_CUSTOM_NAME_1,
+            t.TREATMENT_DATE_2,
+            t.TREATMENT_NAME_2,
+            t.TREATMENT_COMMENTS_2,
+            t.TREATMENT_CUSTOM_NAME_2,
+            t.TREATMENT_DATE_3,
+            t.TREATMENT_NAME_3,
+            t.TREATMENT_COMMENTS_3,
             t.TREATMENT_CUSTOM_NAME_3,
             COALESCE(t.TREATMENT_GT3_CREATED_IND, 'No') AS TREATMENT_GT3_CREATED_IND,
-            ml.SPECIMEN_COLLECTION_DATE_1,  
-            ml.RESULTED_TEST_NAME_1,  
-            ml.LAB_REPORT_DATE_1,  
-            ml.RESULTED_TEST_RESULT_1,  
-            ml.RESULTED_TEST_TEXT_RESULT_1,  
-            ml.LAB_RESULT_COMMENTS_1,  
-            ml.RESULTED_TEST_NUMERIC_CONCAT_1,  
-            ml.SPECIMEN_SOURCE_1,  
-            ml.SPECIMEN_COLLECTION_DATE_2,  
-            ml.RESULTED_TEST_NAME_2,  
-            ml.LAB_REPORT_DATE_2,  
-            ml.RESULTED_TEST_RESULT_2,  
-            ml.RESULTED_TEST_TEXT_RESULT_2,  
-            ml.LAB_RESULT_COMMENTS_2,  
-            ml.RESULTED_TEST_NUMERIC_CONCAT_2,  
-            ml.SPECIMEN_SOURCE_2,  
-            ml.SPECIMEN_COLLECTION_DATE_3,  
-            ml.RESULTED_TEST_NAME_3,  
-            ml.LAB_REPORT_DATE_3,  
-            ml.RESULTED_TEST_RESULT_3,  
-            ml.RESULTED_TEST_TEXT_RESULT_3,  
-            ml.LAB_RESULT_COMMENTS_3,  
-            ml.RESULTED_TEST_NUMERIC_CONCAT_3,  
+            ml.SPECIMEN_COLLECTION_DATE_1,
+            ml.RESULTED_TEST_NAME_1,
+            ml.LAB_REPORT_DATE_1,
+            ml.RESULTED_TEST_RESULT_1,
+            ml.RESULTED_TEST_TEXT_RESULT_1,
+            ml.LAB_RESULT_COMMENTS_1,
+            ml.RESULTED_TEST_NUMERIC_CONCAT_1,
+            ml.SPECIMEN_SOURCE_1,
+            ml.SPECIMEN_COLLECTION_DATE_2,
+            ml.RESULTED_TEST_NAME_2,
+            ml.LAB_REPORT_DATE_2,
+            ml.RESULTED_TEST_RESULT_2,
+            ml.RESULTED_TEST_TEXT_RESULT_2,
+            ml.LAB_RESULT_COMMENTS_2,
+            ml.RESULTED_TEST_NUMERIC_CONCAT_2,
+            ml.SPECIMEN_SOURCE_2,
+            ml.SPECIMEN_COLLECTION_DATE_3,
+            ml.RESULTED_TEST_NAME_3,
+            ml.LAB_REPORT_DATE_3,
+            ml.RESULTED_TEST_RESULT_3,
+            ml.RESULTED_TEST_TEXT_RESULT_3,
+            ml.LAB_RESULT_COMMENTS_3,
+            ml.RESULTED_TEST_NUMERIC_CONCAT_3,
             ml.SPECIMEN_SOURCE_3,
             COALESCE(ml.LAB_GT3_CREATED_IND, 'No') AS LAB_GT3_CREATED_IND,
             cvg1.CODE_DESC_TXT AS MORBIDITY_REPORT_TYPE,
@@ -608,7 +607,6 @@ BEGIN TRY
             cvg8.CODE_DESC_TXT AS NURSING_HOME,
             cvg9.CODE_DESC_TXT AS HEALTHCARE_ORGANIZATION,
             cvg10.CODE_DESC_TXT AS FOOD_WATERBORNE_ILLNESS,
-            cvg11.CODE_SHORT_DESC_TXT AS PATIENT_NAME_SUFFIX,
             con.condition_desc AS CONDITION_NAME,
             d1.DATE_MM_DD_YYYY AS MORBIDITY_REPORT_DATE,
             d2.DATE_MM_DD_YYYY AS ILLNESS_ONSET_DATE,
@@ -616,40 +614,38 @@ BEGIN TRY
             DML_IND
         INTO #MORB_EVENT_FINAL
         FROM  #MORB_EVENT_INIT src
-        LEFT JOIN #MORB_LAB_FLATTENED ml
-            ON src.MORBIDITY_REPORT_KEY = ml.MORBIDITY_REPORT_KEY
-        LEFT JOIN #MORB_TREATMENTS_FLATTENED t
-            ON src.MORBIDITY_REPORT_KEY = t.MORBIDITY_REPORT_KEY
-               LEFT JOIN #SRTLOOKUP cvg1 
-            ON src.MORB_RPT_TYPE = cvg1.CODE AND cvg1.CODE_SET_NM = 'MORB_RPT_TYPE'
-        LEFT JOIN #SRTLOOKUP cvg2 
-            ON src.MORB_RPT_DELIVERY_METHOD = cvg2.CODE AND cvg2.CODE_SET_NM = 'MRB_RPT_METH'
-        LEFT JOIN #SRTLOOKUP cvg3 
-            ON src.DIE_FROM_ILLNESS_IND = cvg3.CODE AND cvg3.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg4 
-            ON src.HOSPITALIZED_IND = cvg4.CODE AND cvg4.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg5 
-            ON src.PREGNANT_IND = cvg5.CODE AND cvg5.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg6 
-            ON src.FOOD_HANDLER_IND = cvg6.CODE AND cvg6.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg7 
-            ON src.DAYCARE_IND = cvg7.CODE AND cvg7.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg8 
-            ON src.NURSING_HOME_ASSOCIATE_IND = cvg8.CODE AND cvg8.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg9 
-            ON src.HEALTHCARE_ORG_ASSOCIATE_IND = cvg9.CODE AND cvg9.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg10 
-            ON src.SUSPECT_FOOD_WTRBORNE_ILLNESS = cvg10.CODE AND cvg10.CODE_SET_NM = 'YNU'
-        LEFT JOIN #SRTLOOKUP cvg11
-            ON src.PATIENT_NAME_SUFFIX = cvg11.CODE AND cvg11.CODE_SET_NM = 'P_NM_SFX'
-        LEFT JOIN dbo.condition con WITH (NOLOCK)
-            ON con.condition_key = src.CONDITION_KEY
-        LEFT JOIN dbo.RDB_DATE d1 WITH (NOLOCK)
-            ON src.MORB_RPT_DT_KEY = d1.DATE_KEY
-        LEFT JOIN dbo.RDB_DATE d2 WITH (NOLOCK)
-            ON src.ILLNESS_ONSET_DT_KEY = d2.DATE_KEY
-        LEFT JOIN dbo.RDB_DATE d3 WITH (NOLOCK)
-            ON src.HSPTL_DISCHARGE_DT_KEY = d3.DATE_KEY;
+                  LEFT JOIN #MORB_LAB_FLATTENED ml
+                            ON src.MORBIDITY_REPORT_KEY = ml.MORBIDITY_REPORT_KEY
+                  LEFT JOIN #MORB_TREATMENTS_FLATTENED t
+                            ON src.MORBIDITY_REPORT_KEY = t.MORBIDITY_REPORT_KEY
+                  LEFT JOIN #SRTLOOKUP cvg1
+                            ON src.MORB_RPT_TYPE = cvg1.CODE AND cvg1.CODE_SET_NM = 'MORB_RPT_TYPE'
+                  LEFT JOIN #SRTLOOKUP cvg2
+                            ON src.MORB_RPT_DELIVERY_METHOD = cvg2.CODE AND cvg2.CODE_SET_NM = 'MRB_RPT_METH'
+                  LEFT JOIN #SRTLOOKUP cvg3
+                            ON src.DIE_FROM_ILLNESS_IND = cvg3.CODE AND cvg3.CODE_SET_NM = 'YNU'
+                  LEFT JOIN #SRTLOOKUP cvg4
+                            ON src.HOSPITALIZED_IND = cvg4.CODE AND cvg4.CODE_SET_NM = 'YNU'
+                  LEFT JOIN #SRTLOOKUP cvg5
+                            ON src.PREGNANT_IND = cvg5.CODE AND cvg5.CODE_SET_NM = 'YNU'
+                  LEFT JOIN #SRTLOOKUP cvg6
+                            ON src.FOOD_HANDLER_IND = cvg6.CODE AND cvg6.CODE_SET_NM = 'YNU'
+                  LEFT JOIN #SRTLOOKUP cvg7
+                            ON src.DAYCARE_IND = cvg7.CODE AND cvg7.CODE_SET_NM = 'YNU'
+                  LEFT JOIN #SRTLOOKUP cvg8
+                            ON src.NURSING_HOME_ASSOCIATE_IND = cvg8.CODE AND cvg8.CODE_SET_NM = 'YNU'
+                  LEFT JOIN #SRTLOOKUP cvg9
+                            ON src.HEALTHCARE_ORG_ASSOCIATE_IND = cvg9.CODE AND cvg9.CODE_SET_NM = 'YNU'
+                  LEFT JOIN #SRTLOOKUP cvg10
+                            ON src.SUSPECT_FOOD_WTRBORNE_ILLNESS = cvg10.CODE AND cvg10.CODE_SET_NM = 'YNU'
+                  LEFT JOIN dbo.condition con WITH (NOLOCK)
+                            ON con.condition_key = src.CONDITION_KEY
+                  LEFT JOIN dbo.RDB_DATE d1 WITH (NOLOCK)
+                            ON src.MORB_RPT_DT_KEY = d1.DATE_KEY
+                  LEFT JOIN dbo.RDB_DATE d2 WITH (NOLOCK)
+                            ON src.ILLNESS_ONSET_DT_KEY = d2.DATE_KEY
+                  LEFT JOIN dbo.RDB_DATE d3 WITH (NOLOCK)
+                            ON src.HSPTL_DISCHARGE_DT_KEY = d3.DATE_KEY;
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_EVENT_FINAL;
@@ -660,53 +656,53 @@ BEGIN TRY
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'DELETE INACTIVE RECORDS FROM dbo.MORBIDITY_REPORT_DATAMART';
-  
+
         DELETE FROM dbo.MORBIDITY_REPORT_DATAMART
         WHERE MORBIDITY_REPORT_KEY IN (
-            SELECT 
-            MORBIDITY_REPORT_KEY
+            SELECT
+                MORBIDITY_REPORT_KEY
             FROM #INACTIVE_MORB
         );
-        
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'UPDATE dbo.MORBIDITY_REPORT_DATAMART';
-  
+
         UPDATE tgt
         SET
             tgt.MORBIDITY_REPORT_KEY = src.MORBIDITY_REPORT_KEY,
             tgt.MORBIDITY_REPORT_LOCAL_ID = src.MORBIDITY_REPORT_LOCAL_ID,
             tgt.PATIENT_LOCAL_ID = src.PATIENT_LOCAL_ID,
-            tgt.PATIENT_GENERAL_COMMENTS = src.PATIENT_GENERAL_COMMENTS,  
+            tgt.PATIENT_GENERAL_COMMENTS = src.PATIENT_GENERAL_COMMENTS,
             tgt.PATIENT_FIRST_NAME = src.PATIENT_FIRST_NAME,
             tgt.PATIENT_MIDDLE_NAME = src.PATIENT_MIDDLE_NAME,
             tgt.PATIENT_LAST_NAME = src.PATIENT_LAST_NAME,
             tgt.PATIENT_NAME_SUFFIX = src.PATIENT_NAME_SUFFIX,
-            tgt.PATIENT_STREET_ADDRESS_1 = src.PATIENT_STREET_ADDRESS_1,  
-            tgt.PATIENT_STREET_ADDRESS_2 = src.PATIENT_STREET_ADDRESS_2,  
+            tgt.PATIENT_STREET_ADDRESS_1 = src.PATIENT_STREET_ADDRESS_1,
+            tgt.PATIENT_STREET_ADDRESS_2 = src.PATIENT_STREET_ADDRESS_2,
             tgt.PATIENT_CITY = src.PATIENT_CITY,
             tgt.PATIENT_STATE = src.PATIENT_STATE,
             tgt.PATIENT_ZIP = src.PATIENT_ZIP,
             tgt.PATIENT_COUNTY = src.PATIENT_COUNTY,
             tgt.PATIENT_COUNTRY = src.PATIENT_COUNTRY,
             tgt.PATIENT_PHONE_NUMBER_HOME = src.PATIENT_PHONE_NUMBER_HOME,
-            tgt.PATIENT_PHONE_EXT_HOME = src.PATIENT_PHONE_EXT_HOME,      
+            tgt.PATIENT_PHONE_EXT_HOME = src.PATIENT_PHONE_EXT_HOME,
             tgt.PATIENT_PHONE_NUMBER_WORK = src.PATIENT_PHONE_NUMBER_WORK,
             tgt.PATIENT_PHONE_EXT_WORK = src.PATIENT_PHONE_EXT_WORK,
             tgt.PATIENT_DOB = src.PATIENT_DOB,
@@ -824,23 +820,23 @@ BEGIN TRY
             tgt.MORB_REPORT_LAST_UPDATED_BY = src.MORB_REPORT_LAST_UPDATED_BY,
             tgt.EXTERNAL_IND = src.EXTERNAL_IND
         FROM #MORB_EVENT_FINAL src
-            LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART tgt
-            ON src.MORBIDITY_REPORT_KEY = tgt.MORBIDITY_REPORT_KEY
+                 LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART tgt
+                           ON src.MORBIDITY_REPORT_KEY = tgt.MORBIDITY_REPORT_KEY
         WHERE src.DML_IND = 'U';
-        
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'INSERT INTO dbo.MORBIDITY_REPORT_DATAMART';
-  
+
         INSERT INTO dbo.MORBIDITY_REPORT_DATAMART
         (
             MORBIDITY_REPORT_KEY,
@@ -1113,38 +1109,38 @@ BEGIN TRY
             src.EXTERNAL_IND
         FROM #MORB_EVENT_FINAL src
         WHERE src.DML_IND = 'I';
-        
+
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO [DBO].[JOB_FLOW_LOG]
         (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
         VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
 
-    COMMIT TRANSACTION;
+        COMMIT TRANSACTION;
 
 
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name,@Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+        VALUES (@batch_id, @Dataflow_Name,@Package_Name, 'COMPLETE', 999, 'COMPLETE', 0);
 
-    SELECT
-        CAST(NULL AS BIGINT) AS public_health_case_uid,
-        CAST(NULL AS BIGINT) AS patient_uid,
-        CAST(NULL AS BIGINT) AS observation_uid,
-        CAST(NULL AS VARCHAR(30)) AS datamart,
-        CAST(NULL AS VARCHAR(50))  AS condition_cd,
-        CAST(NULL AS VARCHAR(200)) AS stored_procedure,
-        CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
         WHERE 1=0;
 
-END TRY
-BEGIN CATCH
+    END TRY
+    BEGIN CATCH
 
 
-IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-         -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
@@ -1153,21 +1149,21 @@ IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             'Error Message: ' + ERROR_MESSAGE();
 
         INSERT INTO [dbo].[job_flow_log] ( batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [Error_Description]
-            , [row_count])
+                                         , [Dataflow_Name]
+                                         , [package_Name]
+                                         , [Status_Type]
+                                         , [step_number]
+                                         , [step_name]
+                                         , [Error_Description]
+                                         , [row_count])
         VALUES ( @batch_id
-                , @Dataflow_Name
-                , @Package_Name
-                , 'ERROR'
-                , @Proc_Step_no
-                , @Proc_Step_name
-                , @FullErrorMessage
-                , 0);
+               , @Dataflow_Name
+               , @Package_Name
+               , 'ERROR'
+               , @Proc_Step_no
+               , @Proc_Step_name
+               , @FullErrorMessage
+               , 0);
 
 
         SELECT
@@ -1178,9 +1174,8 @@ IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             CAST(NULL AS VARCHAR(50))  AS condition_cd,
             @FullErrorMessage AS stored_procedure,
             CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-            WHERE 1=1;
+        WHERE 1=1;
 
-END CATCH
+    END CATCH
 
 END;
-

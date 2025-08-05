@@ -3,6 +3,8 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.InvestigationRepository;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.PostProcRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
@@ -32,12 +34,15 @@ class DatamartProcessingTest {
 
     @Captor
     private ArgumentCaptor<String> topicCaptor;
-
     @Captor
     private ArgumentCaptor<String> keyCaptor;
-
     @Captor
     private ArgumentCaptor<String> messageCaptor;
+
+    @Mock
+    private PostProcRepository postProcRepositoryMock;
+    @Mock
+    private InvestigationRepository investigationRepositoryMock;
 
     private static final String FILE_PREFIX = "rawDataFiles/";
     private static final String PAYLOAD = "payload";
@@ -49,7 +54,7 @@ class DatamartProcessingTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        datamartProcessor = new ProcessDatamartData(kafkaTemplate);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
     }
 
     @AfterEach
@@ -59,9 +64,9 @@ class DatamartProcessingTest {
 
     @ParameterizedTest
     @MethodSource("provideTestData")
-    void testDatamartProcess(String conditionCd, String dmEntity, String dmSp, String dmJson) throws Exception {
+    void testDatamartProcess(String conditionCd, Entity dmEntity, String dmJson) throws Exception {
         String topic = "dummy_investigation";
-        DatamartData datamartData = getDatamartData(conditionCd, dmEntity, dmSp);
+        DatamartData datamartData = getDatamartData(conditionCd, dmEntity.getEntityName(), dmEntity.getStoredProcedure());
 
         datamartProcessor.datamartTopic = topic;
         datamartProcessor.process(List.of(datamartData));
@@ -87,17 +92,17 @@ class DatamartProcessingTest {
 
     static Stream<Arguments> provideTestData() {
         return Stream.of(
-                Arguments.of("10110", HEPATITIS_DATAMART.getEntityName(), HEPATITIS_DATAMART.getStoredProcedure(), "HepDatamart.json"),
-                Arguments.of("10110", STD_HIV_DATAMART.getEntityName(), STD_HIV_DATAMART.getStoredProcedure(), "StdDatamart.json"),
-                Arguments.of("12020", GENERIC_CASE.getEntityName(), GENERIC_CASE.getStoredProcedure(), "GenericCaseDatamart.json"),
-                Arguments.of("10370", CRS_CASE.getEntityName(), CRS_CASE.getStoredProcedure(), "CRSCaseDatamart.json"),
-                Arguments.of("10200", RUBELLA_CASE.getEntityName(), RUBELLA_CASE.getStoredProcedure(), "RubellaCaseDatamart.json"),
-                Arguments.of("10140", MEASLES_CASE.getEntityName(), MEASLES_CASE.getStoredProcedure(), "MeaslesCaseDatamart.json"),
-                Arguments.of(null, CASE_LAB_DATAMART.getEntityName(), CASE_LAB_DATAMART.getStoredProcedure(), "CaseLabDatamart.json"),
-                Arguments.of("10160", BMIRD_CASE.getEntityName(), BMIRD_CASE.getStoredProcedure(), "BMIRDCaseDatamart.json"),
-                Arguments.of("10140", HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), "HepatitisCaseDatamart.json"),
-                Arguments.of("10190", PERTUSSIS_CASE.getEntityName(), PERTUSSIS_CASE.getStoredProcedure(), "PertussisCaseDatamart.json"),
-                Arguments.of("11065", COVID_VACCINATION_DATAMART.getEntityName(), COVID_VACCINATION_DATAMART.getStoredProcedure(), "CovidVacDatamart.json")
+                Arguments.of("10110", HEPATITIS_DATAMART, "HepDatamart.json"),
+                Arguments.of("10110", STD_HIV_DATAMART, "StdDatamart.json"),
+                Arguments.of("12020", GENERIC_CASE, "GenericCaseDatamart.json"),
+                Arguments.of("10370", CRS_CASE, "CRSCaseDatamart.json"),
+                Arguments.of("10200", RUBELLA_CASE, "RubellaCaseDatamart.json"),
+                Arguments.of("10140", MEASLES_CASE, "MeaslesCaseDatamart.json"),
+                Arguments.of(null, CASE_LAB_DATAMART, "CaseLabDatamart.json"),
+                Arguments.of("10160", BMIRD_CASE, "BMIRDCaseDatamart.json"),
+                Arguments.of("10140", HEPATITIS_CASE, "HepatitisCaseDatamart.json"),
+                Arguments.of("10190", PERTUSSIS_CASE, "PertussisCaseDatamart.json"),
+                Arguments.of("11065", COVID_VACCINATION_DATAMART, "CovidVacDatamart.json")
         );
     }
 
@@ -159,5 +164,4 @@ class DatamartProcessingTest {
         JsonNode dmNode = objectMapper.readTree(dmJson);
         return objectMapper.readValue(dmNode.get(PAYLOAD).toString(), Datamart.class);
     }
-
 }
