@@ -20,7 +20,7 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Query(value = "EXEC sp_page_builder_postprocessing :phcUids, :rdbTableNm", nativeQuery = true)
     List<DatamartData> executeStoredProcForPageBuilder(@Param("phcUids") String phcUids, @Param("rdbTableNm") String rdbTableNm);
 
-    @Query(value = "EXEC sp_f_page_case_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    @Query(value = "EXEC sp_f_page_case_postprocessing_3 :publicHealthCaseUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForFPageCase(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
     @Query(value = "EXEC sp_nrt_case_count_postprocessing :healthcaseUids", nativeQuery = true)
