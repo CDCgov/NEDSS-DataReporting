@@ -498,6 +498,24 @@ databaseChangeLog:
             path: 019-create_nrt_datamart_metadata-001.sql
             splitStatements: false
   - changeSet:
+      id: 20.55
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 365-sp_patient_dim_columns_update_to_datamart.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 20.60
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 370-sp_provider_dim_columns_update_to_datamart.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: 22.01
       author: liquibase
       runOnChange: true
