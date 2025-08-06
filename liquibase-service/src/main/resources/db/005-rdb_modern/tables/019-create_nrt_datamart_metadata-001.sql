@@ -15,7 +15,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         /*CNDE-1954: Separate Hepatitis Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'Hepatitis_Datamart',
@@ -45,7 +45,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
           codes will be included, along with HIV. If the baseline condition is not fulfilled,add only HIV prog area codes.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Std_Hiv_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'Std_Hiv_Datamart',
@@ -70,13 +70,13 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = object_id('nrt_datamart_metadata') AND name='Stored_Procedure' AND max_length=36)
             BEGIN
                 ALTER TABLE dbo.nrt_datamart_metadata
-                    ALTER COLUMN Stored_Procedure VARCHAR(200)
+                ALTER COLUMN Stored_Procedure VARCHAR(200)
             END
 
         /*CNDE-2046: Generic_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Generic_Case')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'Generic_Case',
@@ -95,7 +95,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         /*CRS_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'CRS_Case')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'CRS_Case',
@@ -114,7 +114,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         /*Rubella_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Rubella_Case')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'Rubella_Case',
@@ -133,7 +133,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         /*Measles_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Measles_Case')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'Measles_Case',
@@ -158,7 +158,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         /*BMIRD_Case Datamart condition code addition script.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'BMIRD_Case')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'BMIRD_Case',
@@ -184,7 +184,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         --adding the legacy Hep cases
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Hepatitis_Case')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'Hepatitis_Case',
@@ -203,7 +203,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         --adding the legacy pertussis cases
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Pertussis_Case')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'Pertussis_Case',
@@ -222,7 +222,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         -- TB_DATAMART
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'TB_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'TB_Datamart',
@@ -241,7 +241,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         -- VAR_DATAMART
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'VAR_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                        condition_desc_txt,
                        'VAR_Datamart',
@@ -261,7 +261,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
           baseline STD condition is fulfilled.*/
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Std_Hiv_Datamart' and ndm.condition_cd = 10316)
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT cc.condition_cd,
                        cc.condition_desc_txt,
                        'Std_Hiv_Datamart',
@@ -281,7 +281,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
 
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Case_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                         condition_desc_txt,
                         'Covid_Case_Datamart',
@@ -299,7 +299,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
 
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Lab_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                         condition_desc_txt,
                         'Covid_Lab_Datamart',
@@ -317,7 +317,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
 
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Contact_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                         condition_desc_txt,
                         'Covid_Contact_Datamart',
@@ -335,7 +335,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
 
         IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Covid_Vaccination_Datamart')
             BEGIN
-                INSERT INTO dbo.nrt_datamart_metadata
+                INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT condition_cd,
                         condition_desc_txt,
                         'Covid_Vaccination_Datamart',
@@ -355,7 +355,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
         IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'legacy_form_cd' AND Object_ID = Object_ID(N'nrt_datamart_metadata'))
             BEGIN
                 ALTER TABLE dbo.nrt_datamart_metadata
-                    ADD legacy_form_cd varchar(50) NULL;
+                ADD legacy_form_cd varchar(50) NULL;
             END;
 
         IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'legacy_form_cd' AND Object_ID = Object_ID(N'nrt_datamart_metadata'))
