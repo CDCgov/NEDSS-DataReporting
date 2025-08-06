@@ -121,7 +121,33 @@ BEGIN
                 P.PATIENT_ZIP AS PATIENT_ZIP,
                 P.PATIENT_COUNTY AS PATIENT_COUNTY,
                 P.PATIENT_RACE_CALCULATED AS RACE_CALCULATED,
-                P.PATIENT_RACE_CALC_DETAILS AS  RACE_CALC_DETAILS
+                P.PATIENT_RACE_CALC_DETAILS AS  RACE_CALC_DETAILS,
+                ''+
+                CASE
+                    WHEN LEN(TRIM(PATIENT_STREET_ADDRESS_2)) > 0
+                        THEN TRIM(PATIENT_STREET_ADDRESS_2)
+                    ELSE ''
+                    END +
+                CASE
+                    WHEN LEN(TRIM(PATIENT_CITY)) > 0
+                        THEN ',' + TRIM(PATIENT_CITY)
+                    ELSE ''
+                    END +
+                CASE
+                    WHEN LEN(TRIM(PATIENT_COUNTY)) > 0
+                        THEN ',' + TRIM(PATIENT_COUNTY)
+                    ELSE ''
+                    END +
+                CASE
+                    WHEN LEN(TRIM(PATIENT_ZIP)) > 0
+                        THEN ',' + TRIM(PATIENT_ZIP)
+                    ELSE ''
+                    END +
+                CASE
+                    WHEN LEN(TRIM(PATIENT_STATE)) > 0
+                        THEN ',' + TRIM(PATIENT_STATE)
+                    ELSE ''
+                    END as PATIENT_ADDRESS
         into #BMIRD_PATIENT1
         from #INVKEYS BC
                  left join dbo.D_PATIENT as P with (nolock)
@@ -196,11 +222,11 @@ BEGIN
         SET @Proc_Step_name = ' Generating #BMIRD_WITH_EVENT_DATE';
 
 
-/**
-    Get the earliest date from the four date columns
-    PHC_ADD_TIME, EARLIEST_RPT_TO_STATE_DT, FIRST_POSITIVE_CULTURE_DT, ILLNESS_ONSET_DATE
-    and assign the corresponding column name to EVENT_TYP and retain the min value in a new column EVENT_DATE
- */
+        /**
+            Get the earliest date from the four date columns
+            PHC_ADD_TIME, EARLIEST_RPT_TO_STATE_DT, FIRST_POSITIVE_CULTURE_DT, ILLNESS_ONSET_DATE
+            and assign the corresponding column name to EVENT_TYP and retain the min value in a new column EVENT_DATE
+         */
         SELECT *,
                CASE
                    WHEN PHC_ADD_TIME = (
@@ -247,18 +273,18 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-/**
-Antimicrobial Data Processing -
-Retrive the BatchEntry Answers from ANTIMICROBIAL table and pivoting to 8 (Max) + 1 Columns
+        /**
+        Antimicrobial Data Processing -
+        Retrive the BatchEntry Answers from ANTIMICROBIAL table and pivoting to 8 (Max) + 1 Columns
 
-Step 1: Create Antimicrobial tables with only Pencillin and everything except Pencillin
-Step 2: Merge the two tables together
-Step 3: Create a new table with the merged data and add a counter column
-Step 4: Based on whether the counter is greater than 8, create two new tables
-Step 5: For counter values less than or equal to 8, create a new table with the columns transposed
-Step 6: For counter values greater than 8, create a new table with the columns concatenated
-Step 7: Merge the tables so that both <= 8 and > 8 results are included
-**/
+        Step 1: Create Antimicrobial tables with only Pencillin and everything except Pencillin
+        Step 2: Merge the two tables together
+        Step 3: Create a new table with the merged data and add a counter column
+        Step 4: Based on whether the counter is greater than 8, create two new tables
+        Step 5: For counter values less than or equal to 8, create a new table with the columns transposed
+        Step 6: For counter values greater than 8, create a new table with the columns concatenated
+        Step 7: Merge the tables so that both <= 8 and > 8 results are included
+        **/
 
         BEGIN TRANSACTION;
 
@@ -279,14 +305,21 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
             a.SUSCEPTABILITY_METHOD AS SUSCEPTABILITY_METHOD_,
             a.S_I_R_U_RESULT AS S_I_R_U_RESULT_,
             a.MIC_SIGN AS MIC_SIGN_,
-            a.MIC_VALUE AS MIC_VALUE_,
+            CASE
+                WHEN a.MIC_VALUE IS NULL THEN REPLICATE(' ', 44) + '.'
+                ELSE RIGHT(REPLICATE(' ', 50) + RTRIM(CAST(a.MIC_VALUE AS VARCHAR(50))), 50)
+                END AS MIC_VALUE_,
             1 as SORT_ORDER
         into #ANTIMICRO1A
         FROM #BMIRD_PATIENT1 bc
                  INNER JOIN dbo.ANTIMICROBIAL a with (nolock)
                             ON bc.ANTIMICROBIAL_GRP_KEY = a.ANTIMICROBIAL_GRP_KEY
         WHERE a.ANTIMICROBIAL_GRP_KEY <> 1 AND a.ANTIMICROBIAL_AGENT_TESTED_IND = 'PENICILLIN'
+
         ;
+
+        if @debug = 'true' select @Proc_Step_Name as step, * from #ANTIMICRO1A;
+
 
         SELECT
             bc.INVESTIGATION_KEY,
@@ -295,13 +328,18 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
             a.SUSCEPTABILITY_METHOD AS SUSCEPTABILITY_METHOD_,
             a.S_I_R_U_RESULT AS S_I_R_U_RESULT_,
             a.MIC_SIGN AS MIC_SIGN_,
-            a.MIC_VALUE AS MIC_VALUE_,
+            CASE
+                WHEN a.MIC_VALUE IS NULL THEN REPLICATE(' ', 44) + '.'
+                ELSE RIGHT(REPLICATE(' ', 50) + RTRIM(CAST(a.MIC_VALUE AS VARCHAR(50))), 50)
+                END AS MIC_VALUE_,
             9 AS SORT_ORDER
         into #ANTIMICRO1B
         FROM #BMIRD_PATIENT1 bc
                  INNER JOIN dbo.ANTIMICROBIAL a with (nolock)  ON bc.ANTIMICROBIAL_GRP_KEY = a.ANTIMICROBIAL_GRP_KEY
         WHERE a.ANTIMICROBIAL_GRP_KEY <> 1 AND a.ANTIMICROBIAL_AGENT_TESTED_IND <> 'PENICILLIN'
         ;
+
+        if @debug = 'true' select @Proc_Step_Name as step, * from #ANTIMICRO1B;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -314,7 +352,7 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_name = ' Generating #ANTIMICRO2_A and #ANTIMICRO2_B';
+        SET @Proc_Step_name = ' Generating #ANTIMICRO2_A and #ANTIMICRO2_B Sorted';
 
         -- Step 2: Merge the two tables together
         SELECT *
@@ -328,6 +366,7 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
                ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY SORT_ORDER, ANTIMICROBIAL_KEY) AS COUNTER
         into #ANTIMICRO2
         FROM #ANTIMICRO1;
+        if @debug = 'true' select @Proc_Step_Name as step, * from #ANTIMICRO2;
 
         -- Step 4: Based on whether the counter is greater than 8, create two new tables
         SELECT *
@@ -505,17 +544,17 @@ Step 7: Merge the tables so that both <= 8 and > 8 results are included
 
         COMMIT TRANSACTION;
 
-/**
-Conditions Data Processing -
-Retrieve Underlying Conditions from BMIRD_MULTI_VALUE_FIELD Table to 8 (Max) Columns
+        /**
+        Conditions Data Processing -
+        Retrieve Underlying Conditions from BMIRD_MULTI_VALUE_FIELD Table to 8 (Max) Columns
 
-Step 1: Create a dataset of all underlying conditions
-Step 2: Create a new table with the dataset and add a counter column
-Step 3: For counter values less than or equal to 8, create a new table with the columns transposed
-Step 4: For counter values greater than 8, create a new table with the columns concatenated
-Step 5: Merge the tables so that both <= 8 and > 8 results are included
+        Step 1: Create a dataset of all underlying conditions
+        Step 2: Create a new table with the dataset and add a counter column
+        Step 3: For counter values less than or equal to 8, create a new table with the columns transposed
+        Step 4: For counter values greater than 8, create a new table with the columns concatenated
+        Step 5: Merge the tables so that both <= 8 and > 8 results are included
 
-**/
+        **/
 
 
 
@@ -616,15 +655,15 @@ Step 5: Merge the tables so that both <= 8 and > 8 results are included
         COMMIT TRANSACTION;
 
 
-/*
-Site Data Processing -
-Retrieve BMD125, BMD142 and BMD144 from BMIRD_MULTI_VALUE_FIELD and pivot into 3 columns
+        /*
+        Site Data Processing -
+        Retrieve BMD125, BMD142 and BMD144 from BMIRD_MULTI_VALUE_FIELD and pivot into 3 columns
 
-Step 1: Create a dataset of all non-sterile sites
-Step 2: Create 2 datasets of all additional culture sites
-Step 3: Merge the datasets to create a new table with the columns transposed
-Step 4: Merge the new table with the BMIRD_ANTIMICRO table
-*/
+        Step 1: Create a dataset of all non-sterile sites
+        Step 2: Create 2 datasets of all additional culture sites
+        Step 3: Merge the datasets to create a new table with the columns transposed
+        Step 4: Merge the new table with the BMIRD_ANTIMICRO table
+        */
 
         BEGIN TRANSACTION;
 
@@ -751,17 +790,17 @@ Step 4: Merge the new table with the BMIRD_ANTIMICRO table
 
         COMMIT TRANSACTION;
 
-/*
-Types of Infection Data Processing
-Retrieve BMD118 'Types of Infection' pivot to 10 columns
+        /*
+        Types of Infection Data Processing
+        Retrieve BMD118 'Types of Infection' pivot to 10 columns
 
-Step 1: Create a dataset of all types of infections
-Step 2: Create a new table with the columns (based on a set of conditions).
-        For rows that doesn't fall into that condition, they are marked as 0 and 1
-Step 3: Create a new table with the columns transposed for marked as 1
-Step 4: Create a new table with the columns concatenated for marked as 0
-Step 5: Merge the new table with the BMIRD_ANTIMICRO table
-*/
+        Step 1: Create a dataset of all types of infections
+        Step 2: Create a new table with the columns (based on a set of conditions).
+                For rows that doesn't fall into that condition, they are marked as 0 and 1
+        Step 3: Create a new table with the columns transposed for marked as 1
+        Step 4: Create a new table with the columns concatenated for marked as 0
+        Step 5: Merge the new table with the BMIRD_ANTIMICRO table
+        */
 
         BEGIN TRANSACTION;
 
@@ -859,7 +898,7 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
         -- Step 4: Create a new table with the columns concatenated for marked as 0
         SELECT
             INVESTIGATION_KEY,
-            STRING_AGG(TYPES_OF_INFECTIONS_, ',') WITHIN GROUP (ORDER BY TYPES_OF_INFECTIONS_ DESC)
+            STRING_AGG(TYPES_OF_INFECTIONS_, ',') WITHIN GROUP (ORDER BY TYPES_OF_INFECTIONS_ ASC)
                  AS TYPE_INFECTION_OTHERS_CONCAT,
             'No' as TYPE_INFECTION_BACTEREMIA,
             'No' as TYPE_INFECTION_PNEUMONIA,
@@ -921,16 +960,16 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
 
 
 
-/*
-Sterile Sites Data Processing -
-BMD122 'Sterile Sites from which Organism Isolated' pivot to 7 columns
-Step 1: Create a dataset of all sterile sites
-Step 2: Create a new table with the columns (based on a set of conditions).
-    For rows that doesn't fall into that condition, they are marked as 0 and 1
-Step 3: Create a new table with the columns transposed for marked as 1
-Step 4: Create a new table with the columns concatenated for marked as 0
-Step 5: Merge the new table with the BMIRD_ANTIMICRO table
-*/
+        /*
+        Sterile Sites Data Processing -
+        BMD122 'Sterile Sites from which Organism Isolated' pivot to 7 columns
+        Step 1: Create a dataset of all sterile sites
+        Step 2: Create a new table with the columns (based on a set of conditions).
+            For rows that doesn't fall into that condition, they are marked as 0 and 1
+        Step 3: Create a new table with the columns transposed for marked as 1
+        Step 4: Create a new table with the columns concatenated for marked as 0
+        Step 5: Merge the new table with the BMIRD_ANTIMICRO table
+        */
 
 
         BEGIN TRANSACTION;
@@ -1554,7 +1593,7 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
             CAST(NULL AS VARCHAR(50))  AS condition_cd,
             CAST(NULL AS VARCHAR(200)) AS stored_procedure,
             CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-            WHERE 1=0;
+        WHERE 1=0;
 
 
     END TRY
@@ -1600,7 +1639,7 @@ Step 5: Merge the new table with the BMIRD_ANTIMICRO table
             CAST(NULL AS VARCHAR(50))  AS condition_cd,
             @FullErrorMessage AS stored_procedure,
             CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-            WHERE 1=1;
+        WHERE 1=1;
 
     END CATCH
 END;
