@@ -565,6 +565,7 @@ public class PostProcessingService {
                         break;
                     case LDF_DATA:
                         processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds, dmProcessor::checkResult);
+                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, dmProcessor::checkResult);
                         break;
                     case OBSERVATION:
                         dmData = processObservation(keyTopic, entity, dmData, obsCache);
