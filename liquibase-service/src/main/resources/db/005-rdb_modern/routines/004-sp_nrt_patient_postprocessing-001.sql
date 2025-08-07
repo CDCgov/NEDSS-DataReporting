@@ -390,9 +390,8 @@ BEGIN
                when
                tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
                tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
-               tpt.PATIENT_COUNTRY <> p.PATIENT_COUNTRY or
-               tpt.PATIENT_RACE_CALC_DETAILS <> p.PATIENT_RACE_CALC_DETAILS or
-               tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD
+               tpt.PATIENT_ENTRY_METHOD <> p.PATIENT_ENTRY_METHOD or
+               tpt.PATIENT_RACE_CALC_DETAILS <> p.PATIENT_RACE_CALC_DETAILS
                then 1
                else 0
           end as hep100_datamart_update,
@@ -414,16 +413,37 @@ BEGIN
                tpt.PATIENT_DECEASED_INDICATOR <> p.PATIENT_DECEASED_INDICATOR or
                tpt.PATIENT_MARITAL_STATUS <> p.PATIENT_MARITAL_STATUS or
                tpt.PATIENT_SSN <> p.PATIENT_SSN or
-               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX or
+               tpt.PATIENT_NAME_SUFFIX <> p.PATIENT_NAME_SUFFIX 
+               then 1
+               else 0
+          end as morbidity_report_datamart_update,
+          -- additional cases for std_hiv_datamart_update
+          case
+               when
+               tpt.PATIENT_MIDDLE_NAME <> p.PATIENT_MIDDLE_NAME or
+               tpt.PATIENT_COUNTY <> p.PATIENT_COUNTY or
+               tpt.PATIENT_COUNTRY <> p.PATIENT_COUNTRY or
+               tpt.PATIENT_PHONE_HOME <> p.PATIENT_PHONE_HOME or
+               tpt.PATIENT_PHONE_EXT_HOME <> p.PATIENT_PHONE_EXT_HOME or
+               tpt.PATIENT_PHONE_WORK <> p.PATIENT_PHONE_WORK or
+               tpt.PATIENT_PHONE_EXT_WORK <> p.PATIENT_PHONE_EXT_WORK or
+               tpt.PATIENT_RACE_CALCULATED <> p.PATIENT_RACE_CALCULATED or
+               tpt.PATIENT_ETHNICITY <> p.PATIENT_ETHNICITY or
+               tpt.PATIENT_DECEASED_DATE <> p.PATIENT_DECEASED_DATE or
+               tpt.PATIENT_DECEASED_INDICATOR <> p.PATIENT_DECEASED_INDICATOR or
+               tpt.PATIENT_MARITAL_STATUS <> p.PATIENT_MARITAL_STATUS or
                tpt.PATIENT_ADDL_GENDER_INFO <> p.PATIENT_ADDL_GENDER_INFO or
                tpt.PATIENT_ALIAS_NICKNAME <> p.PATIENT_ALIAS_NICKNAME or
                tpt.PATIENT_BIRTH_COUNTRY <> p.PATIENT_BIRTH_COUNTRY or
                tpt.PATIENT_BIRTH_SEX <> p.PATIENT_BIRTH_SEX or
                tpt.PATIENT_CENSUS_TRACT <> p.PATIENT_CENSUS_TRACT or
-               tpt.PATIENT_CURR_SEX_UNK_RSN <> p.PATIENT_CURR_SEX_UNK_RSN
+               tpt.PATIENT_CURR_SEX_UNK_RSN <> p.PATIENT_CURR_SEX_UNK_RSN or
+               tpt.PATIENT_EMAIL <> p.PATIENT_EMAIL or
+               tpt.PATIENT_PREFERRED_GENDER <> p.PATIENT_PREFERRED_GENDER or
+               tpt.PATIENT_UNK_ETHNIC_RSN <> p.PATIENT_UNK_ETHNIC_RSN
                then 1
                else 0
-          end as morbidity_report_datamart_update,
+          end as std_hiv_datamart_update,
           -- additional cases for var_datamart
           case
                when
@@ -880,8 +900,17 @@ BEGIN
                END
 
         -- Enter only if there are updates in the patient table that are valid for downstream datamarts
-        IF EXISTS (select 1 from #PATIENT_UPDATE_LIST
-                    where datamart_update+case_lab_datamart_update+bmird_strep_pneumo_datamart_update+hep100_datamart_update+morbidity_report_datamart_update+var_datamart_update+tb_datamart_update >= 1)
+        IF EXISTS (
+            select 1 from #PATIENT_UPDATE_LIST
+            where datamart_update
+                +case_lab_datamart_update
+                +bmird_strep_pneumo_datamart_update
+                +hep100_datamart_update
+                +morbidity_report_datamart_update
+                +std_hiv_datamart_update
+                +var_datamart_update
+                +tb_datamart_update >= 1
+        )
         BEGIN
             exec sp_patient_dim_columns_update_to_datamart @batch_id, @debug;
         END

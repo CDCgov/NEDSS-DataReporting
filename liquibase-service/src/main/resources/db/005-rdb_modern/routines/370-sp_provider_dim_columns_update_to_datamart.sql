@@ -21,74 +21,132 @@ BEGIN
     declare @rowcount bigint;
     declare @proc_step_no float = 0;
     declare @proc_step_name varchar(200) = '';
-    declare @create_dttm datetime2(7) = current_timestamp ;
-    declare @update_dttm datetime2(7) = current_timestamp ;
     declare @dataflow_name varchar(200) = 'Provider POST-Processing';
     declare @package_name varchar(200) = 'sp_provider_delta_update';
 
     -- Building a mapping table for investigations and providers which can be used later 
     -- multiple times in the procedure when needed
-    select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.* 
-    into #INVESTIGATION_PROVIDER_MAPPING
-    from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
-    on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
-    union all
-    select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.*
-    from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_PAGE_CASE i  with (nolock) 
-    on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
-    union all
-    select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
-    from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_PAGE_CASE i  with (nolock) 
-    on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY  
-    union all
-    select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
-    from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
-    on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY
-    union all
-    select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
-    from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_PAGE_CASE i  with (nolock) 
-    on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY  
-    union all
-    select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
-    from  #PROVIDER_UPDATE_LIST d 
-    inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
-    on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY
-    ;
+    -- select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.* 
+    -- into #INVESTIGATION_PROVIDER_MAPPING
+    -- from  #PROVIDER_UPDATE_LIST d 
+    -- inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
+    -- on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
+    -- union all
+    -- select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.*
+    -- from  #PROVIDER_UPDATE_LIST d 
+    -- inner join dbo.F_PAGE_CASE i  with (nolock) 
+    -- on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
+    -- union all
+    -- select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
+    -- from  #PROVIDER_UPDATE_LIST d 
+    -- inner join dbo.F_PAGE_CASE i  with (nolock) 
+    -- on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY  
+    -- union all
+    -- select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
+    -- from  #PROVIDER_UPDATE_LIST d 
+    -- inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
+    -- on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY
+    -- union all
+    -- select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
+    -- from  #PROVIDER_UPDATE_LIST d 
+    -- inner join dbo.F_PAGE_CASE i  with (nolock) 
+    -- on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY  
+    -- union all
+    -- select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
+    -- from  #PROVIDER_UPDATE_LIST d 
+    -- inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
+    -- on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY
+    -- ;
 
-    
+    ---------------------------------------------------------------------------------------------------------------------------------
 
-    if @debug = 'true'
-        select '#INVESTIGATION_PROVIDER_MAPPING', * from #INVESTIGATION_PROVIDER_MAPPING;
-
-    SET @proc_step_name=' Update Provider attributes in MORBIDITY_REPORT_DATAMART';
+    SET @proc_step_name=' Update Provider attributes in MORBIDITY_REPORT_DATAMART for PROVIDER';
     SET @proc_step_no = 5.5;
 
-    -- Updates to MORBIDITY_REPORT_DATAMART
-    IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm with (nolock) 
-            inner join #INVESTIGATION_PROVIDER_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
-            where datamart_update+morbidity_datamart_update >= 1)
+
+    select
+        h.MORBIDITY_REPORT_KEY,
+        d.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_PROVIDER_MAPPING_FOR_MRD
+    from
+        dbo.MORBIDITY_REPORT_EVENT d with (nolock)
+    inner join dbo.MORBIDITY_REPORT_DATAMART h with (nolock)
+        on d.MORB_RPT_KEY  = h.MORBIDITY_REPORT_KEY
+    inner join #PROVIDER_UPDATE_LIST g with (nolock)
+        on g.PROVIDER_KEY = d.PHYSICIAN_KEY
+    where datamart_update+morbidity_datamart_update >= 1;
+
+
+    if @debug = 'true'
+        select '#INVESTIGATION_PROVIDER_MAPPING_FOR_MRD', * from #INVESTIGATION_PROVIDER_MAPPING_FOR_MRD;
+
+    IF EXISTS (SELECT 1 FROM #INVESTIGATION_PROVIDER_MAPPING_FOR_MRD)
     BEGIN
         update dbo.MORBIDITY_REPORT_DATAMART 
         set 
         PROVIDER_LAST_NAME = tmp.PROVIDER_LAST_NAME,
         PROVIDER_FIRST_NAME = tmp.PROVIDER_FIRST_NAME,
-        PROVIDER_STREET_ADDRESS_1 = tmp.PROVIDER_STREET_ADDRESS_1,
-        PROVIDER_STREET_ADDRESS_2 = tmp.PROVIDER_STREET_ADDRESS_2,
+        PROVIDER_STREET_ADDR_1 = tmp.PROVIDER_STREET_ADDRESS_1,
+        PROVIDER_STREET_ADDR_2 = tmp.PROVIDER_STREET_ADDRESS_2,
         PROVIDER_CITY = tmp.PROVIDER_CITY,
         PROVIDER_STATE = tmp.PROVIDER_STATE,
         PROVIDER_ZIP = tmp.PROVIDER_ZIP,
-        PROVIDER_PHONE_WORK = tmp.PROVIDER_PHONE_WORK,
-        PROVIDER_PHONE_EXT_WORK = tmp.PROVIDER_PHONE_EXT_WORK
+        PROVIDER_PHONE = tmp.PROVIDER_PHONE_WORK,
+        PROVIDER_PHONE_EXT = tmp.PROVIDER_PHONE_EXT_WORK
         from  
-            #INVESTIGATION_PROVIDER_MAPPING tmp
+            #INVESTIGATION_PROVIDER_MAPPING_FOR_MRD tmp
         where 
-            dbo.MORBIDITY_REPORT_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-            and datamart_update+morbidity_datamart_update >= 1;    
+            dbo.MORBIDITY_REPORT_DATAMART.MORBIDITY_REPORT_KEY = tmp.MORBIDITY_REPORT_KEY
+            ;
+    END
+
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+    ---------------------------------------------------------------------------------------------------------------------------------
+    
+    SET @proc_step_name=' Update Provider attributes in MORBIDITY_REPORT_DATAMART for REPORTER';
+    SET @proc_step_no = 5.6;
+
+    select
+        h.MORBIDITY_REPORT_KEY,
+        d.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_REPORTER_MAPPING_FOR_MRD
+    from
+    dbo.MORBIDITY_REPORT_EVENT d with (nolock)
+    inner join dbo.MORBIDITY_REPORT_DATAMART h with (nolock)
+        on d.MORB_RPT_KEY  = h.MORBIDITY_REPORT_KEY
+    inner join #PROVIDER_UPDATE_LIST g with (nolock)
+        on g.PROVIDER_KEY = d.REPORTER_KEY
+    where datamart_update+morbidity_datamart_update >= 1;
+
+
+    if @debug = 'true'
+        select '#INVESTIGATION_REPORTER_MAPPING_FOR_MRD', * from #INVESTIGATION_REPORTER_MAPPING_FOR_MRD;
+    
+    IF EXISTS (SELECT 1 FROM  #INVESTIGATION_REPORTER_MAPPING_FOR_MRD)
+    BEGIN
+        update dbo.MORBIDITY_REPORT_DATAMART 
+        set 
+        REPORTER_LAST_NAME = tmp.PROVIDER_LAST_NAME,
+        REPORTER_FIRST_NAME = tmp.PROVIDER_FIRST_NAME,
+        REPORTER_STREET_ADDR_1 = tmp.PROVIDER_STREET_ADDRESS_1,
+        REPORTER_STREET_ADDR_2 = tmp.PROVIDER_STREET_ADDRESS_2,
+        REPORTER_CITY = tmp.PROVIDER_CITY,
+        REPORTER_STATE = tmp.PROVIDER_STATE,
+        REPORTER_ZIP = tmp.PROVIDER_ZIP,
+        REPORTER_PHONE = tmp.PROVIDER_PHONE_WORK,
+        REPORTER_PHONE_EXT = tmp.PROVIDER_PHONE_EXT_WORK
+        from  
+            #INVESTIGATION_REPORTER_MAPPING_FOR_MRD tmp
+        where
+            dbo.MORBIDITY_REPORT_DATAMART.MORBIDITY_REPORT_KEY = tmp.MORBIDITY_REPORT_KEY
+            ;
     END
 
     set @rowcount=@@rowcount;
@@ -98,10 +156,11 @@ BEGIN
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
 
-    SET @proc_step_name=' Update Provider attributes in STD_HIV_DATAMART';
-    SET @proc_step_no = 5.6;
+    ---------------------------------------------------------------------------------------------------------------------------------
 
-    -- Updates to STD_HIV_DATAMART
+    SET @proc_step_name=' Update Provider attributes in STD_HIV_DATAMART';
+    SET @proc_step_no = 5.7;
+
     IF EXISTS (SELECT 1 from dbo.STD_HIV_DATAMART dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
         ON std_hiv_datamart_update >= 1
@@ -203,10 +262,11 @@ BEGIN
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
 
-    SET @proc_step_name=' Update Provider attributes in HEP100_DATAMART';
-    SET @proc_step_no = 5.7;
+    ---------------------------------------------------------------------------------------------------------------------------------
 
-    -- Updates to HEP100_DATAMART
+    SET @proc_step_name=' Update Provider attributes in HEP100_DATAMART for PHYSICIAN';
+    SET @proc_step_no = 5.8;
+
 
     IF EXISTS (SELECT 1 from dbo.HEP100 dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
@@ -239,6 +299,15 @@ BEGIN
         ;
     END
 
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+    SET @proc_step_name=' Update Provider attributes in HEP100_DATAMART for INVESTIGATOR';
+    SET @proc_step_no = 5.9;
+
     IF EXISTS (SELECT 1 from dbo.HEP100 dm with (nolock) 
         INNER JOIN #PROVIDER_UPDATE_LIST tmp 
         ON dm.INVESTIGATOR_UID = tmp.PROVIDER_UID
@@ -264,14 +333,30 @@ BEGIN
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
 
-    SET @proc_step_name=' Update Provider attributes in TB_DATAMART and TB_HIV_DATAMART';
-    SET @proc_step_no = 5.8;
+    ---------------------------------------------------------------------------------------------------------------------------------
+    
+    SET @proc_step_name=' Update Provider attributes in TB_DATAMART and TB_HIV_DATAMART for PROVIDER';
+    SET @proc_step_no = 5.10;
 
-    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
-        INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
-        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY and map.provider_type = 'investigator'
-            where tb_datamart_update = 1 
-    )
+    select
+        h.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_PROVIDER_MAPPING_FOR_TB
+    from
+        dbo.F_TB_PAM d with (nolock)
+    inner join dbo.TB_DATAMART h with (nolock)
+        on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
+    inner join #PROVIDER_UPDATE_LIST g with (nolock)
+        on g.PROVIDER_KEY = d.PROVIDER_KEY
+    where tb_datamart_update = 1 ;
+
+
+    if @debug = 'true'
+        select '#INVESTIGATION_PROVIDER_MAPPING_FOR_TB', * from #INVESTIGATION_PROVIDER_MAPPING_FOR_TB;        
+
+    declare @rowcount_tmp bigint =0;
+
+    IF EXISTS (SELECT 1 from #INVESTIGATION_PROVIDER_MAPPING_FOR_TB)
     BEGIN
         update dm
         set 
@@ -279,30 +364,54 @@ BEGIN
         INVESTIGATOR_FIRST_NAME = map.PROVIDER_FIRST_NAME,
         INVESTIGATOR_PHONE_NUMBER = map.PROVIDER_PHONE_WORK
         from dbo.TB_DATAMART dm
-        INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
-        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY 
-            and map.provider_type = 'investigator'
-        where tb_datamart_update = 1 
+        INNER JOIN #INVESTIGATION_PROVIDER_MAPPING_FOR_TB map 
+        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY
         ;
 
-        update dbo.TB_HIV_DATAMART
+        set @rowcount_tmp = @@rowcount;
+
+        update dm
         set
-        INVESTIGATOR_LAST_NAME = src.INVESTIGATOR_LAST_NAME, 
-        INVESTIGATOR_FIRST_NAME = src.INVESTIGATOR_FIRST_NAME, 
-        INVESTIGATOR_PHONE_NUMBER = src.INVESTIGATOR_PHONE_NUMBER 
-        from TB_DATAMART src
-        inner join #INVESTIGATION_PROVIDER_MAPPING map 
-        on src.INVESTIGATION_KEY = map.INVESTIGATION_KEY
-            and map.provider_type = 'investigator'
-            and tb_datamart_update = 1
-        where src.INVESTIGATION_KEY = dbo.TB_HIV_DATAMART.INVESTIGATION_KEY
+        INVESTIGATOR_LAST_NAME = map.PROVIDER_LAST_NAME,
+        INVESTIGATOR_FIRST_NAME = map.PROVIDER_FIRST_NAME,
+        INVESTIGATOR_PHONE_NUMBER = map.PROVIDER_PHONE_WORK
+        from dbo.TB_HIV_DATAMART dm
+        inner join #INVESTIGATION_PROVIDER_MAPPING_FOR_TB map 
+        on dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY
         ;
+
+        set @rowcount_tmp = @rowcount_tmp + @@rowcount;
     END
-    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
-        INNER JOIN #INVESTIGATION_PROVIDER_MAPPING map 
-        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY and map.provider_type = 'physician'
-            where tb_datamart_update = 1 
-    )
+    
+    set @rowcount=@rowcount_tmp;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+    ---------------------------------------------------------------------------------------------------------------------------------
+
+    SET @proc_step_name=' Update Provider attributes in TB_DATAMART and TB_HIV_DATAMART for PHYSICIAN';
+    SET @proc_step_no = 5.11;
+
+    select
+        h.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_PHYSICIAN_MAPPING_FOR_TB
+    from
+        dbo.F_TB_PAM d with (nolock)
+    inner join dbo.TB_DATAMART h with (nolock)
+        on d.INVESTIGATION_KEY  = h.INVESTIGATION_KEY
+    inner join #PROVIDER_UPDATE_LIST g with (nolock)
+        on g.PROVIDER_KEY = d.PHYSICIAN_KEY
+    where tb_datamart_update = 1 ;
+
+    if @debug = 'true'
+        select '#INVESTIGATION_PHYSICIAN_MAPPING_FOR_TB', * from #INVESTIGATION_PHYSICIAN_MAPPING_FOR_TB;     
+
+    set @rowcount_tmp =0;
+
+    IF EXISTS (SELECT 1 from #INVESTIGATION_PHYSICIAN_MAPPING_FOR_TB)
     BEGIN
         update dm
         set 
@@ -310,31 +419,53 @@ BEGIN
         PHYSICIAN_FIRST_NAME = map.PROVIDER_FIRST_NAME,
         PHYSICIAN_PHONE_NUMBER = map.PROVIDER_PHONE_WORK
         from dbo.TB_DATAMART dm
-        inner join #INVESTIGATION_PROVIDER_MAPPING map 
-        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY 
-            and map.provider_type = 'physician'
-        where tb_datamart_update = 1  
+        inner join #INVESTIGATION_PHYSICIAN_MAPPING_FOR_TB map 
+        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY
         ;
+        set @rowcount_tmp = @@rowcount;
 
-        update dbo.TB_HIV_DATAMART
+        update dm
         set
-        PHYSICIAN_LAST_NAME = src.PHYSICIAN_LAST_NAME
-        ,PHYSICIAN_FIRST_NAME = src.PHYSICIAN_FIRST_NAME
-        ,PHYSICIAN_PHONE_NUMBER = src.PHYSICIAN_PHONE_WORK
-        from TB_DATAMART src
-        inner join #INVESTIGATION_PROVIDER_MAPPING map 
-        on src.INVESTIGATION_KEY = map.INVESTIGATION_KEY
-            and provider_type = 'physician'
-            and tb_datamart_update = 1
-        where src.INVESTIGATION_KEY = dbo.TB_HIV_DATAMART.INVESTIGATION_KEY
+        PHYSICIAN_LAST_NAME =  map.PROVIDER_LAST_NAME,
+        PHYSICIAN_FIRST_NAME = map.PROVIDER_FIRST_NAME,
+        PHYSICIAN_PHONE_NUMBER = map.PROVIDER_PHONE_WORK
+        from dbo.TB_HIV_DATAMART dm
+        inner join #INVESTIGATION_PHYSICIAN_MAPPING_FOR_TB map 
+        on dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY
         ;
+        set @rowcount_tmp = @rowcount_tmp + @@rowcount;
 
     END
-    IF EXISTS (SELECT 1 from dbo.TB_DATAMART dm with (nolock) 
-        inner join #INVESTIGATION_PROVIDER_MAPPING map 
-        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY and map.provider_type = 'reporter'
-            where tb_datamart_update = 1 
-    )
+
+    set @rowcount=@rowcount_tmp;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+    ---------------------------------------------------------------------------------------------------------------------------------
+    
+    SET @proc_step_name=' Update Provider attributes in TB_DATAMART and TB_HIV_DATAMART for REPORTER';
+    SET @proc_step_no = 5.12;
+
+    select
+        h.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_REPORTER_MAPPING_FOR_TB
+    from
+        dbo.F_TB_PAM d with (nolock)
+    inner join dbo.TB_DATAMART h with (nolock)
+        on d.INVESTIGATION_KEY  = h.INVESTIGATION_KEY
+    inner join #PROVIDER_UPDATE_LIST g with (nolock)
+        on g.PROVIDER_KEY = d.PERSON_AS_REPORTER_KEY
+    where tb_datamart_update = 1 ;
+
+    if @debug = 'true'
+        select '#INVESTIGATION_REPORTER_MAPPING_FOR_TB', * from #INVESTIGATION_REPORTER_MAPPING_FOR_TB; 
+
+    set @rowcount_tmp =0;
+
+    IF EXISTS (SELECT 1 from #INVESTIGATION_REPORTER_MAPPING_FOR_TB)
     BEGIN
         update dm
         set 
@@ -342,29 +473,35 @@ BEGIN
         REPORTER_FIRST_NAME = map.PROVIDER_FIRST_NAME,
         REPORTER_PHONE_NUMBER = map.PROVIDER_PHONE_WORK
         from dbo.TB_DATAMART dm
-        inner join #INVESTIGATION_PROVIDER_MAPPING map 
-        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY 
-            and map.provider_type = 'reporter'
-        where tb_datamart_update = 1 
+        inner join #INVESTIGATION_REPORTER_MAPPING_FOR_TB map 
+        ON dm.INVESTIGATION_KEY = map.INVESTIGATION_KEY
         ;
+        set @rowcount_tmp=@@rowcount;
 
-        update dbo.TB_HIV_DATAMART 
+        update dm 
         set
-        REPORTER_LAST_NAME = src.REPORTER_LAST_NAME
-        ,REPORTER_FIRST_NAME = src.REPORTER_FIRST_NAME
-        ,REPORTER_PHONE_NUMBER = src.REPORTER_PHONE_WORK
-        from TB_DATAMART src
-        inner join #INVESTIGATION_PROVIDER_MAPPING map 
-        on map.INVESTIGATION_KEY = src.INVESTIGATION_KEY
-            and map.provider_type = 'reporter'
-            and tb_datamart_update = 1
-        where src.INVESTIGATION_KEY = dbo.TB_HIV_DATAMART.INVESTIGATION_KEY
+        REPORTER_LAST_NAME = map.PROVIDER_LAST_NAME,
+        REPORTER_FIRST_NAME = map.PROVIDER_FIRST_NAME,
+        REPORTER_PHONE_NUMBER = map.PROVIDER_PHONE_WORK
+        from dbo.TB_HIV_DATAMART dm
+        inner join #INVESTIGATION_REPORTER_MAPPING_FOR_TB map 
+        on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
         ;
+        set @rowcount_tmp=@rowcount_tmp+@@rowcount;
 
     END
 
+    set @rowcount=@rowcount_tmp;
+    INSERT INTO [dbo].[job_flow_log] 
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES 
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
     SET @proc_step_name=' Update Provider attributes in AGGREGATE_REPORT_DATAMART';
-    SET @proc_step_no = 5.9;
+    SET @proc_step_no = 5.13;
 
     IF EXISTS (SELECT 1 from dbo.AGGREGATE_REPORT_DATAMART dm with (nolock)
         INNER JOIN #PROVIDER_UPDATE_LIST map
