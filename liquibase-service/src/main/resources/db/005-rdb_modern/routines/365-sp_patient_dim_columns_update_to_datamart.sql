@@ -23,22 +23,9 @@ BEGIN
     declare @rowcount bigint;
     declare @proc_step_no float = 0;
     declare @proc_step_name varchar(200) = '';
-    declare @create_dttm datetime2(7) = current_timestamp ;
-    declare @update_dttm datetime2(7) = current_timestamp ;
     declare @dataflow_name varchar(200) = 'Patient POST-Processing';
     declare @package_name varchar(200) = 'sp_patient_delta_update';
 
-    -- Building a mapping table for investigations and patients which can be used later 
-    -- multiple times in the procedure
-    select i.INVESTIGATION_KEY, d.* 
-    into #INVESTIGATION_PATIENT_MAPPING
-    from dbo.F_STD_PAGE_CASE i with (nolock)  inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
-    union all
-    select i.INVESTIGATION_KEY, d.* 
-    from dbo.F_PAGE_CASE i with (nolock)  inner join #PATIENT_UPDATE_LIST d on i.PATIENT_KEY = d.PATIENT_KEY 
-
-    if @debug = 'true'
-    select * from #INVESTIGATION_PATIENT_MAPPING;
 
     
     SET @proc_step_name=' Update Patient attributes in CASE_LAB_DATAMART';
@@ -46,10 +33,22 @@ BEGIN
 
     -- we use the INVESTIGATION_KEY to update the patient attributes in the CASE_LAB_DATAMART
     -- since PATIENT_LOCAL_ID is the only identifier for a patient in the CASE_LAB_DATAMART and it could be NULL
+    -- we utilize CASE_COUNT
 
-    IF EXISTS (SELECT 1 FROM dbo.CASE_LAB_DATAMART dm with (nolock) 
-            inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
-            where datamart_update+case_lab_datamart_update >= 1)
+    select
+        h.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_PATIENT_MAPPING_FOR_CASELAB
+    from
+        dbo.CASE_COUNT d with (nolock)
+    inner join dbo.CASE_LAB_DATAMART h with (nolock)
+        on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
+    inner join #PATIENT_UPDATE_LIST g with (nolock)
+        on g.PATIENT_KEY = d.PATIENT_KEY
+    where datamart_update+case_lab_datamart_update >= 1
+
+
+    IF EXISTS (SELECT 1  #INVESTIGATION_PATIENT_MAPPING_FOR_CASELAB)
     BEGIN
         update dbo.CASE_LAB_DATAMART 
         set PATIENT_FIRST_NM = tmp.PATIENT_FIRST_NAME,
@@ -77,10 +76,10 @@ BEGIN
             AGE_REPORTED_UNIT = tmp.PATIENT_AGE_REPORTED_UNIT,
             PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX
         from   
-            #INVESTIGATION_PATIENT_MAPPING tmp
+            #INVESTIGATION_PATIENT_MAPPING_FOR_CASELAB tmp
         where 
             dbo.CASE_LAB_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-            and datamart_update+case_lab_datamart_update >= 1;     
+        ;     
     END
 
     set @rowcount=@@rowcount;
@@ -89,20 +88,36 @@ BEGIN
     VALUES 
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
     
+
+    ---------------------------------------------------------------------------------------------------------------------------------
+
     SET @proc_step_name=' Update Patient attributes in BMIRD_STREP_PNEUMO_DATAMART';
     SET @proc_step_no = 5.2;
 
     -- we use the INVESTIGATION_KEY to update the patient attributes in the BMIRD_STREP_PNEUMO_DATAMART
-    -- since PATIENT_LOCAL_ID is the only identifier for a patient in the BMIRD_STREP_PNEUMO_DATAMART 
+    -- since PATIENT_LOCAL_ID is the only identifier for a patient in the BMIRD_STREP_PNEUMO_DATAMART
+    -- we use BMIRD_CASE
 
-    IF EXISTS (SELECT 1 FROM dbo.BMIRD_STREP_PNEUMO_DATAMART dm with (nolock) 
-            inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
-            where datamart_update+bmird_strep_pneumo_datamart_update >= 1)
+    select 
+        h.INVESTIGATION_KEY, 
+        g.*
+    into #INVESTIGATION_PATIENT_MAPPING_FOR_BMIRD
+	from 
+        dbo.BMIRD_CASE  d
+	inner join 
+        BMIRD_STREP_PNEUMO_DATAMART h on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
+	inner join 
+        #PATIENT_UPDATE_LIST g on g.PATIENT_LOCAL_ID = h.PATIENT_LOCAL_ID
+    where 
+        datamart_update+bmird_strep_pneumo_datamart_update >= 1
+    ;
+
+    IF EXISTS (SELECT 1 FROM #INVESTIGATION_PATIENT_MAPPING_FOR_BMIRD)
     BEGIN
-        update dbo.BMIRD_STREP_PNEUMO_DATAMART 
-        set 
+        update dbo.BMIRD_STREP_PNEUMO_DATAMART
+        set
         PATIENT_FIRST_NAME = tmp.PATIENT_FIRST_NAME,
-        PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME, 
+        PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME,
         PATIENT_DOB = tmp.PATIENT_DOB,
         PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX,
         AGE_REPORTED = tmp.PATIENT_AGE_REPORTED,
@@ -116,11 +131,11 @@ BEGIN
         PATIENT_COUNTY = tmp.PATIENT_COUNTY,
         RACE_CALCULATED = tmp.PATIENT_RACE_CALCULATED,
         RACE_CALC_DETAILS = tmp.PATIENT_RACE_CALC_DETAILS
-        from  
-            #INVESTIGATION_PATIENT_MAPPING tmp
-        where 
+        from
+            #INVESTIGATION_PATIENT_MAPPING_FOR_BMIRD tmp
+        where
             dbo.BMIRD_STREP_PNEUMO_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-            and datamart_update+bmird_strep_pneumo_datamart_update >= 1;    
+            ;
     END
 
     set @rowcount=@@rowcount;
@@ -129,21 +144,24 @@ BEGIN
     VALUES 
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
+
+    ---------------------------------------------------------------------------------------------------------------------------------
+
     SET @proc_step_name=' Update Patient attributes in HEP100';
     SET @proc_step_no = 5.3;
 
     -- we use the PATIENT_UID to update the patient attributes in the HEP100
     -- since PATIENT_UID is available and is not NULL 
 
-    IF EXISTS (SELECT 1 FROM dbo.HEP100 dm with (nolock) 
-            inner join #INVESTIGATION_PATIENT_MAPPING map on map.PATIENT_UID = dm.PATIENT_UID
+    IF EXISTS (SELECT 1 FROM dbo.HEP100 dm with (nolock)
+            inner join #PATIENT_UPDATE_LIST map on map.PATIENT_UID = dm.PATIENT_UID
             where datamart_update+hep100_datamart_update >= 1)
     BEGIN
         update dbo.HEP100 
         set 
-        PATIENT_FIRST_NAME = tmp.PATIENT_FIRST_NAME,
-        PATIENT_MIDDLE_NAME = tmp.PATIENT_MIDDLE_NAME,
-        PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME, 
+        PATIENT_FIRST_NM = tmp.PATIENT_FIRST_NAME,
+        PATIENT_MIDDLE_NM = tmp.PATIENT_MIDDLE_NAME,
+        PATIENT_LAST_NM = tmp.PATIENT_LAST_NAME,
         PATIENT_DOB = tmp.PATIENT_DOB,
         PATIENT_CURR_GENDER = tmp.PATIENT_CURRENT_SEX,
         PATIENT_REPORTEDAGE = tmp.PATIENT_AGE_REPORTED,
@@ -154,19 +172,26 @@ BEGIN
                     + COALESCE(TRIM(tmp.PATIENT_COUNTY) + ',', '')
                     + COALESCE(TRIM(tmp.PATIENT_ZIP) + ',', '')
                     + COALESCE(TRIM(tmp.PATIENT_STATE), ''),''),
-        PATIENT_STREET_ADDRESS_2 = tmp.PATIENT_STREET_ADDRESS_2,
         PATIENT_CITY = NULLIF(dbo.fn_get_proper_case(tmp.PATIENT_CITY),'') ,
-        PATIENT_STATE = tmp.PATIENT_STATE,
         PATIENT_ZIP_CODE = tmp.PATIENT_ZIP,
         PATIENT_COUNTY = tmp.PATIENT_COUNTY,
-        PATIENT_COUNTRY = tmp.PATIENT_COUNTRY,
         PATIENT_ELECTRONIC_IND = tmp.PATIENT_ENTRY_METHOD,
-        RACE_CALC_DETAILS = tmp.PATIENT_RACE_CALC_DETAILS
-        from  
-            #INVESTIGATION_PATIENT_MAPPING tmp
-        where 
+        RACE = tmp.PATIENT_RACE_CALC_DETAILS,
+        ADDR_USE_CD_DESC = 
+            CASE
+                WHEN len(coalesce(trim(tmp.PATIENT_STREET_ADDRESS_1),trim(tmp.PATIENT_STREET_ADDRESS_2),trim(tmp.PATIENT_CITY),trim(tmp.PATIENT_COUNTY),trim(tmp.PATIENT_ZIP),trim(tmp.PATIENT_STATE), '')) > 0 THEN 'Home'
+                ELSE NULL
+            END,
+        ADDR_CD_DESC = 
+            CASE
+                WHEN len(coalesce(trim(tmp.PATIENT_STREET_ADDRESS_1),trim(tmp.PATIENT_STREET_ADDRESS_2),trim(tmp.PATIENT_CITY),trim(tmp.PATIENT_COUNTY),trim(tmp.PATIENT_ZIP),trim(tmp.PATIENT_STATE), '')) > 0 THEN 'House'
+                ELSE NULL
+            END 
+        from
+            #PATIENT_UPDATE_LIST tmp
+        where
             dbo.HEP100.PATIENT_UID = tmp.PATIENT_UID
-            and datamart_update+hep100_datamart_update >= 1;    
+            and datamart_update+hep100_datamart_update >= 1;
     END
     
     set @rowcount=@@rowcount;
@@ -175,18 +200,103 @@ BEGIN
     VALUES 
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
+    
+    ---------------------------------------------------------------------------------------------------------------------------------
+    
     SET @proc_step_name=' Update Patient attributes in Morbidity Report';
     SET @proc_step_no = 5.4;
 
-    -- we use the INVESTIGATION_KEY to update the patient attributes in the MORBIDITY_REPORT_DATAMART
+    -- we use the MORBIDITY_REPORT_KEY to update the patient attributes in the MORBIDITY_REPORT_DATAMART
     -- since PATIENT_LOCAL_ID is the only identifier for a patient in the MORBIDITY_REPORT_DATAMART and it's NULLABLE
+    -- we use MORBIDITY_REPORT_EVENT
 
-    IF EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_DATAMART dm with (nolock) 
-            inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
-            where datamart_update+morbidity_report_datamart_update >= 1)
+    select
+        h.MORBIDITY_REPORT_KEY,
+        d.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_REPORTER_MAPPING_FOR_MRD
+    from
+    	dbo.MORBIDITY_REPORT_EVENT d
+    inner join 
+        dbo.MORBIDITY_REPORT_DATAMART h on d.MORB_RPT_KEY  = h.MORBIDITY_REPORT_KEY
+    inner join 
+        #PATIENT_UPDATE_LIST g on g.PATIENT_KEY = d.PATIENT_KEY
+    where 
+        datamart_update+morbidity_report_datamart_update >= 1
+    ;
+
+    IF EXISTS (SELECT 1 FROM #INVESTIGATION_REPORTER_MAPPING_FOR_MRD)
     BEGIN
-        update dbo.MORBIDITY_REPORT_DATAMART 
-        set 
+        update dbo.MORBIDITY_REPORT_DATAMART
+        set
+        PATIENT_GENERAL_COMMENTS = tmp.PATIENT_GENERAL_COMMENTS,
+        PATIENT_DOB = tmp.PATIENT_DOB,
+        AGE_REPORTED = tmp.PATIENT_AGE_REPORTED,
+        AGE_REPORTED_UNIT = tmp.PATIENT_AGE_REPORTED_UNIT,
+        PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX,
+        PATIENT_DECEASED_INDICATOR = tmp.PATIENT_DECEASED_INDICATOR,
+        PATIENT_DECEASED_DATE = tmp.PATIENT_DECEASED_DATE,
+        PATIENT_MARITAL_STATUS = tmp.PATIENT_MARITAL_STATUS,
+        PATIENT_SSN = tmp.PATIENT_SSN,
+        PATIENT_ETHNICITY = tmp.PATIENT_ETHNICITY,
+        PATIENT_FIRST_NAME = tmp.PATIENT_FIRST_NAME,
+        PATIENT_MIDDLE_NAME = tmp.PATIENT_MIDDLE_NAME,
+        PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME,
+        PATIENT_NAME_SUFFIX = tmp.PATIENT_NAME_SUFFIX,    
+        PATIENT_STREET_ADDRESS_1 = tmp.PATIENT_STREET_ADDRESS_1,
+        PATIENT_STREET_ADDRESS_2 = tmp.PATIENT_STREET_ADDRESS_2,
+        PATIENT_CITY = tmp.PATIENT_CITY,
+        PATIENT_STATE = tmp.PATIENT_STATE,
+        PATIENT_ZIP = tmp.PATIENT_ZIP,
+        PATIENT_COUNTY = tmp.PATIENT_COUNTY,
+        PATIENT_COUNTRY = tmp.PATIENT_COUNTRY,
+        PATIENT_PHONE_NUMBER_HOME = tmp.PATIENT_PHONE_HOME,
+        PATIENT_PHONE_EXT_HOME = tmp.PATIENT_PHONE_EXT_HOME,
+        PATIENT_PHONE_NUMBER_WORK = tmp.PATIENT_PHONE_WORK,
+        PATIENT_PHONE_EXT_WORK = tmp.PATIENT_PHONE_EXT_WORK,
+        RACE_CALCULATED = tmp.RACE_CALCULATED,
+        RACE_CALCULATED_DETAILS = tmp.RACE_CALCULATED_DETAILS
+        from
+                #INVESTIGATION_REPORTER_MAPPING_FOR_MRD tmp
+            where
+                dbo.MORBIDITY_REPORT_DATAMART.MORBIDITY_REPORT_KEY = tmp.MORBIDITY_REPORT_KEY
+            ;
+    END
+    set @rowcount=@@rowcount;
+    INSERT INTO [dbo].[job_flow_log]
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    VALUES
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+
+
+    ---------------------------------------------------------------------------------------------------------------------------------
+
+    SET @proc_step_name=' Update Patient attributes in STD_HIV_DATAMART';
+    SET @proc_step_no = 5.5;
+
+    -- we use the INVESTIGATION_KEY to update the patient attributes in the STD_HIV_DATAMART
+    -- since PATIENT_LOCAL_ID is the only identifier for a patient in the STD_HIV_DATAMART 
+    -- we use F_STD_PAGE_CASE
+
+    select 
+        i.INVESTIGATION_KEY, 
+        d.* 
+    into #INVESTIGATION_PATIENT_MAPPING_HIV
+    from 
+        dbo.F_STD_PAGE_CASE i with (nolock)  
+    inner join 
+        dbo.STD_HIV_DATAMART h 
+        on h.INVESTIGATION_KEY = i.INVESTIGATION_KEY
+    inner join 
+        #PATIENT_UPDATE_LIST d 
+        on i.PATIENT_KEY = d.PATIENT_KEY 
+    where datamart_update+std_hiv_datamart_update >= 1
+    ;
+
+    IF EXISTS (SELECT 1 FROM #INVESTIGATION_PATIENT_MAPPING_HIV)
+    BEGIN
+        update dbo.STD_HIV_DATAMART
+        set
         [CALC_5_YEAR_AGE_GROUP]	 = 	CASE
             WHEN tmp.PATIENT_AGE_REPORTED >= 0
                     AND tmp.PATIENT_AGE_REPORTED <= 4
@@ -260,6 +370,7 @@ BEGIN
                     AND tmp.PATIENT_AGE_REPORTED_UNIT = 'YEARS'
                     THEN '18'
             ELSE NULL END
+        ,[PATIENT_ADDL_GENDER_INFO]	 = 	tmp.PATIENT_ADDL_GENDER_INFO
         ,[PATIENT_AGE_REPORTED] = CASE
             WHEN tmp.PATIENT_AGE_REPORTED IS NULL
                     AND tmp.PATIENT_AGE_REPORTED_UNIT IS NULL THEN '           .'
@@ -296,7 +407,6 @@ BEGIN
             ELSE ISNULL(tmp.PATIENT_PHONE_WORK, ' ') + ' Ext ' + tmp.PATIENT_PHONE_EXT_WORK
         END
         ,[PATIENT_PREFERRED_GENDER]	 = 	tmp.PATIENT_PREFERRED_GENDER
-        ,[PATIENT_PREGNANT_IND]	 = 	INV.PATIENT_PREGNANT_IND
         ,[PATIENT_RACE]	 = 	tmp.PATIENT_RACE_CALCULATED
         ,[PATIENT_SEX]	 = 	CASE
             WHEN tmp.PATIENT_PREFERRED_GENDER IS NULL THEN ISNULL(tmp.PATIENT_CURR_SEX_UNK_RSN, tmp.PATIENT_CURRENT_SEX)
@@ -307,75 +417,112 @@ BEGIN
         ,[PATIENT_STREET_ADDRESS_2]	 = 	tmp.PATIENT_STREET_ADDRESS_2
         ,[PATIENT_UNK_ETHNIC_RSN]	 = 	tmp.PATIENT_UNK_ETHNIC_RSN
         ,[PATIENT_ZIP]	 = 	tmp.PATIENT_ZIP
-        from  
-            #INVESTIGATION_PATIENT_MAPPING tmp
-        where 
-            dbo.MORBIDITY_REPORT_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-            and datamart_update+morbidity_report_datamart_update >= 1;    
+        from
+            #INVESTIGATION_PATIENT_MAPPING_HIV tmp
+        where
+            tmp.INVESTIGATION_KEY = dbo.STD_HIV_DATAMART.INVESTIGATION_KEY
+        ;
     END
 
     set @rowcount=@@rowcount;
-    INSERT INTO [dbo].[job_flow_log] 
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
-    VALUES 
+    VALUES
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
-    SET @proc_step_name=' Update Patient attributes in VAR_DATAMART';
-    SET @proc_step_no = 5.5;
 
-    IF EXISTS (SELECT 1 FROM dbo.VAR_DATAMART dm with (nolock) 
-            inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
-            where datamart_update+var_datamart_update >= 1)
+    ---------------------------------------------------------------------------------------------------------------------------------
+
+    SET @proc_step_name=' Update Patient attributes in VAR_DATAMART';
+    SET @proc_step_no = 5.6;
+
+    -- we use the INVESTIGATION_KEY to update the patient attributes in the VAR_DATAMART
+    -- since PATIENT_LOCAL_ID is the only identifier for a patient in the VAR_DATAMART 
+    -- we use F_VAR_PAM
+
+    select
+        d.PERSON_KEY,
+        d.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_PATIENT_MAPPING_FOR_VAR
+    from
+    	dbo.F_VAR_PAM d
+    inner join dbo.VAR_DATAMART h on
+        d.INVESTIGATION_KEY  = h.INVESTIGATION_KEY
+    inner join #PATIENT_UPDATE_LIST g on
+        g.PATIENT_KEY = d.PERSON_KEY
+	where datamart_update+var_datamart_update >= 1;
+
+    IF EXISTS (SELECT 1 FROM #INVESTIGATION_PATIENT_MAPPING_FOR_VAR)
     BEGIN
-        update dbo.VAR_DATAMART 
-        set 
+        update dbo.VAR_DATAMART
+        set
         PATIENT_PHONE_NUMBER_HOME = tmp.PATIENT_FIRST_NAME
         ,PATIENT_PHONE_EXT_HOME = tmp.PATIENT_PHONE_EXT_HOME
         ,PATIENT_PHONE_NUMBER_WORK = tmp.PATIENT_PHONE_WORK
         ,PATIENT_PHONE_EXT_WORK = tmp.PATIENT_PHONE_EXT_WORK
         ,PATIENT_GENERAL_COMMENTS = tmp.PATIENT_GENERAL_COMMENTS
-        ,PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME 
-        ,PATIENT_FIRST_NAME = tmp.PATIENT_FIRST_NAME 
-        ,PATIENT_MIDDLE_NAME = tmp.PATIENT_MIDDLE_NAME 
-        ,PATIENT_NAME_SUFFIX = tmp.PATIENT_NAME_SUFFIX 
-        ,PATIENT_DOB = tmp.PATIENT_DOB 
-        ,PATIENT_AGE_REPORTED = tmp.PATIENT_AGE_REPORTED 
+        ,PATIENT_LAST_NAME = tmp.PATIENT_LAST_NAME
+        ,PATIENT_FIRST_NAME = tmp.PATIENT_FIRST_NAME
+        ,PATIENT_MIDDLE_NAME = tmp.PATIENT_MIDDLE_NAME
+        ,PATIENT_NAME_SUFFIX = tmp.PATIENT_NAME_SUFFIX
+        ,PATIENT_DOB = tmp.PATIENT_DOB
+        ,PATIENT_AGE_REPORTED = tmp.PATIENT_AGE_REPORTED
         ,AGE_REPORTED_UNIT = tmp.PATIENT_AGE_REPORTED_UNIT
-        ,PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX 
-        ,PATIENT_DECEASED_INDICATOR = tmp.PATIENT_DECEASED_INDICATOR 
-        ,PATIENT_DECEASED_DATE = tmp.PATIENT_DECEASED_DATE 
-        ,PATIENT_MARITAL_STATUS = tmp.PATIENT_MARITAL_STATUS 
+        ,PATIENT_CURRENT_SEX = tmp.PATIENT_CURRENT_SEX
+        ,PATIENT_DECEASED_INDICATOR = tmp.PATIENT_DECEASED_INDICATOR
+        ,PATIENT_DECEASED_DATE = tmp.PATIENT_DECEASED_DATE
+        ,PATIENT_MARITAL_STATUS = tmp.PATIENT_MARITAL_STATUS
         ,PATIENT_SSN= tmp.PATIENT_SSN
-        ,PATIENT_ETHNICITY = tmp.PATIENT_ETHNICITY 
-        ,PATIENT_STREET_ADDRESS_1 = tmp.PATIENT_STREET_ADDRESS_1 
-        ,PATIENT_STREET_ADDRESS_2 = tmp.PATIENT_STREET_ADDRESS_2 
-        ,PATIENT_CITY = tmp.PATIENT_CITY 
-        ,PATIENT_STATE = tmp.PATIENT_STATE 
-        ,PATIENT_ZIP = tmp.PATIENT_ZIP 
-        ,PATIENT_COUNTY = tmp.PATIENT_COUNTY 
-        ,PATIENT_COUNTRY = tmp.PATIENT_COUNTRY 
+        ,PATIENT_ETHNICITY = tmp.PATIENT_ETHNICITY
+        ,PATIENT_STREET_ADDRESS_1 = tmp.PATIENT_STREET_ADDRESS_1
+        ,PATIENT_STREET_ADDRESS_2 = tmp.PATIENT_STREET_ADDRESS_2
+        ,PATIENT_CITY = tmp.PATIENT_CITY
+        ,PATIENT_STATE = tmp.PATIENT_STATE
+        ,PATIENT_ZIP = tmp.PATIENT_ZIP
+        ,PATIENT_COUNTY = tmp.PATIENT_COUNTY
+        ,PATIENT_COUNTRY = tmp.PATIENT_COUNTRY
         ,WITHIN_CITY_LIMITS = tmp.PATIENT_WITHIN_CITY_LIMITS
-        ,RACE_CALC_DETAILS = tmp.PATIENT_RACE_CALC_DETAILS 
+        ,RACE_CALC_DETAILS = tmp.PATIENT_RACE_CALC_DETAILS
         ,RACE_CALCULATED = tmp.PATIENT_RACE_CALCULATED
-        from  
-            #INVESTIGATION_PATIENT_MAPPING tmp
-        where 
+        from
+            #INVESTIGATION_PATIENT_MAPPING_FOR_VAR tmp
+        where
             dbo.VAR_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
-            and datamart_update+var_datamart_update >= 1;    
+            ;
     END
 
     set @rowcount=@@rowcount;
-    INSERT INTO [dbo].[job_flow_log] 
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
-    VALUES 
+    VALUES
     (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
-    SET @proc_step_name=' Update Patient attributes in TB_DATAMART';
-    SET @proc_step_no = 5.6;
 
-    IF EXISTS (SELECT 1 FROM dbo.TB_DATAMART dm with (nolock) 
-            inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
-            where datamart_update+var_datamart_update+tb_datamart_update >= 1)
+    ---------------------------------------------------------------------------------------------------------------------------------
+
+    SET @proc_step_name=' Update Patient attributes in TB_DATAMART';
+    SET @proc_step_no = 5.7;
+
+    -- we use the INVESTIGATION_KEY to update the patient attributes in the TB_DATAMART
+    -- since PATIENT_LOCAL_ID is the only identifier for a patient in the TB_DATAMART 
+    -- we use F_TB_PAM
+
+    select
+        h.INVESTIGATION_KEY,
+        g.*
+    into #INVESTIGATION_PATIENT_MAPPING_FOR_TB
+    from
+        dbo.F_TB_PAM d with (nolock)
+    inner join dbo.TB_DATAMART h with (nolock)
+        on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
+    inner join #PATIENT_UPDATE_LIST g with (nolock)
+        on g.PATIENT_KEY = d.PERSON_KEY
+    where
+    	datamart_update+var_datamart_update+tb_datamart_update >= 1
+    ;
+
+    IF EXISTS (SELECT 1 FROM #INVESTIGATION_PATIENT_MAPPING_FOR_TB)
     BEGIN
         with src as (
         select
@@ -418,21 +565,20 @@ BEGIN
             p.PATIENT_RACE_ASIAN_GT3_IND AS RACE_ASIAN_GT3_IND,
             p.PATIENT_RACE_NAT_HI_GT3_IND AS RACE_NAT_HI_GT3_IND,
             p.PATIENT_RACE_NAT_HI_ALL AS RACE_NAT_HI_ALL,
-            CASE 
-                WHEN p.PATIENT_DOB IS NOT NULL AND dm.DATE_REPORTED IS NOT NULL 
-                THEN DATEDIFF(day, p.PATIENT_DOB, dm.DATE_REPORTED) / 365.25 
-                ELSE NULL 
+            CASE
+                WHEN p.PATIENT_DOB IS NOT NULL AND dm.DATE_REPORTED IS NOT NULL
+                THEN DATEDIFF(day, p.PATIENT_DOB, dm.DATE_REPORTED) / 365.25
+                ELSE NULL
             END AS AGE_IN_DEC
-        from  
-            dbo.TB_DATAMART dm 
-        inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
-            where datamart_update+var_datamart_update+tb_datamart_update >= 1
+        from
+            dbo.TB_DATAMART dm
+        inner join #INVESTIGATION_PATIENT_MAPPING_FOR_TB map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
         )
         ,src_transformed as (
-        select 
+        select
             src.*,
             FLOOR(AGE_IN_DEC) AS CALC_REPORTED_AGE,
-            CASE 
+            CASE
                 WHEN FLOOR(AGE_IN_DEC) IS NULL THEN NULL
                 WHEN -1 <= FLOOR(AGE_IN_DEC) AND FLOOR(AGE_IN_DEC) < 5 THEN 1
                 WHEN 5 <= FLOOR(AGE_IN_DEC) AND FLOOR(AGE_IN_DEC) < 10 THEN 2
@@ -512,79 +658,77 @@ BEGIN
             CALC_10_YEAR_AGE_GROUP      = tmp.CALC_10_YEAR_AGE_GROUP,
             PATIENT_BIRTH_COUNTRY       = left(tmp.PATIENT_BIRTH_COUNTRY, 50)
         from src_transformed tmp
-        where 
+        where
             1=1
             and dbo.TB_DATAMART.INVESTIGATION_KEY = tmp.INVESTIGATION_KEY
             ;
 
         set @rowcount=@@rowcount;
-        INSERT INTO [dbo].[job_flow_log] 
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
-        VALUES 
+        VALUES
         (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
         SET @proc_step_name=' Update Patient attributes in TB_HIV_DATAMART';
-        SET @proc_step_no = 5.7;
+        SET @proc_step_no = 5.8;
 
-        update dbo.TB_HIV_DATAMART
+        update tb
         set
-            PATIENT_PHONE_NUMBER_HOME   = tb.PATIENT_PHONE_NUMBER_HOME   
-            ,PATIENT_PHONE_EXT_HOME      = tb.PATIENT_PHONE_EXT_HOME      
-            ,PATIENT_PHONE_NUMBER_WORK   = tb.PATIENT_PHONE_NUMBER_WORK   
-            ,PATIENT_PHONE_EXT_WORK      = tb.PATIENT_PHONE_EXT_WORK      
-            ,PATIENT_LOCAL_ID            = tb.PATIENT_LOCAL_ID            
-            ,PATIENT_GENERAL_COMMENTS    = tb.PATIENT_GENERAL_COMMENTS    
-            ,PATIENT_LAST_NAME           = tb.PATIENT_LAST_NAME           
-            ,PATIENT_FIRST_NAME          = tb.PATIENT_FIRST_NAME          
-            ,PATIENT_MIDDLE_NAME         = tb.PATIENT_MIDDLE_NAME         
-            ,PATIENT_NAME_SUFFIX         = tb.PATIENT_NAME_SUFFIX         
-            ,PATIENT_DOB                 = tb.PATIENT_DOB                 
-            ,AGE_REPORTED                = tb.AGE_REPORTED                
-            ,AGE_REPORTED_UNIT           = tb.AGE_REPORTED_UNIT           
-            ,PATIENT_BIRTH_SEX           = tb.PATIENT_BIRTH_SEX           
-            ,PATIENT_CURRENT_SEX         = tb.PATIENT_CURRENT_SEX         
-            ,PATIENT_DECEASED_INDICATOR  = tb.PATIENT_DECEASED_INDICATOR  
-            ,PATIENT_DECEASED_DATE       = tb.PATIENT_DECEASED_DATE       
-            ,PATIENT_MARITAL_STATUS      = tb.PATIENT_MARITAL_STATUS      
-            ,PATIENT_SSN                 = tb.PATIENT_SSN                 
-            ,PATIENT_ETHNICITY           = tb.PATIENT_ETHNICITY           
-            ,PATIENT_STREET_ADDRESS_1    = tb.PATIENT_STREET_ADDRESS_1    
-            ,PATIENT_STREET_ADDRESS_2    = tb.PATIENT_STREET_ADDRESS_2    
-            ,PATIENT_CITY                = tb.PATIENT_CITY                
-            ,PATIENT_STATE               = tb.PATIENT_STATE               
-            ,PATIENT_ZIP                 = tb.PATIENT_ZIP                 
-            ,PATIENT_COUNTY              = tb.PATIENT_COUNTY              
-            ,PATIENT_COUNTRY             = tb.PATIENT_COUNTRY             
-            ,PATIENT_WITHIN_CITY_LIMITS  = tb.PATIENT_WITHIN_CITY_LIMITS  
-            ,RACE_CALC_DETAILS           = tb.RACE_CALC_DETAILS           
-            ,RACE_CALCULATED             = tb.RACE_CALCULATED             
-            ,RACE_NAT_HI_1               = tb.RACE_NAT_HI_1               
-            ,RACE_NAT_HI_2               = tb.RACE_NAT_HI_2               
-            ,RACE_NAT_HI_3               = tb.RACE_NAT_HI_3               
-            ,RACE_ASIAN_1                = tb.RACE_ASIAN_1                
-            ,RACE_ASIAN_2                = tb.RACE_ASIAN_2                
-            ,RACE_ASIAN_3                = tb.RACE_ASIAN_3                
-            ,RACE_ASIAN_ALL              = tb.RACE_ASIAN_ALL              
-            ,RACE_ASIAN_GT3_IND          = tb.RACE_ASIAN_GT3_IND          
-            ,RACE_NAT_HI_GT3_IND         = tb.RACE_NAT_HI_GT3_IND         
-            ,RACE_NAT_HI_ALL             = tb.RACE_NAT_HI_ALL             
-            ,CALC_REPORTED_AGE           = tb.CALC_REPORTED_AGE           
-            ,CALC_5_YEAR_AGE_GROUP       = tb.CALC_5_YEAR_AGE_GROUP       
-            ,CALC_10_YEAR_AGE_GROUP      = tb.CALC_10_YEAR_AGE_GROUP      
-            ,PATIENT_BIRTH_COUNTRY       = tb.PATIENT_BIRTH_COUNTRY       
-        from dbo.TB_DATAMART tb
-        inner join #INVESTIGATION_PATIENT_MAPPING map on map.INVESTIGATION_KEY = tb.INVESTIGATION_KEY
-        and datamart_update+var_datamart_update+tb_datamart_update >= 1
-        where 
-            tb.INVESTIGATION_KEY = dbo.TB_HIV_DATAMART.INVESTIGATION_KEY
+            PATIENT_PHONE_NUMBER_HOME   = tb.PATIENT_PHONE_NUMBER_HOME
+            ,PATIENT_PHONE_EXT_HOME      = tb.PATIENT_PHONE_EXT_HOME
+            ,PATIENT_PHONE_NUMBER_WORK   = tb.PATIENT_PHONE_NUMBER_WORK
+            ,PATIENT_PHONE_EXT_WORK      = tb.PATIENT_PHONE_EXT_WORK
+            ,PATIENT_LOCAL_ID            = tb.PATIENT_LOCAL_ID
+            ,PATIENT_GENERAL_COMMENTS    = tb.PATIENT_GENERAL_COMMENTS
+            ,PATIENT_LAST_NAME           = tb.PATIENT_LAST_NAME
+            ,PATIENT_FIRST_NAME          = tb.PATIENT_FIRST_NAME
+            ,PATIENT_MIDDLE_NAME         = tb.PATIENT_MIDDLE_NAME
+            ,PATIENT_NAME_SUFFIX         = tb.PATIENT_NAME_SUFFIX
+            ,PATIENT_DOB                 = tb.PATIENT_DOB
+            ,AGE_REPORTED                = tb.AGE_REPORTED
+            ,AGE_REPORTED_UNIT           = tb.AGE_REPORTED_UNIT
+            ,PATIENT_BIRTH_SEX           = tb.PATIENT_BIRTH_SEX
+            ,PATIENT_CURRENT_SEX         = tb.PATIENT_CURRENT_SEX
+            ,PATIENT_DECEASED_INDICATOR  = tb.PATIENT_DECEASED_INDICATOR
+            ,PATIENT_DECEASED_DATE       = tb.PATIENT_DECEASED_DATE
+            ,PATIENT_MARITAL_STATUS      = tb.PATIENT_MARITAL_STATUS
+            ,PATIENT_SSN                 = tb.PATIENT_SSN
+            ,PATIENT_ETHNICITY           = tb.PATIENT_ETHNICITY
+            ,PATIENT_STREET_ADDRESS_1    = tb.PATIENT_STREET_ADDRESS_1
+            ,PATIENT_STREET_ADDRESS_2    = tb.PATIENT_STREET_ADDRESS_2
+            ,PATIENT_CITY                = tb.PATIENT_CITY
+            ,PATIENT_STATE               = tb.PATIENT_STATE
+            ,PATIENT_ZIP                 = tb.PATIENT_ZIP
+            ,PATIENT_COUNTY              = tb.PATIENT_COUNTY
+            ,PATIENT_COUNTRY             = tb.PATIENT_COUNTRY
+            ,PATIENT_WITHIN_CITY_LIMITS  = tb.PATIENT_WITHIN_CITY_LIMITS
+            ,RACE_CALC_DETAILS           = tb.RACE_CALC_DETAILS
+            ,RACE_CALCULATED             = tb.RACE_CALCULATED
+            ,RACE_NAT_HI_1               = tb.RACE_NAT_HI_1
+            ,RACE_NAT_HI_2               = tb.RACE_NAT_HI_2
+            ,RACE_NAT_HI_3               = tb.RACE_NAT_HI_3
+            ,RACE_ASIAN_1                = tb.RACE_ASIAN_1
+            ,RACE_ASIAN_2                = tb.RACE_ASIAN_2
+            ,RACE_ASIAN_3                = tb.RACE_ASIAN_3
+            ,RACE_ASIAN_ALL              = tb.RACE_ASIAN_ALL
+            ,RACE_ASIAN_GT3_IND          = tb.RACE_ASIAN_GT3_IND
+            ,RACE_NAT_HI_GT3_IND         = tb.RACE_NAT_HI_GT3_IND
+            ,RACE_NAT_HI_ALL             = tb.RACE_NAT_HI_ALL
+            ,CALC_REPORTED_AGE           = tb.CALC_REPORTED_AGE
+            ,CALC_5_YEAR_AGE_GROUP       = tb.CALC_5_YEAR_AGE_GROUP
+            ,CALC_10_YEAR_AGE_GROUP      = tb.CALC_10_YEAR_AGE_GROUP
+            ,PATIENT_BIRTH_COUNTRY       = tb.PATIENT_BIRTH_COUNTRY
+        from dbo.TB_HIV_DATAMART tb
+        inner join #INVESTIGATION_PATIENT_MAPPING_FOR_TB map
+        on map.INVESTIGATION_KEY = tb.INVESTIGATION_KEY
         ;
 
         set @rowcount=@@rowcount;
-        INSERT INTO [dbo].[job_flow_log] 
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
-        VALUES 
+        VALUES
         (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
 
     END
- 
+
 END;
