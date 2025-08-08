@@ -82,7 +82,7 @@ BEGIN
             TB.LAST_CHG_TIME,
             METADATA.CODE_SET_NM,
             CVG.CODE, 
-            CVG.CODE_SHORT_DESC_TXT AS CODE_SHORT_DESC_TXT
+            CVG.CODE_DESC_TXT AS CODE_SHORT_DESC_TXT
         INTO #S_MOVE_STATE_TRANSLATED 
         FROM DBO.NRT_PAGE_CASE_ANSWER TB with (nolock)
         left join dbo.NRT_INVESTIGATION inv with(nolock)
