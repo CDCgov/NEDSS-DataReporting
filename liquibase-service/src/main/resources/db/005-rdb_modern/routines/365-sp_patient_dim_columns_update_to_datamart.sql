@@ -43,7 +43,7 @@ BEGIN
         dbo.CASE_COUNT d with (nolock)
     inner join dbo.CASE_LAB_DATAMART h with (nolock)
         on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
-    inner join #PATIENT_UPDATE_LIST g with (nolock)
+    inner join #PATIENT_UPDATE_LIST g 
         on g.PATIENT_KEY = d.PATIENT_KEY
     where datamart_update+case_lab_datamart_update >= 1
 
@@ -103,11 +103,13 @@ BEGIN
         g.*
     into #INVESTIGATION_PATIENT_MAPPING_FOR_BMIRD
 	from 
-        dbo.BMIRD_CASE  d
+        dbo.BMIRD_CASE d with (nolock)
 	inner join 
-        BMIRD_STREP_PNEUMO_DATAMART h on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
+        dbo.BMIRD_STREP_PNEUMO_DATAMART h with (nolock)
+        on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
 	inner join 
-        #PATIENT_UPDATE_LIST g on g.PATIENT_LOCAL_ID = h.PATIENT_LOCAL_ID
+        #PATIENT_UPDATE_LIST g 
+        on g.PATIENT_KEY = d.PATIENT_KEY
     where 
         datamart_update+bmird_strep_pneumo_datamart_update >= 1
     ;
@@ -216,11 +218,13 @@ BEGIN
         g.*
     into #INVESTIGATION_REPORTER_MAPPING_FOR_MRD
     from
-    	dbo.MORBIDITY_REPORT_EVENT d
+    	dbo.MORBIDITY_REPORT_EVENT d with (nolock)
     inner join 
-        dbo.MORBIDITY_REPORT_DATAMART h on d.MORB_RPT_KEY  = h.MORBIDITY_REPORT_KEY
+        dbo.MORBIDITY_REPORT_DATAMART h with (nolock)
+        on d.MORB_RPT_KEY  = h.MORBIDITY_REPORT_KEY
     inner join 
-        #PATIENT_UPDATE_LIST g on g.PATIENT_KEY = d.PATIENT_KEY
+        #PATIENT_UPDATE_LIST g 
+        on g.PATIENT_KEY = d.PATIENT_KEY
     where 
         datamart_update+morbidity_report_datamart_update >= 1
     ;
@@ -285,7 +289,7 @@ BEGIN
     from 
         dbo.F_STD_PAGE_CASE i with (nolock)  
     inner join 
-        dbo.STD_HIV_DATAMART h 
+        dbo.STD_HIV_DATAMART h with (nolock)
         on h.INVESTIGATION_KEY = i.INVESTIGATION_KEY
     inner join 
         #PATIENT_UPDATE_LIST d 
@@ -446,11 +450,13 @@ BEGIN
         g.*
     into #INVESTIGATION_PATIENT_MAPPING_FOR_VAR
     from
-    	dbo.F_VAR_PAM d
-    inner join dbo.VAR_DATAMART h on
-        d.INVESTIGATION_KEY  = h.INVESTIGATION_KEY
-    inner join #PATIENT_UPDATE_LIST g on
-        g.PATIENT_KEY = d.PERSON_KEY
+    	dbo.F_VAR_PAM d with (nolock)
+    inner join 
+        dbo.VAR_DATAMART h with (nolock)
+        on d.INVESTIGATION_KEY  = h.INVESTIGATION_KEY
+    inner join 
+        #PATIENT_UPDATE_LIST g 
+        on g.PATIENT_KEY = d.PERSON_KEY
 	where datamart_update+var_datamart_update >= 1;
 
     IF EXISTS (SELECT 1 FROM #INVESTIGATION_PATIENT_MAPPING_FOR_VAR)
@@ -514,9 +520,11 @@ BEGIN
     into #INVESTIGATION_PATIENT_MAPPING_FOR_TB
     from
         dbo.F_TB_PAM d with (nolock)
-    inner join dbo.TB_DATAMART h with (nolock)
+    inner join 
+        dbo.TB_DATAMART h with (nolock)
         on d.INVESTIGATION_KEY = h.INVESTIGATION_KEY
-    inner join #PATIENT_UPDATE_LIST g with (nolock)
+    inner join 
+        #PATIENT_UPDATE_LIST g
         on g.PATIENT_KEY = d.PERSON_KEY
     where
     	datamart_update+var_datamart_update+tb_datamart_update >= 1
@@ -571,7 +579,7 @@ BEGIN
                 ELSE NULL
             END AS AGE_IN_DEC
         from
-            dbo.TB_DATAMART dm
+            dbo.TB_DATAMART dm with (nolock)
         inner join #INVESTIGATION_PATIENT_MAPPING_FOR_TB map on map.INVESTIGATION_KEY = dm.INVESTIGATION_KEY
         )
         ,src_transformed as (
