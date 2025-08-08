@@ -24,40 +24,6 @@ BEGIN
     declare @dataflow_name varchar(200) = 'Provider POST-Processing';
     declare @package_name varchar(200) = 'sp_provider_delta_update';
 
-    -- Building a mapping table for investigations and providers which can be used later 
-    -- multiple times in the procedure when needed
-    -- select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.* 
-    -- into #INVESTIGATION_PROVIDER_MAPPING
-    -- from  #PROVIDER_UPDATE_LIST d 
-    -- inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
-    -- on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
-    -- union all
-    -- select i.INVESTIGATION_KEY, i.PHYSICIAN_KEY, 'physician' as provider_type, d.*
-    -- from  #PROVIDER_UPDATE_LIST d 
-    -- inner join dbo.F_PAGE_CASE i  with (nolock) 
-    -- on  i.PHYSICIAN_KEY = d.PROVIDER_KEY  
-    -- union all
-    -- select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
-    -- from  #PROVIDER_UPDATE_LIST d 
-    -- inner join dbo.F_PAGE_CASE i  with (nolock) 
-    -- on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY  
-    -- union all
-    -- select i.INVESTIGATION_KEY, i.INVESTIGATOR_KEY, 'investigator' as provider_type, d.*
-    -- from  #PROVIDER_UPDATE_LIST d 
-    -- inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
-    -- on  i.INVESTIGATOR_KEY = d.PROVIDER_KEY
-    -- union all
-    -- select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
-    -- from  #PROVIDER_UPDATE_LIST d 
-    -- inner join dbo.F_PAGE_CASE i  with (nolock) 
-    -- on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY  
-    -- union all
-    -- select i.INVESTIGATION_KEY, i.PERSON_AS_REPORTER_KEY, 'reporter' as provider_type, d.*
-    -- from  #PROVIDER_UPDATE_LIST d 
-    -- inner join dbo.F_STD_PAGE_CASE i  with (nolock) 
-    -- on  i.PERSON_AS_REPORTER_KEY = d.PROVIDER_KEY
-    -- ;
-
     ---------------------------------------------------------------------------------------------------------------------------------
 
     SET @proc_step_name=' Update Provider attributes in MORBIDITY_REPORT_DATAMART for PROVIDER';
