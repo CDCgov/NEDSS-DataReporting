@@ -325,6 +325,35 @@ BEGIN
 
         if @debug = 'true' SELECT 'DEBUG: tmp_morb_root_keyvalue', * FROM #tmp_morb_root;
 
+        -- ADD MISSING DELETE LOGIC
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Delete existing records for updated observations';
+
+        -- Delete from MORBIDITY_REPORT_EVENT
+        DELETE FROM dbo.MORBIDITY_REPORT_EVENT
+        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
+
+        -- Delete from MORB_RPT_USER_COMMENT
+        DELETE FROM dbo.MORB_RPT_USER_COMMENT
+        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
+
+        -- Delete from LAB_TEST_RESULT (if still relevant)
+        DELETE FROM dbo.LAB_TEST_RESULT
+        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
+
+        -- Delete from MORBIDITY_REPORT
+        DELETE FROM dbo.MORBIDITY_REPORT
+        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
