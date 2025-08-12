@@ -899,6 +899,8 @@ BEGIN
                     exec sp_executesql @sql;
                END
 
+        SET @proc_step_name='Check and perform update to valid patient attributes in downstream Datamarts';
+        SET @proc_step_no = 7;
         -- Enter only if there are updates in the patient table that are valid for downstream datamarts
         IF EXISTS (
             select 1 from #PATIENT_UPDATE_LIST
@@ -912,6 +914,26 @@ BEGIN
                 +tb_datamart_update >= 1
         )
         BEGIN
+
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+            VALUES
+            (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,
+                LEFT( (SELECT
+                    patient_uid,
+                    datamart_update
+                    +case_lab_datamart_update
+                    +bmird_strep_pneumo_datamart_update
+                    +hep100_datamart_update
+                    +morbidity_report_datamart_update
+                    +std_hiv_datamart_update
+                    +var_datamart_update
+                    +tb_datamart_update as update_count
+                    FROM #PATIENT_UPDATE_LIST
+                    FOR JSON PATH
+                ), 500)
+            )
+            ;
             exec sp_patient_dim_columns_update_to_datamart @batch_id, @debug;
         END
 

@@ -23,7 +23,9 @@ BEGIN
     declare @proc_step_name varchar(200) = '';
     declare @dataflow_name varchar(200) = 'Provider POST-Processing';
     declare @package_name varchar(200) = 'sp_provider_delta_update';
+    declare @id_list nvarchar(max);
 
+    SELECT @id_list = STRING_AGG(provider_uid, ',') FROM #PROVIDER_UPDATE_LIST;
     ---------------------------------------------------------------------------------------------------------------------------------
 
     SET @proc_step_name=' Update Provider attributes in MORBIDITY_REPORT_DATAMART for PROVIDER';
@@ -69,9 +71,9 @@ BEGIN
 
     set @rowcount=@@rowcount;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
     ---------------------------------------------------------------------------------------------------------------------------------
     
@@ -117,9 +119,9 @@ BEGIN
 
     set @rowcount=@@rowcount;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
 
     ---------------------------------------------------------------------------------------------------------------------------------
@@ -223,9 +225,9 @@ BEGIN
 
     set @rowcount=@@rowcount;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
 
     ---------------------------------------------------------------------------------------------------------------------------------
@@ -267,9 +269,9 @@ BEGIN
 
     set @rowcount=@@rowcount;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
     SET @proc_step_name=' Update Provider attributes in HEP100_DATAMART for INVESTIGATOR';
     SET @proc_step_no = 5.9;
@@ -294,9 +296,9 @@ BEGIN
 
     set @rowcount=@@rowcount;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
 
     ---------------------------------------------------------------------------------------------------------------------------------
@@ -351,9 +353,9 @@ BEGIN
     
     set @rowcount=@rowcount_tmp;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
     ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -405,9 +407,9 @@ BEGIN
 
     set @rowcount=@rowcount_tmp;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
     ---------------------------------------------------------------------------------------------------------------------------------
     
@@ -459,9 +461,9 @@ BEGIN
 
     set @rowcount=@rowcount_tmp;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
 
     ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -487,8 +489,8 @@ BEGIN
     
     set @rowcount=@@rowcount;
     INSERT INTO [dbo].[job_flow_log] 
-    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
+    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
     VALUES 
-    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount);
+    (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
 END
