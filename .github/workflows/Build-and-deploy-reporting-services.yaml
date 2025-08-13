@@ -5,9 +5,9 @@ on:
       - main
       - master
       - rel-**
-#       Uncomment the following line only to test the build deploy from private branches.
-#      - CNDIT-*
-#      - CNDE-*
+    #       Uncomment the following line only to test the build deploy from private branches.
+    #      - CNDIT-*
+    #      - CNDE-*
     paths-ignore:
       - "docker-compose.yml"
       - "**.md"
@@ -21,7 +21,7 @@ jobs:
     secrets:
       PASSED_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
- 
+
   # person-reporting-microservice
   call-build-person-reporting-microservice-container-workflow:
     permissions:
@@ -42,22 +42,22 @@ jobs:
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
-  call-update-helm-for-person-reporting-microservice:
-    permissions:
-      id-token: write
-      contents: write      
-      pull-requests: write
-    needs: call-build-person-reporting-microservice-container-workflow
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
-    with:
-      microservice_name: person-reporting-service
-      values_file_with_path: charts/person-reporting-service/values-dts1.yaml
-      new_image_tag: ${{ needs.call-build-person-reporting-microservice-container-workflow.outputs.output_image_tag }}
-    secrets:
-      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
-      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
-      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
- 
+  #  call-update-helm-for-person-reporting-microservice:
+  #    permissions:
+  #      id-token: write
+  #      contents: write
+  #      pull-requests: write
+  #    needs: call-build-person-reporting-microservice-container-workflow
+  #    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
+  #    with:
+  #      microservice_name: person-reporting-service
+  #      values_file_with_path: charts/person-reporting-service/values-dts1.yaml
+  #      new_image_tag: ${{ needs.call-build-person-reporting-microservice-container-workflow.outputs.output_image_tag }}
+  #    secrets:
+  #      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
+  #      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
+  #      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+
   # organization-reporting-microservice
   call-build-organization-reporting-microservice-container-workflow:
     permissions:
@@ -78,21 +78,21 @@ jobs:
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
-  call-update-helm-for-organization-reporting-microservice:
-    permissions:
-      id-token: write
-      contents: write      
-      pull-requests: write
-    needs: call-build-organization-reporting-microservice-container-workflow
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
-    with:
-      microservice_name: organization-reporting-service
-      values_file_with_path: charts/organization-reporting-service/values-dts1.yaml
-      new_image_tag: ${{ needs.call-build-organization-reporting-microservice-container-workflow.outputs.output_image_tag }}
-    secrets:
-      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
-      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
-      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+  #  call-update-helm-for-organization-reporting-microservice:
+  #    permissions:
+  #      id-token: write
+  #      contents: write
+  #      pull-requests: write
+  #    needs: call-build-organization-reporting-microservice-container-workflow
+  #    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
+  #    with:
+  #      microservice_name: organization-reporting-service
+  #      values_file_with_path: charts/organization-reporting-service/values-dts1.yaml
+  #      new_image_tag: ${{ needs.call-build-organization-reporting-microservice-container-workflow.outputs.output_image_tag }}
+  #    secrets:
+  #      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
+  #      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
+  #      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
   
   # investigation-reporting-microservice
   call-build-investigation-reporting-microservice-container-workflow:
@@ -114,22 +114,22 @@ jobs:
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
-  call-update-helm-for-investigation-reporting-microservice:
-    permissions:
-      id-token: write
-      contents: write      
-      pull-requests: write
-    needs: call-build-investigation-reporting-microservice-container-workflow
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
-    with:
-      microservice_name: investigation-reporting-service
-      values_file_with_path: charts/investigation-reporting-service/values-dts1.yaml
-      new_image_tag: ${{ needs.call-build-investigation-reporting-microservice-container-workflow.outputs.output_image_tag }}
-    secrets:
-      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
-      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
-      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
-    
+    #  call-update-helm-for-investigation-reporting-microservice:
+    #    permissions:
+    #      id-token: write
+    #      contents: write
+    #      pull-requests: write
+    #    needs: call-build-investigation-reporting-microservice-container-workflow
+    #    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
+    #    with:
+    #      microservice_name: investigation-reporting-service
+    #      values_file_with_path: charts/investigation-reporting-service/values-dts1.yaml
+    #      new_image_tag: ${{ needs.call-build-investigation-reporting-microservice-container-workflow.outputs.output_image_tag }}
+    #    secrets:
+    #      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
+    #      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
+    #      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+
   # post-processing-reporting-microservice
   call-build-post-processing-reporting-microservice-container-workflow:
     permissions:
@@ -150,21 +150,21 @@ jobs:
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
-  call-update-helm-for-post-processing-reporting-microservice:
-    permissions:
-      id-token: write
-      contents: write      
-      pull-requests: write
-    needs: call-build-post-processing-reporting-microservice-container-workflow
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
-    with:
-      microservice_name: post-processing-reporting-service
-      values_file_with_path: charts/post-processing-reporting-service/values-dts1.yaml
-      new_image_tag: ${{ needs.call-build-post-processing-reporting-microservice-container-workflow.outputs.output_image_tag }}
-    secrets:
-      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
-      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
-      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+  #  call-update-helm-for-post-processing-reporting-microservice:
+  #    permissions:
+  #      id-token: write
+  #      contents: write
+  #      pull-requests: write
+  #    needs: call-build-post-processing-reporting-microservice-container-workflow
+  #    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
+  #    with:
+  #      microservice_name: post-processing-reporting-service
+  #      values_file_with_path: charts/post-processing-reporting-service/values-dts1.yaml
+  #      new_image_tag: ${{ needs.call-build-post-processing-reporting-microservice-container-workflow.outputs.output_image_tag }}
+  #    secrets:
+  #      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
+  #      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
+  #      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   # observation-reporting-microservice
   call-build-observation-reporting-microservice-container-workflow:
@@ -186,23 +186,23 @@ jobs:
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
-  call-update-helm-for-observation-reporting-microservice:
-    permissions:
-      id-token: write
-      contents: write      
-      pull-requests: write
-    needs: call-build-observation-reporting-microservice-container-workflow
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
-    with:
-      microservice_name: observation-reporting-service
-      values_file_with_path: charts/observation-reporting-service/values-dts1.yaml
-      new_image_tag: ${{ needs.call-build-observation-reporting-microservice-container-workflow.outputs.output_image_tag }}
-    secrets:
-      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
-      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
-      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+  #  call-update-helm-for-observation-reporting-microservice:
+  #    permissions:
+  #      id-token: write
+  #      contents: write
+  #      pull-requests: write
+  #    needs: call-build-observation-reporting-microservice-container-workflow
+  #    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
+  #    with:
+  #      microservice_name: observation-reporting-service
+  #      values_file_with_path: charts/observation-reporting-service/values-dts1.yaml
+  #      new_image_tag: ${{ needs.call-build-observation-reporting-microservice-container-workflow.outputs.output_image_tag }}
+  #    secrets:
+  #      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
+  #      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
+  #      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
- # LdfData-reporting-microservice
+  # LdfData-reporting-microservice
   call-build-ldfdata-reporting-microservice-container-workflow:
     permissions:
       id-token: write
@@ -222,21 +222,21 @@ jobs:
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
-  call-update-helm-for-ldfdata-reporting-microservice:
-    permissions:
-      id-token: write
-      contents: write      
-      pull-requests: write
-    needs: call-build-ldfdata-reporting-microservice-container-workflow
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
-    with:
-      microservice_name: ldfdata-reporting-service
-      values_file_with_path: charts/ldfdata-reporting-service/values-dts1.yaml
-      new_image_tag: ${{ needs.call-build-ldfdata-reporting-microservice-container-workflow.outputs.output_image_tag }}
-    secrets:
-      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
-      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
-      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+  #  call-update-helm-for-ldfdata-reporting-microservice:
+  #    permissions:
+  #      id-token: write
+  #      contents: write
+  #      pull-requests: write
+  #    needs: call-build-ldfdata-reporting-microservice-container-workflow
+  #    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
+  #    with:
+  #      microservice_name: ldfdata-reporting-service
+  #      values_file_with_path: charts/ldfdata-reporting-service/values-dts1.yaml
+  #      new_image_tag: ${{ needs.call-build-ldfdata-reporting-microservice-container-workflow.outputs.output_image_tag }}
+  #    secrets:
+  #      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
+  #      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
+  #      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
   # liquibase-microservice
   call-build-liquibase-microservice-container-workflow:
@@ -262,7 +262,7 @@ jobs:
   call-update-helm-for-liquibase-microservice:
     permissions:
       id-token: write
-      contents: write      
+      contents: write
       pull-requests: write
     needs: call-build-liquibase-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
@@ -270,6 +270,24 @@ jobs:
       microservice_name: liquibase-service
       values_file_with_path: charts/liquibase/values-dts1.yaml
       new_image_tag: ${{ needs.call-build-liquibase-microservice-container-workflow.outputs.output_image_tag }}
+    secrets:
+      GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
+      GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
+      HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+
+
+  # Helm Update RTR consolidated Java services
+  call-update-consolidated-java-services-helm:
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    needs: call-build-person-reporting-microservice-container-workflow
+    uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
+    with:
+      microservice_name: RTR-Java-microservices
+      values_file_with_path: charts/rtr/values-dts1.yaml
+      new_image_tag: ${{ needs.call-build-person-reporting-microservice-container-workflow.outputs.output_image_tag }}
     secrets:
       GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
