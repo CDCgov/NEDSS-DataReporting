@@ -52,10 +52,8 @@ BEGIN
 
 --------------------------------------------------------------------------------------------------------
 
-        SET
-            @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET
-            @PROC_STEP_NAME = 'GENERATING #LDF_BASE TABLE';
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'GENERATING #LDF_BASE TABLE';
 
         IF OBJECT_ID('#LDF_BASE', 'U') IS NOT NULL
             drop table #LDF_BASE;
@@ -82,7 +80,7 @@ BEGIN
         WHERE  NCA.ldf_status_cd IN ('LDF_UPDATE', 'LDF_CREATE', 'LDF_PROCESSED') AND
             NCA.investigation_form_cd = 'INV_FORM_VAR'
           AND NCA.nuim_record_status_cd IN ('Active', 'Inactive')
-          AND i.case_type_cd = 'I'
+--        AND i.case_type_cd = 'I'
           AND isnull(I.batch_id, 1) = isnull(NCA.batch_id, 1);
 
         if
@@ -426,7 +424,7 @@ BEGIN
             SET @Update_sql =
                     'UPDATE dbo.VAR_PAM_LDF
                     SET
-                    ADD_TIME = tgt.ADD_TIME'
+                    ADD_TIME = COALESCE(tgt.ADD_TIME, src.D_VAR_PAM_ADD_TIME)'
                         + CASE
                               WHEN @ordered_columns != '' THEN ',' + (SELECT STRING_AGG( CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)) + ' = src.' + CAST(QUOTENAME(COLUMN_NAME) AS NVARCHAR(MAX)),',')
                                                                       FROM (SELECT DISTINCT COLUMN_NAME FROM #COL_LIST) as cols)
@@ -435,7 +433,7 @@ BEGIN
                         + '
         FROM
         (
-        SELECT INV.INVESTIGATION_KEY, D_VAR_PAM.VAR_PAM_UID as D_VAR_PAM_UID, LDF_T.*
+        SELECT INV.INVESTIGATION_KEY, D_VAR_PAM.VAR_PAM_UID as D_VAR_PAM_UID, D_VAR_PAM.NCA_ADD_TIME as D_VAR_PAM_ADD_TIME, LDF_T.*
         FROM #LDF_BASE D_VAR_PAM with (nolock)
         INNER JOIN #S_PHC_LIST S_PHC_LIST
             ON S_PHC_LIST.VALUE = D_VAR_PAM.VAR_PAM_UID
