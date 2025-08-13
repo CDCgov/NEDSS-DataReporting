@@ -3,8 +3,6 @@ package gov.cdc.etldatapipeline.person.model.dto.persondetail;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gov.cdc.etldatapipeline.person.model.dto.PersonExtendedProps;
-import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderElasticSearch;
-import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderReporting;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,18 +30,10 @@ public class Phone implements ExtendPerson {
         personFull.setPhElpUseCd(useCd);
         personFull.setPhTlUid(teleLocatorUid);
 
-        if (personFull.getClass() == ProviderReporting.class || personFull.getClass() == ProviderElasticSearch.class) {
-            if (useCd.equalsIgnoreCase("WP") && cd.equalsIgnoreCase("O")) {
-                personFull.setPhoneWork(telephoneNbr);
-                personFull.setPhoneExtWork(extensionTxt);
-                personFull.setPhoneComments(phoneComments);
-            }
-        } else {
-            if (useCd.equalsIgnoreCase("WP") ) {
-                personFull.setPhoneWork(telephoneNbr);
-                personFull.setPhoneExtWork(extensionTxt);
-                personFull.setPhoneComments(phoneComments);
-            }
+        if (useCd.equalsIgnoreCase("WP") ) {
+            personFull.setPhoneWork(telephoneNbr);
+            personFull.setPhoneExtWork(extensionTxt);
+            personFull.setPhoneComments(phoneComments);
         }
 
         if (useCd.equalsIgnoreCase("H")) {
