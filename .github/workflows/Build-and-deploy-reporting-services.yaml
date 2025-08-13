@@ -7,7 +7,7 @@ on:
       - rel-**
     #       Uncomment the following line only to test the build deploy from private branches.
     #      - CNDIT-*
-    #      - CNDE-*
+      - CNDE-*
     paths-ignore:
       - "docker-compose.yml"
       - "**.md"
