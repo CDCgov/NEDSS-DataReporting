@@ -533,19 +533,40 @@ BEGIN
         (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,LEFT(@id_list,500));
 
         IF OBJECT_ID('dbo.' + @dimension_update_tbl_nm, 'U') IS NOT NULL
-            BEGIN
-                 SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
-                 exec sp_executesql @sql;
-            END
+          BEGIN
+               SET @sql = 'drop table dbo.' + @dimension_update_tbl_nm;
+               exec sp_executesql @sql;
+          END
 
-              -- Enter only if there are updates in the provider table that are valid for downstream datamarts
-             IF EXISTS (
-                  select 1 from #PROVIDER_UPDATE_LIST
-                  where datamart_update+tb_datamart_update+morbidity_datamart_update+std_hiv_datamart_update+hep100_datamart_update >= 1
-             )
-            BEGIN
-                exec sp_provider_dim_columns_update_to_datamart @batch_id, @debug;
-            END
+          SET @proc_step_name='Check and perform update to valid provider attributes in downstream Datamarts';
+          SET @proc_step_no = 9;
+          -- Enter only if there are at least one valid update in the provider table that are valid for downstream datamarts
+          IF EXISTS (
+               select 1 from #PROVIDER_UPDATE_LIST
+               where datamart_update
+                +tb_datamart_update
+                +morbidity_datamart_update
+                +std_hiv_datamart_update
+                +hep100_datamart_update >= 1
+          )
+          BEGIN
+               INSERT INTO [dbo].[job_flow_log]
+               (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[msg_description1])
+               VALUES
+               (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,@rowcount,
+                LEFT( (SELECT
+                    provider_uid,
+                   datamart_update
+                   +tb_datamart_update
+                   +morbidity_datamart_update
+                   +std_hiv_datamart_update
+                   +hep100_datamart_update as update_count
+                    FROM #PATIENT_UPDATE_LIST
+                    FOR JSON PATH
+                ), 500)
+                );
+               exec sp_provider_dim_columns_update_to_datamart @batch_id, @debug;
+          END
 
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 999;
