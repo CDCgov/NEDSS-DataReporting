@@ -30,13 +30,11 @@ public class Phone implements ExtendPerson {
         personFull.setPhElpUseCd(useCd);
         personFull.setPhTlUid(teleLocatorUid);
 
-        if (useCd.equalsIgnoreCase("WP") ) {
+        if (useCd.equalsIgnoreCase("WP")) {
             personFull.setPhoneWork(telephoneNbr);
             personFull.setPhoneExtWork(extensionTxt);
             personFull.setPhoneComments(phoneComments);
-        }
-
-        if (useCd.equalsIgnoreCase("H")) {
+        } else if (useCd.equalsIgnoreCase("H")) {
             personFull.setPhoneHome(telephoneNbr);
             personFull.setPhoneExtHome(extensionTxt);
         }
