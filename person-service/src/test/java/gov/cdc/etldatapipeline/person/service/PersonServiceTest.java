@@ -98,52 +98,28 @@ class PersonServiceTest {
                 "rawDataFiles/patient/PatientKey.json");
     }
 
-    @Test
-    void testProcessProviderData() throws JsonProcessingException {
-        ProviderSp providerSp = constructProviderCase(null);
+    @ParameterizedTest
+    @CsvSource({
+            "PersonTelephone.json , rawDataFiles/provider/ProviderReporting.json, rawDataFiles/provider/ProviderElasticSearch.json",
+            "PersonTelephone2.json, rawDataFiles/provider/ProviderReporting2.json, rawDataFiles/provider/ProviderElasticSearch2.json",
+            "PersonTelephone3.json, rawDataFiles/provider/ProviderReporting3.json, rawDataFiles/provider/ProviderElasticSearch3.json"
+    })
+    void testProcessProviderData(String personTelephoneFile,
+                                 String providerReportingFile,
+                                 String providerElasticFile) throws JsonProcessingException {
+
+        ProviderSp providerSp = constructProviderCase(personTelephoneFile);
         Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
         Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
 
-        // Validate Patient Reporting Data Transformation
         validateDataTransformation(
                 readFileData("rawDataFiles/person/PersonProviderChangeData.json"),
                 providerReportingTopic,
                 providerElasticTopic,
-                "rawDataFiles/provider/ProviderReporting.json",
-                "rawDataFiles/provider/ProviderElasticSearch.json",
-                "rawDataFiles/provider/ProviderKey.json");
-    }
-
-    @Test
-    void testProcessProviderData2() throws JsonProcessingException {
-        ProviderSp providerSp = constructProviderCase("PersonTelephone2.json");
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
-        Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
-
-        // Validate Patient Reporting Data Transformation
-        validateDataTransformation(
-                readFileData("rawDataFiles/person/PersonProviderChangeData.json"),
-                providerReportingTopic,
-                providerElasticTopic,
-                "rawDataFiles/provider/ProviderReporting2.json",
-                "rawDataFiles/provider/ProviderElasticSearch2.json",
-                "rawDataFiles/provider/ProviderKey.json");
-    }
-
-    @Test
-    void testProcessProviderData3() throws JsonProcessingException {
-        ProviderSp providerSp = constructProviderCase("PersonTelephone3.json");
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
-        Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
-
-        // Validate Patient Reporting Data Transformation
-        validateDataTransformation(
-                readFileData("rawDataFiles/person/PersonProviderChangeData.json"),
-                providerReportingTopic,
-                providerElasticTopic,
-                "rawDataFiles/provider/ProviderReporting3.json",
-                "rawDataFiles/provider/ProviderElasticSearch3.json",
-                "rawDataFiles/provider/ProviderKey.json");
+                providerReportingFile,
+                providerElasticFile,
+                "rawDataFiles/provider/ProviderKey.json"
+        );
     }
 
     @Test

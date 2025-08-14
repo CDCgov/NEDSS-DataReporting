@@ -109,13 +109,11 @@ public class DataPostProcessor {
 
         // --- Special work phone logic for ProviderReporting / ProviderElasticSearch ---
         if (pf instanceof ProviderReporting || pf instanceof ProviderElasticSearch) {
-            // 1. Try WP + O
             Phone workPhone = Arrays.stream(allData)
                     .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()) && "O".equalsIgnoreCase(p.getCd()))
                     .max(Comparator.comparing(Phone::getTeleLocatorUid))
                     .orElse(null);
 
-            // 2. Fallback: WP only
             if (workPhone == null) {
                 workPhone = Arrays.stream(allData)
                         .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()))
@@ -124,27 +122,13 @@ public class DataPostProcessor {
             }
 
             if (workPhone != null) {
-                pf.setPhoneWork(workPhone.getTelephoneNbr());
-                pf.setPhoneExtWork(workPhone.getExtensionTxt());
-                pf.setPhoneComments(workPhone.getPhoneComments());
-                pf.setPhElpCd(workPhone.getCd());
-                pf.setPhElpUseCd(workPhone.getUseCd());
-                pf.setPhTlUid(workPhone.getTeleLocatorUid());
+                workPhone.updatePerson(pf); // delegate update
             }
-        }
-        // --- Work phone logic for others ---
-        else {
+        } else {
             Arrays.stream(allData)
                     .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()))
                     .max(Comparator.comparing(Phone::getTeleLocatorUid))
-                    .ifPresent(p -> {
-                        pf.setPhoneWork(p.getTelephoneNbr());
-                        pf.setPhoneExtWork(p.getExtensionTxt());
-                        pf.setPhoneComments(p.getPhoneComments());
-                        pf.setPhElpCd(p.getCd());
-                        pf.setPhElpUseCd(p.getUseCd());
-                        pf.setPhTlUid(p.getTeleLocatorUid());
-                    });
+                    .ifPresent(p -> p.updatePerson(pf)); // delegate update
         }
 
         Function<Predicate<? super Phone>, T> personPhoneFn =
