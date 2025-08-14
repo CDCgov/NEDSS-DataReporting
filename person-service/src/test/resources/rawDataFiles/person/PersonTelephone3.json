@@ -37,19 +37,26 @@
     "ph_tl_uid": 10000014
   },
   {
-    "telephoneNbr": "2323252423",
+    "telephoneNbr": "2223334444",
     "extensionTxt": "",
     "ph_elp_use_cd": "WP",
-    "ph_elp_cd": "O",
+    "ph_elp_cd": "CP",
     "ph_tl_uid": 10000016,
     "phone_comments": "work phone office comment"
+  },
+  {
+    "telephoneNbr": "2223335555",
+    "extensionTxt": "",
+    "ph_elp_use_cd": "WP",
+    "ph_elp_cd": "CP",
+    "ph_tl_uid": 10000017
   },
   {
     "telephoneNbr": "2823252423",
     "extensionTxt": "",
     "ph_elp_use_cd": "MC",
     "ph_elp_cd": "CP",
-    "ph_tl_uid": 10000015
+    "ph_tl_uid": 10000019
   },
   {
     "telephoneNbr": "123212331",
