@@ -130,7 +130,7 @@ class PersonDetailsDeserializationTests {
                 .build();
 
         assertNotNull(phones);
-        assertEquals(8, phones.length);
+        assertEquals(9, phones.length);
         assertEquals(expected.toString(), phones[0].toString());
     }
 
