@@ -1,13 +1,13 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_place_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_nrt_place_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_nrt_place_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_nrt_place_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE dbo.sp_nrt_place_postprocessing @id_list nvarchar(max),
-                                                          @debug bit = 'false'
+                                                 @debug bit = 'false'
 AS
 BEGIN
 
@@ -27,8 +27,8 @@ BEGIN
 
         INSERT INTO [dbo].[job_flow_log]
         ( batch_id, [create_dttm], [update_dttm], [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [msg_description1], [row_count])
-        VALUES 
-        ( @batch_id, @create_dttm, @update_dttm, @dataflow_name, @package_name, 'START', 0, 'SP_Start', LEFT(@id_list, 500), 0);
+        VALUES
+            ( @batch_id, @create_dttm, @update_dttm, @dataflow_name, @package_name, 'START', 0, 'SP_Start', LEFT(@id_list, 500), 0);
 
         SET @proc_step_name = 'Create D_PLACE Temp table -' + LEFT(@id_list, 160);
         SET @proc_step_no = 1;
@@ -99,11 +99,11 @@ BEGIN
                             ELSE NULL
             END                                      AS PLACE_LAST_UPDATED_BY
         INTO #tmp_place_table
-        FROM dbo.nrt_place nrt
-                 LEFT JOIN dbo.nrt_place_tele tele on tele.place_uid = nrt.place_uid
-                 LEFT OUTER JOIN dbo.USER_PROFILE B
+        FROM dbo.nrt_place nrt with(nolock)
+                 LEFT JOIN dbo.nrt_place_tele tele with(nolock) on tele.place_uid = nrt.place_uid
+                 LEFT OUTER JOIN dbo.USER_PROFILE B with(nolock)
                                  ON nrt.place_add_user_id = b.nedss_entry_id
-                 LEFT OUTER JOIN dbo.USER_PROFILE C
+                 LEFT OUTER JOIN dbo.USER_PROFILE C with(nolock)
                                  ON nrt.place_add_user_id = c.nedss_entry_id
         WHERE nrt.place_uid IN (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
@@ -130,29 +130,29 @@ BEGIN
                , @rowcount
                , LEFT(@id_list, 500));
 
-        declare @backfill_list nvarchar(max);  
-        SET @backfill_list = 
-		( 
-			SELECT string_agg(t.value, ',')
-			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
-                left join #tmp_place_table tmp
-                on tmp.place_uid = t.value	
-                WHERE tmp.place_uid is null	
-		);
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+                (
+                    SELECT string_agg(t.value, ',')
+                    FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@id_list, ',')) t
+                             left join #tmp_place_table tmp
+                                       on tmp.place_uid = t.value
+                    WHERE tmp.place_uid is null
+                );
 
         IF @backfill_list IS NOT NULL
-        BEGIN
-            SELECT
-                0 AS public_health_case_uid,
-                CAST(NULL AS BIGINT) AS patient_uid,
-                CAST(NULL AS BIGINT) AS observation_uid,
-                'Error' AS datamart,
-                CAST(NULL AS VARCHAR(50))  AS condition_cd,
-                'Missing NRT Record: sp_nrt_place_postprocessing' AS stored_procedure,
-                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            BEGIN
+                SELECT
+                    0 AS public_health_case_uid,
+                    CAST(NULL AS BIGINT) AS patient_uid,
+                    CAST(NULL AS BIGINT) AS observation_uid,
+                    'Error' AS datamart,
+                    CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                    'Missing NRT Record: sp_nrt_place_postprocessing' AS stored_procedure,
+                    CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
                 WHERE 1=1;
-           RETURN;
-        END
+                RETURN;
+            END
 
         BEGIN TRANSACTION;
 
@@ -431,31 +431,18 @@ BEGIN
 
         update k
         SET
-          k.updated_dttm = GETDATE()
+            k.updated_dttm = GETDATE()
         FROM dbo.nrt_place_key k
-          INNER JOIN #tmp_locator_gen d
-            ON K.d_place_key = d.place_key
-            AND k.PLACE_LOCATOR_UID = d.PLACE_LOCATOR_UID;
+                 INNER JOIN #tmp_locator_gen d
+                            ON K.d_place_key = d.place_key
+                                AND k.PLACE_LOCATOR_UID = d.PLACE_LOCATOR_UID;
 
         /* Logging */
         SET @rowcount = @@rowcount
         INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [msg_description1])
-        VALUES ( @batch_id
-               , @dataflow_name
-               , @package_name
-               , 'START'
-               , @proc_step_no
-               , @proc_step_name
-               , @rowcount
-               , LEFT(@id_list, 500));
+        ( batch_id, [create_dttm], [update_dttm], [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1])
+        VALUES ( @batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'START', @proc_step_no, @proc_step_name, 0, LEFT(@id_list, 500));
+
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -507,22 +494,67 @@ BEGIN
         /* Logging */
         SET @rowcount = @@rowcount
         INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [msg_description1])
-        VALUES ( @batch_id
-               , @dataflow_name
-               , @package_name
-               , 'START'
-               , @proc_step_no
-               , @proc_step_name
-               , @rowcount
-               , LEFT(@id_list, 500));
+        ( batch_id, [create_dttm], [update_dttm], [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1])
+        VALUES ( @batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'START', @proc_step_no, @proc_step_name, 0, LEFT(@id_list, 500));
+
+        COMMIT TRANSACTION;
+
+        BEGIN TRANSACTION;
+        SET @proc_step_name = 'Update D_INV_PLACE_REPEAT';
+        SET @proc_step_no = @proc_step_no + 1;
+
+        IF EXISTS(SELECT 1 FROM dbo.D_INV_PLACE_REPEAT d
+                                    INNER JOIN #tmp_locator_gen p ON p.PLACE_LOCATOR_UID = d.PLACE_AS_SEX_OF_PHC
+            OR p.PLACE_LOCATOR_UID= d.PLACE_HANGOUT_OF_PHC)
+            BEGIN
+
+                UPDATE dbo.D_INV_PLACE_REPEAT
+                SET
+                    PLACE_ADD_TIME           = p.PLACE_ADD_TIME,
+                    PLACE_ADD_USER_ID        = p.PLACE_ADD_USER_ID,
+                    PLACE_ADDED_BY           = p.PLACE_ADDED_BY,
+                    PLACE_ADDRESS_COMMENTS   = p.PLACE_ADDRESS_COMMENTS,
+                    PLACE_CITY               = p.PLACE_CITY,
+                    PLACE_COUNTRY            = p.PLACE_COUNTRY,
+                    PLACE_COUNTRY_DESC       = p.PLACE_COUNTRY_DESC,
+                    PLACE_COUNTY_CODE        = p.PLACE_COUNTY_CODE,
+                    PLACE_COUNTY_DESC        = p.PLACE_COUNTY_DESC,
+                    PLACE_EMAIL              = p.PLACE_EMAIL,
+                    PLACE_GENERAL_COMMENTS   = p.PLACE_GENERAL_COMMENTS,
+                    PLACE_LAST_CHANGE_TIME   = p.PLACE_LAST_CHANGE_TIME,
+                    PLACE_LAST_CHG_USER_ID   = p.PLACE_LAST_CHG_USER_ID,
+                    PLACE_LAST_UPDATED_BY    = p.PLACE_LAST_UPDATED_BY,
+                    PLACE_LOCAL_ID           = p.PLACE_LOCAL_ID,
+                    PLACE_NAME               = p.PLACE_NAME,
+                    PLACE_PHONE              = p.PLACE_PHONE,
+                    PLACE_PHONE_COMMENTS     = p.PLACE_PHONE_COMMENTS,
+                    PLACE_PHONE_EXT          = p.PLACE_PHONE_EXT,
+                    PLACE_POSTAL_UID         = p.PLACE_POSTAL_UID,
+                    PLACE_QUICK_CODE         = p.PLACE_QUICK_CODE,
+                    PLACE_RECORD_STATUS      = p.PLACE_RECORD_STATUS,
+                    PLACE_RECORD_STATUS_TIME = p.PLACE_RECORD_STATUS_TIME,
+                    PLACE_STATE_CODE         = p.PLACE_STATE_CODE,
+                    PLACE_STATE_DESC         = p.PLACE_STATE_DESC,
+                    PLACE_STATUS_CD          = p.PLACE_STATUS_CD,
+                    PLACE_STATUS_TIME        = p.PLACE_STATUS_TIME,
+                    PLACE_STREET_ADDRESS_1   = p.PLACE_STREET_ADDRESS_1,
+                    PLACE_STREET_ADDRESS_2   = p.PLACE_STREET_ADDRESS_2,
+                    PLACE_TELE_LOCATOR_UID   = p.PLACE_TELE_LOCATOR_UID,
+                    PLACE_TELE_TYPE          = p.PLACE_TELE_TYPE,
+                    PLACE_TELE_USE           = p.PLACE_TELE_USE,
+                    PLACE_TYPE_DESCRIPTION   = p.PLACE_TYPE_DESCRIPTION,
+                    PLACE_UID                = p.PLACE_UID,
+                    PLACE_ZIP                = p.PLACE_ZIP
+                FROM #tmp_locator_gen p
+                         INNER JOIN DBO.D_INV_PLACE_REPEAT d ON p.PLACE_LOCATOR_UID = d.PLACE_AS_SEX_OF_PHC
+                    OR  p.PLACE_LOCATOR_UID= d.PLACE_HANGOUT_OF_PHC;
+            END
+
+        SET @rowcount = @@rowcount
+        INSERT INTO [dbo].[job_flow_log]
+        ( batch_id, [create_dttm], [update_dttm], [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1])
+        VALUES ( @batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'START', @proc_step_no, @proc_step_name, 0, LEFT(@id_list, 500));
+
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -621,22 +653,9 @@ BEGIN
         /* Logging */
         SET @rowcount = @@rowcount
         INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [msg_description1])
-        VALUES ( @batch_id
-               , @dataflow_name
-               , @package_name
-               , 'START'
-               , @proc_step_no
-               , @proc_step_name
-               , @rowcount
-               , LEFT(@id_list, 500));
+        ( batch_id, [create_dttm], [update_dttm], [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1])
+        VALUES ( @batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'START', @proc_step_no, @proc_step_name, 0, LEFT(@id_list, 500));
+
         COMMIT TRANSACTION;
 
         SET @proc_step_name = 'SP_COMPLETE';
@@ -659,7 +678,7 @@ BEGIN
             CAST(NULL AS VARCHAR(50))  AS condition_cd,
             CAST(NULL AS VARCHAR(200)) AS stored_procedure,
             CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-            WHERE 1=0;
+        WHERE 1=0;
 
     END TRY
     BEGIN CATCH
@@ -667,7 +686,7 @@ BEGIN
 
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-            -- Construct the error message string with all details:
+        -- Construct the error message string with all details:
         DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
@@ -678,19 +697,19 @@ BEGIN
         /* Logging */
         INSERT INTO [dbo].[job_flow_log]
         ( batch_id, [create_dttm], [update_dttm], [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [msg_description1], [Error_Description])
-        VALUES 
-        ( @batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'ERROR', @Proc_Step_no, @proc_step_name, 0, LEFT(@id_list, 500), @FullErrorMessage);
+        VALUES
+            ( @batch_id, current_timestamp, current_timestamp, @dataflow_name, @package_name, 'ERROR', @Proc_Step_no, @proc_step_name, 0, LEFT(@id_list, 500), @FullErrorMessage);
 
 
         SELECT
-                0 AS public_health_case_uid,
-                CAST(NULL AS BIGINT) AS patient_uid,
-                CAST(NULL AS BIGINT) AS observation_uid,
-                'Error' AS datamart,
-                CAST(NULL AS VARCHAR(50))  AS condition_cd,
-                @FullErrorMessage AS stored_procedure,
-                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-                WHERE 1=1;
+            0 AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            'Error' AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            @FullErrorMessage AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+        WHERE 1=1;
 
     END CATCH
 
