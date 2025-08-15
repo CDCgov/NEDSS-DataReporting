@@ -659,7 +659,7 @@ BEGIN
         COMMIT TRANSACTION;
 
         SET @proc_step_name = 'SP_COMPLETE';
-        SET @proc_step_no = @proc_step_no + 1;
+        SET @proc_step_no = 999;
 
 
         IF OBJECT_ID('#tmp_place_table', 'U') IS NOT NULL drop table #tmp_place_table;
