@@ -1160,11 +1160,12 @@ BEGIN
      , CASE_INFO as (
         select
             src.VACCINATION_UID,
-            actrel.TARGET_ACT_UID as PHC_UID
+            STRING_AGG(actrel.TARGET_ACT_UID, ',') as PHC_UIDs
         from #TMP_VACCINATION_INIT src
         inner join NBS_ODSE.dbo.ACT_RELATIONSHIP actrel with (nolock)
              ON actrel.SOURCE_ACT_UID = src.VACCINATION_UID
         where TYPE_CD='1180'
+        GROUP BY src.VACCINATION_UID
     )
     SELECT
 	    ix.ADD_TIME ,
@@ -1194,7 +1195,7 @@ BEGIN
         ix.MATERIAL_CD,
 		prov.PROVIDER_UID,
 		org.ORGANIZATION_UID,
-		cas.PHC_UID,
+		cas.PHC_UIDs,
 		pat.PATIENT_UID,
 	    nesteddata.answers,
 	    nesteddata.rdb_cols
