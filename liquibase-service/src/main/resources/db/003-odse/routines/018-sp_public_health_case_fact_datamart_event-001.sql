@@ -1601,15 +1601,15 @@ BEGIN
             MIN(ADD_TIME) AS FIRSTNOTIFICATIONDATE
                       ,
                       --DONE
-            MAX(CASE
+            NULLIF(MAX(CASE
                     WHEN version_ctrl_nbr != 1 THEN -1
                     ELSE add_user_id
-                END) AS FIRSTNOTIFICATIONSUBMITTEDBY,
+                END), -1) AS FIRSTNOTIFICATIONSUBMITTEDBY,
                       --DONE
-            MAX(CASE
+            NULLIF(MAX(CASE
                     WHEN notif_latest_rownum != 1 THEN -1
                     ELSE last_chg_user_id
-                END) AS LASTNOTIFICATIONSUBMITTEDBY
+                END), -1) AS LASTNOTIFICATIONSUBMITTEDBY
                       --DONE
                       --MIN(CASE WHEN RECORD_STATUS_CD='COMPLETED' THEN  LAST_CHG_USER_ID END) AS FIRSTNOTIFICATIONSUBMITTEDBY,
                       ,MIN(CASE
