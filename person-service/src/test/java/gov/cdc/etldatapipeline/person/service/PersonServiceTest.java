@@ -98,20 +98,28 @@ class PersonServiceTest {
                 "rawDataFiles/patient/PatientKey.json");
     }
 
-    @Test
-    void testProcessProviderData() throws JsonProcessingException {
-        ProviderSp providerSp = constructProvider();
+    @ParameterizedTest
+    @CsvSource({
+            "PersonTelephone.json , rawDataFiles/provider/ProviderReporting.json, rawDataFiles/provider/ProviderElasticSearch.json",
+            "PersonTelephone2.json, rawDataFiles/provider/ProviderReporting2.json, rawDataFiles/provider/ProviderElasticSearch2.json",
+            "PersonTelephone3.json, rawDataFiles/provider/ProviderReporting3.json, rawDataFiles/provider/ProviderElasticSearch3.json"
+    })
+    void testProcessProviderData(String personTelephoneFile,
+                                 String providerReportingFile,
+                                 String providerElasticFile) throws JsonProcessingException {
+
+        ProviderSp providerSp = constructProviderCase(personTelephoneFile);
         Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
         Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
 
-        // Validate Patient Reporting Data Transformation
         validateDataTransformation(
                 readFileData("rawDataFiles/person/PersonProviderChangeData.json"),
                 providerReportingTopic,
                 providerElasticTopic,
-                "rawDataFiles/provider/ProviderReporting.json",
-                "rawDataFiles/provider/ProviderElasticSearch.json",
-                "rawDataFiles/provider/ProviderKey.json");
+                providerReportingFile,
+                providerElasticFile,
+                "rawDataFiles/provider/ProviderKey.json"
+        );
     }
 
     @Test
@@ -247,13 +255,13 @@ class PersonServiceTest {
                 .build();
     }
 
-    private ProviderSp constructProvider() {
+    private ProviderSp constructProviderCase(String overridePhoneData) {
         String filePathPrefix = "rawDataFiles/person/";
         return ProviderSp.builder()
                 .personUid(10000001L)
                 .nameNested(readFileData(filePathPrefix + "PersonName.json"))
                 .addressNested(readFileData(filePathPrefix + "PersonAddress.json"))
-                .telephoneNested(readFileData(filePathPrefix + "PersonTelephone.json"))
+                .telephoneNested(readFileData(overridePhoneData==null?filePathPrefix + "PersonTelephone.json":filePathPrefix+overridePhoneData))
                 .entityDataNested(readFileData(filePathPrefix + "PersonEntityData.json"))
                 .emailNested(readFileData(filePathPrefix + "PersonEmail.json"))
                 .build();

@@ -1440,8 +1440,7 @@ BEGIN
     AND NF.[last_chg_time] < @batch_end_time)
     OR AR.TARGET_ACT_UID IN (SELECT PUBLIC_HEALTH_CASE_UID FROM #TEMP_PHCSUBJECT WITH (NOLOCK)))
     */
-        ORDER BY TARGET_ACT_UID
-               ,LAST_CHG_TIME;
+        ORDER BY TARGET_ACT_UID, LAST_CHG_TIME;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
@@ -1526,6 +1525,32 @@ BEGIN
         IF OBJECT_ID('#TEMP_MIN_MAX_NOTIFICATION') IS NOT NULL
             DROP TABLE #TEMP_MIN_MAX_NOTIFICATION;
 
+        WITH orderedHist AS(
+        SELECT
+        PUBLIC_HEALTH_CASE_UID
+        ,TARGET_CLASS_CD
+        ,SOURCE_ACT_UID
+        ,SOURCE_CLASS_CD
+        ,VERSION_CTRL_NBR
+        ,ADD_TIME
+        ,ADD_USER_ID
+        ,RPT_SENT_TIME
+        ,RECORD_STATUS_CD
+        ,RECORD_STATUS_TIME
+        ,LAST_CHG_TIME
+        ,LAST_CHG_USER_ID
+        ,HIST_IND
+        ,TXT
+        ,NOTIFSENTCOUNT
+        ,NOTIFREJECTEDCOUNT
+        ,NOTIFCREATEDCOUNT
+        ,X1
+        ,X2
+        ,FIRSTNOTIFICATIONSENDDATE
+        ,NOTIFICATIONDATE
+        ,ROW_NUMBER() OVER (PARTITION BY PUBLIC_HEALTH_CASE_UID ORDER BY VERSION_CTRL_NBR DESC) notif_latest_rownum
+    FROM #TEMP_SAS_NOTIFICATION
+        )
         SELECT DISTINCT MIN(CASE
             WHEN VERSION_CTRL_NBR = 1
                 THEN RECORD_STATUS_CD
@@ -1576,10 +1601,15 @@ BEGIN
             MIN(ADD_TIME) AS FIRSTNOTIFICATIONDATE
                       ,
                       --DONE
-            MIN(ADD_USER_ID) AS FIRSTNOTIFICATIONSUBMITTEDBY
-                      ,
+            NULLIF(MAX(CASE
+                    WHEN version_ctrl_nbr != 1 THEN -1
+                    ELSE add_user_id
+                END), -1) AS FIRSTNOTIFICATIONSUBMITTEDBY,
                       --DONE
-            MIN(ADD_USER_ID) AS LASTNOTIFICATIONSUBMITTEDBY
+            NULLIF(MAX(CASE
+                    WHEN notif_latest_rownum != 1 THEN -1
+                    ELSE last_chg_user_id
+                END), -1) AS LASTNOTIFICATIONSUBMITTEDBY
                       --DONE
                       --MIN(CASE WHEN RECORD_STATUS_CD='COMPLETED' THEN  LAST_CHG_USER_ID END) AS FIRSTNOTIFICATIONSUBMITTEDBY,
                       ,MIN(CASE
@@ -1589,7 +1619,7 @@ BEGIN
             END) AS NOTIFICATIONDATE
                       ,PUBLIC_HEALTH_CASE_UID
         INTO #TEMP_MIN_MAX_NOTIFICATION
-        FROM #TEMP_SAS_NOTIFICATION WITH (NOLOCK)
+        FROM orderedHist
         GROUP BY PUBLIC_HEALTH_CASE_UID;
 
         UPDATE #TEMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = NOTIFCREATEDCOUNT-1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT>0;

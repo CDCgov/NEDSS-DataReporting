@@ -100,22 +100,50 @@ public class DataPostProcessor {
     }
 
     public <T extends PersonExtendedProps> void processPersonTelephone(String telephone, T pf) {
-        if (!ObjectUtils.isEmpty(telephone)) {
-
-            // deserialize once, guarantee non-null
-            Phone[] allData = requireNonNull(deserializePayload(telephone, Phone[].class));
-
-            Function<Predicate<? super Phone>, T> personPhoneFn =
-                    p -> Arrays.stream(allData)
-                            .filter(p)
-                            .max(Comparator.comparing(Phone::getTeleLocatorUid))
-                            .map(n -> n.updatePerson(pf))
-                            .orElse(null);
-
-            personPhoneFn.apply(p -> "WP".equalsIgnoreCase(p.getUseCd()));
-            personPhoneFn.apply(p -> "H".equalsIgnoreCase(p.getUseCd()));
-            personPhoneFn.apply(p -> "CP".equalsIgnoreCase(p.getCd()));
+        if (ObjectUtils.isEmpty(telephone)) {
+            return;
         }
+
+        // Deserialize once
+        Phone[] allData = requireNonNull(deserializePayload(telephone, Phone[].class));
+
+        // --- Special work phone logic for ProviderReporting / ProviderElasticSearch ---
+        if (pf instanceof ProviderReporting || pf instanceof ProviderElasticSearch) {
+            Phone workPhone = Arrays.stream(allData)
+                    .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()) && "O".equalsIgnoreCase(p.getCd()))
+                    .max(Comparator.comparing(Phone::getTeleLocatorUid))
+                    .orElse(null);
+
+            if (workPhone == null) {
+                workPhone = Arrays.stream(allData)
+                        .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()))
+                        .max(Comparator.comparing(Phone::getTeleLocatorUid))
+                        .orElse(null);
+            }
+
+            if (workPhone != null) {
+                workPhone.updatePerson(pf); // delegate update
+            }
+        } else {
+            Arrays.stream(allData)
+                    .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()))
+                    .max(Comparator.comparing(Phone::getTeleLocatorUid))
+                    .ifPresent(p -> p.updatePerson(pf)); // delegate update
+        }
+
+        Function<Predicate<? super Phone>, T> personPhoneFn =
+            p -> Arrays.stream(allData)
+                    .filter(p)
+                    .max(Comparator.comparing(Phone::getTeleLocatorUid))
+                    .map(n -> n.updatePerson(pf))
+                    .orElse(null);
+
+        // --- Home phone ---
+        personPhoneFn.apply(p -> "H".equalsIgnoreCase(p.getUseCd()));
+
+        // --- Cell phone ---
+        personPhoneFn.apply(p -> "CP".equalsIgnoreCase(p.getCd()));
+
     }
 
     public <T extends PersonExtendedProps> void processPersonEntityData(String entityData, T pf) {

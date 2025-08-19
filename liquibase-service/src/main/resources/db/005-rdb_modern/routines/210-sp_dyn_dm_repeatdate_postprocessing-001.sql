@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatdate_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatdate_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_dyn_dm_repeatdate_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_dyn_dm_repeatdate_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE dbo.sp_dyn_dm_repeatdate_postprocessing
     @batch_id BIGINT,
@@ -119,7 +119,7 @@ BEGIN
         IF @countmeta < 1
             BEGIN
 
-                SELECT 'No repeat date metadata';
+                if @debug = 'true' SELECT 'No repeat date metadata';
 
 
                 SET @temp_sql = '
@@ -684,7 +684,7 @@ BEGIN
                 GROUP BY [COL1]
             ) AS x;
 
-        PRINT @columns;
+        -- PRINT @columns;
 
         SET @sql = N'
 					SELECT [INVESTIGATION_KEY] , ' + STUFF(@columns, 1, 2, '') +
@@ -924,7 +924,7 @@ BEGIN
                 GROUP BY [USER_DEFINED_COLUMN_NM_ALL]
             ) AS x;
 
-        PRINT @columns;
+        if @debug = 'true' PRINT @columns;
 
         SET @sql = N'
 		SELECT [INVESTIGATION_KEY]  , '+STUFF(@columns, 1, 2, '')+
@@ -936,7 +936,7 @@ BEGIN
                            ) AS j PIVOT (max(ANSWER_DESC21) FOR [USER_DEFINED_COLUMN_NM_ALL] in
                         ('+STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '')+')) AS p;';
 
-        print @sql;
+        if @debug = 'true' print @sql;
         EXEC ( @sql);
 
 

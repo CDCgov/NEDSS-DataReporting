@@ -45,7 +45,6 @@ WITH NotifHist AS (
                 OR NF.RECORD_STATUS_CD = 'APPROVED'
             )
     UNION
-    
     SELECT  
         TARGET_ACT_UID
         ,TARGET_CLASS_CD
@@ -83,7 +82,33 @@ WITH NotifHist AS (
                 OR NF.RECORD_STATUS_CD = 'PEND_APPR'
                 OR NF.RECORD_STATUS_CD = 'APPROVED'
             )
-
+),
+orderedHist AS(
+    SELECT
+        PUBLIC_HEALTH_CASE_UID
+        ,TARGET_CLASS_CD
+        ,SOURCE_ACT_UID
+        ,SOURCE_CLASS_CD
+        ,VERSION_CTRL_NBR
+        ,ADD_TIME
+        ,ADD_USER_ID
+        ,RPT_SENT_TIME
+        ,RECORD_STATUS_CD
+        ,RECORD_STATUS_TIME
+        ,LAST_CHG_TIME
+        ,LAST_CHG_USER_ID
+        ,HIST_IND
+        ,TXT
+        ,NOTIFSENTCOUNT
+        ,NOTIFREJECTEDCOUNT
+        ,NOTIFCREATEDCOUNT
+        ,X1
+        ,X2
+        ,FIRSTNOTIFICATIONSENDDATE
+        ,NOTIFICATIONDATE
+        ,notification_uid
+        ,ROW_NUMBER() OVER (PARTITION BY PUBLIC_HEALTH_CASE_UID ORDER BY VERSION_CTRL_NBR DESC) notif_latest_rownum
+    FROM NotifHist
 )
 SELECT DISTINCT 
     MIN(CASE
@@ -125,15 +150,19 @@ SELECT DISTINCT
             THEN RPT_SENT_TIME
     END) AS last_notification_send_date
     ,MIN(ADD_TIME) AS first_notification_date
-    ,MIN(ADD_USER_ID) AS first_notification_submitted_by
-    ,MIN(ADD_USER_ID) AS last_notification_submitted_by
+    ,NULLIF(MAX(CASE
+            WHEN version_ctrl_nbr != 1 THEN -1
+            ELSE add_user_id
+        END), -1) AS first_notification_submitted_by
+    ,NULLIF(MAX(CASE
+            WHEN notif_latest_rownum != 1 THEN -1
+            ELSE last_chg_user_id
+        END), -1) AS last_notification_submitted_by
     ,MIN(CASE
             WHEN RECORD_STATUS_CD = 'COMPLETED' AND RPT_SENT_TIME IS NOT NULL
             THEN RPT_SENT_TIME
     END) AS notification_date
     ,PUBLIC_HEALTH_CASE_UID
     ,notification_uid
-FROM NotifHist
-GROUP BY PUBLIC_HEALTH_CASE_UID, notification_uid
-
-;
+FROM orderedHist
+GROUP BY PUBLIC_HEALTH_CASE_UID, notification_uid;
