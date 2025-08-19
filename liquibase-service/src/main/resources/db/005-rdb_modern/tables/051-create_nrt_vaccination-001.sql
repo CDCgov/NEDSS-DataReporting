@@ -80,6 +80,13 @@ IF EXISTS (SELECT 1
                 ALTER TABLE dbo.nrt_vaccination
                     ADD material_cd varchar(20);
             END;
+        -- CNDE - 3045
+        IF NOT EXISTS(SELECT 1
+                      FROM sys.columns
+                      WHERE name = N'phc_uids' AND Object_ID = Object_ID(N'nrt_vaccination'))
+            BEGIN ALTER TABLE dbo.nrt_vaccination
+                ADD phc_uids NVARCHAR(MAX);
+            END;
         
     END;
 

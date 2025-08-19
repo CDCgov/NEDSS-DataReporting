@@ -669,7 +669,12 @@ public class ProcessInvestigationDataUtil {
         vaccinationReporting.setVersionCtrlNbr(vaccination.getVersionCtrlNbr());
         vaccinationReporting.setElectronicInd(vaccination.getElectronicInd());
         vaccinationReporting.setProviderUid(vaccination.getProviderUid());
-        vaccinationReporting.setPhcUid(vaccination.getPhcUid());
+        String phcUids = vaccination.getPhcUids();
+        if (phcUids != null && !phcUids.isEmpty()){
+            String firstPhcUid = phcUids.split(",")[0].trim();
+            vaccinationReporting.setPhcUids(firstPhcUid);
+
+        }
         vaccinationReporting.setOrganizationUid(vaccination.getOrganizationUid());
         vaccinationReporting.setPatientUid(vaccination.getPatientUid());
         vaccinationReporting.setMaterialCd(vaccination.getMaterialCd());

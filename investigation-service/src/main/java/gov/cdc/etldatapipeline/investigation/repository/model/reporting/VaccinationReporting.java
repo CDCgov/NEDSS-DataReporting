@@ -36,7 +36,7 @@ public class VaccinationReporting {
     private String electronicInd;
     private Long providerUid;
     private Long organizationUid;
-    private Long phcUid;
+    private String phcUids;
     private Long patientUid;
     private String materialCd;
 }
