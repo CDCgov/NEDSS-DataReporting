@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatvarch_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatvarch_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_dyn_dm_repeatvarch_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_dyn_dm_repeatvarch_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE [dbo].sp_dyn_dm_repeatvarch_postprocessing
     @batch_id BIGINT,
@@ -142,7 +142,7 @@ BEGIN
         if @countmeta < 1
             begin
 
-                select 'No repeat varchar metadata';
+                if @debug = 'true' select 'No repeat varchar metadata';
 
 
                 exec(@ddl_sql_invreptvarchar);
