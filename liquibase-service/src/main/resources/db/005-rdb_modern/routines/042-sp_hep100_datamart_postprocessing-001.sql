@@ -7,9 +7,6 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_hep100_dat
 GO
 
 CREATE PROCEDURE dbo.sp_hep100_datamart_postprocessing @phc_uids nvarchar(max),
-                                                       @pat_uids nvarchar(max),
-                                                       @prov_uids nvarchar(max),
-                                                       @org_uids nvarchar(max),
                                                        @debug bit = 'false'
 AS
 
@@ -32,17 +29,6 @@ BEGIN
         BEGIN
             TRANSACTION;
 
-        --Serialize input parameters to JSON for clean logging
-        DECLARE @params_json VARCHAR(500) = JSON_QUERY((
-            SELECT
-                @phc_uids AS phc_uids,
-                @pat_uids AS pat_uids,
-                @prov_uids AS prov_uids,
-                @org_uids AS org_uids,
-                @debug AS debug
-            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
-        ));
-
         INSERT INTO dbo.job_flow_log ( batch_id
                                      , [Dataflow_Name]
                                      , [package_Name]
@@ -58,7 +44,7 @@ BEGIN
                , @Proc_Step_no
                , @Proc_Step_Name
                , 0
-               , LEFT('ID List-' + @params_json, 500));
+               , LEFT('ID List-' + @phc_uids, 500));
 
         COMMIT TRANSACTION;
 
@@ -376,15 +362,7 @@ BEGIN
             LEFT JOIN dbo.condition con WITH (NOLOCK)
                 ON inv.cd = con.condition_cd
             WHERE 
-            (I.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
-            OR
-            P.PATIENT_UID IN (SELECT value FROM STRING_SPLIT(@pat_uids, ','))
-            OR
-            PROV.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
-            OR
-            INVGTR.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
-            OR
-            REPTORG.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ',')))
+            I.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_uids, ','))
             AND I.RECORD_STATUS_CD = 'ACTIVE';
             
 
