@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatnumeric_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatnumeric_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_dyn_dm_repeatnumeric_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_dyn_dm_repeatnumeric_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE [dbo].sp_dyn_dm_repeatnumeric_postprocessing
 
@@ -164,7 +164,7 @@ BEGIN
         if @countmeta < 1
             begin
 
-                select 'No repeat numeric metadata';
+                if @debug = 'true' select 'No repeat numeric metadata';
 
                 exec(@ddl_sql_invreptnum);
 
@@ -785,7 +785,7 @@ BEGIN
                            SELECT [INVESTIGATION_KEY], [DATA_VALUE] , [COL1]
                            FROM #tmp_DynDm_METADATA_MERGED_INIT
                            group by [INVESTIGATION_KEY], [DATA_VALUE] , [COL1]
-                           ) AS j PIVOT (max(DATA_VALUE) FOR [COL1] in
+        ) AS j PIVOT (max(DATA_VALUE) FOR [COL1] in
                            ('+STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '')+')) AS p;';
                 if @debug='true'
                     select '@tmp_DynDm_INVESTIGATION_REPEAT_NUMERIC', @sql;
