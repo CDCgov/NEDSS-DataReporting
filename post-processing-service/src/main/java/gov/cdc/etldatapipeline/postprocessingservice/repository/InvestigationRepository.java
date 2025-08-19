@@ -59,6 +59,9 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
     @Query(value = "EXEC sp_hepatitis_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForHepatitisCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
+    @Query(value = "EXEC sp_hep100_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
+    List<DatamartData> executeStoredProcForHep100(@Param("publicHealthCaseUids") String publicHealthCaseUids);
+
     @Query(value = "EXEC sp_pertussis_case_datamart_postprocessing :publicHealthCaseUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForPertussisCaseDatamart(@Param("publicHealthCaseUids") String publicHealthCaseUids);
 
@@ -175,4 +178,5 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
 
     @Query(value = "EXEC sp_covid_lab_celr_datamart_postprocessing :observationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForCovidLabCelrDatamart(@Param("observationUids") String observationUids);
+
 }

@@ -65,13 +65,6 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
     @Query(value = "EXEC sp_f_contact_record_case_postprocessing :contactUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForFContactRecordCase(@Param("contactUids") String contactUids);
 
-    @Procedure("sp_hep100_datamart_postprocessing")
-    void executeStoredProcForHep100(
-            @Param("publicHealthCaseUids") String publicHealthCaseUids,
-            @Param("patientUids") String patientUids,
-            @Param("providerUids") String providerUids,
-            @Param("organizationUids") String organizationUids);
-
     @Query(value = "exec sp_nrt_treatment_postprocessing :treatmentUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForTreatment(@Param("treatmentUids") String treatmentUids);
 
