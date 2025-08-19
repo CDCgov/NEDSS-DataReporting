@@ -178,5 +178,4 @@ public interface InvestigationRepository extends JpaRepository<DatamartData, Lon
 
     @Query(value = "EXEC sp_covid_lab_celr_datamart_postprocessing :observationUids", nativeQuery = true)
     List<DatamartData> executeStoredProcForCovidLabCelrDatamart(@Param("observationUids") String observationUids);
-
 }
