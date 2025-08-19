@@ -329,23 +329,15 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'Delete existing records for updated observations';
+        SET @PROC_STEP_NAME = 'Delete LAB_TEST_RESULT where associations no longer exist';
 
-        -- Delete from MORBIDITY_REPORT_EVENT
-        DELETE FROM dbo.MORBIDITY_REPORT_EVENT
-        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
-
-        -- Delete from MORB_RPT_USER_COMMENT
-        DELETE FROM dbo.MORB_RPT_USER_COMMENT
-        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
-
-        -- Delete from LAB_TEST_RESULT (if still relevant)
+        -- Only delete LAB_TEST_RESULT records where the association no longer exists
         DELETE FROM dbo.LAB_TEST_RESULT
-        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
-
-        -- Delete from MORBIDITY_REPORT
-        DELETE FROM dbo.MORBIDITY_REPORT
-        WHERE morb_rpt_key IN (SELECT morb_rpt_key FROM #tmp_morb_root WHERE morb_rpt_key IS NOT NULL);
+        WHERE morb_rpt_key IN (
+            SELECT tmr.morb_rpt_key
+            FROM #tmp_morb_root tmr
+            WHERE tmr.morb_rpt_key IS NOT NULL
+        );
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
