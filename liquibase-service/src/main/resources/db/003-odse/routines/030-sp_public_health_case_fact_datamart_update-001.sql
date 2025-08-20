@@ -245,7 +245,7 @@ BEGIN
            BEGIN
 
                SET @proc_step_no = @proc_step_no + 1;
-               SET @proc_step_name = 'Generating #TMP_SAS_LATEST_NOT';
+               SET @proc_step_name = 'Generating #TMP_LATEST_NOT';
 
                SELECT TARGET_ACT_UID AS PUBLIC_HEALTH_CASE_UID
                     ,ar.SOURCE_ACT_UID
@@ -253,7 +253,7 @@ BEGIN
                     ,NF.RECORD_STATUS_CD AS NOTIFCURRENTSTATE
                     ,NF.txt
                     ,NF.local_id AS NOTIFICATION_LOCAL_ID
-               INTO #TMP_SAS_LATEST_NOT
+               INTO #TMP_LATEST_NOT
                FROM NBS_ODSE.DBO.ACT_RELATIONSHIP AR WITH (NOLOCK)
                   ,NBS_ODSE.DBO.NOTIFICATION NF WITH (NOLOCK)
                WHERE AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID
@@ -266,7 +266,7 @@ BEGIN
                    )
                  AND  AR.SOURCE_ACT_UID IN (SELECT ENTITY_UID FROM #TMP_ENTITY WITH (NOLOCK))
 
-               if @debug = 'true' Select '#TMP_SAS_LATEST_NOT', * from #TMP_SAS_LATEST_NOT;
+               if @debug = 'true' Select '#TMP_LATEST_NOT', * from #TMP_LATEST_NOT;
 
                SET @rowcount = @@ROWCOUNT;
 
@@ -277,7 +277,7 @@ BEGIN
 
 
                SET @proc_step_no = @Proc_Step_no + 1;
-               SET @proc_step_name = 'Generating #TMP_SAS_NOTIFICATION';
+               SET @proc_step_name = 'Generating #TMP_NOTIFICATION';
 
                SELECT DISTINCT TARGET_ACT_UID AS PUBLIC_HEALTH_CASE_UID
                              ,TARGET_CLASS_CD
@@ -300,7 +300,7 @@ BEGIN
                              ,CAST(NULL AS INT) AS X2
                              ,CAST(NULL AS DATETIME) AS FIRSTNOTIFICATIONSENDDATE
                              ,CAST(NULL AS DATETIME) AS NOTIFICATIONDATE
-               INTO #TMP_SAS_NOTIFICATION
+               INTO #TMP_NOTIFICATION
                FROM NBS_ODSE.DBO.ACT_RELATIONSHIP AR WITH (NOLOCK)
                    INNER JOIN NBS_ODSE.DBO.NOTIFICATION_HIST NF WITH (NOLOCK) ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID
                WHERE SOURCE_CLASS_CD = 'NOTF'
@@ -354,7 +354,7 @@ BEGIN
                  and AR.SOURCE_ACT_UID IN (SELECT ENTITY_UID FROM #TMP_ENTITY WITH (NOLOCK))
                ORDER BY SOURCE_ACT_UID, LAST_CHG_TIME;
 
-               if @debug = 'true' Select '#TMP_SAS_NOTIFICATION', * from #TMP_SAS_NOTIFICATION;
+               if @debug = 'true' Select '#TMP_NOTIFICATION', * from #TMP_NOTIFICATION;
 
                SELECT @rowcount = @@ROWCOUNT;
 
@@ -366,47 +366,79 @@ BEGIN
                SET @proc_step_no = @Proc_Step_no + 1;
                SET @proc_step_name = 'Generating #TMP_MIN_MAX_NOTIFICATION';
 
+               WITH orderedHist AS(
+                   SELECT
+                       PUBLIC_HEALTH_CASE_UID
+                        ,TARGET_CLASS_CD
+                        ,SOURCE_ACT_UID
+                        ,SOURCE_CLASS_CD
+                        ,VERSION_CTRL_NBR
+                        ,ADD_TIME
+                        ,ADD_USER_ID
+                        ,RPT_SENT_TIME
+                        ,RECORD_STATUS_CD
+                        ,RECORD_STATUS_TIME
+                        ,LAST_CHG_TIME
+                        ,LAST_CHG_USER_ID
+                        ,HIST_IND
+                        ,TXT
+                        ,NOTIFSENTCOUNT
+                        ,NOTIFREJECTEDCOUNT
+                        ,NOTIFCREATEDCOUNT
+                        ,X1
+                        ,X2
+                        ,FIRSTNOTIFICATIONSENDDATE
+                        ,NOTIFICATIONDATE
+                        ,ROW_NUMBER() OVER (PARTITION BY PUBLIC_HEALTH_CASE_UID ORDER BY VERSION_CTRL_NBR DESC) notif_latest_rownum
+                   FROM #TMP_NOTIFICATION
+               )
                SELECT DISTINCT
                    MIN(CASE
-                            WHEN VERSION_CTRL_NBR = 1 THEN RECORD_STATUS_CD
+                           WHEN VERSION_CTRL_NBR = 1 THEN RECORD_STATUS_CD
                        END) AS FIRSTNOTIFICATIONSTATUS,
                    SUM(CASE
-                            WHEN RECORD_STATUS_CD = 'REJECTED' THEN 1 ELSE 0
+                           WHEN RECORD_STATUS_CD = 'REJECTED' THEN 1 ELSE 0
                        END) AS NOTIFREJECTEDCOUNT,
                    SUM(CASE
-                            WHEN RECORD_STATUS_CD = 'APPROVED' OR RECORD_STATUS_CD = 'PEND_APPR' THEN 1
-                            WHEN RECORD_STATUS_CD = 'REJECTED' THEN -1 ELSE 0
+                           WHEN RECORD_STATUS_CD = 'APPROVED' OR RECORD_STATUS_CD = 'PEND_APPR' THEN 1
+                           WHEN RECORD_STATUS_CD = 'REJECTED' THEN -1 ELSE 0
                        END) AS NOTIFCREATEDCOUNT,
                    SUM(CASE
-                            WHEN RECORD_STATUS_CD = 'COMPLETED' THEN 1 ELSE 0
+                           WHEN RECORD_STATUS_CD = 'COMPLETED' THEN 1 ELSE 0
                        END) AS NOTIFSENTCOUNT,
                    MIN(CASE
-                            WHEN RECORD_STATUS_CD = 'COMPLETED' THEN RPT_SENT_TIME
+                           WHEN RECORD_STATUS_CD = 'COMPLETED' THEN RPT_SENT_TIME
                        END) AS FIRSTNOTIFICATIONSENDDATE,
                    SUM(CASE
-                            WHEN RECORD_STATUS_CD = 'PEND_APPR' THEN 1 ELSE 0
+                           WHEN RECORD_STATUS_CD = 'PEND_APPR' THEN 1 ELSE 0
                        END) AS NOTIFCREATEDPENDINGSCOUNT,
                    MAX(CASE
-                            WHEN RECORD_STATUS_CD = 'APPROVED' OR RECORD_STATUS_CD = 'PEND_APPR' THEN LAST_CHG_TIME
+                           WHEN RECORD_STATUS_CD = 'APPROVED' OR RECORD_STATUS_CD = 'PEND_APPR' THEN LAST_CHG_TIME
                        END) AS LASTNOTIFICATIONDATE,
                              --DONE?
                    MAX(CASE
-                            WHEN RECORD_STATUS_CD = 'COMPLETED' THEN RPT_SENT_TIME
+                           WHEN RECORD_STATUS_CD = 'COMPLETED' THEN RPT_SENT_TIME
                        END) AS LASTNOTIFICATIONSENDDATE,
                              --DONE?
                    MIN(ADD_TIME) AS FIRSTNOTIFICATIONDATE,
                              --DONE
-                   MIN(ADD_USER_ID) AS FIRSTNOTIFICATIONSUBMITTEDBY,
+                   NULLIF(MAX(CASE
+                                  WHEN VERSION_CTRL_NBR != 1 THEN -1
+                                  ELSE ADD_USER_ID
+                              END), -1) AS FIRSTNOTIFICATIONSUBMITTEDBY,
                              --DONE
-                   MIN(ADD_USER_ID) AS LASTNOTIFICATIONSUBMITTEDBY,
+                   NULLIF(MAX(CASE
+                                  WHEN notif_latest_rownum != 1 THEN -1
+                                  ELSE LAST_CHG_USER_ID
+                              END), -1) AS LASTNOTIFICATIONSUBMITTEDBY,
                              --DONE
                    MIN(CASE
-                            WHEN RECORD_STATUS_CD = 'COMPLETED' AND RPT_SENT_TIME IS NOT NULL
-                            THEN RPT_SENT_TIME
+                           WHEN RECORD_STATUS_CD = 'COMPLETED' AND RPT_SENT_TIME IS NOT NULL
+                           THEN RPT_SENT_TIME
                       END) AS NOTIFICATIONDATE,
                    PUBLIC_HEALTH_CASE_UID
                INTO #TMP_MIN_MAX_NOTIFICATION
-               FROM #TMP_SAS_NOTIFICATION WITH (NOLOCK)
+               FROM orderedHist WITH (NOLOCK)
                GROUP BY PUBLIC_HEALTH_CASE_UID;
 
                UPDATE #TMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = NOTIFCREATEDCOUNT-1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT>0;
@@ -441,7 +473,7 @@ BEGIN
                              ,t.NOTIFCURRENTSTATE
                INTO #TMP_SUB_CASE_NOTIF
                FROM #TMP_MIN_MAX_NOTIFICATION tn WITH (NOLOCK)
-                    LEFT JOIN #TMP_SAS_LATEST_NOT t WITH (NOLOCK) ON t.PUBLIC_HEALTH_CASE_UID = tn.PUBLIC_HEALTH_CASE_UID;
+                    LEFT JOIN #TMP_LATEST_NOT t WITH (NOLOCK) ON t.PUBLIC_HEALTH_CASE_UID = tn.PUBLIC_HEALTH_CASE_UID;
 
                if @debug = 'true' Select '#TMP_SUB_CASE_NOTIF', * from #TMP_SUB_CASE_NOTIF;
 
