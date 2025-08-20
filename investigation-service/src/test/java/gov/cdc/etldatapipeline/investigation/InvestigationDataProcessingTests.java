@@ -11,6 +11,7 @@ import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import org.awaitility.Awaitility;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.awaitility.Awaitility;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -78,8 +78,6 @@ class InvestigationDataProcessingTests {
 
     ProcessInvestigationDataUtil transformer;
 
-
-
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
@@ -119,11 +117,8 @@ class InvestigationDataProcessingTests {
         transformer.setPageCaseAnswerOutputTopicName(PAGE_CASE_ANSWER_TOPIC);
         transformer.transformInvestigationData(investigation, BATCH_ID);
 
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
 
         assertEquals(CONFIRMATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
@@ -179,12 +174,8 @@ class InvestigationDataProcessingTests {
         observation.setBatchId(BATCH_ID);
 
         transformer.transformInvestigationData(investigation, BATCH_ID);
-
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(kafkaTemplate, times(6)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
 
         assertEquals(OBSERVATION_TOPIC, topicCaptor.getAllValues().getFirst());
 
@@ -252,11 +243,8 @@ class InvestigationDataProcessingTests {
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
         transformer.processInterview(interview, BATCH_ID);
-        Awaitility.await()
-                .atMost(2, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
 
         InterviewReportingKey actualInterviewKey = null;
         InterviewAnswerKey actualInterviewAnswerKey = null;
@@ -337,10 +325,8 @@ class InvestigationDataProcessingTests {
         var actualRdbMetadataColumnsValue = objectMapper.readValue(
                 objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), MetadataColumn.class);
 
-
         assertEquals(metadataColumnKey, actualRdbMetadataColumnKey);
         assertEquals(metadataColumnValue, actualRdbMetadataColumnsValue);
-
     }
 
     @Test
@@ -360,12 +346,24 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processInterview(interview, BATCH_ID);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() -> verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate).send(anyString(), anyString(), anyString()));
 
-        ILoggingEvent log = listAppender.list.getLast();
+        ILoggingEvent log = listAppender.list.removeLast();
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+        log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+
+        interview.setAnswers(null);
+        interview.setNotes(null);
+        transformer.processInterview(interview, BATCH_ID);
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, atLeastOnce()).send(anyString(), anyString(), anyString()));
+
+        log = listAppender.list.removeLast();
+        assertTrue(log.getFormattedMessage().contains("Investigation Interview Note"));
+        log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains("Investigation Interview Answer"));
     }
 
     @Test
@@ -400,11 +398,8 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processContact(contact);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
 
         //contact key
         var actualContactKey = objectMapper.readValue(
@@ -435,7 +430,7 @@ class InvestigationDataProcessingTests {
         transformer.setContactAnswerOutputTopicName(CONTACT_ANSWERS_TOPIC);
 
         transformer.processContact(contact);
-        verify(kafkaTemplate, never()).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
 
         ILoggingEvent log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains("Error processing Contact Record "));
@@ -453,12 +448,17 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processContact(contact);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() -> verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
-
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate).send(anyString(), anyString(), anyString()));
         ILoggingEvent log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+
+        contact.setAnswers(null);
+        transformer.processContact(contact);
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, atLeastOnce()).send(anyString(), anyString(), anyString()));
+        log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains("Contact Record Answer"));
     }
 
     @Test
@@ -476,11 +476,8 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processVaccination(vaccination);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
 
         var actualVacKey = objectMapper.readValue(
                 objectMapper.readTree(keyCaptor.getAllValues().getFirst()).path("payload").toString(), VaccinationReportingKey.class);
@@ -512,11 +509,8 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processVaccination(vaccination);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
 
         // key
         var actualVacKey = objectMapper.readValue(
@@ -548,15 +542,19 @@ class InvestigationDataProcessingTests {
         transformer.setVaccinationAnswerOutputTopicName(VACCINATION_ANSWERS_TOPIC);
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
-        transformer.processVaccination(vaccination);
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
 
+        transformer.processVaccination(vaccination);
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate).send(anyString(), anyString(), anyString()));
         ILoggingEvent log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
+
+        vaccination.setAnswers(null);
+        transformer.processVaccination(vaccination);
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, atLeastOnce()).send(anyString(), anyString(), anyString()));
+        log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains("Vaccination Answer"));
     }
 
     @Test
@@ -588,11 +586,8 @@ class InvestigationDataProcessingTests {
 
         InvestigationTransformed investigationTransformed = transformer.transformInvestigationData(investigation, BATCH_ID);
 
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, times(4)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
         assertEquals(PAGE_CASE_ANSWER_TOPIC, topicCaptor.getValue());
 
         var actualPageCaseAnswer = objectMapper.readValue(
@@ -638,11 +633,8 @@ class InvestigationDataProcessingTests {
 
         transformer.transformInvestigationData(investigation, BATCH_ID);
 
-        Awaitility.await()
-                .atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() ->
-                        verify(kafkaTemplate, times(7)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
-                );
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, times(7)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
         assertEquals(AGGREGATE_TOPIC, topicCaptor.getValue());
 
         var actual = objectMapper.readValue(
@@ -694,6 +686,22 @@ class InvestigationDataProcessingTests {
         transformer.processInvestigationCaseManagement("{\"foo\":\"bar\"}");
         transformer.processInvestigationCaseManagement("{\"investigation_case_management\":}");
         verify(kafkaTemplate, never()).send(eq(CASE_MANAGEMENT_TOPIC), anyString(), anyString());
+    }
+
+    @Test
+    void testProcessPhcFactDatamartException() {
+        final String ERROR_MSG = "Test Error";
+
+        doThrow(new RuntimeException(ERROR_MSG)).when(investigationRepository).populatePhcFact(anyString());
+        doThrow(new RuntimeException(ERROR_MSG)).when(investigationRepository).updatePhcFact(anyString(), anyString());
+
+        transformer.processPhcFactDatamart("123");
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
+
+        transformer.processPhcFactDatamart("NOTF","123");
+        log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
     }
 
     private @NotNull InvestigationNotification constructNotifications() {

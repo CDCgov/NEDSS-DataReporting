@@ -99,7 +99,6 @@ class InvestigationServiceTest {
 
         investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository, treatmentRepository, kafkaTemplate, transformer);
 
-        investigationService.setPhcDatamartEnable(true);
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
         investigationService.setInvestigationTopicReporting(investigationTopicOutput);
@@ -174,6 +173,8 @@ class InvestigationServiceTest {
         verify(notificationRepository).computeNotifications(String.valueOf(notificationUid));
         verify(kafkaTemplate).send(topicCaptor.capture(), anyString(), anyString());
         assertEquals(notificationTopicOutput, topicCaptor.getValue());
+
+        verify(investigationRepository).updatePhcFact("NOTF", String.valueOf(notificationUid));
     }
 
     @Test
