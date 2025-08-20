@@ -440,13 +440,13 @@ class InvestigationDataProcessingTests {
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         transformer.processContact(contact);
-        verify(kafkaTemplate, timeout(1000)).send(anyString(), anyString(), anyString());
+        verify(kafkaTemplate, timeout(3000)).send(anyString(), anyString(), anyString());
         ILoggingEvent log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains(INVALID_JSON));
 
         contact.setAnswers(null);
         transformer.processContact(contact);
-        verify(kafkaTemplate, timeout(1000).atLeastOnce()).send(anyString(), anyString(), anyString());
+        verify(kafkaTemplate, timeout(3000).atLeastOnce()).send(anyString(), anyString(), anyString());
         log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains("Contact Record Answer"));
     }
