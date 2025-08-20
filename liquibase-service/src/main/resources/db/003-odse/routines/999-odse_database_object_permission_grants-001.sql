@@ -80,9 +80,9 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
         EXEC sp_executesql @GrantExecPHCDatamartUpdateSQL;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_update] to [' + @OrgUserName + ']';
 
-        DECLARE @GrantWritePHCFactSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[PublicHealthCaseFact] TO [' + @OrgUserName + ']';
+        DECLARE @GrantWritePHCFactSQL NVARCHAR(MAX) = 'GRANT UPDATE ON [dbo].[PublicHealthCaseFact] TO [' + @OrgUserName + ']';
         EXEC sp_executesql @GrantWritePHCFactSQL;
-        PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact] to [' + @OrgUserName + ']';
+        PRINT 'Granted UPDATE permissions on [dbo].[PublicHealthCaseFact] to [' + @OrgUserName + ']';
     END
 PRINT 'Organization service user permission grants completed.';
 
@@ -121,14 +121,13 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
         EXEC sp_executesql @GrantExecPHCDatamartUpdateSQL;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_update] to [' + @PersonUserName + ']';
 
-        -- Grant write permissions on specific tables for investigation service
-        DECLARE @GrantWriteSubjectRaceSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[SubjectRaceInfo] TO [' + @PersonUserName + ']';
+        DECLARE @GrantWriteSubjectRaceSQL NVARCHAR(MAX) = 'GRANT UPDATE ON [dbo].[SubjectRaceInfo] TO [' + @PersonUserName + ']';
         EXEC sp_executesql @GrantWriteSubjectRaceSQL;
-        PRINT 'Granted write permissions on [dbo].[SubjectRaceInfo] to [' + @PersonUserName + ']';
+        PRINT 'Granted UPDATE permissions on [dbo].[SubjectRaceInfo] to [' + @PersonUserName + ']';
 
-        DECLARE @GrantWritePHCFactSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[PublicHealthCaseFact] TO [' + @PersonUserName + ']';
+        DECLARE @GrantWritePHCFactSQL NVARCHAR(MAX) = 'GRANT UPDATE ON [dbo].[PublicHealthCaseFact] TO [' + @PersonUserName + ']';
         EXEC sp_executesql @GrantWritePHCFactSQL;
-        PRINT 'Granted write permissions on [dbo].[PublicHealthCaseFact] to [' + @PersonUserName + ']';
+        PRINT 'Granted UPDATE permissions on [dbo].[PublicHealthCaseFact] to [' + @PersonUserName + ']';
     END
 
 PRINT 'Person service user permission grants completed.';
