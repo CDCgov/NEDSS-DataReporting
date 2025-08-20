@@ -331,6 +331,33 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+
+    IF EXISTS(
+       select 1
+        from dbo.nrt_investigation_notification notif
+        inner join  #temp_ntf_event_table t on t.notification_uid = notif.notification_uid
+    )
+    BEGIN
+        SELECT I.INVESTIGATION_KEY
+             ,MIN(notif.rpt_sent_time) AS FIRSTNOTIFICATIONSENDDATE
+        INTO #TMP_Notif
+        FROM #temp_ntf_event_table AS I WITH(NOLOCK)
+                LEFT JOIN dbo.NOTIFICATION_EVENT NE WITH(NOLOCK) ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY
+            LEFT JOIN dbo.nrt_notification_key NK WITH(NOLOCK)	ON NE.NOTIFICATION_KEY = NK.d_notification_key
+            LEFT JOIN dbo.nrt_investigation_notification notif WITH(NOLOCK) ON notif.notification_uid= NK.notification_uid
+        WHERE notif.NOTIF_STATUS = 'COMPLETED' and notif.RPT_SENT_TIME IS NOT NULL
+        GROUP BY I.INVESTIGATION_KEY
+        ORDER BY I.INVESTIGATION_KEY;
+
+        IF EXISTS(select 1 from #TMP_Notif)
+        BEGIN
+            UPDATE ISD
+            SET ISD.INIT_NND_NOT_DT = NND.FIRSTNOTIFICATIONSENDDATE
+                FROM dbo.[HEPATITIS_DATAMART] ISD
+                             INNER JOIN #TMP_Notif NND with (nolock) ON ISD.INVESTIGATION_KEY = NND.INVESTIGATION_KEY;
+        END
+    END
+
         SET @proc_step_name='SP_COMPLETE';
         SET @proc_step_no = 999;
 
