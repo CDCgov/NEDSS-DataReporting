@@ -180,6 +180,16 @@ class OrganizationServiceTest {
         assertThrows(NoDataException.class, () -> organizationService.processMessage(payload, inputTopic));
     }
 
+    @Test
+    void testProcessPhcFactDatamartException() {
+        final String ERROR_MSG = "Test Error";
+
+        doThrow(new RuntimeException(ERROR_MSG)).when(orgRepository).updatePhcFact(anyString(), anyString());
+        organizationService.processPhcFactDatamart("123");
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
+    }
+
     private void validateOrgTransformation() throws JsonProcessingException {
         String changeData = readFileData("orgcdc/OrgChangeData.json");
         String expectedKey = readFileData("orgtransformed/OrgKey.json");

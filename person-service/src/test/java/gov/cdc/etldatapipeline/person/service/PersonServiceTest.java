@@ -1,5 +1,8 @@
 package gov.cdc.etldatapipeline.person.service;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,16 +15,15 @@ import gov.cdc.etldatapipeline.person.repository.PatientRepository;
 import gov.cdc.etldatapipeline.person.repository.ProviderRepository;
 import gov.cdc.etldatapipeline.person.repository.UserRepository;
 import gov.cdc.etldatapipeline.person.transformer.PersonTransformers;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.*;
@@ -67,9 +69,13 @@ class PersonServiceTest {
     private final String userReportingTopic = "UserRepoting";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private AutoCloseable closeable;
+    private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
     @BeforeEach
     void setUp() {
+        closeable = MockitoAnnotations.openMocks(this);
+
         PersonTransformers transformer = new PersonTransformers();
         personService = new PersonService(patientRepository, providerRepository, userRepository, transformer, kafkaTemplate);
         personService.setPersonTopic(inputTopicPerson);
@@ -80,6 +86,17 @@ class PersonServiceTest {
         personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
         personService.setUserReportingOutputTopic(userReportingTopic);
         personService.setElasticSearchEnable(true);
+
+        Logger logger = (Logger) LoggerFactory.getLogger(PersonService.class);
+        listAppender.start();
+        logger.addAppender(listAppender);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        Logger logger = (Logger) LoggerFactory.getLogger(PersonService.class);
+        logger.detachAppender(listAppender);
+        closeable.close();
     }
 
     @Test
@@ -224,6 +241,16 @@ class PersonServiceTest {
             when(userRepository.computeAuthUsers(String.valueOf(authUserUid))).thenReturn(Optional.of(Collections.emptyList()));
         }
         assertThrows(NoDataException.class, () -> personService.processMessage(payload, inputTopic));
+    }
+
+    @Test
+    void testProcessPhcFactDatamartException() {
+        final String ERROR_MSG = "Test Error";
+
+        doThrow(new RuntimeException(ERROR_MSG)).when(patientRepository).updatePhcFact(anyString(), anyString());
+        personService.processPhcFactDatamart("PAT","123");
+        ILoggingEvent log = listAppender.list.getLast();
+        assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
     }
 
     private void validateDataTransformation(

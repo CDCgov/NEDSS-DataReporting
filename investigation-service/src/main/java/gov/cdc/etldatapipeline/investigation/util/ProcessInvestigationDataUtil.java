@@ -598,7 +598,6 @@ public class ProcessInvestigationDataUtil {
         }
     }
 
-
     public void processVaccination(Vaccination vaccination) {
         try {
 
@@ -620,8 +619,6 @@ public class ProcessInvestigationDataUtil {
                     .whenComplete((res, e) -> logger.info("Vaccination data (uid={}) sent to {}", vaccination.getVaccinationUid(), vaccinationOutputTopicName))
                     .thenRunAsync(() -> transformAndSendVaccinationAnswer(vaccination));
 
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "Vaccination");
         } catch (Exception e) {
             logger.error("Error processing Vaccination or any of the associated data from vac data: {}", e.getMessage());
         }
@@ -629,7 +626,6 @@ public class ProcessInvestigationDataUtil {
 
     private void transformAndSendVaccinationAnswer(Vaccination vaccination) {
         try {
-
             JsonNode answerArray = parseJsonArray(vaccination.getAnswers());
 
             for (JsonNode node : answerArray) {

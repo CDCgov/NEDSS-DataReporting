@@ -111,7 +111,7 @@ public class OrganizationService {
             final String orgUid = organizationUid = extractUid(message,"organization_uid");
             log.info(topicDebugLog, "Organization", organizationUid, topic);
 
-            CompletableFuture.runAsync(() -> processPhcFactDatamart("ORG", orgUid), rtrExecutor);
+            CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
 
             Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
 
@@ -141,12 +141,12 @@ public class OrganizationService {
         }
     }
 
-    public void processPhcFactDatamart(String objName, String uids) {
+    protected void processPhcFactDatamart(String uids) {
         if (!uids.isEmpty()) {
             try {
                 // Calling sp_public_health_case_fact_datamart_update
-                log.info("Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart", objName, uids);
-                orgRepository.updatePhcFact(objName, uids);
+                log.info("Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart", "ORG", uids);
+                orgRepository.updatePhcFact("ORG", uids);
                 log.info("Stored proc execution completed: sp_public_health_case_fact_datamart_update '{}", uids);
             } catch (Exception dbe) {
                 log.warn("Error updating PHC fact datamart: {}", dbe.getMessage());
