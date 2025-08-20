@@ -24,12 +24,16 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
@@ -63,6 +67,9 @@ public class OrganizationService {
     private final PlaceRepository placeRepository;
     private final DataTransformers transformer;
     private final KafkaTemplate<String, String> kafkaTemplate;
+
+    private static int nProc = Runtime.getRuntime().availableProcessors();
+    private ExecutorService rtrExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("rtr-"));
 
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
 
@@ -103,6 +110,9 @@ public class OrganizationService {
         try {
             final String orgUid = organizationUid = extractUid(message,"organization_uid");
             log.info(topicDebugLog, "Organization", organizationUid, topic);
+
+            CompletableFuture.runAsync(() -> processPhcFactDatamart("ORG", orgUid), rtrExecutor);
+
             Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
 
             if (!organizations.isEmpty()) {
@@ -128,6 +138,19 @@ public class OrganizationService {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             throw new DataProcessingException(errorMessage("Organization", organizationUid, e), e);
+        }
+    }
+
+    public void processPhcFactDatamart(String objName, String uids) {
+        if (!uids.isEmpty()) {
+            try {
+                // Calling sp_public_health_case_fact_datamart_update
+                log.info("Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart", objName, uids);
+                orgRepository.updatePhcFact(objName, uids);
+                log.info("Stored proc execution completed: sp_public_health_case_fact_datamart_update '{}", uids);
+            } catch (Exception dbe) {
+                log.warn("Error updating PHC fact datamart: {}", dbe.getMessage());
+            }
         }
     }
 

@@ -74,9 +74,6 @@ public class InvestigationService {
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String investigationTopicReporting;
 
-    @Value("${featureFlag.phc-datamart-enable}")
-    private boolean phcDatamartEnable;
-
     private final InvestigationRepository investigationRepository;
     private final NotificationRepository notificationRepository;
     private final InterviewRepository interviewRepository;
@@ -153,9 +150,7 @@ public class InvestigationService {
         try {
             final String phcUid = publicHealthCaseUid = extractUid(value, "public_health_case_uid");
 
-            if (phcDatamartEnable) {
-                CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
-            }
+            CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
 
             logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
             Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
@@ -213,7 +208,10 @@ public class InvestigationService {
     public void processNotification(String value) {
         String notificationUid = "";
         try {
-            notificationUid = extractUid(value, "notification_uid");
+            final String notfUid = notificationUid = extractUid(value, "notification_uid");
+
+            CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart("NOTF", notfUid), phcExecutor);
+
             logger.info(topicDebugLog, "Notification", notificationUid, notificationTopic);
 
             Optional<NotificationUpdate> notificationData = notificationRepository.computeNotifications(notificationUid);

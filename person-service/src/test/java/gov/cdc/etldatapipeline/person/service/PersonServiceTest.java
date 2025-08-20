@@ -30,8 +30,7 @@ import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PersonServiceTest {
@@ -70,7 +69,7 @@ class PersonServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         PersonTransformers transformer = new PersonTransformers();
         personService = new PersonService(patientRepository, providerRepository, userRepository, transformer, kafkaTemplate);
         personService.setPersonTopic(inputTopicPerson);
@@ -86,16 +85,25 @@ class PersonServiceTest {
     @Test
     void testProcessPatientData() throws JsonProcessingException {
         PatientSp patientSp = constructPatient();
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(List.of(patientSp));
+        PatientSp mprPatient = constructPatient();
+        mprPatient.setPersonParentUid(mprPatient.getPersonUid());
+        Mockito.when(patientRepository.computePatients(anyString()))
+                .thenReturn(List.of(patientSp)).thenReturn(List.of(mprPatient));
+
+        String incomingChangeData = readFileData("rawDataFiles/person/PersonPatientChangeData.json");
 
         // Validate Patient Reporting Data Transformation
         validateDataTransformation(
-                readFileData("rawDataFiles/person/PersonPatientChangeData.json"),
+                incomingChangeData,
                 patientReportingTopic,
                 patientElasticTopic,
                 "rawDataFiles/patient/PatientReporting.json",
                 "rawDataFiles/patient/PatientElastic.json",
                 "rawDataFiles/patient/PatientKey.json");
+        verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
+
+        personService.processMessage(incomingChangeData, inputTopicPerson);
+        verify(patientRepository).updatePhcFact("PAT", String.valueOf(mprPatient.getPersonUid()));
     }
 
     @ParameterizedTest
@@ -109,17 +117,27 @@ class PersonServiceTest {
                                  String providerElasticFile) throws JsonProcessingException {
 
         ProviderSp providerSp = constructProviderCase(personTelephoneFile);
+        ProviderSp mprProvider = constructProviderCase(personTelephoneFile);
+        mprProvider.setPersonParentUid(mprProvider.getPersonUid());
         Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
-        Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
+        Mockito.when(providerRepository.computeProviders(anyString()))
+                .thenReturn(List.of(providerSp)).thenReturn(List.of(mprProvider));
+
+        String incomingChangeData = readFileData("rawDataFiles/person/PersonProviderChangeData.json");
 
         validateDataTransformation(
-                readFileData("rawDataFiles/person/PersonProviderChangeData.json"),
+                incomingChangeData,
                 providerReportingTopic,
                 providerElasticTopic,
                 providerReportingFile,
                 providerElasticFile,
                 "rawDataFiles/provider/ProviderKey.json"
         );
+
+        verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
+
+        personService.processMessage(incomingChangeData, inputTopicPerson);
+        verify(patientRepository).updatePhcFact("PRV", String.valueOf(mprProvider.getPersonUid()));
     }
 
     @Test

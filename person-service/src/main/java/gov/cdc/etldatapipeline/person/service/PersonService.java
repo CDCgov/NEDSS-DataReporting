@@ -28,11 +28,16 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
@@ -72,6 +77,9 @@ public class PersonService {
 
     @Value("${featureFlag.elastic-search-enable}")
     private boolean elasticSearchEnable;
+
+    private static int nProc = Runtime.getRuntime().availableProcessors();
+    private ExecutorService rtrExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("rtr-"));
 
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
@@ -139,8 +147,15 @@ public class PersonService {
         }
     }
 
-    private void processProviderData(List<ProviderSp> providerDataFromStoredProc) {
-        providerDataFromStoredProc.forEach(provider -> {
+    private void processProviderData(List<ProviderSp> providerData) {
+        final String uids = providerData.stream()
+                .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
+                .map(ProviderSp::getPersonUid).map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", uids), rtrExecutor);
+
+        providerData.forEach(provider -> {
             String reportingKey = transformer.buildProviderKey(provider);
             String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
             kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
@@ -157,8 +172,15 @@ public class PersonService {
         });
     }
 
-    private void processPatientData(List<PatientSp> personDataFromStoredProc) {
-        personDataFromStoredProc.forEach(personData -> {
+    private void processPatientData(List<PatientSp> patientData) {
+        final String uids = patientData.stream()
+                .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
+                .map(PatientSp::getPersonUid).map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", uids), rtrExecutor);
+
+        patientData.forEach(personData -> {
             String reportingKey = transformer.buildPatientKey(personData);
             String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
             kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
@@ -196,6 +218,19 @@ public class PersonService {
             throw new NoDataException(ex.getMessage(), ex);
         } catch (Exception e) {
             throw new DataProcessingException(errorMessage("User", userUid, e), e);
+        }
+    }
+
+    public void processPhcFactDatamart(String objName, String uids) {
+        if (!uids.isEmpty()) {
+            try {
+                // Calling sp_public_health_case_fact_datamart_update
+                log.info("Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart", objName, uids);
+                patientRepository.updatePhcFact(objName, uids);
+                log.info("Stored proc execution completed: sp_public_health_case_fact_datamart_update '{}", uids);
+            } catch (Exception dbe) {
+                log.warn("Error updating PHC fact datamart: {}", dbe.getMessage());
+            }
         }
     }
 }

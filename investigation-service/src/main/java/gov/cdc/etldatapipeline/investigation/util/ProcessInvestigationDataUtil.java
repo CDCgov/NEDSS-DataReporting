@@ -422,6 +422,18 @@ public class ProcessInvestigationDataUtil {
         }
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public void processPhcFactDatamart(String objName, String uid) {
+        try {
+            // Calling sp_public_health_case_fact_datamart_update
+            logger.info("Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart", objName, uid);
+            investigationRepository.updatePhcFact(objName, uid);
+            logger.info("Stored proc execution completed: sp_public_health_case_fact_datamart_update '{}", uid);
+        } catch (Exception dbe) {
+            logger.warn("Error updating PHC fact datamart: {}", dbe.getMessage());
+        }
+    }
+
     private JsonNode parseJsonArray(String jsonString) throws JsonProcessingException, IllegalArgumentException {
         JsonNode jsonArray = jsonString != null ? objectMapper.readTree(jsonString) : null;
         if (jsonArray != null && jsonArray.isArray()) {

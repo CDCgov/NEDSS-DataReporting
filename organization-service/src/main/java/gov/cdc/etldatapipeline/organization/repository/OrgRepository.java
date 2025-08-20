@@ -14,4 +14,6 @@ public interface OrgRepository extends JpaRepository<OrganizationSp, String> {
     @Query(nativeQuery = true, value = "execute sp_organization_event :org_uids")
     Set<OrganizationSp> computeAllOrganizations(@Param("org_uids") String orgUids);
 
+    @Query(nativeQuery = true, value = "exec sp_public_health_case_fact_datamart_update :objName, :uidLst")
+    void updatePhcFact(@Param("objName") String objName, @Param("uidLst") String uidLst);
 }

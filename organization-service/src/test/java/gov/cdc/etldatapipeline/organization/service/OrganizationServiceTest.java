@@ -68,7 +68,7 @@ class OrganizationServiceTest {
     private final String teleReportingTopic = "TeleReporting";
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         DataTransformers transformer = new DataTransformers();
         organizationService = new OrganizationService(orgRepository, placeRepository, transformer, kafkaTemplate);
@@ -86,7 +86,7 @@ class OrganizationServiceTest {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
         logger.detachAppender(listAppender);
         closeable.close();
@@ -98,6 +98,7 @@ class OrganizationServiceTest {
         when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
 
         validateOrgTransformation();
+        verify(orgRepository).updatePhcFact("ORG", "10036000");
     }
 
     @Test
