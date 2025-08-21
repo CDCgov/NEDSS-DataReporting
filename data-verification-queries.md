@@ -599,7 +599,7 @@ WHERE nt.notification_uid IS NULL
 ORDER BY update_time;
 ```
 
-### 16. NOTIFICATION_EVENT Verification
+### 15. NOTIFICATION_EVENT Verification
 
 **Purpose**: Check for missed notification event records by comparing operational Notification and Act_Relationship with NOTIFICATION_EVENT.
 
@@ -651,7 +651,7 @@ WHERE tgt.notification_uid IS NULL
 ORDER BY update_time;
 ```
 
-### 18. TREATMENT_EVENT Verification
+### 16. TREATMENT_EVENT Verification
 
 **Purpose**: Check for missed treatment event records by comparing operational Treatment with TREATMENT_EVENT dimension.
 
