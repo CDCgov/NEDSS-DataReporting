@@ -45,6 +45,13 @@ These queries identify records that exist in the operational source system but a
         SELECT * FROM job_flow_log jfl WHERE jfl.create_dttm >= '<YYYY-MM-DD>' and Status_type='ERROR' ;
         ```
 5. Consider if there are data quality issues preventing transformation
+6. If a event needs to be re-triggered for a usecase to debug or to correct the RDB tables, we could initiate that through a simple targeted update on the ODSE table.
+   For example, If we are finding data miss for an investigation (uid=10009821) in couple of investigation
+   and case related tables then we could run 
+    ```sql
+    update nbs_odse.dbo.Public_health_case set last_chg_time = dateadd(minute, 2, last_chg_time) 
+    where public_health_case_uid = 10009821;
+    ```
 
 
 
