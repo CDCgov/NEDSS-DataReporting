@@ -325,6 +325,27 @@ BEGIN
 
         if @debug = 'true' SELECT 'DEBUG: tmp_morb_root_keyvalue', * FROM #tmp_morb_root;
 
+        -- ADD MISSING DELETE LOGIC
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Delete LAB_TEST_RESULT where associations no longer exist';
+
+        -- Only delete LAB_TEST_RESULT records where the association no longer exists
+        DELETE FROM dbo.LAB_TEST_RESULT
+        WHERE morb_rpt_key IN (
+            SELECT tmr.morb_rpt_key
+            FROM #tmp_morb_root tmr
+            WHERE tmr.morb_rpt_key IS NOT NULL
+        );
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+        COMMIT TRANSACTION;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
