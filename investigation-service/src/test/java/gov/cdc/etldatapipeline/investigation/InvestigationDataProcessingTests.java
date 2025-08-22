@@ -783,4 +783,57 @@ class InvestigationDataProcessingTests {
         expected.setDatamartColumnNm("TOTAL_COUNT_50_TO_64");
         return expected;
     }
+
+    @Test
+    void testVaccinationWithMultiplePHCUIDs() throws JsonProcessingException {
+        Vaccination vaccination = constructVaccination(VACCINATION_UID);
+        vaccination.setPhcUid("123456,789012,345678");
+        transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
+        VaccinationReportingKey expectedKey = new VaccinationReportingKey();
+        expectedKey.setVaccinationUid(VACCINATION_UID);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processVaccination(vaccination);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+        var actualVacValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), VaccinationReporting.class);
+        assertEquals("123456,789012,345678", actualVacValue.getPhcUid());
+    }
+
+    @Test
+    void testVaccinationWithSinglePHCUID() throws JsonProcessingException {
+        Vaccination vaccination = constructVaccination(VACCINATION_UID);
+        vaccination.setPhcUid("123456");
+        transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processVaccination(vaccination);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+        var actualVacValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), VaccinationReporting.class);
+        assertEquals("123456", actualVacValue.getPhcUid());
+    }
+
+    @Test
+    void testVaccinationWithNullPHCUID() throws JsonProcessingException {
+        Vaccination vaccination = constructVaccination(VACCINATION_UID);
+        vaccination.setPhcUid(null);
+        transformer.setVaccinationOutputTopicName(VACCINATION_TOPIC);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+        transformer.processVaccination(vaccination);
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(1)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture())
+                );
+        var actualVacValue = objectMapper.readValue(
+                objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(), VaccinationReporting.class);
+        assertNull(actualVacValue.getPhcUid());
+    }
 }
