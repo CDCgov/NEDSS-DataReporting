@@ -92,5 +92,7 @@ sonarqube {
         property "sonar.projectKey", "CDCgov_NEDSS-DataReporting"
         property "sonar.organization", "cdcgov"
         property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.exclusions", String.join(", ",
+                "**/DbConfigProvider.java")
     }
 }
