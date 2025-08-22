@@ -230,6 +230,8 @@ public class ProcessDatamartData {
             case HEPATITIS_CASE:
                 executeDmProc(HEPATITIS_CASE,
                         invRepository::executeStoredProcForHepatitisCaseDatamart, cases, this::checkResult);
+                executeDmProc(HEP100,
+                        invRepository::executeStoredProcForHep100, cases, this::checkResult);
                 processLdfLegacy(ldfType, cases);
                 break;
             case PERTUSSIS_CASE:
@@ -339,17 +341,10 @@ public class ProcessDatamartData {
             String provString = listToParameterString(dmMulti.get(PROVIDER.getEntityName()));
             String orgString = listToParameterString(dmMulti.get(ORGANIZATION.getEntityName()));
 
-            int totalLengthHep100 = invString.length() + patString.length() + provString.length() + orgString.length();
             int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
             int totalLengthMorbReportDM = obsString.length() + patString.length() + provString.length() + orgString.length() + invString.length();
 
             try {
-                if (totalLengthHep100 > 0) {
-                    procRepository.executeStoredProcForHep100(invString, patString, provString, orgString);
-                } else {
-                    logger.info("No updates to HEP100 Datamart");
-                }
-
                 if (totalLengthInvSummary > 0) {
                     //reusing the same DTO class for Dynamic Marts
                     List<DatamartData> dmDataList = procRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);

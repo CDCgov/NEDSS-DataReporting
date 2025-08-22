@@ -422,6 +422,18 @@ public class ProcessInvestigationDataUtil {
         }
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public void processPhcFactDatamart(String objName, String uid) {
+        try {
+            // Calling sp_public_health_case_fact_datamart_update
+            logger.info("Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart", objName, uid);
+            investigationRepository.updatePhcFact(objName, uid);
+            logger.info("Stored proc execution completed: sp_public_health_case_fact_datamart_update '{}", uid);
+        } catch (Exception dbe) {
+            logger.warn("Error updating PHC fact datamart: {}", dbe.getMessage());
+        }
+    }
+
     private JsonNode parseJsonArray(String jsonString) throws JsonProcessingException, IllegalArgumentException {
         JsonNode jsonArray = jsonString != null ? objectMapper.readTree(jsonString) : null;
         if (jsonArray != null && jsonArray.isArray()) {
@@ -586,7 +598,6 @@ public class ProcessInvestigationDataUtil {
         }
     }
 
-
     public void processVaccination(Vaccination vaccination) {
         try {
 
@@ -608,8 +619,6 @@ public class ProcessInvestigationDataUtil {
                     .whenComplete((res, e) -> logger.info("Vaccination data (uid={}) sent to {}", vaccination.getVaccinationUid(), vaccinationOutputTopicName))
                     .thenRunAsync(() -> transformAndSendVaccinationAnswer(vaccination));
 
-        } catch (IllegalArgumentException ex) {
-            logger.info(ex.getMessage(), "Vaccination");
         } catch (Exception e) {
             logger.error("Error processing Vaccination or any of the associated data from vac data: {}", e.getMessage());
         }
@@ -617,7 +626,6 @@ public class ProcessInvestigationDataUtil {
 
     private void transformAndSendVaccinationAnswer(Vaccination vaccination) {
         try {
-
             JsonNode answerArray = parseJsonArray(vaccination.getAnswers());
 
             for (JsonNode node : answerArray) {

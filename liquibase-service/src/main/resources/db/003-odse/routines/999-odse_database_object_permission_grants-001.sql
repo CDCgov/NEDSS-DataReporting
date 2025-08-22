@@ -75,6 +75,14 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @OrgUserName)
         DECLARE @GrantExecPlaceSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_place_event] TO [' + @OrgUserName + ']';
         EXEC sp_executesql @GrantExecPlaceSPSQL;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_place_event] to [' + @OrgUserName + ']';
+
+        DECLARE @GrantOrgExecPHCDatamartUpdateSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_update] TO [' + @OrgUserName + ']';
+        EXEC sp_executesql @GrantOrgExecPHCDatamartUpdateSQL;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_update] to [' + @OrgUserName + ']';
+
+        DECLARE @GrantOrgUpdatePHCFactSQL NVARCHAR(MAX) = 'GRANT UPDATE ON [dbo].[PublicHealthCaseFact] TO [' + @OrgUserName + ']';
+        EXEC sp_executesql @GrantOrgUpdatePHCFactSQL;
+        PRINT 'Granted UPDATE permissions on [dbo].[PublicHealthCaseFact] to [' + @OrgUserName + ']';
     END
 PRINT 'Organization service user permission grants completed.';
 
@@ -108,6 +116,18 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @PersonUserName)
         DECLARE @GrantExecAuthUserSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_auth_user_event] TO [' + @PersonUserName + ']';
         EXEC sp_executesql @GrantExecAuthUserSPSQL;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_auth_user_event] to [' + @PersonUserName + ']';
+
+        DECLARE @GrantPersonExecPHCDatamartUpdateSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_update] TO [' + @PersonUserName + ']';
+        EXEC sp_executesql @GrantPersonExecPHCDatamartUpdateSQL;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_update] to [' + @PersonUserName + ']';
+
+        DECLARE @GrantPersonUpdateSubjectRaceSQL NVARCHAR(MAX) = 'GRANT UPDATE ON [dbo].[SubjectRaceInfo] TO [' + @PersonUserName + ']';
+        EXEC sp_executesql @GrantPersonUpdateSubjectRaceSQL;
+        PRINT 'Granted UPDATE permissions on [dbo].[SubjectRaceInfo] to [' + @PersonUserName + ']';
+
+        DECLARE @GrantPersonUpdatePHCFactSQL NVARCHAR(MAX) = 'GRANT UPDATE ON [dbo].[PublicHealthCaseFact] TO [' + @PersonUserName + ']';
+        EXEC sp_executesql @GrantPersonUpdatePHCFactSQL;
+        PRINT 'Granted UPDATE permissions on [dbo].[PublicHealthCaseFact] to [' + @PersonUserName + ']';
     END
 
 PRINT 'Person service user permission grants completed.';
@@ -184,6 +204,10 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @InvUserName)
         DECLARE @GrantExecPHCDatamartSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_event] TO [' + @InvUserName + ']';
         EXEC sp_executesql @GrantExecPHCDatamartSQL;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_event] to [' + @InvUserName + ']';
+
+        DECLARE @GrantExecPHCDatamartUpdateSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_update] TO [' + @InvUserName + ']';
+        EXEC sp_executesql @GrantExecPHCDatamartUpdateSQL;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_update] to [' + @InvUserName + ']';
 
         -- Grant write permissions on specific tables for investigation service
         DECLARE @GrantWriteSubjectRaceSQL NVARCHAR(MAX) = 'GRANT INSERT, UPDATE, DELETE ON [dbo].[SubjectRaceInfo] TO [' + @InvUserName + ']';

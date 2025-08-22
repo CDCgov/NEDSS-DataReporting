@@ -300,14 +300,18 @@ class PostProcessingServiceDmTest {
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
                                 "\"datamart\":\"Hepatitis_Case\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
-                        HEPATITIS_CASE.getEntityName(), HEPATITIS_CASE.getStoredProcedure(), 3,
-                        repo -> verify(repo).executeStoredProcForHepatitisCaseDatamart("123")),
+                        HEPATITIS_CASE.getEntityName(), HEP100.getStoredProcedure(), 5,
+                        repo -> {
+                            verify(repo).executeStoredProcForHepatitisCaseDatamart("123");
+                            verify(repo).executeStoredProcForHep100("123");
+                        }),
                 new DatamartTestCase(
                         "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\"," +
                                 "\"datamart\":\"Hepatitis_Case,LDF_HEPATITIS\",\"stored_procedure\":\"sp_hepatitis_case_datamart_postprocessing\"}}",
-                        "Hepatitis_Case,LDF_HEPATITIS", LDF_HEPATITIS.getStoredProcedure(), 5,
+                        "Hepatitis_Case,LDF_HEPATITIS", LDF_HEPATITIS.getStoredProcedure(), 7,
                         repo -> {
                             verify(repo).executeStoredProcForHepatitisCaseDatamart("123");
+                            verify(repo).executeStoredProcForHep100("123");
                             verify(repo).executeStoredProcForLdfHepatitisDatamart("123");
                         }),
                 new DatamartTestCase(
@@ -350,47 +354,6 @@ class PostProcessingServiceDmTest {
     }
 
     @Test
-    void testPostProcessHep100() {
-
-        String investigationKey1 = "{\"payload\":{\"public_health_case_uid\":126}}";
-        String investigationKey2 = "{\"payload\":{\"public_health_case_uid\":235}}";
-        String patientKey = "{\"payload\":{\"patient_uid\":127}}";
-        String providerKey = "{\"payload\":{\"provider_uid\":130}}";
-        String organizationKey = "{\"payload\":{\"organization_uid\":123}}";
-
-
-        String invTopic = "dummy_investigation";
-        String patTopic = "dummy_patient";
-        String provTopic = "dummy_provider";
-        String orgTopic = "dummy_organization";
-
-        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey1, investigationKey1);
-        postProcessingServiceMock.processNrtMessage(invTopic, investigationKey2, investigationKey2);
-        postProcessingServiceMock.processNrtMessage(patTopic, patientKey, patientKey);
-        postProcessingServiceMock.processNrtMessage(provTopic, providerKey, providerKey);
-        postProcessingServiceMock.processNrtMessage(orgTopic, organizationKey, organizationKey);
-
-        postProcessingServiceMock.processCachedIds();
-        postProcessingServiceMock.processDatamartIds();
-
-        verify(postProcRepositoryMock).executeStoredProcForHep100("126,235", "127", "130", "123");
-    }
-
-    @Test
-    void testPostProcessHep100NoIds() {
-        // Test with an event that doesn't trigger the Hep100 datamart procedure
-        String contactKey = "{\"payload\":{\"contact_uid\":123}}";
-        String crTopic = "dummy_contact";
-        postProcessingServiceMock.processNrtMessage(crTopic, contactKey, contactKey);
-        postProcessingServiceMock.processCachedIds();
-        postProcessingServiceMock.processDatamartIds();
-
-        verify(postProcRepositoryMock, never()).executeStoredProcForHep100(any(),any(),any(),any());
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals("No updates to HEP100 Datamart", logs.get(6).getFormattedMessage());
-    }
-
-    @Test
     void testPostProcessInvSummary() {
 
         String investigationKey = "{\"payload\":{\"public_health_case_uid\":126}}";
@@ -423,7 +386,7 @@ class PostProcessingServiceDmTest {
 
         verify(postProcRepositoryMock, never()).executeStoredProcForInvSummaryDatamart(any(),any(),any());
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals("No updates to INV_SUMMARY Datamart", logs.get(7).getFormattedMessage());
+        assertEquals("No updates to INV_SUMMARY Datamart", logs.get(6).getFormattedMessage());
     }
 
     @Test

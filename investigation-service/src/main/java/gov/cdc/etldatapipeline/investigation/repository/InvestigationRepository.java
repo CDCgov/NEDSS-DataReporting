@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.investigation.repository;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.Investigation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +15,9 @@ public interface InvestigationRepository extends JpaRepository<Investigation, St
     @Query(nativeQuery = true, value = "execute sp_investigation_event :investigation_uids")
     Optional<Investigation> computeInvestigations(@Param("investigation_uids") String investigationUids);
 
-    @Query(nativeQuery = true, value = "exec sp_public_health_case_fact_datamart_event :investigation_uids")
+    @Procedure("sp_public_health_case_fact_datamart_event")
     void populatePhcFact(@Param("investigation_uids") String phcIds);
+
+    @Procedure("sp_public_health_case_fact_datamart_update")
+    void updatePhcFact(@Param("objName") String objName, @Param("uidLst") String uidLst);
 }
