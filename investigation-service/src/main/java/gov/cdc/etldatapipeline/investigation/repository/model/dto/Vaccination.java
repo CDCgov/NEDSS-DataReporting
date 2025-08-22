@@ -88,7 +88,7 @@ public class Vaccination {
     private Long organizationUid;
 
     @Column(name="PHC_UID")
-    private Long phcUid;
+    private String phcUid;
 
     @Column(name="PATIENT_UID")
     private Long patientUid;
