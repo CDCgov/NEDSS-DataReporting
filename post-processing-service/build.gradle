@@ -60,11 +60,12 @@ dependencies {
     implementation 'com.microsoft.sqlserver:mssql-jdbc:12.3.0.jre17-preview'
     implementation 'ch.qos.logback:logback-classic'
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
-    implementation 'org.springframework.kafka:spring-kafka:3.1.2'
+    implementation 'org.springframework.kafka:spring-kafka:3.3.1'
     implementation 'org.apache.kafka:connect-api:3.7.0'
     implementation 'org.modelmapper:modelmapper:3.2.0'
     implementation 'commons-io:commons-io:2.15.0'
     implementation 'com.google.guava:guava:33.1.0-jre'
+    implementation 'com.zaxxer:HikariCP:5.0.1'
 
     if (findProject(':common-util')) {
         implementation project(':common-util')

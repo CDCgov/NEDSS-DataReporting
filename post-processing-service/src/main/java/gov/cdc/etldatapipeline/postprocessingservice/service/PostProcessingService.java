@@ -4,10 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.*;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.model.BackfillData;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.model.DatamartData;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.model.dto.Datamart;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.InvestigationRepository;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.PostProcRepository;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -148,7 +149,9 @@ public class PostProcessingService {
             "${spring.kafka.topic.state_defined_field_metadata}",
             "${spring.kafka.topic.page}",
             "${spring.kafka.topic.condition}"
-    })
+    },
+            containerFactory = "kafkaListenerContainerFactoryDefault"
+    )
     public void processNrtMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
@@ -253,7 +256,7 @@ public class PostProcessingService {
             DeserializationException.class,
             RuntimeException.class
     })
-    @KafkaListener(topics = { "${spring.kafka.topic.datamart}" })
+    @KafkaListener(topics = { "${spring.kafka.topic.datamart}" }, containerFactory = "kafkaListenerContainerFactoryDefault")
     public void processDmMessage(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Payload String payload) {

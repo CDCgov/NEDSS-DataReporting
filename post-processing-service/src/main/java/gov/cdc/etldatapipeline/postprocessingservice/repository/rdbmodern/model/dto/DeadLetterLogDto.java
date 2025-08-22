@@ -1,0 +1,21 @@
+package gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.model.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class DeadLetterLogDto {
+    private String id;
+    private String originTopic;
+    private String payload;
+    private String stackTrace;
+    private Timestamp receivedAt;
+}

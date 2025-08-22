@@ -1,7 +1,7 @@
-package gov.cdc.etldatapipeline.postprocessingservice.repository;
+package gov.cdc.etldatapipeline.postprocessingservice.repository.rdb;
 
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.model.BackfillData;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.model.DatamartData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;

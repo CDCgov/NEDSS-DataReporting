@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto;
+package gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
