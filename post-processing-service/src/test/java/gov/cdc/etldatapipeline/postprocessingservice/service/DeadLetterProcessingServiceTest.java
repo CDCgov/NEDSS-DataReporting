@@ -14,14 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,7 +59,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_Success() throws Exception {
+    void testHandlingDeadLetter_Success() {
         // Arrange
         String payload = "test payload";
         String key = "test key";
@@ -112,7 +109,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_WithNullValues() throws Exception {
+    void testHandlingDeadLetter_WithNullValues()  {
         // Arrange
         String payload = "test payload";
         String key = "test key";
@@ -162,7 +159,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_RepositoryException() throws Exception {
+    void testHandlingDeadLetter_RepositoryException() {
         // Arrange
         String payload = "test payload";
         String key = "test key";
@@ -194,7 +191,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_EmptyPayload() throws Exception {
+    void testHandlingDeadLetter_EmptyPayload() {
         // Arrange
         String payload = "";
         String key = "";
@@ -237,7 +234,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_LargePayload() throws Exception {
+    void testHandlingDeadLetter_LargePayload() {
         // Arrange
         String payload = "x".repeat(10000); // Large payload
         String key = "test key";
@@ -280,7 +277,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_SpecialCharacters() throws Exception {
+    void testHandlingDeadLetter_SpecialCharacters() {
         // Arrange
         String payload = "payload with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?";
         String key = "key with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?";
@@ -328,7 +325,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_TimestampHandling() throws Exception {
+    void testHandlingDeadLetter_TimestampHandling() {
         // Arrange
         String payload = "test payload";
         String key = "test key";
@@ -375,7 +372,7 @@ class DeadLetterProcessingServiceTest {
     }
 
     @Test
-    void testHandlingDeadLetter_MultipleCalls() throws Exception {
+    void testHandlingDeadLetter_MultipleCalls() {
         // Arrange
         String[] payloads = {"payload1", "payload2", "payload3"};
         String[] keys = {"key1", "key2", "key3"};

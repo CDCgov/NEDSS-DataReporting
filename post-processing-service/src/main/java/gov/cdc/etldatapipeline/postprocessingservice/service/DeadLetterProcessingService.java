@@ -2,19 +2,18 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 
 import gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.DeadLetterLogRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.model.DeadLetterLog;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.messaging.handler.annotation.Header;
-import java.nio.charset.StandardCharsets;
+
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
+@SuppressWarnings("java:S107")
 @Service
 public class DeadLetterProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(DeadLetterProcessingService.class);
