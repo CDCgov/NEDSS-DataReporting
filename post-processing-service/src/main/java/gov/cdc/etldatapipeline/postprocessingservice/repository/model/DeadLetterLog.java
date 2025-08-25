@@ -3,7 +3,6 @@ package gov.cdc.etldatapipeline.postprocessingservice.repository.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.sql.Timestamp;
 
