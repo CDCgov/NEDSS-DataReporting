@@ -7,7 +7,7 @@ import lombok.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "rtr_dead_letter_log")
+@Table(name = "nrt_dead_letter_log")
 @Getter
 @Setter
 @NoArgsConstructor

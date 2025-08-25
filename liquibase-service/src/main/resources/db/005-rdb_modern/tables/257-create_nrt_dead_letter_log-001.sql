@@ -1,8 +1,8 @@
 IF NOT EXISTS (SELECT 1
                FROM sysobjects
-               WHERE name = 'rtr_dead_letter_log'
+               WHERE name = 'nrt_dead_letter_log'
                  and xtype = 'U')
-CREATE TABLE rtr_dead_letter_log
+CREATE TABLE nrt_dead_letter_log
 (
     id                      bigint IDENTITY (1,1) PRIMARY KEY NOT NULL,
     origin_topic            NVARCHAR(255)                     NOT NULL,
