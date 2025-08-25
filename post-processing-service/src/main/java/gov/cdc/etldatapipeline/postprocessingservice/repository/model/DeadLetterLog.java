@@ -17,9 +17,8 @@ import java.sql.Timestamp;
 public class DeadLetterLog {
 
     @Id
-    @GenericGenerator(name = "generator", strategy = "guid", parameters = {})
-    @GeneratedValue(generator = "generator")
-    @Column(name = "id", columnDefinition="uniqueidentifier")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private String id;
 
     @Column(name = "origin_topic", nullable = false)
