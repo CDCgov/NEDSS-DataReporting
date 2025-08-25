@@ -65,7 +65,6 @@ dependencies {
     implementation 'org.modelmapper:modelmapper:3.2.0'
     implementation 'commons-io:commons-io:2.15.0'
     implementation 'com.google.guava:guava:33.1.0-jre'
-    implementation 'com.zaxxer:HikariCP:5.0.1'
 
     if (findProject(':common-util')) {
         implementation project(':common-util')
