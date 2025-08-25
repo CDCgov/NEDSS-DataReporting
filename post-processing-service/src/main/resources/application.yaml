@@ -56,13 +56,10 @@ spring:
   datasource:
     password: ${DB_PASSWORD:-fake.fake.fake.1234}
     username: ${DB_USERNAME:-sa}
-    url-rdb: ${DB_RDB_URL:jdbc:sqlserver://localhost:1433;databaseName=:RDB;encrypt=true;trustServerCertificate=true;}
-    url-rdb-modern: ${DB_RDB_MODERN_URL:jdbc:sqlserver://localhost:1433;databaseName=:RDB_MODERN;encrypt=true;trustServerCertificate=true;}
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: ${DB_RDB_URL:jdbc:sqlserver://localhost:1433;databaseName=:RDB;encrypt=true;trustServerCertificate=true;}
   jpa:
     properties:
       jakarta.persistence.query.timeout: -1
-
 service:
   fixed-delay:
     cached-ids: ${FIXED_DELAY_ID:20000}
@@ -71,8 +68,3 @@ service:
   max-retries: ${MAX_RETRIES:3}
 server:
   port: '8095'
-
-
-
-
-

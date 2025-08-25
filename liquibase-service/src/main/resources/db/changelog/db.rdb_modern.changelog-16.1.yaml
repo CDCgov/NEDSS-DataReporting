@@ -2871,6 +2871,15 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 926
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 257-create_rtr_dead_letter_log-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: 999
       author: liquibase
       comment: "Permission script will always execute last."

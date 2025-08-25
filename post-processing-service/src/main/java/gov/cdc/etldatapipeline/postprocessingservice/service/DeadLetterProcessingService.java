@@ -1,17 +1,15 @@
 package gov.cdc.etldatapipeline.postprocessingservice.service;
 
-import gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.DeadLetterLogRepository;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.model.DeadLetterLog;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.DeadLetterLogRepository;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DeadLetterLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 @SuppressWarnings("java:S107")
 @Service
@@ -68,7 +66,6 @@ public class DeadLetterProcessingService {
             "${spring.kafka.person-topic.topic-name-user}${spring.kafka.dlq.dlq-suffix-format-2}"
     },
             containerFactory = "kafkaListenerContainerFactoryDlt")
-    @Transactional("modernTransactionManager")
     public void handlingDeadLetter(String value,
                                    @Header(KafkaHeaders.RECEIVED_KEY) String key,
                                    @Header(KafkaHeaders.RECEIVED_TIMESTAMP) Long  receiveTimestamp,
@@ -79,7 +76,7 @@ public class DeadLetterProcessingService {
                                    @Header(KafkaHeaders.EXCEPTION_CAUSE_FQCN) String exceptionCauseFqcn,
                                    @Header(KafkaHeaders.EXCEPTION_MESSAGE) String exceptionMessage) {
         try {
-            Long ts = receiveTimestamp;
+            Timestamp sqlTimestamp = new Timestamp(receiveTimestamp);
 
             DeadLetterLog log = DeadLetterLog.builder()
                     .originTopic(topic)
@@ -90,7 +87,7 @@ public class DeadLetterProcessingService {
                     .exceptionFqcn(exceptionFqcn)
                     .exceptionCauseFqcn(exceptionCauseFqcn)
                     .exceptionMessage(exceptionMessage)
-                    .receivedAt(Timestamp.valueOf(LocalDateTime.now()))
+                    .receivedAt(sqlTimestamp)
                     .build();
 
             deadLetterLogRepository.save(log);

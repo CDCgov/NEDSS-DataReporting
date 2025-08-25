@@ -1,6 +1,6 @@
-package gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern;
+package gov.cdc.etldatapipeline.postprocessingservice.repository;
 
-import gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.model.DeadLetterLog;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DeadLetterLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

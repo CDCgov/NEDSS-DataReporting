@@ -9,5 +9,5 @@ CREATE TABLE rtr_dead_letter_log (
                                      exception_message NVARCHAR(MAX) NULL,
                                      exception_fqcn NVARCHAR(255) NULL,
                                      exception_cause_fqcn NVARCHAR(255) NULL,
-                                     received_at DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+                                     received_at  datetime2 NOT NULL,
 );

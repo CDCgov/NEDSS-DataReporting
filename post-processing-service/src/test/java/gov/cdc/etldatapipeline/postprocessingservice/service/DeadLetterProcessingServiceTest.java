@@ -3,8 +3,8 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.DeadLetterLogRepository;
-import gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.model.DeadLetterLog;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.DeadLetterLogRepository;
+import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DeadLetterLog;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -364,11 +364,6 @@ class DeadLetterProcessingServiceTest {
 
         DeadLetterLog capturedLog = logCaptor.getValue();
         assertNotNull(capturedLog.getReceivedAt());
-        
-        // Verify that the receivedAt timestamp is close to the current time
-        long currentTime = System.currentTimeMillis();
-        long receivedTime = capturedLog.getReceivedAt().getTime();
-        assertTrue(Math.abs(currentTime - receivedTime) < 1000); // Within 1 second
     }
 
     @Test
@@ -420,22 +415,6 @@ class DeadLetterProcessingServiceTest {
         assertNotNull(annotation);
         assertTrue(annotation.topics().length > 0);
         assertEquals("kafkaListenerContainerFactoryDlt", annotation.containerFactory());
-    }
-
-    @Test
-    void testTransactionalAnnotation() throws Exception {
-        // Test that the Transactional annotation is present with correct configuration
-        Method method = DeadLetterProcessingService.class.getMethod("handlingDeadLetter",
-                String.class, String.class, Long.class, String.class, String.class,
-                String.class, String.class, String.class, String.class);
-
-        assertTrue(method.isAnnotationPresent(org.springframework.transaction.annotation.Transactional.class));
-        
-        org.springframework.transaction.annotation.Transactional annotation = 
-                method.getAnnotation(org.springframework.transaction.annotation.Transactional.class);
-        
-        assertNotNull(annotation);
-        assertEquals("modernTransactionManager", annotation.value());
     }
 
     @Test

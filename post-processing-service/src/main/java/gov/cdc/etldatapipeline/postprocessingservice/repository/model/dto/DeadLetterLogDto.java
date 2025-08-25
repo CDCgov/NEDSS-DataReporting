@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.model.dto;
+package gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

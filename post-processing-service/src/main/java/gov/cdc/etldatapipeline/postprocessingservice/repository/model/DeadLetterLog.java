@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.postprocessingservice.repository.rdbmodern.model;
+package gov.cdc.etldatapipeline.postprocessingservice.repository.model;
 
 
 import jakarta.persistence.*;

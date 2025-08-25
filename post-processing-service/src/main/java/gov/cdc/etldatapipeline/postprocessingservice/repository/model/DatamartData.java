@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.postprocessingservice.repository.rdb.model;
+package gov.cdc.etldatapipeline.postprocessingservice.repository.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
