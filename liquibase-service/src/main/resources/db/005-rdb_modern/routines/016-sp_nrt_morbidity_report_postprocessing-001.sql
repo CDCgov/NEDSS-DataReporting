@@ -329,15 +329,18 @@ BEGIN
         BEGIN TRANSACTION;
 
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-        SET @PROC_STEP_NAME = 'Delete LAB_TEST_RESULT where associations no longer exist';
+        SET @PROC_STEP_NAME = 'Disassociate LAB_TEST_RESULT by setting morb_rpt_key = 1';
 
-        -- Only delete LAB_TEST_RESULT records where the association no longer exists
-        DELETE FROM dbo.LAB_TEST_RESULT
+        -- Move lab results to the default/unassociated (morb_rpt_key = 1)
+        UPDATE dbo.LAB_TEST_RESULT
+        SET morb_rpt_key = 1,
+            RDB_LAST_REFRESH_TIME = GETDATE()
         WHERE morb_rpt_key IN (
-            SELECT tmr.morb_rpt_key
-            FROM #tmp_morb_root tmr
-            WHERE tmr.morb_rpt_key IS NOT NULL
-        );
+            SELECT morb_rpt_key
+            FROM #tmp_morb_root
+            WHERE morb_rpt_key IS NOT NULL
+        )
+          AND morb_rpt_key <> 1;  -- Don't update records already unassociated
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
