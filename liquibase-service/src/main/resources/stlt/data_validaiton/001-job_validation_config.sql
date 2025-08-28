@@ -482,7 +482,7 @@ begin
         WHERE cd NOT IN (
             SELECT distinct condition_cd FROM dbo.NRT_SRTE_CONDITION_CODE 
             WHERE investigation_form_cd
-            NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
+            NOT IN 	( ''bo.'',''INV_FORM_BMDGBS'',''INV_FORM_BMDGEN'',''INV_FORM_BMDNM'',''INV_FORM_BMDSP'',''INV_FORM_GEN'',''INV_FORM_HEPA'',''INV_FORM_HEPBV'',''INV_FORM_HEPCV'',''INV_FORM_HEPGEN'',''INV_FORM_MEA'',''INV_FORM_PER'',''INV_FORM_RUB'',''INV_FORM_RVCT'',''INV_FORM_VAR'')
         )
     ) src
     LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.case_uid = src.public_health_case_uid
@@ -528,7 +528,7 @@ begin
         WHERE cd IN (
             SELECT distinct condition_cd FROM dbo.NRT_SRTE_CONDITION_CODE 
             WHERE investigation_form_cd
-            NOT IN 	( 'bo.','INV_FORM_BMDGBS','INV_FORM_BMDGEN','INV_FORM_BMDNM','INV_FORM_BMDSP','INV_FORM_GEN','INV_FORM_HEPA','INV_FORM_HEPBV','INV_FORM_HEPCV','INV_FORM_HEPGEN','INV_FORM_MEA','INV_FORM_PER','INV_FORM_RUB','INV_FORM_RVCT','INV_FORM_VAR')
+            NOT IN 	( ''bo.'',''INV_FORM_BMDGBS'',''INV_FORM_BMDGEN'',''INV_FORM_BMDNM'',''INV_FORM_BMDSP'',''INV_FORM_GEN'',''INV_FORM_HEPA'',''INV_FORM_HEPBV'',''INV_FORM_HEPCV'',''INV_FORM_HEPGEN'',''INV_FORM_MEA'',''INV_FORM_PER'',''INV_FORM_RUB'',''INV_FORM_RVCT'',''INV_FORM_VAR'')
         )
     ) src
     LEFT JOIN dbo.INVESTIGATION inv with (nolock) ON inv.case_uid = src.public_health_case_uid
@@ -656,19 +656,19 @@ begin
     ) src
     LEFT JOIN (
         SELECT n.contact_uid, d.local_id
-        FROM dbo.NRT_CONACT_KEY n with (nolock)
+        FROM dbo.NRT_CONTACT_KEY n with (nolock)
         INNER JOIN dbo.D_CONTACT_RECORD d with (nolock)
         ON d.d_contact_record_key = n.d_contact_record_key
     ) di
     ON di.contact_uid = src.CT_CONTACT_UID
-    LEFT JOIN dbo.NRT_CONACT nrt with (nolock) ON nrt.contact_uid = src.contact_uid
-    LEFT JOIN dbo.NRT_CONACT_KEY nrtk with (nolock) ON nrtk.contact_uid = nrt.contact_uid
+    LEFT JOIN dbo.NRT_CONTACT nrt with (nolock) ON nrt.contact_uid = src.CT_CONTACT_UID
+    LEFT JOIN dbo.NRT_CONTACT_KEY nrtk with (nolock) ON nrtk.contact_uid = nrt.contact_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
     ON nb.entity = ''CONTACT''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
-        WHERE TRY_CAST(s.value AS BIGINT) = src.contact_uid
+        WHERE TRY_CAST(s.value AS BIGINT) = src.CT_CONTACT_UID
     )
     WHERE di.contact_uid IS NULL', NULL);
 
@@ -700,20 +700,20 @@ begin
     ) src
     LEFT JOIN (
         SELECT n.contact_uid, d.local_id
-        FROM dbo.NRT_CONACT_KEY n with (nolock)
+        FROM dbo.NRT_CONTACT_KEY n with (nolock)
         INNER JOIN dbo.D_CONTACT_RECORD d with (nolock)
         ON d.d_contact_record_key = n.d_contact_record_key
     ) di
     ON di.contact_uid = src.CT_CONTACT_UID
-    LEFT JOIN dbo.NRT_CONACT nrt with (nolock) ON nrt.contact_uid = src.contact_uid
-    LEFT JOIN dbo.NRT_CONACT_KEY nrtk with (nolock) ON nrtk.contact_uid = nrt.contact_uid
+    LEFT JOIN dbo.NRT_CONTACT nrt with (nolock) ON nrt.contact_uid = src.CT_CONTACT_UID
+    LEFT JOIN dbo.NRT_CONTACT_KEY nrtk with (nolock) ON nrtk.contact_uid = nrt.contact_uid
     LEFT JOIN dbo.F_CONTACT_RECORD_CASE fact with (nolock) ON fact.d_contact_record_key = nrtk.d_contact_record_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
     ON nb.entity = ''CONTACT''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
-        WHERE TRY_CAST(s.value AS BIGINT) = src.contact_uid
+        WHERE TRY_CAST(s.value AS BIGINT) = src.CT_CONTACT_UID
     )
     WHERE fact.d_contact_record_key IS NULL', 'D_CONTACT_RECORD');
 
@@ -744,7 +744,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Hepatitis_Datamart'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Hepatitis_Datamart'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -867,7 +867,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''TB_Datamart'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''TB_Datamart'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -949,7 +949,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''VAR_Datamart'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''VAR_Datamart'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -990,7 +990,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''CRS_Case'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''CRS_Case'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -1031,7 +1031,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Rubella_Case'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Rubella_Case'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -1072,7 +1072,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Generic_Case'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Generic_Case'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -1112,7 +1112,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Measles_Case'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Measles_Case'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -1152,7 +1152,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''BMIRD_Case'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''BMIRD_Case'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -1192,7 +1192,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Hepatitis_Case'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Hepatitis_Case'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -1233,7 +1233,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Pertussis_Case'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Pertussis_Case'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -1274,7 +1274,7 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd   
         FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
-        WHERE cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Covid_Case_Datamart'' )
+        WHERE record_status_cd <> ''LOG_DEL'' AND cd in (SELECT condition_cd FROM dbo.nrt_datamart_metadata WHERE Datamart=''Covid_Case_Datamart'' )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
