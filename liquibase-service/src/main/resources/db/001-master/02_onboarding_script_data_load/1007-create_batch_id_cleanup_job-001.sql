@@ -38,7 +38,11 @@ IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE name = @JobName)
     END
 
 -- Drop schedule separately in case it's not tied to only this job
-
+IF OBJECT_ID(N'tempdb..#ScheduleInfo') IS NOT NULL
+BEGIN
+    DROP TABLE #ScheduleInfo
+END
+    
 CREATE TABLE #ScheduleInfo (
 	schedule_id INT,
 	schedule_uid UNIQUEIDENTIFIER,
