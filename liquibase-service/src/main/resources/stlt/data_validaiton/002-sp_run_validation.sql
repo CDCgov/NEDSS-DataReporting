@@ -56,19 +56,20 @@ BEGIN TRY
              WHERE d.value = c.rdb_entity
           )
     )
-    SELECT DISTINCT rdb_entity, level
+    SELECT rdb_entity, MAX(level) AS level
     INTO #entities_to_run
-    FROM dep_cte;
+    FROM dep_cte
+    GROUP BY rdb_entity;
 
     select * from  #entities_to_run;
 
     ----------------------------------------------------------------------
     -- 2. Cursor/loop through entities in dependency order
     ----------------------------------------------------------------------
-    DECLARE @curr_entity VARCHAR(500);
+    DECLARE @curr_entity VARCHAR(500), @level INT;
 
     DECLARE entity_cursor CURSOR FOR
-    SELECT rdb_entity
+    SELECT rdb_entity, level
     FROM #entities_to_run
     ORDER BY level;
 
@@ -86,10 +87,13 @@ BEGIN TRY
     retry_error_desc NVARCHAR(MAX),
     error_log_json NVARCHAR(MAX)
     );
+
+    CREATE TABLE #root_uids (uid BIGINT PRIMARY KEY);
+
   
 
     OPEN entity_cursor;
-    FETCH NEXT FROM entity_cursor INTO @curr_entity;
+    FETCH NEXT FROM entity_cursor INTO @curr_entity, @level;
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
@@ -111,7 +115,7 @@ BEGIN TRY
 
         IF @check_log = 0
         BEGIN
-            -- Only run validation query
+            -- Only use validation query
             SET @sql = 'select v.*, error_log_json as NULL from ('+@validation_query+') v';
         END
         ELSE
@@ -121,7 +125,12 @@ BEGIN TRY
             --    - Appends latest N errors flattened as JSON array
             SET @sql = '
             ;WITH validation_cte AS (
-                ' + @validation_query + '
+                SELECT * FROM (' + @validation_query + ' ) base '+
+                CASE
+                    WHEN EXISTS (SELECT 1 FROM #root_uids) THEN ' WHERE  uid IN (SELECT uid FROM #root_uids)'
+                    ELSE ''
+                END +
+                ' 
             ),
             error_cte AS (
                 SELECT
@@ -205,7 +214,14 @@ BEGIN TRY
                     @lookback = @lookback;
             END
         END
-        FETCH NEXT FROM entity_cursor INTO @curr_entity;
+        
+        IF @level= 0
+        BEGIN
+        INSERT INTO #root_uids (uid)
+            SELECT DISTINCT uid FROM #results;
+        END
+
+        FETCH NEXT FROM entity_cursor INTO @curr_entity, @level;
     END
 
     CLOSE entity_cursor;
