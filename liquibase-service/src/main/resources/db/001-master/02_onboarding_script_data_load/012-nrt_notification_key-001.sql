@@ -30,20 +30,23 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and xtyp
             notif.NOTIFICATION_KEY, 
             ar1.source_act_uid
         FROM [dbo].[NOTIFICATION] notif WITH(NOLOCK) 
-        LEFT JOIN [dbo].NOTIFICATION_EVENT notif_event 
+        LEFT JOIN [dbo].NOTIFICATION_EVENT notif_event WITH(NOLOCK) 
             ON notif.NOTIFICATION_KEY = notif_event.NOTIFICATION_KEY
-        LEFT JOIN [dbo].INVESTIGATION inv
+        LEFT JOIN [dbo].INVESTIGATION inv WITH(NOLOCK) 
             ON inv.INVESTIGATION_KEY = notif_event.INVESTIGATION_KEY
-        INNER JOIN NBS_ODSE.dbo.Act_relationship ar1
-            ON inv.CASE_UID = ar1.target_act_uid
+        INNER JOIN NBS_ODSE.dbo.Act_relationship ar1 WITH(NOLOCK)
+                   ON inv.CASE_UID = ar1.target_act_uid
             AND ar1.target_class_cd = 'CASE'
             AND ar1.source_class_cd = 'NOTF'
+        INNER JOIN NBS_ODSE.dbo.Notification n WITH(NOLOCK) 
+        	ON ar1.source_act_uid = n.notification_uid  
         LEFT JOIN [dbo].nrt_notification_key k
           ON k.D_NOTIFICATION_KEY = notif.NOTIFICATION_KEY AND COALESCE(k.NOTIFICATION_UID, 1) = COALESCE(ar1.source_act_uid, 1)
-        WHERE k.D_NOTIFICATION_KEY IS NULL AND k.NOTIFICATION_UID IS NULL
+        WHERE k.D_NOTIFICATION_KEY IS NULL AND k.NOTIFICATION_UID IS NULL 
+        	AND n.cd not in ('EXP_NOTF', 'SHARE_NOTF', 'EXP_NOTF_PHDC','SHARE_NOTF_PHDC')	
             ORDER BY notif.NOTIFICATION_KEY;
+            
 
         SET IDENTITY_INSERT [dbo].nrt_notification_key OFF
         
     END
-
