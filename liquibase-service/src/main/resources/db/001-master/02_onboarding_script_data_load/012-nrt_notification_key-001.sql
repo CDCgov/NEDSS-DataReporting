@@ -34,8 +34,8 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and xtyp
             ON notif.NOTIFICATION_KEY = notif_event.NOTIFICATION_KEY
         LEFT JOIN [dbo].INVESTIGATION inv WITH(NOLOCK) 
             ON inv.INVESTIGATION_KEY = notif_event.INVESTIGATION_KEY
-        INNER JOIN NBS_ODSE.dbo.Act_relationship ar1
-            ON inv.CASE_UID = ar1.target_act_uid
+        INNER JOIN NBS_ODSE.dbo.Act_relationship ar1 WITH(NOLOCK)
+                   ON inv.CASE_UID = ar1.target_act_uid
             AND ar1.target_class_cd = 'CASE'
             AND ar1.source_class_cd = 'NOTF'
         INNER JOIN NBS_ODSE.dbo.Notification n WITH(NOLOCK) 
