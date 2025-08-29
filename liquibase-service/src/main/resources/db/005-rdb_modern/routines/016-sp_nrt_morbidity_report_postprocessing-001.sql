@@ -325,6 +325,40 @@ BEGIN
 
         if @debug = 'true' SELECT 'DEBUG: tmp_morb_root_keyvalue', * FROM #tmp_morb_root;
 
+        -- ADD MISSING DELETE LOGIC
+        BEGIN TRANSACTION;
+
+        SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
+        SET @PROC_STEP_NAME = 'Disassociate LAB_TEST_RESULT only for morb reports without investigations';
+
+-- Only move lab results to default bucket when morbidity report loses investigation association
+        UPDATE dbo.LAB_TEST_RESULT
+        SET morb_rpt_key = 1,
+            RDB_LAST_REFRESH_TIME = GETDATE()
+          WHERE morb_rpt_key IN (
+            SELECT tmr.morb_rpt_key
+            FROM #tmp_morb_root tmr
+            WHERE tmr.morb_rpt_key IS NOT NULL
+              AND (
+                -- No investigation associated
+                tmr.associated_phc_uids IS NULL
+                    OR tmr.associated_phc_uids = ''
+                    OR tmr.record_status_cd = 'INACTIVE'
+                    -- Or investigation no longer exists
+                    OR NOT EXISTS (
+                    SELECT 1 FROM dbo.Investigation inv
+                    WHERE inv.case_uid = tmr.associated_phc_uids
+                )
+                )
+        )
+          AND morb_rpt_key <> 1;
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+
+        INSERT INTO [dbo].[job_flow_log]
+        (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
+        VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+        COMMIT TRANSACTION;
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
