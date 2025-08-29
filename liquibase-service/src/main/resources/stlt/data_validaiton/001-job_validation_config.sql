@@ -34,7 +34,7 @@ begin
     LEFT JOIN dbo.NRT_PROVIDER_KEY nrtk with (nolock) ON nrtk.PROVIDER_UID = nrt.provider_uid
     LEFT JOIN dbo.D_PROVIDER dp with (nolock) ON dp.PROVIDER_UID = src.person_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''PROVIDER''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''PROVIDER'' 
         AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -70,7 +70,7 @@ begin
     LEFT JOIN dbo.NRT_PATIENT nrt with (nolock) ON nrt.patient_uid = src.person_uid
     LEFT JOIN dbo.NRT_PATIENT_KEY nrtk with (nolock) ON nrtk.patient_uid = nrt.patient_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''PATIENT''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''PATIENT''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -106,7 +106,7 @@ begin
     LEFT JOIN dbo.NRT_ORGANIZATION nrt with (nolock) ON nrt.organization_uid = src.organization_uid
     LEFT JOIN dbo.NRT_ORGANIZATION_KEY nrtk with (nolock) ON nrtk.organization_uid = nrt.organization_uid
     LEFT JOIN NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''ORGANIZATION''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''ORGANIZATION''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -146,7 +146,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = nrt.public_health_case_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''INVESTIGATION''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''INVESTIGATION''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -184,7 +184,7 @@ begin
     LEFT JOIN dbo.NRT_TREATMENT nrt ON nrt.treatment_uid = src.treatment_uid
     LEFT JOIN dbo.NRT_TREATMENT_KEY nrtk ON nrtk.treatment_uid = nrt.treatment_uid
     LEFT JOIN dbo.NRT_BACKFILL nb
-    ON nb.entity = ''TREATMENT''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''TREATMENT''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -229,7 +229,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_CASE_MANAGEMENT_KEY nrtk with (nolock) ON nrtk.public_health_case_uid = nrt.public_health_case_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''CASE_MANAGEMENT''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''CASE_MANAGEMENT''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -268,7 +268,7 @@ begin
     LEFT JOIN dbo.NRT_VACCINATION nrt with (nolock) ON nrt.vaccination_uid = src.vaccination_uid
     LEFT JOIN dbo.NRT_VACCINATION_KEY nrtk with (nolock) ON nrtk.vaccination_uid = nrt.vaccination_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''VACCINATION''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''VACCINATION''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -313,7 +313,7 @@ begin
     LEFT JOIN dbo.NRT_INTERVIEW nrt with (nolock) ON nrt.interview_uid = src.interview_uid
     LEFT JOIN dbo.NRT_INTERVIEW_KEY nrtk with (nolock) ON nrtk.interview_uid = nrt.interview_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''INTERVIEW''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''INTERVIEW''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -356,7 +356,7 @@ begin
     LEFT JOIN dbo.NRT_OBSERVATION nrt with (nolock) ON nrt.observation_uid = src.observation_uid
     LEFT JOIN dbo.NRT_LAB_TEST_KEY nrtk with (nolock) ON nrtk.lab_test_uid = nrt.observation_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''OBSERVATION''
+    ON nb.status_cd <> ''COMPLETE'' AND (nb.entity = ''OBSERVATION'' or nb.entity like ''OBS%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -400,7 +400,7 @@ begin
     LEFT JOIN dbo.NRT_OBSERVATION nrt with (nolock) ON nrt.observation_uid = src.observation_uid
     LEFT JOIN dbo.NRT_LAB_TEST_KEY nrtk with (nolock) ON nrtk.lab_test_uid = nrt.observation_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON (nb.entity = ''OBSERVATION'' or nb.entity like ''OBS%'')
+    ON nb.status_cd <> ''COMPLETE'' AND (nb.entity = ''OBSERVATION'' or nb.entity like ''OBS%'')
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -408,49 +408,6 @@ begin
     )
     WHERE lt.LAB_TEST_UID IS NULL', 'LAB_TEST');
 
-
-
-    insert into job_validation_config values ('LAB_TEST_RESULT', 'Observation PRE-Processing Event,D_LABTEST_RESULTS Post-Processing Event',
-    'SELECT 
-        src.observation_uid as uid 
-        , src.local_id
-        , src.update_time
-        , src.record_status_cd
-        , case 
-            when nrt.observation_uid is null then ''FALSE'' 
-            else ''TRUE''
-        end as record_in_nrt_table
-        , case 
-            when nrtk.lab_test_uid is null then ''FALSE'' 
-            else ''TRUE'' 
-        end as record_in_nrt_key_table
-        , nb.record_uid_list as retry_list
-        , nb.batch_id as retry_job_batch_id
-        , nb.retry_count as retry_count
-        , nb.err_description as retry_error_desc
-    FROM (
-        SELECT 
-            observation_uid,
-            local_id,
-            record_status_cd,
-            ISNULL(last_chg_time, add_time) as update_time,
-            obs_domain_cd_st_1
-        FROM nbs_odse.dbo.Observation obs with (nolock)
-        WHERE obs.record_status_cd <> ''LOG_DEL''
-        AND obs.obs_domain_cd_st_1 IN ( ''Result'', ''R_Result'', ''I_Result'', ''Order_rslt'')
-                AND (obs.CTRL_CD_DISPLAY_FORM IN (''LabReport'', ''LabReportMorb'') OR obs.CTRL_CD_DISPLAY_FORM IS NULL)
-    ) src
-    LEFT JOIN dbo.LAB_TEST_RESULT lt with (nolock) ON lt.LAB_TEST_UID = src.observation_uid
-    LEFT JOIN dbo.NRT_OBSERVATION nrt with (nolock) ON nrt.observation_uid = src.observation_uid
-    LEFT JOIN dbo.NRT_LAB_TEST_KEY nrtk with (nolock) ON nrtk.lab_test_uid = nrt.observation_uid
-    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON (nb.entity = ''OBSERVATION'' or nb.entity like ''OBS%'')
-    AND EXISTS (
-        SELECT 1
-        FROM STRING_SPLIT(nb.record_uid_list, '','') s
-        WHERE TRY_CAST(s.value AS BIGINT) = src.observation_uid
-    )
-    WHERE lt.LAB_TEST_UID IS NULL', 'LAB_TEST');
 
 
     insert into job_validation_config values ('F_PAGE_CASE', 'F_PAGE_CASE',
@@ -490,7 +447,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.d_investigation_key = fact.investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''F_PAGE_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''F_PAGE_CASE''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -536,7 +493,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.d_investigation_key = fact.investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''F_STD_PAGE_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''F_STD_PAGE_CASE''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -575,7 +532,7 @@ begin
     LEFT JOIN dbo.NRT_VACCINATION nrt with (nolock) ON nrt.vaccination_uid = src.vaccination_uid
     LEFT JOIN dbo.NRT_VACCINATION_KEY nrtk with (nolock) ON nrtk.vaccination_uid = nrt.vaccination_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''VACCINATION''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''VACCINATION''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -620,7 +577,7 @@ begin
     LEFT JOIN dbo.NRT_INTERVIEW_KEY nrtk with (nolock) ON nrtk.interview_uid = nrt.interview_uid
     LEFT JOIN dbo.F_INTERVIEW_CASE fact with (nolock) ON fact.d_interview_key = nrtk.d_interview_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''INTERVIEW''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''INTERVIEW''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -664,7 +621,7 @@ begin
     LEFT JOIN dbo.NRT_CONTACT nrt with (nolock) ON nrt.contact_uid = src.CT_CONTACT_UID
     LEFT JOIN dbo.NRT_CONTACT_KEY nrtk with (nolock) ON nrtk.contact_uid = nrt.contact_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''CONTACT''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''CONTACT''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -709,7 +666,7 @@ begin
     LEFT JOIN dbo.NRT_CONTACT_KEY nrtk with (nolock) ON nrtk.contact_uid = nrt.contact_uid
     LEFT JOIN dbo.F_CONTACT_RECORD_CASE fact with (nolock) ON fact.d_contact_record_key = nrtk.d_contact_record_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''CONTACT''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''CONTACT''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -750,7 +707,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.HEPATITIS_DATAMART dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''HEPATITIS_DATAMART''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%Hepatitis_Datamart%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -790,7 +747,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.STD_HIV_DATAMART dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''STD_HIV_DATAMART''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''%Std_Hiv_Datamart%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -832,7 +789,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.F_TB_PAM fact with (nolock) ON fact.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''F_TB_PAM''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''F_TB_PAM''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -873,7 +830,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.TB_DATAMART dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''TB_DATAMART''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%TB_Datamart%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -915,7 +872,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.F_VAR_PAM fact with (nolock) ON fact.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''F_VAR_PAM''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''F_VAR_PAM''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -955,7 +912,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.VAR_DATAMART fact with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''VAR_DATAMART''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%VAR_Datamart%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -996,7 +953,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.CRS_CASE dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''CRS_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%CRS_Case%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1037,7 +994,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.RUBELLA_CASE dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''RUBELLA_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%Rubella_Case%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1078,7 +1035,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.GENERIC_CASE dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''GENERIC_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%Generic_Case%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1118,7 +1075,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.MEASLES_CASE dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''MEASLES_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%Measles_Case%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1158,7 +1115,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.BMIRD_CASE dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''BMIRD_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like''%BMIRD_Case%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1198,7 +1155,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.HEPATITIS_CASE dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''HEPATITIS_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%Hepatitis_Case%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1239,7 +1196,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.PERTUSSIS_CASE dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''PERTUSSIS_CASE''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%Pertussis_Case%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1280,7 +1237,7 @@ begin
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
     LEFT JOIN dbo.COVID_CASE_DATAMART dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''COVID_CASE_DATAMART''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity like ''%Covid_Case_Datamart%''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1317,7 +1274,7 @@ begin
     LEFT JOIN dbo.NRT_NOTIFICATION_KEY nrtk with (nolock) ON nrtk.notification_uid = src.notification_uid
     LEFT JOIN dbo.NOTIFICATION n with (nolock) ON n.notification_key = nrtk.d_notification_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''NOTIFICATION''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''NOTIFICATION''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1354,7 +1311,7 @@ begin
     LEFT JOIN dbo.NRT_NOTIFICATION_KEY nrtk with (nolock) ON nrtk.notification_uid = src.notification_uid
     LEFT JOIN dbo.NOTIFICATION_EVENT n with (nolock) ON n.notification_key = nrtk.d_notification_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.entity = ''NOTIFICATION''
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''NOTIFICATION''
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s

@@ -6,26 +6,50 @@ BEGIN
 END
 GO 
 /**
-	1.	Resolve Dependencies
-        •	Uses a recursive CTE to expand all dependencies for the given @entity.
-        •	Produces an ordered list of entities to process (parents before children).
-	2.	Iterate Entities
-        For each entity:
-        •	Load the validation_query and dataflows.
-        •	Run the validation query that compares ODSE table with RDB table, NRT tables and also the Backfill/Retry table
-        •	If @check_log = 0, run the validation query directly.
-        •	If @check_log = 1, join validation results to recent job_flow_log errors:
-        •	Filters by dataflows, Status_Type = 'ERROR', and either TOP N or last X days.
-        •	Aggregates errors into JSON (error_log_json) per record.
-	3.	Collate Results
-        •	Results are inserted into a temp table #results with a unified schema (including error_log_json).
-        •	At the end, a single combined result set is returned for all entities in dependency order.
-**/    
+    Stored Procedure: dbo.sp_run_validation
+
+    Purpose:
+    Validates a given RDB table against its corresponding ODSE table, with optional inclusion of job flow log errors,
+    and can optionally update the ODSE table's last_chg_time for relevant records.
+
+    Parameters:
+    @entity           VARCHAR(100)  - The RDB table or entity to validate against the ODSE table.
+    @check_log        BIT            - 1 = include job_flow_log error info, 0 = only run validation query.
+    @topn_errors      SMALLINT       - Optional; when provided, limits to TOP N latest errors; 
+                                       when NULL, retrieves all errors from the last @lookback days (default 10).
+    @initiate_update  BIT            - 0 = update the ODSE table (last_chg_time) for rows corresponding to validated UIDs.
+    @from_date        DATE           - Optional; updates only rows where last_chg_time >= @from_date. Defaults to current date.
+
+    Logic Overview:
+    1. Resolve Dependencies:
+        - Uses a recursive CTE to expand all dependencies for the given @entity.
+        - Produces an ordered list of entities to process (parents before children).
+
+    2. Iterate Entities:
+        - For each entity:
+            • Loads the validation query and associated dataflows.
+            • Executes the validation query, comparing ODSE table data against RDB, NRT, and Backfill/Retry tables.
+            • If @check_log = 1, joins validation results to recent job_flow_log errors filtered by dataflows, Status_Type = 'ERROR', 
+              and either TOP N or last X days.
+            • Aggregates errors per UID into a JSON array (error_log_json).
+
+    3. Collate Results:
+        - Inserts results into a temporary table #results with a unified schema including error_log_json.
+        - Maintains #root_uids for top-level entity UIDs.
+
+    4. Conditional Update (if @initiate_update = 1):
+        - Parses the ODSE table name and primary key from the validation query.
+        - Updates only rows in the ODSE table where the PK matches UIDs in #results.
+        - Sets last_chg_time to last_chg_time+2 mins for these rows.
+
+*/   
 CREATE OR ALTER PROCEDURE dbo.sp_run_validation
 (
-    @entity    VARCHAR(100), --rdb table that is validated against odse
-    @check_log BIT = 0,   -- 1 = include job_flow_log info, 0 = only run validation query
-    @topn_errors  SMALLINT = NULL -- when provided, get TOP N latest errors; when NULL, get all errors from last 10 days
+    @entity    VARCHAR(100), 
+    @check_log BIT = 0,
+    @topn_errors  SMALLINT = NULL,
+    @initiate_update BIT = 0,
+    @from_date      DATE = NULL
 )
 AS
 BEGIN
@@ -35,6 +59,7 @@ DECLARE @validation_query NVARCHAR(MAX);
 DECLARE @sql NVARCHAR(MAX);
 DECLARE @dataflows VARCHAR(500);
 DECLARE @lookback INT = 10;
+DECLARE @odse_table SYSNAME;
     
 BEGIN TRY
 
@@ -181,7 +206,7 @@ BEGIN TRY
             ';
         END
 
-        select  @sql;
+        print  @sql;
 
         -- 3. Execute dynamic SQL with parameters
         IF @check_log = 0
@@ -232,10 +257,87 @@ BEGIN TRY
     ----------------------------------------------------------------------
     SELECT * FROM #results;
 
+    ----------------------------------------------------------------------
+    -- 4. If initiate_update = 1, parse odse table name and run UPDATE
+    ----------------------------------------------------------------------
+
+    IF @initiate_update = 1
+    BEGIN
+        SET NOCOUNT OFF;
+        DECLARE @RowCount_no INT;
+        DECLARE @odse_pk_column NVARCHAR(MAX);
+
+        -- Default from_date to today if not provided
+        IF @from_date IS NULL
+            SET @from_date = CAST(SYSDATETIME() AS DATE);
+
+        
+        ;WITH cte AS (
+            SELECT 
+                CHARINDEX('nbs_odse.dbo.', validation_query) AS startpos, 
+                validation_query, 
+                rdb_entity 
+            FROM JOB_VALIDATION_CONFIG
+            WHERE rdb_entity = @entity
+        )
+        SELECT TOP 1 @odse_table = SUBSTRING(
+            validation_query, 
+            startpos + LEN('nbs_odse.dbo.'), 
+            CHARINDEX(' ', validation_query, startpos + LEN('nbs_odse.dbo.')) - (startpos + LEN('nbs_odse.dbo.'))
+        ) 
+        FROM cte;
+        IF @odse_table IS NOT NULL
+        BEGIN
+            ;WITH PKCols AS (
+                SELECT
+                    c.name AS column_name,
+                    ic.key_ordinal
+                FROM nbs_odse.sys.indexes i
+                JOIN nbs_odse.sys.index_columns ic
+                ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+                JOIN nbs_odse.sys.columns c
+                ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+                WHERE i.is_primary_key = 1 AND ic.key_ordinal = 1
+                AND i.object_id = OBJECT_ID(N'nbs_odse.dbo.' + @odse_table)
+            )
+            SELECT @odse_pk_column =
+                STRING_AGG(QUOTENAME(column_name), ',')
+            FROM PKCols;
+
+            PRINT 'ODSE table: nbs_odse.dbo.' + ISNULL(@odse_table,'(null)')
+                + ' | PK: ' + ISNULL(@odse_pk_column,'(none)');
+                
+            DECLARE @update_sql NVARCHAR(MAX) = N'
+            UPDATE tgt
+            SET last_chg_time = dateadd(minute, 2, last_chg_time)
+            FROM nbs_odse.dbo.' + QUOTENAME(@odse_table) + ' AS tgt
+            INNER JOIN #results r
+                ON tgt.' + @odse_pk_column + ' = r.uid
+            WHERE tgt.last_chg_time >= @from_date;';  
+            
+            PRINT @update_sql;
+            
+            EXEC sp_executesql @update_sql, N'@from_date DATE', @from_date=@from_date;
+            SELECT @RowCount_no = @@ROWCOUNT;
+            PRINT 'Updated '+CAST(@RowCount_no AS VARCHAR(20)) +' rows in table: nbs_odse.dbo.' + @odse_table;
+        END
+        ELSE
+        BEGIN
+            RAISERROR('Could not find nbs_odse.dbo.<table> in validation query for entity %s', 16, 1, @entity);
+            RETURN;
+        END
+
+    END
 END TRY
 BEGIN CATCH
-    CLOSE entity_cursor;
-    DEALLOCATE entity_cursor;
+    -- Close cursor only if it exists and is open
+    IF CURSOR_STATUS('local', 'entity_cursor') >= -1
+    BEGIN
+        IF CURSOR_STATUS('local', 'entity_cursor') > -1
+            CLOSE entity_cursor;
+
+        DEALLOCATE entity_cursor;
+    END;
     DECLARE @FullErrorMessage VARCHAR(8000) =
             'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +  -- Carriage return and line feed for new lines
             'Error Severity: ' + CAST(ERROR_SEVERITY() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
