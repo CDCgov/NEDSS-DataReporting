@@ -3,9 +3,11 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.PostProcRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +56,8 @@ class PostProcessingServiceDmTest {
         closeable = MockitoAnnotations.openMocks(this);
         datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
-                datamartProcessor));
+                datamartProcessor, new CustomMetrics(new SimpleMeterRegistry())));
+        postProcessingServiceMock.initMetrics();
 
         listAppender.start();
         Logger serviceLogger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);

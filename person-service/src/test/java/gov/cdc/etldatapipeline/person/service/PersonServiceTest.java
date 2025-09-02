@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.etldatapipeline.person.model.dto.user.AuthUser;
@@ -15,6 +16,7 @@ import gov.cdc.etldatapipeline.person.repository.PatientRepository;
 import gov.cdc.etldatapipeline.person.repository.ProviderRepository;
 import gov.cdc.etldatapipeline.person.repository.UserRepository;
 import gov.cdc.etldatapipeline.person.transformer.PersonTransformers;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,7 +79,9 @@ class PersonServiceTest {
         closeable = MockitoAnnotations.openMocks(this);
 
         PersonTransformers transformer = new PersonTransformers();
-        personService = new PersonService(patientRepository, providerRepository, userRepository, transformer, kafkaTemplate);
+        personService = new PersonService(
+                patientRepository, providerRepository, userRepository, transformer,
+                kafkaTemplate, new CustomMetrics(new SimpleMeterRegistry()));
         personService.setPersonTopic(inputTopicPerson);
         personService.setUserTopic(inputTopicUser);
         personService.setPatientReportingOutputTopic(patientReportingTopic);
@@ -86,6 +90,7 @@ class PersonServiceTest {
         personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
         personService.setUserReportingOutputTopic(userReportingTopic);
         personService.setElasticSearchEnable(true);
+        personService.initMetrics();
 
         Logger logger = (Logger) LoggerFactory.getLogger(PersonService.class);
         listAppender.start();

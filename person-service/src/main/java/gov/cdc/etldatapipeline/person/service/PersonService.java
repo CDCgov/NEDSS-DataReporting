@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.etldatapipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.etldatapipeline.person.model.dto.user.AuthUser;
@@ -13,6 +14,8 @@ import gov.cdc.etldatapipeline.person.repository.ProviderRepository;
 import gov.cdc.etldatapipeline.person.repository.UserRepository;
 import gov.cdc.etldatapipeline.person.transformer.PersonTransformers;
 import gov.cdc.etldatapipeline.person.transformer.PersonType;
+import io.micrometer.core.instrument.Counter;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -84,6 +87,23 @@ public class PersonService {
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
 
+    private static final String SERVICE_NAME = "person-reporting";
+
+    private final CustomMetrics metrics;
+
+    private Counter msgProcessed;
+    private Counter msgSuccess;
+    private Counter msgFailure;
+
+    @PostConstruct
+    void initMetrics() {
+        String[] tags = {"service", SERVICE_NAME};
+
+        msgProcessed = metrics.counter("person_msg_processed", tags);
+        msgSuccess = metrics.counter( "person_msg_success", tags);
+        msgFailure = metrics.counter("person_msg_failure", tags);
+    }
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
             autoCreateTopics = "false",
@@ -117,34 +137,40 @@ public class PersonService {
     }
 
     private void processPerson(String message, String topic) {
-        String personUid = "";
-        try {
-            JsonNode jsonNode = objectMapper.readTree(message);
-            JsonNode payloadNode = jsonNode.get("payload").path("after");
+        msgProcessed.increment();
+        metrics.recordTime("person_msg_processing_seconds", () -> {
+            String personUid = "";
+            try {
+                JsonNode jsonNode = objectMapper.readTree(message);
+                JsonNode payloadNode = jsonNode.get("payload").path("after");
 
-            personUid = extractUid(message, "person_uid");
-            log.info(topicDebugLog, "Person", personUid, topic);
-            List<PatientSp> personDataFromStoredProc = patientRepository.computePatients(personUid);
-            processPatientData(personDataFromStoredProc);
+                personUid = extractUid(message, "person_uid");
+                log.info(topicDebugLog, "Person", personUid, topic);
+                List<PatientSp> personDataFromStoredProc = patientRepository.computePatients(personUid);
+                processPatientData(personDataFromStoredProc);
 
-            String cd = payloadNode.get("cd").asText();
-            List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
-            if (cd != null && cd.equalsIgnoreCase("PRV")) {
-                providerDataFromStoredProc = providerRepository.computeProviders(personUid);
+                String cd = payloadNode.get("cd").asText();
+                List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
+                if (cd != null && cd.equalsIgnoreCase("PRV")) {
+                    providerDataFromStoredProc = providerRepository.computeProviders(personUid);
 
-                processProviderData(providerDataFromStoredProc);
-            } else {
-                log.debug("There is no provider to process in the incoming data.");
+                    processProviderData(providerDataFromStoredProc);
+                } else {
+                    log.debug("There is no provider to process in the incoming data.");
+                }
+
+                if (personDataFromStoredProc.isEmpty() && providerDataFromStoredProc.isEmpty()) {
+                    throw new EntityNotFoundException("Unable to find Person with id: " + personUid);
+                }
+                msgSuccess.increment();
+            } catch (EntityNotFoundException ex) {
+                msgFailure.increment();
+                throw new NoDataException(ex.getMessage(), ex);
+            } catch (Exception e) {
+                msgFailure.increment();
+                throw new DataProcessingException(errorMessage("Person", personUid, e), e);
             }
-
-            if (personDataFromStoredProc.isEmpty() && providerDataFromStoredProc.isEmpty()) {
-                throw new EntityNotFoundException("Unable to find Person with id: " + personUid);
-            }
-        } catch (EntityNotFoundException ex) {
-            throw new NoDataException(ex.getMessage(), ex);
-        } catch (Exception e) {
-            throw new DataProcessingException(errorMessage("Person", personUid, e), e);
-        }
+        }, "service", SERVICE_NAME);
     }
 
     private void processProviderData(List<ProviderSp> providerData) {

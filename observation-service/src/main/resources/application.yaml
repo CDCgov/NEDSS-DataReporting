@@ -33,3 +33,16 @@ spring:
     change-log: db/changelog/db.changelog-master.yaml
 server:
   port: '8094'
+
+management:
+  endpoint:
+    prometheus:
+      access: read_only
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true

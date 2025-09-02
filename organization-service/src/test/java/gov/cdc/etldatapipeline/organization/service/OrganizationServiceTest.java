@@ -7,11 +7,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.model.dto.place.*;
 import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
 import gov.cdc.etldatapipeline.organization.repository.PlaceRepository;
 import gov.cdc.etldatapipeline.organization.transformer.DataTransformers;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,7 +73,8 @@ class OrganizationServiceTest {
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         DataTransformers transformer = new DataTransformers();
-        organizationService = new OrganizationService(orgRepository, placeRepository, transformer, kafkaTemplate);
+        organizationService = new OrganizationService(
+                orgRepository, placeRepository, transformer, kafkaTemplate, new CustomMetrics(new SimpleMeterRegistry()));
         organizationService.setOrgTopic(orgTopic);
         organizationService.setPlaceTopic(placeTopic);
         organizationService.setOrgReportingOutputTopic(orgReportingTopic);
@@ -79,6 +82,7 @@ class OrganizationServiceTest {
         organizationService.setPlaceReportingOutputTopic(placeReportingTopic);
         organizationService.setTeleOutputTopic(teleReportingTopic);
         organizationService.setElasticSearchEnable(true);
+        organizationService.initMetrics();
 
         Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
         listAppender.start();

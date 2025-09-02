@@ -48,3 +48,16 @@ service:
   max-retries: ${MAX_RETRIES:3}
 server:
   port: '8095'
+
+management:
+  endpoint:
+    prometheus:
+      access: read_only
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
