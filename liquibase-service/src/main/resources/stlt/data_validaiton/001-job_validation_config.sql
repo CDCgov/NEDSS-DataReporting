@@ -456,7 +456,7 @@ begin
     WHERE fact.investigation_key IS NULL', 'INVESTIGATION');
 
 
-    insert into job_validation_config values ('F_STD_PAGE_CASE', 'F_PAGE_CASE',
+    insert into job_validation_config values ('F_STD_PAGE_CASE', 'F_STD_PAGE_CASE',
     'SELECT
         src.public_health_case_uid as uid 
         , src.local_id
