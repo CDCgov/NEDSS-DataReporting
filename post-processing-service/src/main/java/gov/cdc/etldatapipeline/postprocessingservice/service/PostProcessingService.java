@@ -132,8 +132,6 @@ public class PostProcessingService {
         ppMsgFailure = metrics.counter("post_msg_failure", tags);
 
         dmMsgProcessed = metrics.counter("dm_msg_processed", tags);
-        dmMsgSuccess = metrics.counter( "dm_msg_success", tags);
-        dmMsgFailure = metrics.counter("dm_msg_failure", tags);
 
         processTimer = metrics.timer("post_batch_processing_seconds", tags);
         metrics.gauge("post_batch_size", cacheSizeGauge, AtomicInteger::doubleValue, tags);
