@@ -342,12 +342,16 @@ BEGIN
               AND (
                 -- No investigation associated
                 tmr.associated_phc_uids IS NULL
-                    OR tmr.associated_phc_uids = ''
+                    OR LTRIM(RTRIM(tmr.associated_phc_uids)) = ''
                     OR tmr.record_status_cd = 'INACTIVE'
-                    -- Or investigation no longer exists
+                    -- Or investigation no longer exists (handle comma-separated values and data type conversion)
                     OR NOT EXISTS (
                     SELECT 1 FROM dbo.Investigation inv
-                    WHERE inv.case_uid = tmr.associated_phc_uids
+                    WHERE inv.case_uid IN (
+                        SELECT TRY_CAST(LTRIM(RTRIM(value)) AS BIGINT)
+                        FROM STRING_SPLIT(tmr.associated_phc_uids, ',')
+                        WHERE TRY_CAST(LTRIM(RTRIM(value)) AS BIGINT) IS NOT NULL
+                    )
                 )
                 )
         )
@@ -358,6 +362,8 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name] ,[Status_Type],[step_number],[step_name],[row_count])
         VALUES  (@BATCH_ID,@Dataflow_Name,@Package_Name,'START',@PROC_STEP_NO,@PROC_STEP_NAME,@ROWCOUNT_NO);
+
+
         COMMIT TRANSACTION;
 
         SELECT @RowCount_no = @@ROWCOUNT;
