@@ -33,7 +33,6 @@ BEGIN
         IF @observation_id_list = ''
             BEGIN
                 RAISERROR('observation_id_list parameter cannot be empty. Please provide at least one observation ID.', 16, 1);
-                RETURN;
             END
         ELSE
             BEGIN

@@ -86,6 +86,21 @@ BEGIN TRY
         select @Proc_Step_Name as step, *
         from #PHC_LIST;
 
+    IF NOT EXISTS (SELECT 1 FROM #PHC_LIST)
+        BEGIN
+            if @debug='true'
+                PRINT 'No rows found in #PHC_LIST. Exiting procedure.';
+            SELECT
+                0 AS public_health_case_uid,
+                CAST(NULL AS BIGINT) AS patient_uid,
+                CAST(NULL AS BIGINT) AS observation_uid,
+                'Error' AS datamart,
+                CAST(NULL AS VARCHAR(50))  AS condition_cd,
+                'Missing NRT Record: sp_covid_case_datamart_postprocessing' AS stored_procedure,
+                CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+                WHERE 1=1;
+            RETURN;
+        END
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
     SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
@@ -105,6 +120,15 @@ BEGIN TRY
     BEGIN
         if @debug='true'
             PRINT 'No rows found in #TempTable. Exiting procedure.';
+        SELECT
+            CAST(NULL AS BIGINT) AS public_health_case_uid,
+            CAST(NULL AS BIGINT) AS patient_uid,
+            CAST(NULL AS BIGINT) AS observation_uid,
+            CAST(NULL AS VARCHAR(30)) AS datamart,
+            CAST(NULL AS VARCHAR(50))  AS condition_cd,
+            CAST(NULL AS VARCHAR(200)) AS stored_procedure,
+            CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
+            WHERE 1=0;
         RETURN;
     END
 
