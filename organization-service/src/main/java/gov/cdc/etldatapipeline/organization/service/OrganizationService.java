@@ -136,27 +136,26 @@ public class OrganizationService {
                 CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
 
                 Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
-
-                if (!organizations.isEmpty()) {
-                    organizations.forEach(org -> {
-                        String reportingKey = transformer.buildOrganizationKey(org);
-                        String reportingData = transformer.processData(org, OrganizationType.ORGANIZATION_REPORTING);
-                        kafkaTemplate.send(orgReportingOutputTopic, reportingKey, reportingData);
-                        log.info("Organization data (uid={}) sent to {}", orgUid, orgReportingOutputTopic);
-                        log.debug("Organization Reporting: {}", reportingData);
-
-                        if (elasticSearchEnable) {
-                            String elasticKey = transformer.buildOrganizationKey(org);
-                            String elasticData = transformer.processData(org, OrganizationType.ORGANIZATION_ELASTIC_SEARCH);
-                            kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
-                            log.info("Organization data (uid={}) sent to {}", orgUid, orgElasticSearchTopic);
-                            log.debug("Organization Elastic: {}", elasticData != null ? elasticData : "");
-                        }
-                        msgSuccess.increment();
-                    });
-                } else {
+                if (organizations.isEmpty()) {
                     throw new EntityNotFoundException("Unable to find Organization with id: " + organizationUid);
                 }
+
+                organizations.forEach(org -> {
+                    String reportingKey = transformer.buildOrganizationKey(org);
+                    String reportingData = transformer.processData(org, OrganizationType.ORGANIZATION_REPORTING);
+                    kafkaTemplate.send(orgReportingOutputTopic, reportingKey, reportingData);
+                    log.info("Organization data (uid={}) sent to {}", orgUid, orgReportingOutputTopic);
+                    log.debug("Organization Reporting: {}", reportingData);
+
+                    if (elasticSearchEnable) {
+                        String elasticKey = transformer.buildOrganizationKey(org);
+                        String elasticData = transformer.processData(org, OrganizationType.ORGANIZATION_ELASTIC_SEARCH);
+                        kafkaTemplate.send(orgElasticSearchTopic, elasticKey, elasticData);
+                        log.info("Organization data (uid={}) sent to {}", orgUid, orgElasticSearchTopic);
+                        log.debug("Organization Elastic: {}", elasticData != null ? elasticData : "");
+                    }
+                    msgSuccess.increment();
+                });
             } catch (EntityNotFoundException ex) {
                 msgFailure.increment();
                 throw new NoDataException(ex.getMessage(), ex);
