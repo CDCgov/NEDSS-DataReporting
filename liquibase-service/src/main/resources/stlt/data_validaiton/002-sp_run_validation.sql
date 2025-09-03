@@ -206,7 +206,8 @@ BEGIN TRY
             ';
         END
 
-        print  @sql;
+        PRINT 'SQL statement: ' + @sql;
+        PRINT 'Parameter @dataflows: ' + ISNULL(@dataflows, '<NULL>');
 
         -- 3. Execute dynamic SQL with parameters
         IF @check_log = 0
@@ -315,7 +316,8 @@ BEGIN TRY
                 ON tgt.' + @odse_pk_column + ' = r.uid
             WHERE tgt.last_chg_time >= @from_date;';  
             
-            PRINT @update_sql;
+            PRINT 'SQL statement: ' + @update_sql;
+            PRINT 'Parameter @from_date: ' + ISNULL(@from_date, '<NULL>');
             
             EXEC sp_executesql @update_sql, N'@from_date DATE', @from_date=@from_date;
             SELECT @RowCount_no = @@ROWCOUNT;
