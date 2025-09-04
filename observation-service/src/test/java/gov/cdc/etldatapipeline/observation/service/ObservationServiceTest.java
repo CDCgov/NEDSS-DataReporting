@@ -3,11 +3,13 @@ package gov.cdc.etldatapipeline.observation.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.Observation;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationKey;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationReporting;
 import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,10 +63,13 @@ class ObservationServiceTest {
         closeable = MockitoAnnotations.openMocks(this);
         ProcessObservationDataUtil transformer = new ProcessObservationDataUtil(kafkaTemplate);
         transformer.setMaterialTopicName("materialTopic");
-        observationService = new ObservationService(observationRepository, kafkaTemplate, transformer);
+        observationService = new ObservationService(
+                observationRepository, kafkaTemplate, transformer, new CustomMetrics(new SimpleMeterRegistry()));
         observationService.setObservationTopic(inputTopicNameObservation);
         observationService.setActRelationshipTopic(inputTopicNameActRelationship);
         observationService.setObservationTopicOutputReporting(outputTopicNameObservation);
+        observationService.initMetrics();
+
         transformer.setCodedTopicName("ObservationCoded");
         transformer.setReasonTopicName("ObservationReason");
         transformer.setTxtTopicName("ObservationTxt");

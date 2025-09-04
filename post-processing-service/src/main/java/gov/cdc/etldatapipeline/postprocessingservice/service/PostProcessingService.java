@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.PostProcRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.kafka.common.errors.SerializationException;
@@ -34,6 +39,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -98,11 +105,39 @@ public class PostProcessingService {
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
 
+    static final String SERVICE_NAME = "post-process-reporting";
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
 
     @Value("${spring.kafka.topic.investigation}")
     private String investigationTopic;
+
+    private final CustomMetrics metrics;
+
+    private Counter ppMsgProcessed;
+    private Counter ppDmProcessed;
+    private Counter ppMsgSuccess;
+    private Counter ppMsgFailure;
+
+    Timer processTimer;
+    private final AtomicInteger msgCacheSizeGauge = new AtomicInteger();
+    private final AtomicInteger dmCacheSizeGauge = new AtomicInteger();
+
+    @PostConstruct
+    void initMetrics() {
+        String[] tags = {"service", SERVICE_NAME};
+
+        ppMsgProcessed = metrics.counter("post_msg_processed", tags);
+        ppDmProcessed = metrics.counter("post_dm_processed", tags);
+
+        ppMsgSuccess = metrics.counter( "post_msg_success", tags);
+        ppMsgFailure = metrics.counter("post_msg_failure", tags);
+
+        processTimer = metrics.timer("post_msg_batch_processing_seconds", tags);
+        metrics.gauge("post_msg_batch_size", msgCacheSizeGauge, AtomicInteger::doubleValue, tags);
+        metrics.gauge("post_dm_batch_size", dmCacheSizeGauge, AtomicInteger::doubleValue, tags);
+    }
 
     /**
      * Processes a message from a Kafka topic. This method is the entry point for handling messages
@@ -155,14 +190,18 @@ public class PostProcessingService {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload String payload) {
+        ppMsgProcessed.increment();
         extractIdFromMessage(topic, key, payload);
     }
 
     /**
-     * Extract id from the kafka message key
-     * @param topic
-     * @param messageKey
-     * @param payload
+     * Extracts entity UID from the Kafka message and caches it for further processing.
+     * If the identifier is numeric, it is also enriched with values from the message payload.
+     *
+     * @param topic       the Kafka topic from which the message was received (used to determine entity type)
+     * @param messageKey  the Kafka message key in JSON format, containing the entity UID
+     * @param payload     the Kafka message payload in JSON format, used for enrichment when UID is numeric
+     * @throws DataProcessingException if the UID field is missing or cannot be processed
      */
     private void extractIdFromMessage(String topic, String messageKey, String payload) {
         try {
@@ -191,11 +230,20 @@ public class PostProcessingService {
             throw new DataProcessingException(msg, e);
         }
     }
+
     /**
-     * Extracts relevant value from the kafka message payload
-     * @param uid
-     * @param topic
-     * @param payload
+     * Extracts and categorizes additional values from a Kafka message payload based on the entity type.
+     * <p>
+     * Depending on the topic suffix, this method will:
+     * <ul>
+     *   <li><b>Investigation</b>: add the UID to summary/aggregate caches and map it to Page Builder tables.</li>
+     *   <li><b>Notification</b>: extract the act type code and link it to the associated investigation UID for summary case processing.</li>
+     *   <li><b>Observation</b>: classify observations into MorbReport or LabReport caches based on control and domain codes.</li>
+     * </ul>
+     *
+     * @param uid     the numeric identifier extracted from the Kafka message key
+     * @param topic   the Kafka topic name, used to determine which entity-specific rules to apply
+     * @param payload the Kafka message payload in JSON format, used to extract additional values
      */
     private void extractValFromMessage(Long uid, String topic, String payload) {
         try {
@@ -260,6 +308,7 @@ public class PostProcessingService {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Payload String payload) {
         try {
+            ppDmProcessed.increment();
             logger.info("Got this payload: {} from the topic: {}", payload, topic);
             JsonNode payloadNode = objectMapper.readTree(payload);
 
@@ -336,14 +385,22 @@ public class PostProcessingService {
             obsCache.clear();
         }
 
-        processCdCache(cdCacheSnapshot);
+        int cacheSize =
+                idCacheSnapshot.values().stream().mapToInt(List::size).sum() +
+                cdCacheSnapshot.values().stream().mapToInt(List::size).sum();
+        msgCacheSizeGauge.set(cacheSize);
 
-        if (!idCacheSnapshot.isEmpty()) {
-            processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, null);
-        }
-
-        // only execute if BOTH cdCacheSnapshot and idCacheSnapshot are empty
-        if (cdCacheSnapshot.isEmpty() && idCacheSnapshot.isEmpty()) {
+        if (cacheSize > 0) {
+            Timer.Sample sample = metrics.startSample();
+            try {
+                processCdCache(cdCacheSnapshot);
+                if (!idCacheSnapshot.isEmpty()) {
+                    processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, null);
+                }
+            } finally {
+                metrics.stopSample(sample, processTimer);
+            }
+        } else {
             logger.info("No ids to process from the topics.");
         }
     }
@@ -478,9 +535,6 @@ public class PostProcessingService {
         // list to store details of datamarts and the associated ids that needs to be hydrated downstream
         List<DatamartData> dmData = new ArrayList<>();
 
-        // list to keep volatile datamart data to be merged into dmData
-        List<DatamartData> dmDataSp;
-
         // Isolated temporary map to accumulate entity ID collections by entity type.
         // After processing, it is merged into dmCache for multi-ID datamarts invocation.
         // Isolation prevents conflicts from concurrent modifications by the datamart processing thread.
@@ -500,94 +554,18 @@ public class PostProcessingService {
                 continue;
             }
 
-            if (batchId == null) {
-                logger.info(PROCESSING_IDS_LOG_MSG, ids.size(), keyTopic);
-            } else {
-                logger.info("Retrying {} id(s) from topic: {}, attempt #{} for batch id: {}",
-                        ids.size(), keyTopic, dmProcessor.retryAttempts.getOrDefault(batchId, 0)+1, batchId);
-            }
+            logIdProcessing(ids.size(), keyTopic, batchId);
 
             Entity entity = getEntityByTopic(keyTopic);
             try {
-                switch (entity) {
-                    case PAGE:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage, dmProcessor::checkResult);
-                        break;
-                    case ORGANIZATION:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds, dmProcessor::checkResult);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        newDmMulti.computeIfAbsent(ORGANIZATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    case PROVIDER:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds, dmProcessor::checkResult);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        newDmMulti.computeIfAbsent(PROVIDER.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    case PATIENT:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds, dmProcessor::checkResult);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        newDmMulti.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    case AUTH_USER:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile, dmProcessor::checkResult);
-                        break;
-                    case D_PLACE:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace, dmProcessor::checkResult);
-                        break;
-                    case INVESTIGATION:
-                        dmDataSp = processInvestigation(keyTopic, entity, ids, pbCache);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        newDmMulti.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        processByInvFormCode(dmData, keyTopic);
-                        break;
-                    case CONTACT:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord, dmProcessor::checkResult);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFContactRecordCase, dmProcessor::checkResult,
-                                "sp_f_contact_record_case_postprocessing");
-                        newDmMulti.computeIfAbsent(CONTACT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    case NOTIFICATION:
-                        dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds, dmProcessor::checkResult);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    case CASE_MANAGEMENT:
-                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement, dmProcessor::checkResult);
-                        processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase, dmProcessor::checkResult,
-                                "sp_f_std_page_case_postprocessing");
-                        break;
-                    case INTERVIEW:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview, dmProcessor::checkResult);
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase, dmProcessor::checkResult,
-                                "sp_f_interview_case_postprocessing");
-                        break;
-                    case STATE_DEFINED_FIELD_METADATA:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, dmProcessor::checkResult);
-                        break;
-                    case LDF_DATA:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds, dmProcessor::checkResult);
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, dmProcessor::checkResult);
-                        break;
-                    case OBSERVATION:
-                        dmData = processObservation(keyTopic, entity, dmData, obsCache);
-                        newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    case TREATMENT:
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment, dmProcessor::checkResult);
-                        break;
-                    case VACCINATION:
-                        dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination, dmProcessor::checkResult);
-                        dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                        processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFVaccination, dmProcessor::checkResult,
-                                "sp_f_vaccination_postprocessing");
-                        newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
-                        break;
-                    default:
-                        logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
-                        break;
-                }
+                var dmDataSp = processEntity(entity, keyTopic, ids, pbCache, obsCache, newDmMulti);
+                incrementIf(ppDmProcessed, 1, !newDmMulti.isEmpty());
+                dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
+
+                // do not count failed retries here to avoid double counting
+                incrementIf(ppMsgSuccess, ids.size(), batchId == null);
             } catch (Exception e) {
+                incrementIf(ppMsgFailure, ids.size(), batchId == null);
                 logger.error(errorMessage(entity.getEntityName(), listToParameterString(ids), new Exception(e.getClass().getSimpleName())));
                 processingFailed = true;
                 batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
@@ -595,7 +573,7 @@ public class PostProcessingService {
         }
 
         // process METRIC_EVENT datamart since multiple datamarts depend on it
-        processMetricEventDatamart(newDmMulti);
+        dmProcessor.processMetricEventDatamart(newDmMulti);
         processSummaryCases();
         dmProcessor.process(dmData);
 
@@ -613,42 +591,117 @@ public class PostProcessingService {
         for (Entry<String, List<String>> entry : cdCacheSnapshot.entrySet()) {
             String keyTopic = entry.getKey();
             List<String> cds = entry.getValue();
-
-            logger.info(PROCESSING_IDS_LOG_MSG, cds.size(), keyTopic);
-
             Entity entity = getEntityByTopic(keyTopic);
+            logIdProcessing(cds.size(), keyTopic, null);
 
-            if (Objects.requireNonNull(entity) == CONDITION) {
-                processTopic(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
-            } else {
-                logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
+            try {
+                if (Objects.requireNonNull(entity) == CONDITION) {
+                    processTopic(keyTopic, entity, cds, postProcRepository::executeStoredProcForConditionCode);
+                } else {
+                    logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
+                }
+                ppMsgSuccess.increment(cds.size());
+            } catch (Exception e) {
+                String ids = cds.stream().distinct().collect(Collectors.joining(","));
+                logger.error(errorMessage(entity.getEntityName(), ids, new Exception(e.getClass().getSimpleName())));
+                ppMsgFailure.increment(cds.size());
             }
         }
     }
 
-    private void processSummaryCases() {
-        // Making cache snapshot preventing out-of-sequence ids processing
-        final Set<Long> sumUids;
-        final Set<Long> aggUids;
-
-        synchronized (cacheLock) {
-            sumUids = Optional.ofNullable(sumCache.get(CASE_TYPE_SUM))
-                    .map(HashSet::new)
-                    .orElse(new HashSet<>());
-            aggUids = Optional.ofNullable(sumCache.get(CASE_TYPE_AGG))
-                    .map(HashSet::new)
-                    .orElse(new HashSet<>());
-            sumCache.clear();
+    private void logIdProcessing(int idSize, String keyTopic, Long batchId) {
+        if (batchId == null) {
+            logger.info(PROCESSING_IDS_LOG_MSG, idSize, keyTopic);
+        } else {
+            logger.info("Retrying {} id(s) from topic: {}, attempt #{} for batch id: {}",
+                    idSize, keyTopic, dmProcessor.retryAttempts.getOrDefault(batchId, 0)+1, batchId);
         }
+    }
 
-        processTopic(investigationTopic, SUMMARY_REPORT_CASE, sumUids,
-                investigationRepository::executeStoredProcForSummaryReportCase);
+    private void incrementIf(Counter cnt, int size, boolean notRetry) {
+        if (notRetry) {
+            cnt.increment(size);
+        }
+    }
 
-        processTopic(investigationTopic, SR100_DATAMART, sumUids,
-                investigationRepository::executeStoredProcForSR100Datamart);
+    private List<DatamartData> processEntity(
+            Entity entity, String keyTopic, List<Long> ids,
+            Map<String, List<Long>> pbCache, Map<String, List<Long>> obsCache, Map<String, Queue<Long>> newDmMulti) {
 
-        processTopic(investigationTopic, AGGREGATE_REPORT_DATAMART, aggUids,
-                investigationRepository::executeStoredProcForAggregateReport);
+        // list to keep volatile datamart data to be merged into main dmData
+        List<DatamartData> dmDataSp = Collections.emptyList();
+        switch (entity) {
+            case PAGE:
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForNBSPage, dmProcessor::checkResult);
+                break;
+            case ORGANIZATION:
+                dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForOrganizationIds, dmProcessor::checkResult);
+                newDmMulti.computeIfAbsent(ORGANIZATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                break;
+            case PROVIDER:
+                dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForProviderIds, dmProcessor::checkResult);
+                newDmMulti.computeIfAbsent(PROVIDER.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                break;
+            case PATIENT:
+                dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForPatientIds, dmProcessor::checkResult);
+                newDmMulti.computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                break;
+            case AUTH_USER:
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForUserProfile, dmProcessor::checkResult);
+                break;
+            case D_PLACE:
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDPlace, dmProcessor::checkResult);
+                break;
+            case INVESTIGATION:
+                dmDataSp = processInvestigation(keyTopic, entity, ids, pbCache);
+                newDmMulti.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                processByInvFormCode(dmDataSp, keyTopic);
+                break;
+            case CONTACT:
+                dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDContactRecord, dmProcessor::checkResult);
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFContactRecordCase, dmProcessor::checkResult,
+                        "sp_f_contact_record_case_postprocessing");
+                newDmMulti.computeIfAbsent(CONTACT.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                break;
+            case NOTIFICATION:
+                dmDataSp = processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForNotificationIds, dmProcessor::checkResult);
+                newDmMulti.computeIfAbsent(NOTIFICATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                break;
+            case CASE_MANAGEMENT:
+                processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForCaseManagement, dmProcessor::checkResult);
+                processTopic(keyTopic, entity, ids, investigationRepository::executeStoredProcForFStdPageCase, dmProcessor::checkResult,
+                        "sp_f_std_page_case_postprocessing");
+                break;
+            case INTERVIEW:
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDInterview, dmProcessor::checkResult);
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFInterviewCase, dmProcessor::checkResult,
+                        "sp_f_interview_case_postprocessing");
+                break;
+            case STATE_DEFINED_FIELD_METADATA:
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, dmProcessor::checkResult);
+                break;
+            case LDF_DATA:
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfIds, dmProcessor::checkResult);
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForLdfDimensionalData, dmProcessor::checkResult);
+                break;
+            case OBSERVATION:
+                dmDataSp = processObservation(keyTopic, entity, obsCache);
+                newDmMulti.computeIfAbsent(OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                break;
+            case TREATMENT:
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForTreatment, dmProcessor::checkResult);
+                break;
+            case VACCINATION:
+                dmDataSp = processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForDVaccination, dmProcessor::checkResult);
+                processTopic(keyTopic, entity, ids, postProcRepository::executeStoredProcForFVaccination, dmProcessor::checkResult,
+                        "sp_f_vaccination_postprocessing");
+                newDmMulti.computeIfAbsent(VACCINATION.getEntityName(), k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+                break;
+            default:
+                logger.warn(UNKNOWN_TOPIC_LOG_MSG, keyTopic);
+                break;
+        }
+        return dmDataSp == null ? Collections.emptyList() : dmDataSp;
     }
 
     private void processByInvFormCode(List<DatamartData> dmData, String keyTopic) {
@@ -701,23 +754,24 @@ public class PostProcessingService {
 
         processTopic(keyTopic, F_PAGE_CASE, ids, investigationRepository::executeStoredProcForFPageCase, dmProcessor::checkResult);
         processTopic(keyTopic, CASE_COUNT, ids, investigationRepository::executeStoredProcForCaseCount, dmProcessor::checkResult);
-                                       
+
         return dmData;
     }
 
     private List<DatamartData> processObservation(
-            String keyTopic, Entity entity, List<DatamartData> dmData, Map<String, List<Long>> obsCache) {
+            String keyTopic, Entity entity, Map<String, List<Long>> obsCache) {
         final List<Long> morbIds;
         final List<Long> labIds;
 
         morbIds = Optional.ofNullable(obsCache.get(MORB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
         labIds = Optional.ofNullable(obsCache.get(LAB_REPORT)).map(ArrayList::new).orElseGet(ArrayList::new);
 
+        List<DatamartData> dmData = new ArrayList<>();
+
         if (!morbIds.isEmpty()) {
-            List<DatamartData> dmDataM = processTopic(keyTopic, entity, morbIds,
+            dmData = processTopic(keyTopic, entity, morbIds,
                     postProcRepository::executeStoredProcForMorbReport, dmProcessor::checkResult,
                     "sp_d_morbidity_report_postprocessing");
-            dmData = Stream.concat(dmData.stream(), dmDataM.stream()).distinct().toList();
         }
 
         if (!labIds.isEmpty()) {
@@ -740,21 +794,29 @@ public class PostProcessingService {
         return dmData;
     }
 
-    private void processMetricEventDatamart(Map<String, Queue<Long>> dmMulti) {
-        String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
-        String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
-        String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
-        String ctrString = listToParameterString(dmMulti.get(CONTACT.getEntityName()));
-        String vaxString = listToParameterString(dmMulti.get(VACCINATION.getEntityName()));
+    private void processSummaryCases() {
+        // Making cache snapshot preventing out-of-sequence ids processing
+        final Set<Long> sumUids;
+        final Set<Long> aggUids;
 
-        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
-                + ctrString.length() + vaxString.length();
-
-        if (totalLengthEventMetric > 0) {
-            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString, vaxString);
-        } else {
-            logger.info("No updates to EVENT_METRIC Datamart");
+        synchronized (cacheLock) {
+            sumUids = Optional.ofNullable(sumCache.get(CASE_TYPE_SUM))
+                    .map(HashSet::new)
+                    .orElse(new HashSet<>());
+            aggUids = Optional.ofNullable(sumCache.get(CASE_TYPE_AGG))
+                    .map(HashSet::new)
+                    .orElse(new HashSet<>());
+            sumCache.clear();
         }
+
+        processTopic(investigationTopic, SUMMARY_REPORT_CASE, sumUids,
+                investigationRepository::executeStoredProcForSummaryReportCase);
+
+        processTopic(investigationTopic, SR100_DATAMART, sumUids,
+                investigationRepository::executeStoredProcForSR100Datamart);
+
+        processTopic(investigationTopic, AGGREGATE_REPORT_DATAMART, aggUids,
+                investigationRepository::executeStoredProcForAggregateReport);
     }
 
     private Long buildRetryCache(
@@ -805,6 +867,7 @@ public class PostProcessingService {
         }
 
         if (!dmCacheSnapshot.isEmpty()) {
+            dmCacheSizeGauge.set(dmCacheSnapshot.size());
             dmProcessor.processDmCache(dmCacheSnapshot, null);
         }
     }
@@ -838,6 +901,7 @@ public class PostProcessingService {
      *
      * @throws IllegalArgumentException If the topic does not map to a known entity type.
      */
+    @NonNull
     private Entity getEntityByTopic(String topic) {
         return Arrays.stream(Entity.values())
                 .filter(entity -> entity.getPriority() > 0)

@@ -1,7 +1,9 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'jacoco'
+    id 'org.sonarqube' version '4.2.1.3168'
 }
 
 group = 'gov.cdc.etldatapipeline'
@@ -15,19 +17,45 @@ repositories {
     mavenCentral()
 }
 
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it,
+                    exclude: ['**/metrics/*.class'])
+        }))
+    }
+}
+
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+    compileOnly 'org.springframework.boot:spring-boot-actuator-autoconfigure'
+    api 'io.micrometer:micrometer-core'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.slf4j:slf4j-api'
+
     implementation 'commons-io:commons-io:2.15.0'
-    implementation 'org.springframework.kafka:spring-kafka:3.1.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
-    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     implementation 'com.google.guava:guava:33.1.0-jre'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+sonarqube {
+    properties {
+        property "sonar.coverage.exclusions", "**/metrics/*.java"
+    }
 }

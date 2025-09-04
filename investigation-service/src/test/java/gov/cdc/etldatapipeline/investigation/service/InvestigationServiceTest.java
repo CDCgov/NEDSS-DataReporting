@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.awaitility.Awaitility;
@@ -97,7 +99,9 @@ class InvestigationServiceTest {
         closeable = MockitoAnnotations.openMocks(this);
         ProcessInvestigationDataUtil transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
 
-        investigationService = new InvestigationService(investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository, treatmentRepository, kafkaTemplate, transformer);
+        investigationService = new InvestigationService(
+                investigationRepository, notificationRepository, interviewRepository, contactRepository, vaccinationRepository, treatmentRepository,
+                kafkaTemplate, transformer, new CustomMetrics(new SimpleMeterRegistry()));
 
         investigationService.setInvestigationTopic(investigationTopic);
         investigationService.setNotificationTopic(notificationTopic);
@@ -108,6 +112,7 @@ class InvestigationServiceTest {
         investigationService.setTreatmentTopic(treatmentTopic);
         investigationService.setTreatmentOutputTopicName(treatmentTopicOutput);
         investigationService.setActRelationshipTopic(actRelationshipTopic);
+        investigationService.initMetrics();
 
         transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
         transformer.setInvestigationObservationOutputTopicName("investigationObservation");

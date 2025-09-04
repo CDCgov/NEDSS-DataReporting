@@ -3,12 +3,15 @@ package gov.cdc.etldatapipeline.investigation.service;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.investigation.repository.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationKey;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InvestigationReporting;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.TreatmentReportingKey;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import io.micrometer.core.instrument.Counter;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -91,6 +94,23 @@ public class InvestigationService {
 
     InvestigationKey investigationKey = new InvestigationKey();
 
+    private static final String SERVICE_NAME = "investigation-reporting";
+
+    private final CustomMetrics metrics;
+
+    private Counter msgProcessed;
+    private Counter msgSuccess;
+    private Counter msgFailure;
+
+    @PostConstruct
+    void initMetrics() {
+        String[] tags = {"service", SERVICE_NAME};
+
+        msgProcessed = metrics.counter("inv_msg_processed", tags);
+        msgSuccess = metrics.counter( "inv_msg_success", tags);
+        msgFailure = metrics.counter("inv_msg_failure", tags);
+    }
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
             autoCreateTopics = "false",
@@ -146,34 +166,41 @@ public class InvestigationService {
     }
 
     public void processInvestigation(String value, long batchId) {
-        String publicHealthCaseUid = "";
-        try {
-            final String phcUid = publicHealthCaseUid = extractUid(value, "public_health_case_uid");
+        msgProcessed.increment();
+        metrics.recordTime("inv_msg_processing_seconds", () -> {
+            String publicHealthCaseUid = "";
+            try {
+                final String phcUid = publicHealthCaseUid = extractUid(value, "public_health_case_uid");
 
-            CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
+                CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
 
-            logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
-            Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
-            if (investigationData.isPresent()) {
-                Investigation investigation = investigationData.get();
-                investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
-                InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation, batchId);
-                InvestigationReporting reportingModel = buildReportingModelForTransformedData(investigation, investigationTransformed);
-                pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
-                        // only process and send notifications when investigation data has been sent
-                        .whenComplete((res, ex) ->
-                                logger.info("Investigation data (uid={}) sent to {}", phcUid, investigationTopicReporting))
-                        .thenRunAsync(() -> processDataUtil.processInvestigationCaseManagement(investigation.getInvestigationCaseManagement()))
-                        .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications()))
-                        .join();
-            } else {
-                throw new EntityNotFoundException("Unable to find Investigation with id: " + publicHealthCaseUid);
+                logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
+                Optional<Investigation> investigationData = investigationRepository.computeInvestigations(publicHealthCaseUid);
+                if (investigationData.isPresent()) {
+                    Investigation investigation = investigationData.get();
+                    investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
+                    InvestigationTransformed investigationTransformed = processDataUtil.transformInvestigationData(investigation, batchId);
+                    InvestigationReporting reportingModel = buildReportingModelForTransformedData(investigation, investigationTransformed);
+                    pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
+                            // only process and send notifications when investigation data has been sent
+                            .whenComplete((res, ex) -> {
+                                logger.info("Investigation data (uid={}) sent to {}", phcUid, investigationTopicReporting);
+                                msgSuccess.increment();
+                            })
+                            .thenRunAsync(() -> processDataUtil.processInvestigationCaseManagement(investigation.getInvestigationCaseManagement()))
+                            .thenRunAsync(() -> processDataUtil.processNotifications(investigation.getInvestigationNotifications()))
+                            .join();
+                } else {
+                    throw new EntityNotFoundException("Unable to find Investigation with id: " + publicHealthCaseUid);
+                }
+            } catch (EntityNotFoundException ex) {
+                msgFailure.increment();
+                throw new NoDataException(ex.getMessage(), ex);
+            } catch (Exception e) {
+                msgFailure.increment();
+                throw new DataProcessingException(errorMessage("Investigation", publicHealthCaseUid, e), e);
             }
-        } catch (EntityNotFoundException ex) {
-            throw new NoDataException(ex.getMessage(), ex);
-        } catch (Exception e) {
-            throw new DataProcessingException(errorMessage("Investigation", publicHealthCaseUid, e), e);
-        }
+        }, "service", SERVICE_NAME);
     }
 
     private void processActRelationship(String value) {

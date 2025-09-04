@@ -2,6 +2,7 @@ package gov.cdc.etldatapipeline.organization.service;
 
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.etldatapipeline.organization.model.dto.place.Place;
 import gov.cdc.etldatapipeline.organization.model.dto.place.PlaceTele;
@@ -9,6 +10,8 @@ import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
 import gov.cdc.etldatapipeline.organization.repository.PlaceRepository;
 import gov.cdc.etldatapipeline.organization.transformer.DataTransformers;
 import gov.cdc.etldatapipeline.organization.transformer.OrganizationType;
+import io.micrometer.core.instrument.Counter;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -73,6 +76,23 @@ public class OrganizationService {
 
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
 
+    private static final String SERVICE_NAME = "organization-reporting";
+
+    private final CustomMetrics metrics;
+
+    private Counter msgProcessed;
+    private Counter msgSuccess;
+    private Counter msgFailure;
+
+    @PostConstruct
+    void initMetrics() {
+        String[] tags = {"service", SERVICE_NAME};
+
+        msgProcessed = metrics.counter("org_msg_processed", tags);
+        msgSuccess = metrics.counter( "org_msg_success", tags);
+        msgFailure = metrics.counter("org_msg_failure", tags);
+    }
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
             autoCreateTopics = "false",
@@ -106,16 +126,20 @@ public class OrganizationService {
     }
 
     private void processOrganization(String message, String topic) {
-        String organizationUid = "";
-        try {
-            final String orgUid = organizationUid = extractUid(message,"organization_uid");
-            log.info(topicDebugLog, "Organization", organizationUid, topic);
+        msgProcessed.increment();
+        metrics.recordTime("org_msg_processing_seconds", () -> {
+            String organizationUid = "";
+            try {
+                final String orgUid = organizationUid = extractUid(message, "organization_uid");
+                log.info(topicDebugLog, "Organization", organizationUid, topic);
 
-            CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
+                CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
 
-            Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
+                Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
+                if (organizations.isEmpty()) {
+                    throw new EntityNotFoundException("Unable to find Organization with id: " + organizationUid);
+                }
 
-            if (!organizations.isEmpty()) {
                 organizations.forEach(org -> {
                     String reportingKey = transformer.buildOrganizationKey(org);
                     String reportingData = transformer.processData(org, OrganizationType.ORGANIZATION_REPORTING);
@@ -130,15 +154,16 @@ public class OrganizationService {
                         log.info("Organization data (uid={}) sent to {}", orgUid, orgElasticSearchTopic);
                         log.debug("Organization Elastic: {}", elasticData != null ? elasticData : "");
                     }
+                    msgSuccess.increment();
                 });
-            } else {
-                throw new EntityNotFoundException("Unable to find Organization with id: " + organizationUid);
+            } catch (EntityNotFoundException ex) {
+                msgFailure.increment();
+                throw new NoDataException(ex.getMessage(), ex);
+            } catch (Exception e) {
+                msgFailure.increment();
+                throw new DataProcessingException(errorMessage("Organization", organizationUid, e), e);
             }
-        } catch (EntityNotFoundException ex) {
-            throw new NoDataException(ex.getMessage(), ex);
-        } catch (Exception e) {
-            throw new DataProcessingException(errorMessage("Organization", organizationUid, e), e);
-        }
+        },"service", SERVICE_NAME);
     }
 
     protected void processPhcFactDatamart(String uids) {

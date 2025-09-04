@@ -4,12 +4,15 @@ package gov.cdc.etldatapipeline.observation.service;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.observation.repository.IObservationRepository;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.Observation;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationKey;
 import gov.cdc.etldatapipeline.observation.repository.model.dto.ObservationTransformed;
 import gov.cdc.etldatapipeline.observation.repository.model.reporting.ObservationReporting;
 import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
+import io.micrometer.core.instrument.Counter;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -61,6 +64,23 @@ public class ObservationService {
 
     ObservationKey observationKey = new ObservationKey();
 
+    private static final String SERVICE_NAME = "observation-reporting";
+
+    private final CustomMetrics metrics;
+
+    private Counter msgProcessed;
+    private Counter msgSuccess;
+    private Counter msgFailure;
+
+    @PostConstruct
+    void initMetrics() {
+        String[] tags = {"service", SERVICE_NAME};
+
+        msgProcessed = metrics.counter("obs_msg_processed", tags);
+        msgSuccess = metrics.counter( "obs_msg_success", tags);
+        msgFailure = metrics.counter("obs_msg_failure", tags);
+    }
+
     @RetryableTopic(
             attempts = "${spring.kafka.consumer.max-retry}",
             autoCreateTopics = "false",
@@ -100,27 +120,32 @@ public class ObservationService {
     }
 
     private void processObservation(String value, long batchId, boolean isFromObservationTopic, String actRelationshipSourceActUid) {
-        String observationUid = "";
-        try {
-            observationUid = isFromObservationTopic ? extractUid(value,"observation_uid") : actRelationshipSourceActUid;
-            observationKey.setObservationUid(Long.valueOf(observationUid));
-            logger.info(topicDebugLog, observationUid, observationTopic);
-            Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
-            if(observationData.isPresent()) {
-                ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
-                ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get(), batchId);
-                modelMapper.map(observationTransformed, reportingModel);
-                pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
-                logger.info("Observation data (uid={}) sent to {}", observationUid, observationTopicOutputReporting);
+        msgProcessed.increment();
+        metrics.recordTime("obs_msg_processing_seconds", () -> {
+            String observationUid = "";
+            try {
+                observationUid = isFromObservationTopic ? extractUid(value, "observation_uid") : actRelationshipSourceActUid;
+                observationKey.setObservationUid(Long.valueOf(observationUid));
+                logger.info(topicDebugLog, observationUid, observationTopic);
+                Optional<Observation> observationData = iObservationRepository.computeObservations(observationUid);
+                if (observationData.isPresent()) {
+                    ObservationReporting reportingModel = modelMapper.map(observationData.get(), ObservationReporting.class);
+                    ObservationTransformed observationTransformed = processObservationDataUtil.transformObservationData(observationData.get(), batchId);
+                    modelMapper.map(observationTransformed, reportingModel);
+                    pushKeyValuePairToKafka(observationKey, reportingModel, observationTopicOutputReporting);
+                    logger.info("Observation data (uid={}) sent to {}", observationUid, observationTopicOutputReporting);
+                    msgSuccess.increment();
+                } else {
+                    throw new EntityNotFoundException("Unable to find Observation with id: " + observationUid);
+                }
+            } catch (EntityNotFoundException ex) {
+                msgFailure.increment();
+                throw new NoDataException(ex.getMessage(), ex);
+            } catch (Exception e) {
+                msgFailure.increment();
+                throw new DataProcessingException(errorMessage("Observation", observationUid, e), e);
             }
-            else {
-                throw new EntityNotFoundException("Unable to find Observation with id: " + observationUid);
-            }
-        } catch (EntityNotFoundException ex) {
-            throw new NoDataException(ex.getMessage(), ex);
-        } catch (Exception e) {
-            throw new DataProcessingException(errorMessage("Observation", observationUid, e), e);
-        }
+        },"service", SERVICE_NAME);
     }
 
     private void processActRelationship(String value, long batchId) {

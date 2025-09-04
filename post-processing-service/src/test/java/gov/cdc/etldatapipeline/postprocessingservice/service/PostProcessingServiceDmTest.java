@@ -3,9 +3,11 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.PostProcRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,15 +54,18 @@ class PostProcessingServiceDmTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock,
+                new CustomMetrics(new SimpleMeterRegistry()));
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
-                datamartProcessor));
+                datamartProcessor, new CustomMetrics(new SimpleMeterRegistry())));
+        postProcessingServiceMock.initMetrics();
+        datamartProcessor.initMetrics();
 
         listAppender.start();
         Logger serviceLogger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         serviceLogger.addAppender(listAppender);
-        Logger procLogger = (Logger) LoggerFactory.getLogger(ProcessDatamartData.class);
-        procLogger.addAppender(listAppender);
+        Logger dmLogger = (Logger) LoggerFactory.getLogger(ProcessDatamartData.class);
+        dmLogger.addAppender(listAppender);
     }
 
     @AfterEach
@@ -386,7 +391,7 @@ class PostProcessingServiceDmTest {
 
         verify(postProcRepositoryMock, never()).executeStoredProcForInvSummaryDatamart(any(),any(),any());
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals("No updates to INV_SUMMARY Datamart", logs.get(6).getFormattedMessage());
+        assertEquals("No updates to INV_SUMMARY Datamart", logs.get(8).getFormattedMessage());
     }
 
     @Test

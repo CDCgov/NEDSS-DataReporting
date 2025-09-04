@@ -19,13 +19,13 @@ class KafkaConsumerConfigTest {
             .withStartupTimeout(Duration.ofMinutes(5));
 
     @BeforeAll
-    public static void setUp() {
+    static void setUp() {
         kafkaContainer.start();
         kafkaConsumerConfig = new KafkaConsumerConfig();
     }
 
     @AfterAll
-    public static void tearDown() {
+    static void tearDown() {
         kafkaContainer.stop();
     }
 

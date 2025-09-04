@@ -40,3 +40,16 @@ featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
 server:
   port: '8092'
+
+management:
+  endpoint:
+    prometheus:
+      access: read_only
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true

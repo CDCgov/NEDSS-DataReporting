@@ -3,12 +3,16 @@ package gov.cdc.etldatapipeline.postprocessingservice.service;
 import com.google.common.base.Strings;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.PostProcRepository;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.BackfillData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.DatamartData;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.Datamart;
 import gov.cdc.etldatapipeline.postprocessingservice.repository.model.dto.DatamartKey;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
@@ -63,14 +67,33 @@ public class ProcessDatamartData {
     static final String MULTI_ID_DATAMART = "MultiId_Datamart";
     static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
     static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG = "Processing {} message topic. Calling stored proc: {} '{}'";
-    static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG_2 = "Processing {} message topic. Calling stored proc: {} '{}', '{}";
+    static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG_2 = "Processing {} message topic. Calling stored proc: {} '{}', '{}'";
 
     static final String STATUS_READY = "READY";
     static final String STATUS_COMPLETE = "COMPLETE";
     static final String STATUS_SUSPENDED = "SUSPENDED";
 
+    static final String SERVICE_NAME = "post-process-reporting";
+
     @Value("${spring.kafka.topic.datamart}")
     public String datamartTopic;
+
+    private final CustomMetrics metrics;
+
+    private Counter ppDmSuccess;
+    private Counter ppDmFailure;
+
+    Timer processTimer;
+
+    @PostConstruct
+    void initMetrics() {
+        String[] tags = {"service", SERVICE_NAME};
+
+        ppDmSuccess = metrics.counter( "post_dm_success", tags);
+        ppDmFailure = metrics.counter("post_dm_failure", tags);
+
+        processTimer = metrics.timer("post_dm_batch_processing_seconds", tags);
+    }
 
     public void process(List<DatamartData> data) {
         if (Objects.nonNull(data) && !data.isEmpty()) {
@@ -100,9 +123,10 @@ public class ProcessDatamartData {
     }
 
     private List<DatamartData> reduce(List<DatamartData> dmData) {
+        final String hepDm = HEPATITIS_DATAMART.getEntityName();
         List<Long> hepUidsAlreadyInDmData =
                 dmData.stream().filter(Objects::nonNull)
-                        .filter(d -> HEPATITIS_DATAMART.getEntityName().equals(d.getDatamart()))
+                        .filter(d -> d.getDatamart().startsWith(hepDm)) // excludes
                         .map(DatamartData::getPublicHealthCaseUid).toList();
 
         return dmData.stream().filter(Objects::nonNull)
@@ -118,8 +142,15 @@ public class ProcessDatamartData {
         List<Long> ldfUids = new ArrayList<>();
         boolean failed = false;
 
+        Timer.Sample sample = metrics.startSample();
+
         for (Map.Entry<String, Map<String, List<Long>>> entry : dmCache.entrySet()) {
             String dmKey = entry.getKey();
+
+            if (MULTI_ID_DATAMART.equals(dmKey)) {
+                continue;
+            }
+
             Map<String, List<Long>> dmValues = entry.getValue();
 
             List<Long> uids = getUids(dmValues, INVESTIGATION);
@@ -134,7 +165,9 @@ public class ProcessDatamartData {
 
                 try {
                     processDatamart(dmKey, dmValues, ldfUids);
+                    incrementIf(ppDmSuccess, batchId == null);
                 } catch (Exception e) {
+                    incrementIf(ppDmFailure, batchId == null);
                     logger.error(errorMessage(dmKey, listToParameterString(uids), new Exception(e.getClass().getSimpleName())));
                     failed = true;
                     batchId = buildRetryCache(batchId, dmKey, dmValues, e);
@@ -148,7 +181,14 @@ public class ProcessDatamartData {
             failed = processMultiIdDatamart(batchId, dmCache.get(MULTI_ID_DATAMART), failed);
         }
 
+        metrics.stopSample(sample, processTimer);
         return !failed;
+    }
+
+    private void incrementIf(Counter cnt, boolean notRetry) {
+        if (notRetry) {
+            cnt.increment();
+        }
     }
 
     /**
@@ -163,11 +203,6 @@ public class ProcessDatamartData {
      * @param ldfUids a list to store case IDs for LDF-related datamarts
      */
     private void processDatamart(String dmKey, Map<String, List<Long>> idMap, List<Long> ldfUids) {
-
-        if (MULTI_ID_DATAMART.equals(dmKey)) {
-            return;
-        }
-
         List<Long> uids = getUids(idMap, INVESTIGATION);
         List<Long> patUids = getUids(idMap, PATIENT);
         List<Long> obsUids = getUids(idMap, OBSERVATION);
@@ -274,13 +309,15 @@ public class ProcessDatamartData {
     }
 
     private boolean processLdfVaccinePreventDm(Long batchId, List<Long> ldfUids, boolean failed) {
-        if (!failed) {
+        if (!failed && !ldfUids.isEmpty()) {
 
             String cases = listToParameterString(ldfUids);
             try {
                 executeDmProc(LDF_VACCINE_PREVENT_DISEASES,
                         invRepository::executeStoredProcForLdfVacPreventDiseasesDatamart, cases, this::checkResult);
+                incrementIf(ppDmSuccess, batchId == null);
             } catch (Exception e) {
+                incrementIf(ppDmFailure, batchId == null);
                 String ldfType = LDF_VACCINE_PREVENT_DISEASES.getEntityName();
                 String dmKey = "LDF," + ldfType;
 
@@ -346,18 +383,26 @@ public class ProcessDatamartData {
             try {
                 if (totalLengthInvSummary > 0) {
                     //reusing the same DTO class for Dynamic Marts
+                    logger.info("Executing stored proc: sp_inv_summary_datamart_postprocessing '{}', '{}', '{}'", invString, notifString, obsString);
                     List<DatamartData> dmDataList = procRepository.executeStoredProcForInvSummaryDatamart(invString, notifString, obsString);
-                    processDynDatamart(dmDataList);
+                    logExecutionCompleted("sp_inv_summary_datamart_postprocessing");
+                    processDynDatamart(dmDataList, batchId);
+                    incrementIf(ppDmSuccess, batchId == null);
                 } else {
                     logger.info("No updates to INV_SUMMARY Datamart");
                 }
 
                 if (totalLengthMorbReportDM > 0) {
+                    logger.info("Executing stored proc: sp_morbidity_report_datamart_postprocessing '{}', '{}', '{}', '{}', '{}'",
+                            obsString, patString, provString, orgString, invString);
                     procRepository.executeStoredProcForMorbidityReportDatamart(obsString, patString, provString, orgString, invString);
+                    logExecutionCompleted("sp_morbidity_report_datamart_postprocessing");
+                    incrementIf(ppDmSuccess, batchId == null);
                 } else {
                     logger.info("No updates to MORBIDITY_REPORT_DATAMART");
                 }
             } catch (Exception e) {
+                incrementIf(ppDmFailure, batchId == null);
                 logger.error(errorMessage(MULTI_ID_DATAMART, invString, new Exception(e.getClass().getSimpleName())));
                 buildRetryCache(batchId, MULTI_ID_DATAMART, dmMulti, e);
                 failed = true;
@@ -366,23 +411,44 @@ public class ProcessDatamartData {
         return failed;
     }
 
-    private void processDynDatamart(List<DatamartData> dmDataList) {
+    private void processDynDatamart(List<DatamartData> dmDataList, Long batchId) {
         if (!dmDataList.isEmpty()) {
-            Map<String, String> datamartPhcIdMap = dmDataList.stream()
-                    .collect(Collectors.groupingBy(
-                            DatamartData::getDatamart,
-                            Collectors.mapping(
+            Map<String, String> datamartPhcIdMap = dmDataList.stream().collect(
+                    Collectors.groupingBy(DatamartData::getDatamart, Collectors.mapping(
                                     dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
-                                    Collectors.joining(",")
-                            )
+                                    Collectors.joining(","))
                     ));
 
             datamartPhcIdMap.forEach((datamart, phcIds) ->
-                    CompletableFuture.runAsync(() -> procRepository.executeStoredProcForDynDatamart(datamart, phcIds), dynDmExecutor)
-                            .thenRun(() -> logger.info("Updates to Dynamic Datamart: {} ", datamart))
+                    CompletableFuture
+                            .runAsync(() -> {
+                                logger.info("Executing stored proc: sp_dyn_datamart_postprocessing '{}', '{}'", datamart, phcIds);
+                                procRepository.executeStoredProcForDynDatamart(datamart, phcIds);
+                                logExecutionCompleted("sp_dyn_datamart_postprocessing");
+                                incrementIf(ppDmSuccess, batchId == null);
+                                }, dynDmExecutor)
             );
-        } else {
-            logger.info("No updates to Dynamic Datamarts");
+        }
+    }
+
+    void processMetricEventDatamart(Map<String, Queue<Long>> dmMulti) {
+        String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
+        String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
+        String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
+        String ctrString = listToParameterString(dmMulti.get(CONTACT.getEntityName()));
+        String vaxString = listToParameterString(dmMulti.get(VACCINATION.getEntityName()));
+
+        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
+                + ctrString.length() + vaxString.length();
+
+        if (totalLengthEventMetric > 0) {
+            Timer.Sample sample = metrics.startSample();
+            logger.info("Executing stored proc: sp_event_metric_datamart_postprocessing '{}', '{}', '{}', '{}', '{}'",
+                    invString, obsString, notifString, ctrString, vaxString);
+            procRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString, vaxString);
+            logExecutionCompleted("sp_event_metric_datamart_postprocessing");
+            incrementIf(ppDmSuccess, true);
+            metrics.stopSample(sample, processTimer);
         }
     }
 
@@ -583,7 +649,7 @@ public class ProcessDatamartData {
             logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG, dmEntity.getEntityName(), dmEntity.getStoredProcedure(), ids);
             List<T> result = repositoryMethod.apply(ids);
             checkResult.accept(result);
-            logger.info(SP_EXECUTION_COMPLETED, dmEntity.getStoredProcedure());
+            logExecutionCompleted(dmEntity.getStoredProcedure());
         }
     }
 
@@ -593,8 +659,12 @@ public class ProcessDatamartData {
             logger.info(PROCESSING_MESSAGE_TOPIC_LOG_MSG_2, dmEntity.getEntityName(), dmEntity.getStoredProcedure(), ids, pids);
             List<T> result = repositoryMethod.apply(ids, pids);
             checkResult.accept(result);
-            logger.info(SP_EXECUTION_COMPLETED, dmEntity.getStoredProcedure());
+            logExecutionCompleted(dmEntity.getStoredProcedure());
         }
+    }
+
+    private void logExecutionCompleted(String spName) {
+        logger.info(SP_EXECUTION_COMPLETED, spName);
     }
 
     private List<Long> getUids(Map<String, List<Long>> dmValues, Entity entity) {
