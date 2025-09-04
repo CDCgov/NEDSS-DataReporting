@@ -356,7 +356,7 @@ begin
     LEFT JOIN dbo.NRT_OBSERVATION nrt with (nolock) ON nrt.observation_uid = src.observation_uid
     LEFT JOIN dbo.NRT_LAB_TEST_KEY nrtk with (nolock) ON nrtk.lab_test_uid = nrt.observation_uid
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
-    ON nb.status_cd <> ''COMPLETE'' AND (nb.entity = ''OBSERVATION'' or nb.entity like ''OBS%''
+    ON nb.status_cd <> ''COMPLETE'' AND (nb.entity = ''OBSERVATION'' or nb.entity like ''OBS%'' )
     AND EXISTS (
         SELECT 1
         FROM STRING_SPLIT(nb.record_uid_list, '','') s
@@ -1447,7 +1447,7 @@ begin
             record_status_cd   
         FROM nbs_odse.dbo.Notification n with (nolock) 
     ) src
-    LEFT JOIN dbo.NRT_NOTIFICATION nrt with (nolock) ON nrt.notification_uid = src.notification_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_NOTIFICATION nrt with (nolock) ON nrt.notification_uid = src.notification_uid
     LEFT JOIN dbo.NRT_NOTIFICATION_KEY nrtk with (nolock) ON nrtk.notification_uid = src.notification_uid
     LEFT JOIN dbo.NOTIFICATION n with (nolock) ON n.notification_key = nrtk.d_notification_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
@@ -1484,7 +1484,7 @@ begin
             record_status_cd   
         FROM nbs_odse.dbo.Notification n with (nolock) 
     ) src
-    LEFT JOIN dbo.NRT_NOTIFICATION nrt with (nolock) ON nrt.notification_uid = src.notification_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_NOTIFICATION nrt with (nolock) ON nrt.notification_uid = src.notification_uid
     LEFT JOIN dbo.NRT_NOTIFICATION_KEY nrtk with (nolock) ON nrtk.notification_uid = src.notification_uid
     LEFT JOIN dbo.NOTIFICATION_EVENT n with (nolock) ON n.notification_key = nrtk.d_notification_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
@@ -1527,7 +1527,7 @@ begin
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
-    LEFT JOIN dbo.HEP100 dim with (nolock) ON dim.investigation_key = nrtk.investigation_key
+    LEFT JOIN dbo.HEP100 dim with (nolock) ON dim.investigation_key = nrtk.d_investigation_key
     LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
     ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''HEP100''
     AND EXISTS (
@@ -1986,8 +1986,8 @@ begin
             ISNULL(last_chg_time, add_time) as update_time,
             record_status_cd 
         FROM
-            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
-        WHERE phc.record_status_cd = ''ACTIVE'' AND CASE_TYPE = ''I''
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE with (nolock) 
+        WHERE record_status_cd = ''ACTIVE'' AND case_type_cd = ''I''
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
@@ -2033,8 +2033,8 @@ begin
             SELECT condition_cd 
             FROM dbo.CONDITION c with ( nolock)  
             INNER JOIN dbo.V_NRT_NBS_INVESTIGATION_RDB_TABLE_METADATA inv_meta 
-            ON c.DISEASE_GRP_CD =  inv_meta.FORM_CD
-            WHERE DISEASE_GRP_CD = ''<DISEASE_GRP_CD>''
+            ON c.DISEASE_GRP_CD =  inv_meta.FORM_CD AND c.DISEASE_GRP_CD = ''<DISEASE_GRP_CD>''
+        )
     ) src
     LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
     LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
