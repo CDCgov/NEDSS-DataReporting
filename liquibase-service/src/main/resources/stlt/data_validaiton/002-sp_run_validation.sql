@@ -21,11 +21,15 @@ GO
     @from_date        DATE           - Optional; updates only rows where last_chg_time >= @from_date. Defaults to current date.
 
     Logic Overview:
-    1. Resolve Dependencies:
+    1. Handle for Dynamic Datamarts  Dependencies:
+        - Expanded rows for each DM_INV_* datamart instead of just the placeholder one.
+        - Creates a temporary table that gets used downstream
+
+    2. Resolve Dependencies:
         - Uses a recursive CTE to expand all dependencies for the given @entity.
         - Produces an ordered list of entities to process (parents before children).
 
-    2. Iterate Entities:
+    3. Iterate Entities:
         - For each entity:
             • Loads the validation query and associated dataflows.
             • Executes the validation query, comparing ODSE table data against RDB, NRT, and Backfill/Retry tables.
@@ -33,17 +37,17 @@ GO
               and either TOP N or last X days.
             • Aggregates errors per UID into a JSON array (error_log_json).
 
-    3. Collate Results:
+    4. Collate Results:
         - Inserts results into a temporary table #results with a unified schema including error_log_json.
         - Maintains #root_uids for top-level entity UIDs.
 
-    4. Conditional Update (if @initiate_update = 1):
+    5. Conditional Update (if @initiate_update = 1):
         - Parses the ODSE table name and primary key from the validation query.
         - Updates only rows in the ODSE table where the PK matches UIDs in #results.
         - Sets last_chg_time to last_chg_time+2 mins for these rows.
 
 */   
-CREATE OR ALTER PROCEDURE dbo.sp_run_validation
+CREATE PROCEDURE dbo.sp_run_validation
 (
     @entity    VARCHAR(100), 
     @check_log BIT = 0,
@@ -66,16 +70,57 @@ BEGIN TRY
     ----------------------------------------------------------------------
     -- 1. Resolve dependencies (recursive CTE)
     ----------------------------------------------------------------------
+
+    -- 1. Create the temp table with same structure
+    CREATE TABLE #JOB_VALIDATION_CONFIG (
+        rdb_entity varchar(500),
+        dataflows varchar(500),
+        validation_query nvarchar(max),
+        dependencies nvarchar(max) default NULL
+    );
+
+    -- 2. Insert all rows except the placeholder DM_INV_<DATAMART_NM>
+    INSERT INTO #JOB_VALIDATION_CONFIG (rdb_entity, dataflows, validation_query, dependencies)
+    SELECT rdb_entity, dataflows, validation_query, dependencies
+    FROM dbo.JOB_VALIDATION_CONFIG
+    WHERE rdb_entity <> 'DM_INV_<DATAMART_NM>';
+
+    -- 3. Insert dynamic DM_INV_* rows
+    INSERT INTO #JOB_VALIDATION_CONFIG (rdb_entity, dataflows, validation_query, dependencies)
+    SELECT 
+        'DM_INV_' + DATAMART_NM AS rdb_entity,
+        'DYNAMIC_DATAMART POST-Processing' AS dataflows,
+        REPLACE(
+            REPLACE(jvc.validation_query, '<DATAMART_NM>', DATAMART_NM),
+            '<DISEASE_GRP_CD>', DISEASE_GRP_CD
+        ) AS validation_query,
+        jvc.dependencies
+    FROM
+    (select distinct DATAMART_NM, DISEASE_GRP_CD FROM 
+        dbo.INV_SUMM_DATAMART isd WITH (nolock) 
+        INNER JOIN 
+            dbo.CONDITION c WITH (nolock)  
+            ON isd.DISEASE_CD = c.CONDITION_CD
+        INNER JOIN 
+            dbo.V_NRT_NBS_INVESTIGATION_RDB_TABLE_METADATA inv_meta 
+            ON c.DISEASE_GRP_CD = inv_meta.FORM_CD
+    ) dminfo
+    CROSS JOIN (select * from dbo.JOB_VALIDATION_CONFIG where rdb_entity = 'DM_INV_<DATAMART_NM>')jvc
+    ;
+
+    ----------------------------------------------------------------------
+    -- 2. Resolve dependencies (recursive CTE)
+    ----------------------------------------------------------------------
     ;WITH dep_cte AS (
         SELECT r.rdb_entity, r.dependencies, 0 AS level
-        FROM dbo.JOB_VALIDATION_CONFIG r
+        FROM #JOB_VALIDATION_CONFIG r
         WHERE r.rdb_entity = @entity
 
         UNION ALL
 
         SELECT c.rdb_entity, c.dependencies, p.level + 1
         FROM dep_cte p
-        JOIN dbo.JOB_VALIDATION_CONFIG c
+        JOIN #JOB_VALIDATION_CONFIG c
           ON EXISTS (
              SELECT 1 FROM STRING_SPLIT(p.dependencies, ',') d
              WHERE d.value = c.rdb_entity
@@ -89,11 +134,11 @@ BEGIN TRY
     select * from  #entities_to_run;
 
     ----------------------------------------------------------------------
-    -- 2. Cursor/loop through entities in dependency order
+    -- 3. Cursor/loop through entities in dependency order
     ----------------------------------------------------------------------
     DECLARE @curr_entity VARCHAR(500), @level INT;
 
-    DECLARE entity_cursor CURSOR FOR
+    DECLARE entity_cursor CURSOR LOCAL FAST_FORWARD FOR
     SELECT rdb_entity, level
     FROM #entities_to_run
     ORDER BY level;
@@ -126,7 +171,7 @@ BEGIN TRY
         SELECT 
             @validation_query = validation_query,
             @dataflows = dataflows
-        FROM dbo.JOB_VALIDATION_CONFIG
+        FROM #JOB_VALIDATION_CONFIG
         WHERE rdb_entity = @curr_entity;
 
         IF @validation_query IS NULL
@@ -136,6 +181,13 @@ BEGIN TRY
             DEALLOCATE entity_cursor;
             RETURN;
         END
+
+        PRINT '--- Loop Iteration ---';
+        PRINT 'Current Entity: ' + ISNULL(@curr_entity, '<NULL>');
+        PRINT 'Level: ' + CAST(@level AS VARCHAR(10));
+        --PRINT 'Validation Query: ' + ISNULL(@validation_query, '<NULL>');
+        PRINT 'Dataflows: ' + ISNULL(@dataflows, '<NULL>');
+
 
 
         IF @check_log = 0
@@ -254,12 +306,12 @@ BEGIN TRY
     DEALLOCATE entity_cursor;
 
     ----------------------------------------------------------------------
-    -- 3. Collated result
+    -- 4. Collated result
     ----------------------------------------------------------------------
-    SELECT * FROM #results;
+    SELECT TOP 1000 * FROM #results;
 
     ----------------------------------------------------------------------
-    -- 4. If initiate_update = 1, parse odse table name and run UPDATE
+    -- 5. If initiate_update = 1, parse odse table name and run UPDATE
     ----------------------------------------------------------------------
 
     IF @initiate_update = 1
@@ -272,13 +324,15 @@ BEGIN TRY
         IF @from_date IS NULL
             SET @from_date = CAST(SYSDATETIME() AS DATE);
 
+        IF @entity = 'D_CASE_MANAGEMENT' 
+            SET @entity = 'INVESTIGATION'
         
         ;WITH cte AS (
             SELECT 
                 CHARINDEX('nbs_odse.dbo.', validation_query) AS startpos, 
                 validation_query, 
                 rdb_entity 
-            FROM JOB_VALIDATION_CONFIG
+            FROM #JOB_VALIDATION_CONFIG
             WHERE rdb_entity = @entity
         )
         SELECT TOP 1 @odse_table = SUBSTRING(
@@ -317,7 +371,7 @@ BEGIN TRY
             WHERE tgt.last_chg_time >= @from_date;';  
             
             PRINT 'SQL statement: ' + @update_sql;
-            PRINT 'Parameter @from_date: ' + ISNULL(@from_date, '<NULL>');
+            PRINT 'Parameter @from_date: ' + ISNULL(cast(@from_date as varchar) , '<NULL>');
             
             EXEC sp_executesql @update_sql, N'@from_date DATE', @from_date=@from_date;
             SELECT @RowCount_no = @@ROWCOUNT;

@@ -1627,7 +1627,7 @@ begin
     )
     WHERE dim.investigation_key IS NULL', 'LDF_DIMENSIONAL_DATA,GENERIC_CASE');
 
-    insert into job_validation_config values ('LDF_BMIRD', 'sp_ldf_bmird_datamart_postprocessing POST-Processing',
+    insert into job_validation_config values ('LDF_BMIRD', 'sp_ldf_bmird_datamart_postprocessing',
     'SELECT
         src.public_health_case_uid as uid 
         , src.local_id
@@ -1672,5 +1672,380 @@ begin
         WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
     )
     WHERE dim.investigation_key IS NULL', 'LDF_DIMENSIONAL_DATA,BMIRD_CASE');
+
+    insert into job_validation_config values ('LDF_FOODBORNE', 'LDF_FOODBORNE POST-Processing',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.active_ind as record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT
+            public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd 
+        FROM
+            nbs_odse.dbo.STATE_DEFINED_FIELD_METADATA sdf with (nolock)
+        INNER JOIN 
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
+        ON phc.public_health_case_uid = sdf.ldf_uid AND
+            sdf.business_object_nm in (''PHC'', ''BMD'', ''HEP'', ''NIP'')
+        WHERE 
+            phc.record_status_cd <> ''LOG_DEL'' 
+            AND phc.condition_cd in (SELECT condition_cd FROM dbo.LDF_DATAMART_TABLE_REF WHERE datamart_name = ''LDF_FOODBORNE'' )
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.LDF_FOODBORNE dim with (nolock) ON dim.investigation_key = nrtk.investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''LDF_FOODBORNE''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dim.investigation_key IS NULL', 'LDF_DIMENSIONAL_DATA,GENERIC_CASE');
+
+        insert into job_validation_config values ('LDF_MUMPS', 'sp_ldf_mumps_datamart_postprocessing POST-Processing',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.active_ind as record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT
+            public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd 
+        FROM
+            nbs_odse.dbo.STATE_DEFINED_FIELD_METADATA sdf with (nolock)
+        INNER JOIN 
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
+        ON phc.public_health_case_uid = sdf.ldf_uid AND
+            sdf.business_object_nm in (''PHC'', ''BMD'', ''HEP'', ''NIP'')
+        WHERE 
+            phc.record_status_cd <> ''LOG_DEL'' 
+            AND phc.condition_cd in (SELECT condition_cd FROM dbo.LDF_DATAMART_TABLE_REF WHERE datamart_name = ''LDF_MUMPS'' )
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.LDF_MUMPS dim with (nolock) ON dim.investigation_key = nrtk.investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''LDF_MUMPS''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dim.investigation_key IS NULL', 'LDF_DIMENSIONAL_DATA,MUMPS_CASE');
+
+    insert into job_validation_config values ('LDF_TETANUS', 'LDF_TETANUS POST-Processing',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.active_ind as record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT
+            public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd 
+        FROM
+            nbs_odse.dbo.STATE_DEFINED_FIELD_METADATA sdf with (nolock)
+        INNER JOIN 
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
+        ON phc.public_health_case_uid = sdf.ldf_uid AND
+            sdf.business_object_nm in (''PHC'', ''BMD'', ''HEP'', ''NIP'')
+        WHERE 
+            phc.record_status_cd <> ''LOG_DEL'' 
+            AND phc.condition_cd in (SELECT condition_cd FROM dbo.LDF_DATAMART_TABLE_REF WHERE datamart_name = ''LDF_TETANUS'' )
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.LDF_TETANUS dim with (nolock) ON dim.investigation_key = nrtk.investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''LDF_TETANUS''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dim.investigation_key IS NULL', 'LDF_DIMENSIONAL_DATA,GENERIC_CASE');
+
+
+    insert into job_validation_config values ('LDF_VACCINE_PREVENT_DISEASES', 'LDF_VACCINE_PREVENT_DISEASES POST-Processing',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.active_ind as record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT
+            public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd 
+        FROM
+            nbs_odse.dbo.STATE_DEFINED_FIELD_METADATA sdf with (nolock)
+        INNER JOIN 
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
+        ON phc.public_health_case_uid = sdf.ldf_uid AND
+            sdf.business_object_nm in (''PHC'', ''BMD'', ''HEP'', ''NIP'')
+        WHERE 
+            phc.record_status_cd <> ''LOG_DEL'' 
+            AND phc.condition_cd in (SELECT condition_cd FROM dbo.LDF_DATAMART_TABLE_REF WHERE datamart_name = ''LDF_VACCINE_PREVENT_DISEASES'' )
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.LDF_VACCINE_PREVENT_DISEASES dim with (nolock) ON dim.investigation_key = nrtk.investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''LDF_VACCINE_PREVENT_DISEASES''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dim.investigation_key IS NULL', 'LDF_DIMENSIONAL_DATA,MEASLES_CASE');
+
+
+    insert into job_validation_config values ('LDF_HEPATITIS', 'sp_ldf_hepatitis_datamart_postprocessing POST-Processing',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.active_ind as record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT
+            public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd 
+        FROM
+            nbs_odse.dbo.STATE_DEFINED_FIELD_METADATA sdf with (nolock)
+        INNER JOIN 
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
+        ON phc.public_health_case_uid = sdf.ldf_uid AND
+            sdf.business_object_nm in (''PHC'', ''BMD'', ''HEP'', ''NIP'')
+        WHERE 
+            phc.record_status_cd <> ''LOG_DEL'' 
+            AND phc.condition_cd in (SELECT condition_cd FROM dbo.LDF_DATAMART_TABLE_REF WHERE datamart_name = ''LDF_HEPATITIS'' )
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.LDF_HEPATITIS dim with (nolock) ON dim.investigation_key = nrtk.investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''LDF_HEPATITIS''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dim.investigation_key IS NULL', 'LDF_DIMENSIONAL_DATA,HEPATITIS_CASE');
+
+
+    insert into job_validation_config values ('BMIRD_STREP_PNEUMO_DATAMART', 'BMIRD_STREP_PNEUMO Post-Processing Event',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT
+            public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd 
+        FROM
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
+        WHERE phc.record_status_cd <> ''LOG_DEL'' 
+        AND phc.cd in (''11723'',''11717'',''11720'') 
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.BMIRD_STREP_PNEUMO_DATAMART dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''Bmird_Strep_Pneumo_Datamart''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dm.investigation_key IS NULL', 'BMIRD_CASE');
+
+        insert into job_validation_config values ('INV_SUMM_DATAMART', 'INV_SUMM_DATAMART Post-Processing Event',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT
+            public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd 
+        FROM
+            nbs_odse.dbo.PUBLIC_HEALTH_CASE phc with (nolock) 
+        WHERE phc.record_status_cd = ''ACTIVE'' AND CASE_TYPE = ''I''
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.INV_SUMM_DATAMART dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''DM^MultiId_Datamart''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dm.investigation_key IS NULL', 'INVESTIGATION');
+
+    
+    insert into job_validation_config values ('DM_INV_<DATAMART_NM>', 'DYNAMIC_DATAMART POST-Processing',
+    'SELECT
+        src.public_health_case_uid as uid 
+        , src.local_id
+        , src.update_time
+        , src.record_status_cd
+        , case 
+            when nrt.public_health_case_uid is null then ''FALSE'' 
+            else ''TRUE''
+        end as record_in_nrt_table
+        , case 
+            when nrtk.case_uid is null then ''FALSE'' 
+            else ''TRUE'' 
+        end as record_in_nrt_key_table
+        , nb.record_uid_list as retry_list
+        , nb.batch_id as retry_job_batch_id
+        , nb.retry_count as retry_count
+        , nb.err_description as retry_error_desc
+    FROM (
+        SELECT public_health_case_uid, 
+            local_id, 
+            cd, 
+            investigation_status_cd,
+            ISNULL(last_chg_time, add_time) as update_time,
+            record_status_cd   
+        FROM nbs_odse.dbo.Public_health_case phc with (nolock) 
+        WHERE record_status_cd <> ''LOG_DEL'' 
+        AND cd in (
+            SELECT condition_cd 
+            FROM dbo.CONDITION c with ( nolock)  
+            INNER JOIN dbo.V_NRT_NBS_INVESTIGATION_RDB_TABLE_METADATA inv_meta 
+            ON c.DISEASE_GRP_CD =  inv_meta.FORM_CD
+            WHERE DISEASE_GRP_CD = ''<DISEASE_GRP_CD>''
+    ) src
+    LEFT JOIN dbo.NRT_INVESTIGATION nrt with (nolock) ON nrt.public_health_case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.NRT_INVESTIGATION_KEY nrtk with (nolock) ON nrtk.case_uid = src.public_health_case_uid
+    LEFT JOIN dbo.DM_INV_<DATAMART_NM> dm with (nolock) ON dm.investigation_key = nrtk.d_investigation_key
+    LEFT JOIN dbo.NRT_BACKFILL nb with (nolock)
+    ON nb.status_cd <> ''COMPLETE'' AND nb.entity = ''DM^MultiId_Datamart''
+    AND EXISTS (
+        SELECT 1
+        FROM STRING_SPLIT(nb.record_uid_list, '','') s
+        WHERE TRY_CAST(s.value AS BIGINT) = src.public_health_case_uid
+    )
+    WHERE dm.investigation_key IS NULL', 'INV_SUMM_DATAMART');
 
 END
