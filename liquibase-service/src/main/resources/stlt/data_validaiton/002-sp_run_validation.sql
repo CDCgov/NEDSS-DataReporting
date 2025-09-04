@@ -366,7 +366,7 @@ BEGIN TRY
                 
             DECLARE @update_sql NVARCHAR(MAX) = N'
             UPDATE tgt
-            SET last_chg_time = dateadd(minute, 2, last_chg_time)
+            SET last_chg_time = DATEADD(millisecond, 2, tgt.last_chg_time)
             FROM nbs_odse.dbo.' + QUOTENAME(@odse_table) + ' AS tgt
             INNER JOIN #results r
                 ON tgt.' + @odse_pk_column + ' = r.uid
