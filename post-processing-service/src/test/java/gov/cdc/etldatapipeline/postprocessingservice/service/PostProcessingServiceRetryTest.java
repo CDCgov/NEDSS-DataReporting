@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.LDF_VACCINE_PREVENT_DISEASES;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.ProcessDatamartData.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -52,14 +53,16 @@ class PostProcessingServiceRetryTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
+        datamartProcessor = new ProcessDatamartData(
+                kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock, new CustomMetrics(new SimpleMeterRegistry()));
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor, new CustomMetrics(new SimpleMeterRegistry())));
         postProcessingServiceMock.setMaxRetries(2);
         postProcessingServiceMock.initMetrics();
+        datamartProcessor.initMetrics();
         datamartProcessor.setMaxRetries(2);
 
-        Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
+        Logger logger = (Logger) LoggerFactory.getLogger(ProcessDatamartData.class);
         listAppender.start();
         logger.addAppender(listAppender);
     }
@@ -116,7 +119,7 @@ class PostProcessingServiceRetryTest {
         String patientUid = "123";
 
         when(postProcRepositoryMock.executeStoredProcForPatientIds(patientUid))
-                .thenThrow(new RuntimeException(errorMsg))
+                .thenThrow(new RuntimeException(new RuntimeException(errorMsg)))
                 .thenReturn(Collections.emptyList());
 
         postProcessingServiceMock.processNrtMessage(patTopic, patKey, patKey);
@@ -150,6 +153,20 @@ class PostProcessingServiceRetryTest {
 
         postProcessingServiceMock.backfillEvent();
         verify(postProcRepositoryMock, never()).executeBackfillEvent(anyString());
+
+        String genDmMsg = "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\"," +
+                "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
+
+        datamartProcessor.setMaxRetries(-1);
+        when(investigationRepositoryMock.executeStoredProcForGenericCaseDatamart(anyString())).thenThrow(new RuntimeException(errorMsg));
+        postProcessingServiceMock.processDmMessage("dummy_datamart", genDmMsg);
+        postProcessingServiceMock.processDatamartIds();
+
+        assertTrue(datamartProcessor.retryCache.isEmpty());
+
+        postProcessingServiceMock.backfillEvent();
+        verify(postProcRepositoryMock, never()).executeBackfillEvent(anyString());
+
     }
 
     @Test
@@ -174,6 +191,7 @@ class PostProcessingServiceRetryTest {
                 "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
 
         String phcUid = "123";
+
         when(investigationRepositoryMock.executeStoredProcForHepDatamart(phcUid)).thenThrow(new RuntimeException(errorMsg));
 
         postProcessingServiceMock.processDmMessage(topic, hepDmMsg);
@@ -198,6 +216,29 @@ class PostProcessingServiceRetryTest {
                 eq(dmEntity), contains(phcUid), eq(batchId), eq(errorMsg), eq(STATUS_READY), eq(0));
 
         verify(investigationRepositoryMock, times(3)).executeStoredProcForHepDatamart(anyString());
+    }
+
+    @Test
+    void testProcessLdfVaccine() {
+        String topic = "dummy_datamart";
+        String ldfVacDmMsg =
+                "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10200\"," +
+                "\"datamart\":\"Rubella_Case,LDF_VACCINE_PREVENT_DISEASES\",\"stored_procedure\":\"sp_rubella_case_datamart_postprocessing\"}}";
+
+        String phcUid = "123";
+        when(investigationRepositoryMock.executeStoredProcForLdfVacPreventDiseasesDatamart(phcUid)).thenThrow(new RuntimeException(errorMsg));
+
+        postProcessingServiceMock.processDmMessage(topic, ldfVacDmMsg);
+        postProcessingServiceMock.processDatamartIds();
+
+        assertFalse(datamartProcessor.retryCache.isEmpty());
+        assertFalse(datamartProcessor.errorMap.isEmpty());
+
+        Long batchId = datamartProcessor.retryCache.entrySet().iterator().next().getKey();
+        assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
+
+        List<ILoggingEvent> logs = listAppender.list;
+        assertTrue(logs.getLast().getMessage().contains(LDF_VACCINE_PREVENT_DISEASES.getEntityName()));
     }
 
     @Test

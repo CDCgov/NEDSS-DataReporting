@@ -54,16 +54,18 @@ class PostProcessingServiceDmTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
+        datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock,
+                new CustomMetrics(new SimpleMeterRegistry()));
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor, new CustomMetrics(new SimpleMeterRegistry())));
         postProcessingServiceMock.initMetrics();
+        datamartProcessor.initMetrics();
 
         listAppender.start();
         Logger serviceLogger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
         serviceLogger.addAppender(listAppender);
-        Logger procLogger = (Logger) LoggerFactory.getLogger(ProcessDatamartData.class);
-        procLogger.addAppender(listAppender);
+        Logger dmLogger = (Logger) LoggerFactory.getLogger(ProcessDatamartData.class);
+        dmLogger.addAppender(listAppender);
     }
 
     @AfterEach
@@ -389,7 +391,7 @@ class PostProcessingServiceDmTest {
 
         verify(postProcRepositoryMock, never()).executeStoredProcForInvSummaryDatamart(any(),any(),any());
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals("No updates to INV_SUMMARY Datamart", logs.get(6).getFormattedMessage());
+        assertEquals("No updates to INV_SUMMARY Datamart", logs.get(8).getFormattedMessage());
     }
 
     @Test

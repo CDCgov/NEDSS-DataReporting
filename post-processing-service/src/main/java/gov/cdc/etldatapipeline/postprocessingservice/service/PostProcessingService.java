@@ -111,31 +111,33 @@ public class PostProcessingService {
     @Value("${spring.kafka.topic.investigation}")
     private String investigationTopic;
 
-    private static final String SERVICE_NAME = "post-process-reporting";
+    static final String SERVICE_NAME = "post-process-reporting";
 
     private final CustomMetrics metrics;
 
     private Counter ppMsgProcessed;
+    private Counter ppDmProcessed;
+
     private Counter ppMsgSuccess;
     private Counter ppMsgFailure;
 
-    private Counter dmMsgProcessed;
-
     Timer processTimer;
-    private final AtomicInteger cacheSizeGauge = new AtomicInteger();
+    private final AtomicInteger msgCacheSizeGauge = new AtomicInteger();
+    private final AtomicInteger dmCacheSizeGauge = new AtomicInteger();
 
     @PostConstruct
     void initMetrics() {
         String[] tags = {"service", SERVICE_NAME};
 
         ppMsgProcessed = metrics.counter("post_msg_processed", tags);
+        ppDmProcessed = metrics.counter("post_dm_processed", tags);
+
         ppMsgSuccess = metrics.counter( "post_msg_success", tags);
         ppMsgFailure = metrics.counter("post_msg_failure", tags);
 
-        dmMsgProcessed = metrics.counter("dm_msg_processed", tags);
-
-        processTimer = metrics.timer("post_batch_processing_seconds", tags);
-        metrics.gauge("post_batch_size", cacheSizeGauge, AtomicInteger::doubleValue, tags);
+        processTimer = metrics.timer("post_msg_batch_processing_seconds", tags);
+        metrics.gauge("post_msg_batch_size", msgCacheSizeGauge, AtomicInteger::doubleValue, tags);
+        metrics.gauge("post_dm_batch_size", dmCacheSizeGauge, AtomicInteger::doubleValue, tags);
     }
 
     /**
@@ -194,10 +196,13 @@ public class PostProcessingService {
     }
 
     /**
-     * Extract id from the kafka message key
-     * @param topic
-     * @param messageKey
-     * @param payload
+     * Extracts entity UID from the Kafka message and caches it for further processing.
+     * If the identifier is numeric, it is also enriched with values from the message payload.
+     *
+     * @param topic       the Kafka topic from which the message was received (used to determine entity type)
+     * @param messageKey  the Kafka message key in JSON format, containing the entity UID
+     * @param payload     the Kafka message payload in JSON format, used for enrichment when UID is numeric
+     * @throws DataProcessingException if the UID field is missing or cannot be processed
      */
     private void extractIdFromMessage(String topic, String messageKey, String payload) {
         try {
@@ -226,11 +231,20 @@ public class PostProcessingService {
             throw new DataProcessingException(msg, e);
         }
     }
+
     /**
-     * Extracts relevant value from the kafka message payload
-     * @param uid
-     * @param topic
-     * @param payload
+     * Extracts and categorizes additional values from a Kafka message payload based on the entity type.
+     * <p>
+     * Depending on the topic suffix, this method will:
+     * <ul>
+     *   <li><b>Investigation</b>: add the UID to summary/aggregate caches and map it to Page Builder tables.</li>
+     *   <li><b>Notification</b>: extract the act type code and link it to the associated investigation UID for summary case processing.</li>
+     *   <li><b>Observation</b>: classify observations into MorbReport or LabReport caches based on control and domain codes.</li>
+     * </ul>
+     *
+     * @param uid     the numeric identifier extracted from the Kafka message key
+     * @param topic   the Kafka topic name, used to determine which entity-specific rules to apply
+     * @param payload the Kafka message payload in JSON format, used to extract additional values
      */
     private void extractValFromMessage(Long uid, String topic, String payload) {
         try {
@@ -295,7 +309,7 @@ public class PostProcessingService {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Payload String payload) {
         try {
-            dmMsgProcessed.increment();
+            ppDmProcessed.increment();
             logger.info("Got this payload: {} from the topic: {}", payload, topic);
             JsonNode payloadNode = objectMapper.readTree(payload);
 
@@ -375,7 +389,7 @@ public class PostProcessingService {
         int cacheSize =
                 idCacheSnapshot.values().stream().mapToInt(List::size).sum() +
                 cdCacheSnapshot.values().stream().mapToInt(List::size).sum();
-        cacheSizeGauge.set(cacheSize);
+        msgCacheSizeGauge.set(cacheSize);
 
         if (cacheSize > 0) {
             Timer.Sample sample = metrics.startSample();
@@ -546,12 +560,13 @@ public class PostProcessingService {
             Entity entity = getEntityByTopic(keyTopic);
             try {
                 var dmDataSp = processEntity(entity, keyTopic, ids, pbCache, obsCache, newDmMulti);
+                incrementIf(ppDmProcessed, 1, !newDmMulti.isEmpty());
                 dmData = Stream.concat(dmData.stream(), dmDataSp.stream()).distinct().toList();
-                ppMsgSuccess.increment(ids.size());
+
+                // do not count failed retries here to avoid double counting
+                incrementIf(ppMsgSuccess, ids.size(), batchId == null);
             } catch (Exception e) {
-                if (batchId == null) { // do not count failed retries here to avoid double counting
-                    ppMsgFailure.increment(ids.size());
-                }
+                incrementIf(ppMsgFailure, ids.size(), batchId == null);
                 logger.error(errorMessage(entity.getEntityName(), listToParameterString(ids), new Exception(e.getClass().getSimpleName())));
                 processingFailed = true;
                 batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
@@ -559,7 +574,7 @@ public class PostProcessingService {
         }
 
         // process METRIC_EVENT datamart since multiple datamarts depend on it
-        processMetricEventDatamart(newDmMulti);
+        dmProcessor.processMetricEventDatamart(newDmMulti);
         processSummaryCases();
         dmProcessor.process(dmData);
 
@@ -601,6 +616,12 @@ public class PostProcessingService {
         } else {
             logger.info("Retrying {} id(s) from topic: {}, attempt #{} for batch id: {}",
                     idSize, keyTopic, dmProcessor.retryAttempts.getOrDefault(batchId, 0)+1, batchId);
+        }
+    }
+
+    private void incrementIf(Counter cnt, int size, boolean notRetry) {
+        if (notRetry) {
+            cnt.increment(size);
         }
     }
 
@@ -799,23 +820,6 @@ public class PostProcessingService {
                 investigationRepository::executeStoredProcForAggregateReport);
     }
 
-    private void processMetricEventDatamart(Map<String, Queue<Long>> dmMulti) {
-        String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
-        String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
-        String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
-        String ctrString = listToParameterString(dmMulti.get(CONTACT.getEntityName()));
-        String vaxString = listToParameterString(dmMulti.get(VACCINATION.getEntityName()));
-
-        int totalLengthEventMetric = invString.length() + obsString.length() + notifString.length()
-                + ctrString.length() + vaxString.length();
-
-        if (totalLengthEventMetric > 0) {
-            postProcRepository.executeStoredProcForEventMetric(invString, obsString, notifString, ctrString, vaxString);
-        } else {
-            logger.info("No updates to EVENT_METRIC Datamart");
-        }
-    }
-
     private Long buildRetryCache(
             Long batchId, String keyTopic, List<Long> ids, Map<String, List<Long>> pbCache, Map<String, List<Long>> obsCache, Exception e) {
 
@@ -864,6 +868,7 @@ public class PostProcessingService {
         }
 
         if (!dmCacheSnapshot.isEmpty()) {
+            dmCacheSizeGauge.set(dmCacheSnapshot.size());
             dmProcessor.processDmCache(dmCacheSnapshot, null);
         }
     }

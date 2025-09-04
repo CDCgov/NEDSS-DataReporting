@@ -975,7 +975,7 @@
             {
               "datasource": "aws-prometheus",
               "editorMode": "builder",
-              "expr": "max_over_time(post_batch_processing_seconds_max{instance=\"$instance\", application=\"$application\"}[10m])",
+              "expr": "max_over_time(post_msg_batch_processing_seconds_max{instance=\"$instance\", application=\"$application\"}[10m])",
               "hide": false,
               "includeNullMetadata": true,
               "legendFormat": "Max over 10m",
@@ -985,7 +985,7 @@
             {
               "datasource": "aws-prometheus",
               "editorMode": "builder",
-              "expr": "rate(post_batch_processing_seconds_sum{instance=\"$instance\", application=\"$application\"}[10m]) / rate(post_batch_processing_seconds_count{instance=\"$instance\", application=\"$application\"}[10m])",
+              "expr": "rate(post_msg_batch_processing_seconds_sum{instance=\"$instance\", application=\"$application\"}[10m]) / rate(post_msg_batch_processing_seconds_count{instance=\"$instance\", application=\"$application\"}[10m])",
               "hide": false,
               "legendFormat": "Avg over 10m",
               "range": true,
@@ -1079,7 +1079,7 @@
             {
               "datasource": "aws-prometheus",
               "editorMode": "builder",
-              "expr": "post_batch_size{instance=\"$instance\", application=\"$application\"}",
+              "expr": "post_msg_batch_size{instance=\"$instance\", application=\"$application\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "legendFormat": "Current",
@@ -1089,7 +1089,7 @@
             {
               "datasource": "aws-prometheus",
               "editorMode": "builder",
-              "expr": "avg_over_time(post_batch_size{instance=\"$instance\", application=\"$application\"}[10m])",
+              "expr": "avg_over_time(post_msg_batch_size{instance=\"$instance\", application=\"$application\"}[10m])",
               "hide": false,
               "legendFormat": "Avg over 10m",
               "range": true,
@@ -1098,7 +1098,7 @@
             {
               "datasource": "aws-prometheus",
               "editorMode": "builder",
-              "expr": "max_over_time(post_batch_size{instance=\"$instance\", application=\"$application\"}[10m])",
+              "expr": "max_over_time(post_msg_batch_size{instance=\"$instance\", application=\"$application\"}[10m])",
               "hide": false,
               "legendFormat": "Max over 10m",
               "range": true,
@@ -1106,6 +1106,455 @@
             }
           ],
           "title": "Batch size",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "aws-prometheus",
+            "uid": "aws-prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "id": 110,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "post_dm_processed_total{instance=\"$instance\", application=\"$application\"}",
+              "fullMetaSearch": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Total",
+              "range": true,
+              "refId": "A",
+              "useBackend": false
+            }
+          ],
+          "title": "Total number of datamart events/messages processed",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "aws-prometheus",
+            "uid": "aws-prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "id": 111,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "post_dm_success_total{instance=\"$instance\", application=\"$application\"}",
+              "fullMetaSearch": false,
+              "hide": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Success",
+              "range": true,
+              "refId": "B",
+              "useBackend": false
+            },
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "post_dm_failure_total{instance=\"$instance\", application=\"$application\"}",
+              "fullMetaSearch": false,
+              "hide": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Failure",
+              "range": true,
+              "refId": "C",
+              "useBackend": false
+            }
+          ],
+          "title": "Total datamart messages - Success & Failure",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "aws-prometheus",
+            "uid": "aws-prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Max over 10m"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "light-blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Avg over 10m"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "light-green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 12,
+            "y": 18
+          },
+          "id": 112,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "aws-prometheus",
+              "editorMode": "builder",
+              "expr": "max_over_time(post_dm_batch_processing_seconds_max{instance=\"$instance\", application=\"$application\"}[10m])",
+              "hide": false,
+              "includeNullMetadata": true,
+              "legendFormat": "Max over 10m",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": "aws-prometheus",
+              "editorMode": "builder",
+              "expr": "rate(post_dm_batch_processing_seconds_sum{instance=\"$instance\", application=\"$application\"}[10m]) / rate(post_dm_batch_processing_seconds_count{instance=\"$instance\", application=\"$application\"}[10m])",
+              "hide": false,
+              "legendFormat": "Avg over 10m",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Datamart batch processing time, sec",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "aws-prometheus",
+            "uid": "aws-prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 6,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 12,
+            "y": 26
+          },
+          "id": 113,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "aws-prometheus",
+              "editorMode": "builder",
+              "expr": "post_dm_batch_size{instance=\"$instance\", application=\"$application\"}",
+              "fullMetaSearch": false,
+              "includeNullMetadata": true,
+              "legendFormat": "Current",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": "aws-prometheus",
+              "editorMode": "builder",
+              "expr": "avg_over_time(post_dm_batch_size{instance=\"$instance\", application=\"$application\"}[10m])",
+              "hide": false,
+              "legendFormat": "Avg over 10m",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": "aws-prometheus",
+              "editorMode": "builder",
+              "expr": "max_over_time(post_dm_batch_size{instance=\"$instance\", application=\"$application\"}[10m])",
+              "hide": false,
+              "legendFormat": "Max over 10m",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Datamart batch size",
           "type": "timeseries"
         }
       ],

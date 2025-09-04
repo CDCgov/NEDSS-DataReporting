@@ -48,10 +48,12 @@ class PostProcessingServiceEntityTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
-        ProcessDatamartData datamartProcessor = new ProcessDatamartData(kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock);
+        ProcessDatamartData datamartProcessor = new ProcessDatamartData(
+                kafkaTemplate, postProcRepositoryMock, investigationRepositoryMock, new CustomMetrics(new SimpleMeterRegistry()));
         postProcessingServiceMock = spy(new PostProcessingService(postProcRepositoryMock, investigationRepositoryMock,
                 datamartProcessor, new CustomMetrics(new SimpleMeterRegistry())));
         postProcessingServiceMock.initMetrics();
+        datamartProcessor.initMetrics();
 
         postProcessingServiceMock.setInvestigationTopic("dummy_investigation");
 
@@ -98,7 +100,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForPatientIds(expectedPatientIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -114,7 +116,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForProviderIds(expectedProviderIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -130,7 +132,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForOrganizationIds(expectedOrganizationIdsIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
@@ -274,7 +276,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForNBSPage(expectedNBSPageIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(PAGE.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -329,7 +331,7 @@ class PostProcessingServiceEntityTest {
         verify(investigationRepositoryMock).executeStoredProcForFStdPageCase(expectedPublicHealthCaseIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(7, logs.size());
+        assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(CASE_MANAGEMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
         assertTrue(logs.get(4).getFormattedMessage().contains(F_STD_PAGE_CASE.getStoredProcedure()));
@@ -379,7 +381,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForFInterviewCase(expectedIntIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(7, logs.size());
+        assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(INTERVIEW.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -398,7 +400,7 @@ class PostProcessingServiceEntityTest {
         String expectedLdfIdsString = "123";
         verify(postProcRepositoryMock).executeStoredProcForLdfIds(expectedLdfIdsString);
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(7, logs.size());
+        assertEquals(6, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(LDF_DATA.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -418,7 +420,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForLdfDimensionalData(expectedLdfIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(STATE_DEFINED_FIELD_METADATA.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -701,8 +703,6 @@ class PostProcessingServiceEntityTest {
         postProcessingServiceMock.processCachedIds();
 
         verify(postProcRepositoryMock, never()).executeStoredProcForEventMetric(any(),any(),any(),any(),any());
-        List<ILoggingEvent> logs = listAppender.list;
-        assertEquals("No updates to EVENT_METRIC Datamart", logs.get(4).getFormattedMessage());
     }
 
     @Test
@@ -745,7 +745,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForUserProfile(expectedUserProfileIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(AUTH_USER.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -786,7 +786,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForDPlace(expectedPlaceIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(D_PLACE.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
@@ -832,7 +832,7 @@ class PostProcessingServiceEntityTest {
         verify(postProcRepositoryMock).executeStoredProcForTreatment(expectedTreatmentIdsString);
 
         List<ILoggingEvent> logs = listAppender.list;
-        assertEquals(5, logs.size());
+        assertEquals(4, logs.size());
         assertTrue(logs.get(2).getFormattedMessage().contains(TREATMENT.getStoredProcedure()));
         assertTrue(logs.get(3).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
