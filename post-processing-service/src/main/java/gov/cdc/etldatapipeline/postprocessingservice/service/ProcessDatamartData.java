@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.postprocessingservice.service.Entity.*;
-import static gov.cdc.etldatapipeline.postprocessingservice.service.PostProcessingService.SERVICE_NAME;
 
 @Component
 @RequiredArgsConstructor @Setter
@@ -73,6 +72,8 @@ public class ProcessDatamartData {
     static final String STATUS_READY = "READY";
     static final String STATUS_COMPLETE = "COMPLETE";
     static final String STATUS_SUSPENDED = "SUSPENDED";
+
+    static final String SERVICE_NAME = "post-process-reporting";
 
     @Value("${spring.kafka.topic.datamart}")
     public String datamartTopic;

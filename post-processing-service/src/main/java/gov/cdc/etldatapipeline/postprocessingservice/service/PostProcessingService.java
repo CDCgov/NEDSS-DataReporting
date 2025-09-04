@@ -105,19 +105,18 @@ public class PostProcessingService {
     static final String CASE_TYPE_AGG = "Aggregate";
     static final String ACT_TYPE_SUM = "SummaryNotification";
 
+    static final String SERVICE_NAME = "post-process-reporting";
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Object cacheLock = new Object();
 
     @Value("${spring.kafka.topic.investigation}")
     private String investigationTopic;
 
-    static final String SERVICE_NAME = "post-process-reporting";
-
     private final CustomMetrics metrics;
 
     private Counter ppMsgProcessed;
     private Counter ppDmProcessed;
-
     private Counter ppMsgSuccess;
     private Counter ppMsgFailure;
 
