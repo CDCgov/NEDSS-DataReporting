@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_covid_contact_datamart_postprocessing]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_covid_contact_datamart_postprocessing]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_covid_contact_datamart_postprocessing]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_covid_contact_datamart_postprocessing]
+    END
+GO
 
 CREATE PROCEDURE [dbo].[sp_covid_contact_datamart_postprocessing]
     @phcid_list nvarchar(max), -- Removed default NULL value to make it required
@@ -219,159 +219,155 @@ BEGIN
             con_inv_asw3.answer_txt AS 'CTT_INV_SYMPTOMATIC',
             con_inv.effective_from_time AS 'CTT_INV_ILLNESS_ONSET_DT',
             con_inv.effective_to_time AS 'CTT_INV_ILLNESS_END_DT',
-            con_inv_asw4.answer_txt AS 'CTT_INV_SYMPTOM_STATUS',
-
-            /* Add a unique identifier for the contact record */
-            con.CONTACT_UID AS 'CONTACT_UID'
-
+            con_inv_asw4.answer_txt AS 'CTT_INV_SYMPTOM_STATUS'
         INTO #COVID_CONTACT_DATAMART
         FROM dbo.nrt_contact con WITH (NOLOCK)
-            INNER JOIN dbo.nrt_investigation inv WITH (NOLOCK)
-                    ON con.SUBJECT_ENTITY_PHC_UID = inv.public_health_case_uid
-                        AND con.RECORD_STATUS_CD <> 'LOG_DEL'
+                 INNER JOIN dbo.nrt_investigation inv WITH (NOLOCK)
+                            ON con.SUBJECT_ENTITY_PHC_UID = inv.public_health_case_uid
+                                AND con.RECORD_STATUS_CD <> 'LOG_DEL'
 
             -- SRC: Index patient (use D_PATIENT dimension table directly)
-            LEFT OUTER JOIN dbo.D_PATIENT pat WITH (NOLOCK)
-                ON pat.PATIENT_UID = inv.patient_id
+                 LEFT OUTER JOIN dbo.D_PATIENT pat WITH (NOLOCK)
+                                 ON pat.PATIENT_UID = inv.patient_id
 
-            LEFT OUTER JOIN dbo.nrt_patient nrt_pat WITH (NOLOCK)
-                ON nrt_pat.patient_uid = inv.patient_id
+                 LEFT OUTER JOIN dbo.nrt_patient nrt_pat WITH (NOLOCK)
+                                 ON nrt_pat.patient_uid = inv.patient_id
 
-            LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK)
-                ON cvg1.CODE_DESC = pat.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'           --Person.PERSON_CURR_GENDER
+                 LEFT JOIN dbo.v_code_value_general cvg1 WITH (NOLOCK)
+                           ON cvg1.CODE_DESC = pat.PATIENT_CURRENT_SEX AND cvg1.cd='DEM113'           --Person.PERSON_CURR_GENDER
 
-            LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK)
-                ON pat.PATIENT_DECEASED_INDICATOR = cvg2.CODE_DESC AND cvg2.cd='DEM127'    --Person.PATIENT_DECEASED_IND
+                 LEFT JOIN dbo.v_code_value_general cvg2 WITH (NOLOCK)
+                           ON pat.PATIENT_DECEASED_INDICATOR = cvg2.CODE_DESC AND cvg2.cd='DEM127'    --Person.PATIENT_DECEASED_IND
 
             -- These replace CT_CONTACT_ANSWER joins in original with corresponding question identifiers
-            LEFT OUTER JOIN dbo.nrt_contact_answer con_ans1 WITH (NOLOCK)
-                ON con_ans1.contact_uid = con.CONTACT_UID
-                    AND con_ans1.rdb_column_nm = 'CTT_EXPOSURE_TYPE' -- Contact Exposure Type with Investigation Subject
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans1 WITH (NOLOCK)
+                                 ON con_ans1.contact_uid = con.CONTACT_UID
+                                     AND con_ans1.rdb_column_nm = 'CTT_EXPOSURE_TYPE' -- Contact Exposure Type with Investigation Subject
 
-            LEFT OUTER JOIN dbo.nrt_contact_answer con_ans2 WITH (NOLOCK)
-                ON con_ans2.contact_uid = con.CONTACT_UID
-                    AND con_ans2.rdb_column_nm = 'CTT_EXPOSURE_SITE_TYPE' -- Contact Exposure Site Type
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans2 WITH (NOLOCK)
+                                 ON con_ans2.contact_uid = con.CONTACT_UID
+                                     AND con_ans2.rdb_column_nm = 'CTT_EXPOSURE_SITE_TYPE' -- Contact Exposure Site Type
 
-            LEFT OUTER JOIN dbo.nrt_contact_answer con_ans3 WITH (NOLOCK)
-                ON con_ans3.contact_uid = con.CONTACT_UID
-                    AND con_ans3.rdb_column_nm = 'CTT_FIRST_EXPOSURE_DT' -- First Exposure Date with Contact
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans3 WITH (NOLOCK)
+                                 ON con_ans3.contact_uid = con.CONTACT_UID
+                                     AND con_ans3.rdb_column_nm = 'CTT_FIRST_EXPOSURE_DT' -- First Exposure Date with Contact
 
-            LEFT OUTER JOIN dbo.nrt_contact_answer con_ans4 WITH (NOLOCK)
-                ON con_ans4.contact_uid = con.CONTACT_UID
-                    AND con_ans4.rdb_column_nm = 'CTT_LAST_EXPOSURE_DT' -- Last Exposure Date with Contact
+                 LEFT OUTER JOIN dbo.nrt_contact_answer con_ans4 WITH (NOLOCK)
+                                 ON con_ans4.contact_uid = con.CONTACT_UID
+                                     AND con_ans4.rdb_column_nm = 'CTT_LAST_EXPOSURE_DT' -- Last Exposure Date with Contact
 
             -- These replace NBS_CASE_ANSWER joins with investigation_observation and include batch_id matching
-            LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw1 WITH (NOLOCK)
-                ON inv_asw1.act_uid = inv.public_health_case_uid
-                    AND inv_asw1.question_identifier = 'NBS547' -- CDC-Assigned Case ID
-                    AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw1.batch_id,1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw1 WITH (NOLOCK)
+                                 ON inv_asw1.act_uid = inv.public_health_case_uid
+                                     AND inv_asw1.question_identifier = 'NBS547' -- CDC-Assigned Case ID
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw1.batch_id,1)
 
-            LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw2 WITH (NOLOCK)
-                ON inv_asw2.act_uid = inv.public_health_case_uid
-                    AND inv_asw2.question_identifier = 'NOT113' -- Reporting County
-                    AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw2.batch_id, 1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw2 WITH (NOLOCK)
+                                 ON inv_asw2.act_uid = inv.public_health_case_uid
+                                     AND inv_asw2.question_identifier = 'NOT113' -- Reporting County
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw2.batch_id, 1)
 
-            LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw3 WITH (NOLOCK)
-                ON inv_asw3.act_uid = inv.public_health_case_uid
-                    AND inv_asw3.question_identifier = 'INV576' -- Symptomatic
-                    AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw3.batch_id, 1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw3 WITH (NOLOCK)
+                                 ON inv_asw3.act_uid = inv.public_health_case_uid
+                                     AND inv_asw3.question_identifier = 'INV576' -- Symptomatic
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw3.batch_id, 1)
 
-            LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw4 WITH (NOLOCK)
-                ON inv_asw4.act_uid = inv.public_health_case_uid
-                    AND inv_asw4.question_identifier = 'NBS555' -- Symptomatic status
-                    AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw4.batch_id,1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer inv_asw4 WITH (NOLOCK)
+                                 ON inv_asw4.act_uid = inv.public_health_case_uid
+                                     AND inv_asw4.question_identifier = 'NBS555' -- Symptomatic status
+                                     AND ISNULL(inv.batch_id,1) = ISNULL(inv_asw4.batch_id,1)
 
             -- These replace JURISDICTION_CODE table joins
-            LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_inv WITH (NOLOCK)
-                ON inv.jurisdiction_cd = j_inv.CODE
+                 LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_inv WITH (NOLOCK)
+                                 ON inv.jurisdiction_cd = j_inv.CODE
 
             -- Investigator information (use D_PROVIDER dimension table directly)
-            LEFT OUTER JOIN dbo.D_PROVIDER pat_inv WITH (NOLOCK)
-                ON pat_inv.PROVIDER_UID = inv.investigator_id
+                 LEFT OUTER JOIN dbo.D_PROVIDER pat_inv WITH (NOLOCK)
+                                 ON pat_inv.PROVIDER_UID = inv.investigator_id
 
             -- Contact investigation (maps to original's contactInvestigation join)
-            LEFT OUTER JOIN dbo.nrt_investigation con_inv WITH (NOLOCK)
-                ON con.CONTACT_ENTITY_PHC_UID = con_inv.public_health_case_uid
+                 LEFT OUTER JOIN dbo.nrt_investigation con_inv WITH (NOLOCK)
+                                 ON con.CONTACT_ENTITY_PHC_UID = con_inv.public_health_case_uid
 
             -- Contact investigation jurisdiction
-            LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_con_inv WITH (NOLOCK)
-                ON con_inv.jurisdiction_cd = j_con_inv.CODE
+                 LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_con_inv WITH (NOLOCK)
+                                 ON con_inv.jurisdiction_cd = j_con_inv.CODE
 
             -- Contact investigation observations with batch_id matching
-            LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw1 WITH (NOLOCK)
-                ON con_inv_asw1.act_uid = con_inv.public_health_case_uid
-                    AND con_inv_asw1.question_identifier = 'NBS547' -- CDC-Assigned Case ID
-                    AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw1.batch_id,1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw1 WITH (NOLOCK)
+                                 ON con_inv_asw1.act_uid = con_inv.public_health_case_uid
+                                     AND con_inv_asw1.question_identifier = 'NBS547' -- CDC-Assigned Case ID
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw1.batch_id,1)
 
-            LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw2 WITH (NOLOCK)
-                ON con_inv_asw2.act_uid = con_inv.public_health_case_uid
-                    AND con_inv_asw2.question_identifier = 'NOT113' -- Reporting County
-                    AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw2.batch_id,1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw2 WITH (NOLOCK)
+                                 ON con_inv_asw2.act_uid = con_inv.public_health_case_uid
+                                     AND con_inv_asw2.question_identifier = 'NOT113' -- Reporting County
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw2.batch_id,1)
 
-            LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw3 WITH (NOLOCK)
-                ON con_inv_asw3.act_uid = con_inv.public_health_case_uid
-                    AND con_inv_asw3.question_identifier = 'INV576' -- Symptomatic
-                    AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw3.batch_id,1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw3 WITH (NOLOCK)
+                                 ON con_inv_asw3.act_uid = con_inv.public_health_case_uid
+                                     AND con_inv_asw3.question_identifier = 'INV576' -- Symptomatic
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw3.batch_id,1)
 
-            LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw4 WITH (NOLOCK)
-                ON con_inv_asw4.act_uid = con_inv.public_health_case_uid
-                    AND con_inv_asw4.question_identifier = 'NBS555' -- Symptomatic status
-                    AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw4.batch_id,1)
+                 LEFT OUTER JOIN dbo.nrt_page_case_answer con_inv_asw4 WITH (NOLOCK)
+                                 ON con_inv_asw4.act_uid = con_inv.public_health_case_uid
+                                     AND con_inv_asw4.question_identifier = 'NBS555' -- Symptomatic status
+                                     AND ISNULL(con_inv.batch_id,1) = ISNULL(con_inv_asw4.batch_id,1)
 
             -- CTT records from investigation (use D_PATIENT dimension table directly)
-            LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_inv WITH (NOLOCK)
-                ON ctt_pat_inv.PATIENT_UID = con_inv.patient_id
+                 LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_inv WITH (NOLOCK)
+                                 ON ctt_pat_inv.PATIENT_UID = con_inv.patient_id
 
             -- CTT records from contact (use D_PATIENT dimension table directly)
-            LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_con WITH (NOLOCK)
-                ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
+                 LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_con WITH (NOLOCK)
+                                 ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg4 WITH (NOLOCK)
-                ON cvg4.code_short_desc_txt = inv.contact_inv_priority AND cvg4.code_set_nm = 'NBS_PRIORITY'
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg4 WITH (NOLOCK)
+                           ON cvg4.code_short_desc_txt = inv.contact_inv_priority AND cvg4.code_set_nm = 'NBS_PRIORITY'
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg5 WITH (NOLOCK)
-                ON cvg5.code_short_desc_txt = con.CTT_PRIORITY AND cvg5.code_set_nm = 'NBS_PRIORITY'
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg5 WITH (NOLOCK)
+                           ON cvg5.code_short_desc_txt = con.CTT_PRIORITY AND cvg5.code_set_nm = 'NBS_PRIORITY'
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg6 WITH (NOLOCK)
-                ON cvg6.code_short_desc_txt = con.CTT_DISPOSITION AND cvg6.code_set_nm IN ('NBS_DISPO','FIELD_FOLLOWUP_DISPOSITION_STD')
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg6 WITH (NOLOCK)
+                           ON cvg6.code_short_desc_txt = con.CTT_DISPOSITION AND cvg6.code_set_nm IN ('NBS_DISPO','FIELD_FOLLOWUP_DISPOSITION_STD')
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg7 WITH (NOLOCK)
-                ON cvg7.code_short_desc_txt = con.CTT_RELATIONSHIP AND cvg7.code_set_nm = 'NBS_RELATIONSHIP'
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg7 WITH (NOLOCK)
+                           ON cvg7.code_short_desc_txt = con.CTT_RELATIONSHIP AND cvg7.code_set_nm = 'NBS_RELATIONSHIP'
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg8 WITH (NOLOCK)
-                ON cvg8.code_short_desc_txt = con.CTT_HEALTH_STATUS AND cvg8.code_set_nm = 'NBS_HEALTH_STATUS'
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg8 WITH (NOLOCK)
+                           ON cvg8.code_short_desc_txt = con.CTT_HEALTH_STATUS AND cvg8.code_set_nm = 'NBS_HEALTH_STATUS'
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg9 WITH (NOLOCK)
-                      ON cvg9.code_short_desc_txt = con.CTT_SYMP_IND AND cvg9.code_set_nm = 'YNU'
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg9 WITH (NOLOCK)
+                           ON cvg9.code_short_desc_txt = con.CTT_SYMP_IND AND cvg9.code_set_nm = 'YNU'
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg10 WITH (NOLOCK)
-                      ON cvg10.code_short_desc_txt = con.CTT_RISK_IND AND cvg10.code_set_nm = 'YNU'
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg10 WITH (NOLOCK)
+                           ON cvg10.code_short_desc_txt = con.CTT_RISK_IND AND cvg10.code_set_nm = 'YNU'
 
-            LEFT JOIN dbo.nrt_srte_Code_value_general cvg11 WITH (NOLOCK)
-                      ON cvg11.code_short_desc_txt = con.CTT_EVAL_COMPLETED AND cvg11.code_set_nm = 'YNU'
+                 LEFT JOIN dbo.nrt_srte_Code_value_general cvg11 WITH (NOLOCK)
+                           ON cvg11.code_short_desc_txt = con.CTT_EVAL_COMPLETED AND cvg11.code_set_nm = 'YNU'
 
-            OUTER APPLY (
-                SELECT
-                    IIF (con.CONTACT_ENTITY_PHC_UID IS NOT NULL,
-                         ctt_pat_inv.PATIENT_CURRENT_SEX,
-                         ctt_pat_con.PATIENT_CURRENT_SEX) AS PATIENT_CURRENT_SEX,
-                    IIF (con.CONTACT_ENTITY_PHC_UID IS NOT NULL,
-                         ctt_pat_inv.PATIENT_DECEASED_INDICATOR,
-                         ctt_pat_con.PATIENT_DECEASED_INDICATOR) AS PATIENT_DECEASED_INDICATOR,
-                    IIF (con.CONTACT_ENTITY_PHC_UID IS NOT NULL,
-                         ctt_pat_inv.PATIENT_COUNTRY,
-                         ctt_pat_con.PATIENT_COUNTRY) AS PATIENT_COUNTRY
+                 OUTER APPLY (
+            SELECT
+                IIF (con.CONTACT_ENTITY_PHC_UID IS NOT NULL,
+                     ctt_pat_inv.PATIENT_CURRENT_SEX,
+                     ctt_pat_con.PATIENT_CURRENT_SEX) AS PATIENT_CURRENT_SEX,
+                IIF (con.CONTACT_ENTITY_PHC_UID IS NOT NULL,
+                     ctt_pat_inv.PATIENT_DECEASED_INDICATOR,
+                     ctt_pat_con.PATIENT_DECEASED_INDICATOR) AS PATIENT_DECEASED_INDICATOR,
+                IIF (con.CONTACT_ENTITY_PHC_UID IS NOT NULL,
+                     ctt_pat_inv.PATIENT_COUNTRY,
+                     ctt_pat_con.PATIENT_COUNTRY) AS PATIENT_COUNTRY
 
         ) AS pd
 
-            LEFT JOIN dbo.v_code_value_general cvg12 WITH (NOLOCK)
-                ON cvg12.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg12.cd='DEM113'           --Person.PERSON_CURR_GENDER
+                 LEFT JOIN dbo.v_code_value_general cvg12 WITH (NOLOCK)
+                           ON cvg12.CODE_DESC = pd.PATIENT_CURRENT_SEX AND cvg12.cd='DEM113'           --Person.PERSON_CURR_GENDER
 
-            LEFT JOIN dbo.v_code_value_general cvg13 WITH (NOLOCK)
-                ON cvg13.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg13.cd='DEM127'    --Person.PATIENT_DECEASED_IND
+                 LEFT JOIN dbo.v_code_value_general cvg13 WITH (NOLOCK)
+                           ON cvg13.CODE_DESC = pd.PATIENT_DECEASED_INDICATOR AND cvg13.cd='DEM127'    --Person.PATIENT_DECEASED_IND
 
-            LEFT JOIN dbo.v_code_value_general cvg14 WITH (NOLOCK)
-                      ON cvg14.CODE_DESC = pd.PATIENT_COUNTRY AND cvg14.cd='DEM126'         --Location.PSL_CNTRY
+                 LEFT JOIN dbo.v_code_value_general cvg14 WITH (NOLOCK)
+                           ON cvg14.CODE_DESC = pd.PATIENT_COUNTRY AND cvg14.cd='DEM126'         --Location.PSL_CNTRY
 
         WHERE inv.cd = @conditionCd
           AND inv.public_health_case_uid IN (  -- Removed NULL check for @phcid_list
@@ -391,8 +387,7 @@ BEGIN
                );
 
         /* Debug output if requested */
-        IF @debug = 'true'
-            SELECT * FROM #COVID_CONTACT_DATAMART;
+        IF @debug = 'true' SELECT * FROM #COVID_CONTACT_DATAMART;
 
         SET @proc_step_name = 'Update COVID_CONTACT_DATAMART';
         SET @proc_step_no = 2;
@@ -400,31 +395,11 @@ BEGIN
         /* Start transaction for the delete and insert operations */
         BEGIN TRANSACTION;
 
-        /* Delete ALL records from datamart matching the provided PHC IDs */
-        DELETE FROM dbo.COVID_CONTACT_DATAMART
-        WHERE CONTACT_UID IN (
-            SELECT CONTACT_UID FROM dbo.nrt_contact WITH (NOLOCK)
-            WHERE SUBJECT_ENTITY_PHC_UID IN (
-                SELECT TRY_CAST(value AS BIGINT)
-                FROM STRING_SPLIT(@phcid_list, ',')
-            )
-            -- Removed RECORD_STATUS_CD <> 'LOG_DEL' filter to delete ALL matching records
-        );
-
-        /* Logging */
-        SET @rowcount = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
-            [step_number], [step_name], [row_count], [msg_description1]
-        )
-        VALUES (
-                   @batch_id, @dataflow_name, @package_name, 'PROCESSING',
-                   @proc_step_no, @proc_step_name, @rowcount, LEFT(ISNULL(@phcid_list, 'NULL'),500)
-               );
 
         /* Insert updated records */
-        INSERT INTO dbo.COVID_CONTACT_DATAMART
-        SELECT * FROM #COVID_CONTACT_DATAMART;
+        INSERT INTO dbo.COVID_CONTACT_DATAMART (SRC_PATIENT_FIRST_NAME, SRC_PATIENT_MIDDLE_NAME, SRC_PATIENT_LAST_NAME, SRC_PATIENT_DOB, SRC_PATIENT_AGE_REPORTED, SRC_PATIENT_AGE_RPTD_UNIT, SRC_PATIENT_CURRENT_SEX, SRC_PATIENT_DECEASED_IND, SRC_PATIENT_DECEASED_DT, SRC_PATIENT_STREET_ADDR_1, SRC_PATIENT_STREET_ADDR_2, SRC_PATIENT_CITY, SRC_PATIENT_STATE, SRC_PATIENT_ZIP, SRC_PATIENT_COUNTY, SRC_PATIENT_COUNTRY, SRC_INV_JURISDICTION_NM, SRC_INV_START_DT, SRC_INV_STATUS, SRC_INV_STATE_CASE_ID, SRC_INV_LEGACY_CASE_ID, SRC_INV_CDC_ASSIGNED_ID, SRC_INV_RPTNG_CNTY, SRC_INV_HSPTLIZD_IND, SRC_INV_DIE_FRM_ILLNESS_IND, SRC_INV_DEATH_DT, SRC_INV_CASE_STATUS, SRC_INV_SYMPTOMATIC, SRC_INV_ILLNESS_ONSET_DT, SRC_INV_ILLNESS_END_DT, SRC_INV_SYMPTOM_STATUS, SRC_CTT_INV_PRIORITY, SRC_CTT_INV_INFECTIOUS_FRM_DT, SRC_CTT_INV_INFECTIOUS_TO_DT, SRC_CTT_INV_STATUS, SRC_CTT_INV_COMMENTS, CR_JURISDICTION_NM, CR_STATUS, CR_PRIORITY, CR_INV_FIRST_NAME, CR_INV_LAST_NAME, CR_INV_ASSIGNED_DT, CR_DISPOSITION, CR_DISPO_DT, CR_NAMED_ON_DT, CR_RELATIONSHIP, CR_HEALTH_STATUS, CR_EXPOSURE_TYPE, CR_EXPOSURE_SITE_TY, CR_FIRST_EXPOSURE_DT, CR_LAST_EXPOSURE_DT, CR_SYMP_IND, CR_SYMP_ONSET_DT, CR_RISK_IND, CR_RISK_NOTES, CR_EVAL_COMPLETED, CR_EVAL_DT, CR_EVAL_NOTES, CTT_PATIENT_FIRST_NAME, CTT_PATIENT_MIDDLE_NAME, CTT_PATIENT_LAST_NAME, CTT_PATIENT_DOB, CTT_PATIENT_AGE_REPORTED, CTT_PATIENT_AGE_RPTD_UNIT, CTT_PATIENT_CURRENT_SEX, CTT_PATIENT_DECEASED_IND, CTT_PATIENT_DECEASED_DT, CTT_PATIENT_STREET_ADDR_1, CTT_PATIENT_STREET_ADDR_2, CTT_PATIENT_CITY, CTT_PATIENT_STATE, CTT_PATIENT_ZIP, CTT_PATIENT_COUNTY, CTT_PATIENT_COUNTRY, CTT_PATIENT_TEL_HOME, CTT_PATIENT_PHONE_WORK, CTT_PATIENT_PHONE_EXT_WORK, CTT_PATIENT_TEL_CELL, CTT_PATIENT_EMAIL, CTT_INV_JURISDICTION_NM, CTT_INV_START_DT, CTT_INV_STATUS, CTT_INV_STATE_CASE_ID, CTT_INV_LEGACY_CASE_ID, CTT_INV_CDC_ASSIGNED_ID, CTT_INV_RPTNG_CNTY, CTT_INV_HSPTLIZD_IND, CTT_INV_DIE_FRM_ILLNESS_IND, CTT_INV_DEATH_DT, CTT_INV_CASE_STATUS, CTT_INV_SYMPTOMATIC, CTT_INV_ILLNESS_ONSET_DT, CTT_INV_ILLNESS_END_DT, CTT_INV_SYMPTOM_STATUS)
+        SELECT SRC_PATIENT_FIRST_NAME, SRC_PATIENT_MIDDLE_NAME, SRC_PATIENT_LAST_NAME, SRC_PATIENT_DOB, SRC_PATIENT_AGE_REPORTED, SRC_PATIENT_AGE_RPTD_UNIT, SRC_PATIENT_CURRENT_SEX, SRC_PATIENT_DECEASED_IND, SRC_PATIENT_DECEASED_DT, SRC_PATIENT_STREET_ADDR_1, SRC_PATIENT_STREET_ADDR_2, SRC_PATIENT_CITY, SRC_PATIENT_STATE, SRC_PATIENT_ZIP, SRC_PATIENT_COUNTY, SRC_PATIENT_COUNTRY, SRC_INV_JURISDICTION_NM, SRC_INV_START_DT, SRC_INV_STATUS, SRC_INV_STATE_CASE_ID, SRC_INV_LEGACY_CASE_ID, SRC_INV_CDC_ASSIGNED_ID, SRC_INV_RPTNG_CNTY, SRC_INV_HSPTLIZD_IND, SRC_INV_DIE_FRM_ILLNESS_IND, SRC_INV_DEATH_DT, SRC_INV_CASE_STATUS, SRC_INV_SYMPTOMATIC, SRC_INV_ILLNESS_ONSET_DT, SRC_INV_ILLNESS_END_DT, SRC_INV_SYMPTOM_STATUS, SRC_CTT_INV_PRIORITY, SRC_CTT_INV_INFECTIOUS_FRM_DT, SRC_CTT_INV_INFECTIOUS_TO_DT, SRC_CTT_INV_STATUS, SRC_CTT_INV_COMMENTS, CR_JURISDICTION_NM, CR_STATUS, CR_PRIORITY, CR_INV_FIRST_NAME, CR_INV_LAST_NAME, CR_INV_ASSIGNED_DT, CR_DISPOSITION, CR_DISPO_DT, CR_NAMED_ON_DT, CR_RELATIONSHIP, CR_HEALTH_STATUS, CR_EXPOSURE_TYPE, CR_EXPOSURE_SITE_TY, CR_FIRST_EXPOSURE_DT, CR_LAST_EXPOSURE_DT, CR_SYMP_IND, CR_SYMP_ONSET_DT, CR_RISK_IND, CR_RISK_NOTES, CR_EVAL_COMPLETED, CR_EVAL_DT, CR_EVAL_NOTES, CTT_PATIENT_FIRST_NAME, CTT_PATIENT_MIDDLE_NAME, CTT_PATIENT_LAST_NAME, CTT_PATIENT_DOB, CTT_PATIENT_AGE_REPORTED, CTT_PATIENT_AGE_RPTD_UNIT, CTT_PATIENT_CURRENT_SEX, CTT_PATIENT_DECEASED_IND, CTT_PATIENT_DECEASED_DT, CTT_PATIENT_STREET_ADDR_1, CTT_PATIENT_STREET_ADDR_2, CTT_PATIENT_CITY, CTT_PATIENT_STATE, CTT_PATIENT_ZIP, CTT_PATIENT_COUNTY, CTT_PATIENT_COUNTRY, CTT_PATIENT_TEL_HOME, CTT_PATIENT_PHONE_WORK, CTT_PATIENT_PHONE_EXT_WORK, CTT_PATIENT_TEL_CELL, CTT_PATIENT_EMAIL, CTT_INV_JURISDICTION_NM, CTT_INV_START_DT, CTT_INV_STATUS, CTT_INV_STATE_CASE_ID, CTT_INV_LEGACY_CASE_ID, CTT_INV_CDC_ASSIGNED_ID, CTT_INV_RPTNG_CNTY, CTT_INV_HSPTLIZD_IND, CTT_INV_DIE_FRM_ILLNESS_IND, CTT_INV_DEATH_DT, CTT_INV_CASE_STATUS, CTT_INV_SYMPTOMATIC, CTT_INV_ILLNESS_ONSET_DT, CTT_INV_ILLNESS_END_DT, CTT_INV_SYMPTOM_STATUS
+        FROM #COVID_CONTACT_DATAMART;
 
         /* Logging for insert operation */
         SET @rowcount = @@ROWCOUNT;
@@ -466,7 +441,7 @@ BEGIN
             CAST(NULL AS VARCHAR(50))  AS condition_cd,
             CAST(NULL AS VARCHAR(200)) AS stored_procedure,
             CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-            WHERE 1=0;
+        WHERE 1=0;
 
     END TRY
     BEGIN CATCH
@@ -498,7 +473,7 @@ BEGIN
             CAST(NULL AS VARCHAR(50))  AS condition_cd,
             @FullErrorMessage AS stored_procedure,
             CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
-            WHERE 1=1;
-            
+        WHERE 1=1;
+
     END CATCH;
 END;
