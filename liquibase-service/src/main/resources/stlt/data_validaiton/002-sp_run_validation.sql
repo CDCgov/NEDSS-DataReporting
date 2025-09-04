@@ -324,7 +324,9 @@ BEGIN TRY
         IF @from_date IS NULL
             SET @from_date = CAST(SYSDATETIME() AS DATE);
 
-        IF @entity = 'D_CASE_MANAGEMENT' 
+        --special case since Case_Mgmt is not tracked under cdc and LDF data can be 
+        --tracked via the investigation
+        IF @entity = 'D_CASE_MANAGEMENT' or LEFT(@entity, 4) = 'LDF_'
             SET @entity = 'INVESTIGATION'
         
         ;WITH cte AS (
