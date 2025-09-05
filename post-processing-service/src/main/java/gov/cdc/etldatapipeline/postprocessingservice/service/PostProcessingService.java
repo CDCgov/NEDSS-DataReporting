@@ -113,6 +113,9 @@ public class PostProcessingService {
     @Value("${spring.kafka.topic.investigation}")
     private String investigationTopic;
 
+    @Value("${featureFlag.service-disable}")
+    private boolean serviceDisabled;
+
     private final CustomMetrics metrics;
 
     private Counter ppMsgProcessed;
@@ -190,7 +193,9 @@ public class PostProcessingService {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload String payload) {
+
         ppMsgProcessed.increment();
+        if (serviceDisabled) return; // skip processing when disabled
         extractIdFromMessage(topic, key, payload);
     }
 

@@ -60,6 +60,8 @@ spring:
   jpa:
     properties:
       jakarta.persistence.query.timeout: -1
+featureFlag:
+  service-disable: ${FF_SERVICE_DISABLE:false}
 service:
   fixed-delay:
     cached-ids: ${FIXED_DELAY_ID:20000}
