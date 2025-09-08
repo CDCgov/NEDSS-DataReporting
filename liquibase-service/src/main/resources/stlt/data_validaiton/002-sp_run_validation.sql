@@ -18,7 +18,7 @@ GO
     @topn_errors      SMALLINT       - Optional; when provided, limits to TOP N latest errors; 
                                        when NULL, retrieves all errors from the last @lookback days (default 10).
     @initiate_update  BIT            - 0 = update the ODSE table (last_chg_time) for rows corresponding to validated UIDs.
-    @from_date        DATE           - Optional; updates only rows where last_chg_time >= @from_date. Defaults to current date.
+    @from_date        DATE           - Optional; updates only rows where last_chg_time >= @from_date or if last_chg_time is NULL. Defaults to current date.
 
     Logic Overview:
     1. Handle for Dynamic Datamarts  Dependencies:
@@ -366,11 +366,15 @@ BEGIN TRY
                 
             DECLARE @update_sql NVARCHAR(MAX) = N'
             UPDATE tgt
-            SET last_chg_time = DATEADD(millisecond, 2, tgt.last_chg_time)
+            SET last_chg_time = ISNULL(
+                            DATEADD(millisecond, 2, tgt.last_chg_time),
+                            GETDATE()
+                        )
             FROM nbs_odse.dbo.' + QUOTENAME(@odse_table) + ' AS tgt
             INNER JOIN #results r
                 ON tgt.' + @odse_pk_column + ' = r.uid
-            WHERE tgt.last_chg_time >= @from_date;';  
+            WHERE tgt.last_chg_time >= @from_date
+                OR tgt.last_chg_time IS NULL';
             
             PRINT 'SQL statement: ' + @update_sql;
             PRINT 'Parameter @from_date: ' + ISNULL(cast(@from_date as varchar) , '<NULL>');
