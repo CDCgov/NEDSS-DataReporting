@@ -66,6 +66,9 @@ public class OrganizationService {
     @Value("${featureFlag.elastic-search-enable}")
     private boolean elasticSearchEnable;
 
+    @Value("${featureFlag.phc-datamart-disable}")
+    private boolean phcDatamartDisable;
+
     private final OrgRepository orgRepository;
     private final PlaceRepository placeRepository;
     private final DataTransformers transformer;
@@ -133,7 +136,9 @@ public class OrganizationService {
                 final String orgUid = organizationUid = extractUid(message, "organization_uid");
                 log.info(topicDebugLog, "Organization", organizationUid, topic);
 
-                CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
+                if (!phcDatamartDisable) {
+                    CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
+                }
 
                 Set<OrganizationSp> organizations = orgRepository.computeAllOrganizations(organizationUid);
                 if (organizations.isEmpty()) {

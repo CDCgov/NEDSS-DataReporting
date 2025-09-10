@@ -150,6 +150,22 @@ class InvestigationServiceTest {
     }
 
     @Test
+    void testProcessInvestigationPhcFactDisabled() {
+        Long investigationUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\", \"prog_area_cd\": \"BMIRD\"}}}";
+
+        final Investigation investigation = constructInvestigation(investigationUid);
+        when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
+
+        investigationService.setPhcDatamartDisable(true);
+        ConsumerRecord<String, String> rec = getRecord(investigationTopic, payload);
+        investigationService.processMessage(rec, consumer);
+        verify(investigationRepository, never()).populatePhcFact(String.valueOf(investigationUid));
+    }
+
+    @Test
     void testProcessInvestigationException() {
         String invalidPayload = "{\"payload\": {\"after\": }}";
         ConsumerRecord<String, String> rec = getRecord(investigationTopic, invalidPayload);
@@ -180,6 +196,22 @@ class InvestigationServiceTest {
         assertEquals(notificationTopicOutput, topicCaptor.getValue());
 
         verify(investigationRepository).updatePhcFact("NOTF", String.valueOf(notificationUid));
+    }
+
+    @Test
+    void testProcessNotificationPhcFactDisabled() {
+        Long notificationUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"notification_uid\": \"" + notificationUid + "\"}}}";
+
+        final NotificationUpdate notification = constructNotificationUpdate(notificationUid);
+        when(notificationRepository.computeNotifications(String.valueOf(notificationUid))).thenReturn(Optional.of(notification));
+        investigationService.setPhcDatamartDisable(true);
+
+        investigationService.processMessage(getRecord(notificationTopic, payload), consumer);
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
+
+        verify(investigationRepository, never()).updatePhcFact(anyString(), anyString());
     }
 
     @Test
