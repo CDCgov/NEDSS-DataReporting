@@ -163,7 +163,6 @@ class InvestigationServiceTest {
         ConsumerRecord<String, String> rec = getRecord(investigationTopic, payload);
         investigationService.processMessage(rec, consumer);
         verify(investigationRepository, never()).populatePhcFact(String.valueOf(investigationUid));
-
     }
 
     @Test
@@ -197,6 +196,22 @@ class InvestigationServiceTest {
         assertEquals(notificationTopicOutput, topicCaptor.getValue());
 
         verify(investigationRepository).updatePhcFact("NOTF", String.valueOf(notificationUid));
+    }
+
+    @Test
+    void testProcessNotificationPhcFactDisabled() {
+        Long notificationUid = 123456789L;
+        String payload = "{\"payload\": {\"after\": {\"notification_uid\": \"" + notificationUid + "\"}}}";
+
+        final NotificationUpdate notification = constructNotificationUpdate(notificationUid);
+        when(notificationRepository.computeNotifications(String.valueOf(notificationUid))).thenReturn(Optional.of(notification));
+        investigationService.setPhcDatamartDisable(true);
+
+        investigationService.processMessage(getRecord(notificationTopic, payload), consumer);
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
+
+        verify(investigationRepository, never()).updatePhcFact(anyString(), anyString());
     }
 
     @Test
