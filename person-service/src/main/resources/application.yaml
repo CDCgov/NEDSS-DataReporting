@@ -40,6 +40,7 @@ spring:
     change-log: db/changelog/db.changelog-master.yaml
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
+  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
 server:
   port: '8091'
 

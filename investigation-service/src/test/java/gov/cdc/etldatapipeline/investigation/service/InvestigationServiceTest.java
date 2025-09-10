@@ -150,6 +150,23 @@ class InvestigationServiceTest {
     }
 
     @Test
+    void testProcessInvestigationPhcFactDisabled() {
+        Long investigationUid = 234567890L;
+        String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\", \"prog_area_cd\": \"BMIRD\"}}}";
+
+        final Investigation investigation = constructInvestigation(investigationUid);
+        when(investigationRepository.computeInvestigations(String.valueOf(investigationUid))).thenReturn(Optional.of(investigation));
+        when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
+
+        investigationService.setPhcDatamartDisable(true);
+        ConsumerRecord<String, String> rec = getRecord(investigationTopic, payload);
+        investigationService.processMessage(rec, consumer);
+        verify(investigationRepository, never()).populatePhcFact(String.valueOf(investigationUid));
+
+    }
+
+    @Test
     void testProcessInvestigationException() {
         String invalidPayload = "{\"payload\": {\"after\": }}";
         ConsumerRecord<String, String> rec = getRecord(investigationTopic, invalidPayload);
