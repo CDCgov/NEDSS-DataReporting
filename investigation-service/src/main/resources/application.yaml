@@ -46,6 +46,8 @@ spring:
     url: ${DB_ODSE_URL:jdbc:sqlserver://${DB_SERVER:localhost:1433};databaseName=:NBS_ODSE;encrypt=true;trustServerCertificate=true;}
   liquibase:
     change-log: db/changelog/db.changelog-master.yaml
+featureFlag:
+  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
 server:
   port: '8093'
 

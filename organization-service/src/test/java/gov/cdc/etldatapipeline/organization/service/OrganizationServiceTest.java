@@ -194,6 +194,19 @@ class OrganizationServiceTest {
         assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
     }
 
+    @Test
+    void testProcessPhcFactDatamartDisabled() {
+        OrganizationSp orgSp = new OrganizationSp();
+        orgSp.setOrganizationUid(10036000L);
+        when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
+
+        String changeData = "{\"payload\": {\"after\": {\"organization_uid\": \"123456789\"}}}";
+        organizationService.setPhcDatamartDisable(true);
+        organizationService.processMessage(changeData, orgTopic);
+
+        verify(orgRepository, never()).updatePhcFact(anyString(), anyString());
+    }
+
     private void validateOrgTransformation() throws JsonProcessingException {
         String changeData = readFileData("orgcdc/OrgChangeData.json");
         String expectedKey = readFileData("orgtransformed/OrgKey.json");

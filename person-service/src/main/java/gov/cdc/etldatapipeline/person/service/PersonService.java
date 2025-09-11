@@ -81,6 +81,9 @@ public class PersonService {
     @Value("${featureFlag.elastic-search-enable}")
     private boolean elasticSearchEnable;
 
+    @Value("${featureFlag.phc-datamart-disable}")
+    private boolean phcDatamartDisable;
+
     private static int nProc = Runtime.getRuntime().availableProcessors();
     private ExecutorService rtrExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("rtr-"));
 
@@ -179,7 +182,9 @@ public class PersonService {
                 .map(ProviderSp::getPersonUid).map(String::valueOf)
                 .collect(Collectors.joining(","));
 
-        CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", uids), rtrExecutor);
+        if (!phcDatamartDisable) {
+            CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", uids), rtrExecutor);
+        }
 
         providerData.forEach(provider -> {
             String reportingKey = transformer.buildProviderKey(provider);
@@ -204,7 +209,9 @@ public class PersonService {
                 .map(PatientSp::getPersonUid).map(String::valueOf)
                 .collect(Collectors.joining(","));
 
-        CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", uids), rtrExecutor);
+        if (!phcDatamartDisable) {
+            CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", uids), rtrExecutor);
+        }
 
         patientData.forEach(personData -> {
             String reportingKey = transformer.buildPatientKey(personData);
