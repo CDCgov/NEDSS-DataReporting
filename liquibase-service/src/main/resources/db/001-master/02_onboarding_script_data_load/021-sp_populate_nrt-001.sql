@@ -73,7 +73,7 @@ Begin
                 [UID] 
             ) 
             SELECT TOP (' + @BatchSize + ') t.' + @ODSEUidColumn + ' 
-            FROM NBS_ODSE.dbo.' + @ODSETable + ' t WITH (READPAST) 
+            FROM NBS_ODSE.dbo.' + @ODSETable + ' t WITH (NOLOCK) 
             LEFT JOIN #NRTKeys nrt 
             ON nrt.UID = t.' + @ODSEUidColumn + ' 
             WHERE t.' + @ODSEUidColumn + ' > ' + CAST(@LastUID AS NVARCHAR(50)) + ' 

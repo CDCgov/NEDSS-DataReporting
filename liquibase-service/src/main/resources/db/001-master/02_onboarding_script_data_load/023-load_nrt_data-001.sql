@@ -90,6 +90,11 @@ exec dbo.sp_populate_nrt
     @NRTTable          = 'dbo.nrt_contact',
     @NRTUIDColumn      = 'contact_uid';
 
+/*
+    For loading nrt_ldf_data, it is necessary to use multiple key columns,
+    as uniqueness is determined by both ldf_uid and business_object_uid.
+    So, sp_populate_nrt_multikey is used.
+*/
 exec dbo.sp_populate_nrt_multikey
     @ODSETable         = 'state_defined_field_data',
     @Key1              = 'ldf_uid',
@@ -99,3 +104,12 @@ exec dbo.sp_populate_nrt_multikey
     @NRTTable          = 'dbo.nrt_ldf_data',
     @NRTKey1           = 'ldf_uid',
     @NRTKey2           = 'business_object_uid';
+
+/*
+    Once all of the above stored procedure calls have been executed successfully,
+    redeploy the Person, Investigation, and Organization services with the feature flag
+    phc-datamart-disable set to false.
+
+    Additionally, redeploy the postprocessing service with the feature flag service-disable
+    set to false.
+*/

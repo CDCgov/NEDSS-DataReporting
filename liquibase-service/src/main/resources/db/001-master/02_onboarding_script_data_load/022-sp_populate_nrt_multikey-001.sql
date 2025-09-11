@@ -6,6 +6,13 @@ BEGIN
 END
 GO 
 
+/*
+    For loading nrt_ldf_data, it is necessary to use multiple key columns,
+    as uniqueness is determined by both ldf_uid and business_object_uid.
+
+    For that reason, this procedure accommodates the use of two keys.
+*/
+
 CREATE   PROCEDURE [dbo].[sp_populate_nrt_multikey]
     @ODSETable      NVARCHAR(200),
     @Key1           NVARCHAR(200),  -- first key column name
@@ -75,13 +82,13 @@ Begin
             DELETE FROM #UpdatedKeys;
 
             SET @SQLStatement = '
-                INSERT INTO #UpdatedKeys (Key1, Key2)
-                SELECT TOP (' + CAST(@BatchSize AS NVARCHAR(20)) + ')
-                       t.' + @Key1 + ', t.' + @Key2 + '
-                FROM NBS_ODSE.dbo.' + @ODSETable + ' t WITH (READPAST) 
+                INSERT INTO #UpdatedKeys (Key1, Key2) 
+                SELECT TOP (' + CAST(@BatchSize AS NVARCHAR(20)) + ') 
+                       t.' + @Key1 + ', t.' + @Key2 + ' 
+                FROM NBS_ODSE.dbo.' + @ODSETable + ' t WITH (NOLOCK) 
                 LEFT JOIN #NRTKeys nrt 
                 ON nrt.Key1 = t.' + @Key1 + ' AND nrt.Key2 = t.' + @Key2 + ' 
-                WHERE (t.' + @Key1 + ' > ' + CAST(@LastKey1 AS NVARCHAR(20)) + '
+                WHERE (t.' + @Key1 + ' > ' + CAST(@LastKey1 AS NVARCHAR(20)) + ' 
                        OR (t.' + @Key1 + ' = ' + CAST(@LastKey1 AS NVARCHAR(20)) + 
                        ' AND t.' + @Key2 + ' > ' + CAST(@LastKey2 AS NVARCHAR(20)) + ')) 
                 AND nrt.Key1 IS NULL AND nrt.Key2 IS NULL 
