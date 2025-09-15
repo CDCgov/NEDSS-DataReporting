@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.3'
+	id 'org.springframework.boot' version '3.5.5'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'jacoco'
 	id 'org.sonarqube' version '4.2.1.3168'
@@ -10,7 +10,7 @@ group = 'gov.cdc.etldatapipeline'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '21'
+	sourceCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -43,22 +43,22 @@ jacocoTestReport {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.kafka:spring-kafka:3.1.2'
-	implementation 'io.debezium:debezium-core:2.4.1.Final'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	implementation 'org.springframework.kafka:spring-kafka:3.3.1'
+
 	implementation 'commons-io:commons-io:2.15.0'
 	implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
-	compileOnly 'org.projectlombok:lombok'
-	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
 	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc:12.3.0.jre17-preview'
 	implementation 'ch.qos.logback:logback-classic'
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+	compileOnly 'org.projectlombok:lombok'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
+
 	implementation 'com.google.guava:guava:33.1.0-jre'
+	annotationProcessor 'org.projectlombok:lombok'
 
 	if (findProject(':common-util')) {
 		implementation project(':common-util')
@@ -71,6 +71,14 @@ dependencies {
 	testImplementation 'org.testcontainers:testcontainers:1.19.8'
 	testImplementation 'org.testcontainers:kafka:1.19.8'
 	testImplementation 'org.testcontainers:junit-jupiter:1.19.8'
+}
+
+dependencyManagement {
+	dependencies {
+		dependency 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
+		dependency 'org.apache.tomcat.embed:tomcat-embed-el:11.0.10'
+		dependency 'org.apache.tomcat.embed:tomcat-embed-websocket:11.0.10'
+	}
 }
 
 tasks.named('test') {
