@@ -21,34 +21,52 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_rpt_user_comment_key' 
 
         SET IDENTITY_INSERT [dbo].nrt_lab_rpt_user_comment_key ON
 
-        INSERT INTO [dbo].nrt_lab_rpt_user_comment_key(
-			USER_COMMENT_KEY, 
-			LAB_RPT_USER_COMMENT_UID, 
-			LAB_TEST_UID
-		)
-		SELECT 
-			c.USER_COMMENT_KEY,
-			o.observation_uid,
-			c.lab_test_uid
-		FROM [dbo].LAB_RPT_USER_COMMENT c WITH (NOLOCK)
-		INNER JOIN [NBS_ODSE].[dbo].Act_relationship ar WITH (NOLOCK)
-			ON ar.target_act_uid = c.lab_test_uid 
-		INNER JOIN [NBS_ODSE].[dbo].Act_relationship ar2 WITH (NOLOCK)
-			ON ar.source_act_uid = ar2.target_act_uid
-		INNER JOIN [NBS_ODSE].[dbo].Observation o WITH (NOLOCK)
-			ON ar2.source_act_uid = o.observation_uid 
-			AND o.activity_to_time = c.COMMENTS_FOR_ELR_DT
-			AND o.add_user_id = c.User_comment_created_by
-		LEFT JOIN [dbo].nrt_lab_rpt_user_comment_key uck WITH(NOLOCK)
-			ON uck.USER_COMMENT_KEY = c.USER_COMMENT_KEY 
-			AND uck.LAB_RPT_USER_COMMENT_UID = o.observation_uid 
-			AND uck.LAB_TEST_UID = c.LAB_TEST_UID
-		WHERE 
-			o.obs_domain_cd_st_1 = 'C_Result'  
-			AND uck.USER_COMMENT_KEY IS NULL 
-			AND uck.LAB_RPT_USER_COMMENT_UID IS NULL 
-			AND uck.LAB_TEST_UID IS NULL
-		ORDER BY C.USER_COMMENT_KEY
+
+        ;WITH CommentCTE AS (
+            SELECT
+                c.USER_COMMENT_KEY,
+                c.lab_test_uid,
+                ROW_NUMBER() OVER (
+                    PARTITION BY c.lab_test_uid ORDER BY c.USER_COMMENT_KEY
+                ) AS rn
+            FROM [dbo].LAB_RPT_USER_COMMENT c
+        ),
+        ObsCTE AS (
+            SELECT
+                 o.observation_uid,
+                 ar.target_act_uid AS lab_test_uid,
+                 ROW_NUMBER() OVER (
+                 PARTITION BY ar.target_act_uid ORDER BY o.observation_uid
+                 ) AS rn
+            FROM [NBS_ODSE].[dbo].Act_relationship ar
+            INNER JOIN [NBS_ODSE].[dbo].Act_relationship ar2
+                ON ar.source_act_uid = ar2.target_act_uid
+            INNER JOIN [NBS_ODSE].[dbo].Observation o
+                ON ar2.source_act_uid = o.observation_uid
+                AND o.obs_domain_cd_st_1 = 'C_Result'
+        )
+         INSERT INTO [dbo].nrt_lab_rpt_user_comment_key(
+            USER_COMMENT_KEY,
+            LAB_RPT_USER_COMMENT_UID,
+            LAB_TEST_UID
+        )
+        SELECT
+            c.USER_COMMENT_KEY,
+            o.observation_uid,
+            c.lab_test_uid
+        FROM CommentCTE c
+        INNER JOIN ObsCTE o
+            ON c.lab_test_uid = o.lab_test_uid
+            AND c.rn = o.rn
+        LEFT JOIN [dbo].nrt_lab_rpt_user_comment_key uck
+            ON uck.USER_COMMENT_KEY = c.USER_COMMENT_KEY
+            AND uck.LAB_RPT_USER_COMMENT_UID = o.observation_uid
+            AND uck.LAB_TEST_UID = c.lab_test_uid
+        WHERE
+            uck.USER_COMMENT_KEY IS NULL
+            AND uck.LAB_RPT_USER_COMMENT_UID IS NULL
+            AND uck.LAB_TEST_UID IS NULL
+        ORDER BY c.USER_COMMENT_KEY;
 
         SET IDENTITY_INSERT [dbo].nrt_lab_rpt_user_comment_key OFF
 
