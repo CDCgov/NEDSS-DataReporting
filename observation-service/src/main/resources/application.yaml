@@ -21,6 +21,7 @@ spring:
     consumer:
         max-retry: 3
         maxPollIntervalMs: 30000
+        maxPollRecs: ${KAFKA_CONSUMER_MAX_POLL_RECS:200}
     admin:
       auto-create: true
   application:
