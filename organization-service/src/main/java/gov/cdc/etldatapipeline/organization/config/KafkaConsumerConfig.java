@@ -30,7 +30,7 @@ public class KafkaConsumerConfig {
     private String maxPollInterval = "";
 
     @Value("${spring.kafka.consumer.maxPollRecs}")
-    private String maxPollRecords = "";
+    private String maxPollRecords;
 
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
