@@ -34,6 +34,7 @@ spring:
     consumer:
       max-retry: 3
       maxPollIntervalMs: 300000
+      maxPollRecs: 200
       enable-auto-commit: false
     admin:
       auto-create: true
