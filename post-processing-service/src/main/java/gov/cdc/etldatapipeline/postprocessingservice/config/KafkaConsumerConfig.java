@@ -33,9 +33,6 @@ public class KafkaConsumerConfig {
     @Value("${spring.kafka.consumer.maxPollRecs}")
     private String maxPollRecords;
 
-    @Value("${spring.kafka.consumer.maxPollRecs}")
-    private String maxPollRecords = "";
-
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         final Map<String, Object> config = new HashMap<>();
