@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -69,6 +70,9 @@ public class OrganizationService {
     @Value("${featureFlag.phc-datamart-disable}")
     private boolean phcDatamartDisable;
 
+    @Value("${featureFlag.thread-pool-size:1}")
+    private int threadPoolSize;
+
     private final OrgRepository orgRepository;
     private final PlaceRepository placeRepository;
     private final DataTransformers transformer;
@@ -76,8 +80,10 @@ public class OrganizationService {
 
     private static int nProc = Runtime.getRuntime().availableProcessors();
     private ExecutorService rtrExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("rtr-"));
+    private ExecutorService orgExecutor;
 
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
+    private static String ORG = "Organization";
 
     private static final String SERVICE_NAME = "organization-reporting";
 
@@ -94,6 +100,8 @@ public class OrganizationService {
         msgProcessed = metrics.counter("org_msg_processed", tags);
         msgSuccess = metrics.counter( "org_msg_success", tags);
         msgFailure = metrics.counter("org_msg_failure", tags);
+
+        orgExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
     }
 
     @RetryableTopic(
@@ -119,12 +127,14 @@ public class OrganizationService {
                     "${spring.kafka.input.topic-name-place}"
             }
     )
-    public void processMessage(String message,
+    public CompletableFuture<Void> processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         if (topic.equals(orgTopic)) {
-            processOrganization(message, topic);
+            return CompletableFuture.runAsync(() -> processOrganization(message, topic), orgExecutor);
         } else if (topic.equals(placeTopic)) {
-            processPlace(message, topic);
+            return CompletableFuture.runAsync(() -> processPlace(message, topic), orgExecutor);
+        } else {
+            return CompletableFuture.failedFuture(new DataProcessingException("Unknown topic: " + topic, new NoSuchElementException()));
         }
     }
 
@@ -134,7 +144,7 @@ public class OrganizationService {
             String organizationUid = "";
             try {
                 final String orgUid = organizationUid = extractUid(message, "organization_uid");
-                log.info(topicDebugLog, "Organization", organizationUid, topic);
+                log.info(topicDebugLog, ORG, organizationUid, topic);
 
                 if (!phcDatamartDisable) {
                     CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
@@ -166,7 +176,7 @@ public class OrganizationService {
                 throw new NoDataException(ex.getMessage(), ex);
             } catch (Exception e) {
                 msgFailure.increment();
-                throw new DataProcessingException(errorMessage("Organization", organizationUid, e), e);
+                throw new DataProcessingException(errorMessage(ORG, organizationUid, e), e);
             }
         },"service", SERVICE_NAME);
     }
