@@ -83,7 +83,7 @@ public class OrganizationService {
     private ExecutorService orgExecutor;
 
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
-    private static String ORG = "Organization";
+    private static String organization = "Organization";
 
     private static final String SERVICE_NAME = "organization-reporting";
 
@@ -144,7 +144,7 @@ public class OrganizationService {
             String organizationUid = "";
             try {
                 final String orgUid = organizationUid = extractUid(message, "organization_uid");
-                log.info(topicDebugLog, ORG, organizationUid, topic);
+                log.info(topicDebugLog, organization, organizationUid, topic);
 
                 if (!phcDatamartDisable) {
                     CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
@@ -176,7 +176,7 @@ public class OrganizationService {
                 throw new NoDataException(ex.getMessage(), ex);
             } catch (Exception e) {
                 msgFailure.increment();
-                throw new DataProcessingException(errorMessage(ORG, organizationUid, e), e);
+                throw new DataProcessingException(errorMessage(organization, organizationUid, e), e);
             }
         },"service", SERVICE_NAME);
     }
