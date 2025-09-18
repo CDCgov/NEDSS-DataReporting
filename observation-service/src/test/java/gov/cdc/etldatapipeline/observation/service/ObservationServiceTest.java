@@ -11,6 +11,7 @@ import gov.cdc.etldatapipeline.observation.repository.model.reporting.Observatio
 import gov.cdc.etldatapipeline.observation.util.ProcessObservationDataUtil;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.etldatapipeline.observation.service.ObservationService.toBatchId;
@@ -68,6 +71,7 @@ class ObservationServiceTest {
         observationService.setObservationTopic(inputTopicNameObservation);
         observationService.setActRelationshipTopic(inputTopicNameActRelationship);
         observationService.setObservationTopicOutputReporting(outputTopicNameObservation);
+        observationService.setThreadPoolSize(1);
         observationService.initMetrics();
 
         transformer.setCodedTopicName("ObservationCoded");
@@ -152,26 +156,19 @@ class ObservationServiceTest {
         verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
     }
 
-    @Test
-    void testProcessMessageException() {
-        String invalidPayload = "{\"payload\": {\"after\": {}}}";
+    @ParameterizedTest
+    @CsvSource({
+            "{\"payload\": {\"after\": {}}},Error",
+            "{\"payload\": {\"after\": {}}},Observation",
+            "{\"payload\": {\"after\": {\"source_act_uid\": \"123\"}, \"op\": \"d\"}}}, Act_relationship"
+    })
+    void testProcessMessageException(String payload, String topic) {
 
-        ConsumerRecord<String, String> rec = getRecord(invalidPayload, inputTopicNameObservation);
+        ConsumerRecord<String, String> rec = getRecord(payload, topic);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(rec));
-        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
-    }
-
-    @Test
-    void testProcessMessageExceptionActRelationship() {
-        String invalidPayload = "{\"payload\": {\"before\": {}," +
-                "\"after\": {\"source_act_uid\": \"123\"}," +
-                "\"op\": \"d\"}}";
-
-        ConsumerRecord<String, String> rec = getRecord(invalidPayload, inputTopicNameActRelationship);
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> observationService.processMessage(rec));
-        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+        CompletableFuture<Void> future = observationService.processMessage(rec);
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertEquals(NoSuchElementException.class, ex.getCause().getCause().getClass());
     }
 
     @Test
@@ -181,7 +178,9 @@ class ObservationServiceTest {
         ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameObservation);
 
         when(observationRepository.computeObservations(String.valueOf(observationUid))).thenReturn(Optional.empty());
-        assertThrows(NoDataException.class, () -> observationService.processMessage(rec));
+        CompletableFuture<Void> future = observationService.processMessage(rec);
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertEquals(NoDataException.class, ex.getCause().getClass());
     }
 
     private void validateData(String payload, Observation observation, String inputTopic) throws JsonProcessingException {
@@ -194,7 +193,8 @@ class ObservationServiceTest {
         var reportingModel = constructObservationReporting(observation.getObservationUid(), observation.getObsDomainCdSt1());
         reportingModel.setBatchId(toBatchId.applyAsLong(rec));
 
-        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
         String actualTopic = topicCaptor.getValue();
         String actualKey = keyCaptor.getValue();
         String actualValue = messageCaptor.getValue();
