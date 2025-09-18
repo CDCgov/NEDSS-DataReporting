@@ -19,19 +19,16 @@ import java.util.Map;
 @Configuration
 public class KafkaConsumerConfig {
     @Value("${spring.kafka.group-id}")
-    private String groupId;
+    private String groupId = "";
 
     @Value("${spring.kafka.dlt-group-id}")
-    private String groupIdDlt;
+    private String groupIdDlt = "";
 
     @Value("${spring.kafka.bootstrap-servers}")
-    private String bootstrapServers;
+    private String bootstrapServers = "";
 
     @Value("${spring.kafka.consumer.maxPollIntervalMs}")
-    private String maxPollInterval;
-
-    @Value("${spring.kafka.consumer.maxPollRecs}")
-    private String maxPollRecords;
+    private String maxPollInterval = "";
 
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
