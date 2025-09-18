@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -84,8 +85,12 @@ public class PersonService {
     @Value("${featureFlag.phc-datamart-disable}")
     private boolean phcDatamartDisable;
 
+    @Value("${featureFlag.thread-pool-size:1}")
+    private int threadPoolSize;
+
     private static int nProc = Runtime.getRuntime().availableProcessors();
     private ExecutorService rtrExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("rtr-"));
+    private ExecutorService prsExecutor;
 
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static String topicDebugLog = "Received {} with id: {} from topic: {}";
@@ -105,6 +110,8 @@ public class PersonService {
         msgProcessed = metrics.counter("person_msg_processed", tags);
         msgSuccess = metrics.counter( "person_msg_success", tags);
         msgFailure = metrics.counter("person_msg_failure", tags);
+
+        prsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
     }
 
     @RetryableTopic(
@@ -130,12 +137,14 @@ public class PersonService {
                     "${spring.kafka.input.topic-name-user}"
             }
     )
-    public void processMessage(String message,
+    public CompletableFuture<Void> processMessage(String message,
                                @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         if (topic.equals(personTopic)) {
-            processPerson(message, topic);
+            return CompletableFuture.runAsync(() -> processPerson(message, topic), prsExecutor);
         } else if (topic.equals(userTopic)) {
-            processUser(message, topic);
+            return CompletableFuture.runAsync(() -> processUser(message, topic), prsExecutor);
+        } else {
+            return CompletableFuture.failedFuture(new DataProcessingException("Received data form an unknown topic: " + topic, new NoSuchElementException()));
         }
     }
 
