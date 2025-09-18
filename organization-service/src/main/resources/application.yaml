@@ -40,6 +40,8 @@ spring:
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+  thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
+
 server:
   port: '8092'
 

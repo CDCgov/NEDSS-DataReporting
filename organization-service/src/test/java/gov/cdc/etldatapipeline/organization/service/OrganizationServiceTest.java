@@ -14,6 +14,7 @@ import gov.cdc.etldatapipeline.organization.repository.OrgRepository;
 import gov.cdc.etldatapipeline.organization.repository.PlaceRepository;
 import gov.cdc.etldatapipeline.organization.transformer.DataTransformers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
@@ -82,6 +86,7 @@ class OrganizationServiceTest {
         organizationService.setPlaceReportingOutputTopic(placeReportingTopic);
         organizationService.setTeleOutputTopic(teleReportingTopic);
         organizationService.setElasticSearchEnable(true);
+        organizationService.setThreadPoolSize(1);
         organizationService.initMetrics();
 
         Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
@@ -117,7 +122,9 @@ class OrganizationServiceTest {
         organizationService.processMessage(changeData, orgTopic);
 
         // verify that only one message was sent
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
 
         String actualTopic = topicCaptor.getValue();
         assertEquals(orgReportingTopic, actualTopic);
@@ -141,7 +148,9 @@ class OrganizationServiceTest {
 
         organizationService.processMessage(payload, placeTopic);
 
-        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
 
         ILoggingEvent le = listAppender.list.get(1);
         assertEquals("PlaceTele array is null.", le.getFormattedMessage());
@@ -149,6 +158,7 @@ class OrganizationServiceTest {
 
     @ParameterizedTest
     @CsvSource({
+            "{\"payload\": {}},SomeUpdate",
             "{\"payload\": {}},OrgUpdate",
             "{\"payload\": {}},PlaceUpdate",
             "{\"payload\": {\"after\": {}}},OrgUpdate",
@@ -163,9 +173,9 @@ class OrganizationServiceTest {
             expectedExceptionClass = NullPointerException.class;
         }
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> organizationService.processMessage(payload, topic));
-        assertEquals(expectedExceptionClass, ex.getCause().getClass());
+        CompletableFuture<Void> future = organizationService.processMessage(payload, topic);
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertEquals(expectedExceptionClass, ex.getCause().getCause().getClass());
     }
 
     @ParameterizedTest
@@ -181,7 +191,10 @@ class OrganizationServiceTest {
             Long placeUid = 123456789L;
             when(placeRepository.computeAllPlaces(String.valueOf(placeUid))).thenReturn(Optional.of(Collections.emptyList()));
         }
-        assertThrows(NoDataException.class, () -> organizationService.processMessage(payload, inputTopic));
+        CompletableFuture<Void> future =  organizationService.processMessage(payload, inputTopic);
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertEquals(NoDataException.class, ex.getCause().getClass());
     }
 
     @Test
@@ -198,7 +211,6 @@ class OrganizationServiceTest {
     void testProcessPhcFactDatamartDisabled() {
         OrganizationSp orgSp = new OrganizationSp();
         orgSp.setOrganizationUid(10036000L);
-        when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
 
         String changeData = "{\"payload\": {\"after\": {\"organization_uid\": \"123456789\"}}}";
         organizationService.setPhcDatamartDisable(true);
@@ -213,7 +225,11 @@ class OrganizationServiceTest {
 
         organizationService.processMessage(changeData, orgTopic);
 
-        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(kafkaTemplate, times(2)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture())
+                );
 
         JsonNode expectedJsonNode = objectMapper.readTree(expectedKey);
         JsonNode actualJsonNode = objectMapper.readTree(keyCaptor.getValue());
@@ -241,7 +257,9 @@ class OrganizationServiceTest {
 
         organizationService.processMessage(payload, placeTopic);
 
-        verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await()
+                .atMost(1, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(kafkaTemplate, times(3)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
         String actualPlaceTopic = topicCaptor.getValue();
         String actualTeleTopic = topicCaptor.getAllValues().getFirst();
 
