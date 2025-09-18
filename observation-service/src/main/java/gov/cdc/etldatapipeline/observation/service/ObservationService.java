@@ -29,9 +29,14 @@ import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
 import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.ToLongFunction;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.*;
@@ -53,11 +58,16 @@ public class ObservationService {
     @Value("${spring.kafka.output.topic-name-reporting}")
     private String observationTopicOutputReporting;
 
+    @Value("${featureFlag.thread-pool-size:1}")
+    private int threadPoolSize;
+
     private final IObservationRepository iObservationRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ProcessObservationDataUtil processObservationDataUtil;
     private final ModelMapper modelMapper = new ModelMapper();
     private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
+
+    private ExecutorService obsExecutor;
 
     private static String topicDebugLog = "Received Observation with id: {} from topic: {}";
     public static final ToLongFunction<ConsumerRecord<String, String>> toBatchId = rec -> rec.timestamp()+rec.offset()+rec.partition();
@@ -79,6 +89,8 @@ public class ObservationService {
         msgProcessed = metrics.counter("obs_msg_processed", tags);
         msgSuccess = metrics.counter( "obs_msg_success", tags);
         msgFailure = metrics.counter("obs_msg_failure", tags);
+
+        obsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
     }
 
     @RetryableTopic(
@@ -104,7 +116,7 @@ public class ObservationService {
                         "${spring.kafka.input.topic-name-ar}"
                 }
     )
-    public void processMessage(ConsumerRecord<String, String> rec) {
+    public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
 
         long batchId = toBatchId.applyAsLong(rec);
         String topic = rec.topic();
@@ -112,10 +124,12 @@ public class ObservationService {
         logger.debug(topicDebugLog, message, topic);
 
         if (topic.equals(observationTopic)) {
-            processObservation(message, batchId, true, "");
+            return CompletableFuture.runAsync(() -> processObservation(message, batchId, true, ""), obsExecutor);
         }
         else if (topic.equals(actRelationshipTopic) && message != null) {
-            processActRelationship(message, batchId);
+            return CompletableFuture.runAsync(() -> processActRelationship(message, batchId), obsExecutor);
+        } else {
+            return CompletableFuture.failedFuture(new DataProcessingException("Received data from an unknown topic: " + topic, new NoSuchElementException()));
         }
     }
 

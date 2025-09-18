@@ -134,7 +134,7 @@ public class OrganizationService {
         } else if (topic.equals(placeTopic)) {
             return CompletableFuture.runAsync(() -> processPlace(message, topic), orgExecutor);
         } else {
-            return CompletableFuture.failedFuture(new DataProcessingException("Unknown topic: " + topic, new NoSuchElementException()));
+            return CompletableFuture.failedFuture(new DataProcessingException("Received data from an unknown topic: " + topic, new NoSuchElementException()));
         }
     }
 

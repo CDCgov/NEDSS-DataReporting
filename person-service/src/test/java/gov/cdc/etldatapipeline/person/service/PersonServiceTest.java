@@ -17,6 +17,7 @@ import gov.cdc.etldatapipeline.person.repository.ProviderRepository;
 import gov.cdc.etldatapipeline.person.repository.UserRepository;
 import gov.cdc.etldatapipeline.person.transformer.PersonTransformers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
@@ -90,6 +94,7 @@ class PersonServiceTest {
         personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
         personService.setUserReportingOutputTopic(userReportingTopic);
         personService.setElasticSearchEnable(true);
+        personService.setThreadPoolSize(1);
         personService.initMetrics();
 
         Logger logger = (Logger) LoggerFactory.getLogger(PersonService.class);
@@ -125,7 +130,8 @@ class PersonServiceTest {
         verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
 
         personService.processMessage(incomingChangeData, inputTopicPerson);
-        verify(patientRepository).updatePhcFact("PAT", String.valueOf(mprPatient.getPersonUid()));
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(patientRepository).updatePhcFact("PAT", String.valueOf(mprPatient.getPersonUid())));
     }
 
     @ParameterizedTest
@@ -159,7 +165,8 @@ class PersonServiceTest {
         verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
 
         personService.processMessage(incomingChangeData, inputTopicPerson);
-        verify(patientRepository).updatePhcFact("PRV", String.valueOf(mprProvider.getPersonUid()));
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(patientRepository).updatePhcFact("PRV", String.valueOf(mprProvider.getPersonUid())));
     }
 
     @Test
@@ -171,7 +178,8 @@ class PersonServiceTest {
 
         personService.setElasticSearchEnable(false);
         personService.processMessage(patientData, inputTopicPerson);
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
 
         String actualPatientTopic = topicCaptor.getValue();
         assertEquals(patientReportingTopic, actualPatientTopic);
@@ -187,7 +195,8 @@ class PersonServiceTest {
 
         personService.setElasticSearchEnable(false);
         personService.processMessage(providerData, inputTopicPerson);
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
 
         String actualProviderTopic = topicCaptor.getValue();
         assertEquals(providerReportingTopic, actualProviderTopic);
@@ -195,9 +204,6 @@ class PersonServiceTest {
 
     @Test
     void testProcessPatientDataPhcFactDisabled() {
-        PatientSp patientSp = PatientSp.builder().personUid(10000001L).build();
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(List.of(patientSp));
-
         String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
 
         personService.setPhcDatamartDisable(true);
@@ -207,10 +213,6 @@ class PersonServiceTest {
 
     @Test
     void testProcessProviderDataPhcFactDisabled() {
-        ProviderSp providerSp = ProviderSp.builder().personUid(10000001L).build();
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
-        Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
-
         String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
 
         personService.setPhcDatamartDisable(true);
@@ -228,7 +230,8 @@ class PersonServiceTest {
 
         personService.processMessage(payload, inputTopicUser);
 
-        verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
         String actualTopic = topicCaptor.getValue();
         String actualKey = keyCaptor.getValue();
         String actualValue = valueCaptor.getValue();
@@ -246,14 +249,16 @@ class PersonServiceTest {
 
     @ParameterizedTest
     @CsvSource({
+            "{\"payload\": {}},Nobody",
             "{\"payload\": {}},Person",
             "{\"payload\": {}},User",
             "{\"payload\": {\"after\": {}}},Person",
             "{\"payload\": {\"after\": {}}},User"
     })
     void testProcessMessageException(String payload, String inputTopic) {
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> personService.processMessage(payload, inputTopic));
-        assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+        CompletableFuture<Void> future = personService.processMessage(payload, inputTopic);
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertEquals(NoSuchElementException.class, ex.getCause().getCause().getClass());
     }
 
     @ParameterizedTest
@@ -270,7 +275,9 @@ class PersonServiceTest {
             Long authUserUid = 11L;
             when(userRepository.computeAuthUsers(String.valueOf(authUserUid))).thenReturn(Optional.of(Collections.emptyList()));
         }
-        assertThrows(NoDataException.class, () -> personService.processMessage(payload, inputTopic));
+        CompletableFuture<Void> future = personService.processMessage(payload, inputTopic);
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertEquals(NoDataException.class, ex.getCause().getClass());
     }
 
     @Test
@@ -297,7 +304,8 @@ class PersonServiceTest {
 
         personService.processMessage(incomingChangeData, inputTopicPerson);
 
-        verify(kafkaTemplate, Mockito.times(2)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture());
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                verify(kafkaTemplate, Mockito.times(2)).send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
 
         String actualReportingTopic = topicCaptor.getAllValues().get(0);
         String actualElasticTopic = topicCaptor.getAllValues().get(1);
