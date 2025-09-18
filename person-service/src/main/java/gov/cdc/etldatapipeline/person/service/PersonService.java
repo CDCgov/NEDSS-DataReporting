@@ -144,7 +144,7 @@ public class PersonService {
         } else if (topic.equals(userTopic)) {
             return CompletableFuture.runAsync(() -> processUser(message, topic), prsExecutor);
         } else {
-            return CompletableFuture.failedFuture(new DataProcessingException("Received data form an unknown topic: " + topic, new NoSuchElementException()));
+            return CompletableFuture.failedFuture(new DataProcessingException("Received data from an unknown topic: " + topic, new NoSuchElementException()));
         }
     }
 

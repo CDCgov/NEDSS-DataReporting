@@ -129,7 +129,7 @@ public class ObservationService {
         else if (topic.equals(actRelationshipTopic) && message != null) {
             return CompletableFuture.runAsync(() -> processActRelationship(message, batchId), obsExecutor);
         } else {
-            return CompletableFuture.failedFuture(new DataProcessingException("Received data form an unknown topic: " + topic, new NoSuchElementException()));
+            return CompletableFuture.failedFuture(new DataProcessingException("Received data from an unknown topic: " + topic, new NoSuchElementException()));
         }
     }
 
