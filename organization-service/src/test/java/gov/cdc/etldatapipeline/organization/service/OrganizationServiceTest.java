@@ -164,7 +164,6 @@ class OrganizationServiceTest {
             "{\"payload\": {\"after\": {}}},OrgUpdate",
             "{\"payload\": {\"after\": {}}},PlaceUpdate",
             "{\"payload\": {\"after\": {\"place_uid\": \"123456789\"}}},PlaceUpdate"
-
     })
     void testProcessMessageException(String payload, String topic) {
         Class<?> expectedExceptionClass = NoSuchElementException.class;

@@ -49,6 +49,7 @@ public class InvestigationService {
 
     private static final Logger logger = LoggerFactory.getLogger(InvestigationService.class);
     private ExecutorService phcExecutor = Executors.newFixedThreadPool(nProc*2, new CustomizableThreadFactory("phc-"));
+    private ExecutorService invExecutor;
 
     @Value("${spring.kafka.input.topic-name-phc}")
     private String investigationTopic;
@@ -79,6 +80,9 @@ public class InvestigationService {
 
     @Value("${featureFlag.phc-datamart-disable}")
     private boolean phcDatamartDisable;
+
+    @Value("${featureFlag.thread-pool-size:1}")
+    private int threadPoolSize;
 
     private final InvestigationRepository investigationRepository;
     private final NotificationRepository notificationRepository;
@@ -112,6 +116,8 @@ public class InvestigationService {
         msgProcessed = metrics.counter("inv_msg_processed", tags);
         msgSuccess = metrics.counter( "inv_msg_success", tags);
         msgFailure = metrics.counter("inv_msg_failure", tags);
+
+        invExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("inv-"));
     }
 
     @RetryableTopic(
@@ -142,30 +148,35 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-ar}"
             }
     )
-    public void processMessage(ConsumerRecord<String, String> rec,
+    public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec,
                                Consumer<?,?> consumer) {
-        String topic = rec.topic();
-        String message = rec.value();
-        long batchId = toBatchId.applyAsLong(rec);
+        final String topic = rec.topic();
+        final String message = rec.value();
+        final long batchId = toBatchId.applyAsLong(rec);
 
         logger.debug(topicDebugLog, "message", message, topic);
 
-        if (topic.equals(investigationTopic)) {
-            processInvestigation(message, batchId);
-        } else if (topic.equals(notificationTopic)) {
-            processNotification(message);
-        } else if (topic.equals(interviewTopic)) {
-            processInterview(message, batchId);
-        } else if (topic.equals(contactTopic)) {
-            processContact(message);
-        } else if (topic.equals(vaccinationTopic)) {
-            processVaccination(message, true, "");
-        } else if (topic.equals(treatmentTopic)) {
-            processTreatment(message, true, "");
-        } else if (topic.equals(actRelationshipTopic) && message != null) {
-            processActRelationship(message);
-        }
-        consumer.commitSync();
+        return CompletableFuture.runAsync(() -> {
+                if (topic.equals(investigationTopic)) {
+                    processInvestigation(message, batchId);
+                } else if (topic.equals(notificationTopic)) {
+                    processNotification(message);
+                } else if (topic.equals(interviewTopic)) {
+                    processInterview(message, batchId);
+                } else if (topic.equals(contactTopic)) {
+                    processContact(message);
+                } else if (topic.equals(vaccinationTopic)) {
+                    processVaccination(message, true, "");
+                } else if (topic.equals(treatmentTopic)) {
+                    processTreatment(message, true, "");
+                } else if (topic.equals(actRelationshipTopic) && message != null) {
+                    processActRelationship(message);
+                }
+            }, invExecutor).whenComplete((res, ex) -> {
+                if (ex == null) {
+                    consumer.commitSync();
+                }
+            });
     }
 
     public void processInvestigation(String value, long batchId) {

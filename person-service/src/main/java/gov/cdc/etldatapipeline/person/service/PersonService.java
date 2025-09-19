@@ -111,7 +111,7 @@ public class PersonService {
         msgSuccess = metrics.counter( "person_msg_success", tags);
         msgFailure = metrics.counter("person_msg_failure", tags);
 
-        prsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
+        prsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
     }
 
     @RetryableTopic(
