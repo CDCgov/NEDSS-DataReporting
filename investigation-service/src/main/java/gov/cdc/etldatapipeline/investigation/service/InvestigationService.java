@@ -15,7 +15,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.modelmapper.ModelMapper;
@@ -148,8 +147,7 @@ public class InvestigationService {
                     "${spring.kafka.input.topic-name-ar}"
             }
     )
-    public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec,
-                               Consumer<?,?> consumer) {
+    public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
         final String topic = rec.topic();
         final String message = rec.value();
         final long batchId = toBatchId.applyAsLong(rec);
@@ -172,11 +170,7 @@ public class InvestigationService {
                 } else if (topic.equals(actRelationshipTopic) && message != null) {
                     processActRelationship(message);
                 }
-            }, invExecutor).whenComplete((res, ex) -> {
-                if (ex == null) {
-                    consumer.commitSync();
-                }
-            });
+            }, invExecutor);
     }
 
     public void processInvestigation(String value, long batchId) {
