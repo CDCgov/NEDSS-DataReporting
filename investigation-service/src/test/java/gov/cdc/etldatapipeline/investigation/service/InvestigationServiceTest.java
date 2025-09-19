@@ -12,7 +12,6 @@ import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.MockConsumer;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,9 +60,6 @@ class InvestigationServiceTest {
 
     @Mock
     KafkaTemplate<String, String> kafkaTemplate;
-
-    @Mock
-    MockConsumer<String, String> consumer;
 
     @Captor
     private ArgumentCaptor<String> topicCaptor;
@@ -163,7 +159,7 @@ class InvestigationServiceTest {
 
         investigationService.setPhcDatamartDisable(true);
         ConsumerRecord<String, String> rec = getRecord(investigationTopic, payload);
-        investigationService.processMessage(rec, consumer);
+        investigationService.processMessage(rec);
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
             verify(investigationRepository, never()).populatePhcFact(String.valueOf(investigationUid)));
     }
@@ -191,7 +187,7 @@ class InvestigationServiceTest {
 
         final NotificationUpdate notification = constructNotificationUpdate(notificationUid);
         when(notificationRepository.computeNotifications(String.valueOf(notificationUid))).thenReturn(Optional.of(notification));
-        investigationService.processMessage(getRecord(notificationTopic, payload), consumer);
+        investigationService.processMessage(getRecord(notificationTopic, payload));
 
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
             verify(notificationRepository).computeNotifications(String.valueOf(notificationUid));
@@ -210,7 +206,7 @@ class InvestigationServiceTest {
         when(notificationRepository.computeNotifications(String.valueOf(notificationUid))).thenReturn(Optional.of(notification));
         investigationService.setPhcDatamartDisable(true);
 
-        investigationService.processMessage(getRecord(notificationTopic, payload), consumer);
+        investigationService.processMessage(getRecord(notificationTopic, payload));
         when(kafkaTemplate.send(anyString(), anyString(), isNull())).thenReturn(CompletableFuture.completedFuture(null));
         when(kafkaTemplate.send(anyString(), anyString(), notNull())).thenReturn(CompletableFuture.completedFuture(null));
 
@@ -239,7 +235,7 @@ class InvestigationServiceTest {
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
         ConsumerRecord<String, String> rec = getRecord(interviewTopic, payload);
-        investigationService.processMessage(rec, consumer);
+        investigationService.processMessage(rec);
 
         final InterviewReportingKey interviewReportingKey = new InterviewReportingKey();
         interviewReportingKey.setInterviewUid(interviewUid);
@@ -286,7 +282,7 @@ class InvestigationServiceTest {
         when(contactRepository.computeContact(String.valueOf(contactUid))).thenReturn(Optional.of(contact));
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
-        investigationService.processMessage(getRecord(contactTopic, payload), consumer);
+        investigationService.processMessage(getRecord(contactTopic, payload));
 
         final ContactReportingKey contactReportingKey = new ContactReportingKey();
         contactReportingKey.setContactUid(contactUid);
@@ -328,7 +324,7 @@ class InvestigationServiceTest {
         when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid))).thenReturn(Optional.of(vaccination));
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
 
-        investigationService.processMessage(getRecord(vaccinationTopic, payload), consumer);
+        investigationService.processMessage(getRecord(vaccinationTopic, payload));
 
         final VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
         vaccinationReportingKey.setVaccinationUid(vaccinationUid);
@@ -362,7 +358,7 @@ class InvestigationServiceTest {
         final Vaccination vaccination = constructVaccination(vaccinationUid);
         when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid))).thenReturn(Optional.of(vaccination));
 
-        investigationService.processMessage(getRecord(vaccinationTopic, payload), consumer);
+        investigationService.processMessage(getRecord(vaccinationTopic, payload));
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
                 verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
     }
@@ -399,11 +395,11 @@ class InvestigationServiceTest {
         ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
 
         if (typeCd.equals("OTHER") || op.equals("u")) {
-            investigationService.processMessage(rec, consumer);
+            investigationService.processMessage(rec);
             Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
                     verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString()));
         } else {
-            investigationService.processMessage(rec, consumer);
+            investigationService.processMessage(rec);
 
             final VaccinationReportingKey vaccinationReportingKey = new VaccinationReportingKey();
             vaccinationReportingKey.setVaccinationUid(sourceActUid);
@@ -456,12 +452,12 @@ class InvestigationServiceTest {
         ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
 
         if (typeCd.equals("OTHER")) {
-            investigationService.processMessage(rec, consumer);
+            investigationService.processMessage(rec);
             Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
                     verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString()));
         }
         else {
-            investigationService.processMessage(rec, consumer);
+            investigationService.processMessage(rec);
             future.complete(null);
 
             Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -488,7 +484,7 @@ class InvestigationServiceTest {
     @Test
     void testProcessActRelationshipNullPayload() {
         ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, null);
-        investigationService.processMessage(rec, consumer);
+        investigationService.processMessage(rec);
 
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
                 verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString()));
@@ -503,7 +499,7 @@ class InvestigationServiceTest {
 
     private void validateInvestigationData(String payload, Investigation investigation) throws JsonProcessingException {
         ConsumerRecord<String, String> rec = getRecord(investigationTopic, payload);
-        investigationService.processMessage(rec, consumer);
+        investigationService.processMessage(rec);
 
         InvestigationKey investigationKey = new InvestigationKey();
         investigationKey.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
@@ -551,7 +547,7 @@ class InvestigationServiceTest {
         when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
 
         ConsumerRecord<String, String> rec = getRecord(treatmentTopic, payload);
-        investigationService.processMessage(rec, consumer);
+        investigationService.processMessage(rec);
         future.complete(null);
 
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -583,7 +579,7 @@ class InvestigationServiceTest {
         final Treatment treatment = constructTreatment(treatmentUid);
         when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid))).thenReturn(Optional.of(treatment));
 
-        investigationService.processMessage(getRecord(treatmentTopic, payload), consumer);
+        investigationService.processMessage(getRecord(treatmentTopic, payload));
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
                 verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString()));
     }
@@ -606,7 +602,7 @@ class InvestigationServiceTest {
 
     private void checkException(String topic, String payload, Class<? extends Exception> exceptionClass) {
         ConsumerRecord<String, String> rec = getRecord(topic, payload);
-        CompletableFuture<Void> future = investigationService.processMessage(rec, consumer);
+        CompletableFuture<Void> future = investigationService.processMessage(rec);
         CompletionException ex = assertThrows(CompletionException.class, future::join);
         assertEquals(exceptionClass, ex.getCause().getClass());
     }
