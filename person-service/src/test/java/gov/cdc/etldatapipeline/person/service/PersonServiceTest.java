@@ -6,6 +6,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.person.model.dto.patient.PatientSp;
@@ -147,7 +148,6 @@ class PersonServiceTest {
         ProviderSp providerSp = constructProviderCase(personTelephoneFile);
         ProviderSp mprProvider = constructProviderCase(personTelephoneFile);
         mprProvider.setPersonParentUid(mprProvider.getPersonUid());
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
         Mockito.when(providerRepository.computeProviders(anyString()))
                 .thenReturn(List.of(providerSp)).thenReturn(List.of(mprProvider));
 
@@ -188,7 +188,6 @@ class PersonServiceTest {
     @Test
     void testProcessProviderDataNoElasticSearch() {
         ProviderSp providerSp = ProviderSp.builder().personUid(10000001L).build();
-        Mockito.when(patientRepository.computePatients(anyString())).thenReturn(new ArrayList<>());
         Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
 
         String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
@@ -269,7 +268,6 @@ class PersonServiceTest {
     void testProcessMessageNoDataException(String payload, String inputTopic) {
         if (inputTopic.equals(inputTopicPerson)) {
             Long personUid = 123456789L;
-            when(patientRepository.computePatients(String.valueOf(personUid))).thenReturn(Collections.emptyList());
             when(providerRepository.computeProviders(String.valueOf(personUid))).thenReturn(Collections.emptyList());
         } else if (inputTopic.equals(inputTopicUser)) {
             Long authUserUid = 11L;
@@ -288,6 +286,15 @@ class PersonServiceTest {
         personService.processPhcFactDatamart("PAT","123");
         ILoggingEvent log = listAppender.list.getLast();
         assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
+    }
+
+    @Test
+    void testProcessUnknownCode() {
+        String payload = "{\"payload\": {\"after\": {\"person_uid\": \"123456789\", \"cd\": \"UNK\"}}}";
+        CompletableFuture<Void> future = personService.processMessage(payload, inputTopicPerson);
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertEquals(DataProcessingException.class, ex.getCause().getClass());
+        assertTrue(ex.getCause().getMessage().endsWith("No data to process for this entity type: UNK"));
     }
 
     private void validateDataTransformation(
