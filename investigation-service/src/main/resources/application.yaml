@@ -49,6 +49,7 @@ spring:
     change-log: db/changelog/db.changelog-master.yaml
 featureFlag:
   phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+  thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
 server:
   port: '8093'
 

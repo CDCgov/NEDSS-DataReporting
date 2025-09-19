@@ -111,7 +111,7 @@ public class PersonService {
         msgSuccess = metrics.counter( "person_msg_success", tags);
         msgFailure = metrics.counter("person_msg_failure", tags);
 
-        prsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
+        prsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
     }
 
     @RetryableTopic(
@@ -158,17 +158,22 @@ public class PersonService {
 
                 personUid = extractUid(message, "person_uid");
                 log.info(topicDebugLog, "Person", personUid, topic);
-                List<PatientSp> personDataFromStoredProc = patientRepository.computePatients(personUid);
-                processPatientData(personDataFromStoredProc);
+
+                List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
+                List<PatientSp> personDataFromStoredProc = new ArrayList<>();
 
                 String cd = payloadNode.get("cd").asText();
-                List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
-                if (cd != null && cd.equalsIgnoreCase("PRV")) {
-                    providerDataFromStoredProc = providerRepository.computeProviders(personUid);
-
-                    processProviderData(providerDataFromStoredProc);
-                } else {
-                    log.debug("There is no provider to process in the incoming data.");
+                switch (cd) {
+                    case "PAT":
+                        personDataFromStoredProc = patientRepository.computePatients(personUid);
+                        processPatientData(personDataFromStoredProc);
+                        break;
+                    case "PRV":
+                        providerDataFromStoredProc = providerRepository.computeProviders(personUid);
+                        processProviderData(providerDataFromStoredProc);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("No data to process for this entity type: " + cd);
                 }
 
                 if (personDataFromStoredProc.isEmpty() && providerDataFromStoredProc.isEmpty()) {

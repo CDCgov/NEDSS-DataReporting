@@ -102,15 +102,14 @@ class ObservationServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource (
-            {"d,LabReport,OBS",
-                    "d,LabReport,OTHER",
-                    "c,LabReport,OBS",
-                    "c,LabReport,OTHER",
-                    "d,OTHER,OBS",
-                    "d,OTHER,OTHER"
-            }
-    )
+    @CsvSource ({
+            "d,LabReport,OBS",
+            "d,LabReport,OTHER",
+            "c,LabReport,OBS",
+            "c,LabReport,OTHER",
+            "d,OTHER,OBS",
+            "d,OTHER,OTHER"
+    })
     void testProcessActRelationship(String op, String typeCd, String targetClassCd) throws JsonProcessingException {
         Long sourceActUid = 123456789L;
         String obsDomainCdSt = "Order";

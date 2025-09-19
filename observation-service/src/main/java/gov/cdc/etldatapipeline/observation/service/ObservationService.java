@@ -90,7 +90,7 @@ public class ObservationService {
         msgSuccess = metrics.counter( "obs_msg_success", tags);
         msgFailure = metrics.counter("obs_msg_failure", tags);
 
-        obsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
+        obsExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("obs-"));
     }
 
     @RetryableTopic(
