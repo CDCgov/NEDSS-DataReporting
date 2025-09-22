@@ -30,8 +30,8 @@ if exists (select 1
         IF NOT EXISTS (SELECT name FROM master.sys.database_principals WHERE name = 'db_deploy_admin')
         CREATE USER [db_deploy_admin] FOR LOGIN [db_deploy_admin] WITH DEFAULT_SCHEMA =[dbo];
 
+        GRANT SELECT ON msdb.dbo.sysjobs TO db_deploy_admin;
         GRANT EXECUTE ON msdb.dbo.rds_cdc_enable_db TO db_deploy_admin;
-
         GRANT EXECUTE ON msdb.dbo.rds_cdc_disable_db TO db_deploy_admin;
 
         /*
