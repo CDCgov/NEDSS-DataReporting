@@ -1,56 +1,46 @@
 package gov.cdc.etldatapipeline.commonutil.json;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class NumberToPlainStringDeserializerTest {
 
-    private ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setUp() {
-        objectMapper = new ObjectMapper();
-    }
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     static class Wrapper {
         @JsonDeserialize(using = NumberToPlainStringDeserializer.class)
         public String value;
     }
 
-    @Test
-    void shouldDeserializeNumericValueAsPlainString() throws Exception {
-        String json = "{\"value\": 1.23E+7}";
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                    "{\"value\": 1.23E+7}|12300000",
+                    "{\"value\": 10000000}|10000000",
+                    "{\"value\": \"1.23E+7\"}|1.23E+7"
+            },
+            delimiter = '|'
+    )
+    void shouldDeserializeToPlainString(String json, String expected) throws Exception {
         Wrapper wrapper = objectMapper.readValue(json, Wrapper.class);
-
-        assertThat(wrapper.value).isEqualTo("12300000");
-    }
-
-    @Test
-    void shouldKeepStringValueAsIs() throws Exception {
-        String json = "{\"value\": \"1.23E+7\"}";
-        Wrapper wrapper = objectMapper.readValue(json, Wrapper.class);
-
-        assertThat(wrapper.value).isEqualTo("1.23E+7");
+        assertThat(wrapper.value).isEqualTo(expected);
     }
 
     @Test
     void shouldHandleNullValue() throws Exception {
-        String json = "{\"value\": null}";
-        Wrapper wrapper = objectMapper.readValue(json, Wrapper.class);
-
+        Wrapper wrapper = objectMapper.readValue("{\"value\": null}", Wrapper.class);
         assertThat(wrapper.value).isNull();
     }
 
     @Test
     void shouldFailOnUnexpectedType() {
-        String json = "{\"value\": true}";
-        assertThrows(JsonProcessingException.class,
-                () -> objectMapper.readValue(json, Wrapper.class));
+        assertThatThrownBy(() -> objectMapper.readValue("{\"value\": {\"nested\":1}}", Wrapper.class))
+                .isInstanceOf(Exception.class);
     }
 }
