@@ -2,7 +2,7 @@
   {
     "observation_uid": 10001234,
     "ovn_comparator_cd_1": "100",
-    "ovn_numeric_value_1": 1.00000,
+    "ovn_numeric_value_1": 23456000.00000,
     "ovn_separator_cd": ":",
     "ovn_numeric_value_2": 1.00000,
     "ovn_numeric_unit_cd": "mL",

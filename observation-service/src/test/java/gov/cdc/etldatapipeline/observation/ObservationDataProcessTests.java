@@ -294,7 +294,7 @@ class ObservationDataProcessTests {
         numeric.setOvnComparatorCd1("100");
         numeric.setOvnLowRange("10-100");
         numeric.setOvnHighRange("100-1000");
-        numeric.setOvnNumericValue1("1.0");
+        numeric.setOvnNumericValue1("23456000");
         numeric.setOvnNumericValue2("1.0");
         numeric.setOvnNumericUnitCd("mL");
         numeric.setOvnSeparatorCd(":");
