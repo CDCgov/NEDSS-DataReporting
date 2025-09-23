@@ -6,11 +6,13 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
 import gov.cdc.etldatapipeline.investigation.util.ProcessInvestigationDataUtil;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.awaitility.Awaitility;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -82,6 +84,7 @@ class InvestigationDataProcessingTests {
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         transformer = new ProcessInvestigationDataUtil(kafkaTemplate, investigationRepository);
+        transformer.setMetrics(new CustomMetrics(new SimpleMeterRegistry()));
         Logger logger = (Logger) LoggerFactory.getLogger(ProcessInvestigationDataUtil.class);
         listAppender.start();
         logger.addAppender(listAppender);

@@ -739,17 +739,30 @@
               "datasource": "aws-prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "inv_msg_processed_total{instance=\"$instance\", application=\"$application\"}",
+              "expr": "increase(inv_msg_processed_total{instance=\"$instance\", application=\"$application\"}[24h])",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
-              "legendFormat": "Total",
+              "legendFormat": "Daily (24h)",
               "range": true,
               "refId": "A",
               "useBackend": false
+            },
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "rate(inv_msg_processed_total{instance=\"$instance\", application=\"$application\"}[2m]) * 60",
+              "fullMetaSearch": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Rate (msg/min)",
+              "range": true,
+              "refId": "B",
+              "useBackend": false
             }
           ],
-          "title": "Total number of investigation events/messages processed",
+          "title": "Number of investigation events/messages processed",
           "type": "timeseries"
         },
         {
@@ -810,7 +823,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 12,
+            "w": 18,
             "x": 0,
             "y": 10
           },
@@ -832,7 +845,7 @@
               "datasource": "aws-prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "inv_msg_success_total{instance=\"$instance\", application=\"$application\"}",
+              "expr": "increase(inv_msg_success_total{instance=\"$instance\", application=\"$application\"}[24h])",
               "fullMetaSearch": false,
               "hide": false,
               "includeNullMetadata": true,
@@ -846,7 +859,7 @@
               "datasource": "aws-prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "inv_msg_failure_total{instance=\"$instance\", application=\"$application\"}",
+              "expr": "increase(inv_msg_failure_total{instance=\"$instance\", application=\"$application\"}[24h])",
               "fullMetaSearch": false,
               "hide": false,
               "includeNullMetadata": true,
@@ -857,7 +870,7 @@
               "useBackend": false
             }
           ],
-          "title": "Total investigation messages - Success & Failure",
+          "title": "Investigation Daily Volume – Success & Failure",
           "type": "timeseries"
         },
         {
@@ -953,7 +966,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 7,
+            "w": 6,
             "x": 12,
             "y": 2
           },
@@ -986,6 +999,355 @@
               "datasource": "aws-prometheus",
               "editorMode": "builder",
               "expr": "rate(inv_msg_processing_seconds_sum{instance=\"$instance\", application=\"$application\"}[10m]) / rate(inv_msg_processing_seconds_count{instance=\"$instance\", application=\"$application\"}[10m])",
+              "hide": false,
+              "legendFormat": "Avg over 10m",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Message processing time, sec",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "aws-prometheus",
+            "uid": "aws-prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "id": 111,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "increase(ntf_msg_processed_total{instance=\"$instance\", application=\"$application\"}[24h])",
+              "fullMetaSearch": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Daily (24h)",
+              "range": true,
+              "refId": "A",
+              "useBackend": false
+            },
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "rate(ntf_msg_processed_total{instance=\"$instance\", application=\"$application\"}[2m]) * 60",
+              "fullMetaSearch": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Rate (msg/min)",
+              "range": true,
+              "refId": "B",
+              "useBackend": false
+            }
+          ],
+          "title": "Number of notification events/messages processed",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "aws-prometheus",
+            "uid": "aws-prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 18,
+            "x": 0,
+            "y": 26
+          },
+          "id": 114,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "increase(ntf_msg_success_total{instance=\"$instance\", application=\"$application\"}[24h])",
+              "fullMetaSearch": false,
+              "hide": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Success",
+              "range": true,
+              "refId": "B",
+              "useBackend": false
+            },
+            {
+              "datasource": "aws-prometheus",
+              "disableTextWrap": false,
+              "editorMode": "builder",
+              "expr": "increase(ntf_msg_failure_total{instance=\"$instance\", application=\"$application\"}[24h])",
+              "fullMetaSearch": false,
+              "hide": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "Failure",
+              "range": true,
+              "refId": "C",
+              "useBackend": false
+            }
+          ],
+          "title": "Notification Daily Volume – Success & Failure",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "aws-prometheus",
+            "uid": "aws-prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Max over 10m"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "light-blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Avg over 10m"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "light-green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 12,
+            "y": 18
+          },
+          "id": 117,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "aws-prometheus",
+              "editorMode": "builder",
+              "expr": "max_over_time(ntf_msg_processing_seconds_max{instance=\"$instance\", application=\"$application\"}[10m])",
+              "hide": false,
+              "includeNullMetadata": true,
+              "legendFormat": "Max over 10m",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": "aws-prometheus",
+              "editorMode": "builder",
+              "expr": "rate(ntf_msg_processing_seconds_sum{instance=\"$instance\", application=\"$application\"}[10m]) / rate(ntf_msg_processing_seconds_count{instance=\"$instance\", application=\"$application\"}[10m])",
               "hide": false,
               "legendFormat": "Avg over 10m",
               "range": true,

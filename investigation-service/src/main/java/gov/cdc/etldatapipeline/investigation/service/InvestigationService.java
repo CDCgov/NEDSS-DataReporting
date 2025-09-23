@@ -101,21 +101,25 @@ public class InvestigationService {
     InvestigationKey investigationKey = new InvestigationKey();
 
     private static final String SERVICE_NAME = "investigation-reporting";
+    private static final String SERVICE_TAG = "service";
 
     private final CustomMetrics metrics;
 
     private Counter msgProcessed;
     private Counter msgSuccess;
     private Counter msgFailure;
+    private Counter ntfFailure;
 
     @PostConstruct
     void initMetrics() {
-        String[] tags = {"service", SERVICE_NAME};
+        String[] tags = {SERVICE_TAG, SERVICE_NAME};
 
         msgProcessed = metrics.counter("inv_msg_processed", tags);
         msgSuccess = metrics.counter( "inv_msg_success", tags);
         msgFailure = metrics.counter("inv_msg_failure", tags);
+        ntfFailure = metrics.counter("ntf_msg_failure", tags);
 
+        processDataUtil.setMetrics(metrics);
         invExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("inv-"));
     }
 
@@ -210,7 +214,7 @@ public class InvestigationService {
                 msgFailure.increment();
                 throw new DataProcessingException(errorMessage("Investigation", publicHealthCaseUid, e), e);
             }
-        }, "service", SERVICE_NAME);
+        }, SERVICE_TAG, SERVICE_NAME);
     }
 
     private void processActRelationship(String value) {
@@ -243,28 +247,32 @@ public class InvestigationService {
     }
 
     public void processNotification(String value) {
-        String notificationUid = "";
-        try {
-            final String notfUid = notificationUid = extractUid(value, "notification_uid");
+        metrics.recordTime("ntf_msg_processing_seconds", () -> {
+            String notificationUid = "";
+            try {
+                final String notfUid = notificationUid = extractUid(value, "notification_uid");
 
-            if (!phcDatamartDisable) {
-                CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart("NOTF", notfUid), phcExecutor);
+                if (!phcDatamartDisable) {
+                    CompletableFuture.runAsync(() -> processDataUtil.processPhcFactDatamart("NOTF", notfUid), phcExecutor);
+                }
+
+                logger.info(topicDebugLog, "Notification", notificationUid, notificationTopic);
+
+                Optional<NotificationUpdate> notificationData = notificationRepository.computeNotifications(notificationUid);
+                if (notificationData.isPresent()) {
+                    NotificationUpdate notification = notificationData.get();
+                    processDataUtil.processNotifications(notification.getInvestigationNotifications());
+                } else {
+                    throw new EntityNotFoundException("Unable to find Notification with id; " + notificationUid);
+                }
+            } catch (EntityNotFoundException ex) {
+                ntfFailure.increment();
+                throw new NoDataException(ex.getMessage(), ex);
+            } catch (Exception e) {
+                ntfFailure.increment();
+                throw new DataProcessingException(errorMessage("Notification", notificationUid, e), e);
             }
-
-            logger.info(topicDebugLog, "Notification", notificationUid, notificationTopic);
-
-            Optional<NotificationUpdate> notificationData = notificationRepository.computeNotifications(notificationUid);
-            if (notificationData.isPresent()) {
-                NotificationUpdate notification = notificationData.get();
-                processDataUtil.processNotifications(notification.getInvestigationNotifications());
-            } else {
-                throw new EntityNotFoundException("Unable to find Notification with id; " + notificationUid );
-            }
-        } catch (EntityNotFoundException ex) {
-            throw new NoDataException(ex.getMessage(), ex);
-        } catch (Exception e) {
-            throw new DataProcessingException(errorMessage("Notification", notificationUid, e), e);
-        }
+        }, SERVICE_TAG, SERVICE_NAME);
     }
 
 
