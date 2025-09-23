@@ -482,8 +482,7 @@ public class ProcessInvestigationDataUtil {
                    create and send nrt_interview_note
              */
             String jsonKey = jsonGenerator.generateStringJson(interviewReportingKey);
-            String jsonValue = jsonGenerator.generateStringJson(interviewReporting, "interview_uid",
-                    "investigation_uid", "provider_uid", "patient_uid", "notification_uid");
+            String jsonValue = jsonGenerator.generateStringJson(interviewReporting, "interview_uid");
             kafkaTemplate.send(interviewOutputTopicName, jsonKey, jsonValue)
                     .whenComplete((res, e) -> logger.info("Interview data (uid={}) sent to {}", interview.getInterviewUid(), interviewOutputTopicName))
                     .thenRunAsync(() -> transformAndSendInterviewAnswer(interview, batchId))
