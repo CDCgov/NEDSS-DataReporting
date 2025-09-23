@@ -68,36 +68,46 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #F_VAC_INIT';
 
+        -- Expand comma-separated PHC_UID into individual rows
+        WITH PHC_EXPANDED AS (
+            SELECT nc.VACCINATION_UID,
+                   nc.PATIENT_UID,
+                   nc.PROVIDER_UID,
+                   nc.ORGANIZATION_UID,
+                   CAST(TRIM(phc_split.value) AS BIGINT) as PHC_UID_INDIVIDUAL
+            FROM (SELECT * FROM dbo.NRT_VACCINATION
+                  WHERE VACCINATION_UID IN (SELECT value FROM STRING_SPLIT(@vac_uids, ','))) nc
+                     CROSS APPLY STRING_SPLIT(nc.PHC_UID, ',') phc_split
+            WHERE TRIM(phc_split.value) != '' AND TRIM(phc_split.value) IS NOT NULL
+        )
         SELECT dim.D_VACCINATION_KEY,
 
-               nc.PATIENT_UID,
+               exp.PATIENT_UID,
                coalesce(pt1.PATIENT_KEY, 1)        as PATIENT_KEY,
 
-               nc.PROVIDER_UID,
+               exp.PROVIDER_UID,
                coalesce(pv1.PROVIDER_KEY, 1)       as VACCINE_GIVEN_BY_KEY,
 
-               nc.ORGANIZATION_UID,
+               exp.ORGANIZATION_UID,
                coalesce(org.ORGANIZATION_KEY, 1)   as VACCINE_GIVEN_BY_ORG_KEY,
 
                1                                   as D_VACCINATION_REPEAT_KEY,
 
-               nc.PHC_UID,
+               exp.PHC_UID_INDIVIDUAL              as PHC_UID,
                coalesce(inv1.INVESTIGATION_KEY, 1) as INVESTIGATION_KEY
 
         INTO #F_VAC_INIT
-        FROM (SELECT *
-              FROM dbo.NRT_VACCINATION
-              WHERE VACCINATION_UID IN (SELECT value FROM STRING_SPLIT(@vac_uids, ','))) nc
+        FROM PHC_EXPANDED exp
                  LEFT JOIN
-             dbo.D_VACCINATION dim with (nolock) on dim.VACCINATION_UID = nc.VACCINATION_UID
+             dbo.D_VACCINATION dim with (nolock) on dim.VACCINATION_UID = exp.VACCINATION_UID
                  LEFT JOIN
-             dbo.D_ORGANIZATION org with (nolock) on org.ORGANIZATION_UID = nc.ORGANIZATION_UID
+             dbo.D_ORGANIZATION org with (nolock) on org.ORGANIZATION_UID = exp.ORGANIZATION_UID
                  LEFT JOIN
-             dbo.D_PROVIDER pv1 with (nolock) on pv1.PROVIDER_UID = nc.PROVIDER_UID
+             dbo.D_PROVIDER pv1 with (nolock) on pv1.PROVIDER_UID = exp.PROVIDER_UID
                  LEFT JOIN
-             dbo.D_PATIENT pt1 with (nolock) on pt1.PATIENT_UID = nc.PATIENT_UID
+             dbo.D_PATIENT pt1 with (nolock) on pt1.PATIENT_UID = exp.PATIENT_UID
                  LEFT JOIN
-             dbo.INVESTIGATION inv1 with (nolock) on inv1.CASE_UID = nc.PHC_UID;
+             dbo.INVESTIGATION inv1 with (nolock) on inv1.CASE_UID = exp.PHC_UID_INDIVIDUAL;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -123,7 +133,7 @@ BEGIN
         INTO #F_VAC_INIT_NEW
         FROM #F_VAC_INIT init
                  LEFT OUTER JOIN
-             dbo.F_VACCINATION fact with (nolock) ON fact.D_VACCINATION_KEY = init.D_VACCINATION_KEY
+             dbo.F_VACCINATION fact with (nolock) ON fact.D_VACCINATION_KEY = init.D_VACCINATION_KEY AND fact.INVESTIGATION_KEY = init.INVESTIGATION_KEY
         WHERE fact.D_VACCINATION_KEY is NULL;
 
         if
@@ -181,8 +191,13 @@ BEGIN
         FROM dbo.F_VACCINATION fact
                  INNER JOIN (SELECT *
                              FROM #F_VAC_INIT
-                             WHERE D_VACCINATION_KEY NOT IN (SELECT D_VACCINATION_KEY FROM #F_VAC_INIT_NEW)) src
-                            ON src.D_VACCINATION_KEY = fact.D_VACCINATION_KEY;
+                             WHERE NOT EXISTS (
+                                 SELECT 1 FROM #F_VAC_INIT_NEW new_rec
+                                 WHERE new_rec.D_VACCINATION_KEY = #F_VAC_INIT.D_VACCINATION_KEY
+                                   AND new_rec.INVESTIGATION_KEY = #F_VAC_INIT.INVESTIGATION_KEY
+                             )) src
+                            ON src.D_VACCINATION_KEY = fact.D_VACCINATION_KEY
+                                AND src.INVESTIGATION_KEY = fact.INVESTIGATION_KEY;
 
 
         SELECT @RowCount_no = @@ROWCOUNT;
