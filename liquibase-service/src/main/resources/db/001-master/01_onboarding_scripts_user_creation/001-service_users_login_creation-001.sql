@@ -16,6 +16,11 @@ IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = @UserName)
         DECLARE @CreateLoginSQL NVARCHAR(MAX) = 'CREATE LOGIN [' + @UserName + '] WITH PASSWORD=N''' + @UserPassword + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF';
         EXEC sp_executesql @CreateLoginSQL;
         PRINT 'Created login [' + @UserName + ']';
+
+        -- Grant server-level permissions
+        DECLARE @PermissionGrantSQL NVARCHAR(MAX) = 'GRANT VIEW SERVER STATE TO [' + @UserName + ']';
+        EXEC sp_executesql @PermissionGrantSQL;
+        PRINT 'Granted VIEW SERVER STATE permission to [' + @UserName + ']';
     END
 ELSE
     BEGIN
