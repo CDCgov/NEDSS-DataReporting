@@ -198,11 +198,11 @@ BEGIN
                p.education_level_cd,
                p.add_user_id,
                case
-                   when p.add_user_id > 0 then (select TOP 1 *  from dbo.fn_get_user_name(p.add_user_id) ORDER BY 1)
+                   when p.add_user_id > 0 then (select *  from dbo.fn_get_user_name(p.add_user_id))
                    end                                                                     as add_user_name,
                p.last_chg_user_id,
                case
-                   when p.last_chg_user_id > 0 then (select TOP 1 *  from dbo.fn_get_user_name(p.last_chg_user_id) ORDER BY 1)
+                   when p.last_chg_user_id > 0 then (select *  from dbo.fn_get_user_name(p.last_chg_user_id))
                    end                                                                     as last_chg_user_name,
                nested.name                                                                 AS 'patient_name',
                nested.address                                                              AS 'patient_address',
