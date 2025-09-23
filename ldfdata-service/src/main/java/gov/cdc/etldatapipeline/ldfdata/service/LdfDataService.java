@@ -62,7 +62,7 @@ public class LdfDataService {
 
     private String topicDebugLog = "Received business_object_nm={},ldf_uid={},business_object_uid={} from topic: {}";
 
-    private static final String SERVICE_NAME = "investigation-reporting";
+    private static final String SERVICE_NAME = "ldfdata-reporting";
     private static final String SERVICE_TAG = "service";
 
     private final CustomMetrics metrics;
@@ -79,7 +79,7 @@ public class LdfDataService {
         msgSuccess = metrics.counter( "ldf_msg_success", tags);
         msgFailure = metrics.counter("ldf_msg_failure", tags);
 
-        ldfExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("inv-"));
+        ldfExecutor = Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("ldf-"));
     }
 
     @RetryableTopic(
