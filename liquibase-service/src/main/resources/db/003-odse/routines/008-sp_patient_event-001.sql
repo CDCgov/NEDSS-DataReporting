@@ -106,8 +106,8 @@ BEGIN
                p.age_reported,
                p.age_reported_unit_cd,
                case
-                   when (age_reported_unit_cd is not null or age_reported_unit_cd != '') then (select *
-                                                                                               from dbo.fn_get_value_by_cd_ques(p.age_reported_unit_cd, 'DEM218'))
+                   when (age_reported_unit_cd is not null or age_reported_unit_cd != '') then (select TOP 1 *
+                                                                                               from dbo.fn_get_value_by_cd_ques(p.age_reported_unit_cd, 'DEM218') ORDER BY 1)
                    end                                                                     as age_reported_unit,
                p.first_nm,
                p.middle_nm,
@@ -124,30 +124,30 @@ BEGIN
                p.curr_sex_cd,
                case
                    when (p.curr_sex_cd is not null or p.curr_sex_cd != '')
-                       then (select * from dbo.fn_get_value_by_cd_ques(p.curr_sex_cd, 'DEM113'))
+                       then (select TOP 1 * from dbo.fn_get_value_by_cd_ques(p.curr_sex_cd, 'DEM113') ORDER BY 1)
                    end                                                                     as current_sex,
                p.deceased_ind_cd,
                case
-                   when (p.deceased_ind_cd is not null or p.deceased_ind_cd != '') then (select *
-                                                                                         from dbo.fn_get_value_by_cd_ques(p.deceased_ind_cd, 'DEM127'))
+                   when (p.deceased_ind_cd is not null or p.deceased_ind_cd != '') then (select TOP 1 *
+                                                                                         from dbo.fn_get_value_by_cd_ques(p.deceased_ind_cd, 'DEM127') ORDER BY 1)
                    end                                                                     as deceased_indicator,
                p.electronic_ind,
                p.ethnic_group_ind,
                case
-                   when (p.ethnic_group_ind is not null or p.ethnic_group_ind != '') then (select *
-                                                                                           from dbo.fn_get_value_by_cd_ques(p.ethnic_group_ind, 'DEM155'))
+                   when (p.ethnic_group_ind is not null or p.ethnic_group_ind != '') then (select TOP 1 *
+                                                                                           from dbo.fn_get_value_by_cd_ques(p.ethnic_group_ind, 'DEM155') ORDER BY 1)
                    end                                                                     as ethnicity,
                p.birth_gender_cd,
                case
-                   when (p.birth_gender_cd is not null or p.birth_gender_cd != '') then (select *
-                                                                                         from dbo.fn_get_value_by_cd_ques(p.birth_gender_cd, 'DEM114'))
+                   when (p.birth_gender_cd is not null or p.birth_gender_cd != '') then (select TOP 1 *
+                                                                                         from dbo.fn_get_value_by_cd_ques(p.birth_gender_cd, 'DEM114') ORDER BY 1)
                    end                                                                     as birth_sex,
                p.deceased_time,
                p.last_chg_time,
                p.marital_status_cd,
                case
-                   when (p.marital_status_cd is not null or p.marital_status_cd != '') then (select *
-                                                                                             from dbo.fn_get_value_by_cd_ques(p.marital_status_cd, 'DEM140'))
+                   when (p.marital_status_cd is not null or p.marital_status_cd != '') then (select TOP 1 *
+                                                                                             from dbo.fn_get_value_by_cd_ques(p.marital_status_cd, 'DEM140') ORDER BY 1)
                    end                                                                     as marital_status,
                -- p.record_status_cd,
                dbo.fn_get_record_status(p.record_status_cd)                                as record_status_cd,
@@ -160,36 +160,36 @@ BEGIN
                p.dedup_match_ind,
                p.speaks_english_cd,
                case
-                   when (p.speaks_english_cd is not null or p.speaks_english_cd != '') then (select *
-                                                                                             from dbo.fn_get_value_by_cd_ques(p.speaks_english_cd, 'NBS214'))
+                   when (p.speaks_english_cd is not null or p.speaks_english_cd != '') then (select TOP 1 *
+                                                                                             from dbo.fn_get_value_by_cd_ques(p.speaks_english_cd, 'NBS214') ORDER BY 1)
                    end                                                                     as speaks_english,
                p.ethnic_unk_reason_cd,
                case
-                   when (p.ethnic_unk_reason_cd is not null or p.ethnic_unk_reason_cd != '') then (select *
-                                                                                                   from dbo.fn_get_value_by_cd_ques(p.ethnic_unk_reason_cd, 'NBS273'))
+                   when (p.ethnic_unk_reason_cd is not null or p.ethnic_unk_reason_cd != '') then (select TOP 1 *
+                                                                                                   from dbo.fn_get_value_by_cd_ques(p.ethnic_unk_reason_cd, 'NBS273') ORDER BY 1)
                    end                                                                     as unk_ethnic_rsn,
                p.sex_unk_reason_cd,
                case
-                   when (p.sex_unk_reason_cd is not null or p.sex_unk_reason_cd != '') then (select *
-                                                                                             from dbo.fn_get_value_by_cd_ques(p.sex_unk_reason_cd, 'NBS272'))
+                   when (p.sex_unk_reason_cd is not null or p.sex_unk_reason_cd != '') then (select TOP 1 *
+                                                                                             from dbo.fn_get_value_by_cd_ques(p.sex_unk_reason_cd, 'NBS272') ORDER BY 1)
                    end                                                                     as curr_sex_unk_rsn,
                p.preferred_gender_cd,
                case
-                   when (p.preferred_gender_cd is not null or p.preferred_gender_cd != '') then (select *
+                   when (p.preferred_gender_cd is not null or p.preferred_gender_cd != '') then (select TOP 1 *
                                                                                                  from dbo.fn_get_value_by_cvg(
                                                                                                          p.preferred_gender_cd,
-                                                                                                         'NBS_STD_GENDER_PARPT'))
+                                                                                                         'NBS_STD_GENDER_PARPT') ORDER BY 1 )
                    end                                                                     as preferred_gender,
                p.additional_gender_cd,
                p.occupation_cd,
                case
-                   when (p.occupation_cd is not null or p.occupation_cd != '') then (select *
-                                                                                     from dbo.fn_get_value_by_cd_ques(p.occupation_cd, 'DEM139'))
+                   when (p.occupation_cd is not null or p.occupation_cd != '') then (select TOP 1 *
+                                                                                     from dbo.fn_get_value_by_cd_ques(p.occupation_cd, 'DEM139') ORDER BY 1)
                    end                                                                     as primary_occupation,
                p.prim_lang_cd,
                case
-                   when (p.prim_lang_cd is not null or p.prim_lang_cd != '') then (select *
-                                                                                   from dbo.fn_get_value_by_cd_ques(p.prim_lang_cd, 'DEM142'))
+                   when (p.prim_lang_cd is not null or p.prim_lang_cd != '') then (select TOP 1 *
+                                                                                   from dbo.fn_get_value_by_cd_ques(p.prim_lang_cd, 'DEM142') ORDER BY 1)
                    end                                                                     as primary_language,
                p.multiple_birth_ind,
                p.adults_in_house_nbr,
@@ -198,11 +198,11 @@ BEGIN
                p.education_level_cd,
                p.add_user_id,
                case
-                   when p.add_user_id > 0 then (select * from dbo.fn_get_user_name(p.add_user_id))
+                   when p.add_user_id > 0 then (select *  from dbo.fn_get_user_name(p.add_user_id))
                    end                                                                     as add_user_name,
                p.last_chg_user_id,
                case
-                   when p.last_chg_user_id > 0 then (select * from dbo.fn_get_user_name(p.last_chg_user_id))
+                   when p.last_chg_user_id > 0 then (select *  from dbo.fn_get_user_name(p.last_chg_user_id))
                    end                                                                     as last_chg_user_name,
                nested.name                                                                 AS 'patient_name',
                nested.address                                                              AS 'patient_address',
@@ -292,7 +292,7 @@ BEGIN
                                                   pn.nm_suffix                                         AS [nmSuffix],
                                                   case
                                                       when (pn.nm_suffix is not null or pn.nm_suffix != '')
-                                                          then (select * from dbo.fn_get_value_by_cd_ques(pn.nm_suffix, 'DEM107'))
+                                                          then (select TOP 1 *  from dbo.fn_get_value_by_cd_ques(pn.nm_suffix, 'DEM107') ORDER BY 1 )
                                                       end                                              as name_suffix,
                                                   pn.nm_degree                                         AS [nmDegree],
                                                   pn.person_name_seq                                   AS [pn_person_name_seq],

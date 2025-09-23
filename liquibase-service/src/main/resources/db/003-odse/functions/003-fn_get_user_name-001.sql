@@ -10,7 +10,8 @@ CREATE FUNCTION [dbo].fn_get_user_name(
     RETURNS TABLE
         AS RETURN
         
-        SELECT CAST((RTRIM(LTRIM(au.user_last_nm)) + ', ' +
+        SELECT TOP 1 CAST((RTRIM(LTRIM(au.user_last_nm)) + ', ' +
                      RTRIM(LTRIM(au.user_first_nm))) AS VARCHAR(150)) AS user_full_name
         FROM NBS_ODSE.[dbo].Auth_user au WITH (NOLOCK)
-        WHERE au.NEDSS_ENTRY_ID = @user_id;
+        WHERE au.NEDSS_ENTRY_ID = @user_id
+        ORDER BY au.last_chg_time DESC;
