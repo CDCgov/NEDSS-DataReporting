@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.etldatapipeline.investigation.repository.model.dto.*;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 import gov.cdc.etldatapipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.etldatapipeline.investigation.repository.model.reporting.InterviewReporting;
+import io.micrometer.core.instrument.Counter;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.springframework.transaction.annotation.Isolation;
@@ -84,6 +86,16 @@ public class ProcessInvestigationDataUtil {
     private static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
     private static final String ANSWER_VAL = "ANSWER_VAL";
 
+    private Counter ntfProcessed;
+    private Counter ntfSuccess;
+    private Counter ntfFailure;
+
+    public void setMetrics(CustomMetrics metrics, String... tags) {
+        ntfProcessed = metrics.counter("ntf_msg_processed", tags);
+        ntfSuccess = metrics.counter( "ntf_msg_success", tags);
+        ntfFailure = metrics.counter("ntf_msg_failure", tags);
+    }
+
     @Transactional
     public InvestigationTransformed transformInvestigationData(Investigation investigation, long batchId) {
 
@@ -126,11 +138,13 @@ public class ProcessInvestigationDataUtil {
     }
 
     public void processNotifications(String investigationNotifications) {
+        JsonNode notificationJsonArray = null;
         try {
-            JsonNode investigationNotificationsJsonArray = parseJsonArray(investigationNotifications);
+            notificationJsonArray = parseJsonArray(investigationNotifications);
 
             InvestigationNotificationKey investigationNotificationKey = new InvestigationNotificationKey();
-            for (JsonNode node : investigationNotificationsJsonArray) {
+            for (JsonNode node : notificationJsonArray) {
+                ntfProcessed.increment();
                 Long notificationUid = node.get("notification_uid").asLong();
                 investigationNotificationKey.setNotificationUid(notificationUid);
 
@@ -140,10 +154,13 @@ public class ProcessInvestigationDataUtil {
                 String jsonValue = jsonGenerator.generateStringJson(tempInvestigationNotificationObject);
                 kafkaTemplate.send(investigationNotificationsOutputTopicName, jsonKey, jsonValue)
                         .whenComplete((res, e) -> logger.info("Notification data (uid={}) sent to {}", notificationUid, investigationNotificationsOutputTopicName));
+                ntfSuccess.increment();
             }
         } catch (IllegalArgumentException ex) {
+            if (notificationJsonArray != null) ntfFailure.increment();
             logger.info(ex.getMessage(), "InvestigationNotification");
         } catch (Exception e) {
+            ntfFailure.increment();
             logger.error("Error processing Notifications JSON array from investigation data: {}", e.getMessage());
         }
     }
