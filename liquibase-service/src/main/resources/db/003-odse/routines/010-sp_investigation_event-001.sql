@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_investigation_event]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_investigation_event]')
+                                      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
-BEGIN
-    DROP PROCEDURE [dbo].[sp_investigation_event]
-END
-GO 
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_investigation_event]
+    END
+GO
 
 CREATE PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max)
 AS
@@ -727,19 +727,114 @@ BEGIN
                                                         nh.first_notification_submitted_by,
                                                         nh.last_notification_submitted_by,
                                                         nh.notification_date
-                                                 FROM act_relationship act WITH (NOLOCK)
-                                                          join notification notif WITH (NOLOCK)
-                                                               on act.source_act_uid = notif.notification_uid
+                                                 FROM dbo.act_relationship act WITH (NOLOCK)
+                                                          inner join dbo.notification notif WITH (NOLOCK)
+                                                                     on act.source_act_uid = notif.notification_uid and act.target_act_uid = phc.public_health_case_uid
                                                           left join nbs_odse.dbo.participation part with (nolock)
                                                                     ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
                                                           left join nbs_odse.dbo.person per with (nolock)
                                                                     ON per.cd = 'PAT' AND per.person_uid = part.subject_entity_uid
-                                                          left join nbs_odse.dbo.v_notification_hist nh  with (nolock) on nh.public_health_case_uid = phc.public_health_case_uid
-                                                 WHERE act.target_act_uid = phc.public_health_case_uid
-                                                   AND notif.cd not in
+                                                          LEFT JOIN (
+                                                     SELECT *
+                                                     FROM (
+                                                              SELECT
+                                                                  -- Aggregate across all versions
+                                                                  MIN(CASE WHEN VERSION_CTRL_NBR = 1 THEN RECORD_STATUS_CD END) AS first_notification_status,
+                                                                  SUM(CASE WHEN RECORD_STATUS_CD = 'REJECTED' THEN 1 ELSE 0 END) AS notif_rejected_count,
+                                                                  SUM(CASE
+                                                                          WHEN RECORD_STATUS_CD IN ('APPROVED', 'PEND_APPR') THEN 1
+                                                                          WHEN RECORD_STATUS_CD = 'REJECTED' THEN -1
+                                                                          ELSE 0
+                                                                      END) AS notif_created_count,
+                                                                  SUM(CASE WHEN RECORD_STATUS_CD = 'COMPLETED' THEN 1 ELSE 0 END) AS notif_sent_count,
+                                                                  MIN(CASE WHEN RECORD_STATUS_CD = 'COMPLETED' THEN RPT_SENT_TIME END) AS first_notification_send_date,
+                                                                  SUM(CASE WHEN RECORD_STATUS_CD = 'PEND_APPR' THEN 1 ELSE 0 END) AS notif_created_pending_count,
+                                                                  MAX(CASE WHEN RECORD_STATUS_CD IN ('APPROVED', 'PEND_APPR') THEN LAST_CHG_TIME END) AS last_notification_date,
+                                                                  MAX(CASE WHEN RECORD_STATUS_CD = 'COMPLETED' THEN RPT_SENT_TIME END) AS last_notification_send_date,
+                                                                  MIN(ADD_TIME) AS first_notification_date,
+                                                                  NULLIF(MAX(CASE WHEN VERSION_CTRL_NBR != 1 THEN -1 ELSE ADD_USER_ID END), -1) AS first_notification_submitted_by,
+                                                                  NULLIF(MAX(CASE WHEN notif_latest_rownum = 1 THEN LAST_CHG_USER_ID ELSE -1 END), -1) AS last_notification_submitted_by,
+                                                                  MIN(CASE WHEN RECORD_STATUS_CD = 'COMPLETED' AND RPT_SENT_TIME IS NOT NULL THEN RPT_SENT_TIME END) AS notification_date,
+                                                                  PUBLIC_HEALTH_CASE_UID,
+                                                                  NOTIFICATION_UID
+                                                              FROM (
+                                                                       SELECT
+                                                                           *,
+                                                                           ROW_NUMBER() OVER (PARTITION BY PUBLIC_HEALTH_CASE_UID ORDER BY VERSION_CTRL_NBR DESC) notif_latest_rownum
+                                                                       FROM (
+                                                                                -- Notification_HIST branch
+                                                                                SELECT
+                                                                                    AR.TARGET_ACT_UID AS PUBLIC_HEALTH_CASE_UID,
+                                                                                    AR.TARGET_CLASS_CD,
+                                                                                    AR.SOURCE_ACT_UID,
+                                                                                    AR.SOURCE_CLASS_CD,
+                                                                                    NF.VERSION_CTRL_NBR,
+                                                                                    NF.ADD_TIME,
+                                                                                    NF.ADD_USER_ID,
+                                                                                    NF.RPT_SENT_TIME,
+                                                                                    NF.RECORD_STATUS_CD,
+                                                                                    NF.RECORD_STATUS_TIME,
+                                                                                    NF.LAST_CHG_TIME,
+                                                                                    NF.LAST_CHG_USER_ID,
+                                                                                    'Y' AS HIST_IND,
+                                                                                    NF.TXT
+                                                                                        ,CAST(NULL AS INT) AS NOTIFSENTCOUNT
+                                                                                        ,CAST(NULL AS INT) AS NOTIFREJECTEDCOUNT
+                                                                                        ,CAST(NULL AS INT) AS NOTIFCREATEDCOUNT
+                                                                                        ,CAST(NULL AS INT) AS X1
+                                                                                        ,CAST(NULL AS INT) AS X2
+                                                                                        ,CAST(NULL AS DATETIME) AS FIRSTNOTIFICATIONSENDDATE
+                                                                                        ,CAST(NULL AS DATETIME) AS NOTIFICATIONDATE
+                                                                                        ,NF.NOTIFICATION_UID
+                                                                                FROM NBS_ODSE.DBO.ACT_RELATIONSHIP AR WITH (NOLOCK)
+                                                                                         INNER JOIN NBS_ODSE.DBO.NOTIFICATION_HIST NF WITH (NOLOCK)
+                                                                                                    ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID AND AR.TARGET_ACT_UID = phc.PUBLIC_HEALTH_CASE_UID
+                                                                                WHERE AR.SOURCE_CLASS_CD = 'NOTF'
+                                                                                  AND AR.TARGET_CLASS_CD = 'CASE'
+                                                                                  AND NF.CD = 'NOTF'
+                                                                                  AND NF.RECORD_STATUS_CD IN (
+                                                                                                              'COMPLETED', 'MSG_FAIL', 'REJECTED', 'PEND_APPR', 'APPROVED'
+                                                                                    )
+                                                                                UNION ALL
+                                                                                SELECT
+                                                                                    AR.TARGET_ACT_UID AS PUBLIC_HEALTH_CASE_UID,
+                                                                                    AR.TARGET_CLASS_CD,
+                                                                                    AR.SOURCE_ACT_UID,
+                                                                                    AR.SOURCE_CLASS_CD,
+                                                                                    NF.VERSION_CTRL_NBR,
+                                                                                    NF.ADD_TIME,
+                                                                                    NF.ADD_USER_ID,
+                                                                                    NF.RPT_SENT_TIME,
+                                                                                    NF.RECORD_STATUS_CD,
+                                                                                    NF.RECORD_STATUS_TIME,
+                                                                                    NF.LAST_CHG_TIME,
+                                                                                    NF.LAST_CHG_USER_ID,
+                                                                                    'N' AS HIST_IND
+                                                                                        , NULL AS TXT
+                                                                                        ,CAST(NULL AS INT) AS NOTIFSENTCOUNT
+                                                                                        ,CAST(NULL AS INT) AS NOTIFREJECTEDCOUNT
+                                                                                        ,CAST(NULL AS INT) AS NOTIFCREATEDCOUNT
+                                                                                        ,CAST(NULL AS INT) AS X1
+                                                                                        ,CAST(NULL AS INT) AS X2
+                                                                                        ,CAST(NULL AS DATETIME) AS FIRSTNOTIFICATIONSENDDATE
+                                                                                        ,CAST(NULL AS DATETIME) AS NOTIFICATIONDATE
+                                                                                        ,NF.NOTIFICATION_UID
+                                                                                FROM NBS_ODSE.DBO.ACT_RELATIONSHIP AR WITH (NOLOCK)
+                                                                                         INNER JOIN NBS_ODSE.DBO.NOTIFICATION NF WITH (NOLOCK)
+                                                                                                    ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID AND AR.TARGET_ACT_UID = phc.PUBLIC_HEALTH_CASE_UID
+                                                                                WHERE AR.SOURCE_CLASS_CD = 'NOTF'
+                                                                                  AND AR.TARGET_CLASS_CD = 'CASE'
+                                                                                  AND NF.CD = 'NOTF'
+                                                                                  AND NF.RECORD_STATUS_CD IN (
+                                                                                                              'COMPLETED', 'MSG_FAIL', 'REJECTED', 'PEND_APPR', 'APPROVED'
+                                                                                    )
+                                                                            ) AS combined_sources
+                                                                   ) AS ranked
+                                                              GROUP BY PUBLIC_HEALTH_CASE_UID, NOTIFICATION_UID
+                                                          ) AS final_ranked
+                                                 ) AS nh ON nh.PUBLIC_HEALTH_CASE_UID = phc.PUBLIC_HEALTH_CASE_UID
+                                                 WHERE notif.cd not in
                                                        ('EXP_NOTF', 'SHARE_NOTF', 'EXP_NOTF_PHDC', 'SHARE_NOTF_PHDC')
-                                                   AND act.source_class_cd = 'NOTF'
-                                                   AND act.target_class_cd = 'CASE'
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_notifications) AS investigation_notifications,
                                         (select (select phcase.group_case_cnt                                         as investigation_count,
                                                         round(COALESCE(gcs.group_case_cnt, phcase.group_case_cnt), 0) as case_count,
