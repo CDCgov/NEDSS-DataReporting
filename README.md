@@ -5,7 +5,7 @@ Real Time Reporting (RTR) enables immediate data transformation by transitioning
 - Support scalable microservices
 - Improve access to actionable analytics
 
-RTR uses Kafka to stream change events from transactional data sources into reporting-optimized Kafka topics and the reporting database. This repository the following contains microservices, except for liquibase which is a standalone job for managing database objects.
+RTR uses Kafka to stream change events from transactional data sources into reporting-optimized Kafka topics and the reporting database. This repository contains the following microservices, except for liquibase which is a standalone job for managing database objects.
 
 
 | Service Name                        | Description                                                                                                                                                       |
