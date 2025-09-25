@@ -727,8 +727,8 @@ BEGIN
                                                         nh.first_notification_submitted_by,
                                                         nh.last_notification_submitted_by,
                                                         nh.notification_date
-                                                 FROM dbo.notification notif WITH (NOLOCK)
-                                                          inner join dbo.act_relationship act WITH (NOLOCK)
+                                                 FROM dbo.act_relationship act WITH (NOLOCK)
+                                                          inner join dbo.notification notif WITH (NOLOCK)
                                                                      on act.source_act_uid = notif.notification_uid and act.target_act_uid = phc.public_health_case_uid
                                                           left join nbs_odse.dbo.participation part with (nolock)
                                                                     ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
@@ -787,8 +787,8 @@ BEGIN
                                                                                         ,CAST(NULL AS DATETIME) AS NOTIFICATIONDATE
                                                                                         ,NF.NOTIFICATION_UID
                                                                                 FROM NBS_ODSE.DBO.ACT_RELATIONSHIP AR WITH (NOLOCK)
-                                                                                INNER JOIN NBS_ODSE.DBO.NOTIFICATION_HIST NF WITH (NOLOCK)
-                                                                                              ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID AND AR.TARGET_ACT_UID = phc.PUBLIC_HEALTH_CASE_UID
+                                                                                         INNER JOIN NBS_ODSE.DBO.NOTIFICATION_HIST NF WITH (NOLOCK)
+                                                                                                    ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID AND AR.TARGET_ACT_UID = phc.PUBLIC_HEALTH_CASE_UID
                                                                                 WHERE AR.SOURCE_CLASS_CD = 'NOTF'
                                                                                   AND AR.TARGET_CLASS_CD = 'CASE'
                                                                                   AND NF.CD = 'NOTF'
@@ -821,7 +821,7 @@ BEGIN
                                                                                         ,NF.NOTIFICATION_UID
                                                                                 FROM NBS_ODSE.DBO.ACT_RELATIONSHIP AR WITH (NOLOCK)
                                                                                          INNER JOIN NBS_ODSE.DBO.NOTIFICATION NF WITH (NOLOCK)
-                                                                                              ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID AND AR.TARGET_ACT_UID = phc.PUBLIC_HEALTH_CASE_UID
+                                                                                                    ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID AND AR.TARGET_ACT_UID = phc.PUBLIC_HEALTH_CASE_UID
                                                                                 WHERE AR.SOURCE_CLASS_CD = 'NOTF'
                                                                                   AND AR.TARGET_CLASS_CD = 'CASE'
                                                                                   AND NF.CD = 'NOTF'
