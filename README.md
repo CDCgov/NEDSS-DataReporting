@@ -1,3 +1,39 @@
+# NEDSS-DataReporting
+
+Real Time Reporting (RTR) enables immediate data transformation by transitioning from a traditional batch-based ETL framework to an event-driven architecture. This system is designed to:
+- Enhance reporting database freshness
+- Support scalable microservices
+- Improve access to actionable analytics
+
+RTR uses Kafka to stream change events from transactional data sources into reporting-optimized Kafka topics and the reporting database. This repository the following contains microservices, except for liquibase which is a standalone job for managing database objects.
+
+
+| Service Name                        | Description                                                                                                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| liquibase *(Job)*         | Database version control via Liquibase. Deploys stored procedures, tables, and views required for the RTR pipeline.                                       |
+| investigation-reporting-service   | Processes `Public_health_case` change events. Supports page builder, notifications, confirmation methods, and updates the `PublicHealthCaseFact` datamart. |
+| ldfdata-reporting-service         | Handles change events related to Local Defined Fields (LDFs) and state-defined field data.                                                                        |
+| observation-reporting-service     | Processes `Observation` change events.                                                                                                                            |
+| organization-reporting-service    | Processes `Organization` change events.                                                                                                                           |
+| person-reporting-service          | Processes change events for `Patient`, `Provider`, and `Auth_user` entities.                                                                                      |
+| post-processing-reporting-service | Executes post-processing stored procedures to hydrate dimensions, fact tables, and datamarts.                                                                     |
+
+
+## Documentation and Related Repositories
+
+- Please refer to the full setup documentation in the [System Admin Guide](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
+- Helm Charts: 
+  - [Liquibase](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/liquibase)
+  - [Debezium Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/debezium)
+  - [Confluent Sink Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/kafka-connect-sink)
+  - [Consolidate RTR Services](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/rtr)
+- [Database Upgrade Notes](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
+-   [Database Upgrade without Liquibase](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
+    
+
+
+---
+
 # CDCgov GitHub Organization Open Source Project Template
 
 **Template for clearance: This project serves as a template to aid projects in starting up and moving through clearance procedures. To start, create a new repository and implement the required [open practices](open_practices.md), train on and agree to adhere to the organization's [rules of behavior](rules_of_behavior.md), and [send a request through the create repo form](https://forms.office.com/Pages/ResponsePage.aspx?id=aQjnnNtg_USr6NJ2cHf8j44WSiOI6uNOvdWse4I-C2NUNk43NzMwODJTRzA4NFpCUk1RRU83RTFNVi4u) using language from this template as a Guide.**
