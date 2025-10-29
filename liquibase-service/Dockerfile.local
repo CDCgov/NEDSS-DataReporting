@@ -1,0 +1,45 @@
+FROM liquibase/liquibase:4.33.0-alpine
+
+USER root
+
+RUN apk add --no-cache wget && \
+    wget https://download.microsoft.com/download/fae28b9a-d880-42fd-9b98-d779f0fdd77f/msodbcsql18_18.5.1.1-1_arm64.apk && \
+    wget https://download.microsoft.com/download/7/6/d/76de322a-d860-4894-9945-f0cc5d6a45f8/mssql-tools18_18.4.1.1-1_arm64.apk && \
+    apk add --allow-untrusted msodbcsql18_18.5.1.1-1_arm64.apk && \
+    apk add --allow-untrusted mssql-tools18_18.4.1.1-1_arm64.apk
+
+#Copy sources
+#changelog
+COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
+#master
+COPY liquibase-service/src/main/resources/db/001-master /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/001-master/functions /liquibase/changelog
+#srte
+COPY liquibase-service/src/main/resources/db/002-srte /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/002-srte/tables /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/002-srte/routines /liquibase/changelog
+#odse
+COPY liquibase-service/src/main/resources/db/003-odse /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/003-odse/routines /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/003-odse/functions /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/003-odse/views /liquibase/changelog
+#rdb
+COPY liquibase-service/src/main/resources/db/004-rdb /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/004-rdb/tables /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/004-rdb/routines /liquibase/changelog
+#rdb_modern
+COPY liquibase-service/src/main/resources/db/005-rdb_modern /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/routines /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
+# Onboarding 
+COPY liquibase-service/src/main/resources/db/001-master/02_onboarding_script_data_load/ /liquibase/changelog/onboarding/
+
+#Set the Working Directory
+WORKDIR /liquibase/changelog
+USER liquibase
+
+COPY --chown=liquibase ../containers/liquibase/migrate.sh .
+
+CMD ["./migrate.sh"]
