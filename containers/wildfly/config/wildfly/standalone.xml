@@ -148,7 +148,7 @@
                     </security>
                 </datasource>
                 <datasource jndi-name="java:jboss/datasources/NedssDataSource" pool-name="NedssDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:sqlserver://localhost\singhm;SelectMethod=direct;DatabaseName=nbs_odse</connection-url>
+                    <connection-url>jdbc:sqlserver://rtr-mssql:1433;SelectMethod=direct;DatabaseName=nbs_odse</connection-url>
                     <driver>sqlserver</driver>
                     <pool>
                         <min-pool-size>75</min-pool-size>
@@ -171,7 +171,7 @@
                     </statement>
                 </datasource>
                 <datasource jndi-name="java:jboss/datasources/MsgOutDataSource" pool-name="MsgOutDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:sqlserver://localhost\singhm;SelectMethod=direct;DatabaseName=nbs_msgoute</connection-url>
+                    <connection-url>jdbc:sqlserver://rtr-mssql:1433;SelectMethod=direct;DatabaseName=nbs_msgoute</connection-url>
                     <driver>sqlserver</driver>
                     <pool>
                         <min-pool-size>75</min-pool-size>
@@ -194,7 +194,7 @@
                     </statement>
                 </datasource>
                 <datasource jndi-name="java:jboss/datasources/MsgInDataSource" pool-name="MsgInDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:sqlserver://localhost\singhm;SelectMethod=direct;DatabaseName=nbs_msgine</connection-url>
+                    <connection-url>jdbc:sqlserver://rtr-mssql:1433;SelectMethod=direct;DatabaseName=nbs_msgine</connection-url>
                     <driver>sqlserver</driver>
                     <pool>
                         <min-pool-size>75</min-pool-size>
@@ -217,7 +217,7 @@
                     </statement>
                 </datasource>
                 <datasource jndi-name="java:jboss/datasources/ElrXrefDataSource" pool-name="ElrXrefDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:sqlserver://localhost\singhm;SelectMethod=direct;DatabaseName=nbs_msgoute</connection-url>
+                    <connection-url>jdbc:sqlserver://rtr-mssql:1433;SelectMethod=direct;DatabaseName=nbs_msgoute</connection-url>
                     <driver>sqlserver</driver>
                     <pool>
                         <min-pool-size>75</min-pool-size>
@@ -240,7 +240,7 @@
                     </statement>
                 </datasource>
                 <datasource jndi-name="java:jboss/datasources/RdbDataSource" pool-name="RdbDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:sqlserver://localhost\singhm;SelectMethod=direct;DatabaseName=rdb</connection-url>
+                    <connection-url>jdbc:sqlserver://rtr-mssql:1433;SelectMethod=direct;DatabaseName=rdb</connection-url>
                     <driver>sqlserver</driver>
                     <pool>
                         <min-pool-size>75</min-pool-size>
@@ -262,7 +262,7 @@
                     </statement>
                 </datasource>
                 <datasource jndi-name="java:jboss/datasources/SrtDataSource" pool-name="SrtDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:sqlserver://localhost\singhm;SelectMethod=direct;DatabaseName=nbs_srte</connection-url>
+                    <connection-url>jdbc:sqlserver://rtr-mssql:1433;SelectMethod=direct;DatabaseName=nbs_srte</connection-url>
                     <driver>sqlserver</driver>
                     <pool>
                         <min-pool-size>75</min-pool-size>

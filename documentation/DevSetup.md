@@ -78,6 +78,13 @@ Run the `build_classic.sh` script to pull the NBS 6 source code and build a Wild
 ./containers/build_classic.sh
 ```
 
+OR manually clone the NBS 6 repository to the proper directory and build docker container
+
+```sh
+git clone -b v6.0.16.0 git@github.com:cdcent/NEDSSDev.git containers/wildfly/builder/NEDSSDev
+docker compose up wildfly --build -d
+```
+
 ### Verifying functionality
 
 1. Log into [NBS 6](http://localhost:7003/nbs/login) using the user: `superuser`. No password is required
