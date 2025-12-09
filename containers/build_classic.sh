@@ -9,10 +9,7 @@ CLASSIC_VERSION=v6.0.16.0
 echo "Building NBS6 Application"
 
 if [ -d "$CLASSIC_PATH" ]; then
-    echo "NEDSSDEV already cloned, verifying branch"
-    pushd $CLASSIC_PATH
-    git checkout $CLASSIC_VERSION && git pull
-    popd
+    echo "NEDSSDEV already cloned"
 else
     echo "NEDSSDEV not found, cloning..."
     git clone -b $CLASSIC_VERSION git@github.com:cdcent/NEDSSDev.git $CLASSIC_PATH
