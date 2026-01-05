@@ -279,7 +279,7 @@ def generate_orc_segment(order_number, facility):
     """Generate ORC (Common Order) segment"""
     provider_npi = ''.join(random.choices(string.digits, k=10))
     provider_first = fake.first_name()
-    provider_last = fake.last_name()
+    provider_last = fake.last_name() + '_FAKE'
     
     order_datetime = datetime.now() - timedelta(hours=random.randint(1, 48))
     
@@ -320,7 +320,7 @@ def generate_obr_segment(order_number, test_info, facility):
     
     provider_npi = ''.join(random.choices(string.digits, k=10))
     provider_first = fake.first_name()
-    provider_last = fake.last_name()
+    provider_last = fake.last_name() + '_FAKE'
     
     fields = [
         "OBR",
