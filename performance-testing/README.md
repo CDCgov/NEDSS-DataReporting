@@ -5,13 +5,16 @@ This directory contains tools to add data intended to test the performance and a
 ## Data generation
 
 `generate.py` : create fake ELRs 
+
 `convert.py` : convert an ELR into NBS XML format
 
 ### Setup
 
-`python3 -m venv venv`
-`source venv/bin/activate`
-`pip3 install -r requirements.txt`
+```
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+```
 
 
 ### Create fake ELRs
@@ -49,18 +52,19 @@ Examples:
 
 ### Example
 
-`rm -rf examples; mkdir examples # create directory for fake ELRs`
+```
+rm -rf examples; mkdir examples # create directory for fake ELRs
 
-`python3 generate.py -n 100 -o examples # make 100 fake ELRs`
+python3 generate.py -n 100 -o examples # make 100 fake ELRs
 
-`cd examples`
+cd examples
 
-`for i in *hl7; do ; python3 ../convert.py --sql < $i > $i.sql ; echo $i; done  # convert to XML ready to insert into databse`
+for i in *hl7; do ; python3 ../convert.py --sql < $i > $i.sql ; echo $i; done  # convert to XML ready to insert into databse
 
-`for i in *sql; do; sqlcmd -U 'superuser' -P [PASSWORD] -i $i; echo $i; done  # add to the NBS_MSGOUTE database`
+for i in *sql; do; sqlcmd -U 'superuser' -P [PASSWORD] -i $i; echo $i; done  # add to the NBS_MSGOUTE database
 
-`docker exec wildfly /opt/jboss/wildfly/nedssdomain/Nedss/BatchFiles/ELRImporter.sh  # import data to NBS_ODSE`
-
+docker exec wildfly /opt/jboss/wildfly/nedssdomain/Nedss/BatchFiles/ELRImporter.sh  # import data to NBS_ODSE
+```
 
 ## TODO: more data generation tools
 
