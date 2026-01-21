@@ -5,7 +5,7 @@
     "database.hostname": "rtr-mssql",
     "database.port": "1433",
     "database.user": "sa",
-    "database.password": "fake.fake.fake.1234",
+    "database.password": "PizzaIsGood33!",
     "database.dbname": "nbs_odse",
     "database.names": "nbs_odse",
     "database.server.name": "odse",

@@ -7,7 +7,7 @@
     "batch.size": "200",
     "connection.url": "jdbc:sqlserver://rtr-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;",
     "connection.user": "sa",
-    "connection.password": "fake.fake.fake.1234",
+    "connection.password": "PizzaIsGood33!",
     "connection.pool.min_size": "1",
     "connection.pool.max_size": "5",
     "connection.pool.acquire_increment": "1",

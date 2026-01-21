@@ -2,10 +2,10 @@ spring:
   application:
     name: liquibase-service
   datasource:
-    password: ${DB_PASSWORD:-fake.fake.fake.1234}
+    password: ${DB_PASSWORD:-PizzaIsGood33!}
     username: ${DB_USERNAME:-sa}
     url: ${DB_URL:localhost}
     odse: ${DB_ODSE:NBS_ODSE}
     rdb: ${DB_RDB:RDB}
 server:
-  port: '8090'
+  port: "8090"

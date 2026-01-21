@@ -3,8 +3,8 @@ FROM liquibase/liquibase:4.33.0-alpine
 USER root
 
 RUN apk add --no-cache wget && \
-    wget https://download.microsoft.com/download/fae28b9a-d880-42fd-9b98-d779f0fdd77f/msodbcsql18_18.5.1.1-1_arm64.apk && \
-    wget https://download.microsoft.com/download/7/6/d/76de322a-d860-4894-9945-f0cc5d6a45f8/mssql-tools18_18.4.1.1-1_arm64.apk && \
+    wget https://download.microsoft.com/download/fae28b9a-d880-42fd-9b98-d779f0fdd77f/msodbcsql18_18.5.1.1-1_arm64.apk --no-check-certificate && \
+    wget https://download.microsoft.com/download/7/6/d/76de322a-d860-4894-9945-f0cc5d6a45f8/mssql-tools18_18.4.1.1-1_arm64.apk --no-check-certificate && \
     apk add --allow-untrusted msodbcsql18_18.5.1.1-1_arm64.apk && \
     apk add --allow-untrusted mssql-tools18_18.4.1.1-1_arm64.apk
 

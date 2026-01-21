@@ -4,7 +4,7 @@ set -e
 BASE="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 CLASSIC_PATH=$BASE/wildfly/builder/NEDSSDev
-CLASSIC_VERSION=v6.0.16.0
+CLASSIC_VERSION=lts/6.0.17
 
 echo "Building NBS6 Application"
 

@@ -52,7 +52,7 @@ echo "Applying onboarding scripts"
 for sql in $(find "./onboarding" -iname "*.sql" | sort) ;
 do
     echo "Executing: $sql"
-    /opt/mssql-tools18/bin/sqlcmd -C -S rtr-mssql -U sa -P "fake.fake.fake.1234" -i "$sql"
+    /opt/mssql-tools18/bin/sqlcmd -C -S rtr-mssql -U sa -P "PizzaIsGood33!" -i "$sql"
 
     echo "Completed: $sql"
 done

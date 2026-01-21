@@ -24,7 +24,13 @@
 
 The first time containers are built, the liquibase container will need to be started. All following startups can bypass running liquibase.
 
-### Build the database and liquibase containers
+### Initialize the NEDSSDB submodule
+
+```sh
+git submodule update --init --recursive --remote
+```
+
+### Build the RTR database and liquibase containers
 
 ```sh
 docker compose up mssql liquibase -d
