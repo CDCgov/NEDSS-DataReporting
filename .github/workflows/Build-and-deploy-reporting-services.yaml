@@ -111,7 +111,7 @@ jobs:
     name: Build LdfData Reporting Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: nbs7-ldfdata-reporting
+      microservice_name: nbs7-ldf-data-reporting
       dockerfile_relative_path: -f ./ldfdata-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "21"
