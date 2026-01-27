@@ -8,7 +8,6 @@ on:
 #      Uncomment the following line only to test the build and deploy from private branches.
 #      - CNDIT-*
 #      - CNDE-*
-      - test-deploy
     paths-ignore:
       - "docker-compose.yml"
       - "**.md"
