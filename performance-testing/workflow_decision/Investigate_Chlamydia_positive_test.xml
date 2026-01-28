@@ -1,0 +1,63 @@
+<Algorithm xmlns="http://www.cdc.gov/NEDSS">
+  <AlgorithmName>Investigate_Chlamydia_positive_test</AlgorithmName>
+  <Event>
+    <Code>11648804</Code>
+    <CodeDescTxt>Laboratory Report</CodeDescTxt>
+    <CodeSystemCode>2.16.840.1.113883.6.96</CodeSystemCode>
+  </Event>
+  <Frequency>
+    <Code>1</Code>
+    <CodeDescTxt>Real-Time</CodeDescTxt>
+    <CodeSystemCode>L</CodeSystemCode>
+  </Frequency>
+  <AppliesToEntryMethods>
+    <EntryMethod>
+      <Code>1</Code>
+      <CodeDescTxt>Electronic Document</CodeDescTxt>
+      <CodeSystemCode>L</CodeSystemCode>
+    </EntryMethod>
+  </AppliesToEntryMethods>
+  <InvestigationType>PG_STD_Investigation</InvestigationType>
+  <ApplyToConditions>
+    <Condition>
+      <Code>10274</Code>
+      <CodeDescTxt>Chlamydia trachomatis infection</CodeDescTxt>
+      <CodeSystemCode>2.16.840.1.114222.4.5.277</CodeSystemCode>
+    </Condition>
+  </ApplyToConditions>
+  <Comment/>
+  <ElrAdvancedCriteria>
+    <EventDateLogic>
+      <ElrTimeLogic>
+        <ElrTimeLogicInd>
+          <Code>N</Code>
+        </ElrTimeLogicInd>
+      </ElrTimeLogic>
+    </EventDateLogic>
+    <AndOrLogic>OR</AndOrLogic>
+    <ElrCriteria>
+      <ResultedTest>
+        <Code>70161-5</Code>
+        <CodeDescTxt>Chlamydia trachomatis and Neisseria gonorrhoeae rRNA panel - Urine by Probe and target amplification method (70161-5)</CodeDescTxt>
+      </ResultedTest>
+      <ElrCodedResultValue>
+        <Code>260373001</Code>
+        <CodeDescTxt>Detected (260373001)</CodeDescTxt>
+      </ElrCodedResultValue>
+    </ElrCriteria>
+    <InvLogic>
+      <InvLogicInd>
+        <Code>N</Code>
+      </InvLogicInd>
+    </InvLogic>
+  </ElrAdvancedCriteria>
+  <Action>
+    <CreateInvestigation>
+      <OnFailureToCreateInvestigation>
+        <Code>2</Code>
+        <CodeDescTxt>Retain Event Record</CodeDescTxt>
+        <CodeSystemCode>L</CodeSystemCode>
+      </OnFailureToCreateInvestigation>
+    </CreateInvestigation>
+  </Action>
+</Algorithm>
