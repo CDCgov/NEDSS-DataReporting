@@ -18,7 +18,6 @@ spring:
       retry-suffix: _retry
       dlq-suffix: _dlt
 
-
     group-id: ${KAFKA_CONSUMER_APP:organization-reporting-consumer-app}
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
     consumer:
@@ -32,7 +31,7 @@ spring:
   application:
     name: organization-reporting-service
   datasource:
-    password: ${DB_PASSWORD:-fake.fake.fake.1234}
+    password: ${DB_PASSWORD:-PizzaIsGood33!}
     username: ${DB_USERNAME:-sa}
     url: ${DB_ODSE_URL:jdbc:sqlserver://localhost:1433;databaseName=:NBS_ODSE;encrypt=true;trustServerCertificate=true;}
   liquibase:
@@ -43,7 +42,7 @@ featureFlag:
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
 
 server:
-  port: '8092'
+  port: "8092"
 
 management:
   endpoint:

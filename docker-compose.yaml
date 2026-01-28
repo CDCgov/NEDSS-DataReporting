@@ -1,0 +1,218 @@
+services:
+  mssql:
+    platform: linux/amd64
+    container_name: rtr-mssql
+    build:
+      context: ./containers/db
+      args:
+        - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
+        - DATABASE_BACKUP=6.0.14_base_with_templates_and_std
+        - DB_VERSION=${DB_VERSION:-6.0.17.1}
+        - RUN_SEEDING=${RUN_SEEDING:-false}
+    environment:
+      - ACCEPT_EULA=1
+      - SQLCMDPASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
+      - MSSQL_SA_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
+    ports:
+      - 3433:1433
+    networks:
+      - rtr
+    healthcheck:
+      test: timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/1433'
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  wildfly:
+    build: ./containers/wildfly
+    image: nbs-classic:6.0.16
+    container_name: rtr-wildfly
+    ports:
+      - "9991:9990"
+      - "7003:7001"
+      - "8788:8787"
+    networks:
+      - rtr
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: rtr-zookeeper
+    container_name: rtr-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - rtr
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://kafka:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://localhost:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+    networks:
+      - rtr
+
+  kafka-connect:
+    container_name: kafka-connect
+    build:
+      dockerfile: ./containers/kafka-connect/Dockerfile
+    depends_on:
+      - kafka
+      - mssql
+    ports:
+      - 8083:8083
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "kafka:29092"
+      CONNECT_GROUP_ID: "cp-kafka-connect.groupId"
+      CONNECT_CONFIG_STORAGE_TOPIC: "kafka-sink-connector-config"
+      CONNECT_OFFSET_STORAGE_TOPIC: "kafka-sink-connector-offset"
+      CONNECT_STATUS_STORAGE_TOPIC: "kafka-sink-connector-status"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+    networks:
+      - rtr
+
+  debezium:
+    image: debezium/connect:2.4
+    hostname: debezium
+    container_name: rtr-debezium
+    depends_on:
+      - kafka
+      - zookeeper
+    ports:
+      - "8085:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: connect-cluster
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      OFFSET_STORAGE_FILE_FILENAME: /tmp/connect.offsets
+      OFFSET_FLUSH_INTERVAL_MS: 10000
+      PLUGIN_PATH: /kafka/connect
+
+      CONFIG_STORAGE_TOPIC: connect-configs
+      OFFSET_STORAGE_TOPIC: connect-offsets
+      STATUS_STORAGE_TOPIC: connect-status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+    networks:
+      - rtr
+
+  liquibase:
+    build:
+      dockerfile: ./liquibase-service/Dockerfile.local
+    environment:
+      - DB_USERNAME=sa
+      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+    depends_on:
+      mssql:
+        condition: service_healthy
+    networks:
+      - rtr
+
+  investigation-service:
+    build:
+      dockerfile: ./investigation-service/Dockerfile
+    environment:
+      - DB_USERNAME=sa
+      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    networks:
+      - rtr
+    depends_on:
+      - kafka
+
+  ldfdata-service:
+    build:
+      dockerfile: ./ldfdata-service/Dockerfile
+    environment:
+      - DB_USERNAME=sa
+      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    networks:
+      - rtr
+    depends_on:
+      - kafka
+
+  observation-service:
+    build:
+      dockerfile: ./observation-service/Dockerfile
+    environment:
+      - DB_USERNAME=sa
+      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    networks:
+      - rtr
+    depends_on:
+      - kafka
+
+  organization-service:
+    build:
+      dockerfile: ./organization-service/Dockerfile
+    environment:
+      - DB_USERNAME=sa
+      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    networks:
+      - rtr
+    depends_on:
+      - kafka
+
+  person-service:
+    build:
+      dockerfile: ./person-service/Dockerfile
+    environment:
+      - DB_USERNAME=sa
+      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    networks:
+      - rtr
+    depends_on:
+      - kafka
+
+  post-processing-service:
+    build:
+      dockerfile: ./post-processing-service/Dockerfile
+    environment:
+      - DB_USERNAME=sa
+      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+      - DB_RDB_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    networks:
+      - rtr
+    depends_on:
+      - kafka
+
+networks:
+  rtr:
+    name: rtr
+    driver: bridge

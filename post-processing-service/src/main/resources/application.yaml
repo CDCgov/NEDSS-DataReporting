@@ -55,7 +55,7 @@ spring:
   application:
     name: post-processing-reporting-service
   datasource:
-    password: ${DB_PASSWORD:-fake.fake.fake.1234}
+    password: ${DB_PASSWORD:-PizzaIsGood33!}
     username: ${DB_USERNAME:-sa}
     url: ${DB_RDB_URL:jdbc:sqlserver://localhost:1433;databaseName=:RDB;encrypt=true;trustServerCertificate=true;}
   jpa:
@@ -70,7 +70,7 @@ service:
     backfill: ${FIXED_DELAY_BF:600000}
   max-retries: ${MAX_RETRIES:3}
 server:
-  port: '8095'
+  port: "8095"
 
 management:
   endpoint:

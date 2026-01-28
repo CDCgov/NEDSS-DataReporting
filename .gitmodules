@@ -1,0 +1,3 @@
+[submodule "containers/db/NEDSSDB"]
+	path = containers/db/NEDSSDB
+	url = git@github.com:cdcent/NEDSSDB.git
