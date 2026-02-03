@@ -11,7 +11,7 @@ on:
     paths-ignore:
       - "docker-compose.yml"
       - "**.md"
-
+jobs:
   # person-reporting-microservice
   call-build-person-reporting-microservice-container-workflow:
     permissions:
