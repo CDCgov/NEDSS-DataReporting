@@ -19,7 +19,7 @@ spring:
   application:
     name: ldfdata-reporting-service
   datasource:
-    password: ${DB_PASSWORD:-fake.fake.fake.1234}
+    password: ${DB_PASSWORD:-PizzaIsGood33!}
     username: ${DB_USERNAME:-sa}
     url: ${DB_ODSE_URL:jdbc:sqlserver://localhost:1433;databaseName=:NBS_ODSE;encrypt=true;trustServerCertificate=true;}
   liquibase:
@@ -27,7 +27,7 @@ spring:
 featureFlag:
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
 server:
-  port: '8097'
+  port: "8097"
 
 management:
   endpoint:
