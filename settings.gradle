@@ -17,5 +17,3 @@ include 'post-processing-service'
 include 'ldfdata-service'
 
 include 'liquibase-service'
-
-include 'status-service'
