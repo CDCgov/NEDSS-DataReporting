@@ -1,4 +1,4 @@
-FROM amazoncorretto:21 as builder
+FROM amazoncorretto:25 as builder
 
 RUN yum update -y && yum clean all
 
@@ -16,7 +16,7 @@ WORKDIR /usr/src/
 
 #Build person service along with any required libraries
 RUN ./gradlew :person-service:buildNeeded -x test --no-daemon
-FROM amazoncorretto:21
+FROM amazoncorretto:25
 RUN yum update -y && yum clean all
 COPY --from=builder /usr/src/person-service/build/libs/person-service*.jar person-service.jar
 
