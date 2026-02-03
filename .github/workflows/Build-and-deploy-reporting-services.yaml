@@ -5,22 +5,12 @@ on:
       - main
       - master
       - rel-**
-#      Uncomment the following line only to test the build and deploy from private branches.
-#      - CNDIT-*
-#      - CNDE-*
+    #      Uncomment the following line only to test the build and deploy from private branches.
+    #      - CNDIT-*
+    #      - CNDE-*
     paths-ignore:
       - "docker-compose.yml"
       - "**.md"
-jobs:
-  sonar_scan:
-    permissions:
-      id-token: write
-      contents: read
-    name: Sonar Scan Analyze
-    uses: ./.github/workflows/sonar.yaml
-    secrets:
-      PASSED_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
 
   # person-reporting-microservice
   call-build-person-reporting-microservice-container-workflow:
@@ -133,4 +123,3 @@ jobs:
       java_version: "21"
     secrets:
       NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
-
