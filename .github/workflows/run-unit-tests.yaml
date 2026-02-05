@@ -44,7 +44,7 @@ jobs:
           ./gradlew clean build jacocoTestReport
 
       - name: Publish Testing Reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: testing
           path: ./**/build/reports
