@@ -46,7 +46,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     // Liquibase
-    liquibaseRuntime 'org.liquibase:liquibase-core:4.29.2'
+    liquibaseRuntime 'org.liquibase:liquibase-core:5.0.1'
     liquibaseRuntime 'info.picocli:picocli:4.7.6'
     liquibaseRuntime 'com.microsoft.sqlserver:mssql-jdbc:12.8.1.jre11'
 }
