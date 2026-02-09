@@ -15,7 +15,7 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -325,7 +325,7 @@ BEGIN
               --,nesteddata.ldf_public_health_case
               FROM
                   --public health case
-                  dbo.public_health_case phc WITH (NOLOCK)
+                  nbs_odse.dbo.public_health_case phc WITH (NOLOCK)
                       OUTER apply (SELECT *
                                    FROM (
                                             -- persons associated with public_health_case
@@ -344,11 +344,11 @@ BEGIN
                                                            person.person_parent_uid               AS [person_parent_uid],
                                                            person.record_status_cd                AS [person_record_status],
                                                            person.last_chg_time                   AS [person_last_chg_time]
-                                                    FROM dbo.participation p
+                                                    FROM nbs_odse.dbo.participation p
                                                              WITH (NOLOCK)
-                                                             JOIN dbo.person WITH (NOLOCK) ON person.person_uid =
+                                                             JOIN nbs_odse.dbo.person WITH (NOLOCK) ON person.person_uid =
                                                                                               (select person.person_parent_uid
-                                                                                               from dbo.person
+                                                                                               from nbs_odse.dbo.person
                                                                                                where person.person_uid = p.subject_entity_uid)
                                                     WHERE p.act_uid = phc.public_health_case_uid
                                                     FOR json path,INCLUDE_NULL_VALUES) AS person_participations) AS person_participations,
@@ -360,9 +360,9 @@ BEGIN
                                                         p.last_chg_time                       AS [participation_last_change_time],
                                                         STRING_ESCAPE(org.display_nm, 'json') AS [name],
                                                         org.last_chg_time                     AS [org_last_change_time]
-                                                 FROM dbo.participation p
+                                                 FROM nbs_odse.dbo.participation p
                                                           WITH (NOLOCK)
-                                                          JOIN dbo.organization org WITH (NOLOCK)
+                                                          JOIN nbs_odse.dbo.organization org WITH (NOLOCK)
                                                                ON org.organization_uid = p.subject_entity_uid
                                                  WHERE p.act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS organization_participations) AS organization_participations
@@ -391,10 +391,10 @@ BEGIN
                                                         branch.target_class_cd as root_source_class_cd,
                                                         branch.source_class_cd as branch_source_class_cd,
                                                         branch.type_cd         as branch_type_cd
-                                                 FROM dbo.act_relationship act WITH (NOLOCK)
-                                                          left join dbo.act_relationship branch WITH (NOLOCK)
+                                                 FROM nbs_odse.dbo.act_relationship act WITH (NOLOCK)
+                                                          left join nbs_odse.dbo.act_relationship branch WITH (NOLOCK)
                                                                     on act.source_act_uid = branch.target_act_uid
-                                                          left join dbo.act_relationship AS root WITH (NOLOCK)
+                                                          left join nbs_odse.dbo.act_relationship AS root WITH (NOLOCK)
                                                                     on branch.source_act_uid = root.source_act_uid and root.type_cd = 'ItemToRow'
                                                  WHERE act.target_act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
@@ -410,7 +410,7 @@ BEGIN
                                                         act_id.add_user_id           act_id_add_user_id,
                                                         act_id.last_chg_user_id      act_id_last_chg_user_id,
                                                         act_id.last_chg_time      AS [act_id_last_change_time]
-                                                 FROM dbo.act_id WITH (NOLOCK)
+                                                 FROM nbs_odse.dbo.act_id WITH (NOLOCK)
                                                  WHERE act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS act_ids) AS act_ids,
                                         -- get associated confirmation method
@@ -419,10 +419,10 @@ BEGIN
                                                         cvg.CODE_SHORT_DESC_TXT as confirmation_method_desc_txt,
                                                         cm.confirmation_method_time,
                                                         phc1.last_chg_time      as phc_last_chg_time
-                                                 from dbo.Confirmation_method cm
+                                                 from nbs_odse.dbo.Confirmation_method cm
                                                           left join nbs_srte.dbo.Code_value_general cvg WITH (NOLOCK)
                                                                     on cvg.code = cm.confirmation_method_cd and cvg.code_set_nm = 'PHC_CONF_M'
-                                                          join dbo.Public_health_case phc1 WITH (NOLOCK)
+                                                          join nbs_odse.dbo.Public_health_case phc1 WITH (NOLOCK)
                                                                on cm.public_health_case_uid = phc1.public_health_case_uid
                                                  WHERE cm.public_health_case_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_confirmation_method) AS investigation_confirmation_method,
@@ -570,10 +570,10 @@ BEGIN
                                                               nq.code_set_group_id,
                                                               nq.data_type,
                                                               ntm.datamart_column_nm
-                                                       from dbo.NBS_case_answer na with (nolock )
-                                                                join dbo.NBS_table_metadata ntm with (nolock)
+                                                       from nbs_odse.dbo.NBS_case_answer na with (nolock )
+                                                                join nbs_odse.dbo.NBS_table_metadata ntm with (nolock)
                                                                      on ntm.nbs_table_metadata_uid = na.nbs_table_metadata_uid
-                                                                join dbo.NBS_question nq with (nolock)
+                                                                join nbs_odse.dbo.NBS_question nq with (nolock)
                                                                      on nq.nbs_question_uid = na.nbs_question_uid
                                                        WHERE na.nbs_table_metadata_uid is not null
                                                          and na.act_uid = phc.public_health_case_uid
@@ -584,8 +584,8 @@ BEGIN
                                                               nq.code_set_group_id,
                                                               nq.data_type,
                                                               nq.datamart_column_nm
-                                                       from dbo.NBS_case_answer na with (nolock )
-                                                                join dbo.NBS_question nq with (nolock)
+                                                       from nbs_odse.dbo.NBS_case_answer na with (nolock )
+                                                                join nbs_odse.dbo.NBS_question nq with (nolock)
                                                                      on nq.nbs_question_uid = na.nbs_question_uid
                                                        WHERE na.nbs_table_metadata_uid is null
                                                          and na.act_uid = phc.public_health_case_uid
@@ -679,7 +679,7 @@ BEGIN
                                                          from fn_get_value_by_cvg(initiating_agncy, 'OOJ_AGENCY_LOCAL'))               as initiating_agncy,
                                                         ooj_initg_agncy_recd_date,
                                                         ooj_initg_agncy_outc_due_date
-                                                 from dbo.case_management cm
+                                                 from nbs_odse.dbo.case_management cm
                                                  WHERE cm.public_health_case_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_case_management) AS investigation_case_management,
                                         -- investigation notification columns
@@ -727,8 +727,8 @@ BEGIN
                                                         nh.first_notification_submitted_by,
                                                         nh.last_notification_submitted_by,
                                                         nh.notification_date
-                                                 FROM dbo.act_relationship act WITH (NOLOCK)
-                                                          inner join dbo.notification notif WITH (NOLOCK)
+                                                 FROM nbs_odse.dbo.act_relationship act WITH (NOLOCK)
+                                                          inner join nbs_odse.dbo.notification notif WITH (NOLOCK)
                                                                      on act.source_act_uid = notif.notification_uid and act.target_act_uid = phc.public_health_case_uid
                                                           left join nbs_odse.dbo.participation part with (nolock)
                                                                     ON part.type_cd = 'SubjOfPHC' AND part.act_uid = act.target_act_uid
@@ -885,7 +885,7 @@ BEGIN
                                                    FROM STRING_SPLIT(@phc_id_list
                                                        , ','))) AS results
                  LEFT JOIN nbs_srte.dbo.jurisdiction_code jc WITH (NOLOCK) ON results.jurisdiction_cd = jc.code
-                 LEFT JOIN act WITH (NOLOCK) ON act.act_uid = results.public_health_case_uid
+                 LEFT JOIN nbs_odse.dbo.act WITH (NOLOCK) ON act.act_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.program_area_code pac WITH (NOLOCK) on results.prog_area_cd = pac.prog_area_cd
                  LEFT JOIN nbs_srte.dbo.state_code sc WITH (NOLOCK) ON results.imported_state_cd = sc.state_cd
                  LEFT JOIN nbs_srte.dbo.state_county_code_value sccv WITH (NOLOCK)
@@ -923,7 +923,7 @@ BEGIN
                               MAX(CASE WHEN type_cd = 'PerAsProviderOfOBGYN' THEN entity_uid END)       per_as_provider_of_obgyn_uid,
                               MAX(CASE WHEN type_cd = 'PerAsProvideroOfPediatrics' THEN entity_uid END) per_as_provider_of_pediatrics_uid,
                               MAX(CASE WHEN type_cd = 'OrgAsReporterOfPHC' THEN entity_uid END)         org_as_reporter_uid
-              FROM nbs_act_entity nac WITH (NOLOCK)
+              FROM nbs_odse.dbo.nbs_act_entity nac WITH (NOLOCK)
               GROUP BY act_uid) AS investigation_act_entity
              ON investigation_act_entity.nac_page_case_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.condition_code con on results.cd = con.condition_cd
@@ -942,7 +942,7 @@ BEGIN
 
         -- select * from dbo.Investigation_Dim_Event;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -974,7 +974,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]

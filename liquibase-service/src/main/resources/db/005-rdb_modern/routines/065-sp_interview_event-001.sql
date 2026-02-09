@@ -24,7 +24,7 @@ BEGIN
 
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -103,7 +103,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -164,7 +164,7 @@ BEGIN
                                   END AS DATA_TYPE,
                               rdb_table_nm,
                               answer_group_seq_nbr
-              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) AS metadata
                  INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
                             ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
@@ -181,7 +181,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -225,7 +225,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -268,7 +268,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -311,7 +311,7 @@ BEGIN
                               DATA_TYPE,
                               ACT_UID AS INTERVIEW_UID,
                               RECORD_STATUS_CD
-              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND (
@@ -332,7 +332,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -372,7 +372,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -418,7 +418,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -465,7 +465,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -511,7 +511,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -562,7 +562,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -603,7 +603,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -638,7 +638,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -670,7 +670,7 @@ BEGIN
                               data_type,
                               rdb_table_nm,
                               answer_group_seq_nbr
-              from dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              from nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) as metadata
                  INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
                             ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
@@ -687,7 +687,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -721,7 +721,7 @@ BEGIN
                               RECORD_STATUS_CD,
                               NBS_ANSWER_UID,
                               ANSWER_TXT
-              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND ANSWER_GROUP_SEQ_NBR IS NULL
@@ -741,7 +741,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -801,7 +801,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -841,7 +841,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -882,7 +882,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -929,7 +929,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -962,7 +962,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -987,7 +987,7 @@ BEGIN
                               INVESTIGATION_FORM_CD,
                               QUESTION_GROUP_SEQ_NBR,
                               DATA_TYPE
-              FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND DATA_TYPE in ('Date/Time', 'Date', 'DATETIME', 'DATE')
@@ -1011,7 +1011,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -1060,7 +1060,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -1082,7 +1082,7 @@ BEGIN
                         LEFT(ANSWER_TXT, CHARINDEX('~', ANSWER_TXT + '~') - 1) AS [USER],
                         RECORD_STATUS_CD
         INTO #INTERVIEW_NOTE_INIT
-        FROM dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+        FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
         WHERE act_uid in (SELECT value FROM STRING_SPLIT(@ix_uids, ','))
           AND QUESTION_IDENTIFIER = 'IXS111'
           AND RDB_TABLE_NM = 'D_INTERVIEW_NOTE';
@@ -1094,7 +1094,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -1143,7 +1143,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -1189,7 +1189,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -1256,7 +1256,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
                 @RowCount_no);
@@ -1265,7 +1265,7 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -1296,7 +1296,7 @@ BEGIN
         'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
         'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]

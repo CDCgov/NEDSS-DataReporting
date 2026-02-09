@@ -32,7 +32,7 @@ BEGIN
             @debug = 'true'
             select @batch_id as Batch_id;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     ( batch_id
     , [Dataflow_Name]
     , [package_Name]
@@ -165,7 +165,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -230,7 +230,7 @@ BEGIN
             END AS DATA_TYPE,
             rdb_table_nm,
             answer_group_seq_nbr
-        FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
+        FROM nbs_odse.dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
         WHERE
         CODE_SET_NM = 'NBS_DATA_TYPE'
       AND UPPER(data_type) = 'CODED'
@@ -248,7 +248,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -292,7 +292,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -335,7 +335,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -378,7 +378,7 @@ BEGIN
 	        DATA_TYPE,
 	        CT_CONTACT_UID,
 	        RECORD_STATUS_CD
-        FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
+        FROM nbs_odse.dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
         WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
             AND QUESTION_GROUP_SEQ_NBR IS NULL
             AND (
@@ -399,7 +399,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -439,7 +439,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -484,7 +484,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -531,7 +531,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -578,7 +578,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -635,7 +635,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -676,7 +676,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -708,7 +708,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -736,7 +736,7 @@ BEGIN
 	        ANSWER_TXT,
 	        CT_CONTACT_UID,
 	        NBS_QUESTION_UID
-        FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
+        FROM nbs_odse.dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
         WHERE
         CODE_SET_NM = 'NBS_DATA_TYPE'
         AND CODE = 'TEXT'
@@ -753,7 +753,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -786,7 +786,7 @@ BEGIN
 	        NBS_QUESTION_UID,
 	        CODE_SET_GROUP_ID,
 	        RECORD_STATUS_CD
-        FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
+        FROM nbs_odse.dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
         WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
             AND QUESTION_GROUP_SEQ_NBR IS NULL
             AND ANSWER_GROUP_SEQ_NBR IS NULL
@@ -805,7 +805,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -864,7 +864,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -903,7 +903,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -943,7 +943,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -989,7 +989,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1021,7 +1021,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1053,7 +1053,7 @@ BEGIN
               QUESTION_GROUP_SEQ_NBR,
               ANSWER_TXT,
               DATA_TYPE
-          FROM dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
+          FROM nbs_odse.dbo.V_RDB_UI_METADATA_ANSWERS_CONTACT
           WHERE RDB_TABLE_NM = 'D_CONTACT_RECORD'
             AND QUESTION_GROUP_SEQ_NBR IS NULL
             AND data_location = 'CT_CONTACT_ANSWER.ANSWER_TXT'
@@ -1073,7 +1073,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1123,7 +1123,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1166,7 +1166,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1271,7 +1271,7 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
     VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
             @RowCount_no);
@@ -1280,7 +1280,7 @@ BEGIN
     COMMIT TRANSACTION;
 
 
-    INSERT INTO [rdb].[dbo].[job_flow_log]
+    INSERT INTO [dbo].[job_flow_log]
     ( batch_id
     , [Dataflow_Name]
     , [package_Name]
@@ -1311,7 +1311,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]

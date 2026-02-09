@@ -16,7 +16,7 @@ BEGIN
 
 
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -45,9 +45,9 @@ BEGIN
                   notif.notification_uid,
                   nesteddata.investigation_notifications
               FROM
-                  dbo.notification notif WITH (NOLOCK)
-                      inner join dbo.act_relationship act WITH (NOLOCK) on act.source_act_uid = notif.notification_uid
-                      inner join dbo.public_health_case phc WITH (NOLOCK) on act.target_act_uid = phc.public_health_case_uid
+                  nbs_odse.dbo.notification notif WITH (NOLOCK)
+                      inner join nbs_odse.dbo.act_relationship act WITH (NOLOCK) on act.source_act_uid = notif.notification_uid
+                      inner join nbs_odse.dbo.public_health_case phc WITH (NOLOCK) on act.target_act_uid = phc.public_health_case_uid
                       outer apply (
                       select
                           *
@@ -97,10 +97,10 @@ BEGIN
                                           nh.last_notification_submitted_by,
                                           nh.notification_date
                                       FROM
-                                          dbo.act_relationship act WITH (NOLOCK)
-                                              inner join dbo.public_health_case phc WITH (NOLOCK) on act.target_act_uid = phc.public_health_case_uid
-                                              left join dbo.participation part with (nolock) ON part.type_cd='SubjOfPHC' AND part.act_uid=act.target_act_uid
-                                              left join dbo.person per with (nolock) ON per.cd='PAT' AND per.person_uid = part.subject_entity_uid
+                                          nbs_odse.dbo.act_relationship act WITH (NOLOCK)
+                                              inner join nbs_odse.dbo.public_health_case phc WITH (NOLOCK) on act.target_act_uid = phc.public_health_case_uid
+                                              left join nbs_odse.dbo.participation part with (nolock) ON part.type_cd='SubjOfPHC' AND part.act_uid=act.target_act_uid
+                                              left join nbs_odse.dbo.person per with (nolock) ON per.cd='PAT' AND per.person_uid = part.subject_entity_uid
                                               LEFT JOIN (
                                               SELECT *
                                               FROM (
@@ -216,7 +216,7 @@ BEGIN
 
 
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (      batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -252,7 +252,7 @@ BEGIN
             'Error Message: ' + ERROR_MESSAGE();
 
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (      batch_id
         , [Dataflow_Name]
         , [package_Name]
