@@ -14,7 +14,7 @@ BEGIN
 
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (
           batch_id
         ,[Dataflow_Name]
@@ -63,7 +63,7 @@ BEGIN
                nested.phone              AS 'organization_telephone',
                nested.fax                AS 'organization_fax',
                nested.entity_id          AS 'organization_entity_id'
-        FROM dbo.Organization o WITH (NOLOCK)
+        FROM nbs_odse.dbo.Organization o WITH (NOLOCK)
                  OUTER apply (SELECT *
                               FROM
                                   -- address
@@ -83,8 +83,8 @@ BEGIN
                                                   LTRIM(RTRIM(SUBSTRING(cc.code_short_desc_txt,1,50))) AS [country],
                                                   LTRIM(RTRIM(SUBSTRING(elp.locator_desc_txt,1,2000))) AS [address_comments],
                                                   LTRIM(RTRIM(SUBSTRING(ccv.code_desc_txt,1,50))) AS [county_desc]
-                                           FROM dbo.Entity_locator_participation elp with (nolock)
-                                                    LEFT OUTER JOIN postal_locator pl with (nolock)
+                                           FROM nbs_odse.dbo.Entity_locator_participation elp with (nolock)
+                                                    LEFT OUTER JOIN nbs_odse.dbo.postal_locator pl with (nolock)
                                                                     ON elp.locator_uid = pl.postal_locator_uid
                                                     LEFT OUTER JOIN nbs_srte.dbo.state_code sc with (nolock) on sc.state_cd = pl.state_cd
                                                     LEFT OUTER JOIN nbs_srte.dbo.state_county_code_value scc with (nolock)
@@ -101,7 +101,7 @@ BEGIN
                                   -- org name
                                   (SELECT (SELECT on2.organization_uid                       AS [on_org_uid],
                                                   LTRIM(RTRIM(SUBSTRING(on2.nm_txt, 1, 50))) AS [organization_name]
-                                           FROM dbo.Organization_name on2 WITH (NOLOCK)
+                                           FROM nbs_odse.dbo.Organization_name on2 WITH (NOLOCK)
                                            WHERE o.organization_uid = on2.organization_uid
                                            FOR json path, INCLUDE_NULL_VALUES) AS name) AS name,
                                   -- org phone
@@ -112,8 +112,8 @@ BEGIN
                                                   tl.extension_txt                                     extension_txt,
                                                   STRING_ESCAPE(tl.email_address, 'json')              email_address,
                                                   elp.locator_desc_txt as                              [phone_comments]
-                                           FROM dbo.Entity_locator_participation elp WITH (NOLOCK)
-                                                    JOIN Tele_locator tl WITH (NOLOCK) ON elp.locator_uid = tl.tele_locator_uid
+                                           FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
+                                                    JOIN nbs_odse.dbo.Tele_locator tl WITH (NOLOCK) ON elp.locator_uid = tl.tele_locator_uid
                                            WHERE elp.entity_uid = o.organization_uid
                                              AND elp.class_cd = 'TELE'
                                              AND elp.use_cd = 'WP'
@@ -125,8 +125,8 @@ BEGIN
                                                   elp.cd                                           AS [fax_elp_cd],
                                                   elp.use_cd                                       AS [fax_elp_use_cd],
                                                   LTRIM(RTRIM(SUBSTRING(tl.phone_nbr_txt, 1, 20))) as [org_fax]
-                                           FROM dbo.Entity_locator_participation elp WITH (NOLOCK)
-                                                    JOIN Tele_locator tl WITH (NOLOCK) ON elp.locator_uid = tl.tele_locator_uid
+                                           FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
+                                                    JOIN nbs_odse.dbo.Tele_locator tl WITH (NOLOCK) ON elp.locator_uid = tl.tele_locator_uid
                                            WHERE elp.entity_uid = o.organization_uid
                                              AND elp.class_cd = 'TELE'
                                              AND elp.use_cd = 'WP'
@@ -147,14 +147,14 @@ BEGIN
                                                           then (select *
                                                                 from dbo.fn_get_value_by_cvg(ei.assigning_authority_cd, 'EI_AUTH_ORG'))
                                                       end             as facility_id_auth
-                                           FROM dbo.Entity_id ei WITH (NOLOCK)
+                                           FROM nbs_odse.dbo.Entity_id ei WITH (NOLOCK)
                                            WHERE ei.entity_uid = o.organization_uid
                                            FOR json path, INCLUDE_NULL_VALUES) AS entity_id) AS entity_id
         ) AS nested
                  LEFT JOIN nbs_srte.dbo.NAICS_INDUSTRY_CODE naics WITH (NOLOCK) ON (NAICS.CODE = o.STANDARD_INDUSTRY_CLASS_CD)
         WHERE o.organization_uid in (SELECT value FROM STRING_SPLIT(@org_id_list, ','))
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (
           batch_id
         ,[Dataflow_Name]
@@ -190,7 +190,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb].[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                  batch_id
                                                ,[Dataflow_Name]
                                                ,[package_Name]

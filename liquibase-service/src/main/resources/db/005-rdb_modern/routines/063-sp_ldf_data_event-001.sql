@@ -16,7 +16,7 @@ begin
 		DECLARE @dataflow_name NVARCHAR(200) = 'ldf_data PRE-Processing Event';
         DECLARE @package_name NVARCHAR(200) = 'NBS_ODSE.sp_ldf_data_event';
         
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
             ( batch_id
             , [Dataflow_Name]
             , [package_Name]
@@ -44,7 +44,7 @@ begin
 			else if  @bus_obj_nm = 'NIP'  exec dbo.sp_ldf_phc_event @ldf_uid, @bus_obj_uid_list, @batch_id
 			else if  @bus_obj_nm = 'VAC'  exec dbo.sp_ldf_intervention_event @ldf_uid, @bus_obj_uid_list, @batch_id 
 		
-		INSERT INTO [rdb].[dbo].[job_flow_log]
+		INSERT INTO [dbo].[job_flow_log]
             ( batch_id
             , [Dataflow_Name]
             , [package_Name]
@@ -75,7 +75,7 @@ begin
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]

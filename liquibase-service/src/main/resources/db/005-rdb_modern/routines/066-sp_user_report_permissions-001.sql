@@ -25,7 +25,7 @@ BEGIN
         DECLARE @dataflow_name NVARCHAR(200) = 'USER_REPORT_PERMISSIONS';
         DECLARE @package_name NVARCHAR(200) = 'USER_REPORT_PERMISSIONS';
         
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
             ( batch_id
             , [Dataflow_Name]
             , [package_Name]
@@ -50,20 +50,20 @@ BEGIN
         rep.report_title,
         ds.data_source_title,
         ds.data_source_name
-        from     auth_user [user]
-                join auth_user_role [role] on
+        from     nbs_odse.dbo.auth_user [user]
+                join nbs_odse.dbo.auth_user_role [role] on
                         [role].auth_user_uid=[user].auth_user_uid
-                join auth_perm_set [set] on
+                join nbs_odse.dbo.auth_perm_set [set] on
                         [role].auth_perm_set_uid=[set].auth_perm_set_uid
-                join auth_bus_obj_rt [object_right] on
+                join nbs_odse.dbo.auth_bus_obj_rt [object_right] on
                         [object_right].auth_perm_set_uid=[set].auth_perm_set_uid
-                join auth_bus_obj_type [object_type] on
+                join nbs_odse.dbo.auth_bus_obj_type [object_type] on
                         [object_right].auth_bus_obj_type_uid=[object_type].auth_bus_obj_type_uid
-                join auth_bus_op_rt [operation_right] on
+                join nbs_odse.dbo.auth_bus_op_rt [operation_right] on
                         [operation_right].auth_bus_obj_rt_uid=[object_right].auth_bus_obj_rt_uid
-                join auth_bus_op_type [operation_type] on
+                join nbs_odse.dbo.auth_bus_op_type [operation_type] on
                         [operation_type].auth_bus_op_type_uid=[operation_right].auth_bus_op_type_uid
-                INNER JOIN dbo.report rep
+                INNER JOIN nbs_odse.dbo.report rep
                 ON (
                         [operation_type].bus_op_nm = 'VIEWREPORTPUBLIC' and rep.shared = 'S'
                         OR
@@ -73,7 +73,7 @@ BEGIN
                         OR
                         [operation_type].bus_op_nm = 'VIEWREPORTREPORTINGFACILITY' and rep.shared = 'R'
                 )
-                LEFT JOIN dbo.Data_Source ds
+                LEFT JOIN nbs_odse.dbo.Data_Source ds
                 ON ds.data_source_uid = rep.data_source_uid
         where   
                 /*
@@ -91,7 +91,7 @@ BEGIN
                 )
                 and [operation_type].bus_op_nm in ('VIEWREPORTPRIVATE', 'VIEWREPORTPUBLIC', 'VIEWREPORTREPORTINGFACILITY', 'VIEWREPORTTEMPLATE')
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
             ( batch_id
             , [Dataflow_Name]
             , [package_Name]
@@ -124,7 +124,7 @@ BEGIN
         'Error Message: ' + ERROR_MESSAGE();
 
 
-        INSERT INTO [rdb].[dbo].[job_flow_log] ( batch_id
+        INSERT INTO [dbo].[job_flow_log] ( batch_id
                                          , [Dataflow_Name]
                                          , [package_Name]
                                          , [Status_Type]

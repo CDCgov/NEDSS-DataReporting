@@ -8,6 +8,195 @@ databaseChangeLog:
             path: 000-rdbmodern-db-general-001.sql
             splitStatements: false
   - changeSet:
+      id: 0.01
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 051-sp_organization_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.02
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 052-sp_provider_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.03
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 053-sp_patient_race_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.04
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 054-sp_patient_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.05
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 055-sp_observation_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.06
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 056-sp_investigation_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.07
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 057-sp_ldf_provider_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.08
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 058-sp_ldf_organization_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.09
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 059-sp_ldf_patient_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.10
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 060-sp_ldf_observation_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.11
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 061-sp_ldf_phc_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.12
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 062-sp_ldf_intervention_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.13
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 063-sp_ldf_data_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.14
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 064-sp_notification_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.15
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 065-sp_interview_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.16
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 066-sp_user_report_permissions-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.17
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 067-sp_auth_user_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.18
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 068-sp_place_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.19
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 069-sp_contact_record_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.20
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 070-sp_treatment_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.21
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 071-sp_vaccination_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: 1
       author: liquibase
       runOnChange: true
@@ -166,7 +355,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 246-create_nrt_odse_state_defined_field_metadata-001.sql
-            splitStatements: false    
+            splitStatements: false
   - changeSet:
       id: 16
       author: liquibase
@@ -767,7 +956,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 251-create_nrt_lab_test_result_group_key-001.sql
-            splitStatements: false          
+            splitStatements: false
   - changeSet:
       id: 50.02
       author: liquibase
@@ -802,7 +991,7 @@ databaseChangeLog:
             path: 018-sp_d_lab_test_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
-  - changeSet:  
+  - changeSet:
       id: 56
       author: liquibase
       runOnChange: true
@@ -885,7 +1074,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 022-create_nrt_interview_answer-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 70.2
       author: liquibase
@@ -893,7 +1082,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 026-create_nrt_srte_IMRDBMapping-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 70.3
       author: liquibase
@@ -1294,7 +1483,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 040-create_nrt_hepatitis_case_group_key-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 121
       author: liquibase
@@ -1302,7 +1491,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 041-create_nrt_hepatitis_case_multi_val_key-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 122
       author: liquibase
@@ -1468,7 +1657,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 105-create_d_gt_12_reas_group-001.sql
-            splitStatements: false   
+            splitStatements: false
   - changeSet:
       id: 139.06
       author: liquibase
@@ -1484,7 +1673,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 121-create_d_hc_prov_ty_3_group-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 139.08
       author: liquibase
@@ -1532,7 +1721,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 175-create_d_rash_loc_gen_group-001.sql
-            splitStatements: false             
+            splitStatements: false
   - changeSet:
       id: 139.14
       author: liquibase
@@ -2573,7 +2762,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 237-create_ldf_generic2-001.sql
-            splitStatements: false    
+            splitStatements: false
   - changeSet:
       id: 765
       author: liquibase
@@ -2582,7 +2771,7 @@ databaseChangeLog:
         - sqlFile:
             path: 270-sp_merge_tables-001.sql
             splitStatements: true
-            endDelimiter: GO      
+            endDelimiter: GO
   - changeSet:
       id: 770
       author: liquibase
@@ -2591,7 +2780,7 @@ databaseChangeLog:
         - sqlFile:
             path: 275-sp_execute_ldf_generic-001.sql
             splitStatements: true
-            endDelimiter: GO   
+            endDelimiter: GO
   - changeSet:
       id: 775
       author: liquibase
@@ -2608,7 +2797,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: 238-create_ldf_bmird-001.sql
-            splitStatements: false  
+            splitStatements: false
   - changeSet:
       id: 785
       author: liquibase
@@ -2883,8 +3072,8 @@ databaseChangeLog:
       id: 999
       author: liquibase
       comment: "Permission script will always execute last."
-      runOrder:  last
-      runAlways:  true
+      runOrder: last
+      runAlways: true
       changes:
         - sqlFile:
             path: 999-rdbm_database_object_permission_grants-001.sql

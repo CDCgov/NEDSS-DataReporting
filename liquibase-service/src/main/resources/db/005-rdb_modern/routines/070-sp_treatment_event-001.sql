@@ -23,7 +23,7 @@ BEGIN
         SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmssffff')) AS BIGINT);
 
         -- Initial log entry
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -91,7 +91,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -132,7 +132,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
@@ -196,7 +196,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (
                    @batch_id,
@@ -248,7 +248,7 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (
                    @batch_id,
@@ -262,7 +262,7 @@ BEGIN
         COMMIT TRANSACTION;
 
         -- Log successful completion
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count],[Msg_Description1])
         VALUES (
                    @batch_id,
@@ -281,7 +281,7 @@ BEGIN
 
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         ( batch_id
         , [Dataflow_Name]
         , [package_Name]
