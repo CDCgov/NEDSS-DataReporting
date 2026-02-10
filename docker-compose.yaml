@@ -6,13 +6,12 @@ services:
       context: ./containers/db
       args:
         - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
-        - DATABASE_BACKUP=6.0.14_base_with_templates_and_std
-        - DB_VERSION=${DB_VERSION:-6.0.17.1}
         - RUN_SEEDING=${RUN_SEEDING:-false}
     environment:
       - ACCEPT_EULA=1
       - SQLCMDPASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - MSSQL_SA_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
+      - DATABASE_VERSION=${DB_VERSION:-6.0.17.1}
     ports:
       - 3433:1433
     networks:
