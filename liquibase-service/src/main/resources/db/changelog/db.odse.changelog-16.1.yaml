@@ -55,15 +55,6 @@ databaseChangeLog:
             endDelimiter: GO
 
   - changeSet:
-      id: 18
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 018-sp_public_health_case_fact_datamart_event-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
       id: 19
       author: liquibase
       runOnChange: true
@@ -121,15 +112,7 @@ databaseChangeLog:
             path: 006-fn_get_value_to_pascal_case-001.sql
             splitStatements: true
             endDelimiter: GO
-  - changeSet:
-      id: 37
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 030-sp_public_health_case_fact_datamart_update-001.sql
-            splitStatements: true
-            endDelimiter: GO
+
   - changeSet:
       id: 999
       author: liquibase

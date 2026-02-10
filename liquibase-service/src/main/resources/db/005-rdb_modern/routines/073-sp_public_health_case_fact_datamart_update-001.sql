@@ -19,7 +19,7 @@ BEGIN
 
     BEGIN TRY
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
         (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
         VALUES
             (@batch_id,@dataflow_name,@package_name,'START',@proc_step_no,@proc_step_name,LEFT(@uid_list,500),0);
@@ -57,7 +57,7 @@ BEGIN
 
                 SET @rowcount = @@ROWCOUNT;
 
-                INSERT INTO [rdb].[dbo].[job_flow_log]
+                INSERT INTO [dbo].[job_flow_log]
                     (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                 VALUES
                     (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -82,7 +82,7 @@ BEGIN
 
                 SET @rowcount = @@ROWCOUNT;
 
-                INSERT INTO [rdb].[dbo].[job_flow_log]
+                INSERT INTO [dbo].[job_flow_log]
                     (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                 VALUES
                     (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -110,7 +110,7 @@ BEGIN
 
                SET @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -141,7 +141,7 @@ BEGIN
 
                SET @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -167,7 +167,7 @@ BEGIN
 
                SET @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -191,7 +191,7 @@ BEGIN
 
                SET @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -217,7 +217,7 @@ BEGIN
 
                SET @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -234,7 +234,7 @@ BEGIN
 
                SET @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -270,7 +270,7 @@ BEGIN
 
                SET @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -358,7 +358,7 @@ BEGIN
 
                SELECT @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                    (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -448,7 +448,7 @@ BEGIN
 
                SELECT @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -479,7 +479,7 @@ BEGIN
 
                SELECT @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -509,7 +509,7 @@ BEGIN
 
                SELECT @rowcount = @@ROWCOUNT;
 
-               INSERT INTO [rdb].[dbo].[job_flow_log]
+               INSERT INTO [dbo].[job_flow_log]
                (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count])
                VALUES
                    (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,@rowcount);;
@@ -522,7 +522,7 @@ BEGIN
         SET @proc_step_name = 'SP_Complete';
         SELECT @rowcount = 0;
 
-        INSERT INTO [rdb].[dbo].[job_flow_log]
+        INSERT INTO [dbo].[job_flow_log]
             (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[msg_description1],[row_count])
         VALUES
             (@batch_id,@dataflow_name,@package_name,'COMPLETED',@proc_step_no,@proc_step_name,LEFT(@uid_list,500),@rowcount);;
@@ -541,7 +541,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                               batch_id
                                             ,[Dataflow_Name]
                                             ,[package_Name]

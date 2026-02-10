@@ -81,7 +81,7 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -160,7 +160,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -322,7 +322,7 @@ BEGIN
         PRINT '1. endtime' + LEFT(CONVERT(VARCHAR, @batch_end_time, 120), 10)
 
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -403,7 +403,7 @@ BEGIN
                  LEFT JOIN NBS_ODSE.DBO.OBS_VALUE_DATE  WITH (NOLOCK) ON OBSERVATION2.OBSERVATION_UID =OBS_VALUE_DATE.OBSERVATION_UID
         WHERE OBSERVATION2.CD IN ('INV132', 'INV133') AND ACT_RELATIONSHIP.TYPE_CD ='PHCInvForm';
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -439,7 +439,7 @@ BEGIN
                  INNER JOIN NBS_ODSE.DBO.OBS_VALUE_CODED  WITH (NOLOCK) ON ACT_RELATIONSHIP2.SOURCE_ACT_UID =OBS_VALUE_CODED.OBSERVATION_UID
         WHERE OBSERVATION2.CD IN ('INV128') AND ACT_RELATIONSHIP.TYPE_CD ='PHCInvForm';
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -613,7 +613,7 @@ BEGIN
 		WHERE HOSPITALIZED_IND = LTRIM(RTRIM(''));
 */
         ALTER TABLE #TEMP_PHCINFO1 DROP column LEGACY_HSPTL_DISCHARGE_DT, LEGACY_HSPTL_ADMISSION_DT;
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -662,7 +662,7 @@ BEGIN
             FROM #TEMP_PHCINFO1
         );
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -706,7 +706,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -748,7 +748,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -780,7 +780,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1024,7 +1024,7 @@ BEGIN
             AND FLAG2=1; /* Optimization */
 
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1052,7 +1052,7 @@ BEGIN
 
 
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1162,7 +1162,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1220,7 +1220,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1293,7 +1293,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1444,7 +1444,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1496,7 +1496,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1625,7 +1625,7 @@ BEGIN
         UPDATE #TEMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = NOTIFCREATEDCOUNT-1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT>0;
         UPDATE #TEMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = 1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT=0 and NOTIFREJECTEDCOUNT=0;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1683,7 +1683,7 @@ BEGIN
         WHERE ROWN > 1
         --IF OBJECT_ID ('TEMP_PHCFACT') IS NOT NULL DROP TABLE TEMP_PHCFACT;
         --IF OBJECT_ID ('TEMP_MIN_MAX_NOTIFICATION') IS NOT NULL DROP TABLE TEMP_MIN_MAX_NOTIFICATION;
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1746,7 +1746,7 @@ BEGIN
             AND CODE_SET_NM= 'PHC_CONF_M'
         where t.INVESTIGATION_FORM_CD NOT LIKE 'PG_%' or INVESTIGATION_FORM_CD is null
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1798,7 +1798,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1837,7 +1837,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -1970,7 +1970,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2014,7 +2014,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2090,7 +2090,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2141,7 +2141,7 @@ BEGIN
 
         -- ALTER TABLE #TEMP_PHC_FACT ADD MART_RECORD_CREATION_TIME DATETIME;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2266,7 +2266,7 @@ BEGIN
         -- UPDATE #TEMP_PHC_FACT SET cntry_cd = NULL WHERE cntry_cd = LTRIM(RTRIM(''));
 
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2357,7 +2357,7 @@ BEGIN
 		IF OBJECT_ID('#TEMP_PHCPERSONRACE_CONCAT') IS NOT NULL
 			DROP TABLE #TEMP_PHCPERSONRACE_CONCAT;
 */
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2704,7 +2704,7 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2748,7 +2748,7 @@ BEGIN
         IF OBJECT_ID('#TEMP_PHC_FACT') IS NOT NULL
             DROP TABLE #TEMP_PHC_FACT;
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2774,7 +2774,7 @@ BEGIN
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]
@@ -2812,7 +2812,7 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO rdb.[dbo].[job_flow_log] (
+        INSERT INTO [dbo].[job_flow_log] (
                                                         batch_id
                                                       ,[Dataflow_Name]
                                                       ,[package_Name]

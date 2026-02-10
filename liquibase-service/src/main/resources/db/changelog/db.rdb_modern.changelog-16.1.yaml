@@ -197,6 +197,24 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 0.22
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 072-sp_public_health_case_fact_datamart_event-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.23
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 073-sp_public_health_case_fact_datamart_update-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: 1
       author: liquibase
       runOnChange: true
