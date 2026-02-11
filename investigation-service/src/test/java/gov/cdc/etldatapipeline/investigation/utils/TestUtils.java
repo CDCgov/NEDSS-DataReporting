@@ -347,6 +347,8 @@ public class TestUtils {
         vaccination.setVaccinationAnatomicalSite("");
         vaccination.setVaccineManufacturerNm("test");
         vaccination.setMaterialCd("102");
+        //NEW: TEST comma-separated PHC UIDs
+        vaccination.setPhcUid("12345,78902,34566");
         return vaccination;
     }
 
@@ -372,6 +374,8 @@ public class TestUtils {
         vaccinationReporting.setVaccinationAnatomicalSite("");
         vaccinationReporting.setVaccineManufacturerNm("test");
         vaccinationReporting.setMaterialCd("102");
+        //NEW: TEST comma-separated PHC UIDs
+        vaccinationReporting.setPhcUid("12345,78902,34566");
         return vaccinationReporting;
     }
 
