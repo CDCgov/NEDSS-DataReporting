@@ -1,4 +1,4 @@
-FROM liquibase/liquibase:4.33.0-alpine
+FROM liquibase/liquibase:5.0.1-alpine
 
 USER root
 
