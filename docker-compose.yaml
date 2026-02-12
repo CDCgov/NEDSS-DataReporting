@@ -4,8 +4,9 @@ services:
     container_name: rtr-mssql
     build:
       context: ./containers/db
+      args:
+        - DATABASE_VERSION=6.0.17.1
     environment:
-      - DATABASE_VERSION=6.0.17.1
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
     ports:
       - 3433:1433

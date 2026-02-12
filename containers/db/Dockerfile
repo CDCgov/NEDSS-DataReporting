@@ -4,9 +4,11 @@ FROM ghcr.io/cdcent/nedssdb:fdbd7a
 USER mssql
 
 ARG DATABASE_PASSWORD
+ARG DATABASE_VERSION
 
 ENV SQLCMDPASSWORD=${DATABASE_PASSWORD} \
-    DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    DATABASE_PASSWORD=${DATABASE_PASSWORD} \
+    DATABASE_VERSION=${DATABASE_VERSION} 
 
 # Copy the supplemental restore files for RTR
 COPY --chown=mssql ./initialize /var/opt/database/initialize/

@@ -35,6 +35,13 @@ if [ $count -eq $MAX_RETRIES ]; then
 fi
 
 echo "*************************************************************************"
+echo "  Running NBS migrations"
+echo "*************************************************************************"
+# Run migrations as part of initialization to prevent liquibase errors
+/var/data/run_migrations.sh ${DATABASE_VERSION}
+echo "Migrations complete"
+
+echo "*************************************************************************"
 echo "  Initializing NBS databases"
 echo "*************************************************************************"
 
