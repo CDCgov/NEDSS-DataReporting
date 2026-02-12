@@ -12,8 +12,5 @@ ENV SQLCMDPASSWORD=${DATABASE_PASSWORD} \
 COPY --chown=mssql ./initialize /var/opt/database/initialize/
 
 # Run RTR specific initialization scripts 
-RUN /opt/mssql/bin/sqlservr & \
-    /var/opt/database/initialize/initialize.sh && \
+RUN /var/opt/database/initialize/initialize.sh && \
     rm -rf /var/opt/database/*
-
-ENTRYPOINT [ "/entrypoint.sh" ]
