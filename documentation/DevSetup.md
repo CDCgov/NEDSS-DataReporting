@@ -24,11 +24,9 @@
 
 The first time containers are built, the liquibase container will need to be started. All following startups can bypass running liquibase.
 
-### Initialize the NEDSSDB submodule
+### Prerequisites:
 
-```sh
-git submodule update --init --recursive --remote
-```
+- [Docker GHCR Authentication](documentation/DockerAuth.md)
 
 ### Build the RTR database and liquibase containers
 
@@ -87,7 +85,7 @@ Run the `build_classic.sh` script to pull the NBS 6 source code and build a Wild
 OR manually clone the NBS 6 repository to the proper directory and build docker container
 
 ```sh
-git clone -b v6.0.16.0 git@github.com:cdcent/NEDSSDev.git containers/wildfly/builder/NEDSSDev
+git clone -b lts/6.0.17 git@github.com:cdcent/NEDSSDev.git containers/wildfly/builder/NEDSSDev
 docker compose up wildfly --build -d
 ```
 
