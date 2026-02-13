@@ -215,6 +215,60 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 0.24
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 003-fn_get_value_by_cd_ques-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.25
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 004-fn_get_value_by_cvg-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.26
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 005-fn_get_user_name-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.27
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 006-fn_get_value_by_cd_codeset-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.28
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 007-fn_get_record_status-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 0.29
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 006-fn_get_value_to_pascal_case-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: 1
       author: liquibase
       runOnChange: true

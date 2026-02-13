@@ -8,43 +8,6 @@ databaseChangeLog:
             path: 000-odse-db-general-001.sql
             splitStatements: false
   - changeSet:
-      id: 1
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 001-fn_get_value_by_cd_ques-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
-      id: 2
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 002-fn_get_value_by_cvg-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
-      id: 3
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 003-fn_get_user_name-001.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
-      id: 4
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 004-fn_get_value_by_cd_codeset-001.sql
-            splitStatements: true
-            endDelimiter: GO
-
-  - changeSet:
       id: 9.1
       author: liquibase
       runOnChange: true
@@ -64,16 +27,6 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
-      id: 20
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 005-fn_get_record_status-001.sql
-            splitStatements: true
-            endDelimiter: GO
-
-  - changeSet:
       id: 28
       author: liquibase
       runOnChange: true
@@ -82,7 +35,6 @@ databaseChangeLog:
             path: 002-v_rdb_ui_metadata_answers-001.sql
             splitStatements: true
             endDelimiter: GO
-
   - changeSet:
       id: 32
       author: liquibase
@@ -102,17 +54,6 @@ databaseChangeLog:
             path: 005-v_rdb_ui_metadata_answers_vaccination-001.sql
             splitStatements: true
             endDelimiter: GO
-
-  - changeSet:
-      id: 36
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 006-fn_get_value_to_pascal_case-001.sql
-            splitStatements: true
-            endDelimiter: GO
-
   - changeSet:
       id: 999
       author: liquibase
