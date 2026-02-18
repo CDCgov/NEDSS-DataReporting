@@ -24,6 +24,17 @@ repositories {
     mavenCentral()
 }
 
+bootRun {
+    systemProperty 'spring.profiles.active', 'default,development,local'
+
+    debugOptions {
+        enabled = true
+        server = true
+        suspend = false
+        port = 17070
+    }
+}
+
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
@@ -68,7 +79,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     implementation 'org.modelmapper:modelmapper:3.2.0'
-    implementation 'com.google.guava:guava:33.1.0-jre'
+    implementation 'com.google.guava:guava:33.5.0-jre'
 
     implementation 'io.micrometer:micrometer-core'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
