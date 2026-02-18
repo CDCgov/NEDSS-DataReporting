@@ -28,7 +28,7 @@ BEGIN
         VALUES (
                  @batch_id
                ,'Observation PRE-Processing Event'
-               ,'NBS_ODSE.sp_observation_event'
+               ,'sp_observation_event'
                ,'START'
                ,0
                ,LEFT('Pre ID-' + @obs_id_list,199)
@@ -436,7 +436,7 @@ BEGIN
               WHERE
                   o.observation_uid in (SELECT value FROM STRING_SPLIT(@obs_id_list
                       , ','))) AS results
-                 join act WITH (NOLOCK) ON results.observation_uid = act.act_uid
+                 join nbs_odse.dbo.act WITH (NOLOCK) ON results.observation_uid = act.act_uid
                  left outer join nbs_odse.dbo.observation_interp oi WITH (NOLOCK) on results.observation_uid = oi.observation_uid --1:1
 
         ;
@@ -455,7 +455,7 @@ BEGIN
         VALUES (
                  @batch_id
                , 'Observation PRE-Processing Event'
-               , 'NBS_ODSE.sp_observation_event'
+               , 'sp_observation_event'
                , 'COMPLETE'
                , 0
                , LEFT ('Pre ID-' + @obs_id_list, 199)
@@ -490,7 +490,7 @@ BEGIN
         VALUES (
                  @batch_id
                , 'Observation PRE-Processing Event'
-               , 'NBS_ODSE.sp_observation_event'
+               , 'sp_observation_event'
                , 'ERROR'
                , 0
                , 'Observation PRE-Processing Event'

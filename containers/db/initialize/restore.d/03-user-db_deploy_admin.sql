@@ -1,24 +1,22 @@
--- This script to be run outside of Automation as a one time admin user creation.
--- Please provide a generated password for the PASSWORD field.
+-- ==========================================
+-- User: db_deploy_admin
+-- Service: liquibase
+-- ==========================================
 USE [master]
+
+-- create login
 IF NOT EXISTS (SELECT name
                FROM sys.server_principals
                WHERE name = 'db_deploy_admin')
     BEGIN
-        CREATE LOGIN [db_deploy_admin] WITH PASSWORD =N'<to_be_reset_later>', DEFAULT_DATABASE = [master], DEFAULT_LANGUAGE = [us_english], CHECK_EXPIRATION = OFF, CHECK_POLICY = OFF;
-
+        CREATE LOGIN [db_deploy_admin] WITH PASSWORD =N'db_deploy_admin', DEFAULT_DATABASE = [master], DEFAULT_LANGUAGE = [us_english], CHECK_EXPIRATION = OFF, CHECK_POLICY = OFF;
+        
         ALTER SERVER ROLE [setupadmin] ADD MEMBER [db_deploy_admin];
-
         ALTER SERVER ROLE [processadmin] ADD MEMBER [db_deploy_admin];
-
         GRANT ALTER ANY CREDENTIAL TO [db_deploy_admin];
-
         GRANT ALTER ANY LOGIN TO [db_deploy_admin];
-
         GRANT CREATE ANY DATABASE TO [db_deploy_admin];
-
         GRANT VIEW SERVER STATE TO [db_deploy_admin];
-
     END
 
 if exists (select 1
@@ -53,7 +51,9 @@ else
         GRANT EXECUTE ON sys.sp_cdc_disable_db TO db_deploy_admin;
     end;
 
-
+-- ==========================================
+-- RDB
+-- ==========================================
 USE [RDB];
 
 IF NOT EXISTS (SELECT *
@@ -64,7 +64,6 @@ IF NOT EXISTS (SELECT *
         ALTER ROLE [db_owner] ADD MEMBER [db_deploy_admin]
     END;
 
-USE [rdb_modern];
 
 IF NOT EXISTS (SELECT *
                FROM sys.database_principals
@@ -75,6 +74,9 @@ IF NOT EXISTS (SELECT *
         ALTER ROLE [db_owner] ADD MEMBER [db_deploy_admin]
     END
 
+-- ==========================================
+-- NBS_ODSE
+-- ==========================================
 USE [nbs_odse];
 
 
@@ -87,6 +89,9 @@ IF NOT EXISTS (SELECT *
         ALTER ROLE [db_owner] ADD MEMBER [db_deploy_admin]
     END;
 
+-- ==========================================
+-- NBS_SRTE
+-- ==========================================
 USE [nbs_srte];
 
 IF NOT EXISTS (SELECT *
@@ -98,6 +103,9 @@ IF NOT EXISTS (SELECT *
         ALTER ROLE [db_owner] ADD MEMBER [db_deploy_admin]
     END;
 
+-- ==========================================
+-- NBS_MSGOUTE
+-- ==========================================
 USE [nbs_msgoute]
 
 
@@ -107,9 +115,5 @@ IF NOT EXISTS (SELECT *
     BEGIN
         CREATE USER [db_deploy_admin] FOR LOGIN [db_deploy_admin] WITH DEFAULT_SCHEMA =[dbo]
 
-
         ALTER ROLE [db_owner] ADD MEMBER [db_deploy_admin]
     end;
-
-
--- ALTER LOGIN db_deploy_admin with password ='<your new pass>';

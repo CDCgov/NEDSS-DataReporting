@@ -34,6 +34,7 @@ COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
 # Onboarding 
+COPY liquibase-service/src/main/resources/db/001-master/01_onboarding_scripts_user_creation/ /liquibase/changelog/onboarding/
 COPY liquibase-service/src/main/resources/db/001-master/02_onboarding_script_data_load/ /liquibase/changelog/onboarding/
 
 #Set the Working Directory

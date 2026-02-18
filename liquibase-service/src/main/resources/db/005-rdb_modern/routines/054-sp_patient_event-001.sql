@@ -26,7 +26,7 @@ BEGIN
         ,[Msg_Description1])
         VALUES (@batch_id
                ,'Patient PRE-Processing Event'
-               ,'NBS_ODSE.sp_patient_event'
+               ,'sp_patient_event'
                ,'START'
                ,0
                ,LEFT('Pre ID-' + @user_id_list, 199)
@@ -96,7 +96,7 @@ BEGIN
          race_white_gt3_ind,
          race_white_all,
          patient_uid_race_out)
-            exec nbs_odse.dbo.sp_patient_race_event @user_id_list, @batch_id;
+            exec dbo.sp_patient_race_event @user_id_list, @batch_id;
 
 
         SELECT p.person_uid,

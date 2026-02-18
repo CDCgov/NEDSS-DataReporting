@@ -54,14 +54,3 @@ databaseChangeLog:
             path: 005-v_rdb_ui_metadata_answers_vaccination-001.sql
             splitStatements: true
             endDelimiter: GO
-  - changeSet:
-      id: 999
-      author: liquibase
-      comment: "Permission script will always execute last."
-      runOrder: last
-      runAlways: true
-      changes:
-        - sqlFile:
-            path: 999-odse_database_object_permission_grants-001.sql
-            splitStatements: true
-            endDelimiter: GO
