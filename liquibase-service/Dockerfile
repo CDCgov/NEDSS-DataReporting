@@ -19,16 +19,12 @@ COPY liquibase-service/src/main/resources/db/001-master/functions /liquibase/cha
 #srte
 COPY liquibase-service/src/main/resources/db/002-srte /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/002-srte/tables /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/002-srte/routines /liquibase/changelog
 #odse
 COPY liquibase-service/src/main/resources/db/003-odse /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/003-odse/routines /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/003-odse/functions /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/003-odse/views /liquibase/changelog
 #rdb
 COPY liquibase-service/src/main/resources/db/004-rdb /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/004-rdb/tables /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/004-rdb/routines /liquibase/changelog
 #rdb_modern
 COPY liquibase-service/src/main/resources/db/005-rdb_modern /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/routines /liquibase/changelog
