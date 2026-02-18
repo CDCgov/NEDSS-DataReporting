@@ -91,20 +91,45 @@ IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
 -- Add permissions
 IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
     BEGIN
-        -- Grand data reader role
-        DECLARE @AddRdbRoleReader NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
-        EXEC sp_executesql @AddRdbRoleReader;
-        PRINT 'Added [' + @UserName + '] to db_datareader role in ' +@RDB_DB;
-        
         -- Grand data writer for job_flow_log
         DECLARE @AddRdbRoleWriterJobFlowLog NVARCHAR(MAX) = 'GRANT INSERT ON [dbo].[job_flow_log] TO [' + @UserName + ']';
         EXEC sp_executesql @AddRdbRoleWriterJobFlowLog;
         PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
 
         -- Grant execute on sp_ldf_data_event
-        DECLARE @GrantExecuteLdfEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_data_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecuteLdfEvent;
+        DECLARE @GrantExecuteLdfDataEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_data_event] TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecuteLdfDataEvent;
         PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_data_event] to [' + @UserName + ']';
+        
+        -- Grant execute on sp_ldf_patient_event
+        DECLARE @GrantExecuteLdfPatientEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_patient_event] TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecuteLdfPatientEvent;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_patient_event] to [' + @UserName + ']';
+
+        -- Grant execute on sp_ldf_provider_event
+        DECLARE @GrantExecuteLdfProviderEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_provider_event] TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecuteLdfProviderEvent;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_provider_event] to [' + @UserName + ']';
+
+        -- Grant execute on sp_ldf_organization_event
+        DECLARE @GrantExecuteLdfOrganizationEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_organization_event] TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecuteLdfOrganizationEvent;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_organization_event] to [' + @UserName + ']';
+
+        -- Grant execute on sp_ldf_observation_event
+        DECLARE @GrantExecuteLdfObservationEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_observation_event] TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecuteLdfObservationEvent;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_observation_event] to [' + @UserName + ']';
+
+        -- Grant execute on sp_ldf_phc_event
+        DECLARE @GrantExecuteLdfPhcEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_phc_event] TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecuteLdfPhcEvent;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_phc_event] to [' + @UserName + ']';
+        
+        -- Grant execute on sp_ldf_intervention_event
+        DECLARE @GrantExecuteLdfInterventionEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_ldf_intervention_event] TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecuteLdfInterventionEvent;
+        PRINT 'Granted EXECUTE permission on [dbo].[sp_ldf_intervention_event] to [' + @UserName + ']';
     END
 
 PRINT 'LDF service permission grants completed.';
