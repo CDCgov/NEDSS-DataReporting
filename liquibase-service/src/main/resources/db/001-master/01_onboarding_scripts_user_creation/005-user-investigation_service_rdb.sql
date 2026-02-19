@@ -112,15 +112,10 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         EXEC sp_executesql @AddRdbRoleWriterJobFlowLog;
         PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
 
-        -- Grant execute sp_investigation_event
-        DECLARE @GrantExecuteInvestigationEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_investigation_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecuteInvestigationEvent;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_investigation_event] to [' + @UserName + ']';
-        
-        -- Grant execute sp_public_health_case_fact_datamart_event
-        DECLARE @GrantExecutePHCFactEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecutePHCFactEvent;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_event] to [' + @UserName + ']';
+        -- Grant execute
+        DECLARE @GrantExecute NVARCHAR(MAX) = 'GRANT EXECUTE TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecute;
+        PRINT 'Granted EXECUTE permission to [' + @UserName + ']';
     END 
 
 PRINT 'Investigation service permission grants completed.';

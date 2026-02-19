@@ -97,11 +97,10 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         EXEC sp_executesql @AddRdbRoleWriterJobFlowLog;
         PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
 
-        -- Grant execute on sp_observation_event
-        DECLARE @GrantExecuteObservationEvent NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_observation_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecuteObservationEvent;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_observation_event] to [' + @UserName + ']';
-    
+        -- Grant execute
+        DECLARE @GrantExecute NVARCHAR(MAX) = 'GRANT EXECUTE TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecute;
+        PRINT 'Granted EXECUTE permission to [' + @UserName + ']';
     END
 
 PRINT 'Observation service permission grants completed.';

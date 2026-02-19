@@ -107,26 +107,10 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         EXEC sp_executesql @AddRdbRoleWriterJobFlowLog;
         PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
         
-        -- Grant execute for stored procedures
-        DECLARE @GrantExecPatientSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_patient_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecPatientSPSQL;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_patient_event] to [' + @UserName + ']';
-
-        DECLARE @GrantExecRaceSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_patient_race_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecRaceSPSQL;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_patient_race_event] to [' + @UserName + ']';
-
-        DECLARE @GrantExecProviderSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_provider_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecProviderSPSQL;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_provider_event] to [' + @UserName + ']';
-
-        DECLARE @GrantExecAuthUserSPSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_auth_user_event] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantExecAuthUserSPSQL;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_auth_user_event] to [' + @UserName + ']';
-
-        DECLARE @GrantPersonExecPHCDatamartUpdateSQL NVARCHAR(MAX) = 'GRANT EXECUTE ON [dbo].[sp_public_health_case_fact_datamart_update] TO [' + @UserName + ']';
-        EXEC sp_executesql @GrantPersonExecPHCDatamartUpdateSQL;
-        PRINT 'Granted EXECUTE permission on [dbo].[sp_public_health_case_fact_datamart_update] to [' + @UserName + ']';
+        -- Grant execute
+        DECLARE @GrantExecute NVARCHAR(MAX) = 'GRANT EXECUTE TO [' + @UserName + ']';
+        EXEC sp_executesql @GrantExecute;
+        PRINT 'Granted EXECUTE permission to [' + @UserName + ']';
     END
 
 PRINT 'Person service permission grants completed.';
