@@ -599,9 +599,9 @@ BEGIN
                                                         phc.program_jurisdiction_oid                                                   as case_oid,
                                                         ooj_initg_agncy_outc_snt_date,
                                                         init_foll_up                                                                   as init_fup_initial_foll_up_cd,
-                                                        (select *
+                                                        COALESCE((select *
                                                          from fn_get_value_by_cvg(init_foll_up,
-                                                                                  'STD_CREATE_INV_LABMORB_NONSYPHILIS_PROC_DECISION')) as init_fup_initial_foll_up,
+                                                                                  'STD_CREATE_INV_LABMORB_NONSYPHILIS_PROC_DECISION')), init_foll_up) as init_fup_initial_foll_up,
                                                         init_foll_up_closed_date                                                       as init_fup_closed_dt,
                                                         internet_foll_up                                                               as init_fup_internet_foll_up_cd,
                                                         (select * from fn_get_value_by_cvg(internet_foll_up, 'YN'))                    as internet_foll_up,
