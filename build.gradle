@@ -40,7 +40,6 @@ subprojects {
     tasks.named('test') {
         finalizedBy tasks.named('jacocoTestReport', JacocoReport)
     }
-
 }
 
 sonarqube {
