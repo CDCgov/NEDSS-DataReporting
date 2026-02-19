@@ -40,6 +40,10 @@ subprojects {
     tasks.named('test') {
         finalizedBy tasks.named('jacocoTestReport', JacocoReport)
     }
+
+    dependencies {
+        testRuntimeOnly 'com.h2database:h2'
+    }
 }
 
 sonarqube {
