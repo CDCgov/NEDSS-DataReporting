@@ -29,7 +29,7 @@ spring:
   datasource:
     password: ${DB_PASSWORD:-PizzaIsGood33!}
     username: ${DB_USERNAME:-sa}
-    url: ${DB_ODSE_URL:jdbc:sqlserver://localhost:1433;databaseName=:NBS_ODSE;encrypt=true;trustServerCertificate=true;}
+    url: ${DB_HOST:jdbc:sqlserver://localhost:1433;databaseName=:RDB_MODERN;encrypt=true;trustServerCertificate=true;}
   liquibase:
     change-log: db/changelog/db.changelog-master.yaml
 featureFlag:

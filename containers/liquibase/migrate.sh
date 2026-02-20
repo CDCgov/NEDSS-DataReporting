@@ -4,7 +4,7 @@ echo "Starting migrations"
 liquibase \
     --changelog-file="db.odse.admin.tasks.changelog-16.1.yaml" \
     --searchPath="./" \
-    --url="jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
+    --url="jdbc:sqlserver://${DB_HOST};databaseName=NBS_ODSE;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
     --username="${DB_USERNAME}" \
     --password="${DB_PASSWORD}"\
     update
@@ -13,7 +13,7 @@ liquibase \
 liquibase \
     --changelog-file="db.odse.changelog-16.1.yaml" \
     --searchPath="./" \
-    --url="jdbc:sqlserver://rtr-mssql:1433;databaseName=nbs_odse;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
+    --url="jdbc:sqlserver://${DB_HOST};databaseName=nbs_odse;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
     --username="${DB_USERNAME}" \
     --password="${DB_PASSWORD}"\
     update
@@ -22,7 +22,7 @@ liquibase \
 liquibase \
     --changelog-file="db.srte.admin.tasks.changelog-16.1.yaml" \
     --searchPath="./" \
-    --url="jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_SRTE;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
+    --url="jdbc:sqlserver://${DB_HOST};databaseName=NBS_SRTE;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
     --username="${DB_USERNAME}" \
     --password="${DB_PASSWORD}" \
     update
@@ -31,7 +31,7 @@ liquibase \
 liquibase \
     --changelog-file="db.rdb.changelog-16.1.yaml" \
     --searchPath="./" \
-    --url="jdbc:sqlserver://rtr-mssql:1433;databaseName=rdb_modern;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
+    --url="jdbc:sqlserver://${DB_HOST};databaseName=rdb_modern;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
     --username="${DB_USERNAME}" \
     --password="${DB_PASSWORD}" \
     update
@@ -41,7 +41,7 @@ liquibase \
 liquibase \
     --changelog-file="db.rdb_modern.changelog-16.1.yaml" \
     --searchPath="./" \
-    --url="jdbc:sqlserver://rtr-mssql:1433;databaseName=rdb_modern;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
+    --url="jdbc:sqlserver://${DB_HOST};databaseName=rdb_modern;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
     --username="${DB_USERNAME}" \
     --password="${DB_PASSWORD}" \
     update
@@ -52,7 +52,7 @@ echo "Applying onboarding scripts"
 for sql in $(find "./onboarding" -iname "*.sql" | sort) ;
 do
     echo "Executing: $sql"
-    /opt/mssql-tools18/bin/sqlcmd -C -S rtr-mssql -U sa -P "PizzaIsGood33!" -i "$sql"
+    /opt/mssql-tools18/bin/sqlcmd -C -S "${DB_HOST}" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -i "$sql"
 
     echo "Completed: $sql"
 done
