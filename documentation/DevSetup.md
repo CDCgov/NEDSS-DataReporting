@@ -31,15 +31,7 @@ The first time containers are built, the liquibase container will need to be sta
 ### Build the RTR database and liquibase containers
 
 ```sh
-docker compose up mssql -d
-```
-
-Wait on database to be up and ready for connections
-
-### Build the liquibase container
-
-```sh
-docker compose up liquibase -d
+docker compose up mssql liquibase -d
 ```
 
 Wait on liquibase container to complete migration and run onboarding scripts. Container will stop when complete.

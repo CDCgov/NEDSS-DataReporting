@@ -14,7 +14,7 @@ services:
     networks:
       - rtr
     healthcheck:
-      test: timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/1433'
+      test: test -f /tmp/db_ready && bash -c 'echo > /dev/tcp/localhost/1433' || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -125,6 +125,9 @@ services:
       - DB_USERNAME=db_deploy_admin
       - DB_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
       - DB_HOST=rtr-mssql
+    depends_on:
+      mssql:
+        condition: service_healthy
     networks:
       - rtr
 
@@ -134,7 +137,7 @@ services:
     environment:
       - DB_USERNAME=investigation_service_rdb
       - DB_PASSWORD=investigation_service
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -147,7 +150,7 @@ services:
     environment:
       - DB_USERNAME=ldf_service_rdb
       - DB_PASSWORD=ldf_service
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -160,7 +163,7 @@ services:
     environment:
       - DB_USERNAME=observation_service_rdb
       - DB_PASSWORD=observation_service
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -173,7 +176,7 @@ services:
     environment:
       - DB_USERNAME=organization_service_rdb
       - DB_PASSWORD=organization_service
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -186,7 +189,7 @@ services:
     environment:
       - DB_USERNAME=person_service_rdb
       - DB_PASSWORD=person_service
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -199,7 +202,7 @@ services:
     environment:
       - DB_USERNAME=post_processing_service_rdb
       - DB_PASSWORD=post_processing_service
-      - DB_RDB_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
