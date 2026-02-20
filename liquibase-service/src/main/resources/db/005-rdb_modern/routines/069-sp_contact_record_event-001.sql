@@ -20,7 +20,7 @@ BEGIN
     DECLARE
         @Dataflow_Name VARCHAR(200) = 'Contact_Record PRE-Processing Event';
     DECLARE
-        @Package_Name VARCHAR(200) = 'NBS_ODSE.sp_contact_record_event';
+        @Package_Name VARCHAR(200) = 'sp_contact_record_event';
 
     BEGIN TRY
 

@@ -28,7 +28,7 @@ BEGIN
         VALUES (
                  @batch_id
                , 'Notification PRE-Processing Event'
-               , 'NBS_ODSE.sp_notification_event'
+               , 'sp_notification_event'
                , 'START'
                , 0
                , LEFT ('Pre ID-' + @notification_list, 199)
@@ -228,7 +228,7 @@ BEGIN
         VALUES (
                  @batch_id
                , 'Notification PRE-Processing Event'
-               , 'NBS_ODSE.sp_notification_event'
+               , 'sp_notification_event'
                , 'COMPLETE'
                , 0
                , LEFT ('Pre ID-' + @notification_list, 199)
@@ -265,7 +265,7 @@ BEGIN
         VALUES (
                  @batch_id
                , 'Notification PRE-Processing Event'
-               , 'NBS_ODSE.sp_notification_event'
+               , 'sp_notification_event'
                , 'ERROR'
                , 0
                , 'Notification PRE-Processing Event'

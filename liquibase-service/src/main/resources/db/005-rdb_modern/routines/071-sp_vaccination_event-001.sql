@@ -18,7 +18,7 @@ BEGIN
     DECLARE
         @Dataflow_Name VARCHAR(200) = 'Vaccination PRE-Processing Event';
     DECLARE
-        @Package_Name VARCHAR(200) = 'NBS_ODSE.sp_vaccination_event';
+        @Package_Name VARCHAR(200) = 'sp_vaccination_event';
 
     BEGIN TRY
 
@@ -1239,7 +1239,7 @@ BEGIN
     , [Msg_Description1])
     VALUES ( @batch_id
            , @Dataflow_Name
-           , 'NBS_ODSE.sp_vaccination_record_event'
+           , 'sp_vaccination_record_event'
            , 'COMPLETE'
            , 0
            , LEFT('Pre ID-' + @vac_uids, 199)

@@ -28,7 +28,7 @@ BEGIN
         VALUES (
                  @batch_id
                ,'Organization PRE-Processing Event'
-               ,'NBS_ODSE.sp_organization_event'
+               ,'sp_organization_event'
                ,'START'
                ,0
                ,LEFT('Pre ID-' + @org_id_list,199)
@@ -168,7 +168,7 @@ BEGIN
         VALUES (
                  @batch_id
                ,'Organization PRE-Processing Event'
-               ,'NBS_ODSE.sp_organization_event'
+               ,'sp_organization_event'
                ,'COMPLETE'
                ,0
                ,LEFT('Pre ID-' + @org_id_list,199)
@@ -204,7 +204,7 @@ BEGIN
         VALUES (
                  @batch_id
                ,'Organization PRE-Processing Event'
-               ,'NBS_ODSE.sp_organization_event'
+               ,'sp_organization_event'
                ,'ERROR'
                ,0
                ,'Organization PRE-Processing Event'

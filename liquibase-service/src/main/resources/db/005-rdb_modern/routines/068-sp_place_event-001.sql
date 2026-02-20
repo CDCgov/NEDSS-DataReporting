@@ -26,7 +26,7 @@ BEGIN
         ,[Msg_Description1])
         VALUES (@batch_id
                ,'Place PRE-Processing Event'
-               ,'NBS_ODSE.sp_place_event'
+               ,'sp_place_event'
                ,'START'
                ,0
                ,LEFT('Pre ID-' + @id_list, 199)
@@ -132,7 +132,7 @@ BEGIN
                                                       ,[Msg_Description1])
         VALUES (@batch_id
                ,'Place PRE-Processing Event'
-               ,'NBS_ODSE.sp_place_event'
+               ,'sp_place_event'
                ,'COMPLETE'
                ,0
                ,LEFT('Pre ID-' + @id_list, 199)
@@ -163,7 +163,7 @@ BEGIN
                                                     ,[Error_Description])
         VALUES (@batch_id
                ,'Place PRE-Processing Event'
-               ,'NBS_ODSE.sp_place_event'
+               ,'sp_place_event'
                ,'ERROR'
                ,0
                ,'Place PRE-Processing Event'

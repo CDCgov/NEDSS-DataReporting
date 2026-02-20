@@ -14,7 +14,7 @@ begin
 		DECLARE @batch_id BIGINT;
 		SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 		DECLARE @dataflow_name NVARCHAR(200) = 'ldf_data PRE-Processing Event';
-        DECLARE @package_name NVARCHAR(200) = 'NBS_ODSE.sp_ldf_data_event';
+        DECLARE @package_name NVARCHAR(200) = 'sp_ldf_data_event';
         
         INSERT INTO [dbo].[job_flow_log]
             ( batch_id

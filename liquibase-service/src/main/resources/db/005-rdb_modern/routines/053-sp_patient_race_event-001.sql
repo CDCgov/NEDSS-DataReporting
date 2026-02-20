@@ -919,7 +919,7 @@ BEGIN
         VALUES (
                  @batch_id
                ,'Patient PRE-Processing Event:Person Race Module'
-               ,'NBS_ODSE.sp_patient_race_event'
+               ,'sp_patient_race_event'
                ,'ERROR'
                ,0
                ,'Patient PRE-Processing Event:Person Race'

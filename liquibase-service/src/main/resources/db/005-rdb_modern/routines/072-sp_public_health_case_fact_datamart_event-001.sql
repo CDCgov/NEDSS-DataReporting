@@ -93,7 +93,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -172,7 +172,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -334,7 +334,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -415,7 +415,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -451,7 +451,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -625,7 +625,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -674,7 +674,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -718,7 +718,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -760,7 +760,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -792,7 +792,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1036,7 +1036,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1064,7 +1064,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -1174,7 +1174,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1232,7 +1232,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1305,7 +1305,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1456,7 +1456,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1508,7 +1508,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1637,7 +1637,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -1695,7 +1695,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1758,7 +1758,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1810,7 +1810,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1849,7 +1849,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -1982,7 +1982,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2026,7 +2026,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2102,7 +2102,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2153,7 +2153,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -2278,7 +2278,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2369,7 +2369,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'STEP-AVOIDED'
                ,@Proc_Step_no
                ,@Proc_Step_Name
@@ -2716,7 +2716,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@PROC_STEP_NO
                ,@PROC_STEP_NAME
@@ -2760,7 +2760,7 @@ BEGIN
         VALUES (
                  @Batch_id
                ,'PCHMartETL'
-               ,'NBS_ODSE.PublicHealthCaseFact RTR'
+               ,'PublicHealthCaseFact RTR'
                ,'COMPLETED'
                ,@Proc_Step_no
                ,@Proc_Step_Name

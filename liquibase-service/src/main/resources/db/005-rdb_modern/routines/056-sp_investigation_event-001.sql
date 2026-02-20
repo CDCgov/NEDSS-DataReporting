@@ -26,7 +26,7 @@ BEGIN
         , [Msg_Description1])
         VALUES ( @batch_id
                , 'Investigation PRE-Processing Event'
-               , 'NBS_ODSE.sp_investigation_event'
+               , 'sp_investigation_event'
                , 'START'
                , 0
                , LEFT('Pre ID-' + @phc_id_list, 199)
@@ -953,7 +953,7 @@ BEGIN
         , [Msg_Description1])
         VALUES ( @batch_id
                , 'Investigation PRE-Processing Event'
-               , 'NBS_ODSE.sp_investigation_event'
+               , 'sp_investigation_event'
                , 'COMPLETE'
                , 0
                , LEFT('Pre ID-' + @phc_id_list, 199)
@@ -987,7 +987,7 @@ BEGIN
         )
         VALUES ( @batch_id
                , 'Investigation PRE-Processing Event'
-               , 'NBS_ODSE.sp_investigation_event'
+               , 'sp_investigation_event'
                , 'ERROR'
                , 0
                , 'Investigation PRE-Processing Event'

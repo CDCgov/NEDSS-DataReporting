@@ -35,7 +35,7 @@ BEGIN
         , [Msg_Description1])
         VALUES ( @batch_id
                , 'Interview PRE-Processing Event'
-               , 'NBS_ODSE.sp_interview_event'
+               , 'sp_interview_event'
                , 'START'
                , 0
                , LEFT('Pre ID-' + @ix_uids, 199)
@@ -1276,7 +1276,7 @@ BEGIN
         , [Msg_Description1])
         VALUES ( @batch_id
                , 'Interview PRE-Processing Event'
-               , 'NBS_ODSE.sp_interview_event'
+               , 'sp_interview_event'
                , 'COMPLETE'
                , 0
                , LEFT('Pre ID-' + @ix_uids, 199)
@@ -1309,7 +1309,7 @@ BEGIN
         )
         VALUES ( @batch_id
                , 'Interview PRE-Processing Event'
-               , 'NBS_ODSE.sp_interview_event'
+               , 'sp_interview_event'
                , 'ERROR'
                , 0
                , 'Interview PRE-Processing Event'

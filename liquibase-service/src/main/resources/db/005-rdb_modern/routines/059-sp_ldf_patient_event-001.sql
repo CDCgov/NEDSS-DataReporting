@@ -13,7 +13,7 @@ Begin
     BEGIN TRY
 
         DECLARE @dataflow_name NVARCHAR(200) = 'ldf_patient PRE-Processing Event';
-        DECLARE @package_name NVARCHAR(200) = 'NBS_ODSE.sp_ldf_patient_event';
+        DECLARE @package_name NVARCHAR(200) = 'sp_ldf_patient_event';
         
         INSERT INTO [dbo].[job_flow_log]
             ( batch_id

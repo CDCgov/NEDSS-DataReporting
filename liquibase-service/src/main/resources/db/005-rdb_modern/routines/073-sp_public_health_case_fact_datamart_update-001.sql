@@ -10,7 +10,7 @@ CREATE PROCEDURE dbo.sp_public_health_case_fact_datamart_update @obj_nm varchar(
 AS
 BEGIN
     declare @rowcount bigint;
-    declare @dataflow_name varchar(200) = 'NBS_ODSE.PublicHealthCaseFact Update: ' + @obj_nm;
+    declare @dataflow_name varchar(200) = 'PublicHealthCaseFact Update: ' + @obj_nm;
     declare @package_name varchar(200) = 'PCHMartETL';
     declare @proc_step_no float = 0;
     declare @proc_step_name varchar(200) = 'SP_Start';

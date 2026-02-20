@@ -366,7 +366,7 @@ BEGIN
         ,[Msg_Description1])
         VALUES (@batch_id
                ,'Patient PRE-Processing Event'
-               ,'NBS_ODSE.sp_patient_event'
+               ,'sp_patient_event'
                ,'COMPLETE'
                ,0
                ,LEFT('Pre ID-' + @user_id_list, 199)
@@ -400,7 +400,7 @@ BEGIN
         )
         VALUES (@batch_id
                ,'Patient PRE-Processing Event'
-               ,'NBS_ODSE.sp_patient_event'
+               ,'sp_patient_event'
                ,'ERROR'
                ,0
                ,'Patient PRE-Processing Event'

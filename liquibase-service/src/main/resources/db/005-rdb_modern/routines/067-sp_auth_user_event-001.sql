@@ -26,7 +26,7 @@ BEGIN
         , [Msg_Description1])
         VALUES ( @batch_id
                , 'Auth_User PRE-Processing Event'
-               , 'NBS_ODSE.sp_auth_user_event'
+               , 'sp_auth_user_event'
                , 'START'
                , 0
                , LEFT('Pre ID-' + @user_id_list, 199)
@@ -58,7 +58,7 @@ BEGIN
                                                       , [Msg_Description1])
         VALUES ( @batch_id
                , 'Auth_User PRE-Processing Event'
-               , 'NBS_ODSE.sp_auth_user_event'
+               , 'sp_auth_user_event'
                , 'COMPLETE'
                , 0
                , LEFT('Pre ID-' + @user_id_list, 199)
@@ -91,7 +91,7 @@ BEGIN
 
         VALUES ( @batch_id
                , 'Auth_user PRE-Processing Event'
-               , 'NBS_ODSE.sp_auth_user_event'
+               , 'sp_auth_user_event'
                , 'ERROR'
                , 0
                , 'Auth_user PRE-Processing Event'

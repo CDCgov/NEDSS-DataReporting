@@ -26,7 +26,7 @@ BEGIN
         ,[Msg_Description1])
         VALUES (@batch_id
                ,'Provider PRE-Processing Event'
-               ,'NBS_ODSE.sp_provider_event'
+               ,'sp_provider_event'
                ,'START'
                ,0
                ,LEFT('Pre ID-' + @user_id_list, 199)
@@ -197,7 +197,7 @@ BEGIN
                                                       ,[Msg_Description1])
         VALUES (@batch_id
                ,'Provider PRE-Processing Event'
-               ,'NBS_ODSE.sp_provider_event'
+               ,'sp_provider_event'
                ,'COMPLETE'
                ,0
                ,'PRE-Processing'
@@ -229,7 +229,7 @@ BEGIN
                                                       ,[Error_Description])
         VALUES (@batch_id
                ,'Provider PRE-Processing Event'
-               ,'NBS_ODSE.sp_provider_event'
+               ,'sp_provider_event'
                ,'ERROR'
                ,0
                ,'Provider PRE-Processing Event'

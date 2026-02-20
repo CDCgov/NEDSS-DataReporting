@@ -13,7 +13,7 @@ AS
 BEGIN
 
     DECLARE @DATAFLOW_NAME VARCHAR(100) = 'Treatment PRE-Processing Event';
-    DECLARE @PACKAGE_NAME VARCHAR(100) = 'NBS_ODSE.sp_treatment_event';
+    DECLARE @PACKAGE_NAME VARCHAR(100) = 'sp_treatment_event';
     DECLARE @RowCount_no INT;
     DECLARE @Proc_Step_no FLOAT = 0;
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
