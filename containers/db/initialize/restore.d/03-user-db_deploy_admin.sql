@@ -9,7 +9,7 @@ IF NOT EXISTS (SELECT name
                FROM sys.server_principals
                WHERE name = 'db_deploy_admin')
     BEGIN
-        CREATE LOGIN [db_deploy_admin] WITH PASSWORD =N'db_deploy_admin', DEFAULT_DATABASE = [master], DEFAULT_LANGUAGE = [us_english], CHECK_EXPIRATION = OFF, CHECK_POLICY = OFF;
+        CREATE LOGIN [db_deploy_admin] WITH PASSWORD =N'$(DEPLOY_ADMIN_PASSWORD)', DEFAULT_DATABASE = [master], DEFAULT_LANGUAGE = [us_english], CHECK_EXPIRATION = OFF, CHECK_POLICY = OFF;
         
         ALTER SERVER ROLE [setupadmin] ADD MEMBER [db_deploy_admin];
         ALTER SERVER ROLE [processadmin] ADD MEMBER [db_deploy_admin];

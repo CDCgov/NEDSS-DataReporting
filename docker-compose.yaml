@@ -6,6 +6,7 @@ services:
       context: ./containers/db
       args:
         - DATABASE_VERSION=6.0.17.1
+        - DEPLOY_ADMIN_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
     environment:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
     ports:
@@ -122,7 +123,8 @@ services:
       dockerfile: ./liquibase-service/Dockerfile.local
     environment:
       - DB_USERNAME=db_deploy_admin
-      - DB_PASSWORD=db_deploy_admin
+      - DB_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
+      - DB_HOST=rtr-mssql
     networks:
       - rtr
 
