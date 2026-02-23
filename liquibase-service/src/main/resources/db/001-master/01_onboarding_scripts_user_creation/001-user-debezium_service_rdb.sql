@@ -46,7 +46,6 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         EXEC sp_executesql @AddOdseRoleDataReader;
         PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_ODSE';
     END
-PRINT 'Debezium service user permission grants completed.';
 
 -- ==========================================
 -- NBS_SRTE
@@ -68,7 +67,6 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         EXEC sp_executesql @AddSrteRoleDataReader;
         PRINT 'Added [' + @UserName + '] to db_datareader role in NBS_SRTE';
     END
-PRINT 'Debezium service user permission grants completed.';
 
 -- ==========================================
 -- RDB / RDB_MODERN
@@ -86,3 +84,6 @@ ELSE
     END
 
 DECLARE @RDB_DB NVARCHAR(128) = db_name()
+--No RDB/RDB_Modern permissions are necessary but Liquibase requires a reset to the initial database for tracking purposes
+
+PRINT 'Debezium service user permission grants completed.';

@@ -20,19 +20,6 @@ ELSE
         PRINT 'Login [' + @UserName + '] already exists';
     END
 
-
--- ==========================================
--- NBS_SRTE
--- ==========================================
-USE [NBS_SRTE];
-
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
-    BEGIN
-        DECLARE @CreateSrteUser NVARCHAR(MAX) = 'CREATE USER [' + @UserName + '] FOR LOGIN [' + @UserName + ']';
-        EXEC sp_executesql @CreateSrteUser;
-        PRINT 'Created database user [' + @UserName + '] in NBS_SRTE';
-    END
-
 -- ==========================================
 -- RDB / RDB_MODERN
 -- ==========================================
