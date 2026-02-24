@@ -26,7 +26,7 @@ The first time containers are built, the liquibase container will need to be sta
 
 ### Prerequisites:
 
-- [Docker GHCR Authentication](documentation/DockerAuth.md)
+- [Docker GHCR Authentication](DockerAuth.md)
 
 ### Build the RTR database and liquibase containers
 
