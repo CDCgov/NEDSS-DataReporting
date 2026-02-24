@@ -6,6 +6,7 @@ services:
       context: ./containers/db
       args:
         - DATABASE_VERSION=6.0.17.1
+        - DEPLOY_ADMIN_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
     environment:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
     ports:
@@ -13,7 +14,7 @@ services:
     networks:
       - rtr
     healthcheck:
-      test: timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/1433'
+      test: test -f /tmp/db_ready && bash -c 'echo > /dev/tcp/localhost/1433' || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -121,8 +122,9 @@ services:
     build:
       dockerfile: ./liquibase-service/Dockerfile.local
     environment:
-      - DB_USERNAME=sa
-      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
+      - DB_USERNAME=db_deploy_admin
+      - DB_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
+      - DB_HOST=rtr-mssql
     depends_on:
       mssql:
         condition: service_healthy
@@ -133,9 +135,9 @@ services:
     build:
       dockerfile: ./investigation-service/Dockerfile
     environment:
-      - DB_USERNAME=sa
-      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - DB_USERNAME=investigation_service_rdb
+      - DB_PASSWORD=investigation_service
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -146,9 +148,9 @@ services:
     build:
       dockerfile: ./ldfdata-service/Dockerfile
     environment:
-      - DB_USERNAME=sa
-      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - DB_USERNAME=ldf_service_rdb
+      - DB_PASSWORD=ldf_service
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -159,9 +161,9 @@ services:
     build:
       dockerfile: ./observation-service/Dockerfile
     environment:
-      - DB_USERNAME=sa
-      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - DB_USERNAME=observation_service_rdb
+      - DB_PASSWORD=observation_service
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -172,9 +174,9 @@ services:
     build:
       dockerfile: ./organization-service/Dockerfile
     environment:
-      - DB_USERNAME=sa
-      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - DB_USERNAME=organization_service_rdb
+      - DB_PASSWORD=organization_service
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -185,9 +187,9 @@ services:
     build:
       dockerfile: ./person-service/Dockerfile
     environment:
-      - DB_USERNAME=sa
-      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
-      - DB_ODSE_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      - DB_USERNAME=person_service_rdb
+      - DB_PASSWORD=person_service
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr
@@ -198,9 +200,9 @@ services:
     build:
       dockerfile: ./post-processing-service/Dockerfile
     environment:
-      - DB_USERNAME=sa
-      - DB_PASSWORD=${DB_PASSWORD:-PizzaIsGood33!}
-      - DB_RDB_URL=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_USERNAME=post_processing_service_rdb
+      - DB_PASSWORD=post_processing_service
+      - DB_HOST=jdbc:sqlserver://rtr-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     networks:
       - rtr

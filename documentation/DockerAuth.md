@@ -8,6 +8,7 @@ The below steps will allow Docker to pull images from the private `cdcent` GitHu
     - **Scopes:** Select `read:packages`.
     - Click "Generate token"
     - Copy the generated token
+    - If your access to the NEDSSDB repo is through membership in the [cdcent GitHub org](https://github.com/cdcent), you will need to [authorize your token to access the organization](https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-single-sign-on/authorizing-a-personal-access-token-for-use-with-single-sign-on). If you have access to the repo as an outside collaborator, this is not necessary.
 2.  **Docker Login:** To allow Docker to use the generated token to authenticate, use one of the two options below.
 
     ```bash
@@ -20,8 +21,7 @@ The below steps will allow Docker to pull images from the private `cdcent` GitHu
     cat my_pat.txt | docker login ghcr.io -u <YOUR_GITHUB_USERNAME> --password-stdin
     ```
 
-3.  Validation (Optional)
-    Once the Docker Login is complete, the NEDSSDB image can be pulled using the following command
+3.  **Validation (Optional):** Once the Docker Login is complete, the NEDSSDB image can be pulled using the following command
     ```bash
     docker pull --platform linux/amd64 ghcr.io/cdcent/nedssdb:latest
     ```
