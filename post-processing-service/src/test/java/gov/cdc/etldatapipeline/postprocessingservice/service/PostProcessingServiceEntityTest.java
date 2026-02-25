@@ -514,6 +514,7 @@ class PostProcessingServiceEntityTest {
         // The result uid should only be added to the obsCache
         assertTrue(postProcessingServiceMock.obsCache.containsKey(LAB_REPORT));
         assertTrue(postProcessingServiceMock.obsCache.get(LAB_REPORT).contains(12345L));
+        assertFalse(postProcessingServiceMock.idCache.get(topic).contains(12345L));
 
         postProcessingServiceMock.processCachedIds();
 
