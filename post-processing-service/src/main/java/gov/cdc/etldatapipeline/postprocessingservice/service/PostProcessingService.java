@@ -281,6 +281,24 @@ public class PostProcessingService {
                                 "Order_rslt")) {
                     obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
                 }
+
+                /*
+                  Extract the result observation uid from the Order observation payload since Debezium does not detect
+                  changes for Result lab records on the Observation table. When processObservation is called, this uid
+                  will be in the 'labIds' list and passed into the target sp_d_lab_test_postprocessing stored procedure.
+
+                  This is specifically for ELRs so we need to make sure this is associated with an ELR.
+                 */
+                JsonNode resUidNode = payloadNode.path("result_observation_uid");
+                String electronicInd = payloadNode.path("electronic_ind").asText(); // should always be there
+                if (resUidNode != null && !Objects.equals(resUidNode.asText(), "")
+                        && domainCd.equalsIgnoreCase("Order") && electronicInd.equalsIgnoreCase("Y")) {
+                    List<String> resUidList = List.of(resUidNode.asText().split(","));
+                    resUidList.forEach(resUid -> {
+                        Long rUid = Long.valueOf(resUid);
+                        obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(rUid);
+                    });
+                }
             }
         } catch (Exception ex) {
             logger.warn("Error processing ID values for the {} message: {}", topic, ex.getMessage());

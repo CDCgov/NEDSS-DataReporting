@@ -96,11 +96,7 @@ management:
 ```shell
 docker ps -a -f "name=kafka$" -f "name=rtr-mssql$"
 ```
-3. In the root of this repository execute the following command so the service uses `application-local.yaml`.
+3. In the root of this repository execute the following command (this service is configured to run in debug mode on port 17070 in `build.gradle` by previous dev team).
 ```shell
 ./gradlew :post-processing-service:bootRun --args='--spring.profiles.active=local'
-```
-4. (Optional) Run the service in debug mode.
-```shell
-./gradlew :post-processing-service:bootRun --args='--spring.profiles.active=local' --debug-jvm
 ```
