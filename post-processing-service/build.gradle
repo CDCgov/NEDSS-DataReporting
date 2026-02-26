@@ -67,7 +67,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     implementation 'org.springframework.kafka:spring-kafka:3.3.1'
-    implementation 'org.apache.kafka:connect-api:3.9.1'
+    implementation 'org.apache.kafka:connect-api:4.1.1'
 
     implementation 'commons-io:commons-io:2.15.0'
     implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
