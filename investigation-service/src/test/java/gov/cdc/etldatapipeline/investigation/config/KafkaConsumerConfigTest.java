@@ -31,7 +31,7 @@ class KafkaConsumerConfigTest {
 
     @Test
     void kafkaListenerContainerFactory_ConfigurationIsValid() {
-
+        // this change does nothing
         // Act
         ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory =
                 kafkaConsumerConfig.kafkaListenerContainerFactory();
