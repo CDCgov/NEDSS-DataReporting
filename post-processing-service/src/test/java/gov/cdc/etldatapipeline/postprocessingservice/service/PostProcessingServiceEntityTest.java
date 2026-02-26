@@ -496,6 +496,48 @@ class PostProcessingServiceEntityTest {
         assertTrue(logs.get(9).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
+
+    void testPostProcessObservationLabOrderWithResult() {
+        String topic = "dummy_observation";
+        String key = "{\"payload\":{\"observation_uid\":12344}}";
+        String payload = """
+            {
+            "payload": {
+                "observation_uid": 12344,
+                "obs_domain_cd_st_1": "Order",
+                "ctrl_cd_display_form": "LabReport",
+                "result_observation_uid": 12345,
+                "electronic_ind": "Y"
+            }
+        }
+        """;
+
+        postProcessingServiceMock.processNrtMessage(topic, key, payload);
+        assertEquals(12344L, postProcessingServiceMock.idCache.get(topic).element());
+        assertTrue(postProcessingServiceMock.idCache.containsKey(topic));
+
+        assertTrue(postProcessingServiceMock.obsCache.containsKey(LAB_REPORT));
+        assertTrue(postProcessingServiceMock.obsCache.get(LAB_REPORT).contains(12344L));
+
+        // The result uid should only be added to the obsCache
+        assertTrue(postProcessingServiceMock.obsCache.containsKey(LAB_REPORT));
+        assertTrue(postProcessingServiceMock.obsCache.get(LAB_REPORT).contains(12345L));
+        assertFalse(postProcessingServiceMock.idCache.get(topic).contains(12345L));
+
+        postProcessingServiceMock.processCachedIds();
+
+        String expectedObsIdsString = "12344,12345";
+        verify(postProcRepositoryMock).executeStoredProcForLabTest(expectedObsIdsString);
+        verify(postProcRepositoryMock).executeStoredProcForLabTestResult(expectedObsIdsString);
+        List<ILoggingEvent> logs = listAppender.list;
+        assertEquals(10, logs.size());
+        assertTrue(logs.get(2).getFormattedMessage().contains("sp_d_lab_test_postprocessing"));
+        assertTrue(logs.get(4).getFormattedMessage().contains("sp_d_labtest_result_postprocessing"));
+        assertTrue(logs.get(6).getFormattedMessage().contains("sp_lab100_datamart_postprocessing"));
+        assertTrue(logs.get(8).getFormattedMessage().contains("sp_lab101_datamart_postprocessing"));
+        assertTrue(logs.get(9).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
+    }
+
     @ParameterizedTest
     @CsvSource({
             "'{\"payload\":{\"observation_uid\":123, \"obs_domain_cd_st_1\": \"Result\",\"ctrl_cd_display_form\": \"MorbReport\"}}'",
