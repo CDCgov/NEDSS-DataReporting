@@ -496,13 +496,21 @@ class PostProcessingServiceEntityTest {
         assertTrue(logs.get(9).getMessage().contains(PostProcessingService.SP_EXECUTION_COMPLETED));
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "'{\"payload\":{\"observation_uid\":12344, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"LabReport\",\"result_observation_uid\": 12345, \"electronic_ind\": \"Y\"}}'"
-    })
-    void testPostProcessObservationLabOrderWithResult(String payload) {
+
+    void testPostProcessObservationLabOrderWithResult() {
         String topic = "dummy_observation";
         String key = "{\"payload\":{\"observation_uid\":12344}}";
+        String payload = """
+            {
+            "payload": {
+                "observation_uid": 12344,
+                "obs_domain_cd_st_1": "Order",
+                "ctrl_cd_display_form": "LabReport",
+                "result_observation_uid": 12345,
+                "electronic_ind": "Y"
+            }
+        }
+        """;
 
         postProcessingServiceMock.processNrtMessage(topic, key, payload);
         assertEquals(12344L, postProcessingServiceMock.idCache.get(topic).element());
