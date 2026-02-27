@@ -4,28 +4,27 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 
 class KafkaProducerConfigTest {
-
     private static KafkaProducerConfig kafkaProducerConfig;
+    private static DockerImageName image = DockerImageName.parse("confluentinc/cp-kafka:8.0.4");
 
     @Container
-    public static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.3.0"))
-            .withStartupTimeout(Duration.ofMinutes(5));
+    private static ConfluentKafkaContainer kafkaContainer = new ConfluentKafkaContainer(image);
 
     @BeforeAll
-    public static void setUp() {
+    static void setUp() {
         kafkaContainer.start();
         kafkaProducerConfig = new KafkaProducerConfig();
     }
 
     @AfterAll
-    public static void tearDown() {
+    static void tearDown() {
         kafkaContainer.stop();
     }
 
@@ -33,8 +32,7 @@ class KafkaProducerConfigTest {
     void producerFactory_configValid() {
 
         // Act
-        var target =
-                kafkaProducerConfig.producerFactory();
+        var target = kafkaProducerConfig.producerFactory();
 
         // Assert
         Assertions.assertNotNull(target);
@@ -44,8 +42,7 @@ class KafkaProducerConfigTest {
     void kafkaTemplate_configValid() {
 
         // Act
-        var target =
-                kafkaProducerConfig.kafkaTemplate();
+        var target = kafkaProducerConfig.kafkaTemplate();
 
         // Assert
         Assertions.assertNotNull(target);
