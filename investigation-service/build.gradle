@@ -54,7 +54,6 @@ dependencies {
     implementation 'org.apache.kafka:connect-api:3.9.1'
 
     implementation 'io.debezium:debezium-core:2.4.1.Final'
-    implementation 'commons-io:commons-io:2.15.0'
     implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     implementation 'com.microsoft.sqlserver:mssql-jdbc:12.3.0.jre17-preview'
     implementation 'ch.qos.logback:logback-classic'
@@ -78,9 +77,9 @@ dependencies {
     }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.testcontainers:testcontainers:1.21.3'
-    testImplementation 'org.testcontainers:kafka:1.21.3'
-    testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
+    testImplementation 'org.testcontainers:testcontainers:2.0.3'
+    testImplementation 'org.testcontainers:testcontainers-kafka:2.0.3'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.3'
     testImplementation 'org.awaitility:awaitility:4.2.0'
 }
 
