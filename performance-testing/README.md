@@ -93,8 +93,11 @@ sqlcmd -U 'superuser' -P [PASSWORD] -i Investigate_TB_positive_test.xml.sql
 
 Algorithms can be added, activated, deactivated or removed through the UI, in the Decision Support Management section of the System Management area.
 
+Note that, depending on the completeness of the database snapshot, errors may be seen in the wildfly logs when automatically creating investigations ("prepop caching failed due to question Identifier :null"). This does not prevent the investigation from being created and can be ignored in local development. The error is caused by partially missing data for some conditions that use page builder templates. The missing data is used to prepopulate answers to some investigation questions. Adding complete data to the development snapshots is left as a todo. If necessary, the errors can be avoided by emptying the NBS_ODSE..LOOKUP_ANSWER and NBS_ODSE..LOOKUP_QUESTION tables.
+
 ## TODO
 
 - Add preliminary ELRs and ELR updates, not just final ELRs
 - Add EICR generation to add more data
+- Update the local database snapshots to contain full data for page builder question prepopulation
 
