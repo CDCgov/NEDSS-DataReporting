@@ -164,7 +164,7 @@ BEGIN
             t.morbidity_uid,
             rx1.cd_desc_txt AS treatment_name,
             rx1.program_jurisdiction_oid AS treatment_oid,
-            REPLACE(REPLACE(rx1.txt, CHAR(13) + CHAR(10), ' '), CHAR(10), ' ') AS treatment_comments,
+            NULLIF(TRIM(REPLACE(REPLACE(rx1.txt, CHAR(13) + CHAR(10), ' '), CHAR(10), ' ')), '') AS treatment_comments,
             rx1.shared_ind AS treatment_shared_ind,
             rx1.cd,
             rx2.effective_from_time AS treatment_date,
