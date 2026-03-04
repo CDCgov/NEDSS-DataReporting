@@ -1,22 +1,16 @@
 services:
   mssql:
+    image: ghcr.io/cdcent/nedssdb:latest
     platform: linux/amd64
     container_name: nbs-mssql
-    build:
-      context: ./containers/db
-      args:
-        - DATABASE_VERSION=6.0.17.1
-        - DEPLOY_ADMIN_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
     environment:
+      - DEPLOY_ADMIN_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
+      - DATABASE_VERSION=6.0.17.1
+    volumes:
+      - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
       - 1433:1433
-    healthcheck:
-      test: test -f /tmp/db_ready && bash -c 'echo > /dev/tcp/localhost/1433' || exit 1
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
