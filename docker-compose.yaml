@@ -6,7 +6,7 @@ services:
     environment:
       - DEPLOY_ADMIN_PASSWORD=${DEPLOY_ADMIN_PASSWORD:-db_deploy_admin}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
-      - DATABASE_VERSION=6.0.17.1
+      - DATABASE_VERSION=6.0.18.1
     volumes:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
@@ -16,6 +16,8 @@ services:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
     platform: linux/amd64
     container_name: rtr-wildfly
+    depends_on:
+      - mssql
     ports:
       - "9991:9990"
       - "7003:7001"
