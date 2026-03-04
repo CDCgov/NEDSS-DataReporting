@@ -10,7 +10,7 @@ services:
     volumes:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
-      - 1433:1433
+      - 3433:1433
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1

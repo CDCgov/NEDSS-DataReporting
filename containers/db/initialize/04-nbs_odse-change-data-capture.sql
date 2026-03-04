@@ -3,11 +3,8 @@
 ---------------------------------------------------------------------------------------------------
 USE NBS_ODSE;
 
--- TODO Enable CLR (Might not be necessary)
--- EXEC sp_configure 'clr enabled', 1; RECONFIGURE;
-
--- TODO Set sa as db_owner of NBS_ODSE and? enable cdc
 EXEC sp_changedbowner 'sa';
+
 -- Enable at database level
 IF (SELECT is_cdc_enabled FROM sys.databases WHERE name = 'NBS_ODSE') = 0
 BEGIN
