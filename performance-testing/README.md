@@ -4,7 +4,7 @@ This directory contains tools to add data intended to test the performance and a
 
 ## Data generation
 
-`generate.py` : create fake ELRs 
+`generate.py` : create fake ELRs
 
 `convert.py` : convert an ELR into NBS XML format
 
@@ -63,25 +63,13 @@ for i in *sql; do; sqlcmd -U 'superuser' -P [PASSWORD] -i $i; echo $i; done  # a
 
 ```
 
-This will add the ELRs to the NBS_INTERFACE table in the NBS_MSGOUTE database with status marked as `QUEUED`. The local NBS 6 dev environment is configured to automatically import the queued ELRs into the ODSE database every few minutes. (See [https://github.com/CDCgov/NEDSS-DataReporting/blob/main/containers/wildfly/Dockerfile](https://github.com/CDCgov/NEDSS-DataReporting/blob/main/containers/wildfly/Dockerfile)). So you should soon see the data appear. New patients will be created, and (unless workflow decision procedures are configured) the ELRs will be dropped in either of two queues: Documents Requiring Review or Documents Requiring Security Assignment.
+This will add the ELRs to the NBS_INTERFACE table in the NBS_MSGOUTE database with status marked as `QUEUED`. The `ELRImporter.sh` script should then be executed to process the ELRs.
 
-### ELRImporter batch process
-
-If necessary, it is also possible to force the ELR importer to run immediately.
-In the windows development environments the batch process can usually be found here: 
-
-```
-D:\wildfly-10.0.0.Final\nedssdomain\Nedss\BatchFiles\ELRImporter.bat
+```sh
+docker exec -it rtr-wildfly /opt/jboss/wildfly/nedssdomain/Nedss/BatchFiles/ELRImporter.sh
 ```
 
-The batch process can also be triggered when running locally. The shell version of the batch process in included in more recent NBS 6 versions (6.0.17 and later). 
-
-```
-docker exec wildfly /opt/jboss/wildfly-10.0.0.Final/nedssdomain/Nedss/BatchFiles/ELRImporter.sh  # import data to NBS_ODSE
-
-```
-
-Note that the batch process defaults to using the `nedss_elr_load` user. Depending on the environment, this user may need extra permissions.  
+Once the script is run you should soon see the data appear. New patients will be created, and (unless workflow decision procedures are configured) the ELRs will be dropped in either of two queues: Documents Requiring Review or Documents Requiring Security Assignment.
 
 ### Workflow decision support
 
@@ -100,4 +88,3 @@ Note that, depending on the completeness of the database snapshot, errors may be
 - Add preliminary ELRs and ELR updates, not just final ELRs
 - Add EICR generation to add more data
 - Update the local database snapshots to contain full data for page builder question prepopulation
-

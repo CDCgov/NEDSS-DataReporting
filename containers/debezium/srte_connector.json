@@ -2,7 +2,7 @@
   "name": "srte-connector",
   "config": {
     "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
-    "database.hostname": "rtr-mssql",
+    "database.hostname": "nbs-mssql",
     "database.port": "1433",
     "database.user": "sa",
     "database.password": "PizzaIsGood33!",

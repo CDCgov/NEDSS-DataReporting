@@ -5,7 +5,7 @@
     "tasks.max": "1",
     "offset.flush.interval.ms": "60000",
     "batch.size": "200",
-    "connection.url": "jdbc:sqlserver://rtr-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;",
+    "connection.url": "jdbc:sqlserver://nbs-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;",
     "connection.user": "sa",
     "connection.password": "PizzaIsGood33!",
     "connection.pool.min_size": "1",

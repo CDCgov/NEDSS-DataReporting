@@ -76,17 +76,8 @@ docker compose up investigation-service ldfdata-service observation-service orga
 
 ### Build NBS 6 WildFly container
 
-Run the `build_classic.sh` script to pull the NBS 6 source code and build a WildFly container.
-
 ```sh
-./containers/build_classic.sh
-```
-
-OR manually clone the NBS 6 repository to the proper directory and build docker container
-
-```sh
-git clone -b lts/6.0.17 git@github.com:cdcent/NEDSSDev.git containers/wildfly/builder/NEDSSDev
-docker compose up wildfly --build -d
+docker compose up wildfly -d
 ```
 
 ### Verifying functionality
