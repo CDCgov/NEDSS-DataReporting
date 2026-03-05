@@ -69,15 +69,6 @@ IF NOT EXISTS (SELECT *
     END;
 
 
-IF NOT EXISTS (SELECT *
-               FROM sys.database_principals
-               WHERE name = 'db_deploy_admin')
-    BEGIN
-        CREATE USER [db_deploy_admin] FOR LOGIN [db_deploy_admin] WITH DEFAULT_SCHEMA =[dbo]
-
-        ALTER ROLE [db_owner] ADD MEMBER [db_deploy_admin]
-    END
-
 -- ==========================================
 -- NBS_ODSE
 -- ==========================================

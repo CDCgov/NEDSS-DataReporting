@@ -15,5 +15,5 @@ BEGIN
     MOVE N'RDB_log' TO N'/var/opt/mssql/data/rdb_modern_log.ldf',  NOUNLOAD,  STATS = 10
 
 
-    EXEC dbo.sp_dbcmptlevel @dbname=N'RDB_MODERN', @new_cmptlevel=120
+    ALTER DATABASE [RDB_MODERN] SET COMPATIBILITY_LEVEL = 120;
 END
