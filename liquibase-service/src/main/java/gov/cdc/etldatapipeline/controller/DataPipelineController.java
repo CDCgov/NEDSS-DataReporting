@@ -9,17 +9,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class DataPipelineController {
 
-    DataPipelineStatusService dataPipelineStatusSvc;
+  DataPipelineStatusService dataPipelineStatusSvc;
 
-    public DataPipelineController(DataPipelineStatusService dataPipelineStatusSvc) {
-        this.dataPipelineStatusSvc = dataPipelineStatusSvc;
-    }
+  public DataPipelineController(DataPipelineStatusService dataPipelineStatusSvc) {
+    this.dataPipelineStatusSvc = dataPipelineStatusSvc;
+  }
 
-
-    @GetMapping("/status")
-    @ResponseBody
-    public ResponseEntity<String> getDataPipelineStatusHealth() {
-        return this.dataPipelineStatusSvc.getHealthStatus();
-    }
-
+  @GetMapping("/status")
+  @ResponseBody
+  public ResponseEntity<String> getDataPipelineStatusHealth() {
+    return this.dataPipelineStatusSvc.getHealthStatus();
+  }
 }

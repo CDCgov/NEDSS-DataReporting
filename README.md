@@ -35,6 +35,45 @@ RTR uses Kafka to stream change events from transactional data sources into repo
 
 To set up a local development environment follow the guide [here](documentation/DevSetup.md)
 
+## Code Quality and Formatting
+
+This project uses [Spotless](https://github.com/diffplug/spotless) with [Google Java Format](https://github.com/google/google-java-format) to maintain consistent code style.
+
+### Running Spotless Locally
+
+To check if your code adheres to the formatting standards:
+```sh
+./gradlew spotlessCheck
+```
+
+To automatically apply formatting fixes:
+```sh
+./gradlew spotlessApply
+```
+
+### Formatting Specific Files or Directories
+
+To run Spotless on a specific file or set of files, you can use the `-PspotlessFiles` property. Providing this property automatically bypasses the incremental (`ratchetFrom`) check, allowing you to force-format existing files.
+
+*   **Format a specific service (bypasses the incremental check):**
+    ```sh
+    ./gradlew :liquibase-service:spotlessApply -PspotlessFiles='.*\.java'
+    ```
+
+*   **Format a specific file using its relative path:**
+    ```sh
+    ./gradlew spotlessApply -PspotlessFiles='liquibase-service/src/main/java/MyFile.java'
+    ```
+
+*   **Format multiple specific files (comma-separated):**
+    ```sh
+    ./gradlew spotlessApply -PspotlessFiles='File1.java,File2.java'
+    ```
+
+> **Note:** If you use a subproject task (e.g., `:common-util:spotlessApply`), you can only target files within that subproject's directory. Use the root `spotlessApply` task if you want to target files across different services using their full repository paths.
+
+Formatting is enforced on all Pull Requests via GitHub Actions. It is recommended to run `spotlessApply` before committing your changes.
+
 # CDCgov GitHub Organization Open Source Project Template
 
 **Template for clearance: This project serves as a template to aid projects in starting up and moving through clearance procedures. To start, create a new repository and implement the required [open practices](open_practices.md), train on and agree to adhere to the organization's [rules of behavior](rules_of_behavior.md), and [send a request through the create repo form](https://forms.office.com/Pages/ResponsePage.aspx?id=aQjnnNtg_USr6NJ2cHf8j44WSiOI6uNOvdWse4I-C2NUNk43NzMwODJTRzA4NFpCUk1RRU83RTFNVi4u) using language from this template as a Guide.**

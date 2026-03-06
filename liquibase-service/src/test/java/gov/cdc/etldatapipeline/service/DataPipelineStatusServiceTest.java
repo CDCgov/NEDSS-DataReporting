@@ -6,10 +6,9 @@ import org.springframework.http.HttpStatus;
 
 class DataPipelineStatusServiceTest {
 
-    @Test
-    void statusTest() {
-        DataPipelineStatusService statusService = new DataPipelineStatusService();
-        Assertions.assertEquals(HttpStatus.OK, statusService.getHealthStatus().getStatusCode());
-    }
+  @Test
+  void statusTest() {
+    DataPipelineStatusService statusService = new DataPipelineStatusService();
+    Assertions.assertEquals(HttpStatus.OK, statusService.getHealthStatus().getStatusCode());
+  }
 }
-
