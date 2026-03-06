@@ -8,13 +8,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DataPipelineStatusService {
-    private static final Logger LOG = LoggerFactory.getLogger(DataPipelineStatusService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DataPipelineStatusService.class);
 
-    public DataPipelineStatusService() {
-    }
+  public DataPipelineStatusService() {}
 
-    public ResponseEntity<String> getHealthStatus(){
-        LOG.info("Status OK");
-        return ResponseEntity.status(HttpStatus.OK).body("Status OK");
-    }
+  public ResponseEntity<String> getHealthStatus() {
+    LOG.info("Status OK");
+    return ResponseEntity.status(HttpStatus.OK).body("Status OK");
+  }
 }
