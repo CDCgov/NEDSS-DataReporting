@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    primary:
+      username: post_processing_service_rdb
+      password: post_processing_service
+      url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+    test:
+      username: sa
+      password: PizzaIsGood33!
+      url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+
+logging:
+  level:
+    org.springframework.jdbc.core: TRACE
