@@ -43,9 +43,11 @@ class IntegrationTest {
                     "person-service",
                     "debezium",
                     "kafka-connect")
-            // Add debezium specific wait to ensure connector is ready before test execution
+            // Add specific waits to ensure connectors are ready before test execution
             .waitingFor("debezium",
                     Wait.forLogMessage(".*Finished creating connector.*", 3))
+            .waitingFor("kafka-connect",
+                    Wait.forLogMessage(".*Finished creating connector.*", 1))
             // Set the maximum startup timeout all the waits set are bounded to
             .withStartupTimeout(Duration.ofMinutes(5));
 
