@@ -43,14 +43,11 @@ class IntegrationTest {
                     "person-service",
                     "debezium",
                     "kafka-connect")
-            // Add liquibase specific log check and increase default timeout
-            .waitingFor("liquibase",
-                    Wait.forLogMessage("Migrations complete.*", 1).withStartupTimeout(Duration.ofMinutes(3)))
             // Add debezium specific wait to ensure connector is ready before test execution
             .waitingFor("debezium",
-                    Wait.forLogMessage("Finished creating connector.*", 3).withStartupTimeout(Duration.ofMinutes(3)))
-            // Set a global startup timeout for ComposeContainer
-            .withStartupTimeout(Duration.ofMinutes(10));
+                    Wait.forLogMessage(".*Finished creating connector.*", 3))
+            // Set the maximum startup timeout all the waits set are bounded to
+            .withStartupTimeout(Duration.ofMinutes(5));
 
     @BeforeAll
     static void setUp() {
