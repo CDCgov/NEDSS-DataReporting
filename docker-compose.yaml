@@ -25,7 +25,6 @@ services:
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
-    platform: linux/amd64
     depends_on:
       nbs-mssql:
         condition: service_healthy
@@ -41,11 +40,14 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=ruok
     healthcheck:
-      test: nc -z localhost 2181 || exit -1
+      test: echo "ruok" | nc localhost 2181 | grep imok
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 10s
+      start_interval: 10s
 
   kafka:
     image: confluentinc/cp-kafka:7.3.0
@@ -67,9 +69,11 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
     healthcheck:
       test: kafka-topics --bootstrap-server kafka:29092 --list
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 20s
+      start_interval: 10s
 
   kafka-connect:
     build:
@@ -79,8 +83,12 @@ services:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
     ports:
       - 8083:8083
+    volumes:
+      - ./containers/kafka-connect/initialize/:/kafka/healthcheck/
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "kafka:29092"
       CONNECT_GROUP_ID: "cp-kafka-connect.groupId"
@@ -93,6 +101,13 @@ services:
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+    healthcheck:
+      test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+      start_interval: 10s
 
   debezium:
     image: debezium/connect:2.4
@@ -101,8 +116,14 @@ services:
         condition: service_healthy
       zookeeper:
         condition: service_healthy
+      nbs-mssql:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
     ports:
       - "8085:8083"
+    volumes:
+      - ./containers/debezium/initialize/:/kafka/healthcheck/
     environment:
       BOOTSTRAP_SERVERS: kafka:29092
       GROUP_ID: connect-cluster
@@ -113,13 +134,19 @@ services:
       OFFSET_STORAGE_FILE_FILENAME: /tmp/connect.offsets
       OFFSET_FLUSH_INTERVAL_MS: 10000
       PLUGIN_PATH: /kafka/connect
-
       CONFIG_STORAGE_TOPIC: connect-configs
       OFFSET_STORAGE_TOPIC: connect-offsets
       STATUS_STORAGE_TOPIC: connect-status
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+      start_interval: 10s
 
   investigation-service:
     build:
