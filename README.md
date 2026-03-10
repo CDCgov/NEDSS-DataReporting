@@ -51,6 +51,8 @@ To automatically apply formatting fixes:
 ./gradlew spotlessApply
 ```
 
+**NOTE:** Spotless will automatically be applied after you compile your code with `./gradlew compileJava`
+
 ### Formatting Specific Files or Directories
 
 To run Spotless on a specific file or set of files, you can use the `-PspotlessFiles` property. Providing this property automatically bypasses the incremental (`ratchetFrom`) check, allowing you to force-format existing files.
