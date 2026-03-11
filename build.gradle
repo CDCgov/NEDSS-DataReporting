@@ -61,6 +61,8 @@ subprojects {
     }
 
     tasks.named('test') {
+        // Show all logs during gradle test execution
+        testLogging.showStandardStreams = true
         finalizedBy tasks.named('jacocoTestReport', JacocoReport)
     }
 }

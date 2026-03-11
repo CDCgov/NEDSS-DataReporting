@@ -99,8 +99,8 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
-      interval: 10s
-      timeout: 5s
+      interval: 20s
+      timeout: 15s
       retries: 5
 
   debezium:
@@ -210,6 +210,7 @@ services:
       - DB_PASSWORD=person_service
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+      - spring.kafka.consumer.maxPollIntervalMs=3000
     depends_on:
       kafka:
         condition: service_healthy

@@ -12,10 +12,13 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
@@ -26,6 +29,9 @@ class IntegrationTest {
   @Autowired private PatientCreator patientCreator;
 
   @Autowired private DPatientFinder dPatientFinder;
+
+  private static final Logger logger = LoggerFactory.getLogger(IntegrationTest.class);
+  private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(logger);
 
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
@@ -44,6 +50,14 @@ class IntegrationTest {
           .waitingFor("debezium", Wait.forLogMessage(".*Starting streaming.*", 1))
           .waitingFor(
               "kafka-connect", Wait.forLogMessage(".*Sink task finished initialization.*", 1))
+          // Pull logs from the containers for better debugging
+          .withLogConsumer("nbs-mssql", consumer)
+          .withLogConsumer("liquibase", consumer)
+          .withLogConsumer("zookeeper", consumer)
+          .withLogConsumer("kafka", consumer)
+          .withLogConsumer("debezium", consumer)
+          .withLogConsumer("kafka-connect", consumer)
+          .withLogConsumer("person-service", consumer)
           // Set the maximum startup timeout all the waits set are bounded to
           .withStartupTimeout(Duration.ofMinutes(10));
 
@@ -67,7 +81,7 @@ class IntegrationTest {
 
     // Wait for topics to be created then restart kafka sink connector so it picks
     // up newly created nrt_ topics (TEMP WORKAROUND)
-    Thread.sleep(Duration.ofSeconds(10));
+    Thread.sleep(Duration.ofSeconds(20));
     KafkaSinkClient.restartSinkConnector();
 
     // Validate patient data arrives in D_PATIENT with retry

@@ -10,13 +10,16 @@ spring:
       url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
   kafka:
     consumer:
-      maxPollIntervalMs: 3000
+      maxPollIntervalMs: 6000
+      max-retry: 10
 service:
   fixed-delay:
-    cached-ids: 5000
-    datamart: 5000
-    backfill: 5000
+    cached-ids: 6000
+    datamart: 6000
+    backfill: 6000
+    max-retries: 10
 
 logging:
   level:
     org.springframework.jdbc.core: TRACE
+    org.testcontainers: DEBUG
