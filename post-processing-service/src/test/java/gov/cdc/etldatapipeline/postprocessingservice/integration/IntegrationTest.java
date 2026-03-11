@@ -65,13 +65,15 @@ class IntegrationTest {
     }
 
     @Test
-    void patientDataIsSuccessfullyProcessed() {
-        // Restart kafka sink connector so it picks up newly created topics
-        KafkaSinkClient.restartSinkConnector();
-
+    void patientDataIsSuccessfullyProcessed() throws InterruptedException {
         // Insert a patient into NBS_ODSE
         long createdPatient = patientCreator.create();
         assertThat(createdPatient).isNotZero();
+
+        // Wait for topics to be created then restart kafka sink connector so it picks
+        // up newly created nrt_ topics (TEMP WORKAROUND)
+        Thread.sleep(Duration.ofSeconds(10));
+        KafkaSinkClient.restartSinkConnector();
 
         // Validate patient data arrives in D_PATIENT with retry
         Optional<Long> dPatientKey = Await.waitFor(dPatientFinder::findDPatientKeyWithRetry, createdPatient);
