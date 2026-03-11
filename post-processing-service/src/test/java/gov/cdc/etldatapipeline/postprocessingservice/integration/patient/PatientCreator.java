@@ -1,33 +1,28 @@
 package gov.cdc.etldatapipeline.postprocessingservice.integration.patient;
 
+import gov.cdc.etldatapipeline.postprocessingservice.integration.id.IdGenerator;
+import gov.cdc.etldatapipeline.postprocessingservice.integration.id.IdGenerator.EntityType;
+import gov.cdc.etldatapipeline.postprocessingservice.integration.id.IdGenerator.GeneratedId;
 import java.time.LocalDateTime;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
-import gov.cdc.etldatapipeline.postprocessingservice.integration.id.IdGenerator;
-import gov.cdc.etldatapipeline.postprocessingservice.integration.id.IdGenerator.EntityType;
-import gov.cdc.etldatapipeline.postprocessingservice.integration.id.IdGenerator.GeneratedId;
-
-/**
- * Responsible for creating and inserting patient data into the NBS_ODSE for
- * integration testing
- */
+/** Responsible for creating and inserting patient data into the NBS_ODSE for integration testing */
 @Component
 public class PatientCreator {
 
-    private IdGenerator idGenerator;
-    private JdbcClient client;
+  private IdGenerator idGenerator;
+  private JdbcClient client;
 
-    public PatientCreator(
-            final IdGenerator idGenerator,
-            @Qualifier("testClient") final JdbcClient client) {
-        this.idGenerator = idGenerator;
-        this.client = client;
-    }
+  public PatientCreator(
+      final IdGenerator idGenerator, @Qualifier("testClient") final JdbcClient client) {
+    this.idGenerator = idGenerator;
+    this.client = client;
+  }
 
-    private static final String CREATE_QUERY = """
+  private static final String CREATE_QUERY =
+      """
             insert into NBS_ODSE.dbo.Entity(entity_uid, class_cd) values (:id, 'PSN');
 
             insert into NBS_ODSE.dbo.Person(
@@ -65,18 +60,18 @@ public class PatientCreator {
             );
             """;
 
-    public long create() {
+  public long create() {
 
-        GeneratedId identifier = idGenerator.next(EntityType.PERSON);
+    GeneratedId identifier = idGenerator.next(EntityType.PERSON);
 
-        this.client.sql(CREATE_QUERY)
-                .param("id", identifier.id())
-                .param("local", identifier.toLocalId())
-                .param("addedOn", LocalDateTime.now())
-                .param("addedBy", "9999")
-                .update();
+    this.client
+        .sql(CREATE_QUERY)
+        .param("id", identifier.id())
+        .param("local", identifier.toLocalId())
+        .param("addedOn", LocalDateTime.now())
+        .param("addedBy", "9999")
+        .update();
 
-        return identifier.id();
-    }
-
+    return identifier.id();
+  }
 }
