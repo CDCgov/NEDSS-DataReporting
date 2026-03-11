@@ -6,12 +6,23 @@ import java.util.function.Function;
 
 public class Await {
 
-    private static final int DEFAULT_MAX_RETRY = 6;
-    private static final Duration DEFAULT_RETRY_DELAY = Duration.ofSeconds(10);
+    private static final Duration DEFAULT_RETRY_DELAY = Duration.ofSeconds(6);
+    private static final int DEFAULT_MAX_RETRY = 10;
 
-    public static <A, B> Optional<B> waitFor(
-            Function<A, Optional<B>> function,
-            A parameter) {
+    /**
+     * Calls the provided function until it returns a non-empty Optional or the
+     * retry limit is reached.
+     *
+     * @param <I>       Generic Input
+     * @param <O>       Generic Output
+     * @param function  Function that accepts a single parameter of type I and
+     *                  returns an Optional{@literal <O>}
+     * @param parameter The single parameter of type I to be passed to the function
+     * @return
+     */
+    public static <I, O> Optional<O> waitFor(
+            Function<I, Optional<O>> function,
+            I parameter) {
         return waitFor(function, parameter, DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY);
     }
 

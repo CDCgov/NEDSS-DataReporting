@@ -12,7 +12,7 @@ IFS=',' read -r -a my_array <<< "$cleaned_connector_names"
 if [[ " ${my_array[@]} " =~ " Kafka-Connect-SqlServer-Sink " ]]; then
     echo "Kafka-Connect-SqlServer-Sink is enabled";
 else
-    echo "Kafka-Connect-SqlServer-Sink not found. Initializing..."; 
+    echo "Kafka-Connect-SqlServer-Sink not found. Initializing...";
     curl -s --fail -X POST --header "Accept:application/json" --header "Content-Type:application/json" --data "@/kafka/healthcheck/mssql-connector.json" http://localhost:8083/connectors/
 fi
 

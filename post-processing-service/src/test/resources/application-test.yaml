@@ -8,6 +8,14 @@ spring:
       username: sa
       password: PizzaIsGood33!
       url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+  kafka:
+    consumer:
+      maxPollIntervalMs: 3000
+service:
+  fixed-delay:
+    cached-ids: 5000
+    datamart: 5000
+    backfill: 5000
 
 logging:
   level:

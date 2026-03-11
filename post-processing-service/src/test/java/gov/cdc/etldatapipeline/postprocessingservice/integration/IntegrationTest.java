@@ -16,6 +16,7 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import gov.cdc.etldatapipeline.postprocessingservice.integration.kafkasink.KafkaSinkClient;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.patient.PatientCreator;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.rdb.DPatientFinder;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.util.Await;
@@ -40,16 +41,16 @@ class IntegrationTest {
                     "liquibase",
                     "zookeeper",
                     "kafka",
-                    "person-service",
                     "debezium",
-                    "kafka-connect")
+                    "kafka-connect",
+                    "person-service")
             // Add specific waits to ensure connectors are ready before test execution
             .waitingFor("debezium",
-                    Wait.forLogMessage(".*Finished creating connector.*", 3))
+                    Wait.forLogMessage(".*Starting streaming.*", 1))
             .waitingFor("kafka-connect",
-                    Wait.forLogMessage(".*Finished creating connector.*", 1))
+                    Wait.forLogMessage(".*Sink task finished initialization.*", 1))
             // Set the maximum startup timeout all the waits set are bounded to
-            .withStartupTimeout(Duration.ofMinutes(5));
+            .withStartupTimeout(Duration.ofMinutes(10));
 
     @BeforeAll
     static void setUp() {
@@ -65,6 +66,9 @@ class IntegrationTest {
 
     @Test
     void patientDataIsSuccessfullyProcessed() {
+        // Restart kafka sink connector so it picks up newly created topics
+        KafkaSinkClient.restartSinkConnector();
+
         // Insert a patient into NBS_ODSE
         long createdPatient = patientCreator.create();
         assertThat(createdPatient).isNotZero();
