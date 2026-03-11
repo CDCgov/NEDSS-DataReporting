@@ -2,7 +2,7 @@
 set -e
 
 # Get the list of all connectors from Debezium REST API
-connectors=$(curl -s --fail "http://127.0.0.1:8083/connectors")
+connectors=$(curl -s --fail --connect-timeout 2 "http://127.0.0.1:8083/connectors")
 
 # Clean the array string and load into array
 cleaned_connector_names=$(sed 's/[][]//g; s/"//g' <<< "$connectors")
