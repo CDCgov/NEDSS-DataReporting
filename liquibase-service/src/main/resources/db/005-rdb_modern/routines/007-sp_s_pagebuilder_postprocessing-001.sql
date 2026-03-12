@@ -1178,14 +1178,14 @@ BEGIN
 			DROP TABLE '+@coded_output_table_name+';
 		END;')
 
-        IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
             BEGIN
                 UPDATE #CODED_TABLE_MERGED_INV
                 SET answer_desc11 = NULL
                 WHERE answer_desc11 = '';
             END;
 
-        IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
             BEGIN
                 UPDATE #CODED_TABLE_MERGED_INV
                 SET answer_desc11 = ANSWER_VALUE
@@ -1195,7 +1195,7 @@ BEGIN
                     answer_oth IS NOT NULL;
             END;
 
-        IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
             BEGIN
                 UPDATE #CODED_TABLE_MERGED_INV
                 SET answer_desc11 = ANSWER_TXT
@@ -1207,7 +1207,7 @@ BEGIN
                     LEN(ANSWER_TXT2) > 0;
             END;
 
-        IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
             BEGIN
                 UPDATE #CODED_TABLE_MERGED_INV
                 SET answer_desc11 = ANSWER_TXT
@@ -1221,7 +1221,7 @@ BEGIN
 
 
 
-        IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
             BEGIN
                 UPDATE #CODED_TABLE_MERGED_INV
                 SET answer_desc11 = ANSWER_VALUE
@@ -1232,7 +1232,7 @@ BEGIN
                     code = '';
             END;
 
-        IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
             BEGIN
                 UPDATE #CODED_TABLE_MERGED_INV
                 SET answer_desc11 = ANSWER_TXT
