@@ -23,4 +23,3 @@ logging:
   level:
     org.springframework.jdbc.core: TRACE
     org.testcontainers: DEBUG
-    gov.cdc.etldatapipeline.postprocessingservice.integration.IntegrationTest: DEBUG
