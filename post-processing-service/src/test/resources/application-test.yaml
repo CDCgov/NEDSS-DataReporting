@@ -22,4 +22,3 @@ service:
 logging:
   level:
     org.springframework.jdbc.core: TRACE
-    org.testcontainers: DEBUG
