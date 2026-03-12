@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import gov.cdc.etldatapipeline.postprocessingservice.integration.patient.PatientCreator;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.rdb.DPatientFinder;
+import gov.cdc.etldatapipeline.postprocessingservice.integration.util.Await;
 import java.io.File;
 import java.time.Duration;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,25 +38,26 @@ class IntegrationTest {
               DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
           // List specific services to prevent launching wildfly container
           .withServices(
-              "nbs-mssql", "liquibase", "zookeeper"
-              // "kafka",
-              // "debezium",
-              // "kafka-connect",
-              // "person-service"
-              )
+              "nbs-mssql",
+              "liquibase",
+              "zookeeper",
+              "kafka",
+              "debezium",
+              "kafka-connect",
+              "person-service")
           // Add specific waits to ensure connectors are ready before test execution
           .waitingFor("liquibase", Wait.forLogMessage("Migrations complete.*", 1))
-          // .waitingFor("debezium", Wait.forLogMessage(".*Starting streaming.*", 1))
-          // .waitingFor(
-          //     "kafka-connect", Wait.forLogMessage(".*Sink task finished initialization.*", 1))
+          .waitingFor("debezium", Wait.forLogMessage(".*Starting streaming.*", 1))
+          .waitingFor(
+              "kafka-connect", Wait.forLogMessage(".*Sink task finished initialization.*", 1))
           // Pull logs from the containers for better debugging
           .withLogConsumer("nbs-mssql", consumer)
           .withLogConsumer("liquibase", consumer)
           .withLogConsumer("zookeeper", consumer)
-          // .withLogConsumer("kafka", consumer)
-          // .withLogConsumer("debezium", consumer)
-          // .withLogConsumer("kafka-connect", consumer)
-          // .withLogConsumer("person-service", consumer)
+          .withLogConsumer("kafka", consumer)
+          .withLogConsumer("debezium", consumer)
+          .withLogConsumer("kafka-connect", consumer)
+          .withLogConsumer("person-service", consumer)
           // Set the maximum startup timeout all the waits set are bounded to
           .withStartupTimeout(Duration.ofMinutes(10));
 
@@ -77,10 +80,10 @@ class IntegrationTest {
     assertThat(createdPatient).isNotZero();
 
     // Validate patient data arrives in D_PATIENT with retry
-    // Optional<Long> dPatientKey =
-    // Await.waitFor(dPatientFinder::findDPatientKeyWithRetry, createdPatient);
+    Optional<Long> dPatientKey =
+        Await.waitFor(dPatientFinder::findDPatientKeyWithRetry, createdPatient);
 
-    // assertThat(dPatientKey).isPresent();
-    // assertThat(dPatientKey.get()).isNotZero();
+    assertThat(dPatientKey).isPresent();
+    assertThat(dPatientKey.get()).isNotZero();
   }
 }
