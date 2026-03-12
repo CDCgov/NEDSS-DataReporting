@@ -2,7 +2,6 @@ package gov.cdc.etldatapipeline.postprocessingservice.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import gov.cdc.etldatapipeline.postprocessingservice.integration.kafkasink.KafkaSinkClient;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.patient.PatientCreator;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.rdb.DPatientFinder;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.util.Await;
@@ -74,15 +73,10 @@ class IntegrationTest {
   }
 
   @Test
-  void patientDataIsSuccessfullyProcessed() throws InterruptedException {
+  void patientDataIsSuccessfullyProcessed() {
     // Insert a patient into NBS_ODSE
     long createdPatient = patientCreator.create();
     assertThat(createdPatient).isNotZero();
-
-    // Wait for topics to be created then restart kafka sink connector so it picks
-    // up newly created nrt_ topics (TEMP WORKAROUND)
-    Thread.sleep(Duration.ofSeconds(20));
-    KafkaSinkClient.restartSinkConnector();
 
     // Validate patient data arrives in D_PATIENT with retry
     Optional<Long> dPatientKey =
