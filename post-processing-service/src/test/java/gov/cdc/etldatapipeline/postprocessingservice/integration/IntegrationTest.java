@@ -36,9 +36,7 @@ class IntegrationTest {
               DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
           // List specific services to prevent launching wildfly container
           .withServices(
-              "nbs-mssql", 
-              "liquibase",
-              "zookeeper"
+              "nbs-mssql", "liquibase", "zookeeper"
               // "kafka",
               // "debezium",
               // "kafka-connect",
