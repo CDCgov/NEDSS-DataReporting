@@ -45,11 +45,8 @@ class IntegrationTest {
               "debezium",
               "kafka-connect",
               "person-service")
-          // Add specific waits to ensure connectors are ready before test execution
-          .waitingFor("liquibase", Wait.forLogMessage("Migrations complete.*", 1))
-          .waitingFor("debezium", Wait.forLogMessage(".*Starting streaming.*", 1))
-          .waitingFor(
-              "kafka-connect", Wait.forLogMessage(".*Sink task finished initialization.*", 1))
+          .waitingFor("debezium", Wait.forHealthcheck())
+          .waitingFor("kafka-connect", Wait.forHealthcheck())
           // Pull logs from the containers for better debugging
           .withLogConsumer("nbs-mssql", consumer)
           .withLogConsumer("liquibase", consumer)
