@@ -2,11 +2,11 @@ spring:
   application:
     name: reporting-hydration-service
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
   datasource:
-    password: ${DB_PASSWORD:-PizzaIsGood33!}
-    username: ${DB_USERNAME:-sa}
-    url: ${DB_HOST:jdbc:sqlserver://localhost:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;}
+    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME}
+    url: ${DB_HOST}
 
 server:
   port: "8095"
