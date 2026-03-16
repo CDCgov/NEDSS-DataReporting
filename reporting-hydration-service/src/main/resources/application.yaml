@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: reporting-hydration-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+  datasource:
+    password: ${DB_PASSWORD:-PizzaIsGood33!}
+    username: ${DB_USERNAME:-sa}
+    url: ${DB_HOST:jdbc:sqlserver://localhost:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;}
+
+server:
+  port: "8095"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

@@ -1,0 +1,8142 @@
+NBS 6.0 RDB Data Dictionary
+NEDSS Base System
+Reporting Database (RDB)
+Data Dictionary
+Release 6.0
+March 8, 2018
+Prepared by:
+U.S. Department of Health and Human Services
+1
+Version
+#
+1.4.1 1.4 1.3 1.2 1.1 1.0 0.4 0.3 0.2 0.1 Author Christi
+Hildebrandt
+Christi
+Hildebrandt
+Christi
+Hildebrandt
+Christi
+Hildebrandt
+Christi
+Hildebrandt
+Christi
+Hildebrandt
+Christi
+Hildebrandt
+Christi
+Hildebrandt
+Christi
+Hildebrandt
+John Ortega Reviewed By Coryne Tasca
+& Jennifer
+Ward
+Christi
+Hildebrandt
+NBS 6.0 RDB Data Dictionary
+Version History
+Revision
+Revision Notes
+Date
+4/11/2019 • Updated section 5.2.6 Interview Case to include linkage to
+D_ORGANIZATION for Site ID (INTERVENTION_SITE_KEY) via
+F_INTERVIEW_CASE. This change was implemented in NBS 6.0.
+3/8/2019 • Update for changes introduced with NBS 6.0:
+• Added information regarding changes to ETL process/RDB for
+PAGE_CASE (this SAS process is retired in NBS 6.0 and is
+replaced by a stored procedure process that will eventually be
+implemented with an SSIS package). This information can be
+found in section 4.1.1.3.1 of this document.
+5/11/2018 • Updated for changes introduced with NBS 5.4:
+• Added information regarding dynamic page builder data marts
+in sections 5.3 and 5.4.1.
+• Removed information that was added in version 1.2 of this
+document (regarding the views that were created for Mumps,
+Pertussis, and CS). These views were deemed to be no longer
+needed/relevant with dynamic data mart functionality
+introduced in NBS 5.4.
+1/2/2018 • Updated for changes introduced with NBS 5.3:
+• Added information/mapping on the new Mumps, Pertussis,
+and Congenital Syphilis Views in section 5.3.
+9/7/2017 • Updated for changes introduced with NBS 5.2 (addition of
+F_VACCINATION, D_VACCINATION and retirement of
+VACCINATION mart (now exists as VACCINATION_ARCHIVE) and
+addition of VACCINATION view.
+• Updated Fact Schema 5.2.4 Vaccination to reflect updated
+schema for 5.2.
+ Also updated Fact Schemas for Legacy investigations to ‘point’ to
+the disease/disease family specific LDF dimensions vs. the
+LDF_GROUP.
+1/20/2017 Updated intro and other write-ups to be more detailed. Baselined
+version of the Data Dictionary for Release 5.1.
+12/15/2016 Updated table classifications and descriptions and RDB table
+relationship diagrams (fact schemas).
+11/01/2016 Updated intro and overview materials.
+12/31/2015 Updated with additional content re: Introduction Materials and
+NBS RDB Overview. Added to updated document template. Still in
+draft state.
+12/15/2015 Initial draft.
+2
+NBS 6.0 RDB Data Dictionary
+Contents
+1 Introduction..................................................................................................................................................................................5
+1.1 Purpose ...............................................................................................................................................................................5
+1.2 Scope...................................................................................................................................................................................5
+1.3 Key Terminology and Acronyms .......................................................................................................................................6
+1.4 Document Organization and Usage ..................................................................................................................................7
+2 RDB Overview ...............................................................................................................................................................................8
+3 RDB Schema Design .................................................................................................................................................................. 10
+3.1 Facts ................................................................................................................................................................................. 10
+3.2 Dimensions ...................................................................................................................................................................... 12
+3.2.1 Primary Dimensions ................................................................................................................................................... 12
+3.2.2 Snowflake Dimensions ............................................................................................................................................... 12
+3.2.3 Conformed Dimensions ............................................................................................................................................. 12
+3.2.4 Page Builder Dimensions ........................................................................................................................................... 12
+3.3 Data Marts ....................................................................................................................................................................... 13
+3.4 Primary and Foreign Keys ............................................................................................................................................... 13
+4 RDB Tables ................................................................................................................................................................................. 13
+4.1 RDB Table Classifications ................................................................................................................................................ 13
+4.1.1 Table Categories ......................................................................................................................................................... 14
+4.1.2 Table Types ................................................................................................................................................................. 20
+4.2 RDB Table Descriptions................................................................................................................................................... 21
+4.3 RDB Data Mart Details .................................................................................................................................................... 39
+5 RDB Fact Schemas ..................................................................................................................................................................... 44
+5.1 Entities ............................................................................................................................................................................. 44
+5.1.1 Patient ......................................................................................................................................................................... 44
+5.1.2 Provider ....................................................................................................................................................................... 45
+5.1.3 Organization ............................................................................................................................................................... 46
+5.1.4 Place ............................................................................................................................................................................ 47
+5.2 Acts................................................................................................................................................................................... 48
+5.2.1 Lab Test Result............................................................................................................................................................ 48
+5.2.2 Morbidity Report Event ............................................................................................................................................. 49
+3
+NBS 6.0 RDB Data Dictionary
+5.2.3 Treatment Event......................................................................................................................................................... 50
+5.2.4 Vaccination ................................................................................................................................................................. 51
+5.2.5 Contact Record Case .................................................................................................................................................. 52
+5.2.6 Interview Case ............................................................................................................................................................ 53
+5.2.7 Summary Report Case................................................................................................................................................ 54
+5.2.8 Notification Event....................................................................................................................................................... 55
+5.2.9 Case Count .................................................................................................................................................................. 56
+5.3 Legacy Investigations ...................................................................................................................................................... 57
+5.3.1 BMIRD Case................................................................................................................................................................. 57
+5.3.2 CRS Case ...................................................................................................................................................................... 58
+5.3.3 Generic Case ............................................................................................................................................................... 59
+5.3.4 Hepatitis Case (Pre-Hepatitis Page Adoption)*........................................................................................................ 60
+5.3.5 Measles Case .............................................................................................................................................................. 61
+5.3.6 Pertussis Case (Pre-Pertussis Page Adoption)* ........................................................................................................ 62
+5.3.7 Rubella Case................................................................................................................................................................ 63
+5.3.8 Tuberculosis Case ....................................................................................................................................................... 64
+5.3.9 Varicella Case (Pre-Varicella Page Adoption)* ......................................................................................................... 65
+5.4 Page Builder Investigations ............................................................................................................................................ 66
+5.4.1 Generic Case ............................................................................................................................................................... 66
+5.4.2 STD/HIV Case .............................................................................................................................................................. 67
+4
+NBS 6.0 RDB Data Dictionary
+1 Introduction
+1.1 Purpose
+This document provides an overview of the National Electronic Disease Surveillance System (NEDSS) Base
+System (NBS) Reporting Database (RDB), and describes the tables that comprise it, as well as the relationships
+between them. It also includes:
+ An explanation of key terminology used in the NBS RDB (and throughout this document)
+ An overview of the NBS RDB schema and design concepts
+ Descriptions of the classes and relationships found in the RDB
+ An indication of the primary and foreign keys that support the database design.
+NOTE: The RDB is expected to undergo continual refinement. It is a living model for database design that will be
+revised as public health information needs change, as our understanding of those needs is improved, and as
+available technologies increase the applicability of automation. This document represents a ‘point in time’
+snapshot of the NBS Reporting Database as of the 6.0 Release of the NBS.
+1.2 Scope
+This document provides a high-level overview of the NBS RDB and related processes, and describes the NBS RDB
+components (tables/views), their purpose, and their behavior. The intended audience for this document is any
+user of the NBS that would like to better understand the NBS RDB. Additional NBS RDB documentation that
+provides more detail about the RDB tables, the ETL process, and the reporting module can be found on NBS
+Central1 as follows:
+For further documentation on… Look in the
+To get the following the following information… Which is also
+following
+described in this
+location on NBS
+section of this
+Central…
+document…
+NBS RDB Data Marts NBS Data Mart
+Design
+Documents
+Sample output, a guide to table and attributes, and
+user interface (UI) to RDB attribute mapping, among
+other helpful information about each NBS data mart
+RDB Data Mart
+Details
+NBS RDB Dimensions NBS Dimension
+Design
+Documents
+A full listing of dimension attributes with a mapping to
+their UI component, ODS data location, related value
+set, data type, and any transformation logic applied
+during the Extract, Transform, Load (ETL) process
+RDB Table
+Descriptions
+How data are mapped from the NBS
+user interface for all Legacy Pages in
+the system to their respective
+locations in the RDB
+NBS Field
+Traceability
+Guides
+A full listing of attributes with a mapping to their UI
+component, ODS data location, related value set, data
+type, any transformation logic applied during the ETL
+process, and RDB location by page (e.g., Morbidity
+Report, Lab Report, Patient, etc.)
+How data are mapped from the NBS
+user interface for all Page Builder
+Pages in the system to their
+respective locations in the RDB
+NBS Page
+Builder
+Reporting
+Information on how to build/access reports showing
+RDB mapping for Page Builder pages via the NBS user
+interface
+1 Login required.
+5
+NBS 6.0 RDB Data Dictionary
+1.3 Key Terminology and Acronyms
+Key terminology and acronyms that are used in this document are described in the table:
+Term Acronym Definition
+Bridge Table Bridge tables are used in a star schema in a reporting database to resolve
+many-to-many relationships between fact tables.
+Conformed Dimension A conformed dimension is a type of dimension table containing
+information common across multiple fact tables.
+Data Warehouse A data warehouse is a central repository of integrated data used for
+reporting and data analysis.
+Dimension Table A dimension table is a table in a star schema of a data warehouse. A
+dimension table stores attributes, or dimensions, that describe the
+objects in a fact table.
+Extract, Transform, Load ETL The ETL process moves data from the NBS ODS database tables into the
+NBS RDB tables. It extracts the highly relational operational data that are
+stored in the NBS ODS; transforms the data by translating coded values
+and applying other logic, as required; and loads the data into a more
+flattened table structure in the RDB.
+Fact Tables Fact tables consist of the measurements, metrics, or facts of a business
+process. Facts are located at the center of a star schema or a snowflake
+schema surrounded by dimension tables.
+Lookup Tables Lookup tables in the NBS are data structures that allow fast access to
+dimensional data by providing an array that replaces runtime
+computation with a simpler array indexing operation.
+NEDSS Base System NBS The NBS provides reporting jurisdictions with a NEDSS-compatible
+information system to facilitate transferring health, laboratory, and
+clinical data efficiently and securely over the Internet. More information
+is available on http://wwwn.cdc.gov/nndss/nedss.html.
+National Electronic Disease
+Surveillance System Base System
+NEDSS The NEDSS facilitates electronically transferring public health surveillance
+data from the healthcare system to public health departments. It is a
+conduit for exchanging information that supports NNDSS. When states
+and territories voluntarily submit notifiable disease surveillance data
+electronically to CDC, they use data standards and electronic disease
+information systems and resources supported in part by NEDSS. This
+ensures that state data shared with CDC are submitted quickly, securely,
+and in an understandable form.
+National Notifiable Diseases
+Surveillance System
+NNDSS The National Notifiable Diseases Surveillance System (NNDSS) is a
+nationwide collaboration that enables all levels of public health—local,
+state, territorial, federal, and international—to share notifiable disease-
+related health information. Public health uses this information to
+monitor, control, and prevent the occurrence and spread of state-
+reportable and nationally notifiable infectious and noninfectious diseases
+and conditions.
+Online Analytical Processing OLAP OLAP is a class of information systems that performs multidimensional
+analysis of business data and provides the capability for complex
+calculations, trend analysis, and sophisticated data modeling. OLAP is
+designed to provide support for data analysis via a flattened structure.
+Online Transactional Processing OLTP OLTP is a class of information systems that facilitates and manages
+6
+NBS 6.0 RDB Data Dictionary
+Term Acronym Definition
+transaction-oriented applications, typically for data entry and retrieval
+transaction processing. OLTP is designed to provide support for frequent
+data reading and writing.
+Operational Data Store ODS The ODS database in the NBS stores the real-time, transactional data
+used by the system.
+Reporting Database RDB The RDB supplies data used for reporting and analysis in the NBS. It is
+generated via the ETL batch process that translates and flattens data
+from the NBS ODS.
+Snowflaking Snowflaking is a database term that refers to separating information that
+is stored in dimension tables into hierarchies. A snowflake schema is
+similar to the star schema. It normalizes dimension tables to save data
+storage space and can be used to represent hierarchies of information.
+Staging Tables Staging tables are intermediate data storage tables used for data
+processing during the ETL process. The data staging area sits between the
+data source(s) (i.e. ODS) and the data target(s) (i.e. facts, dimensions, and
+marts).
+Star Schema Star schema is the simplest style of data mart schema and is the
+approach most widely used to develop data warehouses and dimensional
+data marts. The star schema consists of one or more fact tables
+referencing any number of dimension tables.
+System Reference Tables SRT In the NBS, the System Reference Table (SRT) database stores all
+reference data used in the application (i.e. value sets), including standard
+code sets/systems such as: LOINC codes, SNOMED codes, FIPS codes – as
+well as locally-defined code sets.
+Transactional Database Transactional data are data that change with time and are recorded in
+reference to an event (or transaction).
+1.4 Document Organization and Usage
+This document includes the following sections:
+ RDB Overview: This section provides basic information on the purpose and usage of the RDB.
+ RDB Schema Design: This section provides a high-level introduction to the RDB star schema design and
+terminology.
+ RDB Tables: This section provides information about how the tables are classified in the RDB schema
+(e.g. which tables are fact tables vs. dimensions, which tables are incrementally refreshed vs. dropped
+and recreated each ETL run, which tables have static columns vs. dynamically created columns, etc.), as
+well as a description of each table in the RDB.
+ RDB Fact Schemas: This section provides schema diagrams for all of the primary facts in the RDB, which
+represent all of the key ‘acts’ and ‘entities’ in the NBS application, (e.g. patient, provider, organizations,
+labs, contacts, cases, etc.)
+7
+NBS 6.0 RDB Data Dictionary
+2 RDB Overview
+The NBS RDB is a data warehouse that is designed to facilitate data analysis, unlike the NBS ODS, which is
+designed as a transactional database. The table below identifies the key differences between the NBS ODS and
+the NBS RDB.
+ODS RDB
+Type OLTP: Designed to provide support for frequent
+data reading and writing.
+OLAP: Designed to provide support for data
+analysis via a flattened structure.
+Storage Vertical: Observation questions (i.e. questions
+related to NBS event records such as
+investigations, lab reports, morbidity reports, etc.)
+in the NBS ODS are stored as name value pairs,
+where the question and the response are stored
+as separate columns in the same row. By storing
+the information as name value pairs, the ODS only
+uses as much database space as there are
+answers to questions; there are no empty
+columns for unanswered questions.
+Horizontal: Observation responses are stored as
+values and the questions as the columns.
+Model HL7 Reference Information Model (RIM)-based
+schema, which represents a static model of
+healthcare workflows as viewed by the HL7
+standards development group.
+Star Schema, which is the simplest style of data
+mart schema and is the approach most widely
+used to develop data warehouses and
+dimensional data marts.3 The star schema consists
+of one or more fact tables referencing any
+number of dimension tables.
+The RIM is the ultimate source from which all HL7
+V3 standards draw their information-related
+content. Its structure is both flexible and
+extensible, and it can be readily mapped to the
+HL7 2.x message standard and other healthcare
+dataset specifications.2
+The following site provides more information on
+star schema and its usage:
+https://en.wikipedia.org/wiki/Star_schema
+The following site provides more information on
+2 https://corepointhealth.com/resource-center/hl7-resources/rim-reference-information-model
+3 Dedić, N. and Stanier C., 2016., "An Evaluation of the Challenges of Multilingualism in Data Warehouse Development" in
+18th International Conference on Enterprise Information Systems - ICEIS 2016, p. 196
+8
+NBS 6.0 RDB Data Dictionary
+ODS RDB
+the RIM model and its usage:
+https://corepointhealth.com/resource-center/hl7-
+resources/rim-reference-information-model
+Data marts No*
+* Note there is one ‘mart’ table in the NBS ODS,
+PublicHealthCaseFact, which was the first analysis
+table in the NBS (prior to the existence of an RDB).
+Generally, there are no data marts in the ODS.
+Yes
+Historical Yes No
+The ETL process (the MasterETL batch process in the NBS), moves data from the NBS ODS database tables into
+the NBS RDB tables. It translates the operational data that are stored in the NBS ODS into a format that more
+closely resembles traditional public health databases, except that, instead of one flat file structure, the NBS RDB
+consists of multiple tables that are related to one another by primary and foreign keys. The extensible design of
+the RDB allows for the relatively easy addition of new observations and objects. The RDB design supports the
+ability to add new questions and entity/event objects in a rapid manner. The tables in the RDB are organized
+into a star schema, which consists of fact tables and dimension tables.
+NBS Data
+Entry/Data
+Exchange
+NBS Reporting
+Module
+NBS
+MasterETL
+ODS NBS
+_
+Batch Process
+RDB
+_
+Operational Data
+ Extract Data from
+Operational Tables (ODS)
+ Transform Data (Translate
+Codes, etc.)
+ Load Data into Reporting
+Tables (RDB)
+Reporting Data
+The primary goal of the NBS RDB is to provide data in a fairly flat data structure, which allows NBS sites to
+integrate with various existing reporting platforms. Rather than building hundreds of reports directly from the
+ODS, the RDB provides sites the ability to perform analysis on their own terms, using robust reporting and
+analysis products available on the market, (e.g. EPIInfo, Crystal Reports, SAS, Pentaho, Tableau, etc.). This
+provides the ability for sites to more easily perform ad hoc reporting capabilities and to build reports that meet
+the needs of their public health workers.
+The following section further describes the star schema in use by the NBS RDB.
+9
+NBS 6.0 RDB Data Dictionary
+3 RDB Schema Design
+The NBS RDB is designed as a star schema. As previously mentioned, this design is meant to facilitate data
+analysis vs. transactional data. A star schema provides the easy access to data and supports multidimensional
+analysis. Also, a star schema design is easy to change and scale because the granularity is at the lowest level.
+A star schema is characterized by one centralized fact table with data dimension points radiating from it. Each of
+the points of the star is a much smaller dimension (or lookup) table. Each dimension table contains information
+about the entries for a particular attribute in the fact table and is joined to the fact table using a primary
+(surrogate) key to foreign key join. Dimension tables are not joined to each other. A typical fact table contains
+foreign keys from dimensions. A star query is a join between a fact table and a number of dimension tables.
+Designing a star schema database aids in the creation of data marts for easy data analysis.
+The primary components of this schema are fact tables and dimension tables, which are further explained in the
+next section.
+3.1 Facts
+Fact tables are central tables in the star schema (as indicated in the graphic above). In the NBS RDB, the fact
+tables are the NBS events (e.g. investigation, lab report, morbidity report, etc.) and entities (e.g. patient,
+provider, organization, etc.). The investigations are divided into fact tables by type of investigation and condition
+or groups of conditions. Fact tables can contain a single or a composite primary key and are joined to dimension
+tables through foreign keys. When the primary key is a composite key, the combination of the keys is unique for
+each record.
+10
+NBS 5.2 RDB Data Dictionary
+The graphic (left) is an example fact table in the NBS RDB, LAB_TEST_RESULT, which provides all of the keys necessary to create a flattened view
+of the data for lab data for analysis. The graphic (right) shows how the keys in the LAB_TEST_RESULT fact can be used to join to keys in other
+tables in the database to get a ‘full picture’ of an object in the system—in this example, a lab test result.
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+Legend
+Primary Relationship
+(Morb Report in which the lab test is embedded)
+INVESTIGATION
+KEY
+_
+Secondary Relationship
+INVESTIGATION
+CONDITION
+MORBIDITY
+REPORT
+EVENT
+_
+_
+INVESTIGATION
+KEY
+_
+LDF
+GROUP
+KEY
+_
+_
+CONDITION
+KEY
+_
+LDF
+Data
+_
+LDF
+GROUP
+_
+LDF
+_
+GROUP
+_
+KEY
+LAB
+RPT
+DT
+KEY
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+KEY
+_
+RPT
+_
+MORB
+LAB
+TEST
+RESULT
+_
+_
+KEY
+GRP
+_
+COMMENT
+_
+RESULT
+_
+TEST
+RESULT
+GRP
+KEY
+_
+_
+_
+RESULT
+COMMENT
+GRP
+KEY
+_
+_
+_
+RESULT
+COMMENT
+GROUP
+_
+_
+LAB
+RESULT
+COMMENT
+_
+_
+TEST
+RESULT
+GRP
+KEY
+_
+_
+_
+TEST
+RESULT
+GROUPING
+_
+_
+LAB
+RESULT
+VAL
+_
+_
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PERFORMING
+ORDERING
+_
+REPORTING
+_
+_
+LAB
+ORG
+_
+LAB
+_
+KEY
+_
+KEY
+KEY
+COPY
+TO
+_
+LAB
+TEST
+_
+_
+SPECIMEN
+_
+ORDERING
+PROVIDER
+_
+_
+TECHNICIAN
+COLLECTOR
+PROVIDER
+KEY
+KEY
+_
+KEY
+_
+KEY
+_
+_
+LAB
+_
+TEST
+_
+KEY
+LAB
+_
+TEST
+_
+KEY
+LAB
+TEST
+_
+LAB
+TEST
+KEY
+_
+_
+PATIENT
+KEY
+_
+LAB
+RPT
+USER
+COMMENT
+_
+_
+_
+LAB
+LAB
+TEST
+KEY
+_
+_
+TEST LAB
+RPT
+USER
+_
+_
+_
+_
+COMMENT
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+As can be seen in the graphic above, facts are the ‘hubs’ of the RDB, providing the keys necessary to tie everything together. The NBS RDB Fact
+Schemas section of this document provides information on how to use all of the facts in the RDB to create flattened views of all of the key NBS
+entities, events, and investigations (legacy and page builder):
+Entities
+ Patient
+ Provider
+ Organization
+ Place
+Events
+ Lab Test Result
+ Morbidity Report
+ Treatment
+ Vaccination
+ Contact Record
+ Interview
+ Summary Case Report
+ Notification
+ Case Count
+Legacy Investigations
+ BMIRD Case
+ CRS Case
+ Generic Case
+ Hepatitis Case
+ Measles Case
+ Pertussis Case
+ Rubella Case
+ Tuberculosis Case
+ Varicella Case
+Page Builder Investigations
+ Generic Case
+ STD/HIV Case
+11
+NBS 5.2 RDB Data Dictionary
+3.2 Dimensions
+Dimension tables are the points of the star schema. Each dimension table may also contain a single primary key
+or a composite primary key. It may or may not contain foreign keys to other dimension tables. Dimensions are
+joined to a related fact table using a primary key to foreign key join. Every dimension table has a single-field
+primary key; this (surrogate) key is just an automatically incrementing number. There are four main types of
+dimensions in use in the NBS RDB.
+3.2.1 Primary Dimensions
+In the NBS RDB, primary dimensions contain flattened data for all of the key (high-level) NBS entities and events
+(e.g. D_PATIENT, D_INTERVIEW, etc.).
+3.2.2 Snowflake Dimensions
+The NBS RDB uses snow-flaking—that is separating information that is stored in dimension tables into
+hierarchies. A snowflake schema is similar to the star schema. It normalizes dimension tables to save data
+storage space and can be used to represent hierarchies of information. Many of these dimensions are multi-
+value dimensions structured to comply with relational database rules, with bridge tables to resolve many-to-
+many relationships to the fact tables.
+These tables typically store information for questions that allow the user to select multiple responses, (e.g.
+patient race), or for groups of questions that the user can respond to as a group multiple times, (e.g. patient
+identification numbers). In NBS terminology, these represent repeating questions or repeating blocks of data.
+3.2.3 Conformed Dimensions
+Another type of dimension table contains information common across multiple fact tables, such as information
+about organizations that are participating in an event. For example, a lab report captures information about the
+reporting facility as well as the ordering facility; both are organizations and their information is stored in the
+organization dimension tables. These dimension tables that are common across fact tables are called conformed
+dimensions. Conformed dimensions are the ‘highways’ that connect fact tables.
+3.2.4 Page Builder Dimensions
+Page Builder dimensions contain flattened data for all of the subgroup categories of questions used within page
+builder pages (e.g. D_INV_ADMINISTRATIVE, D_INV_CLINICAL, etc.).
+12
+NBS 6.0 RDB Data Dictionary
+3.3 Data Marts
+Subsets of the data in the RDB have been created as radically denormalized tables, known as data marts. These
+data marts exist as either physical tables or as views. Physical tables are used when complex data manipulation
+is necessary to obtain the desired subset, whereas views are used when less manipulation is required, since they
+require less storage space (only the query is stored and not the table; the table is generated each time the user
+runs the corresponding report).
+Data marts are created from the data contained in the fact and dimension tables in the RDB.
+3.4 Primary and Foreign Keys
+In general, the primary and foreign keys, indicated by the suffix ‘key’ in a column name, are pointers to a record
+in another table, whether fact to dimension, dimension to dimension, or dimension to fact. In some instances
+multiple joins may be necessary to get the desired pieces of information. The NBS RDB follows the standard
+database warehousing practice of replacing the production key (key that uniquely identifies data in the
+transactional database (i.e. ODS)) with a surrogate key, which is an anonymous (not known to the transactional
+database), system-generated integer key value. A primary key in the RDB is a surrogate key; a composite primary
+key in the RDB is a combination of surrogate keys.
+4 RDB Tables
+4.1 RDB Table Classifications
+The NBS RDB currently contains ~250 tables and views to support reporting and analysis. This section provides
+classification of these tables to help users to understand the purpose and expected usage of each table/view in
+the NBS RDB.
+13
+NBS 6.0 RDB Data Dictionary
+4.1.1 Table Categories
+NBS RDB tables can be classified into the following categories, which, as described previously, serve different
+purposes within the RDB:
+ Bridge Tables
+ Data Mart Tables
+ Dimension Tables, which can be subcategorized into:
+o Primary Dimensions
+o Conformed Dimensions
+o Snowflake Dimensions
+o Page Builder Dimensions
+ ETL Process Tables
+ Fact Tables, which can be subcategorized into:
+o Primary Facts
+o Disease Data Mart/Fact Hybrids
+o Staging Tables for Fact Population
+ Reference Tables
+ Staging Tables
+ Lookup Tables
+4.1.1.1 Table Naming Conventions
+Because the RDB has evolved over many years, naming conventions are not fully consistent across all tables and
+views. However, for tables created since 2006 (and going forward), the following naming conventions apply:
+ D_ starting a table name indicates a DIMENSION table.
+ D_INV starting a table name indicates a PAGE BUILDER INVESTIGATION DIMENSION table.
+ F_ starting a table name indicates a FACT table.
+ F_S starting a table name indicates a STAGING table for FACT population.
+ L_ starting a table name indicates a LOOKUP table.
+ S_ starting a table name indicates a STAGING table.
+ _GROUP ending a table name indicates a BRIDGE table.
+ _INC ending a table name indicates an INCREMENTAL table (used for incremental ETL processing).
+The table provides a classification of NBS RDB tables into the above categories. Please note Staging and Lookup
+tables are not called out in the table, since these are considered ‘interim’ tables. For information on these tables
+and where they ‘fit’, please see the Staging and Lookup Tables section.
+14
+NBS 6.0 RDB Data Dictionary
+4.1.1.2 Categorization of NBS RDB Tables
+DIMENSIONS FACTS PRIMARY DIMESIONS
+ D_CASE_MANAGEMENT
+ D_CONTACT_RECORD
+ D_INTERVIEW
+ D_ORGANIZATION
+ D_PATIENT
+ D_PLACE
+ D_PROVIDER
+ D_TB_HIV
+ D_TB_PAM
+ D_VAR_PAM
+ LAB_TEST
+ MORBIDITY_REPORT
+ NOTIFICATION
+ TREATMENT
+ D_VACCINATION
+PAGE BUILDER INVESTIGATION
+DIMENSIONS
+ D_INV_ADMINISTRATIVE
+ D_INV_CLINICAL
+ D_INV_COMPLICATION
+ D_INV_CONTACT
+ D_INV_DEATH
+ D_INV_EPIDEMIOLOGY
+ D_INV_HIV
+ D_INV_ISOLATE_TRACKING
+ D_INV_LAB_FINDING
+ D_INV_MEDICAL_HISTORY
+ D_INV_MOTHER
+ D_INV_OTHER
+ D_INV_PATIENT_OBS
+ D_INV_PREGNANCY_BIRTH
+ D_INV_RESIDENCY
+ D_INV_RISK_FACTOR
+ D_INV_SOCIAL_HISTORY
+ D_INV_SYMPTOM
+ D_INV_TRAVEL
+ D_INV_TREATMENT
+ D_INV_UNDER_CONDITION
+ D_INV_VACCINATION
+ TB_PAM_LDF
+ VAR_PAM_LDF
+CONFORMED DIMENSION
+TABLES
+ CONDITION
+ GEOCODING_LOCATION
+ INVESTIGATION
+ LDF_DATA
+ RDB_DATE
+SNOWFLAKE DIMENSIONS
+ ANTIMICROBIAL
+ BMIRD_MULTI_VALUE_FIELD
+ CONFIRMATION_METHOD
+ D_ADDL_RISK
+ D_DISEASE_SITE
+ D_GT_12_REAS
+ D_HC_PROV_TY_3
+ D_INTERVIEW_NOTE
+ D_INVESTIGATION_REPEAT
+ D_MOVE_CNTRY
+ D_MOVE_CNTY
+ D_MOVE_STATE
+ D_MOVED_WHERE
+ D_OUT_OF_CNTRY
+ D_PCR_SOURCE
+ D_RASH_LOC_GEN
+ D_SMR_EXAM_TY
+ HEP_MULTI_VALUE_FIELD
+ LAB_RESULT_COMMENT
+ LAB_RESULT_VAL
+ LAB_RPT_USER_COMMENT
+ MORB_RPT_USER_COMMENT
+ PERTUSSIS_SUSPECTED_SOURCE_
+FLD*
+ PERTUSSIS_TREATMENT_FIELD*
+PRIMARY FACTS
+ F_CONTACT_RECORD_CASE
+ F_INTERVIEW_CASE
+ F_PAGE_CASE
+ F_STD_PAGE_CASE
+ F_TB_PAM
+ F_VAR_PAM
+ F_VACCINATION
+ LAB_TEST_RESULT
+ MORBIDITY_REPORT_EVENT
+ NOTIFICATION_EVENT
+ TREATMENT_EVENT
+DISEASE DATA MART/FACT
+HYBRID TABLES
+ BMIRD_CASE
+ CASE_COUNT
+ CRS_CASE
+ GENERIC_CASE
+ HEPATITIS_CASE
+ MEASLES_CASE
+ PERTUSSIS_CASE*
+ RUBELLA_CASE
+ SUMMARY_REPORT_CASE
+STAGING TABLES FOR FACT
+POPULATION
+ F_S_INV_CASE
+ F_S_STD_HIV_CASE
+ F_S_TB_PAM
+ F_S_VAR_PAM
+ETL PROCESS TABLES (5) DATA MARTS (27)
+ ACTIVITY_LOG_DETAIL
+ ACTIVITY_LOG_MASTER
+ ETL_HEALTH_CHECK_PAT_DATA
+ ETL_MISSING_RECORD
+ ETL_PROCESS
+ DATA_VALIDATION
+ DATA_VALIDATION_MESSAGE
+ DQ_ALL_CASE
+ EVENT_METRIC
+ HEP100*
+ HEPATITIS_DATAMART
+ INV_SUMM_DATAMART
+ LAB_TEST_REPORT
+ LAB100
+ LAB101
+ LDF_BMIRD
+ LDF_FOODBORNE
+ LDF_GENERIC
+ LDF_HEPATITIS*
+REFERENCE TABLES (6) DATA MART ‘VIEWS’
+ CODE_VAL_GENERAL
+ CODESET
+ USER_PROFILE
+ LDF_DATAMART_COLUMN_REF
+ LDF_DATAMART_TABLE_REF
+ RDB_TABLE_METADATA
+ VACCINATION
+ CONTACT RECORD
+ INTERVIEW
+ ORG_LINE_LIST
+ PRV_LINE_LIST
+ REJECTED_NND
+* Archived’ once new page adopted
+BRIDGE TABLES
+ ANTIMICROBIAL_GROUP
+ BMIRD_MULTI_VALUE_FIELD_GROUP
+ CONFIRMATION_METHOD_GROUP
+ D_ADDL_RISK_GROUP
+ D_DISEASE_SITE_GROUP
+ D_GT_12_REAS_GROUP
+ D_HC_PROV_TY_3_GROUP
+ D_MOVE_CNTRY_GROUP
+ D_MOVE_CNTY_GROUP
+ D_MOVE_STATE_GROUP
+ D_MOVED_WHERE_GROUP
+ D_OUT_OF_CNTRY_GROUP
+ D_PCR_SOURCE_GROUP
+ D_RASH_LOC_GEN_GROUP
+ D_SMR_EXAM_TY_GROUP
+ HEP_MULTI_VALUE_FIELD_GROUP *
+ LAB_RESULT_GROUP
+ LDF_GROUP
+ ORGANIZATION_LDF_GROUP
+ PATIENT_LDF_GROUP
+ PERTUSSIS_SUSPECTED_SOURCE_GRP
+*
+ PERTUSSIS_TREATMENT_GROUP *
+ PROVIDER_LDF_GROUP
+ RESULT_COMMENT_GROUP
+ SUMMARY_CASE_GROUP
+ TEST_RESULT_GROUPING
+ LDF_MUMPS*
+ LDF_TETANUS
+ LDF_VACCINE_PREVENT_DISEASES
+ MORBIDITY_REPORT_DATAMART
+ ORG_LINE_LIST
+ PRV_LINE_LIST
+ REJECTED_NND
+ SR100
+ STD_HIV_DATAMART
+ TB_DATAMART
+ TB_HIV_DATAMART
+ USER_PROFILE
+ VAR_DATAMART*
+15
+NBS 6.0 RDB Data Dictionary
+4.1.1.3 Staging and Lookup Tables
+The approximately 150 tables categorized in Categorization of NBS RDB Tables represent the ‘primary’
+tables/views that should be used in creating reports from NBS RDB data. There are an additional set of tables
+(100+) that are considered ‘intermediate’ tables and are used as an ‘interim step’ in creation of the above
+tables. These are called Staging and Lookup tables. These tables are mapped in the chart below to their
+associated dimensions and bridge tables in the NBS RDB.
+DIMENSION LOOKUP STAGING BRIDGE
+PRIMARY DIMENSIONS (ENTITIES)
+D_ORGANIZATION L_ORGANIZATION S_ORGANIZATION ORGANIZATION_LDF_GROUP
+LDF_GROUP
+D_PATIENT L_PATIENT S_PATIENT PATIENT_LDF_GROUP
+LDF_GROUP
+D_PROVIDER L_PROVIDER S_PROVIDER PROVIDER_LDF_GROUP
+LDF_GROUP
+D_PLACE L_PLACE S_PLACE
+PRIMARY DIMENSIONS (ACTS)
+D_CASE_MANAGEMENT L_CASE_MANAGEMENT S_CASE_MANAGEMENT
+D_CONTACT_RECORD L_CONTACT_RECORD S_CONTACT_RECORD
+D_INTERVIEW L_INTERVIEW S_INTERVIEW
+D_TB_HIV L_TB_HIV S_TB_HIV
+D_TB_PAM L_TB_PAM S_TB_PAM
+S_TB_PAM_ACT_ENTITY
+D_VAR_PAM* L_VAR_PAM* S_VAR_PAM*
+S_VAR_PAM_ACT_ENTITY*
+MORBIDITY_REPORT
+LAB_TEST L_LAB_TEST S_UPDATED_LAB
+NOTIFICATION
+TREATMENT
+VACCINATION L_VACCINATION S_VACCINATION
+L_OBSERVATION_MAP
+PAGE BUILDER DIMENSIONS
+D_INV_ADMINISTRATIVE L_INV_ADMINISTRATIVE S_INV_ADMINISTRATIVE
+D_INV_CLINICAL L_INV_CLINICAL S_INV_CLINICAL
+D_INV_COMPLICATION L_INV_COMPLICATION S_INV_COMPLICATION
+D_INV_CONTACT L_INV_CONTACT S_INV_CONTACT
+D_INV_DEATH L_INV_DEATH S_INV_DEATH
+D_INV_EPIDEMIOLOGY L_INV_EPIDEMIOLOGY S_INV_EPIDEMIOLOGY
+D_INV_HIV L_INV_HIV S_INV_HIV
+D_INV_ISOLATE_TRACKING L_INV_ISOLATE_TRACKING S_INV_ISOLATE_TRACKING
+D_INV_LAB_FINDING L_INV_LAB_FINDING S_INV_LAB_FINDING
+D_INV_MEDICAL_HISTORY L_INV_MEDICAL_HISTORY S_INV_MEDICAL_HISTORY
+D_INV_MOTHER L_INV_MOTHER S_INV_MOTHER
+D_INV_OTHER L_INV_OTHER S_INV_OTHER
+D_INV_PATIENT_OBS L_INV_PATIENT_OBS S_INV_PATIENT_OBS
+D_INV_PREGNANCY_BIRTH L_INV_PREGNANCY_BIRTH S_INV_PREGNANCY_BIRTH
+D_INV_RESIDENCY L_INV_RESIDENCY S_INV_RESIDENCY
+D_INV_RISK_FACTOR L_INV_RISK_FACTOR S_INV_RISK_FACTOR
+D_INV_SOCIAL_HISTORY L_INV_SOCIAL_HISTORY S_INV_SOCIAL_HISTORY
+D_INV_SYMPTOM L_INV_SYMPTOM S_INV_SYMPTOM
+16
+NBS 6.0 RDB Data Dictionary
+DIMENSION LOOKUP STAGING BRIDGE
+D_INV_TRAVEL L_INV_TRAVEL S_INV_TRAVEL
+D_INV_TREATMENT L_INV_TREATMENT S_INV_TREATMENT
+D_INV_UNDER_CONDITION L_INV_UNDER_CONDITION S_INV_UNDER_CONDITION
+D_INV_VACCINATION L_INV_VACCINATION S_INV_VACCINATION
+SNOWFLAKE DIMENSIONS
+ANTIMICROBIAL ANTIMICROBIAL_GROUP
+BMIRD_MULTI_VALUE_FIELD BMIRD_MULTI_VALUE_FIELD_GROUP
+CONFIRMATION_METHOD CONFIRMATION_METHOD_GROUP
+D_ADDL_RISK L_ADDL_RISK S_ADDL_RISK D_ADDL_RISK_GROUP
+D_DISEASE_SITE L_DISEASE_SITE S_DISEASE_SITE D_DISEASE_SITE_GROUP
+D_GT_12_REAS L_GT_12_REAS S_GT_12_REAS D_GT_12_REAS_GROUP
+D_HC_PROV_TY_3 L_HC_PROV_TY_3 S_HC_PROV_TY_3 D_HC_PROV_TY_3_GROUP
+D_INTERVIEW_NOTE L_INTERVIEW_NOTE S_INTERVIEW_NOTE
+D_INVESTIGATION_REPEAT L_INVESTIGATION_REPEAT S_INVESTIGATION_REPEAT
+D_MOVE_CNTRY L_MOVE_CNTRY S_MOVE_CNTRY D_MOVE_CNTRY_GROUP
+D_MOVE_CNTY L_MOVE_CNTY S_MOVE_CNTY D_MOVE_CNTY_GROUP
+D_MOVE_STATE L_MOVE_STATE S_MOVE_STATE D_MOVE_STATE_GROUP
+D_MOVED_WHERE L_MOVED_WHERE S_MOVED_WHERE D_MOVED_WHERE_GROUP
+D_OUT_OF_CNTRY L_OUT_OF_CNTRY S_OUT_OF_CNTRY D_OUT_OF_CNTRY_GROUP
+D_PCR_SOURCE L_PCR_SOURCE S_PCR_SOURCE D_PCR_SOURCE_GROUP
+D_RASH_LOC_GEN L_RASH_LOC_GEN S_RASH_LOC_GEN D_RASH_LOC_GEN_GROUP
+D_SMR_EXAM_TY L_SMR_EXAM_TY S_SMR_EXAM_TY D_SMR_EXAM_TY_GROUP
+HEP_MULTI_VALUE_FIELD* HEP_MULTI_VALUE_FIELD_GROUP*
+LAB_RESULT_COMMENT RESULT_COMMENT_GROUP
+LAB_RESULT_VAL LAB_RESULT_GROUP
+TEST_RESULT_GROUPING
+PERTUSSIS_SUSPECTED_SOURCE_F
+LD*
+PERTUSSIS_SUSPECTED_SOURCE_GRP
+*
+PERTUSSIS_TREATMENT_FIELD* PERTUSSIS_TREATMENT_GROUP*
+* Archived’ once new page adopted
+4.1.1.3.1 ‘Temporary’ Staging and Lookup Tables in NBS 6.0 Used for Incremental Processing
+In NBS 6.0, changes were made to the NBS ETL process/RDB for PAGE_CASE (page builder) data. The PAGE_CASE
+SAS process is retired in NBS 6.0 and is replaced by a stored procedure process, which will eventually be
+implemented with an SSIS package. A number of ‘interim’ tables were implemented in NBS 6.0 in support of this
+new ETL process, however, the bulk of these tables are temporary.
+If your site in on NBS 6.0, you may see the following types of tables in your RDB; these are temporary/interim
+tables used to populate the D_INV dimensions in the RDB in an incremental way and should be ignored. In a
+future release, most (if not all) of these tables will be dropped during the ETL process so that they will no longer
+exist in the RDB (other than during the actual ETL process). These tables are being called out so that you can
+understand tables that may exist in NBS 6.0, but WILL NOT be visible in the your RDB long-term.
+17
+NBS 6.0 RDB Data Dictionary
+CODED Tables
+ CODED_COUNTY_TABLE_DESC_REPT
+ CODED_COUNTY_TABLE_DESC_REPT_TEMP
+ CODED_COUNTY_TABLE_REPT
+ CODED_DATA_REPT_OUT
+ CODED_METADATA_REPT
+ CODED_TABLE_DESC_REPT
+ CODED_TABLE_DESC_REPT_TEMP
+ CODED_TABLE_MERGED_REPT
+ CODED_TABLE_OTH_REPT
+ CODED_TABLE_REPT
+ CODED_TABLE_SNTEMP_REPT
+ CODED_TABLE_SNTEMP_TRANS_A_REPT
+ CODED_TABLE_SNTEMP_TRANS_CODE_REPT
+ CODED_TABLE_SNTEMP_TRANS_REPT
+ CODED_TABLE_TEMP_REPT
+DATE Tables
+ DATE_DATA_REPT
+ DATE_DATA_REPT_out
+ DATE_METADATA_REPT
+ PAGE_DATE_TABLE_REPT
+KEY/KEYSTORE Tables
+ DIMENSION_KEYS_PAGECASEID
+ DIMENSIONAL_KEYS
+ ENTITY_KEYSTORE_INC
+ ENTITY_KEYSTORE_STD
+ STAGING_KEY_REPT_FINAL
+LOOKUP Tables
+ LOOKUP_TABLE_N_INV_ADMINISTRATIVE
+ LOOKUP_TABLE_N_INV_CLINICAL
+ LOOKUP_TABLE_N_INV_COMPLICATION
+ LOOKUP_TABLE_N_INV_CONTACT
+ LOOKUP_TABLE_N_INV_DEATH
+ LOOKUP_TABLE_N_INV_EPIDEMIOLOGY
+ LOOKUP_TABLE_N_INV_HIV
+ LOOKUP_TABLE_N_INV_ISOLATE_TRACKING
+ LOOKUP_TABLE_N_INV_LAB_FINDING
+ LOOKUP_TABLE_N_INV_MEDICAL_HISTORY
+ LOOKUP_TABLE_N_INV_MOTHER
+ LOOKUP_TABLE_N_INV_OTHER
+ LOOKUP_TABLE_N_INV_PATIENT_OBS
+ LOOKUP_TABLE_N_INV_PREGNANCY_BIRTH
+ LOOKUP_TABLE_N_INV_RESIDENCY
+ LOOKUP_TABLE_N_INV_RISK_FACTOR
+ LOOKUP_TABLE_N_INV_SOCIAL_HISTORY
+ LOOKUP_TABLE_N_INV_SYMPTOM
+ LOOKUP_TABLE_N_INV_TRAVEL
+ LOOKUP_TABLE_N_INV_TREATMENT
+ LOOKUP_TABLE_N_INV_UNDER_CONDITION
+ LOOKUP_TABLE_N_INV_VACCINATION
+ LOOKUP_TABLE_N_REPT
+NUMERIC Tables
+ NUMERIC_BASE_DATA_REPT
+ NUMERIC_DATA_MERGED_REPT
+ NUMERIC_DATA_REPT_out
+ NUMERIC_DATA_TRANS_REPT
+ NUMERIC_DATA_TRANS1_REPT
+ NUMERIC_DATA1_REPT
+ NUMERIC_DATA2_REPT
+ NUMERIC_METADATA_REPT
+PHC Tables
+ PHC_CASE_UIDS
+ PHC_CASE_UIDS_ALL
+ PHC_UIDS
+ PHC_UIDS_ALL
+ PHC_UIDS_REPT
+Text Tables
+ TEXT_DATA_REPT
+ TEXT_DATA_REPT_out
+ TEXT_METADATA_REPT
+RDB Metadata and Answer Reference Tables
+ RDB_UI_METADATA_REPT
+ rdb_ui_metadata_rept_temp
+ NBS_CASE_ANSWER_REPT
+18
+NBS 5.2 RDB Data Dictionary
+The following incremental Fact, Staging, and Loookup tables (_INC) that have been introduced in NBS 6.0 may
+also be retired in a later release, but all called out below for your reference:
+ F_PAGE_CASE_TEMP_INC
+ F_STD_PAGE_CASE_TEMP_INC
+ L_INV_ADMINISTRATIVE_INC
+ L_INV_CLINICAL_INC
+ L_INV_COMPLICATION_INC
+ L_INV_CONTACT_INC
+ L_INV_DEATH_INC
+ L_INV_EPIDEMIOLOGY_INC
+ L_INV_HIV_INC
+ L_INV_ISOLATE_TRACKING_INC
+ L_INV_LAB_FINDING_INC
+ L_INV_MEDICAL_HISTORY_INC
+ L_INV_MOTHER_INC
+ L_INV_OTHER_INC
+ L_INV_PATIENT_OBS_INC
+ L_INV_PREGNANCY_BIRTH_INC
+ L_INV_RESIDENCY_INC
+ L_INV_RISK_FACTOR_INC
+ L_INV_SOCIAL_HISTORY_INC
+ L_INV_SYMPTOM_INC
+ L_INV_TRAVEL_INC
+ L_INV_TREATMENT_INC
+ L_INV_UNDER_CONDITION_INC
+ L_INV_VACCINATION_INC
+ L_INVESTIGATION_REPEAT_INC
+ S_INV_ADMINISTRATIVE_INC
+ S_INV_CLINICAL_INC
+ S_INV_COMPLICATION_INC
+ S_INV_CONTACT_INC
+ S_INV_DEATH_INC
+ S_INV_EPIDEMIOLOGY_INC
+ S_INV_HIV_INC
+ S_INV_ISOLATE_TRACKING_INC
+ S_INV_LAB_FINDING_INC
+ S_INV_MEDICAL_HISTORY_INC
+ S_INV_MOTHER_INC
+ S_INV_OTHER_INC
+ S_INV_PATIENT_OBS_INC
+ S_INV_PREGNANCY_BIRTH_INC
+ S_INV_RESIDENCY_INC
+ S_INV_RISK_FACTOR_INC
+ S_INV_SOCIAL_HISTORY_INC
+ S_INV_SYMPTOM_INC
+ S_INV_TRAVEL_INC
+ S_INV_TREATMENT_INC
+ S_INV_UNDER_CONDITION_INC
+ S_INV_VACCINATION_INC
+ S_INVESTIGATION_REPEAT_INC
+Finally, the following two logging tables have been added in NBS 6.0 to aid in the incremental refresh process for
+page builder dimension data. Ultimately, these tables will likely be ‘merged’ with the existing
+ACTIVITY_LOG_MASTER and ACTIVITY_LOG_DETAIL to remove unnecessary table redundancy from the NBS
+RDB.
+ job_batch_log: Contains the starting time and end time of the ETL process - end date of the last row is the start
+date of the next row. This is used to track the ‘time span’ of each incremental refresh process for page case data.
+ job_flow_log: Contains the starting time and end time and other details (e.g., counts) of each stored procedure
+that is run as a part of the PAGE_CASE incremental refresh process; each stored procedure may have one to many
+rows in the table for each ETL run depending upon what the stored procedure is doing. The details contained in the
+logging in this table can be useful to use in the de-bugging process (if/when necessary).
+19
+NBS 5.2 RDB Data Dictionary
+4.1.2 Table Types
+Tables in the NBS RDB currently fall into one of four types:
+ DYNAMIC TABLE, INCREMENTALLY REFRESHED
+ DYNAMIC TABLE, NOT INCREMENTALLY REFRESHED
+ STATIC TABLE, INCREMENTALLY REFRESHED
+ STATIC TABLE, NOT INCREMENTALLY REFRESHED
+To better understand what these four table types mean, the following definitions are provided:
+ A dynamic table is a table that has dynamically created columns based on metadata, (i.e. the table could
+change with each ETL run, depending on changes that have been made to event pages in the Page
+Builder module).
+ A static table is a table that has fixed columns, which is created via scripts (vs. dynamically with each ETL
+run).
+ An incrementally refreshed table ONLY adds or updates records in the table if a change has occurred
+since the last time the ETL process has been run for that table.
+ A not incrementally refreshed table’s data are dropped and completely recreated with each ETL run.
+The table below shows which tables in the NBS RDB fall into which type. Over time, the goal is for more and
+more RDB tables to move to the upper left quadrant of this matrix to reduce the burden on, and thus increase
+the performance of, the ETL process.
+DYNAMIC STATIC
+INCREMENTAL
+ D_INTERVIEW
+ D_CONTACT_RECORD
+ D_VACCINATION
+ INVESTIGATION
+ D_INV_ADMINISTRATIVE
+ D_INV_CLINICAL
+ D_INV_COMPLICATION
+ D_INV_CONTACT
+ D_INV_DEATH
+ D_INV_EPIDEMIOLOGY
+ D_INV_HIV
+ D_INV_ISOLATE_TRACKING
+ D_INV_LAB_FINDING
+ D_INV_MEDICAL_HISTORY
+ D_INV_MOTHER
+ D_INV_OTHER
+ D_INV_PATIENT_OBS
+ D_INV_PREGNANCY_BIRTH
+ D_INV_RESIDENCY
+ D_INV_RISK_FACTOR
+ D_INV_SOCIAL_HISTORY
+ D_INV_SYMPTOM
+ D_INV_TRAVEL
+ D_INV_TREATMENT
+ D_INV_UNDER_CONDITION
+ D_INV_VACCINATION
+ D_INTERVIEW_NOTES
+ D_PATIENT
+ D_ORGANIZATION
+ D_PROVIDER
+ MORBIDITY_REPORT
+ MORBIDITY_REPORT_DATAMART
+ LAB_RESULT_COMMENT
+ LAB_RESULT_VAL
+ LAB_RPT_USER_COMMENT
+ LAB_TEST
+ LAB_TEST_RESULT
+ LDF_DATAMART_COLUMN_REF
+ RESULT_COMMENT_GROUP
+ TEST_RESULT_GROUPING
+ LAB100
+ HEP100*
+ HEPATITIS_DATAMART
+ D_PLACE NOT INCREMENTAL
+ALL OTHER TABLES
+(dropped and recreated each ETL run)
+* Archived’ once new page adopted
+**The page builder dimensions are incrementally refreshed as of NBS 6.0.
+20
+NBS 5.2 RDB Data Dictionary
+4.2 RDB Table Descriptions
+The chart below provides descriptions for each table (other than temp, staging, and lookup tables) in the RDB,
+along with an indication of primary and foreign keys and each table’s ‘type’ classification from the matrix
+referenced in Table Types.
+Table Name Description Primary Key Foreign Keys Type
+ACTIVITY_LOG_DETAIL Table that logs the detail of the
+ETL Process.
+Activity_log_detail_uid process_uid
+activity_log_master_uid
+ETL PROCESS
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+ACTIVITY_LOG_MASTER Table that captures the start
+and end dates/time of the ETL
+process.
+Activity_log_master_uid ETL PROCESS
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+AGGREGATE_REPORT_DAT
+AMART
+Provides a flat table of the
+information collected on the
+Aggregate Report in the NBS,
+including information such as
+MMWR Week, MMWR Year
+and counts by logical groupings
+of aggregated data (e.g., Total
+Counts of Hospitalizations for
+0-4 year age group).
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+ANTIMICROBIAL Dimension table that stores
+information about
+antimicrobial agents and their
+susceptibility.
+AGGREGATE_REPORT_DATA
+MART
+ANTIMICROBIAL_KEY
+AGGREGATE_REPORT_DA
+TAMART
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+ANTIMICROBIAL_GROUP Linking table that joins the
+BMIRD_CASE table to th e
+ANTIMICROBIAL table.
+ANTIMICROBIAL_GRP_KEY BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BMIRD_CASE Fact table containing the
+BMIRD investigation
+questions. Core data
+elements that are common
+across all NBS investigations
+are stored in the investigation
+table.
+INVESTIGATOR_KEY
+PHYSICIAN_KEY
+PATIENT_KEY
+REPORTER_KEY
+NURSING_HOME_KEY
+DAYCARE_FACILITY_KEY
+INV_ASSIGNED_DT_KEY
+BMIRD_MULTI_VAL_GRP_KEY
+INVESTIGATION_KEY
+ADT_HSPTL_KEY
+RPT_SRC_ORG_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+ANTIMICROBIAL_GRP_KEY
+INVESTIGATOR_KEY
+PHYSICIAN_KEY
+PATIENT_KEY
+REPORTER_KEY
+NURSING_HOME_KEY
+DAYCARE_FACILITY_KEY
+INV_ASSIGNED_DT_KEY
+BMIRD_MULTI_VAL_GRP_
+KEY
+INVESTIGATION_KEY
+ADT_HSPTL_KEY
+RPT_SRC_ORG_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BMIRD_MULTI_VALUE_FIE
+LD
+Dimension table that stores
+the selected values for the
+BMIRD investigation
+questions for which the user
+can select more than one
+response.
+BMIRD_MULTI_VAL_FIELD_KE
+Y
+BMIRD_MULTI_VAL_GRP_KEY
+BMIRD_MULTI_VAL_GRP_
+KEY
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BMIRD_MULTI_VALUE_FIE
+LD_GROUP
+Linking table that joins the
+BMIRD_CASE table to the
+BMIRD_MULTI_VALUE_FIELD
+BMIRD_MULTI_VAL_GRP_KEY BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+21
+Table Name BMIRD_STREP_PNEUMO_
+DATAMART
+CASE_COUNT CASE_LAB_DATAMART CODE_VAL_GENERAL CODESET CONDITION CONFIRMATION_METHOD CONFIRMATION_METHOD
+_GROUP
+CRS_CASE NBS 5.2 RDB Data Dictionary
+Description Primary Key table. This fact table stores a record
+for each investigation in the
+RDB. It contains information
+about entities that are
+common across all
+investigations as well as some
+information that describes
+the entities such as date the
+investigation was assigned to
+the investigator.
+INVESTIGATOR_KEY
+REPORTER_KEY
+PHYSICIAN_KEY
+RPT_SRC_ORG_KEY
+INV_ASSIGNED_DT_KEY
+PATIENT_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+Provides a flat table of
+common case investigation
+questions, patient identifiable
+information and select
+associated Laboratory Report
+questions.
+INVESTIGATION_KEY Contains the values contained
+in the code sets described in
+CODESET. This table is useful
+in decoding values found in
+the RDB.
+CD
+CODE_KEY
+Describes the NBS code sets
+and links to
+CODE_VAL_GENERAL by the
+attribute, CD. This table also
+contains the NBS unique ids
+(e.g., INV112) that map to the
+NBS page sketches.
+CD Contains a list of the
+conditions and program areas
+used by the NBS installation
+site. During the ETL process
+the program areas are
+appended to the conditions
+to create the condition table
+CONDITION_KEY Stores the confirmation
+method for an investigation.
+The confirmation method is a
+multi- select field on the
+investigation.
+CONFIRMATION_METHOD_K
+EY
+Linking table that joins the
+CONFIRMATION_METHOD
+table to the INVESTIGATION
+table.
+INVESTIGATION_KEY
+CONFIRMATION_METHOD_K
+EY
+Fact table containing CRS
+(congenital rubella syndrome)
+investigation questions. Core
+data elements that are
+common across all NBS
+investigations are stored in
+the investigation table.
+INVESTIGATOR_KEY
+PATIENT_KEY
+PHYSICIAN_KEY
+REPORTER_KEY
+INV_ASSIGNED_DT_KEY
+RPT_SRC_ORG_KEY
+ADT_HSPTL_KEY
+Foreign Keys INVESTIGATOR_KEY
+REPORTER_KEY
+PHYSICIAN_KEY
+RPT_SRC_ORG_KEY
+INV_ASSIGNED_DT_KEY
+PATIENT_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+CD INVESTIGATION_KEY
+CONFIRMATION_METHO
+D_KEY
+INVESTIGATOR_KEY
+PATIENT_KEY
+PHYSICIAN_KEY
+REPORTER_KEY
+INV_ASSIGNED_DT_KEY
+RPT_SRC_ORG_KEY
+ADT_HSPTL_KEY
+Type
+REFRESHED
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+REFERENCE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+REFERENCE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+CONFORMED
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+22
+Table Name D_ADDL_RISK D_ADDL_RISK_GROUP D_CASE_MANAGEMENT D_CONTACT_RECORD D_DISEASE_SITE D_DISEASE_SITE_GROUP D_GT_12_REAS D_GT_12_REAS_GROUP D_HC_PROV_TY_3 D_HC_PROV_TY_3_GROUP D_INTERVIEW D_INTERVIEW_NOTE NBS 5.2 RDB Data Dictionary
+Description Primary Key INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+This table stores the
+additional risk information for
+a TB (tuberculosis)
+investigation. Additional risk
+is a multi- select field on the
+investigation.
+TB_PAM_UID
+D_ADDL_RISK_KEY
+Linking table that joins the
+D_ADDL_RISK table to the
+F_TB_PAM table.
+D_ADDL_RISK_GROUP_KEY Primary dimension providing
+case management information
+for an investigation.
+Primary dimension providing
+contact record information.
+Stores the disease site
+information for a TB
+investigation. Disease site is a
+multi- select field on the
+investigation.
+TB_PAM_UID
+D_DISEASE_SITE_KEY
+Linking table that joins the
+D_DISEASE_SITE table to the
+F_TB_PAM table.
+D_DISEASE_SITE_GROUP_KEY Stores the greater than 12
+reason information for a TB
+investigation. Disease site is a
+multi-select field on the
+investigation.
+TB_PAM_UID
+D_GT_12_REAS_KEY
+Linking table that joins the
+D_GT_12_REAS table to the
+F_TB_PAM table.
+D_GT_12_REAS_GROUP_KEY Stores the healthcare
+provider type information for
+a TB investigation. Healthcare
+provider type is a multi-select
+field on the investigation.
+TB_PAM_UID
+D_HC_PROV_TY_3_KEY
+Linking table that joins the
+D_HC_PROV_TY_3 table to the
+F_TB_PAM table.
+D_HC_PROV_TY_3_GROUP_K
+EY
+Primary dimension providing
+interview record information.
+Stores the interview note
+information for a related
+interview record. Interview
+note is a repeating block
+element on an interview
+Foreign Keys INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+D_ADDL_RISK_GROUP_KE
+Y
+D_DISEASE_SITE_GROUP_
+KEY
+D_GT_12_REAS_GROUP_
+KEY
+D_HC_PROV_TY_3_GROU
+P_KEY
+Type
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+DYNAMIC TABLE,
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+DYNAMIC TABLE,
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+23
+Table Name D_INV_ADMINISTRATIVE D_INV_CLINICAL D_INV_COMPLICATION D_INV_CONTACT D_INV_DEATH D_INV_EPIDEMIOLOGY D_INV_HIV D_INV_ISOLATE_TRACKIN
+G
+D_INV_LAB_FINDING D_INV_MEDICAL_HISTORY NBS 5.2 RDB Data Dictionary
+Description Primary Key Foreign Keys Type
+record.
+Dynamically created based on
+the questions added within the
+page builder module to the
+Administrative Information
+subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Clinical Information subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Complications subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Contact Tracing subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Death Information subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Epidemiologic Information
+subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the HIV
+Information subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Isolate Tracking and
+Genotyping subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Laboratory Findings subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Medical History subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+24
+Table Name D_INV_MOTHER D_INV_OTHER D_INV_PATIENT_OBS D_INV_PREGNANCY_BIRT
+H
+D_INV_RESIDENCY D_INV_RISK_FACTOR D_INV_SOCIAL_HISTORY D_INV_SYMPTOM D_INV_TRAVEL D_INV_TREATMENT D_INV_UNDER_CONDITIO NBS 5.2 RDB Data Dictionary
+Description Primary Key Foreign Keys Type
+Dynamically created based on
+the questions added within the
+page builder module to the
+Mother’s Information
+subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Other (Misc./Unknown)
+subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Patient Demographic
+Information subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Pregnancy and Birth
+Information subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Residency Information
+subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Risk Factors subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Social History subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Signs and Symptoms subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Travel History subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on
+the questions added within the
+page builder module to the
+Treatment Information
+subgroup.
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Dynamically created based on PAGE BUILDER
+25
+NBS 5.2 RDB Data Dictionary
+Table Name Description Primary Key N the questions added within the
+page builder module to the
+Underlying Conditions
+subgroup.
+D_INV_VACCINATION Dynamically created based on
+the questions added within the
+page builder module to the
+Vaccination Information
+subgroup.
+D_INVESTIGATION_REPEA
+T
+Stores the repeating block
+information for a related
+investigation. This table is
+dynamically created based
+upon the questions added to
+repeating blocks within the
+Page Builder module.
+D_MOVE_CNTRY Stores the move to country
+information for a TB
+investigation. Move to country
+is a multi-select field on the
+investigation.
+TB_PAM_UID
+D_MOVE_CNTRY_KEY
+D_MOVE_CNTRY_GROUP Linking table that joins the
+D_MOVE_CNTRY table to the
+F_TB_PAM table.
+D_MOVE_CNTRY_GROUP_KE
+Y
+D_MOVE_CNTY Stores the move to county
+information for a TB
+investigation. Move to county
+is a multi-select field on the
+investigation.
+TB_PAM_UID
+D_MOVE_CNTY_KEY
+D_MOVE_CNTY_GROUP Linking table that joins the
+D_MOVE_CNTY table to the
+F_TB_PAM table.
+D_MOVE_CNTY_GROUP_KEY D_MOVE_STATE Stores the move to state
+information for a TB
+investigation. Move to state is
+a multi-select field on the
+investigation.
+TB_PAM_UID
+D_MOVE_STATE_KEY
+D_MOVE_STATE_GROUP Linking table that joins the
+D_MOVE_STATE table to the
+F_TB_PAM table.
+D_MOVE_STATE_GROUP_KEY D_MOVED_WHERE Stores the moved where
+information for a TB
+investigation. Moved where is
+a multi-select field on the
+investigation.
+TB_PAM_UID
+D_MOVED_WHERE_KEY
+D_MOVED_WHERE_GROU
+P
+Linking table that joins the
+D_MOVED_WHERE table to
+the F_TB_PAM table.
+D_MOVED_WHERE_GROUP_
+KEY
+D_ORGANIZATION Primary dimension providing
+organization information.
+ORGANIZATION_KEY Foreign Keys D_MOVE_CNTRY_GROUP
+_KEY
+D_MOVE_CNTY_GROUP_
+KEY
+D_MOVE_STATE_GROUP_
+KEY
+D_MOVED_WHERE_GRO
+UP_KEY
+Type
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PAGE BUILDER
+INVESTIGATION
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+26
+Table Name D_OUT_OF_CNTRY D_OUT_OF_CNTRY_GROU
+P
+D_PATIENT D_PCR_SOURCE* D_PCR_SOURCE_GROUP* D_PLACE D_PROVIDER D_RASH_LOC_GEN* D_RASH_LOC_GEN_GROU
+P*
+D_SMR_EXAM_TY D_SMR_EXAM_TY_GROUP D_TB_HIV D_TB_PAM NBS 5.2 RDB Data Dictionary
+Description Primary Key Stores the out of country
+information for a TB
+investigation. Out of country is
+a multi-select field on the
+investigation.
+TB_PAM_UID
+D_OUT_OF_CNTRY_KEY
+Linking table that joins the
+D_OUT_OF_CNTRY table to
+the F_TB_PAM table.
+D_OUT_OF_CNTRY_GROUP_K
+EY
+Primary dimension providing
+patient information.
+PATIENT_KEY Stores the PCR source
+information for a Varicella
+investigation. PCR source is a
+multi-select field on the
+investigation.
+VAR_PAM_UID
+D_PCR_SOURCE_KEY
+Linking table that joins the
+D_PCR_SOURCE table to the
+F_VAR_PAM table.
+D_PCR_SOURCE_GROUP_KEY Primary dimension providing
+place information.
+Primary dimension providing
+provider information.
+PROVIDER_KEY Stores the rash location
+generalized information for a
+Varicella investigation. Rash
+location generalized is a
+multi-select field on the
+investigation.
+VAR_PAM_UID
+D_RASH_LOC_GEN_KEY
+Linking table that joins the
+D_RASH_LOC_GEN table to
+the F_VAR_PAM table.
+D_RASH_LOC_GEN_GROUP_K
+EY
+This table stores the smear
+exam type information for a
+TB investigation. Smear exam
+type is a multi-select field on
+the investigation.
+TB_PAM_UID
+D_SMR_EXAM_TY_KEY
+Linking table that joins the
+D_SMR_EXAM_TY table to the
+F_TB_PAM table.
+D_SMR_EXAM_TY_GROUP_K
+EY
+Primary dimension providing
+TB HIV investigation
+information (for users with HIV
+permissions).
+D_TB_HIV_KEY Primary dimension providing
+TB investigation information
+(for users with no HIV
+permissions).
+D_TB_PAM_KEY Foreign Keys D_OUT_OF_CNTRY_GROU
+P_KEY
+D_PCR_SOURCE_GROUP_
+KEY
+D_RASH_LOC_GEN_GROU
+P_KEY
+D_SMR_EXAM_TY_GROU
+P_KEY
+Type
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+DYNAMIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+27
+Table Name D_VACCINATION (new in
+5.2)
+D_VAR_PAM* DATA_VALIDATION DATA_VALIDATION_MESS
+AGE
+DQ_ALL_CASE ETL_HEALTH_CHECK_PAT_
+DATA
+ETL_MISSING_RECORD NBS 5.2 RDB Data Dictionary
+Description Primary Key Foreign Keys Type
+Primary dimension providing
+Vaccination information.
+D_VACCINATION_KEY PRIMARY DIMENSION
+DYNAMIC TABLE,
+INCREMENTALLY
+REFRESHED
+Primary dimension providing
+Varicella investigation
+information.
+D_VAR_PAM_KEY PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+Contains data that help users
+identify errors in their data, as
+well as provide information
+regarding missing information,
+or potential errors that might
+need to be reviewed and/or
+corrected. This data mart
+supports the report available in
+the NBS titled, ‘Line List of Data
+Validations with Program Area
+and Jurisdiction Security’,
+which is secured by Program
+Area and Jurisdiction.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Contains data that helps users
+identify errors in their data, as
+well as provide information
+regarding missing information,
+or potential errors that might
+need to be reviewed and/or
+corrected. This data mart
+supports the report available in
+the NBS titled, ‘Line List of Data
+Validations with Program Area
+and Jurisdiction Security’,
+which is secured by Program
+Area and Jurisdiction.
+DATA_VALIDATION_MESSAG
+E_ID
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Used to ‘feed’ the Data
+Validation Data Mart. Please
+see NBS Data Validation Data
+Mart Design.doc for further
+details, referenced in RDB Data
+Mart Details.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+ETL Process ‘Health Check’
+table for patient data in the
+RDB. Identifies any issues with
+patient data in the RDB (e.g.,
+Patient entry missing in
+D_PATIENT table). This table is
+used in the ‘auto-correct’
+process for fixing missing
+patient records – this issue is
+usually caused by entry of new
+records in the ODS (i.e., making
+changes to transactional data)
+while the ETL is running.
+ETL PROCESS
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+ETL Process ‘Health Check’
+table for patient data in the
+ETL_MISSING_RECORD_UID ETL PROCESS
+STATIC TABLE, NOT
+INCREMENTALLY
+28
+Table Name ETL_PROCESS EVENT_METRIC F_CONTACT_RECORD_CAS
+E
+F_INTERVIEW_CASE F_PAGE_CASE F_S_INV_CASE F_S_STD_HIV_CASE F_S_TB_PAM F_S_VAR_PAM* NBS 5.2 RDB Data Dictionary
+Description Primary Key Foreign Keys Type
+RDB. Identifies any issues with
+observation (event) data in the
+RDB (e.g. The Observation local
+id is not a valid local id. Please
+check.).
+REFRESHED
+ETL Process ‘Health Check’
+reference table that contains a
+list of ETL processes (tables
+created during the ETL
+process). This table is used as a
+reference in the ETL check
+processes.
+Process_uid ETL PROCESS
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+This table contains information
+used for event tracking to
+measure the volume of public
+health events managed using
+the NBS. There is one record
+for every top-level event record
+(not including history tables).
+Currently, the event records
+stored include: Laboratory
+reports, morbidity reports,
+public health cases,
+vaccinations, and
+notifications.
+EVENT_TYPE
+EVENT_UID
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Fact table containing linking
+keys for contact record
+information.
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Fact table containing linking
+keys for interview record
+information.
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Fact table containing linking
+keys for Page Builder
+investigations.
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Staging table used to populate
+the keys for the F_PAGE_CASE
+fact table.
+STAGING TABLE FOR
+FACT POPULATION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Staging table used to populate
+the keys for the
+F_STD_PAGE_CASE fact table.
+STAGING TABLE FOR
+FACT POPULATION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Staging table used to populate
+the keys for the F_TB_PAM fact
+table.
+STAGING TABLE FOR
+FACT POPULATION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Staging table used to populate
+the keys for the F_VAR_PAM
+fact table.
+STAGING TABLE FOR
+FACT POPULATION
+STATIC TABLE, NOT
+INCREMENTALLY
+29
+Table Name F_STD_PAGE_CASE F_TB_PAM F_VACCINATION F_VAR_PAM* GENERIC_CASE GEOCODING_LOCATION HEP_MULTI_VALUE_FIELD HEP_MULTI_VALUE_FIELD
+_GROUP
+HEP100 NBS 5.2 RDB Data Dictionary
+Description Primary Key Fact table containing linking
+keys for Page Builder STD/HIV
+investigations.
+Fact table containing linking
+keys for TB investigations.
+Fact table containing linking
+keys for Vaccinations.
+D_VACCINATION_KEY Fact table containing linking
+keys for Varicella
+investigations.
+Fact table containing the
+investigation questions that
+are on the generic
+investigation. Core data
+elements that are common
+across all NBS investigations
+are stored in the investigation
+table.
+INVESTIGATOR_KEY
+PHYSICIAN_KEY
+REPORTER_KEY
+INV_ASSIGNED_DT_KEY
+PATIENT_KEY
+ADT_HSPTL_KEY
+RPT_SRC_ORG_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+Stores the latitude, longitude
+and other geocoding
+information for the address.
+GEOCODING_LOCATION_KEY Dimension table that stores
+the selected values for the
+Hepatitis investigation
+questions for which the user
+can select more than one
+response.
+HEP_MULTI_VAL_GRP_KEY
+HEP_MULTI_VAL_DATA_KEY
+Linking table that joins the
+HEPATITIS_CASE table to the
+HEP_MULTI_VALUE_FIELD
+table.
+HEP_MULTI_VAL_GRP_KEY Data mart that provides a flat
+table of the information
+collected in the Hepatitis
+investigations consolidated
+with information about the
+associated patients, providers
+and organizations. Each row
+represents one investigation.
+The data mart does not include
+INVESTIGATION_KEY Foreign Keys PATIENT_KEY
+VACCINE_GIVEN_BY_KEY
+VACCINE_GIVEN_BY_ORG
+_KEY
+D_VACCINATION_REPEAT
+_KEY (NOTE: Repeat
+dimension not
+implemented in 5.2)
+INVESTIGATION_KEY
+INVESTIGATOR_KEY
+PHYSICIAN_KEY
+REPORTER_KEY
+INV_ASSIGNED_DT_KEY
+PATIENT_KEY
+ADT_HSPTL_KEY
+RPT_SRC_ORG_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+HEP_MULTI_VAL_GRP_KE
+Y
+Type
+REFRESHED
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+CONFORMED
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+30
+Table Name HEPATITIS_CASE HEPATITIS_DATAMART INV_SUMM_DATAMART NBS 5.2 RDB Data Dictionary
+Description Primary Key questions where the user can
+select multiple responses. That
+information is available by
+joining the
+Hep_multi_value_field table to
+this data mart.
+NOTE: This Hepatitis data mart
+is for use for Hepatitis data
+collected with LEGACY Hepatitis
+Investigation forms (vs. Page
+Builder Hepatitis Investigation
+forms). The
+HEPATITIS_DATAMART houses
+Hepatitis data for
+investigations collected in page
+builder.
+Fact table containing the
+investigation questions that
+are on the Hepatitis
+investigations. Core data
+elements that are common
+across all NBS investigations
+are stored in the investigation
+table.
+REPORTER_KEY
+INVESTIGATOR_KEY
+PHYSICIAN_KEY
+PATIENT_KEY
+INV_ASSIGNED_DT_KEY
+RPT_SRC_ORG_KEY
+HEP_MULTI_VAL_GRP_KEY
+ADT_HSPTL_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+Provides information about
+individual Hepatitis
+investigations with the
+extended Hepatitis questions
+for all Hepatitis diagnoses.
+NOTE: This Hepatitis data mart
+is for use for Hepatitis data
+collected with Page Builder
+Hepatitis Investigation forms
+(vs. LEGACY Hepatitis
+Investigation forms). The
+HEP100 data mart houses
+Hepatitis data for
+investigations collected in
+LEGACY investigations.
+Provides a flat table of the
+generic information to do
+analysis on all conditions
+captured by users of the
+system. Each row in the data
+mart represents an
+Investigation and includes
+information about the patient,
+general investigation data,
+notification data and
+Foreign Keys REPORTER_KEY
+INVESTIGATOR_KEY
+PHYSICIAN_KEY
+PATIENT_KEY
+INV_ASSIGNED_DT_KEY
+RPT_SRC_ORG_KEY
+HEP_MULTI_VAL_GRP_KE
+Y
+ADT_HSPTL_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+Type
+DATA MART
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+31
+Table Name INVESTIGATION LAB_RESULT_COMMENT LAB_RESULT_CONDITION LAB_RESULT_GROUP LAB_RESULT_VAL LAB_RPT_USER_COMMEN
+T
+LAB_TEST LAB_TEST_RESULT NBS 5.2 RDB Data Dictionary
+Description Primary Key information pertaining to any
+lab reports that were
+associated with the
+investigation.
+Contains the questions that
+are common to all
+investigations (BMIRD,
+generic, Hepatitis, etc.).
+INVESTIGATION_KEY Stores the comments for a lab
+report resulted test.
+LAB_RESULT_COMMENT_KEY
+RESULT_COMMENT_GRP_KEY
+THIS TABLE IS NO LONGER IN
+USE AND WILL BE REMOVED IN
+THE NEXT NBS RELEASE.
+THIS TABLE IS NO LONGER IN
+USE AND WILL BE REMOVED IN
+THE NEXT NBS RELEASE.
+Stores the results for each lab
+test. (e.g. numeric, coded
+value, organism, etc.).
+TEST_RESULT_GRP_KEY
+TEST_RESULT_VAL_KEY
+Contains the comments that
+a user enters for a lab report.
+LAB_TEST_KEY
+USER_COMMENT_KEY
+This table has a record for
+each lab test that is entered.
+One lab report will have a
+separate row for each
+ordered, resulted,
+susceptibility, etc. test that is
+in one lab report.
+LAB_TEST_KEY Linking table between
+LAB_TEST and other
+associated information.
+The information is
+stored in the following
+tables:
+ PERSON
+ LAB_RESULT_CO
+MMENT
+ LAB_RPT_USER_CO
+MMENT
+ ORGANIZATION
+ CONDITION
+ LAB_RESULT_VAL
+ LDF_DATA
+ RDB_DATE
+ INVESTIGATION
+ MORBIDITY_REPORT
+LAB_TEST_KEY
+RESULT_COMMENT_GRP_KEY
+TEST_RESULT_GRP_KEY
+PERFORMING_LAB_KEY
+PATIENT_KEY
+COPY_TO_PROVIDER_KEY
+LAB_TEST_TECHNICIAN_KEY
+SPECIMEN_COLLECTOR_KEY
+ORDERING_ORG_KEY
+REPORTING_LAB_KEY
+MORB_RPT_KEY
+ORDERING_PROVIDER_KEY
+CONDITION_KEY
+LAB_RPT_DT_KEY
+INVESTIGATION_KEY
+LDF_GROUP_KEY
+Foreign Keys RESULT_COMMENT_GRP
+_KEY
+TEST_RESULT_GRP_KEY LAB_TEST_KEY LAB_TEST_KEY
+RESULT_COMMENT_GRP
+_KEY
+TEST_RESULT_GRP_KEY
+PERFORMING_LAB_KEY
+PATIENT_KEY
+COPY_TO_PROVIDER_KEY
+LAB_TEST_TECHNICIAN_K
+EY
+SPECIMEN_COLLECTOR_K
+EY
+ORDERING_ORG_KEY
+REPORTING_LAB_KEY
+MORB_RPT_KEY
+ORDERING_PROVIDER_KE
+Y
+Type
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+PRIMARY FACT
+STATIC TABLE,
+INCREMENTALLY
+32
+Table Name LAB100 LAB101 LDF_BMIRD LDF_DATA LDF_DATAMART_COLUMN
+_REF
+LDF_DATAMART_TABLE_R
+EF
+LDF_FOODBORNE LDF_GENERIC LDF_GROUP LDF_HEPATITIS LDF_MUMPS NBS 5.2 RDB Data Dictionary
+Description Primary Key Foreign Keys Type
+Provides information about
+individual resulted lab tests.
+One lab report may have
+multiple rows in the data mart
+if it has multiple resulted tests.
+DATA MART
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+Provides information on all
+resulted laboratory tests
+containing isolate tracking
+data, along with the relevant
+isolate tracking, specimen, and
+patient information.
+DATA MART
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+Provides a flat table (data
+mart), in which each row
+includes all LDFs and/or CDFs
+entered for BMIRD conditions.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+All the custom field questions
+and answers that are added
+regardless of the page/object
+to which they are associated
+are stored in this table. The
+information is stored as a
+name value pair.
+LDF_DATA_KEY CONFORMED
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Reference table indicating LDF
+data mart column names used
+in the process of dynamically
+creating the LDF data marts.
+REFERENCE
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+Reference table indicating LDF
+data mart table names used in
+the process of dynamically
+creating the LDF data marts.
+REFERENCE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Provides a flat table (data mart)
+in which each row includes all
+LDFs and/or CDFs entered for
+Foodborne conditions.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Provides a flat table (data
+mart), in which each row
+includes all LDFs and/or CDFs
+entered for Generic conditions.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Linking table between the
+LDF_DATA table and the
+associated page/object’s
+table (e.g., PERSON,
+BMIRD_CASE, GENERIC_CASE,
+LAB_TEST_RESULT, etc.). It
+groups the set of questions
+for a particular page/object
+(e.g. groups all the custom
+fields on the generic
+investigation page).
+LDF_GROUP_KEY BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Provides a flat table (data mart)
+in which each row includes all
+LDFs and/or CDFs entered for
+Hepatitis conditions.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Provides a flat table (data mart) DATA MART
+33
+Table Name LDF_TETANUS LDF_VACCINE_PREVENT_D
+ISEASES
+MEASLES_CASE MORB_RPT_USER_COMM
+ENT
+MORBIDITY_REPORT MORBIDITY_REPORT_DAT
+AMART
+MORBIDITY_REPORT_EVE
+NT
+NBS 5.2 RDB Data Dictionary
+Description Primary Key in which each row includes all
+LDFs and/or CDFs entered for
+Mumps investigations.
+(Archived after new page is
+adopted).
+Provides a flat table (data mart)
+in which each row includes all
+LDFs and/or CDFs entered for
+Tetanus investigations.
+Provides a flat table (data mart)
+in which each row includes all
+LDFs and/or CDFs entered for
+Vaccine Preventable
+conditions.
+Fact table containing the
+investigation questions that
+are on the Measles
+investigation. Core data
+elements that are common
+across all NBS investigations
+are stored in the investigation
+table.
+INV_RPT_DT_KEY
+INV_ASSIGNED_DT_KEY
+INVESTIGATOR_KEY
+PATIENT_KEY
+PHYSICIAN_KEY
+RPT_SRC_ORG_KEY
+REPORTER_KEY
+ADT_HSPTL_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+Contains the comments that
+a user enters for an externally
+entered Morbidity Report.
+MORB_RPT_KEY
+USER_COMMENT_KEY
+Stores the information that is
+specific to a morbidity report.
+In the NBS, the morbidity
+report is a report by a
+provider about a notifiable
+condition.
+MORB_RPT_KEY Provides a flat table of the
+information collected on the
+Morbidity Report in the NBS,
+including patient demographic
+information, general disease
+information, treatment
+information, and lab
+information. The data mart is
+used to support the Morbidity
+Report Line Listing report. Each
+row in the data mart
+represents one Morbidity
+Report.
+Linking table between
+MORBIDITY_REPORT and
+other associated in
+formation. The information
+is stored in the following
+tables:
+NURSING_HOME_KEY
+HEALTH_CARE_KEY
+MORB_RPT_SRC_ORG_KEY
+PATIENT_KEY
+MORB_RPT_KEY
+PHYSICIAN_KEY
+Foreign Keys INV_RPT_DT_KEY
+INV_ASSIGNED_DT_KEY
+INVESTIGATOR_KEY
+PATIENT_KEY
+PHYSICIAN_KEY
+RPT_SRC_ORG_KEY
+REPORTER_KEY
+ADT_HSPTL_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+MORB_RPT_KEY NURSING_HOME_KEY
+HEALTH_CARE_KEY
+MORB_RPT_SRC_ORG_KE
+Y
+PATIENT_KEY
+MORB_RPT_KEY
+Type
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY DIMENSION
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+34
+Table Name NOTIFICATION NOTIFICATION_EVENT ORGANIZATION_LDF_GRO
+UP
+PATIENT_LDF_GROUP PERTUSSIS_CASE* PERTUSSIS_SUSPECTED_S
+OURCE_FLD*
+PERTUSSIS_SUSPECTED_S
+OURCE_GRP*
+PERTUSSIS_TREATMENT_FI
+ELD*
+NBS 5.2 RDB Data Dictionary
+Description Primary Key  PERSON
+ ORGANIZATION
+ CONDITION
+ LDF_DATA
+ RDB_DATE
+ INVESTIGATION
+REPORTER_KEY
+HSPTL_KEY
+MORB_RPT_CREATE_DT_KEY
+HSPTL_DISCHARGE_DT_KEY
+MORB_RPT_DT_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+Information about
+notifications to CDC about
+investigations for notifiable
+conditions.
+NOTIFICATION_KEY Linking table between
+NOTIFICATION and other
+associated information.
+The information is stored
+in the following tables:
+ PERSON
+ CONDITION
+ RDB_DATE
+ INVESTIGATION
+PATIENT_KEY
+NOTIFICATION_SENT_DT_KEY
+NOTIFICATION_SUBMIT_DT_
+KEY
+NOTIFICATION_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+Links the D_ORGANIZATION
+a n d L_ORGANIZATION table
+to the LDF_DATA table.
+ORGANIZATION_KEY
+LDF_GROUP_KEY
+Links the D_PERSON table to
+the LDF_DATA table.
+LDF_GROUP_KEY
+PATIENT_KEY
+Fact table containing the
+investigation questions that
+are on the Pertussis
+investigation. Core data
+elements that are common
+across all NBS investigations
+are stored in the investigation
+table.
+RPT_SRC_ORG_KEY
+REPORTER_KEY
+PHYSICIAN_KEY
+INVESTIGATOR_KEY
+INV_ASSIGNED_DT_KEY
+PATIENT_KEY
+ADT_HSPTL_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+PERTUSSIS_SUSPECT_SRC_GR
+P_KEY
+PERTUSSIS_TREATMENT_GRP
+_KEY
+LDF_GROUP_KEY
+Hanging fact table that stores
+information about the
+suspected source of a
+PERTUSSIS investigation.
+PERTUSSIS_SUSPECT_SRC_GR
+P_KEY
+PERTUSSIS_SUSPECT_SRC_FL
+D_KEY
+Linking table between
+PERTUSSIS_CASE table and
+PERTUSSIS_SUSPECTED_SOU
+RCE_FL D table.
+PERTUSSIS_SUSPECT_SRC_GR
+P_KEY
+Hanging fact table that stores
+information about length of
+treatment for Pertussis.
+PERTUSSIS_TREATMENT_GRP
+_KEY
+PERTUSSIS_TREATMENT_FLD
+Foreign Keys PHYSICIAN_KEY
+REPORTER_KEY
+HSPTL_KEY
+PATIENT_KEY
+NOTIFICATION_SENT_DT_
+KEY
+NOTIFICATION_SUBMIT_
+DT_KEY
+NOTIFICATION_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+ORGANIZATION_KEY
+LDF_GROUP_KEY
+LDF_GROUP_KEY RPT_SRC_ORG_KEY
+REPORTER_KEY
+PHYSICIAN_KEY
+INVESTIGATOR_KEY
+INV_ASSIGNED_DT_KEY
+PATIENT_KEY
+ADT_HSPTL_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+PERTUSSIS_SUSPECT_SRC
+_GRP_KEY
+PERTUSSIS_TREATMENT_
+GRP_KEY
+LDF_GROUP_KEY
+PERTUSSIS_SUSPECT_SRC
+_GRP_KEY
+PERTUSSIS_TREATMENT_
+GRP_KEY
+Type
+PRIMARY DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+SNOWFLAKE
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+35
+Table Name PERTUSSIS_TREATMENT_G
+ROUP*
+PROVIDER_LDF_GROUP RDB_DATE RDB_TABLE_METADATA RESULT_COMMENT_GROU
+P
+RUBELLA_CASE SR100 STD_HIV_DATAMART NBS 5.2 RDB Data Dictionary
+Description Primary Key _KEY Linking table between
+PERTUSSIS_CASE table and
+PERTUSS
+IS_TREATMENT_FIELD table.
+PERTUSSIS_TREATMENT_GRP
+_KEY
+Linking table between
+L_PROVIDER, D_PROVIDER, and
+LDF_GROUP_KEY.
+PROVIDER_KEY
+LDF_GROUP_KEY
+Contains a list of all
+possible ways to categorize
+a date. For example,
+12/21/2004 is in the month
+of December, is the day of
+21, and is in the year 2004.
+DATE_KEY Contains the metadata for
+RDB table and column names
+and is used to help with pre-
+processing logic.
+Linking table between the
+LAB_TEST_RESULT table and
+the LAB_RESULT_COMMENT
+table.
+RESULT_COMMENT_GRP_KEY Fact table containing the
+investigation questions that
+are on the Rubella
+investigation. Core data
+elements that are common
+across all NBS investigations
+are stored in the investigation
+table.
+INVESTIGATOR_KEY
+PATIENT_KEY
+PHYSICIAN_KEY
+REPORTER_KEY
+INV_ASSIGNED_DT_KEY
+ADT_HSPTL_KEY
+RPT_SRC_ORG_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+Provides information about
+summary data reports.
+Certain conditions are reported
+as summary counts from a
+particular facility for a
+particular MMWR week and
+year. This information is
+collected in the NBS at the level
+of counts for condition from a
+reporting source in a county for
+a specific MMWR week and
+year; these are Summary Data
+records. This data mart
+contains information about the
+Summary Data reports.
+Provides information about
+individual STD and HIV
+investigations with the
+extended STD/HIV questions
+Foreign Keys PROVIDER_KEY INVESTIGATOR_KEY
+PATIENT_KEY
+PHYSICIAN_KEY
+REPORTER_KEY
+INV_ASSIGNED_DT_KEY
+ADT_HSPTL_KEY
+RPT_SRC_ORG_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+Type
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+CONFORMED
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+REFERENCE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+BRIDGE
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+36
+Table Name SUMMARY_CASE_GROUP SUMMARY_REPORT_CASE TB_DATAMART TB_HIV_DATAMART TB_PAM_LDF TEST_RESULT_GROUPING TREATMENT NBS 5.2 RDB Data Dictionary
+Description Primary Key Foreign Keys Type
+for all STD/HIV diagnoses. The
+data mart is used to support
+the STD/HIV standard (canned)
+reports.
+Hanging fact table that stores
+the source of a summary
+report.
+SUMMARY_CASE_SRC_KEY BRIDGE
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+Linking table between the
+INVESTIGATION table and
+SUMMARY_CASE_GROUP
+tables.
+INVESTIGATION_KEY
+SUMMARY_CASE_SRC_KEY
+NOTIFICATION_SEND_DT_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+INVESTIGATION_KEY
+SUMMARY_CASE_SRC_KE
+Y
+NOTIFICATION_SEND_DT_
+KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+DISEASE DATA
+MART/FACT HYBRID
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Provides a flat table (data mart)
+of the information collected on
+the TB Investigation, including
+patient demographic
+information, investigator
+information, TB-specific
+questions, CDC notification
+information, etc. The data
+marts are used to support the
+NBS TB-specific reports.
+Additionally, end-users can use
+this data mart to create their
+own TB reports. Each row in
+the data mart represents one
+TB investigation.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Provides a flat table (data mart)
+of the information collected on
+the TB Investigation, including
+patient demographic
+information, investigator
+information, TB-specific
+questions, CDC notification
+information, etc. The data
+marts are used to support the
+NBS TB-specific reports.
+Additionally, end-users can use
+this data mart to create their
+own TB reports. Each row in
+the data mart represents one
+TB investigation. Includes HIV
+data as well.
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Provides a flat table in which
+each row includes all LDFs
+entered for TB conditions.
+PAGE BUILDER
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+Linking table between
+LAB_TEST_R ES ULT and
+LAB_RESULT_VAL.
+TEST_RESULT_GRP_KEY BRIDGE
+STATIC TABLE,
+INCREMENTALLY
+REFRESHED
+Contains information about TREATMENT_KEY PRIMARY DIMENSION
+37
+NBS 5.2 RDB Data Dictionary
+Table Name Description Primary Key Foreign Keys treatment associated with a
+morbidity report and/or an
+investigation.
+TREATMENT_EVENT Linking table between
+TREATMENT and other
+associated information. The
+information is stored in the
+following tables:
+ PERSON
+ CONDITION
+ RDB_DATE
+ INVESTIGATION
+ ORGANIZATION
+ MORBIDITY_REPORT
+TREATMENT_DT_KEY
+TREATMENT_PROVIDING_OR
+G_KEY
+PATIENT_KEY
+TREATMENT_KEY
+MORB_RPT_KEY
+TREATMENT_PHYSICIAN_KEY
+INVESTIGATION_KEY
+CONDITION_KEY
+LDF_GROUP_KEY
+USER_PROFILE Decodes the numeric user id
+stored in the operational data
+store by providing the first
+and last name of the user.
+NEDSS_ENTRY_ID VACCINATION
+(Retired in 5.2) Exists as
+VACCINATION_ARCHIVE
+with a point-in-time
+snapshot of Vaccination
+data that existed at time
+of migration from legacy
+Vaccination page to Page
+Builder Vaccination page.
+Contains information about
+Vaccinations.
+VACCINATION_DT_KEY
+VACCINE_GIVEN_BY_ORG_K
+EY
+PATIENT_KEY
+INVESTIGATION_KEY
+VACCINE_MANUFACTURER_
+ORG_KEY
+VACCINE_GIVEN_BY_KEY
+VACCINATION_DT_KEY
+VACCINE_GIVEN_BY_OR
+G_KEY
+PATIENT_KEY
+INVESTIGATION_KEY
+VAR_DATAMART* Provides a flat table of the
+information (data mart)
+collected on the Varicella
+Investigation Form, including
+patient demographic
+information, investigator
+information, Varicella-specific
+questions, CDC notification
+information, etc. The data mart
+is used to support the Varicella-
+specific canned report.
+Additionally, end-users can use
+this data mart to create their
+own Varicella reports. Each row
+in the data mart represents
+one Varicella investigation.
+VAR_PAM_LDF* Provides a flat table in which
+each row includes all LDFs
+entered for Varicella
+conditions.
+* Archived after new page is adopted.
+Type
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY FACT
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+REFERENCE
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PRIMARY
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+DATA MART
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+PAGE BUILDER
+DIMENSION
+STATIC TABLE, NOT
+INCREMENTALLY
+REFRESHED
+38
+NBS 5.2 RDB Data Dictionary
+4.3 RDB Data Mart Details
+The table below identifies the current data marts that are available with NBS ‘out-of-the-box’. Further
+information about each data mart is available in the corresponding data mart design document, which is
+identified in the ‘Related Documentation’ column.
+DB Type Data Mart Table/View Name Create
+Related
+Description
+d
+Documentation
+RDB Table Aggregate
+Report Data
+Mart
+AGGREGATE_REPO
+RT_DATAMART
+2009 AGGREGATE
+REPORT DATA
+MART and
+REPORT
+(NBS Aggregate
+Report Data Mart
+and Report.docx)
+Provides a flat table of the information
+collected on the Aggregate Report in the NBS,
+including information such as MMWR Week,
+MMWR Year, and counts by logical groupings
+of aggregated data (e.g. Total Counts of
+Hospitalizations for 0-4 year age group). The
+data mart is used to support the Aggregate
+Report Line Listing report. Additionally, end-
+users can use this data mart to create their
+own reports. Each row in the data mart
+represents one Aggregate Report.
+RDB Table Case and
+Laboratory
+Report Daily
+Report Data
+Mart
+CASE_LAB_DATAMA
+RT
+2008 CASE AND
+LABORATORY
+DAILY REPORT
+DATA MART and
+REPORT
+(NBS Case and
+Laboratory Report
+Daily Report Data
+Mart and
+Report.doc)
+Provides a flat table of common case
+investigation questions, patient identifiable
+information, and select associated Laboratory
+Report questions.
+RDB Table Data Mart
+Event Metrics
+EVENT_METRIC 2005 NBS EVENT
+METRICS DATA
+MART
+(NBS Data Mart
+Event
+Metrics.doc)
+Contains information used for event tracking.
+Information stored in this table is used to
+measure the volume of public health events
+managed using the NBS. There is one record
+for every top level event record (not including
+history tables).
+Currently, the event records stored include:
+Laboratory reports, Morbidity reports, Public
+health cases, Vaccinations, and Notifications.
+RDB Table Data
+Validation
+Data Mart
+DATA_VALIDATION,
+DATA_VALIDATION
+_MESSAGE
+2006 DATA
+VALIDATION
+DATA MART
+DESIGN
+(NBS Data
+Validation Data
+Mart Design.doc)
+Contains data that help users identify errors in
+their data, as well as provide information
+regarding missing information, or potential
+errors that might need to be reviewed and/or
+corrected. This data mart supports the report
+available in the NBS titled, ‘Line List of Data
+Validations with Program Area and Jurisdiction
+Security’, which is secured by Program Area
+and Jurisdiction.
+RDB Table Data Quality DQ_ALL_CASE 2006 DATA Used to ‘feed’ the Data Validation Data Mart.
+39
+DB ODS RDB RDB Type Table Table Table Data Mart (All Case) NBS
+Deduplication
+Activity Log
+Data Mart
+Hepatitis
+Investigations
+(HEP100)*
+Hepatitis
+Data Mart
+NBS 5.2 RDB Data Dictionary
+Table/View Name Create
+Related
+d
+Documentation
+VALIDATION
+DATA MART
+DESIGN
+(NBS Data
+Validation Data
+Mart Design.doc)
+Deduplication_activ
+ity_log
+2005 DEDUPLICATION
+ACTIVITY LOG
+DATA MART
+(NBS
+Deduplication
+Activity Log Data
+Mart Design.doc)
+HEP100 2005 HEPATITIS
+INVESTIGATION
+DATA MART
+DESIGN
+(NBS Hepatitis
+Data Mart Design
+(HEP100).doc)
+HEPATITIS_DATAM
+ART
+2015 NBS HEPATITS
+DATA MART
+DESIGN
+DOCUMENT
+(NBS Hepatitis
+Description
+Please see NBS Data Validation Data Mart
+Design.doc for further details.
+Exposes the Deduplication Activity Log table as
+a data mart so that state administrators can
+more readily monitor the execution of the
+Master Patient Record (MPR) Deduplication
+process. The Deduplication Activity Log data
+mart should be reviewed daily to check the
+status of the previous day’s Deduplication
+process. By reviewing the Deduplication
+Activity Log, administrators can determine the
+following:
+ Number of ‘Similar Groups’ identified that
+will need review in the System Identified
+Queue
+ Number of MPRs that were automatically
+merged as a result of being identified as
+‘Same’
+ Start and End time of the Deduplication
+Batch Process.
+Provides a flat table of the information
+collected in the Hepatitis investigations,
+consolidated with information about the
+associated patients, providers, and
+organizations. Each row represents one
+investigation. The data mart does not include
+questions where the user can select multiple
+responses. That information is available by
+joining the Hep_multi_value_field table to this
+data mart.
+NOTE: This Hepatitis data mart is for use for
+Hepatitis data collected with LEGACY Hepatitis
+Investigation forms (vs. Page Builder Hepatitis
+Investigation forms). The
+HEPATITIS_DATAMART houses Hepatitis data
+for investigations collected in page builder.
+Provides information about individual Hepatitis
+investigations with the extended Hepatitis
+questions for all Hepatitis diagnoses.
+NOTE: This Hepatitis data mart is for use for
+Hepatitis data collected with Page Builder
+40
+DB RDB RDB RDB RDB ODS Type Table Table Table Table Table Data Mart Investigation
+Summary
+Data Mart
+Isolate
+Tracking Data
+Mart (LAB101)
+LDF and CDF
+DATA MARTS
+Morbidity
+Report Data
+Mart
+Notification
+(NND) Activity
+Log Data Mart
+NBS 5.2 RDB Data Dictionary
+Table/View Name Create
+Related
+d
+Documentation
+Data Mart Design
+Document
+HEPATITIS_DATA
+MART.xlsx)
+INV_SUMM_DATA
+MART
+2009 INVESTIGATION
+SUMMARY DATA
+MART AND
+REPORT
+(NBS
+Investigation
+Summary Data
+Mart and
+Reports.doc)
+LAB101 2006 ISOLATE
+TRACKING DATA
+MART DESIGN
+(NBS Isolate
+Tracking Data
+Mart Design
+(LAB101).doc)
+LDF_BMIRD
+LDF_FOODBORNE
+LDF_GENERIC
+LDF_HEPATITIS*
+LDF_MUMPS*
+(archived after new
+page adopted)
+LDF_TETANUS
+LDF_VACCINE_PREV
+ENT_DISEASES
+2009 LDF and CDF
+DATA MARTS
+(NBS LDF and CDF
+Data Marts and
+Report.doc)
+MORBIDITY_REPOR
+T_DATAMART
+2009 MORBIDITY
+REPORT DATA
+MART and
+REPORT
+(NBS Morbidity
+Report Data Mart
+and Report.docx)
+NND_Activity_log 2005 NOTIFICATION
+ACTIVITY LOG
+DATA MART
+(NBS Notification
+Activity Log Data
+Description
+Hepatitis Investigation forms (vs. LEGACY
+Hepatitis Investigation forms). The HEP100
+data mart houses Hepatitis data for
+investigations collected in LEGACY
+investigations.
+Provides a flat table of the generic information
+to do analysis on all conditions captured by
+users of the system. Each row in the data mart
+represents an Investigation and includes
+information about the patient, general
+investigation data, notification data, and
+information pertaining to any lab reports that
+were associated with the investigation.
+Provides information on all resulted laboratory
+tests containing isolate tracking data, along
+with the relevant isolate tracking, specimen,
+and patient information.
+Provides flat tables in which each row includes
+all LDFs and/or CDFs entered for a particular
+condition or logical grouping of conditions.
+Each data mart can then be joined with the
+applicable table(s) in the RDB to create a data
+set that provides Patient Demographic,
+Investigation, LDF/CDF, and any other data
+that the state deems appropriate for analysis.
+NOTE: TB and Varicella are not included in
+these marts, as the LDF/CDF information for
+these conditions has already been accounted
+for in the RDB.
+Provides a flat table of the information
+collected on the Morbidity Report in the NBS,
+including patient demographic information,
+general disease information, treatment
+information and lab information. The data
+mart is used to support the Morbidity Report
+Line Listing report. Each row in the data mart
+represents one Morbidity Report.
+Provides information to monitor the
+transmission of the notifiable disease message
+to CDC. By exposing the NND Activity Log table
+as a data mart, state administrators can more
+readily monitor the health of the creation and
+41
+DB RDB RDB RDB RDB RDB Type Table Table Table Table Table Data Mart Resulted Lab
+Tests (LAB100)
+STD HIV Data
+Mart
+NBS Strep
+Pneumoniae
+Data Mart
+Summary
+Data Reports
+(SR100)
+Tuberculosis
+Data Mart/
+Tuberculosis
+Data Mart for
+HIV Data
+NBS 5.2 RDB Data Dictionary
+Table/View Name Create
+Related
+d
+Documentation
+Mart Design.doc) LAB100 2005 RESULTED LAB
+TEST DATA MART
+DESIGN
+(NBS Resulted Lab
+Test Data Mart
+Design
+LAB100.doc)
+STD_HIV_DATAMAR
+2016 T
+STD HIV DATA
+MART DESIGN
+(NBS STD HIV
+Data Mart Design
+STD_HIV_DATAM
+ART.xlsx)
+BMIRD_STREP_PNE
+UMO_DATAMART
+2008 STREP
+PNEUMONIAE
+DATA MART and
+REPORT
+(NBS Strep
+Pneumoniae Data
+Mart and
+Reports.doc)
+SR100 2005 SUMMARY
+RECORDS DATA
+MART DESIGN
+(NBS Summary
+Case Records
+Data Mart
+Design.doc)
+TB_DATAMART
+TB_HIV_DATAMART
+2008 TB DATA MARTS
+and REPORTS
+(NBS TB Data
+Mart and
+Reports.doc)
+Description
+transmission of notifications to the CDC. It is
+recommended that the Notification Activity
+Log data mart be reviewed daily to check the
+status of the previous day’s notification
+activity.
+Provides information about individual resulted
+lab tests. One lab report may have multiple
+rows in the data mart if it has multiple resulted
+tests.
+Provides information about individual STD and
+HIV investigations with the extended STD/HIV
+questions for all STD/HIV diagnoses. The data
+mart is used to support the STD/HIV standard
+(canned) reports.
+Provides a flat table of the information
+required by to do detailed analysis on Strep
+Pneumoniae, Invasive (Condition Code 11717)
+and Strep Pneumoniae, Drug Resistant,
+Invasive (Condition Code 11720) cases.
+Provides information about summary data
+reports. Certain conditions are reported as
+summary counts from a particular facility for a
+particular MMWR week and year. This
+information is collected in the NBS at the level
+of counts for condition from a reporting source
+in a county for a specific MMWR week and
+year; these are Summary Data records. This
+data mart contains information about the
+Summary Data reports.
+Provides flat tables of the information
+collected on the TB Investigation, including
+patient demographic information, investigator
+information, TB-specific questions, CDC
+notification information, etc. The data marts
+are used to support the NBS TB-specific
+reports. Additionally, end users can use this
+data mart to create their own TB reports. Each
+row in the data mart represents one TB
+investigation.
+42
+NBS 5.2 RDB Data Dictionary
+DB Type Data Mart Table/View Name Create
+Related
+Description
+d
+Documentation
+RDB Table Varicella Data
+Mart*
+VAR_DATAMART 2008 VARICELLA DATA
+MART &
+REPORTS
+(NBS Varicella
+Data Mart and
+Reports.doc)
+Provides a flat table of the information
+collected on the Varicella Investigation Form,
+including patient demographic information,
+investigator information, Varicella-specific
+questions, CDC notification information, etc.
+The data mart is used to support the Varicella-
+specific canned report. Additionally, end users
+can use this data mart to create their own
+Varicella reports. Each row in the data mart
+represents one Varicella investigation.
+ODS Table Public Health
+Case Fact
+PublicHealthCaseFa
+2003 ct
+Provides a subset of information about public
+health case investigations. It includes common
+investigation questions that are standard
+across conditions.
+RDB View Individual Lab
+Test
+LAB_TEST_REPORT N/A N/A Provides individual lab test information. It
+contains one row per test in a lab report (i.e.
+the ordered test, resulted test, and
+susceptibility tests for one lab report represent
+separate rows in this view).
+RDB View Organization
+Line List
+ORG_LINE_LIST N/A N/A Provides information about the organizations,
+such as name, address, and quick code.
+RDB View Provider Line
+List
+PRV_LINE_LIST N/A N/A Provides information about the providers such
+as name, address, and quick code.
+RDB View Investigations
+with
+Rejected NND
+REJECTED_NND N/A N/A Provides information about investigations
+where the NND has been rejected.
+RDB Table NEDSS_Link This table was used for the NNDSS Link
+Application. The naming conventions do not
+match those used by the RDB because this
+table data was used by a pre-existing
+application.
+It is possible that some sites are still using this
+table; no changes have been made to this
+code, but this code is always released as
+commented out.
+* Archived after new page is adopted.
+NOTE: In NBS 5.4, Dynamic Page Builder Data Marts for Investigation pages was implemented. In NBS 5.4, page
+RDB metadata is used to create flat data marts for all page builder investigation pages (where a data mart name
+has been defined) so that jurisdictions no longer have to join together facts and dimensions to be able to see the
+data desired for a given condition/family of conditions. Please see the NBS_User Guide_Page Builder Dynamic
+Data Marts for more information on dynamic data marts in the NBS, which is available on NBS Central in the
+Deployment Documents area.
+43
+NBS 5.2 RDB Data Dictionary
+5 RDB Fact Schemas
+This section provides schema diagrams for all of the primary facts in the RDB, which represent all key ‘acts’ and ‘entities’ in the NBS application.
+5.1 Entities
+5.1.1 Patient
+PAT
+VACCINATION
+LDF
+GROUP
+KEY
+_
+_
+PROVIDER
+KEY
+_
+LDF
+DATA
+_
+PATIENT
+LDF
+GROUP
+_
+_
+KEY
+_
+PATIENT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+VAC
+KEY
+PATIENT
+_
+SUBJECT
+_
+KEY
+THIRD
+PARTY
+_
+_
+CONTACT
+SUBJECT
+ENTITY
+KEY
+_
+KEY
+KEY
+_
+_
+PATIENT
+_
+KEY
+TREATMENT
+EVENT
+_
+TRT
+F
+INTERVIEW
+CASE
+_
+_
+INT
+F
+CONTACT
+RECORD
+CASE
+_
+_
+_
+CTT
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+PROVIDER
+KEY
+_
+PATIENT
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+LAB
+Legend
+MORBIDITY
+REPORT
+_
+_
+EVENT
+MRB
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+44
+NBS 5.2 RDB Data Dictionary
+5.1.2 Provider
+PRV
+VACCINATION
+LDF
+GROUP
+KEY
+_
+_
+PROVIDER
+KEY
+_
+LDF
+DATA
+_
+LDF
+GROUP
+_
+D
+_
+(PROVIDER
+_
+KEY)
+PROVIDER
+VACCINE
+GIVEN
+BY
+KEY
+_
+_
+_
+PROVIDER
+KEY
+_
+VAC
+KEY
+PHYSICIAN
+_
+TREATMENT
+_
+PROVIDER
+_
+INTERPRETER
+KEY
+KEY
+_
+NURSE
+KEY
+_
+PHYSICIAN
+KEY
+_
+PROXY
+KEY
+_
+PHYSICIAN
+REPORTER
+_
+COPY
+LAB
+_
+_
+TO
+TEST
+SPECIMEN
+ORDERING
+_
+_
+_
+PROVIDER
+_
+_
+TECHNICIAN
+COLLECTOR
+PROVIDER
+KEY
+_
+_
+KEY
+_
+KEY
+KEY
+_
+KEY
+KEY
+TREATMENT
+EVENT
+_
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+MORBIDITY
+REPORT
+EVENT
+_
+_
+TRT
+F
+INTERVIEW
+CASE
+_
+_
+INT
+LAB
+TEST
+RESULT
+_
+_
+LAB
+Legend
+MRB
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+45
+NBS 5.2 RDB Data Dictionary
+5.1.3 Organization
+ORG
+VACCINATION
+LDF
+GROUP
+KEY
+_
+_
+ORGANIZATION
+KEY
+_
+LDF
+DATA
+_
+LDF
+GROUP
+_
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+ORGANIZATION
+KEY
+_
+KEY
+KEY
+_
+ORG
+_
+ORG
+_
+_
+BY
+_
+GIVEN
+MANUFACTURER
+_
+VACCINE
+_
+VACCINE
+D
+ORGANIZATION
+KEY)
+_
+(ORGANIZATION
+_
+NURSING
+HOME
+KEY
+_
+_
+HEALTH
+CARE
+KEY
+_
+_
+MORB
+RPT
+SRC
+ORG
+_
+_
+_
+_
+HSPTL
+KEY
+KEY
+_
+VAC
+KEY
+_
+ORG
+PROVIDING
+_
+TREATMENT
+_
+PERFORMING
+ORDERING
+_
+REPORTING
+LAB
+_
+ORG
+LAB
+_
+KEY
+_
+KEY
+KEY
+_
+_
+MORBIDITY
+REPORT
+EVENT
+_
+_
+MRB
+TREATMENT
+EVENT
+_
+LAB
+TEST
+RESULT
+_
+_
+TRT
+LAB
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+46
+5.1.4 Place
+PLC
+STD
+NBS 5.2 RDB Data Dictionary
+D
+INV
+PLACE
+REPEAT
+KEY
+_
+_
+_
+_
+D
+F
+STD
+PAGE
+CASE
+_
+_
+_
+INV
+PLACE
+_
+_
+(PLACE
+_
+REPEAT
+_
+KEY)
+PLACE
+KEY
+_
+As of NBS 5.1, there are only two PLACE types in the NBS, which are
+used in the STD module:
+ PLACE
+HANGOUT
+OF
+PHC
+_
+_
+_
+ PLACE
+AS
+SEX
+OF
+PHC
+_
+_
+_
+_
+Place entity is currently not available on any other event types on the
+user interface, and therefore is not joined with other events in this
+schema in the RDB data dictionary.
+D
+PLACE
+_
+(PLACE
+_
+KEY)
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+47
+NBS 5.2 RDB Data Dictionary
+5.2 Acts
+5.2.1 Lab Test Result
+LAB
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+(Morb Report in which the lab test is embedded)
+CONDITION
+MORBIDITY
+REPORT
+EVENT
+_
+_
+MRB
+LDF
+GROUP
+KEY
+_
+_
+INVESTIGATION
+KEY
+_
+CONDITION
+KEY
+_
+LDF
+Data
+_
+LDF
+GROUP
+_
+LDF
+_
+GROUP
+_
+KEY
+LAB
+RPT
+DT
+KEY
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+KEY
+_
+RPT
+_
+MORB
+LAB
+TEST
+RESULT
+_
+_
+GRP
+KEY
+_
+COMMENT
+_
+RESULT
+_
+TEST
+RESULT
+GRP
+KEY
+_
+_
+_
+RESULT
+COMMENT
+GRP
+KEY
+_
+_
+_
+RESULT
+COMMENT
+GROUP
+_
+_
+LAB
+RESULT
+COMMENT
+_
+_
+TEST
+RESULT
+GRP
+KEY
+_
+_
+_
+TEST
+RESULT
+GROUPING
+_
+_
+LAB
+RESULT
+VAL
+_
+_
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PERFORMING
+ORDERING
+_
+REPORTING
+_
+_
+LAB
+ORG
+_
+LAB
+_
+KEY
+_
+KEY
+KEY
+COPY
+TO
+_
+LAB
+TEST
+_
+_
+SPECIMEN
+_
+ORDERING
+PROVIDER
+_
+_
+TECHNICIAN
+COLLECTOR
+PROVIDER
+KEY
+KEY
+_
+KEY
+_
+KEY
+_
+_
+KEY
+TEST
+LAB
+_
+_
+LAB
+TEST
+KEY
+_
+_
+LAB
+TEST
+KEY
+_
+_
+LAB
+TEST
+_
+PATIENT
+KEY
+_
+LAB
+RPT
+USER
+COMMENT
+_
+_
+_
+LAB
+LAB
+TEST
+KEY
+_
+_
+TEST LAB
+RPT
+USER
+_
+_
+_
+_
+COMMENT
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+48
+NBS 5.2 RDB Data Dictionary
+5.2.2 Morbidity Report Event
+MRB
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+LDF
+GROUP
+KEY
+_
+_
+CONDITION
+KEY
+_
+LDF
+Data
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+INVESTIGATION
+LDF
+GROUP
+_
+LDF
+_
+GROUP
+_
+KEY
+MORB
+RPT
+CREATE
+DT
+KEY
+_
+_
+_
+_
+HSPTL
+DISCHARGE
+DT
+KEY
+_
+_
+_
+ILLNESS
+ONSET
+DT
+KEY
+_
+_
+_
+MORB
+RPT
+DT
+KEY
+_
+KEY
+_
+_
+_
+MORBIDITY
+REPORT
+_
+_
+EVENT
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+NURSING
+HOME
+KEY
+_
+_
+HEALTH
+CARE
+KEY
+_
+_
+MORB
+RPT
+SRC
+ORG
+_
+_
+_
+_
+HSPTL
+KEY
+KEY
+_
+PHYSICIAN
+REPORTER
+_
+KEY
+_
+KEY
+PATIENT
+KEY
+_
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+MORB
+RPT
+USER
+COMMENT
+_
+_
+_
+MORB
+RPT
+KEY
+_
+_
+MORB
+RPT
+KEY
+_
+_
+MORBIDITY
+REPORT
+_
+MORB
+RPT
+KEY
+_
+_
+LAB
+TEST
+RESULT
+_
+_
+(Lab that is embedded)
+MORB
+RPT
+KEY
+_
+_
+TREATMENT
+EVENT
+_
+(Treatment that is embedded)
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+49
+NBS 5.2 RDB Data Dictionary
+5.2.3 Treatment Event
+TRT
+(Morb Report in which the treatment is embedded)
+INVESTIGATION
+KEY
+_
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+INVESTIGATION
+CONDITION
+MORBIDITY
+REPORT
+EVENT
+_
+_
+MRB
+LDF
+GROUP
+KEY
+_
+_
+LDF
+Data
+_
+LDF
+GROUP
+_
+LDF
+_
+GROUP
+TREATMENT
+DT
+KEY
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+TREATMENT
+PROVIDING
+ORG
+KEY
+_
+_
+_
+PHYSICIAN
+KEY
+_
+TREATMENT
+_
+PATIENT
+KEY
+_
+_
+KEY
+TREATMENT
+EVENT
+_
+INVESTIGATION
+KEY
+CONDITION
+KEY
+_
+MORB
+_
+RPT
+_
+KEY
+TREATMENT
+KEY
+_
+TREATMENT
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+50
+5.2.4 Vaccination
+VAC
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+ORG
+NBS 5.2 RDB Data Dictionary
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+D
+VACCINATION
+_
+This dimension does not exist as of
+NBS 5.2.
+D
+VACCINATION
+REPEAT
+_
+_
+INVESTIGATION
+KEY
+_
+D
+VACCINATION
+KEY
+_
+_
+REPEAT
+KEY
+_
+_
+D
+VACCINATION
+_
+F
+VACCINATION
+_
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+VACCINE
+GIVEN
+BY
+ORG
+KEY
+_
+_
+_
+_
+GIVEN
+_
+VACCINE
+_
+BY
+KEY
+_
+PATIENT
+KEY
+_
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+51
+NBS 5.2 RDB Data Dictionary
+5.2.5 Contact Record Case
+CTT
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+(D
+D
+INTERVIEW
+_
+INTERVIEW
+_
+_
+KEY)
+SUBJECT
+_
+THIRD
+PARTY
+_
+CONTACT
+INVESTIGATION
+_
+INVESTIGATION
+_
+INVESTIGATION
+KEY
+KEY
+_
+KEY
+_
+_
+INTERVIEW
+KEY
+_
+CONTACT
+_
+D
+CONTACT
+RECORD
+KEY
+_
+_
+_
+F
+CONTACT
+RECORD
+CASE
+_
+_
+_
+D
+CONTACT
+RECORD
+_
+_
+SUBJECT
+KEY
+_
+THIRD
+PARTY
+ENTITY
+KEY
+_
+_
+_
+CONTACT
+KEY
+_
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+INT
+52
+5.2.6 Interview Case
+INT
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+PRV
+NBS 5.2 RDB Data Dictionary
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+F
+_
+IX
+INTERVIEWER
+KEY
+_
+_
+INTERPRETER
+KEY
+_
+NURSE
+KEY
+_
+PHYSICIAN
+KEY
+_
+PROXY
+KEY
+_
+IX
+PATIENT
+KEY
+_
+INTERVIEWEE
+KEY
+_
+_
+_
+INTERVIEW
+CASE
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+ORG
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+D
+INTERVIEW
+KEY
+_
+_
+INTERVENTION
+SITE
+KEY
+_
+_
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+D
+INTERVIEW
+_
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+53
+NBS 5.2 RDB Data Dictionary
+5.2.7 Summary Report Case
+SUM
+NOT
+NOTIFICATION
+EVENT
+_
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+LDF
+GROUP
+KEY
+_
+_
+LDF
+Data
+_
+LDF
+GROUP
+_
+LDF
+GROUP
+_
+INVESTIGATION
+KEY
+_
+_
+KEY
+NOTIFICATION
+SEND
+DT
+_
+_
+_
+LAST
+UPDATE
+DT
+KEY
+KEY
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+SUMMARY
+_
+CASE
+CONDITION
+KEY
+_
+REPORT
+_
+SUMMARY
+CASE
+SRC
+KEY
+_
+_
+_
+SUMMARY
+CASE
+GROUP
+_
+_
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+54
+5.2.8 Notification Event
+NOT
+CAS
+Case ‘Fact’ Tables
+BMIRD
+CASE
+_
+CASE
+COUNT
+_
+CRS
+CASE
+_
+GENERIC
+CASE
+_
+HEPATITIS
+CASE
+_
+MEASLES
+CASE
+_
+PERTUSSIS
+CASE
+_
+RUBELLA
+CASE
+_
+SUMMARY
+REPORT
+_
+_
+F
+PAGE
+CASE
+_
+_
+F
+STD
+PAGE
+CASE
+_
+_
+_
+F
+TB
+PAM
+_
+_
+F
+VAR
+PAM
+CASE
+_
+_
+NBS 5.2 RDB Data Dictionary
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+KEY
+_
+CONDITION
+KEY
+_
+NOTIFICATION
+NOTIFICATION
+SENT
+_
+_
+SUBMIT
+DT
+_
+DT
+KEY
+KEY
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+NOTIFICATION
+_
+EVENT
+PATIENT
+KEY
+_
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+NOTIFICATION
+KEY
+_
+NOTIFICATION
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+55
+NBS 5.2 RDB Data Dictionary
+5.2.9 Case Count
+CNT
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+_
+KEY
+NOT
+TRT
+VAC
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+CONDITION
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+TREATMENT
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+_
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+_
+KEY INVESTIGATION
+_
+KEY
+KEY
+_
+KEY
+_
+TEST
+RESULT
+_
+_
+INVESTIGATION
+INVESTIGATION
+LAB
+KEY
+INVESTIGATION
+_
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+INV
+_
+ASSIGNED
+INV
+_
+START
+DIAGNOSIS
+_
+INV
+_
+DT
+DT
+_
+RPT
+_
+_
+DT
+_
+DT
+_
+KEY
+KEY
+_
+_
+KEY
+_
+KEY
+KEY
+RPT
+_
+ADT
+SRC
+ORG
+_
+HSPTL
+KEY
+_
+KEY
+_
+_
+MRB
+LAB
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+INVESTIGATOR
+REPORTER
+_
+PHYSICIAN
+KEY
+_
+KEY
+KEY
+_
+PATIENT
+KEY
+_
+_
+CASE
+COUNT
+CONDITION
+KEY
+_
+GEOCODING
+LOCATION
+KEY
+_
+_
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+Legend
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+56
+NBS 5.2 RDB Data Dictionary
+5.3 Legacy Investigations
+5.3.1 BMIRD Case
+BMD
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+TRT
+_
+KEY
+NOT
+MRB
+VAC
+LAB
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+LDF
+GROUP
+KEY
+_
+_
+LDF
+Data
+_
+LDF
+GROUP
+_
+TREATMENT
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+_
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+_
+_
+RESULT
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+KEY
+_
+LDF
+_
+GROUP
+_
+KEY
+CONDITION
+_
+KEY
+ANTIMICROBIAL
+GRP
+_
+KEY
+_
+RDB
+_
+(DATE
+INV
+ASSIGNED
+DT
+_
+_
+_
+KEY BMIRD
+MULTI
+VAL
+GRP
+KEY
+DATE
+_
+_
+_
+_
+BMIRD
+CASE
+_
+KEY) BMIRD
+MULTI
+VALUE
+_
+_
+_
+_
+NURSING
+DAYCARE
+ADT
+RPT
+KEY
+HOME
+_
+KEY
+_
+FACILITY
+_
+KEY
+_
+HSPTL
+_
+KEY
+_
+ORG
+_
+SRC
+_
+_
+GEOCODING
+_
+LOCATION
+KEY
+INVESTIGATOR
+_
+KEY
+PHYSICIAN
+_
+KEY
+REPORTER
+_
+_
+KEY
+ANTIMICROBIAL
+FIELD
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PATIENT
+KEY
+_
+Legend
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+57
+NBS 5.2 RDB Data Dictionary
+5.3.2 CRS Case
+CRS
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+_
+KEY
+NOT
+TRT
+VAC
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+LDF
+VACCINE
+PREVENT
+DISEASES
+_
+_
+_
+TREATMENT
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+_
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+INVESTIGATION
+_
+KEY
+_
+KEY
+INV
+ASSIGNED
+DT
+KEY
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+ADT
+RPT
+HSPTL
+_
+_
+SRC
+ORG
+KEY
+KEY
+_
+_
+_
+KEY
+INVESTIGATOR
+_
+KEY
+PHYSICIAN
+_
+KEY
+REPORTER
+_
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PATIENT
+KEY
+_
+_
+CRS
+CASE
+CONDITION
+KEY
+_
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+MRB
+LAB
+GEOCODING
+LOCATION
+KEY
+_
+_
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+58
+NBS 5.2 RDB Data Dictionary
+5.3.3 Generic Case
+CAS
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+_
+KEY
+NOT
+TRT
+VAC
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+LDF
+GENERIC
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+TREATMENT
+NOTIFICATION
+EVENT
+EVENT MORBIDITY
+_
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+_
+KEY
+CONDITION
+_
+KEY
+INV
+ASSIGNED
+DT
+KEY
+_
+_
+_
+GENERIC
+CASE
+_
+KEY
+_
+PATIENT
+ADT
+RPT
+HSPTL
+_
+_
+SRC
+ORG
+KEY
+KEY
+_
+_
+_
+KEY
+INVESTIGATOR
+_
+KEY
+PHYSICIAN
+_
+KEY
+REPORTER
+_
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+MRB
+LAB
+GEOCODING
+LOCATION
+KEY
+_
+_
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+59
+NBS 5.2 RDB Data Dictionary
+NOT
+TRT
+MRB
+METHOD
+CONFIRMATION
+_
+CONFIRMATION
+METHOD
+KEY
+_
+_
+VAC
+LAB
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+5.3.4 Hepatitis Case (Pre-Hepatitis Page Adoption)*
+HEP
+TREATMENT
+_
+NOTIFICATION
+EVENT
+EVENT MORBIDITY
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+_
+KEY
+CONDITION
+_
+KEY
+RDB
+_
+(DATE
+INV
+ASSIGNED
+DT
+_
+_
+_
+KEY HEP
+MULTI
+VAL
+GRP
+KEY
+DATE
+_
+_
+_
+_
+HEPATITIS
+CASE
+_
+KEY) HEP
+MULTI
+VALUE
+_
+_
+_
+_
+FIELD
+ADT
+RPT
+HSPTL
+_
+_
+ORG
+SRC
+_
+_
+KEY
+KEY
+_
+GEOCODING
+_
+LOCATION
+KEY
+INVESTIGATOR
+_
+KEY
+PHYSICIAN
+_
+REPORTER
+_
+KEY
+KEY
+_
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+LDF
+HEPATITIS
+_
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PATIENT
+KEY
+_
+Legend
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+* This data mart will no longer be available/valid once the new Hepatitis pages are adopted. Once the Page Builder Hepatitis pages are adopted,
+Hepatitis data will be available in a dynamic data mart associated with the Page Builder page; there is also a HEPATITIS_DATAMART available for
+Hepatitis.
+60
+NBS 5.2 RDB Data Dictionary
+5.3.5 Measles Case
+MEA
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+_
+KEY
+NOT
+TRT
+VAC
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+LDF
+VACCINE
+PREVENT
+DISEASES
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+TREATMENT
+NOTIFICATION
+EVENT
+EVENT MORBIDITY
+_
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+_
+KEY
+CONDITION
+_
+KEY
+INV
+INV
+RPT
+DT
+KEY
+_
+_
+_
+ASSIGNED
+DT
+KEY
+_
+_
+_
+MEASLES
+CASE
+_
+KEY
+_
+PATIENT
+ADT
+RPT
+HSPTL
+_
+_
+SRC
+ORG
+KEY
+KEY
+_
+_
+_
+KEY
+INVESTIGATOR
+_
+KEY
+PHYSICIAN
+_
+KEY
+REPORTER
+_
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+MRB
+LAB
+GEOCODING
+LOCATION
+KEY
+_
+_
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+61
+NBS 5.2 RDB Data Dictionary
+TRT
+MRB
+METHOD
+CONFIRMATION
+_
+CONFIRMATION
+METHOD
+KEY
+_
+_
+VAC
+LAB
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+5.3.6 Pertussis Case (Pre-Pertussis Page Adoption)*
+PRT
+NOT
+TREATMENT
+_
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+INVESTIGATION
+_
+KEY
+_
+KEY
+KEY
+INVESTIGATION
+_
+KEY
+_
+LAB
+TEST
+RESULT
+INVESTIGATION
+_
+_
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+_
+KEY
+CONDITION
+_
+KEY
+SUSPECT
+SRC
+_
+_
+PERTUSSIS
+_
+GRP
+KEY
+_
+RDB
+_
+(DATE
+INV
+ASSIGNED
+DT
+_
+_
+_
+KEY PERTUSSIS
+TREATMENT
+GRP
+KEY
+DATE
+_
+_
+_
+PERTUSSIS
+CASE
+_
+KEY) PERTUSSIS
+TREATMENT
+_
+_
+FIELD
+_
+ADT
+RPT
+HSPTL
+_
+_
+ORG
+SRC
+_
+_
+KEY
+KEY
+_
+GEOCODING
+_
+LOCATION
+KEY
+INVESTIGATOR
+_
+KEY
+PHYSICIAN
+_
+KEY
+REPORTER
+_
+_
+KEY
+LDF
+VACCINE
+PREVENT
+DISEASES
+_
+_
+_
+PERTUSSIS
+SUSPECTED
+SOURCE
+FLD
+_
+_
+_
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PATIENT
+KEY
+_
+Legend
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+* This data mart will no longer be available/valid once the new Pertussis page is adopted. Once the Page Builder Pertussis page is adopted,
+Pertussis data will be available in a dynamic data mart associated with the Page Builder page.
+62
+NBS 5.2 RDB Data Dictionary
+5.3.7 Rubella Case
+RUB
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+_
+KEY
+TRT
+VAC
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+LDF
+VACCINE
+PREVENT
+DISEASES
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+NOT
+TREATMENT
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+_
+_
+REPORT
+EVENT
+_
+_
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+CONDITION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+_
+KEY
+CONDITION
+_
+KEY
+INV
+ASSIGNED
+DT
+KEY
+_
+_
+_
+RUBELLA
+CASE
+_
+KEY
+_
+PATIENT
+ADT
+RPT
+HSPTL
+_
+_
+SRC
+ORG
+KEY
+KEY
+_
+_
+_
+KEY
+INVESTIGATOR
+_
+KEY
+PHYSICIAN
+_
+KEY
+REPORTER
+_
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+MRB
+LAB
+GEOCODING
+LOCATION
+KEY
+_
+_
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+63
+NBS 5.2 RDB Data Dictionary
+5.3.8 Tuberculosis Case
+TUB
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+_
+KEY
+TRT
+VAC
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+D
+TB
+PAM
+_
+_
+NOT
+TREATMENT
+_
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+REPORT
+_
+_
+_
+EVENT
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+INVESTIGATION
+_
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+_
+KEY
+D
+_
+TB
+_
+PAM
+_
+KEY
+ADD
+DATE
+KEY
+_
+_
+LAST
+CHG
+DATE
+KEY
+_
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+F
+TB
+PAM
+_
+_
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PRV
+KEY
+ORG
+REPORTER
+_
+KEY
+AS
+_
+_
+HOSPITAL
+_
+KEY
+_
+KEY
+PROVIDER
+PHYSICIAN
+_
+REPORTER
+AS
+_
+_
+KEY
+_
+PERSON
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PERSON
+KEY
+_
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+D
+MRB
+LAB
+KEY
+GROUP
+_
+CNTRY
+_
+KEY
+MOVE
+_
+GROUP
+_
+_
+REAS
+_
+12
+D
+GT
+_
+KEY
+_
+_
+GROUP
+_
+CNTY
+D
+MOVE
+_
+_
+_
+RISK
+GROUP
+_
+KEY
+D
+ADDL
+_
+_
+_
+D
+DISEASE
+SITE
+GROUP
+KEY
+_
+_
+_
+_
+D
+HC
+PROV
+TY
+3
+GROUP
+KEY
+_
+_
+_
+_
+_
+_
+D
+_
+MOVE
+_
+STATE
+_
+GROUP
+_
+KEY
+D
+_
+MOVED
+_
+WHERE
+D
+_
+OUT
+_
+GROUP
+_
+KEY
+_
+OF
+D
+_
+CNTRY
+_
+SMR
+_
+GROUP
+_
+EXAM
+_
+KEY
+_
+TY
+_
+GROUP
+_
+KEY
+D
+MOVE
+CNTRY
+_
+_
+D
+GT
+12
+REAS
+_
+_
+_
+D
+MOVE
+CNTY
+_
+_
+D
+ADDL
+RISK
+_
+_
+D
+DISEASE
+SITE
+_
+_
+D
+HC
+PROV
+TY
+3
+_
+_
+_
+_
+D
+MOVE
+STATE
+_
+_
+D
+MOVED
+WHERE
+_
+_
+D
+OUT
+OF
+CNTRY
+_
+_
+_
+D
+SMR
+EXAM
+TY
+_
+_
+_
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+Secondary Relationship
+64
+NBS 5.2 RDB Data Dictionary
+TRT
+VAC
+5.3.9 Varicella Case (Pre-Varicella Page Adoption)*
+VAR
+CONFIRMATION
+METHOD
+_
+CONFIRMATION
+_
+METHOD
+_
+KEY
+NOT
+TREATMENT
+_
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+_
+REPORT
+EVENT
+VACCINATION
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+_
+_
+_
+KEY
+_
+LAB
+TEST
+RESULT
+INVESTIGATION
+_
+_
+KEY
+INVESTIGATION
+_
+INVESTIGATION
+_
+KEY
+MRB
+LAB
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+INVESTIGATION
+D
+VAR
+PAM
+_
+_
+D
+_
+VAR
+_
+PAM
+_
+KEY
+ADD
+DATE
+KEY
+_
+_
+LAST
+CHG
+DATE
+KEY
+_
+_
+_
+D
+PCR
+SOURCE
+GROUP
+KEY
+_
+_
+_
+_
+D
+RASH
+LOC
+GEN
+GROUP
+KEY
+_
+_
+_
+_
+_
+D
+PCR
+SOURCE
+_
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+PRV
+ORG
+_
+AS
+_
+REPORTER
+HOSPITAL
+_
+KEY
+_
+KEY
+PERSON
+PROVIDER
+KEY
+_
+PHYSICIAN
+KEY
+_
+AS
+REPORTER
+KEY
+_
+_
+_
+PAT
+F
+VAR
+PAM
+_
+_
+KEY
+_
+PERSON
+D
+RASH
+LOC
+GEN
+_
+_
+_
+Legend
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+* This data mart will no longer be available/valid once the new Varicella page is adopted. Once the Page Builder Varicella page is adopted,
+Varicella data will be available in a dynamic data mart associated with the Page Builder page.
+65
+NBS 5.2 RDB Data Dictionary
+5.4 Page Builder Investigations
+5.4.1 Generic Case
+In NBS 5.4, page RDB metadata is used to create flat data marts for all page builder investigation pages (where a data mart name has been
+defined) so that jurisdictions no longer have to join together facts and dimensions to be able to see the data desired for a given condition/family
+of conditions. Please see the NBS_User Guide_Page Builder Dynamic Data Marts for more information on dynamic data marts in the NBS, which
+is available on NBS Central in the Deployment Documents area.
+PGB
+NOT
+TRT
+TREATMENT
+_
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+_
+REPORT
+EVENT
+_
+_
+VAC
+VACCINATION
+INVESTIGATION
+KEY
+_
+KEY
+_
+LAB
+TEST
+RESULT
+_
+_
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+INVESTIGATION
+KEY
+INVESTIGATION
+_
+INVESTIGATION
+KEY
+_
+INVESTIGATION
+INVESTIGATION
+_
+KEY
+MRB
+METHOD
+CONFIRMATION
+_
+CONFIRMATION
+METHOD
+KEY
+_
+_
+LAB
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+CONDITION
+CONDITION
+KEY
+_
+...
+KEY
+_
+_
+D
+INV
+_
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+ADD
+DATE
+KEY
+_
+_
+LAST
+CHG
+DATE
+KEY
+_
+_
+_
+ORG
+HOSPITAL
+KEY
+_
+AS
+REPORTER
+_
+KEY
+_
+_
+D
+INV
+ADMINISTRATIVE
+_
+_
+D
+INV
+CLINICAL
+_
+_
+D
+INV
+COMPLICATION
+_
+_
+D
+INV
+EPIDEMIOLOGY
+_
+_
+D
+INV
+HIV
+_
+_
+D
+INV
+LAB
+FINDING
+_
+_
+D
+INV
+_
+MEDICAL
+HISTORY
+_
+_
+_
+D
+INV
+OTHER
+_
+_
+D
+INV
+PATIENT
+OBS
+_
+_
+D
+INV
+RISK
+_
+FACTOR
+_
+_
+D
+INV
+_
+SYMPTOM
+_
+_
+D
+INV
+TRAVEL
+_
+_
+D
+INV
+TREATMENT
+_
+_
+D
+INV
+CONTACT
+_
+_
+D
+INV
+DEATH
+_
+_
+D
+INV
+ISOLATE
+TRACKING
+_
+_
+_
+D
+INV
+MOTHER
+_
+_
+D
+INV
+PREGNANCY
+BIRTH
+_
+_
+_
+D
+INV
+RESIDENCY
+_
+_
+D
+INV
+SOCIAL
+HISTORY
+_
+_
+_
+D
+INV
+UNDER
+CONDITION
+_
+_
+D
+INV
+_
+VACCINATION
+_
+_
+D
+INVESTIGATION
+REPEAT
+KEY
+_
+_
+_
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+F
+_
+PERSON
+INVESTIGATOR
+KEY
+_
+PHYSICIAN
+KEY
+_
+AS
+REPORTER
+KEY
+_
+_
+_
+PAGE
+CASE
+_
+KEY
+_
+PATIENT
+D
+INVESTIGATION
+REPEAT
+_
+_
+GEOCODING
+LOCATION
+_
+_
+KEY
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+Legend
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Primary Relationship
+Secondary Relationship
+66
+NBS 5.2 RDB Data Dictionary
+5.4.2 STD/HIV Case
+STD
+NOT
+TRT
+METHOD
+CONFIRMATION
+_
+CONFIRMATION
+METHOD
+KEY
+_
+_
+VAC
+TREATMENT
+_
+EVENT MORBIDITY
+NOTIFICATION
+EVENT
+REPORT
+_
+_
+_
+EVENT
+VACCINATION
+INVESTIGATION
+INVESTIGATION
+_
+KEY
+_
+KEY
+INVESTIGATION
+KEY
+_
+KEY
+_
+INVESTIGATION
+MRB
+KEY
+_
+INVESTIGATION
+LAB
+TEST
+RESULT
+_
+_
+KEY
+INVESTIGATION
+_
+LAB
+CONFIRMATION
+METHOD
+GROUP
+_
+_
+INVESTIGATION
+CONDITION
+RDB
+_
+(DATE
+DATE
+_
+KEY)
+INVESTIGATION
+KEY
+_
+...
+KEY
+_
+_
+CONDITION
+KEY
+_
+D
+INV
+_
+D
+INV
+ADMINISTRATIVE
+_
+_
+D
+INV
+CLINICAL
+_
+_
+D
+INV
+COMPLICATION
+_
+_
+D
+INV
+EPIDEMIOLOGY
+_
+_
+D
+INV
+HIV
+_
+_
+D
+INV
+LAB
+FINDING
+_
+_
+D
+INV
+_
+MEDICAL
+HISTORY
+_
+_
+_
+D
+INV
+OTHER
+_
+_
+D
+INV
+PATIENT
+OBS
+_
+_
+D
+INV
+RISK
+_
+FACTOR
+_
+_
+D
+INV
+_
+SYMPTOM
+_
+_
+D
+INV
+TRAVEL
+_
+_
+D
+INV
+TREATMENT
+_
+_
+D
+INV
+CONTACT
+_
+_
+D
+INV
+DEATH
+_
+_
+D
+INV
+ISOLATE
+TRACKING
+_
+_
+_
+D
+INV
+MOTHER
+_
+_
+D
+INV
+PREGNANCY
+BIRTH
+_
+_
+_
+D
+INV
+RESIDENCY
+_
+_
+D
+INV
+SOCIAL
+HISTORY
+_
+_
+_
+D
+INV
+UNDER
+CONDITION
+_
+_
+D
+INV
+_
+VACCINATION
+_
+_
+ADD
+LAST
+_
+_
+DATE
+CHG
+_
+KEY
+_
+DATE
+_
+KEY
+HOSPITAL
+KEY
+_
+ORG
+AS
+REPORTER
+KEY
+_
+_
+_
+ORDERING
+FACILITY
+KEY
+_
+_
+FACILITY
+FLD
+FOLLOW
+UP
+KEY
+_
+_
+_
+_
+D
+INVESTIGATION
+REPEAT
+KEY
+_
+_
+_
+ORG
+D
+ORGANIZATION
+_
+(ORGANIZATION
+_
+KEY)
+F
+STD
+PAGE
+CASE
+_
+_
+_
+D
+INVESTIGATION
+REPEAT
+_
+_
+INVESTIGATOR
+KEY
+_
+PHYSICIAN
+KEY
+_
+PERSON
+AS
+REPORTER
+KEY
+_
+_
+_
+CLOSED
+BY
+KEY
+_
+_
+DISPOSITIONED
+BY
+KEY
+_
+_
+INVSTGTR
+FLD
+FOLLOW
+UP
+KEY
+_
+_
+_
+_
+PROVIDER
+FLD
+FOLLOW
+UP
+KEY
+_
+_
+_
+_
+SUPRVSR
+OF
+FLD
+FOLLOW
+UP
+KEY
+_
+_
+_
+_
+_
+INIT
+ASGNED
+FLD
+FOLLOW
+UP
+KEY
+_
+_
+_
+_
+_
+INIT
+FOLLOW
+UP
+INVSTGTR
+KEY
+_
+_
+_
+_
+INIT
+ASGNED
+INTERVIEWER
+KEY
+_
+_
+_
+INTERVIEWER
+ASSIGNED
+KEY
+_
+_
+SURVEILLANCE
+INVESTIGATOR
+_
+_
+SUPRVSR
+OF
+CASE
+ASSGNMENT
+KEY
+KEY
+_
+_
+_
+_
+D
+INV
+PLACE
+REPEAT
+KEY
+_
+_
+_
+_
+GEOCODING
+_
+LOCATION
+_
+KEY
+D
+INV
+PLACE
+_
+_
+(PLACE
+_
+REPEAT
+_
+KEY)
+PLC
+GEOCODING
+(GEOCODING
+LOCATION
+_
+LOCATION
+_
+_
+KEY)
+PATIENT
+KEY
+_
+Legend
+Off-page reference. Please refer
+to the corresponding page for
+additional table joins.
+Primary Relationship
+PRV
+D
+PROVIDER
+_
+(PROVIDER
+_
+KEY)
+PAT
+D
+PATIENT
+_
+(PATIENT
+_
+KEY)
+Secondary Relationship
+67
