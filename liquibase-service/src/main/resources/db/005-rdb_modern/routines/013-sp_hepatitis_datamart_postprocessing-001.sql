@@ -60,7 +60,7 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_CONDITION';
         SET @Proc_Step_no = 2;
 
-        IF OBJECT_ID('#TMP_CONDITION', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_CONDITION', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_CONDITION;
             END;
@@ -85,7 +85,7 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_F_PAGE_CASE';
         SET @Proc_Step_no = 3;
 
-        IF OBJECT_ID('#TMP_F_PAGE_CASE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_PAGE_CASE', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_PAGE_CASE;
             END;
@@ -123,7 +123,7 @@ BEGIN
         SET @Proc_Step_no = 4;
 
 
-        IF OBJECT_ID('#TMP_F_INV_ADMINISTRATIVE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_ADMINISTRATIVE', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_ADMINISTRATIVE;
             END;
@@ -139,7 +139,7 @@ BEGIN
         IF @debug ='true' SELECT 'TMP_F_INV_ADMINISTRATIVE', * FROM #TMP_F_INV_ADMINISTRATIVE;
 
 
-        IF OBJECT_ID('#TMP_D_INV_ADMINISTRATIVE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_ADMINISTRATIVE', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_ADMINISTRATIVE;
             END;
@@ -184,13 +184,13 @@ BEGIN
         SET @Proc_Step_no = 5;
 
 
-        IF OBJECT_ID('#TMP_F_INV_CLINICAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_CLINICAL', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_CLINICAL;
             END;
 
 
-        IF OBJECT_ID('#TMP_D_INV_CLINICAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_CLINICAL', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_CLINICAL;
             END;
@@ -239,12 +239,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_D_INV_PATIENT_OBS';
         SET @Proc_Step_no = 6;
 
-        IF OBJECT_ID('#TMP_D_INV_PATIENT_OBS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_PATIENT_OBS', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_PATIENT_OBS;
             END;
 
-        IF OBJECT_ID('#TMP_F_INV_PATIENT_OBS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_PATIENT_OBS', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_PATIENT_OBS;
             END;
@@ -290,12 +290,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_D_INV_EPIDEMIOLOGY';
         SET @Proc_Step_no = 7;
 
-        IF OBJECT_ID('#TMP_F_INV_EPIDEMIOLOGY', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_EPIDEMIOLOGY', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_EPIDEMIOLOGY;
             END;
 
-        IF OBJECT_ID('#TMP_D_INV_EPIDEMIOLOGY', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_EPIDEMIOLOGY', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_EPIDEMIOLOGY;
             END;
@@ -414,13 +414,13 @@ BEGIN
         SET @Proc_Step_no = 8;
 
 
-        IF OBJECT_ID('#TMP_F_INV_LAB_FINDING', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_LAB_FINDING', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_LAB_FINDING;
             END;
 
 
-        IF OBJECT_ID('#TMP_D_INV_LAB_FINDING', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_LAB_FINDING', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_LAB_FINDING;
             END;
@@ -578,12 +578,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_D_INV_MEDICAL_HISTORY';
         SET @Proc_Step_no = 9;
 
-        IF OBJECT_ID('#TMP_F_INV_MEDICAL_HISTORY', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_MEDICAL_HISTORY', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_MEDICAL_HISTORY;
             END;
 
-        IF OBJECT_ID('#TMP_D_INV_MEDICAL_HISTORY', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_MEDICAL_HISTORY', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_MEDICAL_HISTORY;
             END;
@@ -652,12 +652,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_D_INV_MOTHER';
         SET @Proc_Step_no = 10;
 
-        IF OBJECT_ID('#TMP_F_INV_MOTHER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_MOTHER', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_MOTHER;
             END;
 
-        IF OBJECT_ID('#TMP_D_INV_MOTHER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_MOTHER', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_MOTHER;
             END;
@@ -723,12 +723,12 @@ BEGIN
 
         SET @Proc_Step_no = 11;
 
-        IF OBJECT_ID('#TMP_F_INV_RISK_FACTOR', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_RISK_FACTOR', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_RISK_FACTOR;
             END;
 
-        IF OBJECT_ID('#TMP_D_INV_RISK_FACTOR', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_RISK_FACTOR', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_RISK_FACTOR;
             END;
@@ -889,12 +889,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating #TMP_D_INV_TRAVEL';
         SET @Proc_Step_no = 12;
 
-        IF OBJECT_ID('#TMP_F_INV_TRAVEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_TRAVEL', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_TRAVEL;
             END;
 
-        IF OBJECT_ID('#TMP_D_INV_TRAVEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_TRAVEL', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_TRAVEL;
             END;
@@ -957,12 +957,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating  TMP_D_INV_VACCINATION';
         SET @Proc_Step_no = 13;
 
-        IF OBJECT_ID('#TMP_F_INV_VACCINATION', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INV_VACCINATION', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INV_VACCINATION;
             END;
 
-        IF OBJECT_ID('#TMP_D_INV_VACCINATION', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INV_VACCINATION', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INV_VACCINATION;
             END;
@@ -1029,7 +1029,7 @@ BEGIN
 
         SET @Proc_Step_no = 14;
 
-        IF OBJECT_ID('#TMP_D_Patient', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_Patient', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_Patient;
             END;
@@ -1061,7 +1061,7 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_Investigation';
         SET @Proc_Step_no = 15;
 
-        IF OBJECT_ID('#TMP_Investigation', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_Investigation', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_Investigation;
 
@@ -1097,12 +1097,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_Notif and #TMP_Event';
         SET @Proc_Step_no = 16;
 
-        IF OBJECT_ID('#TMP_Notif', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_Notif', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_Notif;
             END;
 
-        IF OBJECT_ID('#TMP_Event', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_Event', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_Event;
             END;
@@ -1225,7 +1225,7 @@ BEGIN
         SET @Proc_Step_name = 'Generating  #TMP_HEP_PAT_PROV';
         SET @Proc_Step_no = 17;
 
-        IF OBJECT_ID('#TMP_HEP_PAT_PROV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_HEP_PAT_PROV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_HEP_PAT_PROV;
 
@@ -1401,12 +1401,12 @@ BEGIN
         SET @Proc_Step_name = 'Generating #TMP_D_INVESTIGATION_REPEAT';
         SET @Proc_Step_no = 18;
 
-        IF OBJECT_ID('#TMP_F_INVESTIGATION_REPEAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_F_INVESTIGATION_REPEAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_F_INVESTIGATION_REPEAT;
             END;
 
-        IF OBJECT_ID('#TMP_D_INVESTIGATION_REPEAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_D_INVESTIGATION_REPEAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_D_INVESTIGATION_REPEAT;
             END;
@@ -1465,7 +1465,7 @@ BEGIN
         SET @Proc_Step_name = 'Generating #TMP_METADATA_TEST';
         SET @Proc_Step_no = 19;
 
-        IF OBJECT_ID('#TMP_METADATA_TEST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_METADATA_TEST', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_METADATA_TEST;
             END;
@@ -1502,7 +1502,7 @@ BEGIN
         SET @Proc_Step_no = 20;
 
 
-        IF OBJECT_ID('#TMP_VAC_REPEAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT;
             END;
@@ -1547,18 +1547,18 @@ BEGIN
         SET @Proc_Step_no = 21;
 
         ----b
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_DATE_Pivot', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_DATE_Pivot', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_DATE_Pivot;
 
             END;
 
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_DATE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_DATE', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_DATE;
             END;
 
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_DATE_Final', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_DATE_Final', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_DATE_Final;
             END;
@@ -1661,17 +1661,17 @@ BEGIN
         SET @Proc_Step_no = 22;
 
         ----c
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_NUM_Pivot', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_NUM_Pivot', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_NUM_Pivot;
             END;
 
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_NUM', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_NUM', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_NUM;
             END;
 
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_NUM_final', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_NUM_final', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_NUM_Final;
             END;
@@ -1772,7 +1772,7 @@ BEGIN
         SET @Proc_Step_no = 23;
 
 
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_FINAL1', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_FINAL1', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_FINAL1;
             END;
@@ -1810,7 +1810,7 @@ BEGIN
         SET @Proc_Step_no = 24;
 
         ----e
-        IF OBJECT_ID('#TMP_VAC_REPEAT_OUT_FINAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_VAC_REPEAT_OUT_FINAL', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_VAC_REPEAT_OUT_FINAL;
 
@@ -1846,7 +1846,7 @@ BEGIN
         SET @Proc_Step_name = 'Generating TMP_HEPATITIS_CASE_BASE';
         SET @Proc_Step_no = 25;
 
-        IF OBJECT_ID('#TMP_HEPATITIS_CASE_BASE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_HEPATITIS_CASE_BASE', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #TMP_HEPATITIS_CASE_BASE;
             END;

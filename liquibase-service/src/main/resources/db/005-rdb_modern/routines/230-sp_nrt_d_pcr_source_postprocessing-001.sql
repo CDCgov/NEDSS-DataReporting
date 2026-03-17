@@ -50,7 +50,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_PCR_SOURCE_PHC_LIST TABLE';
 
-        IF OBJECT_ID('#D_PCR_SOURCE_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_PCR_SOURCE_PHC_LIST', 'U') IS NOT NULL
             drop table #D_PCR_SOURCE_PHC_LIST;
 
         SELECT value
@@ -75,7 +75,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_PCR_SOURCE_TRANSLATED';
 
-            IF OBJECT_ID('#S_D_PCR_SOURCE_TRANSLATED', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_PCR_SOURCE_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_PCR_SOURCE_TRANSLATED;
             
             SELECT DISTINCT
@@ -121,7 +121,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_PCR_SOURCE';
 
-            IF OBJECT_ID('#S_D_PCR_SOURCE', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_PCR_SOURCE', 'U') IS NOT NULL
                 DROP TABLE #S_D_PCR_SOURCE;
 
 
@@ -152,7 +152,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_PCR_SOURCE_DEL';
 
-            IF OBJECT_ID('#TEMP_D_PCR_SOURCE_DEL', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_PCR_SOURCE_DEL', 'U') IS NOT NULL
             drop table #TEMP_D_PCR_SOURCE_DEL;
 
             SELECT 
@@ -326,7 +326,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #D_VAR_PAM_TEMP';
 
-            IF OBJECT_ID('#D_VAR_PAM_TEMP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#D_VAR_PAM_TEMP', 'U') IS NOT NULL
                 DROP TABLE #D_VAR_PAM_TEMP;
             
 
@@ -358,7 +358,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_PCR_SOURCE_GROUP';
 
-            IF OBJECT_ID('#L_D_PCR_SOURCE_GROUP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_PCR_SOURCE_GROUP', 'U') IS NOT NULL
                 DROP TABLE #L_D_PCR_SOURCE_GROUP;
 
             SELECT 
@@ -387,7 +387,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_PCR_SOURCE';
 
-            IF OBJECT_ID('#L_D_PCR_SOURCE', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_PCR_SOURCE', 'U') IS NOT NULL
                 DROP TABLE #L_D_PCR_SOURCE;
 
             SELECT 
@@ -418,7 +418,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_PCR_SOURCE';
 
-            IF OBJECT_ID('#TEMP_D_PCR_SOURCE', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_PCR_SOURCE', 'U') IS NOT NULL
                 DROP TABLE #TEMP_D_PCR_SOURCE;
 
             SELECT L.VAR_PAM_UID,

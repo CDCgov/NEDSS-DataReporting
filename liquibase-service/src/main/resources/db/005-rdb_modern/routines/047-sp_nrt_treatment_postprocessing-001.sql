@@ -47,7 +47,7 @@ BEGIN
 		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 		SET @PROC_STEP_NAME = 'GENERATING #treatment_uids';
 
-		IF OBJECT_ID('#treatment_uids', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#treatment_uids', 'U') IS NOT NULL
 			DROP TABLE #treatment_uids;
 
 		SELECT value AS treatment_uid
@@ -69,7 +69,7 @@ BEGIN
         SET @proc_step_name = 'Generating #treatment';
         SET @proc_step_no = @PROC_STEP_NO + 1;
 
-		IF OBJECT_ID('#treatment', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#treatment', 'U') IS NOT NULL
 			DROP TABLE #treatment;
 
         /* Temp treatment table creation */
@@ -175,7 +175,7 @@ BEGIN
 		SET @proc_step_name = 'Generating #treatment_event';
         SET @proc_step_no = @PROC_STEP_NO + 1;
 
-		IF OBJECT_ID('#treatment_event', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#treatment_event', 'U') IS NOT NULL
 			DROP TABLE #treatment_event;
 
         /* Temp treatment_event table creation */
@@ -231,7 +231,7 @@ BEGIN
         SET @proc_step_name = 'Get old treatment keys';
         SET @proc_step_no =  @PROC_STEP_NO + 1;
 
-		IF OBJECT_ID('#OLD_TREATMENT_KEYS', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#OLD_TREATMENT_KEYS', 'U') IS NOT NULL
 			DROP TABLE #OLD_TREATMENT_KEYS;
 
         SELECT

@@ -68,7 +68,7 @@ BEGIN
         SET @Proc_Step_no = 2;
         SET @Proc_Step_Name = ' Generating phc_uids_REPT';
 
-        IF OBJECT_ID('#phc_uids_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#phc_uids_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #phc_uids_REPT;
             END;
@@ -99,7 +99,7 @@ BEGIN
         SET @Proc_Step_no = 3;
         SET @Proc_Step_Name = ' Creating #NRT_PAGE temporary table to hold latest answers for act_uids';
 
-        IF OBJECT_ID('#NRT_PAGE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NRT_PAGE', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NRT_PAGE;
             END;
@@ -152,7 +152,7 @@ BEGIN
         SET @Proc_Step_Name = ' Generating TEXT_METADATA_REPT';
 
 
-        IF OBJECT_ID('#NBS_CASE_ANSWER_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NBS_CASE_ANSWER_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NBS_CASE_ANSWER_REPT;
             END;
@@ -234,7 +234,7 @@ BEGIN
         SET @Proc_Step_Name = ' Generating CODED_TABLE_TEMP_REPT';
 
 
-        IF OBJECT_ID('#CODED_TABLE_TEMP_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_TEMP_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_TEMP_REPT;
             END;
@@ -274,7 +274,7 @@ BEGIN
         SET ANSWER_TXT = 'OTH'
         WHERE UPPER(ANSWER_TXT) LIKE 'OTH^%';
 
-        IF OBJECT_ID('#CODED_TABLE_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_REPT;
             END;
@@ -299,7 +299,7 @@ ON #CODED_TABLE_REPT
                INCLUDE( [ANSWER_GROUP_SEQ_NBR], [PAGE_CASE_UID], [NBS_QUESTION_UID], [NBS_CASE_ANSWER_UID], [ANSWER_TXT], [RDB_COLUMN_NM], [ANSWER_OTH], [RDB_COLUMN_NM2], [INVESTIGATION_FORM_CD], [BLOCK_NM] );
 
         */
-        IF OBJECT_ID('#CODED_TABLE_DESC_REPT_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_DESC_REPT_TEMP', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_DESC_REPT_TEMP;
             END;
@@ -320,7 +320,7 @@ ON #CODED_TABLE_REPT
         --where  nbs_question_uid is not null
         GROUP BY PAGE_CASE_UID, RDB_COLUMN_NM, NBS_QUESTION_UID, ANSWER_GROUP_SEQ_NBR;
 
-        IF OBJECT_ID('#CODED_TABLE_DESC_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_DESC_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_DESC_REPT;
             END;
@@ -337,7 +337,7 @@ ON #CODED_TABLE_REPT
         if @debug = 'true'
             select * from #CODED_TABLE_DESC_REPT;
 
-        IF OBJECT_ID('#CODED_COUNTY_TABLE_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_COUNTY_TABLE_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_COUNTY_TABLE_REPT;
             END;
@@ -354,7 +354,7 @@ ON #CODED_TABLE_REPT
                 CVG.CODE = CODED.ANSWER_TXT
         WHERE METADATA.CODE_SET_NM = 'COUNTY_CCD';
 
-        IF OBJECT_ID('#CODED_COUNTY_TABLE_DESC_REPT_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_COUNTY_TABLE_DESC_REPT_TEMP', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_COUNTY_TABLE_DESC_REPT_TEMP;
             END;
@@ -372,7 +372,7 @@ ON #CODED_TABLE_REPT
         FROM #CODED_COUNTY_TABLE_REPT AS p1
         GROUP BY PAGE_CASE_UID, ANSWER_GROUP_SEQ_NBR, NBS_QUESTION_UID;
 
-        IF OBJECT_ID('#CODED_COUNTY_TABLE_DESC_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_COUNTY_TABLE_DESC_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_COUNTY_TABLE_DESC_REPT;
             END;
@@ -386,7 +386,7 @@ ON #CODED_TABLE_REPT
                 cct.ANSWER_GROUP_SEQ_NBR = cctt.ANSWER_GROUP_SEQ_NBR AND
                 cct.NBS_QUESTION_UID = cctt.NBS_QUESTION_UID;
 
-        IF OBJECT_ID('#CODED_TABLE_OTH_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_OTH_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_OTH_REPT;
             END;
@@ -417,7 +417,7 @@ ON #CODED_TABLE_REPT
 
 
 
-        IF OBJECT_ID('#CODED_TABLE_SNTEMP_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_SNTEMP_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_SNTEMP_REPT;
             END;
@@ -455,7 +455,7 @@ ON #CODED_TABLE_REPT
         if @debug = 'true'
             select * from #CODED_TABLE_SNTEMP_REPT;
 
-        IF OBJECT_ID('#CODED_TABLE_SNTEMP_TRANS_A_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_SNTEMP_TRANS_A_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_SNTEMP_TRANS_A_REPT;
             END;
@@ -530,7 +530,7 @@ ON #CODED_TABLE_REPT
         SET @Proc_Step_Name = ' Generating '+@coded_output_table_name;
 
 
-        IF OBJECT_ID('#CODED_TABLE_SNTEMP_TRANS_CODE_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_SNTEMP_TRANS_CODE_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_SNTEMP_TRANS_CODE_REPT;
             END;
@@ -544,7 +544,7 @@ ON #CODED_TABLE_REPT
         WHERE LEN(UNIT_TYPE_CD) > 0 AND
             UPPER(UNIT_TYPE_CD) = 'CODED';
 
-        IF OBJECT_ID('#CODED_TABLE_SNTEMP_TRANS_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_SNTEMP_TRANS_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_SNTEMP_TRANS_REPT;
             END;
@@ -558,7 +558,7 @@ ON #CODED_TABLE_REPT
         ALTER TABLE #CODED_TABLE_SNTEMP_TRANS_REPT
             ADD [NBS_QUESTION_UID] [bigint] NULL, [ANSWER_TXT] [varchar](100) NULL, [ANSWER_OTH] [varchar](256) NULL, [RDB_COLUMN_NM2] [varchar](30) NULL, [ANSWER_TXT1] [varchar](100) NULL, [OTHER_VALUE_IND_CD] [char](1) NULL;
 
-        IF OBJECT_ID('#CODED_TABLE_MERGED_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_MERGED_REPT;
             END;
@@ -578,7 +578,7 @@ ON #CODED_TABLE_REPT
         if @debug = 'true'
             select * from #CODED_TABLE_MERGED_REPT;
 
-        IF OBJECT_ID('#CODED_DATA_REPT_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_DATA_REPT_OUT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_DATA_REPT_OUT;
             END;
@@ -624,7 +624,7 @@ ON #CODED_TABLE_REPT
 
         --CREATE TABLE  	DATE_DATA AS
         /*
-        IF OBJECT_ID('#DATE_DATA_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DATE_DATA_REPT', 'U') IS NOT NULL
         BEGIN
             DROP TABLE #DATE_DATA_REPT;
         END;
@@ -673,7 +673,7 @@ ON #CODED_TABLE_REPT
 
 
 
-        IF OBJECT_ID('#PAGE_DATE_TABLE_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PAGE_DATE_TABLE_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #PAGE_DATE_TABLE_REPT;
             END;
@@ -747,7 +747,7 @@ ON #CODED_TABLE_REPT
 
         --CREATE TABLE NUMERIC_BASE_DATA AS
 
-        IF OBJECT_ID('#NUMERIC_BASE_DATA_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_BASE_DATA_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_BASE_DATA_REPT;
             END;
@@ -771,7 +771,7 @@ ON #CODED_TABLE_REPT
             QUESTION_GROUP_SEQ_NBR IS NOT NULL;
 
 
-        IF OBJECT_ID('#NUMERIC_DATA1_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA1_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA1_REPT;
             END;
@@ -805,7 +805,7 @@ ON #CODED_TABLE_REPT
         SET RDB_COLUMN_NM2 = RTRIM(RDB_COLUMN_NM) + ' UNIT'
         WHERE LEN(RTRIM(ANSWER_CODED)) > 0;
 
-        IF OBJECT_ID('#NUMERIC_DATA2_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA2_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA2_REPT;
             END;
@@ -818,7 +818,7 @@ ON #CODED_TABLE_REPT
         SET RDB_COLUMN_NM2 = SUBSTRING(RDB_COLUMN_NM2, 1, 22)
         WHERE LEN(RTRIM(RDB_COLUMN_NM2)) > 0;
 
-        IF OBJECT_ID('#NUMERIC_DATA_MERGED_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA_MERGED_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_MERGED_REPT;
             END;
@@ -829,7 +829,7 @@ ON #CODED_TABLE_REPT
         SELECT *
         FROM #NUMERIC_DATA2_REPT;
 
-        IF OBJECT_ID('#NUMERIC_DATA_TRANS_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA_TRANS_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_TRANS_REPT;
             END;
@@ -853,7 +853,7 @@ ON #CODED_TABLE_REPT
                              ELSE ANSWER_UNIT
             END;
 
-        IF OBJECT_ID('#NUMERIC_DATA_TRANS1_REPT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA_TRANS1_REPT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_TRANS1_REPT;
             END;

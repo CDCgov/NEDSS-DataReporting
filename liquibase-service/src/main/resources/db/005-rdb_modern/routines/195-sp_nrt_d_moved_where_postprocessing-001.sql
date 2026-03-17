@@ -39,7 +39,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #PHC_LIST TABLE';
 
-        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_PHC_LIST', 'U') IS NOT NULL
         drop table #S_PHC_LIST;
 
         SELECT value
@@ -69,7 +69,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_MOVED_WHERE_TRANSLATED';
 
-        IF OBJECT_ID('#S_MOVED_WHERE_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_MOVED_WHERE_TRANSLATED', 'U') IS NOT NULL
         drop table #S_MOVED_WHERE_TRANSLATED;
         
         SELECT DISTINCT
@@ -121,7 +121,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_MOVED_WHERE';
 
-        IF OBJECT_ID('#S_MOVED_WHERE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_MOVED_WHERE', 'U') IS NOT NULL
         drop table #S_MOVED_WHERE;
 
 
@@ -153,7 +153,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TEMP_D_MOVED_WHERE_DEL';
 
-        IF OBJECT_ID('#TEMP_D_MOVED_WHERE_DEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_D_MOVED_WHERE_DEL', 'U') IS NOT NULL
         drop table #TEMP_D_MOVED_WHERE_DEL;
 
         SELECT MOVED_WHERE.TB_PAM_UID, 
@@ -325,7 +325,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_TB_PAM_TEMP';
 
-        IF OBJECT_ID('#D_TB_PAM_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_TB_PAM_TEMP', 'U') IS NOT NULL
         drop table #D_TB_PAM_TEMP;
         
 
@@ -358,7 +358,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #L_MOVED_WHERE_GROUP';
 
-        IF OBJECT_ID('#L_MOVED_WHERE_GROUP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#L_MOVED_WHERE_GROUP', 'U') IS NOT NULL
         drop table #L_MOVED_WHERE_GROUP;
 
         SELECT D_TB_PAM.TB_PAM_UID,   NRT_GROUP_KEY.TB_PAM_UID AS D_MOVED_WHERE_UID , NRT_GROUP_KEY.D_MOVED_WHERE_GROUP_KEY
@@ -390,7 +390,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #L_MOVED_WHERE';
 
-        IF OBJECT_ID('#L_MOVED_WHERE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#L_MOVED_WHERE', 'U') IS NOT NULL
         drop table #L_MOVED_WHERE;
 
         SELECT L.TB_PAM_UID,  
@@ -425,7 +425,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TEMP_D_MOVED_WHERE';
 
-        IF OBJECT_ID('#TEMP_D_MOVED_WHERE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_D_MOVED_WHERE', 'U') IS NOT NULL
         drop table #TEMP_D_MOVED_WHERE;
 
         SELECT L.TB_PAM_UID,

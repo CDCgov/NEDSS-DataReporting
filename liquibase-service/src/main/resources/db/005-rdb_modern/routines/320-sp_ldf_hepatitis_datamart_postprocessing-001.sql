@@ -72,7 +72,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_hepatitis_datamart_postprocessing]
 			SET @PROC_STEP_NAME = 'LDF_UID_LIST';  
 	
 			--------- Create #LDF_UID_LIST table 
-			IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#LDF_UID_LIST', 'U') IS NOT NULL   
 				DROP TABLE #LDF_UID_LIST; 
 		
 			SELECT distinct TRIM(value) AS value into #LDF_UID_LIST FROM STRING_SPLIT(@phc_uids, ',')		
@@ -97,7 +97,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_hepatitis_datamart_postprocessing]
 
 			--------- Create #TMP_BASE_HEPATITIS table 
 
-			IF OBJECT_ID('#TMP_BASE_HEPATITIS', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_BASE_HEPATITIS', 'U') IS NOT NULL   
 					DROP TABLE #TMP_BASE_HEPATITIS; 
 		
 			SELECT LDA.* 
@@ -128,7 +128,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_hepatitis_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_HEPATITIS';  
 
-			IF OBJECT_ID('#TMP_LINKED_HEPATITIS', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_LINKED_HEPATITIS', 'U') IS NOT NULL   
 					DROP TABLE #TMP_LINKED_HEPATITIS; 
 
 			SELECT GEN_LDF.*,  
@@ -173,7 +173,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_hepatitis_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_HEPATITIS';  
 	
-			IF OBJECT_ID('#TMP_ALL_HEPATITIS', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_HEPATITIS', 'U') IS NOT NULL   
 				DROP TABLE #TMP_ALL_HEPATITIS; 
 
 			SELECT A.*,  
@@ -208,7 +208,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_hepatitis_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
 			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_HEPATITIS_SHORT_COL';  
 
-			IF OBJECT_ID('#TMP_ALL_HEPATITIS_SHORT_COL', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_HEPATITIS_SHORT_COL', 'U') IS NOT NULL   
 					DROP TABLE #TMP_ALL_HEPATITIS_SHORT_COL; 
 				
 			SELECT INVESTIGATION_KEY, 
@@ -242,7 +242,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_hepatitis_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_HEPATITIS_TA';  
 
-			IF OBJECT_ID('#TMP_ALL_HEPATITIS_TA', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_HEPATITIS_TA', 'U') IS NOT NULL   
 					DROP TABLE #TMP_ALL_HEPATITIS_TA; 
 
 			

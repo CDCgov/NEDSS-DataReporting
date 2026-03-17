@@ -66,7 +66,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #obs_ids';
 
-        IF OBJECT_ID('#obs_ids', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#obs_ids', 'U') IS NOT NULL
             DROP TABLE #obs_ids;
 
         SELECT DISTINCT TRIM(value) AS observation_uid
@@ -89,7 +89,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'GENERATING #edx_document';
 
 
-        IF OBJECT_ID('#dx_document', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#dx_document', 'U') IS NOT NULL
             DROP TABLE #edx_document;
 
         ;WITH edx_lst AS(
@@ -131,7 +131,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #observation_data';
 
-        IF OBJECT_ID('#observation_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#observation_data', 'U') IS NOT NULL
             DROP TABLE #observation_data;
 
         SELECT 
@@ -257,7 +257,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #material_data';
 
-        IF OBJECT_ID('#material_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#material_data', 'U') IS NOT NULL
             DROP TABLE #material_data;
         
         ;WITH mat AS (
@@ -304,7 +304,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #reason_data';
 
-        IF OBJECT_ID('#reason_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#reason_data', 'U') IS NOT NULL
             DROP TABLE #reason_data;
 
         SELECT 
@@ -332,7 +332,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #provider_data';
 
-        IF OBJECT_ID('#provider_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#provider_data', 'U') IS NOT NULL
             DROP TABLE #provider_data;
 
         SELECT 
@@ -357,7 +357,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #morb_data';
 
-        IF OBJECT_ID('#morb_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#morb_data', 'U') IS NOT NULL
             DROP TABLE #morb_data;
         
         SELECT 
@@ -389,7 +389,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #hierarchical_data';
 
-        IF OBJECT_ID('#hierarchical_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#hierarchical_data', 'U') IS NOT NULL
             DROP TABLE #hierarchical_data;
 
         SELECT 
@@ -435,7 +435,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #observation_hierarchical_data';
 
-        IF OBJECT_ID('#observation_hierarchical_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#observation_hierarchical_data', 'U') IS NOT NULL
             DROP TABLE #observation_hierarchical_data;
 
         SELECT
@@ -462,7 +462,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #merge_order';
 
-        IF OBJECT_ID('#merge_order', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#merge_order', 'U') IS NOT NULL
             DROP TABLE #merge_order;
 
         ;WITH mat AS (
@@ -527,7 +527,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #lab_test_final';
 
-        IF OBJECT_ID('#lab_test_final', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#lab_test_final', 'U') IS NOT NULL
             DROP TABLE #lab_test_final;
 
         SELECT 
@@ -640,7 +640,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #lab_test_N';
 
-        IF OBJECT_ID('#lab_test_N', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#lab_test_N', 'U') IS NOT NULL
             DROP TABLE #lab_test_N;
 
         SELECT distinct ltf.LAB_TEST_UID
@@ -666,7 +666,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #lab_test_E';
 
-        IF OBJECT_ID('#lab_test_E', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#lab_test_E', 'U') IS NOT NULL
             DROP TABLE #lab_test_E;
 
         SELECT distinct ltf.LAB_TEST_uid
@@ -691,7 +691,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #lab_test_D';
 
-        IF OBJECT_ID('#lab_test_D', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#lab_test_D', 'U') IS NOT NULL
             DROP TABLE #lab_test_D;
 
         SELECT distinct ltf.LAB_TEST_uid
@@ -719,7 +719,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #nrt_observation_txt_data';
 
-        IF OBJECT_ID('#nrt_observation_txt_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#nrt_observation_txt_data', 'U') IS NOT NULL
             DROP TABLE #nrt_observation_txt_data;
 
         ;WITH 
@@ -800,7 +800,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #lab_rpt_user_comment_N';
 
-        IF OBJECT_ID('#lab_rpt_user_comment_N', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#lab_rpt_user_comment_N', 'U') IS NOT NULL
             DROP TABLE #lab_rpt_user_comment_N;
 
         SELECT distinct cd.OBSERVATION_UID, cd.LAB_TEST_UID
@@ -826,7 +826,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #lab_rpt_user_comment_E';
 
-        IF OBJECT_ID('#lab_rpt_user_comment_E', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#lab_rpt_user_comment_E', 'U') IS NOT NULL
             DROP TABLE #lab_rpt_user_comment_E;
 
         SELECT distinct cd.OBSERVATION_UID, cd.LAB_TEST_UID
@@ -852,7 +852,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #lab_rpt_user_comment_D';
 
-        IF OBJECT_ID('#lab_rpt_user_comment_D', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#lab_rpt_user_comment_D', 'U') IS NOT NULL
             DROP TABLE #lab_rpt_user_comment_D;
 
         SELECT distinct cd.OBSERVATION_UID, cd.LAB_TEST_UID

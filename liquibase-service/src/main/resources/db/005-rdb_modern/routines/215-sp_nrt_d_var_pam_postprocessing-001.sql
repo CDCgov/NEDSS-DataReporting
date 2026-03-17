@@ -35,7 +35,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING S_PHC_LIST TABLE';
           
-        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_PHC_LIST', 'U') IS NOT NULL
             drop table #S_PHC_LIST;
 
         SELECT value
@@ -57,7 +57,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #S_VAR_PAM_SET_TRANSLATED TABLE';
           
         
-        IF OBJECT_ID('#S_VAR_PAM_SET_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_VAR_PAM_SET_TRANSLATED', 'U') IS NOT NULL
             drop table #S_VAR_PAM_SET_TRANSLATED;
 
         --Step 2: Create S_VAR_PAM_SET_TRANSLATED temporary table
@@ -120,7 +120,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #S_VAR_PAM_SET_CVG TABLE';
         
         
-        IF OBJECT_ID('#S_VAR_PAM_SET_CVG', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_VAR_PAM_SET_CVG', 'U') IS NOT NULL
             drop table #S_VAR_PAM_SET_CVG;
         
         -- Step 3: Apply conditional logic for ANSWER_TXT (equivalent to DATA S_VAR_PAM_SET_CVG)
@@ -166,7 +166,7 @@ BEGIN
           
         
         
-        IF OBJECT_ID('#S_VAR_PAM_SET_CVG2', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_VAR_PAM_SET_CVG2', 'U') IS NOT NULL
             drop table #S_VAR_PAM_SET_CVG2;
         
 
@@ -215,7 +215,7 @@ BEGIN
           
         
         
-        IF OBJECT_ID('#S_PAM_CHG_TIME', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_PAM_CHG_TIME', 'U') IS NOT NULL
             drop table #S_PAM_CHG_TIME;
         
         -- Step 5: Create S_PAM_CHG_TIME temporary table
@@ -245,7 +245,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #S_VAR_PAM1 TABLE';
           
         
-        IF OBJECT_ID('#S_VAR_PAM1', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_VAR_PAM1', 'U') IS NOT NULL
             drop table #S_VAR_PAM1;
 
         -- Pivot transformation
@@ -322,7 +322,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #S_VAR_PAM TABLE';
           
         
-        IF OBJECT_ID('#S_VAR_PAM', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_VAR_PAM', 'U') IS NOT NULL
             drop table #S_VAR_PAM;
 
         -- Final transformation with date and numeric conversions
@@ -532,7 +532,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING TEMP table for updates and inserts';
 
-        IF OBJECT_ID('#L_VAR_PAM', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#L_VAR_PAM', 'U') IS NOT NULL
             drop table #L_VAR_PAM;
           
         --insert new items to generate key 

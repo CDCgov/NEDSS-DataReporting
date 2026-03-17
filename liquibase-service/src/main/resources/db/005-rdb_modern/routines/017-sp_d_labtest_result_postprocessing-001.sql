@@ -52,7 +52,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #labResult_ids';
 
-        IF OBJECT_ID('#labResult_ids', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#labResult_ids', 'U') IS NOT NULL
             DROP TABLE #labResult_ids;
 
         SELECT value AS observation_uid
@@ -74,7 +74,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #TMP_D_LAB_TEST_N';
 
-		IF OBJECT_ID('#TMP_D_LAB_TEST_N', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_D_LAB_TEST_N', 'U') IS NOT NULL
             DROP TABLE #TMP_D_LAB_TEST_N;
 
         --List of new Observations for Lab Test Result
@@ -104,7 +104,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #TMP_lab_test_resultInit ';
 
-		IF OBJECT_ID('#TMP_lab_test_resultInit', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_lab_test_resultInit', 'U') IS NOT NULL
             DROP TABLE #TMP_lab_test_resultInit;
 
         --Get morbidity reports associated to lab
@@ -145,7 +145,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #TMP_nrt_observation_txt ';
 
-		IF OBJECT_ID('#TMP_nrt_observation_txt', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_nrt_observation_txt', 'U') IS NOT NULL
             DROP TABLE #TMP_nrt_observation_txt;
 
 		;WITH obstxt AS (
@@ -175,7 +175,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #TMP_nrt_observation_coded';
 
-		IF OBJECT_ID('#TMP_nrt_observation_coded', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_nrt_observation_coded', 'U') IS NOT NULL
             DROP TABLE #TMP_nrt_observation_coded;
 
 		;WITH obscoded AS (
@@ -206,7 +206,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #TMP_nrt_observation_numeric';
 
-		IF OBJECT_ID('#TMP_nrt_observation_numeric', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_nrt_observation_numeric', 'U') IS NOT NULL
             DROP TABLE #TMP_nrt_observation_numeric;
         
 		;WITH obsnum AS (
@@ -236,7 +236,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #TMP_nrt_observation_date';
 
-		IF OBJECT_ID('#TMP_nrt_observation_date', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_nrt_observation_date', 'U') IS NOT NULL
             DROP TABLE #TMP_nrt_observation_date;
 
 		;WITH obsdate AS (
@@ -266,7 +266,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Test_Result1 ';
 
-		IF OBJECT_ID('#TMP_Lab_Test_Result1', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_Lab_Test_Result1', 'U') IS NOT NULL
             DROP TABLE #TMP_Lab_Test_Result1;
 
         SELECT tst.lab_test_key,
@@ -360,7 +360,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Result_And_R_Result ';
 
-		IF OBJECT_ID('#TMP_Result_And_R_Result', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_Result_And_R_Result', 'U') IS NOT NULL
             DROP TABLE #TMP_Result_And_R_Result;
 
         SELECT *
@@ -383,7 +383,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Comment ';
 
-		IF OBJECT_ID('#TMP_Lab_Result_Comment', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_Lab_Result_Comment', 'U') IS NOT NULL
             DROP TABLE #TMP_Lab_Result_Comment;
 
         /*Notes: Inner Join specified*/
@@ -415,7 +415,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Comment ';
 
-        IF OBJECT_ID('#TMP_New_Lab_Result_Comment', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_New_Lab_Result_Comment', 'U') IS NOT NULL
             DROP TABLE #TMP_New_Lab_Result_Comment;
 
         SELECT *,
@@ -438,7 +438,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Comment_grouped ';
 
-		IF OBJECT_ID('#TMP_New_Lab_Result_Comment_grouped', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_New_Lab_Result_Comment_grouped', 'U') IS NOT NULL
             DROP TABLE #TMP_New_Lab_Result_Comment_grouped;
 
 		-- create index idx_TMP_New_Lab_Result_Comment_uid ON  #TMP_New_Lab_Result_Comment (lab_test_uid);
@@ -481,7 +481,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_New_Lab_Result_Comment_FINAL ';
 
-        IF OBJECT_ID('#TMP_New_Lab_Result_Comment_FINAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_New_Lab_Result_Comment_FINAL', 'U') IS NOT NULL
             DROP TABLE #TMP_New_Lab_Result_Comment_FINAL;
 
         -- INSERT INTO #TMP_New_Lab_Result_Comment_FINAL
@@ -529,7 +529,7 @@ BEGIN
 		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #Lab_Result_Comment_N ';
 
-		IF OBJECT_ID('#Lab_Result_Comment_N', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#Lab_Result_Comment_N', 'U') IS NOT NULL
             DROP TABLE #Lab_Result_Comment_N;
 
 		SELECT 
@@ -556,7 +556,7 @@ BEGIN
 		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #Lab_Result_Comment_E ';
 
-		IF OBJECT_ID('#Lab_Result_Comment_E', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#Lab_Result_Comment_E', 'U') IS NOT NULL
             DROP TABLE #Lab_Result_Comment_E;
 
 		SELECT 
@@ -582,7 +582,7 @@ BEGIN
 		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #Lab_Result_Comment_D ';
 
-		IF OBJECT_ID('#Lab_Result_Comment_D', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#Lab_Result_Comment_D', 'U') IS NOT NULL
             DROP TABLE #Lab_Result_Comment_D;
 
 		SELECT 
@@ -655,7 +655,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Result_Comment_Group ';
 
-        IF OBJECT_ID('#TMP_Result_Comment_Group', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_Result_Comment_Group', 'U') IS NOT NULL
             DROP TABLE #TMP_Result_Comment_Group;
 
         SELECT DISTINCT 
@@ -702,7 +702,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Val ';
 
-        IF OBJECT_ID('#TMP_Lab_Result_Val', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_Lab_Result_Val', 'U') IS NOT NULL
             DROP TABLE #TMP_Lab_Result_Val;
 
         --INSERT INTO #TMP_Lab_Result_Val
@@ -791,7 +791,7 @@ BEGIN
 		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TEST_Result_Group_N ';
 
-		IF OBJECT_ID('#TEST_Result_Group_N', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TEST_Result_Group_N', 'U') IS NOT NULL
             DROP TABLE #TEST_Result_Group_N;
 
 		SELECT 
@@ -818,7 +818,7 @@ BEGIN
 		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TEST_Result_Group_E ';
 
-		IF OBJECT_ID('#TEST_Result_Group_E', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TEST_Result_Group_E', 'U') IS NOT NULL
             DROP TABLE #TEST_Result_Group_E;
 
 		SELECT 
@@ -844,7 +844,7 @@ BEGIN
 		SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TEST_Result_Group_D ';
 
-		IF OBJECT_ID('#TEST_Result_Group_D', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TEST_Result_Group_D', 'U') IS NOT NULL
             DROP TABLE #TEST_Result_Group_D;
 
 		SELECT 
@@ -916,7 +916,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_TEST_RESULT_GROUPING ';
 
-        IF OBJECT_ID('#TMP_TEST_RESULT_GROUPING', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_TEST_RESULT_GROUPING', 'U') IS NOT NULL
             DROP TABLE #TMP_TEST_RESULT_GROUPING;
 
 
@@ -979,7 +979,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #TMP_Lab_Result_Val_Final ';
 
-		IF OBJECT_ID('#TMP_Lab_Result_Val_Final', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#TMP_Lab_Result_Val_Final', 'U') IS NOT NULL
             DROP TABLE #TMP_Lab_Result_Val_Final;
 
         SELECT MIN([TEST_RESULT_GRP_KEY])       AS TEST_RESULT_GRP_KEY

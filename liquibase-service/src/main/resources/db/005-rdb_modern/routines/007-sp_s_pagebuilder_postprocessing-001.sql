@@ -38,7 +38,7 @@ BEGIN
         SET @Proc_Step_no = 2;
         SET @Proc_Step_Name = ' Creating #NRT_PAGE temporary table to hold latest answers for act_uids';
 
-        IF OBJECT_ID('#NRT_PAGE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NRT_PAGE', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NRT_PAGE;
             END;
@@ -87,7 +87,7 @@ BEGIN
         SET @Proc_Step_no = 3;
         SET @Proc_Step_Name = ' Generating text_data_'+@category;
 
-        IF OBJECT_ID('#text_data_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#text_data_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #text_data_INV;
             END;
@@ -177,7 +177,7 @@ BEGIN
         SET @Proc_Step_no = 5;
         SET @Proc_Step_Name = ' Generating CODED rdb_ui_metadata_'+@category;
         -- CREATE TABLE CODED_TABLE AS
-        IF OBJECT_ID('#CASE_ANSWER_PHC_UIDS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CASE_ANSWER_PHC_UIDS', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CASE_ANSWER_PHC_UIDS;
             END;
@@ -207,7 +207,7 @@ BEGIN
         ;
 
 
-        IF OBJECT_ID('#CODED_TABLE_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_INV;
             END;
@@ -252,7 +252,7 @@ BEGIN
         SET @Proc_Step_no = 8;
         SET @Proc_Step_Name = ' Create table CODED_TABLE_OTHER_EMPTY_'+@category;
         --CREATE TABLE 	CODED_TABLE_OTHER_EMPTY
-        IF OBJECT_ID('#CODED_TABLE_OTHER_EMPTY_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_OTHER_EMPTY_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_OTHER_EMPTY_INV;
             END;
@@ -281,7 +281,7 @@ BEGIN
         SET @Proc_Step_no = 9;
         SET @Proc_Step_Name = ' create table CODED_TABLE_OTHER_NONEMPTY_'+@category;
         -- CREATE TABLE CODED_TABLE_OTHER_NONEMPTY
-        IF OBJECT_ID('#CODED_TABLE_OTHER_NONEMPTY_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_OTHER_NONEMPTY_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_OTHER_NONEMPTY_INV;
             END;
@@ -328,7 +328,7 @@ BEGIN
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 11;
         SET @Proc_Step_Name = ' create table CODED_TABLE_OTHER_'+@category;
-        IF OBJECT_ID('#CODED_TABLE_OTHER_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_OTHER_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_OTHER_INV;
             END;
@@ -373,7 +373,7 @@ BEGIN
         SET @Proc_Step_no = 12;
         SET @Proc_Step_Name = ' create table CODED_TABLE_STD_'+@category;
         --CREATE TABLE 	CODED_TABLE_STD
-        IF OBJECT_ID('#CODED_TABLE_STD_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_STD_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_STD_INV;
             END;
@@ -414,7 +414,7 @@ BEGIN
         SET @Proc_Step_no = 15;
         SET @Proc_Step_Name = ' Create table CODED_TABLE_SNTEMP_'+@category;
         -- CREATE TABLE CODED_TABLE_SNTEMP AS
-        IF OBJECT_ID('#CODED_TABLE_SNTEMP_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_SNTEMP_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_SNTEMP_INV;
             END;
@@ -503,7 +503,7 @@ BEGIN
         SET @Proc_Step_no = 19;
         SET @Proc_Step_Name = ' Update  CODED_TABLE_SNTEMP_TRANS_A_'+@category;
         --CREATE TABLE CODED_TABLE_SNTEMP_TRANS_A
-        IF OBJECT_ID('#CODED_TABLE_SNTEMP_TRANS_A_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_SNTEMP_TRANS_A_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_SNTEMP_TRANS_A_INV;
             END;
@@ -560,7 +560,7 @@ BEGIN
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 21;
         SET @Proc_Step_Name = ' UPDATE TABLE  CODED_TABLE_SNTEMP_TRANS_CODE_'+@category;
-        IF OBJECT_ID('#CODED_TABLE_SNTEMP_TRANS_CODE_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_SNTEMP_TRANS_CODE_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_SNTEMP_TRANS_CODE_INV;
             END;
@@ -590,12 +590,12 @@ BEGIN
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 23;
         SET @Proc_Step_Name = ' CREATE TABLE  CODED_TABLE_'+@category;
-        IF OBJECT_ID('#CODED_TABLE_TEMP_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_TEMP_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_TEMP_INV;
             END;
 
-        IF OBJECT_ID('#CODED_TABLE_CAT_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_CAT_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_CAT_INV;
             END;
@@ -637,7 +637,7 @@ BEGIN
         if @debug = 'true'
             select * from #CODED_TABLE_CAT_INV
 
-        IF OBJECT_ID('#CODED_TABLE_DESC_INV_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_DESC_INV_TEMP', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_DESC_INV_TEMP;
             END;
@@ -658,7 +658,7 @@ BEGIN
         if @debug = 'true'
             select * from #CODED_TABLE_DESC_INV_TEMP
 
-        IF OBJECT_ID('#CODED_TABLE_DESC_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_DESC_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_DESC_INV;
             END;
@@ -684,7 +684,7 @@ BEGIN
         SET @Proc_Step_no = 26;
         SET @Proc_Step_Name = 'CREATE TABLE  CODED_COUNTY_TABLE_'+@category;
         --CREATE TABLE 	CODED_COUNTY_TABLE
-        IF OBJECT_ID('#CODED_COUNTY_TABLE_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_COUNTY_TABLE_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_COUNTY_TABLE_INV;
             END;
@@ -701,7 +701,7 @@ BEGIN
                 CVG.CODE = CODED.ANSWER_TXT
         WHERE METADATA.CODE_SET_NM = 'COUNTY_CCD';
 
-        IF OBJECT_ID('#CODED_COUNTY_TABLE_DESC_INV_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_COUNTY_TABLE_DESC_INV_TEMP', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_COUNTY_TABLE_DESC_INV_TEMP;
             END;
@@ -718,7 +718,7 @@ BEGIN
         FROM #CODED_COUNTY_TABLE_INV AS p1
         GROUP BY PAGE_CASE_UID, NBS_QUESTION_UID;
 
-        IF OBJECT_ID('#CODED_COUNTY_TABLE_DESC_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_COUNTY_TABLE_DESC_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_COUNTY_TABLE_DESC_INV;
             END;
@@ -739,11 +739,11 @@ BEGIN
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 27;
         SET @Proc_Step_Name = 'CREATE TABLE CODED_TABLE_MERGED_'+@category;
-        IF OBJECT_ID('#CODED_TABLE_MERGED_TEMP_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_TEMP_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_MERGED_TEMP_INV;
             END;
-        IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #CODED_TABLE_MERGED_INV;
             END;
@@ -781,7 +781,7 @@ BEGIN
         SET @Proc_Step_no = 31;
         SET @Proc_Step_Name = ' CREATE TABLE DATE_DATA_'+@category;
         -- CREATE TABLE DATE_DATA AS
-        IF OBJECT_ID('#DATE_DATA_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DATE_DATA_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #DATE_DATA_INV;
             END;
@@ -854,7 +854,7 @@ BEGIN
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 36;
         SET @Proc_Step_Name = ' CREATE TABLE PAGE_DATE_TABLE_'+@category;
-        IF OBJECT_ID('#PAGE_DATE_TABLE_INV', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PAGE_DATE_TABLE_INV', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #PAGE_DATE_TABLE_INV;
             END;
@@ -949,7 +949,7 @@ BEGIN
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 41;
         SET @Proc_Step_Name = ' CREATE TABLE  NUMERIC_BASE_DATA_INV_CAT';
-        IF OBJECT_ID('#NUMERIC_BASE_DATA_INV_CAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_BASE_DATA_INV_CAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_BASE_DATA_INV_CAT;
             END;
@@ -996,7 +996,7 @@ BEGIN
         SET RDB_COLUMN_NM2 = SUBSTRING(RTRIM(RDB_COLUMN_NM), 1, 25) + ' UNIT'
         WHERE LEN(RTRIM(ANSWER_CODED)) > 0;
 
-        IF OBJECT_ID('#NUMERIC_DATA_2_INV_CAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA_2_INV_CAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_2_INV_CAT;
             END;
@@ -1017,7 +1017,7 @@ BEGIN
         BEGIN TRANSACTION;
         SET @Proc_Step_no = 44;
         SET @Proc_Step_Name = ' CREATE TABLE  NUMERIC_DATA_MERGED_INV_CAT';
-        IF OBJECT_ID('#NUMERIC_DATA_MERGED_INV_CAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA_MERGED_INV_CAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_MERGED_INV_CAT;
             END;
@@ -1040,7 +1040,7 @@ BEGIN
         SET @Proc_Step_no = 45;
         SET @Proc_Step_Name = ' CREATE TABLE  NUMERIC_DATA_TRANS_INV_CAT';
         --CREATE TABLE 	NUMERIC_DATA_TRANS  AS
-        IF OBJECT_ID('#NUMERIC_DATA_TRANS_INV_CAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA_TRANS_INV_CAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_TRANS_INV_CAT;
             END;
@@ -1078,12 +1078,12 @@ BEGIN
         SET @Proc_Step_no = 48;
         SET @Proc_Step_Name = ' UPDATE TABLE  CODED_TABLE_SNTEMP_TRANS_A_INV_CAT';
 
-        IF OBJECT_ID('#NUMERIC_DATA_TRANS1_INV_CAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#NUMERIC_DATA_TRANS1_INV_CAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #NUMERIC_DATA_TRANS1_INV_CAT;
             END;
         /**
-            IF OBJECT_ID('#CODED_TABLE_MERGED_INV', 'U') IS NULL
+            IF OBJECT_ID('tempdb..#CODED_TABLE_MERGED_INV', 'U') IS NULL
             BEGIN
                 CREATE TABLE #CODED_TABLE_MERGED_INV
                 (
@@ -1378,7 +1378,7 @@ BEGIN
         SET @Proc_Step_no = 53;
         SET @Proc_Step_Name = ' Generating STAGING_KEY_INV_CAT';
         --create table STAGING_KEY AS
-        IF OBJECT_ID('#STAGING_KEY_INV_CAT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#STAGING_KEY_INV_CAT', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #STAGING_KEY_INV_CAT;
             END;
@@ -1392,7 +1392,7 @@ BEGIN
             QUESTION_GROUP_SEQ_NBR IS NULL
         GROUP BY ACT_UID, NBS_CASE_ANSWER_UID, nrt_page.LAST_CHG_TIME;
 
-        IF OBJECT_ID('#STAGING_KEY_INV_CAT_FINAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#STAGING_KEY_INV_CAT_FINAL', 'U') IS NOT NULL
             BEGIN
                 DROP TABLE #STAGING_KEY_INV_CAT_FINAL;
             END;
