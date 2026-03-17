@@ -38,6 +38,7 @@ bootRun {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+    testLogging.showStandardStreams = true
 }
 
 jacoco {
