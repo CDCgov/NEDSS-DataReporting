@@ -19,6 +19,7 @@
 1. [organization-service](../organization-service/Dockerfile) - Processes Kafka message for Organization data
 1. [person-service](../person-service/Dockerfile) - Processes Kafka message for Person data
 1. [post-processing-service](../post-processing-service/Dockerfile) - Handles mapping key-uid mappings
+1. [reporting-hydration-service](../reporting-hydration-service/Dockerfile) - **FUTURE** service for consolidating all the DataReporting microserices
 
 ## Initial Setup
 
@@ -71,7 +72,7 @@ curl localhost:8083/connectors
 ### Build data processing services
 
 ```sh
-docker compose up investigation-service ldfdata-service observation-service organization-service person-service post-processing-service -d
+docker compose up investigation-service ldfdata-service observation-service organization-service person-service post-processing-service reporting-hydration-service -d
 ```
 
 ### Build NBS 6 WildFly container
