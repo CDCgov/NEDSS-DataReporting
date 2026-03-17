@@ -2,9 +2,9 @@ package gov.cdc.etldatapipeline.reportinghydration.investigation.repository.mode
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 @Data
@@ -12,6 +12,5 @@ import lombok.NonNull;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TreatmentReportingKey {
-    @NonNull
-    private Long treatmentUid;
+  @NonNull private Long treatmentUid;
 }

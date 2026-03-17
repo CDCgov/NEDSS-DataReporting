@@ -7,9 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class InvestigationCaseManagementKey {
-    private Long publicHealthCaseUid;
-    private Long caseManagementUid;
+  private Long publicHealthCaseUid;
+  private Long caseManagementUid;
 }

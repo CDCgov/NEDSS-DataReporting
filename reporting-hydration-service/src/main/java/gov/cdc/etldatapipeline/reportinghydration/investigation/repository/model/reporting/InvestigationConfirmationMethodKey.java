@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class InvestigationConfirmationMethodKey {
-    private Long publicHealthCaseUid;
-    private String confirmationMethodCd;
+  private Long publicHealthCaseUid;
+  private String confirmationMethodCd;
 }

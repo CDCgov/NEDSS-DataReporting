@@ -10,7 +10,6 @@ import lombok.NonNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InterviewReportingKey {
-    @NonNull
-    @JsonProperty("interview_uid")
-    private Long interviewUid;
+  @NonNull @JsonProperty("interview_uid")
+  private Long interviewUid;
 }

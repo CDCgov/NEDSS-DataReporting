@@ -6,12 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-
 @Data
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class PageCaseAnswerKey {
-    @NonNull
-    private Long actUid;
-    private Long nbsCaseAnswerUid;
+  @NonNull private Long actUid;
+  private Long nbsCaseAnswerUid;
 }

@@ -7,9 +7,9 @@ import lombok.Data;
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class InvestigationConfirmationMethod {
-    private Long publicHealthCaseUid;
-    private String confirmationMethodCd;
-    private String confirmationMethodDescTxt;
-    private String confirmationMethodTime;
-    private Long batchId;
+  private Long publicHealthCaseUid;
+  private String confirmationMethodCd;
+  private String confirmationMethodDescTxt;
+  private String confirmationMethodTime;
+  private Long batchId;
 }

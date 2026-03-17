@@ -8,11 +8,9 @@ import lombok.NonNull;
 @Data
 @NoArgsConstructor
 public class MetadataColumnKey {
-    @NonNull
-    @JsonProperty("table_name")
-    private String tableName;
+  @NonNull @JsonProperty("table_name")
+  private String tableName;
 
-    @NonNull
-    @JsonProperty("rdb_column_nm")
-    private String rdbColumnName;
+  @NonNull @JsonProperty("rdb_column_nm")
+  private String rdbColumnName;
 }

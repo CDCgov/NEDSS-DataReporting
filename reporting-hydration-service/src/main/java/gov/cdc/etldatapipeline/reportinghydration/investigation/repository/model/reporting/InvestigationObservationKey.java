@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class InvestigationObservationKey {
-    private Long publicHealthCaseUid;
-    private Long observationId;
-    private Long branchId;
+  private Long publicHealthCaseUid;
+  private Long observationId;
+  private Long branchId;
 }

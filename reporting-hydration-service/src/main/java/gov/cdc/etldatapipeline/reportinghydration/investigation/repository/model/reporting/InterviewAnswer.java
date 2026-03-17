@@ -9,8 +9,8 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class InterviewAnswer {
-    private Long interviewUid;
-    private String rdbColumnNm;
-    private String answerVal;
-    private Long batchId;
+  private Long interviewUid;
+  private String rdbColumnNm;
+  private String answerVal;
+  private Long batchId;
 }

@@ -9,10 +9,10 @@ import lombok.Data;
 @Data
 public class NotificationUpdate {
 
-    @Id
-    @Column(name = "notification_uid")
-    private Long notificationUid;
+  @Id
+  @Column(name = "notification_uid")
+  private Long notificationUid;
 
-    @Column(name = "investigation_notifications")
-    private String investigationNotifications;
+  @Column(name = "investigation_notifications")
+  private String investigationNotifications;
 }

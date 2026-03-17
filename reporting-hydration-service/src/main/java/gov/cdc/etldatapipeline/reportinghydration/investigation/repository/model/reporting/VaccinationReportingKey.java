@@ -10,7 +10,6 @@ import lombok.NonNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VaccinationReportingKey {
-    @NonNull
-    @JsonProperty("vaccination_uid")
-    private Long vaccinationUid;
+  @NonNull @JsonProperty("vaccination_uid")
+  private Long vaccinationUid;
 }

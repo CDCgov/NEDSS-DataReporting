@@ -1,5 +1,7 @@
 package gov.cdc.etldatapipeline.reportinghydration.investigation.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -11,47 +13,43 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Slf4j
 @EnableKafka
 @Configuration
 public class KafkaConsumerConfig {
-    @Value("${spring.kafka.group-id}")
-    private String groupId = "";
+  @Value("${spring.kafka.group-id}")
+  private String groupId = "";
 
-    @Value("${spring.kafka.bootstrap-servers}")
-    private String bootstrapServers = "";
+  @Value("${spring.kafka.bootstrap-servers}")
+  private String bootstrapServers = "";
 
-    // Higher value for more intensive operation, also increase latency
-    // default is 300000, equivalent to 5 min
-    @Value("${spring.kafka.consumer.maxPollIntervalMs}")
-    private String maxPollInterval = "";
+  // Higher value for more intensive operation, also increase latency
+  // default is 300000, equivalent to 5 min
+  @Value("${spring.kafka.consumer.maxPollIntervalMs}")
+  private String maxPollInterval = "";
 
-    @Value("${spring.kafka.consumer.maxPollRecs}")
-    private String maxPollRecords = "";
+  @Value("${spring.kafka.consumer.maxPollRecs}")
+  private String maxPollRecords = "";
 
-    @Bean
-    public ConsumerFactory<String, String> consumerFactory() {
-        final Map<String, Object> config = new HashMap<>();
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        config.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollInterval);
-        config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
-        return new DefaultKafkaConsumerFactory<>(config);
-    }
+  @Bean
+  public ConsumerFactory<String, String> consumerFactory() {
+    final Map<String, Object> config = new HashMap<>();
+    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+    config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    config.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollInterval);
+    config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
+    return new DefaultKafkaConsumerFactory<>(config);
+  }
 
-    // Config for kafka listener aka consumer
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String>
-    kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
-        factory.getContainerProperties().setAsyncAcks(true);
-        return  factory;
-    }
+  // Config for kafka listener aka consumer
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+    ConcurrentKafkaListenerContainerFactory<String, String> factory =
+        new ConcurrentKafkaListenerContainerFactory<>();
+    factory.setConsumerFactory(consumerFactory());
+    factory.getContainerProperties().setAsyncAcks(true);
+    return factory;
+  }
 }

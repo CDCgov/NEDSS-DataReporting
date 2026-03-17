@@ -9,7 +9,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class VaccinationAnswer {
-    private Long vaccinationUid;
-    private String rdbColumnNm;
-    private String answerVal;
+  private Long vaccinationUid;
+  private String rdbColumnNm;
+  private String answerVal;
 }

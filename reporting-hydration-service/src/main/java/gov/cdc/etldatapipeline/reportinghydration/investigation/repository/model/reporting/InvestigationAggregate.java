@@ -10,11 +10,11 @@ import lombok.NonNull;
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class InvestigationAggregate {
-    private @NonNull Long actUid;
-    private @NonNull Long nbsCaseAnswerUid;
-    private String answerTxt;
-    private String dataType;
-    private Long codeSetGroupId;
-    private String datamartColumnNm;
-    private Long batchId;
+  private @NonNull Long actUid;
+  private @NonNull Long nbsCaseAnswerUid;
+  private String answerTxt;
+  private String dataType;
+  private Long codeSetGroupId;
+  private String datamartColumnNm;
+  private Long batchId;
 }
