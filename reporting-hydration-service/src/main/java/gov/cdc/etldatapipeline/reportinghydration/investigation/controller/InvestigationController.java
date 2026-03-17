@@ -1,6 +1,6 @@
 package gov.cdc.etldatapipeline.reportinghydration.investigation.controller;
 
-import gov.cdc.etldatapipeline.investigation.service.KafkaProducerService;
+import gov.cdc.etldatapipeline.reportinghydration.investigation.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
