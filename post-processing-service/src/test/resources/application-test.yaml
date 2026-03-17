@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    primary:
+      username: post_processing_service_rdb
+      password: post_processing_service
+      url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+    test:
+      username: sa
+      password: PizzaIsGood33!
+      url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+  kafka:
+    consumer:
+      maxPollIntervalMs: 6000
+      max-retry: 10
+service:
+  fixed-delay:
+    cached-ids: 6000
+    datamart: 6000
+    backfill: 6000
+    max-retries: 10
+
+logging:
+  level:
+    org.springframework.jdbc.core: TRACE

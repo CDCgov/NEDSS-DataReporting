@@ -21,64 +21,14 @@
 1. [post-processing-service](../post-processing-service/Dockerfile) - Handles mapping key-uid mappings
 1. [reporting-hydration-service](../reporting-hydration-service/Dockerfile) - **FUTURE** service for consolidating all the DataReporting microserices
 
-## Initial Setup
-
-The first time containers are built, the liquibase container will need to be started. All following startups can bypass running liquibase.
-
 ### Prerequisites:
 
 - [Docker GHCR Authentication](DockerAuth.md)
 
-### Build the RTR database and liquibase containers
+### Build and run the RTR services
 
 ```sh
-docker compose up mssql liquibase -d
-```
-
-Wait on liquibase container to complete migration and run onboarding scripts. Container will stop when complete.
-
-### Build zookeeper, kafka, kafka-connect, debezium containers
-
-```sh
-docker compose up zookeeper kafka kafka-connect debezium -d
-```
-
-### Enable connectors for debezium
-
-```sh
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8085/connectors/ -d @containers/debezium/odse_connector.json
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8085/connectors/ -d @containers/debezium/odse_meta_connector.json
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8085/connectors/ -d @containers/debezium/srte_connector.json
-```
-
-Active connectors can be verified by sending a GET to `/connectors`
-
-```sh
-curl localhost:8085/connectors
-```
-
-### Enable connectors for kafka-connect
-
-```sh
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d @containers/kafka-connect/mssql-connector.json
-```
-
-Active connectors can be verified by sending a GET to `/connectors`
-
-```sh
-curl localhost:8083/connectors
-```
-
-### Build data processing services
-
-```sh
-docker compose up investigation-service ldfdata-service observation-service organization-service person-service post-processing-service reporting-hydration-service -d
-```
-
-### Build NBS 6 WildFly container
-
-```sh
-docker compose up wildfly -d
+docker compose up -d
 ```
 
 ### Verifying functionality
