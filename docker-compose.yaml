@@ -243,4 +243,9 @@ services:
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+      nbs-mssql:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
