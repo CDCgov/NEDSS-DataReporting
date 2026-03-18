@@ -59,8 +59,6 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
-    networks:
-      - rtr
     healthcheck:
       test: kafka-topics --bootstrap-server kafka:29092 --list
       interval: 15s
