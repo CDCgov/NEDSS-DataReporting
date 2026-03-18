@@ -73,7 +73,8 @@ public class PersonService {
   private final UserRepository userRepository;
   private final PersonTransformers transformer;
 
-  @Qualifier("personKafkaTemplate") private final KafkaTemplate<String, String> kafkaTemplate;
+  @Qualifier("personKafkaTemplate")
+  private final KafkaTemplate<String, String> kafkaTemplate;
 
   @Value("${spring.kafka.input.topic-name}")
   private String personTopic;
@@ -105,9 +106,7 @@ public class PersonService {
   @Value("${featureFlag.thread-pool-size:1}")
   private int threadPoolSize;
 
-  private static int nProc = Runtime.getRuntime().availableProcessors();
-  private ExecutorService rtrExecutor =
-      Executors.newFixedThreadPool(nProc * 2, new CustomizableThreadFactory("rtr-"));
+  private ExecutorService rtrExecutor;
   private ExecutorService prsExecutor;
 
   private static final ObjectMapper objectMapper =
@@ -130,6 +129,8 @@ public class PersonService {
     msgSuccess = metrics.counter("person_msg_success", tags);
     msgFailure = metrics.counter("person_msg_failure", tags);
 
+    int nproc = Runtime.getRuntime().availableProcessors();
+    rtrExecutor = Executors.newFixedThreadPool(nproc * 2, new CustomizableThreadFactory("rtr-"));
     prsExecutor =
         Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
   }
