@@ -26,7 +26,6 @@ abstract class IntegrationTest {
           .withServices(
               "nbs-mssql",
               "liquibase",
-              "zookeeper",
               "kafka",
               "debezium",
               "kafka-connect",
@@ -36,7 +35,6 @@ abstract class IntegrationTest {
           // Pull logs from the containers for better debugging
           .withLogConsumer("nbs-mssql", consumer)
           .withLogConsumer("liquibase", consumer)
-          .withLogConsumer("zookeeper", consumer)
           .withLogConsumer("kafka", consumer)
           .withLogConsumer("debezium", consumer)
           .withLogConsumer("kafka-connect", consumer)
