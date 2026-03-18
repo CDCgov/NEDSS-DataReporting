@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": [
+      {
+        "type": "int64",
+        "optional": false,
+        "field": "organization_uid"
+      }
+    ]
+  },
+  "payload": {
+    "organization_uid": 10036000
+  }
+}

@@ -8,8 +8,10 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
       key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
     input:
-      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+      topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
       topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+      topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
+      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
     output:
       providerElastic:
         topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
@@ -21,6 +23,14 @@ spring:
         topic-name: ${PATIENT_REPORTING:nrt_patient}
       userReporting:
         topic-name: ${USER_REPORTING:nrt_auth_user}
+      organizationElastic:
+        topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
+      organizationReporting:
+        topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
+      placeReporting:
+        topic-name: ${PLACE_REPORTING:nrt_place}
+      placeTeleReporting:
+        topic-name: ${PLACE_TELE_REPORTING:nrt_place_tele}
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt
