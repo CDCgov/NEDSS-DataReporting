@@ -144,8 +144,8 @@ BEGIN
                                                   ei.assigning_authority_cd,
                                                   case
                                                       when (ei.type_cd = 'FI' and ei.assigning_authority_cd is not null)
-                                                          then (select *
-                                                                from dbo.fn_get_value_by_cvg(ei.assigning_authority_cd, 'EI_AUTH_ORG'))
+                                                          then COALESCE(NULLIF(TRIM((select *
+                                                                from dbo.fn_get_value_by_cvg(ei.assigning_authority_cd, 'EI_AUTH_ORG'))), ''), ei.assigning_authority_cd)
                                                       end             as facility_id_auth
                                            FROM nbs_odse.dbo.Entity_id ei WITH (NOLOCK)
                                            WHERE ei.entity_uid = o.organization_uid
