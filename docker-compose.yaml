@@ -234,12 +234,12 @@ services:
       liquibase:
         condition: service_completed_successfully
 
-  reporting-hydration-service:
+  reporting-pipeline-service:
     build:
-      dockerfile: ./reporting-hydration-service/Dockerfile
+      dockerfile: ./reporting-pipeline-service/Dockerfile
     environment:
-      - DB_USERNAME=reporting_hydration_service_rdb
-      - DB_PASSWORD=reporting_hydration_service
+      - DB_USERNAME=reporting_pipeline_service_rdb
+      - DB_PASSWORD=reporting_pipeline_service
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:

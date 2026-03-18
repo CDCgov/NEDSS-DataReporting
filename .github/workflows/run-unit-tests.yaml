@@ -5,6 +5,7 @@ on:
       - "investigation-service/**"
       - "ldfdata-service/**"
       - "person-service/**"
+      - "reporting-pipeline-service/**"
       - "post-processing-service/**"
       - "observation-service/**"
       - "organization-service/**"

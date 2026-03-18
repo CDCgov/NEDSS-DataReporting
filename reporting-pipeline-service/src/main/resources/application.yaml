@@ -1,6 +1,6 @@
 spring:
   application:
-    name: reporting-hydration-service
+    name: reporting-pipeline-service
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
   datasource:
