@@ -16,11 +16,7 @@ BASE="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 echo "Building SQL Server database"
 docker-compose -f $BASE/docker-compose.yml up nbs-dataaccess-mssql --build -d
 
-# Build and deploy Zookeeper container
-echo "Building Zookeeper"
-docker-compose -f $BASE/docker-compose.yml up zookeeper --build -d
-
-# Build and deploy Kafka Broke container
+# Build and deploy Kafka Broker container
 echo "Building Kafka Broker"
 docker-compose -f $BASE/docker-compose.yml up broker --build -d
 
