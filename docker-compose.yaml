@@ -103,16 +103,12 @@ services:
   debezium:
     image: debezium/connect:2.4
     depends_on:
-<<<<<<< HEAD
-      - kafka
-=======
       kafka:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
->>>>>>> main
     ports:
       - "8085:8083"
     volumes:
