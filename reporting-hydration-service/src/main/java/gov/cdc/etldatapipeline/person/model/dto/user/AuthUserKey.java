@@ -11,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class AuthUserKey {
-  @NonNull @JsonProperty("auth_user_uid")
+  @NonNull
+  @JsonProperty("auth_user_uid")
   private Long authUserUid;
 }
