@@ -48,7 +48,7 @@ class InvestigationDataProcessingTests {
   private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private static final String FILE_PREFIX = "rawDataFiles/";
+  private static final String FILE_PREFIX = "investigation/rawDataFiles/";
   private static final String CONFIRMATION_TOPIC = "confirmationTopic";
   private static final String OBSERVATION_TOPIC = "observationTopic";
   private static final String NOTIFICATIONS_TOPIC = "notificationsTopic";

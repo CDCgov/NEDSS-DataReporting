@@ -7,7 +7,7 @@ import gov.cdc.etldatapipeline.investigation.repository.model.reporting.*;
 
 public class TestUtils {
 
-  public static final String FILE_PATH_PREFIX = "rawDataFiles/";
+  public static final String FILE_PATH_PREFIX = "investigation/rawDataFiles/";
 
   public static Investigation constructInvestigation(Long investigationUid) {
     Investigation investigation = new Investigation();
