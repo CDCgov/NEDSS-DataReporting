@@ -28,7 +28,7 @@ public class KafkaProducerConfig {
 
   @Bean
   public KafkaTemplate<String, String> personKafkaTemplate() {
-    // set factory for both producer and consumer
+    // set factory for both producer
     return new KafkaTemplate<>(personProducerFactory());
   }
 }
