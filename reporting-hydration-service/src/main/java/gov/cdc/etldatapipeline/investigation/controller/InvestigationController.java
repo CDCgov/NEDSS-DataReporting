@@ -32,12 +32,6 @@ public class InvestigationController {
   @Value("${spring.kafka.input.topic-name-tmt}")
   private String treatmentTopic;
 
-  @GetMapping("/reporting/investigation-svc/status")
-  public ResponseEntity<String> getDataPipelineStatusHealth() {
-    log.info("Investigation Service Status OK");
-    return ResponseEntity.status(HttpStatus.OK).body("Investigation Service Status OK");
-  }
-
   @PostMapping("/reporting/investigation-svc/investigation")
   public void postInvestigation(@RequestBody String jsonData) {
     producerService.sendMessage(investigationTopic, jsonData);
