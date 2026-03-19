@@ -93,6 +93,7 @@ public class InvestigationService {
 
   @Qualifier("investigationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
+
   private final ProcessInvestigationDataUtil processDataUtil;
   private final ModelMapper modelMapper = new ModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
