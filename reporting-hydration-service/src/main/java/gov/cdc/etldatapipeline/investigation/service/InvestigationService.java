@@ -91,7 +91,7 @@ public class InvestigationService {
   private final VaccinationRepository vaccinationRepository;
   private final TreatmentRepository treatmentRepository;
 
-  @Qualifier("personKafkaTemplate")
+  @Qualifier("investigationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
   private final ProcessInvestigationDataUtil processDataUtil;
   private final ModelMapper modelMapper = new ModelMapper();
