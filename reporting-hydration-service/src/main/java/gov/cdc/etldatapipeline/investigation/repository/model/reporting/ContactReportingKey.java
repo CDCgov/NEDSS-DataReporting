@@ -10,6 +10,7 @@ import lombok.NonNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContactReportingKey {
-  @NonNull @JsonProperty("contact_uid")
+  @NonNull
+  @JsonProperty("contact_uid")
   private Long contactUid;
 }

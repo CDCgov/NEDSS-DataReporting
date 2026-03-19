@@ -8,9 +8,11 @@ import lombok.NonNull;
 @Data
 @NoArgsConstructor
 public class VaccinationAnswerKey {
-  @NonNull @JsonProperty("vaccinationUid")
+  @NonNull
+  @JsonProperty("vaccinationUid")
   private Long vaccinationUid;
 
-  @NonNull @JsonProperty("rdb_column_nm")
+  @NonNull
+  @JsonProperty("rdb_column_nm")
   private String rdbColumnNm;
 }

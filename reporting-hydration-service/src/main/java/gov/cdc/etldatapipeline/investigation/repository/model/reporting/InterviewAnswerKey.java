@@ -8,9 +8,11 @@ import lombok.NonNull;
 @Data
 @NoArgsConstructor
 public class InterviewAnswerKey {
-  @NonNull @JsonProperty("interview_uid")
+  @NonNull
+  @JsonProperty("interview_uid")
   private Long interviewUid;
 
-  @NonNull @JsonProperty("rdb_column_nm")
+  @NonNull
+  @JsonProperty("rdb_column_nm")
   private String rdbColumnNm;
 }

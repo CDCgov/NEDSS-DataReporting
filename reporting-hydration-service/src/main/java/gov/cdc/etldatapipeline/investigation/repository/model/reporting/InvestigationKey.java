@@ -8,6 +8,7 @@ import lombok.NonNull;
 @Data
 @NoArgsConstructor
 public class InvestigationKey {
-  @NonNull @JsonProperty("public_health_case_uid")
+  @NonNull
+  @JsonProperty("public_health_case_uid")
   private Long publicHealthCaseUid;
 }

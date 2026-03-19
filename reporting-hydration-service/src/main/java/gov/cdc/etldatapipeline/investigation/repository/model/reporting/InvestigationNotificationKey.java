@@ -9,6 +9,7 @@ import lombok.NonNull;
 @NoArgsConstructor
 public class InvestigationNotificationKey {
 
-  @NonNull @JsonProperty("notification_uid")
+  @NonNull
+  @JsonProperty("notification_uid")
   private Long notificationUid;
 }
