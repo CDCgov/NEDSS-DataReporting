@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.investigation.config;
+package gov.cdc.etldatapipeline.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class KafkaConsumerConfig {
   private String bootstrapServers = "";
 
   // Higher value for more intensive operation, also increase latency
-  // default is 300000, equivalent to 5 min
+  // default is 30000, equivalent to 5 min
   @Value("${spring.kafka.consumer.maxPollIntervalMs}")
   private String maxPollInterval = "";
 
@@ -32,7 +32,7 @@ public class KafkaConsumerConfig {
   private String maxPollRecords = "";
 
   @Bean
-  public ConsumerFactory<String, String> consumerFactory() {
+  public ConsumerFactory<String, String> personConsumerFactory() {
     final Map<String, Object> config = new HashMap<>();
     config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -48,7 +48,7 @@ public class KafkaConsumerConfig {
   public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
-    factory.setConsumerFactory(consumerFactory());
+    factory.setConsumerFactory(personConsumerFactory());
     factory.getContainerProperties().setAsyncAcks(true);
     return factory;
   }

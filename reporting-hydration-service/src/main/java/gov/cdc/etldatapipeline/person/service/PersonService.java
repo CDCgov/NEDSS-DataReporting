@@ -153,7 +153,7 @@ public class PersonService {
       })
   @KafkaListener(
       topics = {"${spring.kafka.input.topic-name-person}", "${spring.kafka.input.topic-name-user}"},
-      containerFactory = "personKafkaListenerContainerFactory")
+      containerFactory = "kafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
     if (topic.equals(personTopic)) {
