@@ -27,6 +27,7 @@ import org.apache.kafka.common.errors.SerializationException;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
@@ -90,6 +91,7 @@ public class InvestigationService {
   private final VaccinationRepository vaccinationRepository;
   private final TreatmentRepository treatmentRepository;
 
+  @Qualifier("personKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
   private final ProcessInvestigationDataUtil processDataUtil;
   private final ModelMapper modelMapper = new ModelMapper();
