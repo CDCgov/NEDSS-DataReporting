@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.config;
+package gov.cdc.etldatapipeline.person.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,10 +12,12 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @EnableKafka
 @Configuration
+@Component("PersonKafkaConsumerConfig")
 public class KafkaConsumerConfig {
   @Value("${spring.kafka.group-id}")
   private String groupId = "";
@@ -45,7 +47,8 @@ public class KafkaConsumerConfig {
 
   // Config for kafka listener aka consumer
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+  public ConcurrentKafkaListenerContainerFactory<String, String>
+      personKafkaListenerContainerFactory() {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(personConsumerFactory());

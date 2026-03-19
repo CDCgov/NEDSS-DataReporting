@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.config;
+package gov.cdc.etldatapipeline.person.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.stereotype.Component;
 
 @Configuration
+@Component("PersonKafkaProducerConfig")
 public class KafkaProducerConfig {
   @Value("${spring.kafka.bootstrap-servers}")
   private String bootstrapServers = "";

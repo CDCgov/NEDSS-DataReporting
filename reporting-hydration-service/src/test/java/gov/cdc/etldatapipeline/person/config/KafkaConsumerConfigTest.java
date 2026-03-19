@@ -1,6 +1,5 @@
 package gov.cdc.etldatapipeline.person.config;
 
-import gov.cdc.etldatapipeline.config.KafkaConsumerConfig;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,11 +28,11 @@ class KafkaConsumerConfigTest {
   }
 
   @Test
-  void kafkaListenerContainerFactory_ConfigurationIsValid() {
+  void personKafkaListenerContainerFactory_ConfigurationIsValid() {
 
     // Act
     ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory =
-        kafkaConsumerConfig.kafkaListenerContainerFactory();
+        kafkaConsumerConfig.personKafkaListenerContainerFactory();
 
     // Assert
     Assertions.assertNotNull(kafkaListenerContainerFactory);
