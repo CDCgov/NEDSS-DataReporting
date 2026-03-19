@@ -44,3 +44,7 @@ hs_err_pid*
 build
 application-local.yaml
 NEDSSDev/
+
+# Performance-testing
+venv/
+examples/
