@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OrganizationElasticSearch {
-  private long organizationUid;
+  private Long organizationUid;
   private String cd;
   private String statusCd;
   private String statusTime;
