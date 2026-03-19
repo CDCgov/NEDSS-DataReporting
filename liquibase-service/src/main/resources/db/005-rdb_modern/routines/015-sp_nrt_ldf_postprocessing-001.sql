@@ -54,7 +54,7 @@ BEGIN
         SET @proc_step_name='Create #LDF_UID_LIST Table';
         SET @proc_step_no = @proc_step_no +1;
 
-        IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#LDF_UID_LIST', 'U') IS NOT NULL
 			    DROP TABLE #LDF_UID_LIST;
 
         SELECT distinct TRIM(value) AS value
@@ -113,7 +113,7 @@ BEGIN
         SET @proc_step_name='Create #DEL_LDF_DATA_KEY to capture delete events';
         SET @proc_step_no = @proc_step_no +1;
 
-        IF OBJECT_ID('#DEL_LDF_DATA_KEY', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DEL_LDF_DATA_KEY', 'U') IS NOT NULL
           DROP TABLE #DEL_LDF_DATA_KEY;
 
         select distinct ld.LDF_DATA_KEY, ld.LDF_GROUP_KEY
@@ -235,7 +235,7 @@ BEGIN
         SET @proc_step_no = @proc_step_no +1;
 
 
-        IF OBJECT_ID('#DEL_GROUP_KEY', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DEL_GROUP_KEY', 'U') IS NOT NULL
           DROP TABLE #DEL_GROUP_KEY;
 
         select distinct lg.ldf_group_key
@@ -755,7 +755,7 @@ BEGIN
         SET @proc_step_name='Get Business IDS to delete';
         SET @proc_step_no = @proc_step_no +1;
 
-        IF OBJECT_ID('#tmp_business_object_uids', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_business_object_uids', 'U') IS NOT NULL
           DROP TABLE #tmp_business_object_uids;
 
         select distinct nrt.business_object_uid
@@ -836,7 +836,7 @@ BEGIN
         SET @proc_step_name='Create LDF_DATA Temp tables-'+ LEFT(@ldf_uid_list,105);
         SET @proc_step_no = @proc_step_no +1;
 
-        IF OBJECT_ID('#tmp_ldf_data', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_ldf_data', 'U') IS NOT NULL
           DROP TABLE #tmp_ldf_data;
 
 

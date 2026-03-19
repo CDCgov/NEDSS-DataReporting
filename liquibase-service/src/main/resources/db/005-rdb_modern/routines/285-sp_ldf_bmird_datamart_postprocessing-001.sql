@@ -72,7 +72,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_bmird_datamart_postprocessing]
 			SET @PROC_STEP_NAME = 'LDF_UID_LIST';  
 			
 			--------- Create #LDF_UID_LIST table 
-			IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#LDF_UID_LIST', 'U') IS NOT NULL   
 				DROP TABLE #LDF_UID_LIST; 
 		
 			SELECT distinct TRIM(value) AS value into #LDF_UID_LIST FROM STRING_SPLIT(@phc_uids, ',')		
@@ -97,7 +97,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_bmird_datamart_postprocessing]
 
 			--------- Create #TMP_BASE_BMIRD table 
 
-			IF OBJECT_ID('#TMP_BASE_BMIRD', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_BASE_BMIRD', 'U') IS NOT NULL   
 					DROP TABLE #TMP_BASE_BMIRD; 
 		
 			SELECT LDA.* 
@@ -129,7 +129,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_bmird_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_BMIRD';  
 
-			IF OBJECT_ID('#TMP_LINKED_BMIRD', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_LINKED_BMIRD', 'U') IS NOT NULL   
 					DROP TABLE #TMP_LINKED_BMIRD; 
 
 			SELECT GEN_LDF.*,  
@@ -174,7 +174,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_bmird_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_BMIRD';  
 
-			IF OBJECT_ID('#TMP_ALL_BMIRD', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_BMIRD', 'U') IS NOT NULL   
 				DROP TABLE #TMP_ALL_BMIRD; 
 
 			SELECT A.*,  
@@ -209,7 +209,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_bmird_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
 			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_BMIRD_SHORT_COL';  
 
-			IF OBJECT_ID('#TMP_ALL_BMIRD_SHORT_COL', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_BMIRD_SHORT_COL', 'U') IS NOT NULL   
 					DROP TABLE #TMP_ALL_BMIRD_SHORT_COL; 
 				
 			SELECT INVESTIGATION_KEY, 
@@ -243,7 +243,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_bmird_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_BMIRD_TA';  
 
-			IF OBJECT_ID('#TMP_ALL_BMIRD_TA', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_BMIRD_TA', 'U') IS NOT NULL   
 					DROP TABLE #TMP_ALL_BMIRD_TA; 
 			
 			SELECT INVESTIGATION_KEY, 

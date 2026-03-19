@@ -47,7 +47,7 @@ BEGIN
         SET @Proc_Step_name = 'Create #TMP_PROVIDER_USER_DIMENSION';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
-        IF OBJECT_ID('#TMP_PROVIDER_USER_DIMENSION', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_PROVIDER_USER_DIMENSION', 'U') IS NOT NULL
             drop table #TMP_PROVIDER_USER_DIMENSION;
 
 
@@ -100,7 +100,7 @@ BEGIN
         SET @Proc_Step_name = 'Create #TMP_USER_PROVIDER';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
-        IF OBJECT_ID('#TMP_USER_PROVIDER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_USER_PROVIDER', 'U') IS NOT NULL
             drop table #TMP_USER_PROVIDER;
 
         SELECT distinct PROVIDER_UID
@@ -120,7 +120,7 @@ BEGIN
         SET @Proc_Step_name = 'Create #TMP_USER_PROVIDER_KEY';
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
-        IF OBJECT_ID('#TMP_USER_PROVIDER_KEY', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_USER_PROVIDER_KEY', 'U') IS NOT NULL
             drop table #TMP_USER_PROVIDER_KEY;
 
         SELECT T.PROVIDER_UID,
@@ -147,10 +147,10 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 
 
-        IF OBJECT_ID('#TMP_USER_PROFILE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_USER_PROFILE', 'U') IS NOT NULL
             drop table #TMP_USER_PROFILE;
 
-        IF OBJECT_ID('#USER_PROFILE_FINAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#USER_PROFILE_FINAL', 'U') IS NOT NULL
             drop table #USER_PROFILE_FINAL;
 
         SELECT P.*,
@@ -269,15 +269,15 @@ BEGIN
 
 ----------------------------------------------Dropping all tmp tables.------------------------------
 
-        IF OBJECT_ID('#TMP_PROVIDER_USER_DIMENSION', 'U') IS NOT NULL ---Step1
+        IF OBJECT_ID('tempdb..#TMP_PROVIDER_USER_DIMENSION', 'U') IS NOT NULL ---Step1
             drop table #TMP_PROVIDER_USER_DIMENSION;
-        IF OBJECT_ID('#TMP_USER_PROVIDER', 'U') IS NOT NULL ------------Step2
+        IF OBJECT_ID('tempdb..#TMP_USER_PROVIDER', 'U') IS NOT NULL ------------Step2
             drop table #TMP_USER_PROVIDER;
-        IF OBJECT_ID('#TMP_USER_PROVIDER_KEY', 'U') IS NOT NULL --------Step3
+        IF OBJECT_ID('tempdb..#TMP_USER_PROVIDER_KEY', 'U') IS NOT NULL --------Step3
             drop table #TMP_USER_PROVIDER_KEY;
-        IF OBJECT_ID('#TMP_USER_PROFILE', 'U') IS NOT NULL ------------Step4
+        IF OBJECT_ID('tempdb..#TMP_USER_PROFILE', 'U') IS NOT NULL ------------Step4
             drop table #TMP_USER_PROFILE;
-        IF OBJECT_ID('#USER_PROFILE_FINAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#USER_PROFILE_FINAL', 'U') IS NOT NULL
             drop table #USER_PROFILE_FINAL;
 
 ----------------------------------------------------------------------------------------------------------------

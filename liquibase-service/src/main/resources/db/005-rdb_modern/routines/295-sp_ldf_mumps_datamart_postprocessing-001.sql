@@ -73,7 +73,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 
 			--------- Create #LDF_UID_LIST table 
 
-			IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#LDF_UID_LIST', 'U') IS NOT NULL   
 				DROP TABLE #LDF_UID_LIST; 
 		
 			SELECT distinct TRIM(value) AS value into #LDF_UID_LIST FROM STRING_SPLIT(@phc_uids, ',')		
@@ -97,7 +97,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 
 			--------- Create #TMP_BASE_MUMPS table 
 
-			IF OBJECT_ID('#TMP_BASE_MUMPS', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_BASE_MUMPS', 'U') IS NOT NULL   
 					DROP TABLE #TMP_BASE_MUMPS; 
 		
 			SELECT LDA.* 
@@ -129,7 +129,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING TMP_LINKED_MUMPS';  
 
-			IF OBJECT_ID('#TMP_LINKED_MUMPS', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_LINKED_MUMPS', 'U') IS NOT NULL   
 					DROP TABLE #TMP_LINKED_MUMPS; 
 
 			SELECT GEN_LDF.*,  
@@ -173,7 +173,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING TMP_ALL_MUMPS';  
 
-			IF OBJECT_ID('#TMP_ALL_MUMPS', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_MUMPS', 'U') IS NOT NULL   
 				DROP TABLE #TMP_ALL_MUMPS; 
 
 			SELECT A.*,  
@@ -208,7 +208,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
 			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_MUMPS_SHORT_COL';  
 
-			IF OBJECT_ID('#TMP_ALL_MUMPS_SHORT_COL', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_MUMPS_SHORT_COL', 'U') IS NOT NULL   
 					DROP TABLE #TMP_ALL_MUMPS_SHORT_COL; 
 				
 			SELECT INVESTIGATION_KEY, 
@@ -242,7 +242,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_mumps_datamart_postprocessing]
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = ' GENERATING TMP_ALL_MUMPS_TA';  
 
-			IF OBJECT_ID('#TMP_ALL_MUMPS_TA', 'U') IS NOT NULL   
+			IF OBJECT_ID('tempdb..#TMP_ALL_MUMPS_TA', 'U') IS NOT NULL   
 					DROP TABLE #TMP_ALL_MUMPS_TA; 
 				
 			SELECT INVESTIGATION_KEY, 

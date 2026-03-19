@@ -54,7 +54,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OBS_CODED_BMIRD_Case';
 
-        IF OBJECT_ID('#OBS_CODED_BMIRD_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_CODED_BMIRD_Case', 'U') IS NOT NULL
             drop table #OBS_CODED_BMIRD_Case;
 
         SELECT public_health_case_uid,
@@ -87,7 +87,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_TXT_BMIRD_Case';
 
-        IF OBJECT_ID('#OBS_TXT_BMIRD_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_TXT_BMIRD_Case', 'U') IS NOT NULL
             drop table #OBS_TXT_BMIRD_Case;
 
         SELECT public_health_case_uid,
@@ -121,7 +121,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_DATE_BMIRD_Case';
 
-        IF OBJECT_ID('#OBS_DATE_BMIRD_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_DATE_BMIRD_Case', 'U') IS NOT NULL
             drop table #OBS_DATE_BMIRD_Case;
 
         select public_health_case_uid,
@@ -155,7 +155,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_BMIRD_Case';
 
-        IF OBJECT_ID('#OBS_NUMERIC_BMIRD_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_NUMERIC_BMIRD_Case', 'U') IS NOT NULL
             drop table #OBS_NUMERIC_BMIRD_Case;
 
         select rom.public_health_case_uid,
@@ -194,7 +194,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OBS_CODED_Antimicrobial';
 
-        IF OBJECT_ID('#OBS_CODED_Antimicrobial', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_CODED_Antimicrobial', 'U') IS NOT NULL
             drop table #OBS_CODED_Antimicrobial;
 
         SELECT public_health_case_uid,
@@ -229,7 +229,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OBS_NUMERIC_Antimicrobial';
 
-        IF OBJECT_ID('#OBS_NUMERIC_Antimicrobial', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_NUMERIC_Antimicrobial', 'U') IS NOT NULL
             drop table #OBS_NUMERIC_Antimicrobial;
 
         SELECT public_health_case_uid,
@@ -268,7 +268,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OBS_CODED_BMIRD_Multi_Value_field';
 
-        IF OBJECT_ID('#OBS_CODED_BMIRD_Multi_Value_field', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_CODED_BMIRD_Multi_Value_field', 'U') IS NOT NULL
             drop table #OBS_CODED_BMIRD_Multi_Value_field;
 
 
@@ -305,7 +305,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OLD_AM_GRP_KEYS';
 
-        IF OBJECT_ID('#OLD_AM_GRP_KEYS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OLD_AM_GRP_KEYS', 'U') IS NOT NULL
             drop table #OLD_AM_GRP_KEYS;
 
         SELECT ANTIMICROBIAL_GRP_KEY
@@ -330,7 +330,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TMP_AM_GRP';
 
-        IF OBJECT_ID('#TMP_AM_GRP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_AM_GRP', 'U') IS NOT NULL
             drop table #TMP_AM_GRP;
 
             SELECT DISTINCT public_health_case_uid,
@@ -357,7 +357,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #Antimicrobial_IDS';
 
-        IF OBJECT_ID('#Antimicrobial_IDS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#Antimicrobial_IDS', 'U') IS NOT NULL
             drop table #Antimicrobial_IDS;
 
         WITH id_cte AS (
@@ -492,7 +492,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OLD_MV_GRP_KEYS';
 
-        IF OBJECT_ID('#OLD_MV_GRP_KEYS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OLD_MV_GRP_KEYS', 'U') IS NOT NULL
             drop table #OLD_MV_GRP_KEYS;
 
         SELECT BMIRD_MULTI_VAL_GRP_KEY
@@ -517,7 +517,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TMP_MV_GRP';
 
-        IF OBJECT_ID('#TMP_MV_GRP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_MV_GRP', 'U') IS NOT NULL
             drop table #TMP_MV_GRP;
 
         SELECT DISTINCT public_health_case_uid,
@@ -544,7 +544,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #BMIRD_Multi_Value_field_IDS';
 
-        IF OBJECT_ID('#BMIRD_Multi_Value_field_IDS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#BMIRD_Multi_Value_field_IDS', 'U') IS NOT NULL
             drop table #BMIRD_Multi_Value_field_IDS;
 
         WITH id_cte AS (
@@ -681,7 +681,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #KEY_ATTR_INIT';
 
-        IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#KEY_ATTR_INIT', 'U') IS NOT NULL
             drop table #KEY_ATTR_INIT;
 
         SELECT

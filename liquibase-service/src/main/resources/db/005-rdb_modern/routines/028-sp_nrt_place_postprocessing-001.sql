@@ -662,8 +662,8 @@ BEGIN
         SET @proc_step_no = 999;
 
 
-        IF OBJECT_ID('#tmp_place_table', 'U') IS NOT NULL drop table #tmp_place_table;
-        IF OBJECT_ID('#tmp_locator_gen', 'U') IS NOT NULL drop table #tmp_locator_gen;
+        IF OBJECT_ID('tempdb..#tmp_place_table', 'U') IS NOT NULL drop table #tmp_place_table;
+        IF OBJECT_ID('tempdb..#tmp_locator_gen', 'U') IS NOT NULL drop table #tmp_locator_gen;
 
 
         INSERT INTO [dbo].[job_flow_log]

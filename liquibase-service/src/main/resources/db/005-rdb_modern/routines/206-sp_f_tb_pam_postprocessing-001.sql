@@ -122,7 +122,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #PAT_prov_keystore';
 
-            IF OBJECT_ID('#PAT_prov_keystore', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#PAT_prov_keystore', 'U') IS NOT NULL
                 DROP TABLE #PAT_prov_keystore;
 
             SELECT DISTINCT

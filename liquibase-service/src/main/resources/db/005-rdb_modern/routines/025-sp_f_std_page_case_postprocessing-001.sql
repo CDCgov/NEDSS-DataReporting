@@ -49,7 +49,7 @@ BEGIN
         SET @proc_step_no = 1;
         SET @proc_step_name = ' Generating PHC_UIDS_ALL';
 
-        IF OBJECT_ID('#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
             drop table #PHC_CASE_UIDS_ALL
             ;
 
@@ -111,7 +111,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' Generating PHC_UIDS';
 
 
-        IF OBJECT_ID('#PHC_UIDS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PHC_UIDS', 'U') IS NOT NULL
             drop table #PHC_UIDS
             ;
 
@@ -168,7 +168,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' Generating ENTITY_KEYSTORE_STD';
 
 
-        IF OBJECT_ID('#ENTITY_KEYSTORE_STD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#ENTITY_KEYSTORE_STD', 'U') IS NOT NULL
             drop table #ENTITY_KEYSTORE_STD
             ;
 
@@ -258,7 +258,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' Generating #DIMENSIONAL_KEYS';
 
 
-        IF OBJECT_ID('#DIMENSIONAL_KEYS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DIMENSIONAL_KEYS', 'U') IS NOT NULL
             drop table #DIMENSIONAL_KEYS
             ;
 
@@ -329,7 +329,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1; --6
         SET @PROC_STEP_NAME = ' Generating #F_STD_PAGE_CASE_TEMP_INC';
 
-        IF OBJECT_ID('#F_STD_PAGE_CASE_TEMP_INC', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#F_STD_PAGE_CASE_TEMP_INC', 'U') IS NOT NULL
             drop table #F_STD_PAGE_CASE_TEMP_INC
             ;
 

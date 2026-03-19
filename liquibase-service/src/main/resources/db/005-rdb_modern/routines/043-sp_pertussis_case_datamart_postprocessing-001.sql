@@ -65,7 +65,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_Case';
 
-        IF OBJECT_ID('#OBS_CODED_PERTUSSIS_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_CODED_PERTUSSIS_Case', 'U') IS NOT NULL
             drop table #OBS_CODED_PERTUSSIS_Case;
 
         SELECT public_health_case_uid,
@@ -102,7 +102,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_Case';
 
-        IF OBJECT_ID('#OBS_TXT_PERTUSSIS_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_TXT_PERTUSSIS_Case', 'U') IS NOT NULL
             drop table #OBS_TXT_PERTUSSIS_Case;
 
         SELECT public_health_case_uid,
@@ -136,7 +136,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_Case';
 
-        IF OBJECT_ID('#OBS_DATE_PERTUSSIS_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_DATE_PERTUSSIS_Case', 'U') IS NOT NULL
             drop table #OBS_DATE_PERTUSSIS_Case;
 
         select public_health_case_uid,
@@ -170,7 +170,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_Case';
 
-        IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_Case', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_NUMERIC_PERTUSSIS_Case', 'U') IS NOT NULL
             drop table #OBS_NUMERIC_PERTUSSIS_Case;
 
         select rom.public_health_case_uid,
@@ -209,7 +209,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD';
 
-        IF OBJECT_ID('#OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
             drop table #OBS_CODED_PERTUSSIS_SUSPECTED_SOURCE_FLD;
 
         SELECT public_health_case_uid,
@@ -244,7 +244,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD';
 
-        IF OBJECT_ID('#OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
             drop table #OBS_TXT_PERTUSSIS_SUSPECTED_SOURCE_FLD;
 
         SELECT public_health_case_uid,
@@ -280,7 +280,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD';
 
-        IF OBJECT_ID('#OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
             drop table #OBS_DATE_PERTUSSIS_SUSPECTED_SOURCE_FLD;
 
         select public_health_case_uid,
@@ -316,7 +316,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD';
 
-        IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD', 'U') IS NOT NULL
             drop table #OBS_NUMERIC_PERTUSSIS_SUSPECTED_SOURCE_FLD;
 
         select rom.public_health_case_uid,
@@ -357,7 +357,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OBS_CODED_PERTUSSIS_TREATMENT_FIELD';
 
-        IF OBJECT_ID('#OBS_CODED_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_CODED_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
             drop table #OBS_CODED_PERTUSSIS_TREATMENT_FIELD;
 
         SELECT public_health_case_uid,
@@ -392,7 +392,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_TXT_PERTUSSIS_TREATMENT_FIELD';
 
-        IF OBJECT_ID('#OBS_TXT_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_TXT_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
             drop table #OBS_TXT_PERTUSSIS_TREATMENT_FIELD;
 
         SELECT public_health_case_uid,
@@ -428,7 +428,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_DATE_PERTUSSIS_TREATMENT_FIELD';
 
-        IF OBJECT_ID('#OBS_DATE_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_DATE_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
             drop table #OBS_DATE_PERTUSSIS_TREATMENT_FIELD;
 
         select public_health_case_uid,
@@ -464,7 +464,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD';
 
-        IF OBJECT_ID('#OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD', 'U') IS NOT NULL
             drop table #OBS_NUMERIC_PERTUSSIS_TREATMENT_FIELD;
 
         select rom.public_health_case_uid,
@@ -505,7 +505,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OLD_TREATMENT_GRP_KEYS';
 
-        IF OBJECT_ID('#OLD_TREATMENT_GRP_KEYS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OLD_TREATMENT_GRP_KEYS', 'U') IS NOT NULL
             drop table #OLD_TREATMENT_GRP_KEYS;
 
         SELECT PERTUSSIS_TREATMENT_GRP_KEY
@@ -530,7 +530,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TMP_TREATMENT_GRP';
 
-        IF OBJECT_ID('#TMP_TREATMENT_GRP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_TREATMENT_GRP', 'U') IS NOT NULL
             drop table #TMP_TREATMENT_GRP;
 
         SELECT DISTINCT public_health_case_uid,
@@ -557,7 +557,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TREATMENT_IDS';
 
-        IF OBJECT_ID('#TREATMENT_IDS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TREATMENT_IDS', 'U') IS NOT NULL
             drop table #TREATMENT_IDS;
 
         WITH id_cte AS (
@@ -699,7 +699,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OLD_SRC_GRP_KEYS';
 
-        IF OBJECT_ID('#OLD_SRC_GRP_KEYS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OLD_SRC_GRP_KEYS', 'U') IS NOT NULL
             drop table #OLD_SRC_GRP_KEYS;
 
         SELECT PERTUSSIS_SUSPECT_SRC_GRP_KEY
@@ -724,7 +724,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TMP_SRC_GRP';
 
-        IF OBJECT_ID('#TMP_SRC_GRP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_SRC_GRP', 'U') IS NOT NULL
             drop table #TMP_SRC_GRP;
 
         SELECT DISTINCT public_health_case_uid,
@@ -764,7 +764,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #SOURCE_IDS';
 
-        IF OBJECT_ID('#SOURCE_IDS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#SOURCE_IDS', 'U') IS NOT NULL
             drop table #SOURCE_IDS;
 
         WITH id_cte AS (
@@ -906,7 +906,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #KEY_ATTR_INIT';
 
-        IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#KEY_ATTR_INIT', 'U') IS NOT NULL
             drop table #KEY_ATTR_INIT;
 
         SELECT
