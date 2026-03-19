@@ -24,7 +24,7 @@ spring:
       topic-name-ar: nbs_Act_relationship
 
       # Person
-      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+      topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
       topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
     output:
       # Investigation

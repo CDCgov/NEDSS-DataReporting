@@ -112,7 +112,7 @@ public class ObservationService {
     )
     @KafkaListener(
                 topics = {
-                        "${spring.kafka.input.topic-name}",
+                        "${spring.kafka.input.topic-name-person}",
                         "${spring.kafka.input.topic-name-ar}"
                 }
     )
