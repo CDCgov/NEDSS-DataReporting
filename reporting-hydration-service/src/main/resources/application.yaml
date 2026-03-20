@@ -66,8 +66,6 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     admin:
       auto-create: true
-    liquibase:
-      change-log: db/changelog/db.changelog-master.yaml
 
   datasource:
     password: ${DB_PASSWORD}
