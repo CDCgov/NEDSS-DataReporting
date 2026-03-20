@@ -20,10 +20,10 @@ public class PersonServiceController {
   private static final String PRODUCED = "Produced : ";
 
   @Value("${spring.kafka.input.topic-name-person}")
-  private String personTopicName;
+  private String personTopicName = "nbs_Person";
 
   @Value("${spring.kafka.input.topic-name-user}")
-  private String userTopicName;
+  private String userTopicName = "nbs_Auth_user";
 
   @PostMapping(value = "/reporting/person-svc/provider")
   public ResponseEntity<String> postProvider(@RequestBody String payLoad) {

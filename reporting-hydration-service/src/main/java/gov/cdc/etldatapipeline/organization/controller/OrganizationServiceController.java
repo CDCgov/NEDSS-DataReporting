@@ -1,6 +1,7 @@
 package gov.cdc.etldatapipeline.organization.controller;
 
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -10,20 +11,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class OrganizationServiceController {
 
+  @Qualifier("organizationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   @Value("${spring.kafka.input.topic-name-organization}")
-  private String orgTopicName;
+  private String orgTopicName = "nbs_Organization";
 
   @Value("${spring.kafka.input.topic-name-place}")
-  private String placeTopicName;
-
-  public OrganizationServiceController(
-      @Qualifier("organizationKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
-    this.kafkaTemplate = kafkaTemplate;
-  }
+  private String placeTopicName = "nbs_Place";
 
   @PostMapping(value = "/reporting/organization-svc/organization")
   public ResponseEntity<String> postOrganization(@RequestBody String payLoad) {
