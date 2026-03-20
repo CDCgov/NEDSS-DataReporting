@@ -1,4 +1,4 @@
-FROM amazoncorretto:21 as builder
+FROM amazoncorretto:21 AS builder
 
 RUN yum update -y && yum clean all
 
