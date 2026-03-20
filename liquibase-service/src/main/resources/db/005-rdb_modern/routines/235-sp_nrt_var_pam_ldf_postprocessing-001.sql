@@ -36,7 +36,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_PHC_LIST TABLE';
 
-        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_PHC_LIST', 'U') IS NOT NULL
             drop table #S_PHC_LIST;
 
         SELECT value
@@ -55,7 +55,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #LDF_BASE TABLE';
 
-        IF OBJECT_ID('#LDF_BASE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#LDF_BASE', 'U') IS NOT NULL
             drop table #LDF_BASE;
 
         SELECT
@@ -105,7 +105,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #LDF_BASE_CODED_TRANSLATED TABLE';
 
 
-        IF OBJECT_ID('#LDF_BASE_CODED_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#LDF_BASE_CODED_TRANSLATED', 'U') IS NOT NULL
             drop table #LDF_BASE_CODED_TRANSLATED;
 
 
@@ -149,7 +149,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #LDF_BASE_CLINICAL_TRANSLATED TABLE';
 
 
-        IF OBJECT_ID('#LDF_BASE_CLINICAL_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#LDF_BASE_CLINICAL_TRANSLATED', 'U') IS NOT NULL
             drop table #LDF_BASE_CLINICAL_TRANSLATED;
 
 
@@ -193,7 +193,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #LDF_BASE_STATE_TRANSLATED TABLE';
 
-        IF OBJECT_ID('#LDF_BASE_STATE_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#LDF_BASE_STATE_TRANSLATED', 'U') IS NOT NULL
             drop table #LDF_BASE_STATE_TRANSLATED;
 
 
@@ -237,7 +237,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #LDF_BASE_COUNTRY_TRANSLATED TABLE';
 
-        IF OBJECT_ID('#LDF_BASE_COUNTRY_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#LDF_BASE_COUNTRY_TRANSLATED', 'U') IS NOT NULL
             drop table #LDF_BASE_COUNTRY_TRANSLATED;
 
         SELECT
@@ -278,7 +278,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #LDF_BASE_TRANSLATED TABLE';
 
-        IF OBJECT_ID('#LDF_BASE_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#LDF_BASE_TRANSLATED', 'U') IS NOT NULL
             drop table #LDF_BASE_TRANSLATED;
 
         SELECT
@@ -309,7 +309,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #MISSED_COLS TABLE';
 
-        IF OBJECT_ID('#MISSED_COLS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#MISSED_COLS', 'U') IS NOT NULL
             drop table #MISSED_COLS;
 
         -- All DATAMART_COLUMN_NM in the LDFs are varchar as only data type observed for LDF is the same as its source NBS_case_answer.answer_txt (varchar)
@@ -371,7 +371,7 @@ BEGIN
         SET @PROC_STEP_NAME = 'GENERATING #COL_LIST TABLE';
 
 
-        IF OBJECT_ID('#COL_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#COL_LIST', 'U') IS NOT NULL
             drop table #COL_LIST;
 
 

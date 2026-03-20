@@ -39,7 +39,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #PHC_LIST TABLE';
 
-        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_PHC_LIST', 'U') IS NOT NULL
         drop table #S_PHC_LIST;
 
         SELECT value
@@ -69,7 +69,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_ADDL_RISK_CD_TRANSLATED';
 
-        IF OBJECT_ID('#S_ADDL_RISK_CD_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_ADDL_RISK_CD_TRANSLATED', 'U') IS NOT NULL
         drop table #S_ADDL_RISK_CD_TRANSLATED;
         
         SELECT DISTINCT
@@ -121,7 +121,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_ADDL_RISK';
 
-        IF OBJECT_ID('#S_ADDL_RISK', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_ADDL_RISK', 'U') IS NOT NULL
         drop table #S_ADDL_RISK;
 
 
@@ -158,7 +158,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TEMP_D_ADDL_RISK_DEL';
 
-        IF OBJECT_ID('#TEMP_D_ADDL_RISK_DEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_D_ADDL_RISK_DEL', 'U') IS NOT NULL
         drop table #TEMP_D_ADDL_RISK_DEL;
 
         SELECT ADDL_RISK.TB_PAM_UID, 
@@ -324,7 +324,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_TB_PAM_TEMP';
 
-        IF OBJECT_ID('#D_TB_PAM_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_TB_PAM_TEMP', 'U') IS NOT NULL
         drop table #D_TB_PAM_TEMP;
         
 
@@ -357,7 +357,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #L_ADDL_RISK_GROUP';
 
-        IF OBJECT_ID('#L_ADDL_RISK_GROUP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#L_ADDL_RISK_GROUP', 'U') IS NOT NULL
         drop table #L_ADDL_RISK_GROUP;
 
         SELECT D_TB_PAM.TB_PAM_UID,   NRT_GROUP_KEY.TB_PAM_UID AS D_ADDL_RISK_UID , NRT_GROUP_KEY.D_ADDL_RISK_GROUP_KEY
@@ -389,7 +389,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #L_ADDL_RISK';
 
-        IF OBJECT_ID('#L_ADDL_RISK', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#L_ADDL_RISK', 'U') IS NOT NULL
         drop table #L_ADDL_RISK;
 
         SELECT L.TB_PAM_UID,  
@@ -424,7 +424,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TEMP_D_ADDL_RISK';
 
-        IF OBJECT_ID('#TEMP_D_ADDL_RISK', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_D_ADDL_RISK', 'U') IS NOT NULL
         drop table #TEMP_D_ADDL_RISK;
 
         SELECT L.TB_PAM_UID,

@@ -32,31 +32,31 @@ SEGMENT_SEP = '\r'
 LAB_TESTS = [
 
 # ABOR
-{"loinc": "30178-8", "name": "West Nile virus Ab", "specimen": "Serum", "results": ["Detected", "Not Detected"]},
+{"loinc": "30178-8", "name": "West Nile virus Ab", "specimen": "SER", "specimen_txt": "Serum", "results": ["Detected", "Not Detected"]},
 
-{"loinc": "6388-3", "name": "Eastern equine encephalitis virus Ab", "specimen": "Serum", "results": ["Detected", "Not Detected"]},
+{"loinc": "6388-3", "name": "Eastern equine encephalitis virus Ab","specimen": "SER", "specimen_txt": "Serum", "results": ["Detected", "Not Detected"]},
 
 # BMIRD
-{"loinc": "62493-2", "name": "Streptococcus pneumoniae Ag", "specimen": "Blood", "results": ["Streptococcus pneumoniae", "Not Detected"]},
+{"loinc": "62493-2", "name": "Streptococcus pneumoniae Ag","specimen": "BLDV", "specimen_txt": "Blood venous", "results": ["Streptococcus pneumoniae", "Not Detected"]},
 
 # VPD
-{"loinc": "55161-4", "name": "Bordetella pertussis", "specimen": "NP Swab", "results": ["Detected", "Not Detected"]},
+{"loinc": "55161-4", "name": "Bordetella pertussis", "specimen": "NOS", "specimen_txt": "Nose (nasal passage)", "results": ["Detected", "Not Detected"]},
 
 # HEP
-{"loinc": "65633-0", "name": "Hepatitis B virus", "specimen": "Serum", "results": ["Detected", "Not Detected"]},
-{"loinc": "75886-2", "name": "Hepatitis C virus", "specimen": "Serum", "results": ["Detected", "Not Detected"]},
+{"loinc": "65633-0", "name": "Hepatitis B virus", "specimen": "SER", "specimen_txt": "Serum", "results": ["Detected", "Not Detected"]},
+{"loinc": "75886-2", "name": "Hepatitis C virus","specimen": "SER", "specimen_txt": "Serum", "results": ["Detected", "Not Detected"]},
 
 # GCD
-{"loinc": "10351-5", "name": "HIV 1 Ab", "specimen": "Blood", "results": ["Detected", "Not Detected"]},
+{"loinc": "10351-5", "name": "HIV 1 Ab", "specimen": "BLDV", "specimen_txt": "Blood venous", "results": ["Detected", "Not Detected"]},
 
 # STD
-{"loinc": "70161-5", "name": "Chlamydia trachomatis", "specimen": "Genital Swab", "results": ["Detected", "Not Detected"]},
+{"loinc": "70161-5", "name": "Chlamydia trachomatis", "specimen": "GEN", "specimen_txt": "Genital", "results": ["Detected", "Not Detected"]},
 
 # TB
-{"loinc": "64084-7", "name": "Mycobacterium tuberculosis", "specimen": "Sputum", "results": ["Detected", "Not Detected"]},
+{"loinc": "64084-7", "name": "Mycobacterium tuberculosis", "specimen": "SPT", "specimen_txt": "Sputum", "results": ["Detected", "Not Detected"]},
 
 # VPD
-{"loinc": "5401-5", "name": "Varicella zoster virus", "specimen": "Lesion Swab", "results": ["Detected", "Not Detected"]},
+{"loinc": "5401-5", "name": "Varicella zoster virus","specimen": "BRO", "specimen_txt": "Bronchial", "results": ["Detected", "Not Detected"]},
 
 ]
 
@@ -451,7 +451,7 @@ def generate_spm_segment(test_info):
         "1",  # Set ID
         f"{specimen_id}^{specimen_id}",  # Specimen ID
         "",  # Specimen Parent IDs
-        f"{test_info['specimen']}^^HL70487",  # Specimen Type
+        f"{test_info['specimen']}^{test_info['specimen_txt']}^HL70487",  # Specimen Type
         "",  # Specimen Type Modifier
         "",  # Specimen Additives
         "",  # Specimen Collection Method

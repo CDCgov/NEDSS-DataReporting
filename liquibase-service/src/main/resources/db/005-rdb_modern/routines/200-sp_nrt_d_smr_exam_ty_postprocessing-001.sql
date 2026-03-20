@@ -56,7 +56,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_SMR_EXAM_TY_PHC_LIST TABLE';
 
-        IF OBJECT_ID('#D_SMR_EXAM_TY_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_SMR_EXAM_TY_PHC_LIST', 'U') IS NOT NULL
             drop table #D_SMR_EXAM_TY_PHC_LIST;
 
         SELECT value
@@ -85,7 +85,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_SMR_EXAM_TY_TRANSLATED';
 
-            IF OBJECT_ID('#S_D_SMR_EXAM_TY_TRANSLATED', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_SMR_EXAM_TY_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_SMR_EXAM_TY_TRANSLATED;
             
             SELECT DISTINCT
@@ -136,7 +136,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_SMR_EXAM_TY';
 
-            IF OBJECT_ID('#S_D_SMR_EXAM_TY', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_SMR_EXAM_TY', 'U') IS NOT NULL
                 DROP TABLE #S_D_SMR_EXAM_TY;
 
 
@@ -170,7 +170,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_SMR_EXAM_TY_DEL';
 
-            IF OBJECT_ID('#TEMP_D_SMR_EXAM_TY_DEL', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_SMR_EXAM_TY_DEL', 'U') IS NOT NULL
             drop table #TEMP_D_SMR_EXAM_TY_DEL;
 
             SELECT 
@@ -348,7 +348,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #D_TB_PAM_TEMP';
 
-            IF OBJECT_ID('#D_TB_PAM_TEMP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#D_TB_PAM_TEMP', 'U') IS NOT NULL
                 DROP TABLE #D_TB_PAM_TEMP;
             
 
@@ -384,7 +384,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_SMR_EXAM_TY_GROUP';
 
-            IF OBJECT_ID('#L_D_SMR_EXAM_TY_GROUP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_SMR_EXAM_TY_GROUP', 'U') IS NOT NULL
                 DROP TABLE #L_GT_12_REAS_GROUP;
 
             SELECT 
@@ -417,7 +417,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_SMR_EXAM_TY';
 
-            IF OBJECT_ID('#L_D_SMR_EXAM_TY', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_SMR_EXAM_TY', 'U') IS NOT NULL
                 DROP TABLE #L_D_SMR_EXAM_TY;
 
             SELECT 
@@ -452,7 +452,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_SMR_EXAM_TY';
 
-            IF OBJECT_ID('#TEMP_D_SMR_EXAM_TY', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_SMR_EXAM_TY', 'U') IS NOT NULL
                 DROP TABLE #TEMP_D_SMR_EXAM_TY;
 
             SELECT L.TB_PAM_UID,

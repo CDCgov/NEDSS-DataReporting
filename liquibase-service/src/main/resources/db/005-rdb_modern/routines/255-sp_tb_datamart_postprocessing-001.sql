@@ -51,7 +51,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING S_INVESTIGATION_LIST TABLE';
           
-        IF OBJECT_ID('#S_INVESTIGATION_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_INVESTIGATION_LIST', 'U') IS NOT NULL
             DROP TABLE #S_INVESTIGATION_LIST;
 
         SELECT DISTINCT
@@ -83,7 +83,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING S_INVESTIGATION_LIST_DEL TABLE';
           
-        IF OBJECT_ID('#S_INVESTIGATION_LIST_DEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_INVESTIGATION_LIST_DEL', 'U') IS NOT NULL
             DROP TABLE #S_INVESTIGATION_LIST_DEL;
 
         SELECT DISTINCT
@@ -114,7 +114,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #PATIENT TABLE';
           
-        IF OBJECT_ID('#PATIENT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PATIENT', 'U') IS NOT NULL
             DROP TABLE #PATIENT;
 
         -- 1. Create #PATIENT temporary table
@@ -186,7 +186,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #PROVIDER TABLE';
           
-        IF OBJECT_ID('#PROVIDER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PROVIDER', 'U') IS NOT NULL
             DROP TABLE #PROVIDER;
 
         -- 2. Create #PROVIDER temporary table
@@ -222,7 +222,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #PHYSICIAN TABLE';
           
-        IF OBJECT_ID('#PHYSICIAN', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PHYSICIAN', 'U') IS NOT NULL
             DROP TABLE #PHYSICIAN;
 
         -- 3. Create #PHYSICIAN temporary table
@@ -259,7 +259,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #REPORTER TABLE';
           
-        IF OBJECT_ID('#REPORTER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#REPORTER', 'U') IS NOT NULL
             DROP TABLE #REPORTER;
 
         -- 4. Create #REPORTER temporary table
@@ -296,7 +296,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #ORG_REPORTER TABLE';
           
-        IF OBJECT_ID('#ORG_REPORTER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#ORG_REPORTER', 'U') IS NOT NULL
             DROP TABLE #ORG_REPORTER;
 
         -- 5. Create #ORG_REPORTER temporary table
@@ -330,7 +330,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #HOSPITAL TABLE';
           
-        IF OBJECT_ID('#HOSPITAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#HOSPITAL', 'U') IS NOT NULL
             DROP TABLE #HOSPITAL;
 
         -- 6. Create #HOSPITAL temporary table
@@ -364,7 +364,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #ENTITY_LOCATION TABLE';
           
-        IF OBJECT_ID('#ENTITY_LOCATION', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#ENTITY_LOCATION', 'U') IS NOT NULL
             DROP TABLE #ENTITY_LOCATION;
 
         -- 7. Create #ENTITY_LOCATION temporary table
@@ -452,7 +452,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #BASE_TRANSLATED TABLE';
           
-        IF OBJECT_ID('#BASE_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#BASE_TRANSLATED', 'U') IS NOT NULL
             DROP TABLE #BASE_TRANSLATED;
 
         -- 8. Create #BASE_TRANSLATED temporary table
@@ -720,7 +720,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #INIT TABLE';
           
-        IF OBJECT_ID('#INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#INIT', 'U') IS NOT NULL
             DROP TABLE #INIT;
 
         -- 9. Create #INIT temporary table with age calculations
@@ -851,7 +851,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #GT_12_REAS_OUT TABLE';
           
-        IF OBJECT_ID('#GT_12_REAS_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#GT_12_REAS_OUT', 'U') IS NOT NULL
             DROP TABLE #GT_12_REAS_OUT;
 
         -- 10. Create #GT_12_REAS_OUT temporary table
@@ -899,7 +899,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #SMR_EXAM_TY_OUT TABLE';
           
-        IF OBJECT_ID('#SMR_EXAM_TY_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#SMR_EXAM_TY_OUT', 'U') IS NOT NULL
             DROP TABLE #SMR_EXAM_TY_OUT;
 
         -- 11. Create #SMR_EXAM_TY_OUT temporary table
@@ -947,7 +947,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #ADDL_RISK_OUT TABLE';
           
-        IF OBJECT_ID('#ADDL_RISK_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#ADDL_RISK_OUT', 'U') IS NOT NULL
             DROP TABLE #ADDL_RISK_OUT;
 
         -- 12. Create #ADDL_RISK_OUT temporary table
@@ -995,7 +995,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #DISEASE_SITE_OUT TABLE';
           
-        IF OBJECT_ID('#DISEASE_SITE_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DISEASE_SITE_OUT', 'U') IS NOT NULL
             DROP TABLE #DISEASE_SITE_OUT;
 
         -- 13. Create #DISEASE_SITE_OUT temporary table
@@ -1043,7 +1043,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #HC_PROV_TY_3_OUT TABLE';
           
-        IF OBJECT_ID('#HC_PROV_TY_3_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#HC_PROV_TY_3_OUT', 'U') IS NOT NULL
             DROP TABLE #HC_PROV_TY_3_OUT;
 
         -- 14. Create #HC_PROV_TY_3_OUT temporary table
@@ -1091,7 +1091,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #MOVED_WHERE_OUT TABLE';
           
-        IF OBJECT_ID('#MOVED_WHERE_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#MOVED_WHERE_OUT', 'U') IS NOT NULL
             DROP TABLE #MOVED_WHERE_OUT;
 
         -- 15. Create #MOVED_WHERE_OUT temporary table
@@ -1139,7 +1139,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #OUT_OF_CNTRY_OUT TABLE';
           
-        IF OBJECT_ID('#OUT_OF_CNTRY_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#OUT_OF_CNTRY_OUT', 'U') IS NOT NULL
             DROP TABLE #OUT_OF_CNTRY_OUT;
 
         -- 16. Create #OUT_OF_CNTRY_OUT temporary table
@@ -1187,7 +1187,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #MOVE_STATE_OUT TABLE';
           
-        IF OBJECT_ID('#MOVE_STATE_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#MOVE_STATE_OUT', 'U') IS NOT NULL
             DROP TABLE #MOVE_STATE_OUT;
 
         -- 17. Create #MOVE_STATE_OUT temporary table
@@ -1236,7 +1236,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #MOVE_CNTRY_OUT TABLE';
           
-        IF OBJECT_ID('#MOVE_CNTRY_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#MOVE_CNTRY_OUT', 'U') IS NOT NULL
             DROP TABLE #MOVE_CNTRY_OUT;
 
         -- 18. Create #MOVE_CNTRY_OUT temporary table
@@ -1285,7 +1285,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #MOVE_CNTY_OUT TABLE';
           
-        IF OBJECT_ID('#MOVE_CNTY_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#MOVE_CNTY_OUT', 'U') IS NOT NULL
             DROP TABLE #MOVE_CNTY_OUT;
 
         -- 19. Create #MOVE_CNTY_OUT temporary table
@@ -1334,7 +1334,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #CONFIRMATION_METHOD_OUT TABLE';
           
-        IF OBJECT_ID('#CONFIRMATION_METHOD_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CONFIRMATION_METHOD_OUT', 'U') IS NOT NULL
             DROP TABLE #CONFIRMATION_METHOD_OUT;
 
         -- 20. Create #CONFIRMATION_METHOD_OUT temporary table
@@ -1434,7 +1434,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TB_DATAMART_init TABLE';
           
-        IF OBJECT_ID('#TB_DATAMART_init', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TB_DATAMART_init', 'U') IS NOT NULL
             DROP TABLE #TB_DATAMART_init;
 
         -- 21. Create #TB_DATAMART_init temporary table 
@@ -1504,7 +1504,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TB_DATAMART TABLE';
           
-        IF OBJECT_ID('#TB_DATAMART', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TB_DATAMART', 'U') IS NOT NULL
             DROP TABLE #TB_DATAMART;
 
         -- 22. Create #TB_DATAMART temporary table 

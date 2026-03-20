@@ -36,7 +36,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_PHC_LIST TABLE';
 
-        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_PHC_LIST', 'U') IS NOT NULL
             drop table #S_PHC_LIST;
 
         SELECT DISTINCT value
@@ -58,7 +58,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING S_INVESTIGATION_LIST_DEL TABLE';
 
-        IF OBJECT_ID('#S_INVESTIGATION_LIST_DEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_INVESTIGATION_LIST_DEL', 'U') IS NOT NULL
             DROP TABLE #S_INVESTIGATION_LIST_DEL;
 
         SELECT DISTINCT
@@ -118,7 +118,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #DMBASE TABLE';
 
-        IF OBJECT_ID('#DMBASE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DMBASE', 'U') IS NOT NULL
             drop table #DMBASE;
 
         SELECT distinct D_VAR_PAM.D_VAR_PAM_KEY
@@ -147,7 +147,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #PATIENT TABLE';
 
-        IF OBJECT_ID('#PATIENT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PATIENT', 'U') IS NOT NULL
             drop table #PATIENT;
 
         -- PATIENT table
@@ -210,7 +210,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #PROVIDER TABLE';
 
 
-        IF OBJECT_ID('#PROVIDER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PROVIDER', 'U') IS NOT NULL
             drop table #PROVIDER;
 
         -- PROVIDER table
@@ -247,7 +247,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #PHYSICIAN TABLE';
 
 
-        IF OBJECT_ID('#PHYSICIAN', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PHYSICIAN', 'U') IS NOT NULL
             drop table #PHYSICIAN;
 
         -- PHYSICIAN table
@@ -284,7 +284,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #REPORTER TABLE';
 
 
-        IF OBJECT_ID('#REPORTER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#REPORTER', 'U') IS NOT NULL
             drop table #REPORTER;
 
         -- REPORTER table
@@ -320,7 +320,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #ORG_REPORTER TABLE';
 
-        IF OBJECT_ID('#ORG_REPORTER', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#ORG_REPORTER', 'U') IS NOT NULL
             drop table #ORG_REPORTER;
 
         -- ORG_REPORTER table
@@ -356,7 +356,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #HOSPITAL TABLE';
 
 
-        IF OBJECT_ID('#HOSPITAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#HOSPITAL', 'U') IS NOT NULL
             drop table #HOSPITAL;
 
         -- HOSPITAL table
@@ -391,7 +391,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #ENTITY_LOCATION TABLE';
 
-        IF OBJECT_ID('#ENTITY_LOCATION', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#ENTITY_LOCATION', 'U') IS NOT NULL
             drop table #ENTITY_LOCATION;
 
         -- ENTITY_LOCATION table
@@ -469,7 +469,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #INVESTIGATION TABLE';
 
-        IF OBJECT_ID('#INVESTIGATION', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#INVESTIGATION', 'U') IS NOT NULL
             drop table #INVESTIGATION;
 
         -- INVESTIGATION table
@@ -545,7 +545,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #BASE TABLE';
 
-        IF OBJECT_ID('#BASE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#BASE', 'U') IS NOT NULL
             drop table #BASE;
 
         -- BASE table
@@ -712,7 +712,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #BASE_TRANSLATED TABLE';
 
 
-        IF OBJECT_ID('#BASE_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#BASE_TRANSLATED', 'U') IS NOT NULL
             drop table #BASE_TRANSLATED;
 
         -- BASE_TRANSLATED table
@@ -745,7 +745,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #INIT TABLE';
 
-        IF OBJECT_ID('#INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#INIT', 'U') IS NOT NULL
             drop table #INIT;
 
         -- INIT table
@@ -777,7 +777,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_PCR_SOURCE TABLE';
 
-        IF OBJECT_ID('#D_PCR_SOURCE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_PCR_SOURCE', 'U') IS NOT NULL
             drop table #D_PCR_SOURCE;
 
         -- D_PCR_SOURCE processing
@@ -808,7 +808,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_PCR_SOURCE_OUT TABLE';
 
-        IF OBJECT_ID('#D_PCR_SOURCE_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_PCR_SOURCE_OUT', 'U') IS NOT NULL
             drop table #D_PCR_SOURCE_OUT;
 
         -- PCR Source transformation (replacing DATA step)
@@ -848,7 +848,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_RASH_LOC_GEN TABLE';
 
-        IF OBJECT_ID('#D_RASH_LOC_GEN', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_RASH_LOC_GEN', 'U') IS NOT NULL
             drop table #D_RASH_LOC_GEN;
 
         -- Similar transformation for D_RASH_LOC_GEN
@@ -880,7 +880,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_RASH_LOC_GEN_OUT TABLE';
 
-        IF OBJECT_ID('#D_RASH_LOC_GEN_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_RASH_LOC_GEN_OUT', 'U') IS NOT NULL
             drop table #D_RASH_LOC_GEN_OUT;
 
         SELECT
@@ -919,7 +919,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #CONFIRMATION_METHOD TABLE';
 
-        IF OBJECT_ID('#CONFIRMATION_METHOD', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CONFIRMATION_METHOD', 'U') IS NOT NULL
             drop table #CONFIRMATION_METHOD;
 
         -- CONFIRMATION_METHOD processing
@@ -960,7 +960,7 @@ BEGIN
             @PROC_STEP_NAME = 'GENERATING #CONFIRMATION_METHOD_BASE TABLE';
 
 
-        IF OBJECT_ID('#CONFIRMATION_METHOD_BASE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CONFIRMATION_METHOD_BASE', 'U') IS NOT NULL
             drop table #CONFIRMATION_METHOD_BASE;
 
         -- PIVOT for CONFIRMATION_METHOD
@@ -994,7 +994,7 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING #CONFIRMATION_METHOD_BASE_TEMP TABLE';
 
-        IF OBJECT_ID('#CONFIRMATION_METHOD_BASE_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CONFIRMATION_METHOD_BASE_TEMP', 'U') IS NOT NULL
             drop table #CONFIRMATION_METHOD_BASE_TEMP;
 
         -- Process CONFIRMATION_METHOD_BASE (replacing first DATA step)
@@ -1029,7 +1029,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #CONFIRMATION_METHOD_BASE2 TABLE';
 
-        IF OBJECT_ID('#CONFIRMATION_METHOD_BASE2', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CONFIRMATION_METHOD_BASE2', 'U') IS NOT NULL
             drop table #CONFIRMATION_METHOD_BASE2;
 
         -- Process CONFIRMATION_METHOD_BASE (replacing second DATA step)
@@ -1063,7 +1063,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #CONFIRMATION_METHOD_OUT TABLE';
 
-        IF OBJECT_ID('#CONFIRMATION_METHOD_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#CONFIRMATION_METHOD_OUT', 'U') IS NOT NULL
             drop table #CONFIRMATION_METHOD_OUT;
 
         -- Create CONFIRMATION_METHOD_OUT table
@@ -1098,7 +1098,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #VAR_DATAMART_INIT TABLE';
 
-        IF OBJECT_ID('#VAR_DATAMART_INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#VAR_DATAMART_INIT', 'U') IS NOT NULL
             drop table #VAR_DATAMART_INIT;
 
         -- VAR_DATAMART_init
@@ -1149,7 +1149,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #VAR_DATAMART_NOT_EVENT TABLE';
 
-        IF OBJECT_ID('#VAR_DATAMART_NOT_EVENT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#VAR_DATAMART_NOT_EVENT', 'U') IS NOT NULL
             drop table #VAR_DATAMART_NOT_EVENT;
 
         -- VAR_DATAMART_not_event with notification details

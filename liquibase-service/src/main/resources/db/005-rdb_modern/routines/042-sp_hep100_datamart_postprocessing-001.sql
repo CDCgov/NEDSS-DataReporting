@@ -54,7 +54,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #HEP100_INIT';
 
-            IF OBJECT_ID('#HEP100_INIT', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#HEP100_INIT', 'U') IS NOT NULL
                 drop table #HEP100_INIT;
 
 

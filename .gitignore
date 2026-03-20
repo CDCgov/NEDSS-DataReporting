@@ -34,6 +34,9 @@ hs_err_pid*
 ### .vscode ###
 .vscode/
 
+### VIM / NEOVIM ###
+.exrc
+
 ### env ###
 *.env
 
@@ -53,5 +56,7 @@ NEDSSDev/
 .classpath
 .settings/
 .factorypath
-bin/
 
+# Performance-testing
+venv/
+examples/
