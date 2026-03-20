@@ -45,6 +45,7 @@ jobs:
           ./gradlew clean build jacocoTestReport
 
       - name: Publish Testing Reports
+        if: always()
         uses: actions/upload-artifact@v6
         with:
           name: testing
