@@ -34,7 +34,7 @@ public class KafkaConsumerConfig {
   @Value("${spring.kafka.consumer.maxPollRecs}")
   private String maxPollRecords = "";
 
-  @Bean(name = "investigationConsumerFactory")
+  @Bean
   public ConsumerFactory<String, String> investigationConsumerFactory() {
     final Map<String, Object> config = new HashMap<>();
     config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -47,7 +47,7 @@ public class KafkaConsumerConfig {
   }
 
   // Config for kafka listener aka consumer
-  @Bean(name = "investigationKafkaListenerContainerFactory")
+  @Bean
   public ConcurrentKafkaListenerContainerFactory<String, String>
       investigationKafkaListenerContainerFactory() {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =

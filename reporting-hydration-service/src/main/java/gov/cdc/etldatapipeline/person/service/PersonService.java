@@ -150,10 +150,11 @@ public class PersonService {
         DeserializationException.class,
         RuntimeException.class,
         NoDataException.class
-      })
+      },
+      kafkaTemplate = "personKafkaTemplate")
   @KafkaListener(
       topics = {"${spring.kafka.input.topic-name-person}", "${spring.kafka.input.topic-name-user}"},
-      containerFactory = "kafkaListenerContainerFactory")
+      containerFactory = "personKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
     if (topic.equals(personTopic)) {

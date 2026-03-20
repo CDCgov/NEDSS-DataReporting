@@ -143,7 +143,8 @@ public class InvestigationService {
         DeserializationException.class,
         RuntimeException.class,
         NoDataException.class
-      })
+      },
+      kafkaTemplate = "investigationKafkaTemplate")
   @KafkaListener(
       topics = {
         "${spring.kafka.input.topic-name-phc}",
@@ -153,7 +154,8 @@ public class InvestigationService {
         "${spring.kafka.input.topic-name-vac}",
         "${spring.kafka.input.topic-name-tmt}",
         "${spring.kafka.input.topic-name-ar}"
-      })
+      },
+      containerFactory = "investigationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
     final String topic = rec.topic();
     final String message = rec.value();

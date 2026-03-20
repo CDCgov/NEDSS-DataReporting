@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -75,7 +76,9 @@ public class ProcessInvestigationDataUtil {
   @Value("${spring.kafka.output.topic-name-rdb-metadata-columns}")
   private String rdbMetadataColumnsOutputTopicName;
 
+  @Qualifier("investigationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
+
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
   private final ModelMapper modelMapper = new ModelMapper();
 

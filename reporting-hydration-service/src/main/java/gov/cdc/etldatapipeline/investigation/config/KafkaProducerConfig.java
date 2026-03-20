@@ -19,7 +19,7 @@ public class KafkaProducerConfig {
   private String bootstrapServers = "";
 
   @Bean
-  public ProducerFactory<String, String> personProducerFactory() {
+  public ProducerFactory<String, String> investigationProducerFactory() {
     final Map<String, Object> config = new HashMap<>();
     config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -29,8 +29,8 @@ public class KafkaProducerConfig {
   }
 
   @Bean
-  public KafkaTemplate<String, String> personKafkaTemplate() {
-    // set factory for both producer
-    return new KafkaTemplate<>(personProducerFactory());
+  public KafkaTemplate<String, String> investigationKafkaTemplate() {
+    // set factory for both producer and consumer
+    return new KafkaTemplate<>(investigationProducerFactory());
   }
 }

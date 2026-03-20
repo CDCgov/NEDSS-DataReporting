@@ -1,6 +1,7 @@
 package gov.cdc.etldatapipeline.investigation.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +11,8 @@ public class KafkaProducerService {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   @Autowired
-  public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate) {
+  public KafkaProducerService(
+      @Qualifier("investigationKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
     this.kafkaTemplate = kafkaTemplate;
   }
 
