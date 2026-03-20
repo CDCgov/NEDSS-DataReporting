@@ -12,12 +12,10 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @EnableKafka
-@Configuration
-@Component("InvestigationKafkaConsumerConfig")
+@Configuration("InvestigationKafkaConsumerConfig")
 public class KafkaConsumerConfig {
 
   @Value("${spring.kafka.group-id}")
