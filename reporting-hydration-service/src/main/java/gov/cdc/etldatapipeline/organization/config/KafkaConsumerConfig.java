@@ -14,7 +14,7 @@ import org.springframework.kafka.core.*;
 
 @Slf4j
 @EnableKafka
-@Configuration
+@Configuration("organizationKafkaConsumerConfig")
 public class KafkaConsumerConfig {
   @Value("${spring.kafka.group-id}")
   private String groupId = "";

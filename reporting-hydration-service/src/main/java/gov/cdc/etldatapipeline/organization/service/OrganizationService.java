@@ -127,6 +127,7 @@ public class OrganizationService {
   }
 
   @RetryableTopic(
+      kafkaTemplate = "organizationKafkaTemplate",
       attempts = "${spring.kafka.consumer.max-retry}",
       autoCreateTopics = "false",
       dltStrategy = DltStrategy.FAIL_ON_ERROR,
