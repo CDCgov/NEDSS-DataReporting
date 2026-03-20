@@ -44,3 +44,14 @@ hs_err_pid*
 build
 application-local.yaml
 NEDSSDev/
+
+# asdf configurations
+.tool-versions
+
+### Eclipse / JDTLS ###
+.project
+.classpath
+.settings/
+.factorypath
+bin/
+
