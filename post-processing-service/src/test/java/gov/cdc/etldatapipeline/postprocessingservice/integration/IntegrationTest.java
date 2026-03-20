@@ -27,6 +27,7 @@ abstract class IntegrationTest {
               "nbs-mssql", "liquibase", "kafka", "debezium", "kafka-connect", "person-service")
           .waitingFor("debezium", Wait.forHealthcheck())
           .waitingFor("kafka-connect", Wait.forHealthcheck())
+          .waitingFor("person-service", Wait.forHealthcheck())
           // Pull logs from the containers for better debugging
           .withLogConsumer("nbs-mssql", consumer)
           .withLogConsumer("liquibase", consumer)
