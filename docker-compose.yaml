@@ -11,6 +11,7 @@ services:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
       - 3433:1433
+    mem_limit: 2.5G
 
   liquibase:
     build:
@@ -22,6 +23,7 @@ services:
     depends_on:
       nbs-mssql:
         condition: service_healthy
+    mem_limit: 200M
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
@@ -32,6 +34,7 @@ services:
       - "9991:9990"
       - "7003:7001"
       - "8788:8787"
+    mem_limit: 1G
 
   kafka:
     image: confluentinc/cp-kafka:7.8.7
@@ -62,6 +65,7 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+    mem_limit: 700M
 
   kafka-connect:
     build:
@@ -95,6 +99,7 @@ services:
       interval: 20s
       timeout: 15s
       retries: 5
+    mem_limit: 1.25G
 
   debezium:
     image: debezium/connect:2.4
@@ -130,6 +135,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    mem_limit: 800M
 
   investigation-service:
     build:
@@ -146,6 +152,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+    mem_limit: 300M
 
   ldfdata-service:
     build:
@@ -162,6 +169,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+    mem_limit: 300M
 
   observation-service:
     build:
@@ -178,6 +186,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+    mem_limit: 300M
 
   organization-service:
     build:
@@ -194,6 +203,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+    mem_limit: 300M
 
   person-service:
     build:
@@ -211,6 +221,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+    mem_limit: 300M
 
   post-processing-service:
     build:
@@ -227,6 +238,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+    mem_limit: 300M
 
   reporting-hydration-service:
     build:
@@ -243,3 +255,4 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+    mem_limit: 300M
