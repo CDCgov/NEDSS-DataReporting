@@ -17,8 +17,11 @@ WORKDIR /usr/src/
 #Build person service along with any required libraries
 RUN ./gradlew :person-service:buildNeeded -x test --no-daemon
 FROM amazoncorretto:21
-RUN yum update -y && yum clean all
+RUN yum update -y && yum install -y curl && yum clean all
 COPY --from=builder /usr/src/person-service/build/libs/person-service*.jar person-service.jar
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD curl -f http://localhost:8091/actuator/health || exit 1
 
 # Run jar
 ENTRYPOINT ["java", "-jar", "person-service.jar"]

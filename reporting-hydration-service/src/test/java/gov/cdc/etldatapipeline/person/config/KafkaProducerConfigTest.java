@@ -1,5 +1,6 @@
 package gov.cdc.etldatapipeline.person.config;
 
+import gov.cdc.etldatapipeline.reportinghydration.util.TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,10 +11,10 @@ import org.testcontainers.utility.DockerImageName;
 
 class KafkaProducerConfigTest {
   private static KafkaProducerConfig kafkaProducerConfig;
-  private static DockerImageName image = DockerImageName.parse("confluentinc/cp-kafka:8.0.4");
+  private static final DockerImageName image = TestUtils.getComposeImageName("kafka");
 
   @Container
-  private static ConfluentKafkaContainer kafkaContainer = new ConfluentKafkaContainer(image);
+  private static final ConfluentKafkaContainer kafkaContainer = new ConfluentKafkaContainer(image);
 
   @BeforeAll
   static void setUp() {
