@@ -21,7 +21,7 @@ RUN yum update -y && yum install -y curl && yum clean all
 COPY --from=builder /usr/src/person-service/build/libs/person-service*.jar person-service.jar
 
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD curl -f http://localhost:8095/actuator/health || exit 1
+  CMD curl -f http://localhost:8091/actuator/health || exit 1
 
 # Run jar
 ENTRYPOINT ["java", "-jar", "person-service.jar"]
