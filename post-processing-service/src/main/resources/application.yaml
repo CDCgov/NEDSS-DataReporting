@@ -46,6 +46,7 @@ spring:
     dlt-group-id: rtr-dlt-group
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
     consumer:
+      auto-offset-reset: earliest
       max-retry: 3
       maxPollIntervalMs: 30000
       maxPollRecs: ${KAFKA_CONSUMER_MAX_POLL_RECS:200}
