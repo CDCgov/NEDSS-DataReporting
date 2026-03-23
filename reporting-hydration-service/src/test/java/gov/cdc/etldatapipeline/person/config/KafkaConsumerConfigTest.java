@@ -29,7 +29,7 @@ class KafkaConsumerConfigTest {
   }
 
   @Test
-  void kafkaListenerContainerFactory_ConfigurationIsValid() {
+  void personKafkaListenerContainerFactory_ConfigurationIsValid() {
 
     // Act
     ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory =
