@@ -1,7 +1,5 @@
 package gov.cdc.etldatapipeline.postprocessingservice.config;
 
-import java.util.HashMap;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -13,73 +11,69 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @EnableKafka
 @Configuration
 public class KafkaConsumerConfig {
-  @Value("${spring.kafka.group-id}")
-  private String groupId = "";
+    @Value("${spring.kafka.group-id}")
+    private String groupId = "";
 
-  @Value("${spring.kafka.dlt-group-id}")
-  private String groupIdDlt = "";
+    @Value("${spring.kafka.dlt-group-id}")
+    private String groupIdDlt = "";
 
-  @Value("${spring.kafka.bootstrap-servers}")
-  private String bootstrapServers = "";
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers = "";
 
-  @Value("${spring.kafka.consumer.maxPollIntervalMs}")
-  private String maxPollInterval = "";
+    @Value("${spring.kafka.consumer.maxPollIntervalMs}")
+    private String maxPollInterval = "";
 
-  @Value("${spring.kafka.consumer.maxPollRecs}")
-  private String maxPollRecords = "";
+    @Value("${spring.kafka.consumer.maxPollRecs}")
+    private String maxPollRecords = "";
 
-  @Value("${spring.kafka.consumer.auto-offset-reset:latest}")
-  private String autoOffsetReset;
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory() {
+        final Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollInterval);
+        config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
+        return new DefaultKafkaConsumerFactory<>(config);
+    }
 
-  @Bean
-  public ConsumerFactory<String, String> consumerFactory() {
-    final Map<String, Object> config = new HashMap<>();
-    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-    config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    config.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollInterval);
-    config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
-    config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-    return new DefaultKafkaConsumerFactory<>(config);
-  }
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactoryDefault() {
+        return createContainerFactory(groupId);
+    }
 
-  @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String>
-      kafkaListenerContainerFactoryDefault() {
-    return createContainerFactory(groupId);
-  }
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactoryDlt() {
+        return createContainerFactory(groupIdDlt);
+    }
 
-  @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String>
-      kafkaListenerContainerFactoryDlt() {
-    return createContainerFactory(groupIdDlt);
-  }
 
-  private ConcurrentKafkaListenerContainerFactory<String, String> createContainerFactory(
-      String groupId) {
-    ConcurrentKafkaListenerContainerFactory<String, String> factory =
-        new ConcurrentKafkaListenerContainerFactory<>();
-    factory.setConsumerFactory(createConsumerFactory(groupId));
-    return factory;
-  }
+    private ConcurrentKafkaListenerContainerFactory<String, String> createContainerFactory(String groupId) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(createConsumerFactory(groupId));
+        return factory;
+    }
 
-  private ConsumerFactory<String, String> createConsumerFactory(String groupId) {
-    return new DefaultKafkaConsumerFactory<>(baseConsumerConfigs(groupId));
-  }
 
-  private Map<String, Object> baseConsumerConfigs(String groupId) {
-    Map<String, Object> config = new HashMap<>();
-    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-    config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    config.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollInterval);
-    config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-    return config;
-  }
+    private ConsumerFactory<String, String> createConsumerFactory(String groupId) {
+        return new DefaultKafkaConsumerFactory<>(baseConsumerConfigs(groupId));
+    }
+
+    private Map<String, Object> baseConsumerConfigs(String groupId) {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollInterval);
+        return config;
+    }
 }

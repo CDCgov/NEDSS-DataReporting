@@ -12,8 +12,6 @@ spring:
     consumer:
       maxPollIntervalMs: 6000
       max-retry: 10
-      properties:
-        metadata.max.age.ms: 6000
 service:
   fixed-delay:
     cached-ids: 6000
