@@ -19,7 +19,7 @@ abstract class IntegrationTest {
   private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(logger);
 
   @SuppressWarnings("resource")
-  private static final ComposeContainer environment =
+  protected static final ComposeContainer environment =
       new ComposeContainer(
               DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
           // List specific services to prevent launching wildfly container
