@@ -41,7 +41,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_I_Result_vals';
 
 
-        IF OBJECT_ID('#tmp_I_Result_vals', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_I_Result_vals', 'U') IS NOT NULL
             drop table #tmp_I_Result_vals ;
 
         /*
@@ -86,7 +86,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_ISOLATE_TRACKING_INIT';
 
 
-        IF OBJECT_ID('#tmp_ISOLATE_TRACKING_INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_ISOLATE_TRACKING_INIT', 'U') IS NOT NULL
             drop table #tmp_ISOLATE_TRACKING_INIT ;
 
         SELECT lt.LAB_TEST_KEY,
@@ -140,7 +140,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_RESULTED_TEST_DETAIL1';
 
 
-        IF OBJECT_ID('#tmp_RESULTED_TEST_DETAIL1', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_RESULTED_TEST_DETAIL1', 'U') IS NOT NULL
             drop table #tmp_RESULTED_TEST_DETAIL1 ;
 
         -- this query works through the LAB_TEST table to get the resulted test
@@ -211,7 +211,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_RESULTED_TEST_DETAILS';
 
 
-        IF OBJECT_ID('#tmp_RESULTED_TEST_DETAILS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_RESULTED_TEST_DETAILS', 'U') IS NOT NULL
             drop table #tmp_RESULTED_TEST_DETAILS ;
 
         SELECT TRACK.LAB_TEST_KEY,
@@ -293,7 +293,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_ISOLATE_TRACKING_LAB330_INIT';
 
 
-        IF OBJECT_ID('#tmp_ISOLATE_TRACKING_LAB330_INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_ISOLATE_TRACKING_LAB330_INIT', 'U') IS NOT NULL
             drop table #tmp_ISOLATE_TRACKING_LAB330_INIT ;
 
 
@@ -334,7 +334,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_RESULTED_TEST_DETAILS_final';
 
 
-        IF OBJECT_ID('#tmp_RESULTED_TEST_DETAILS_final', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_RESULTED_TEST_DETAILS_final', 'U') IS NOT NULL
             drop table #tmp_RESULTED_TEST_DETAILS_final ;
 
 
@@ -699,7 +699,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_ISOLATE_TRACKING_WITH_LAB330';
 
 
-        IF OBJECT_ID('#tmp_ISOLATE_TRACKING_WITH_LAB330', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_ISOLATE_TRACKING_WITH_LAB330', 'U') IS NOT NULL
             drop table #tmp_ISOLATE_TRACKING_WITH_LAB330 ;
 
 
@@ -785,7 +785,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING #tmp_LAB101_INIT';
 
 
-        IF OBJECT_ID('#tmp_LAB101_INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_LAB101_INIT', 'U') IS NOT NULL
             drop table #tmp_LAB101_INIT ;
 
         SELECT OID                                                as 'PROGRAM_JURISDICTION_OID',
@@ -869,7 +869,7 @@ BEGIN
         SET @PROC_STEP_NAME = ' GENERATING TMP_LAB101_INIT2';
 
 
-        IF OBJECT_ID('#TMP_LAB101_INIT2', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_LAB101_INIT2', 'U') IS NOT NULL
             drop table #TMP_LAB101_INIT2 ;
 
 
@@ -1181,38 +1181,38 @@ BEGIN
         COMMIT TRANSACTION;
 
 
-        IF OBJECT_ID('#tmp_ISOLATE_TRACKING_INIT', 'U') IS NOT NULL drop table #tmp_ISOLATE_TRACKING_INIT ;
-        IF OBJECT_ID('#tmp_UPDATED_LAB101', 'U') IS NOT NULL drop table #tmp_UPDATED_LAB101 ;
-        IF OBJECT_ID('#tmp_ISOLATE_TRACKING_INIT', 'U') IS NOT NULL drop table #tmp_ISOLATE_TRACKING_INIT ;
-        IF OBJECT_ID('#tmp_RESULTED_TEST_DETAIL1', 'U') IS NOT NULL drop table #tmp_RESULTED_TEST_DETAIL1 ;
-        IF OBJECT_ID('#tmp_RESULTED_TEST_DETAILS', 'U') IS NOT NULL drop table #tmp_RESULTED_TEST_DETAILS ;
-        IF OBJECT_ID('#tmp_ISOLATE_TRACKING_LAB330_INIT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_ISOLATE_TRACKING_INIT', 'U') IS NOT NULL drop table #tmp_ISOLATE_TRACKING_INIT ;
+        IF OBJECT_ID('tempdb..#tmp_UPDATED_LAB101', 'U') IS NOT NULL drop table #tmp_UPDATED_LAB101 ;
+        IF OBJECT_ID('tempdb..#tmp_ISOLATE_TRACKING_INIT', 'U') IS NOT NULL drop table #tmp_ISOLATE_TRACKING_INIT ;
+        IF OBJECT_ID('tempdb..#tmp_RESULTED_TEST_DETAIL1', 'U') IS NOT NULL drop table #tmp_RESULTED_TEST_DETAIL1 ;
+        IF OBJECT_ID('tempdb..#tmp_RESULTED_TEST_DETAILS', 'U') IS NOT NULL drop table #tmp_RESULTED_TEST_DETAILS ;
+        IF OBJECT_ID('tempdb..#tmp_ISOLATE_TRACKING_LAB330_INIT', 'U') IS NOT NULL
             drop table #tmp_ISOLATE_TRACKING_LAB330_INIT ;
-        IF OBJECT_ID('#tmp_RESULTED_TEST_DETAILS_FINAL', 'U') IS NOT NULL drop table #tmp_RESULTED_TEST_DETAILS_FINAL ;
-        IF OBJECT_ID('#tmp_ISOLATE_TRACKING_WITH_LAB330', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_RESULTED_TEST_DETAILS_FINAL', 'U') IS NOT NULL drop table #tmp_RESULTED_TEST_DETAILS_FINAL ;
+        IF OBJECT_ID('tempdb..#tmp_ISOLATE_TRACKING_WITH_LAB330', 'U') IS NOT NULL
             drop table #tmp_ISOLATE_TRACKING_WITH_LAB330 ;
-        IF OBJECT_ID('#tmp_LAB101_INIT', 'U') IS NOT NULL drop table #tmp_LAB101_INIT ;
-        IF OBJECT_ID('#tmp_LAB101_INIT2', 'U') IS NOT NULL drop table #tmp_LAB101_INIT2 ;
+        IF OBJECT_ID('tempdb..#tmp_LAB101_INIT', 'U') IS NOT NULL drop table #tmp_LAB101_INIT ;
+        IF OBJECT_ID('tempdb..#tmp_LAB101_INIT2', 'U') IS NOT NULL drop table #tmp_LAB101_INIT2 ;
 
 
-        IF OBJECT_ID('#tmp_LAB_TEST_final', 'U') IS NOT NULL drop table #tmp_LAB_TEST_final ;
-        IF OBJECT_ID('#tmp_LAB_TEST', 'U') IS NOT NULL drop table #tmp_LAB_TEST ;
-        IF OBJECT_ID('#tmp_Lab_Test_Result', 'U') IS NOT NULL drop table #tmp_Lab_Test_Result;
-        IF OBJECT_ID('#tmp_TEST_RESULT_GROUPING', 'U') IS NOT NULL drop table #TMP_TEST_RESULT_GROUPING;
+        IF OBJECT_ID('tempdb..#tmp_LAB_TEST_final', 'U') IS NOT NULL drop table #tmp_LAB_TEST_final ;
+        IF OBJECT_ID('tempdb..#tmp_LAB_TEST', 'U') IS NOT NULL drop table #tmp_LAB_TEST ;
+        IF OBJECT_ID('tempdb..#tmp_Lab_Test_Result', 'U') IS NOT NULL drop table #tmp_Lab_Test_Result;
+        IF OBJECT_ID('tempdb..#tmp_TEST_RESULT_GROUPING', 'U') IS NOT NULL drop table #TMP_TEST_RESULT_GROUPING;
 
-        IF OBJECT_ID('#tmp_Lab_Result_Val', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_Lab_Result_Val', 'U') IS NOT NULL
             drop table #tmp_Lab_Result_Val;
 
-        IF OBJECT_ID('#tmp_New_Lab_Result_Comment_FINAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_New_Lab_Result_Comment_FINAL', 'U') IS NOT NULL
             drop table #TMP_New_Lab_Result_Comment_FINAL;
 
 
-        IF OBJECT_ID('#tmp_LAB_RESULT_VAL_final', 'U') IS NOT NULL drop table #tmp_LAB_RESULT_VAL_final ;
-        IF OBJECT_ID('#tmp_TEST_RESULT_GROUPING', 'U') IS NOT NULL drop table #tmp_TEST_RESULT_GROUPING ;
-        IF OBJECT_ID('#tmp_D_LAB_TEST_N', 'U') IS NOT NULL drop table #tmp_D_LAB_TEST_N ;
-        IF OBJECT_ID('#tmp_LAB_TEST_RESULT', 'U') IS NOT NULL drop table #tmp_LAB_TEST_RESULT ;
+        IF OBJECT_ID('tempdb..#tmp_LAB_RESULT_VAL_final', 'U') IS NOT NULL drop table #tmp_LAB_RESULT_VAL_final ;
+        IF OBJECT_ID('tempdb..#tmp_TEST_RESULT_GROUPING', 'U') IS NOT NULL drop table #tmp_TEST_RESULT_GROUPING ;
+        IF OBJECT_ID('tempdb..#tmp_D_LAB_TEST_N', 'U') IS NOT NULL drop table #tmp_D_LAB_TEST_N ;
+        IF OBJECT_ID('tempdb..#tmp_LAB_TEST_RESULT', 'U') IS NOT NULL drop table #tmp_LAB_TEST_RESULT ;
 
-        IF OBJECT_ID('#tmp_updated_participant', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_updated_participant', 'U') IS NOT NULL
             drop table #tmp_updated_participant;
 
         BEGIN TRANSACTION;

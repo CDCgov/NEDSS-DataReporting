@@ -5,6 +5,7 @@ on:
       - "investigation-service/**"
       - "ldfdata-service/**"
       - "person-service/**"
+      - "reporting-hydration-service/**"
       - "post-processing-service/**"
       - "observation-service/**"
       - "organization-service/**"
@@ -44,7 +45,7 @@ jobs:
           ./gradlew clean build jacocoTestReport
 
       - name: Publish Testing Reports
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: testing
           path: ./**/build/reports

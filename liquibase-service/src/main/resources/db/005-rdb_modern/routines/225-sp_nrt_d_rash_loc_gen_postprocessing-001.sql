@@ -38,7 +38,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #PHC_LIST TABLE';
 
-        IF OBJECT_ID('#S_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_PHC_LIST', 'U') IS NOT NULL
         drop table #S_PHC_LIST;
 
         SELECT value
@@ -64,7 +64,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_RASH_LOC_GEN_TRANSLATED';
 
-        IF OBJECT_ID('#S_RASH_LOC_GEN_TRANSLATED', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_RASH_LOC_GEN_TRANSLATED', 'U') IS NOT NULL
         drop table #S_RASH_LOC_GEN_TRANSLATED;
         
         SELECT DISTINCT
@@ -112,7 +112,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #S_RASH_LOC_GEN';
 
-        IF OBJECT_ID('#S_RASH_LOC_GEN', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_RASH_LOC_GEN', 'U') IS NOT NULL
         drop table #S_RASH_LOC_GEN;
 
 
@@ -141,7 +141,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TEMP_D_RASH_LOC_GEN_DEL';
 
-        IF OBJECT_ID('#TEMP_D_RASH_LOC_GEN_DEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_D_RASH_LOC_GEN_DEL', 'U') IS NOT NULL
         drop table #TEMP_D_RASH_LOC_GEN_DEL;
 
         SELECT RASH_LOC_GEN.VAR_PAM_UID, 
@@ -310,7 +310,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_VAR_PAM_TEMP';
 
-        IF OBJECT_ID('#D_VAR_PAM_TEMP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_VAR_PAM_TEMP', 'U') IS NOT NULL
         drop table #D_VAR_PAM_TEMP;
         
 
@@ -339,7 +339,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #L_RASH_LOC_GEN_GROUP';
 
-        IF OBJECT_ID('#L_RASH_LOC_GEN_GROUP', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#L_RASH_LOC_GEN_GROUP', 'U') IS NOT NULL
         drop table #L_RASH_LOC_GEN_GROUP;
 
         SELECT D_VAR_PAM.VAR_PAM_UID,   NRT_GROUP_KEY.VAR_PAM_UID AS D_RASH_LOC_GEN_UID , NRT_GROUP_KEY.D_RASH_LOC_GEN_GROUP_KEY
@@ -367,7 +367,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #L_RASH_LOC_GEN';
 
-        IF OBJECT_ID('#L_RASH_LOC_GEN', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#L_RASH_LOC_GEN', 'U') IS NOT NULL
         drop table #L_RASH_LOC_GEN;
 
         SELECT L.VAR_PAM_UID,  
@@ -398,7 +398,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TEMP_D_RASH_LOC_GEN';
 
-        IF OBJECT_ID('#TEMP_D_RASH_LOC_GEN', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_D_RASH_LOC_GEN', 'U') IS NOT NULL
         drop table #TEMP_D_RASH_LOC_GEN;
 
         SELECT L.VAR_PAM_UID,

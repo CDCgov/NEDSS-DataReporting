@@ -78,7 +78,7 @@ BEGIN
         SET @Proc_Step_no = 3;
         SET @Proc_Step_Name = ' Generating PHC_CASE_UIDS_ALL';
 
-        IF OBJECT_ID('#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#PHC_CASE_UIDS_ALL', 'U') IS NOT NULL
             drop table #PHC_CASE_UIDS_ALL;
 
 
@@ -106,13 +106,13 @@ BEGIN
         SET @Proc_Step_no = 4;
         SET @Proc_Step_Name = ' Generating ENTITY_KEYSTORE_INC';
 
-        IF OBJECT_ID('#ENTITY_KEYSTORE_INC', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#ENTITY_KEYSTORE_INC', 'U') IS NOT NULL
             drop table #ENTITY_KEYSTORE_INC
             ;
 
         -- drop table dbo.F_S_INV_CASE
 
-        IF OBJECT_ID('#F_S_INV_CASE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#F_S_INV_CASE', 'U') IS NOT NULL
             drop table #F_S_INV_CASE;
 
         -- Populate dbo.F_S_INV_CASE
@@ -180,7 +180,7 @@ BEGIN
         SET @Proc_Step_no = 5;
         SET @Proc_Step_Name = ' Generating DIMENSION_KEYS_PAGECASEID';
 
-        IF OBJECT_ID('#DIMENSION_KEYS_PAGECASEID', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DIMENSION_KEYS_PAGECASEID', 'U') IS NOT NULL
             drop table #DIMENSION_KEYS_PAGECASEID
             ;
 
@@ -230,7 +230,7 @@ BEGIN
         SET @Proc_Step_no = 6;
         SET @Proc_Step_Name = ' Generating DIMENSIONAL_KEYS';
 
-        IF OBJECT_ID('#DIMENSIONAL_KEYS', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#DIMENSIONAL_KEYS', 'U') IS NOT NULL
             drop table #DIMENSIONAL_KEYS
             ;
 
@@ -301,7 +301,7 @@ BEGIN
         SET @Proc_Step_no = 7;
         SET @Proc_Step_Name = ' Generating F_PAGE_CASE_TEMP_INC';
 
-        IF OBJECT_ID('#F_PAGE_CASE_TEMP_INC', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#F_PAGE_CASE_TEMP_INC', 'U') IS NOT NULL
             drop table #F_PAGE_CASE_TEMP_INC
             ;
 

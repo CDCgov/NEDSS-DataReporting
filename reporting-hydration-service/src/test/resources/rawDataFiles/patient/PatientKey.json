@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": [
+      {
+        "type": "int64",
+        "optional": false,
+        "field": "patient_uid"
+      }
+    ]
+  },
+  "payload": {
+    "patient_uid": 10000001
+  }
+}

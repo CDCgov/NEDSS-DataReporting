@@ -642,6 +642,7 @@ def convert_spm_to_xml(segment, parent):
         spec_type = ET.SubElement(spm, 'SpecimenType')
         comps = parse_components(fields[4])
         add_element(spec_type, 'HL7Identifier', comps[0] if len(comps) > 0 else '')
+        add_element(spec_type, 'HL7Text', comps[1] if len(comps) > 1 else '')
         add_element(spec_type, 'HL7NameofCodingSystem', comps[2] if len(comps) > 2 else '')
     
     add_element(spm, 'GroupedSpecimenCount')

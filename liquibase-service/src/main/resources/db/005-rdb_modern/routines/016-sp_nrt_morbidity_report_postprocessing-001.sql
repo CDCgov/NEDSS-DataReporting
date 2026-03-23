@@ -197,7 +197,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating  tmp_morb_root';
 
-        IF OBJECT_ID('#tmp_morb_root', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_morb_root', 'U') IS NOT NULL
             DROP TABLE #tmp_morb_root ;
 
         /*
@@ -376,7 +376,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating #tmp_MorbFrmQ';
 
-        IF OBJECT_ID('#tmp_MorbFrmQ', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQ', 'U') IS NOT NULL
             DROP TABLE #tmp_MorbFrmQ ;
 
         --Get MorbFrmQ associated to observation using cd in nrt_observation.
@@ -405,7 +405,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating  #tmp_MorbFrmQCoded';
 
-        IF OBJECT_ID('#tmp_MorbFrmQCoded', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQCoded', 'U') IS NOT NULL
             DROP TABLE #tmp_MorbFrmQCoded ;
 
         SELECT 	oq.*,
@@ -427,7 +427,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating #tmp_MorbFrmQDate';
 
-        IF OBJECT_ID('#tmp_MorbFrmQDate', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQDate', 'U') IS NOT NULL
             DROP TABLE #tmp_MorbFrmQDate;
 
         SELECT 	oq.*,
@@ -447,7 +447,7 @@ BEGIN
         SET @PROC_STEP_NO =  @PROC_STEP_NO + 1 ;
         SET @PROC_STEP_NAME = 'Generating #tmp_MorbFrmQTxt';
 
-        IF OBJECT_ID('#tmp_MorbFrmQTxt', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQTxt', 'U') IS NOT NULL
             DROP TABLE #tmp_MorbFrmQTxt ;
 
         SELECT 	oq.*,
@@ -1325,11 +1325,11 @@ BEGIN
 			DROP TABLE '+@tmp_Morbidity_Report+';
 		END;')
 
-        IF OBJECT_ID('#tmp_morb_root', 'U') IS NOT NULL  DROP TABLE    	#tmp_morb_root 	;
-        IF OBJECT_ID('#tmp_MorbFrmQ', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQ 	;
-        IF OBJECT_ID('#tmp_MorbFrmQCoded', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQCoded 	;
-        IF OBJECT_ID('#tmp_MorbFrmQDate', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQDate 	;
-        IF OBJECT_ID('#tmp_MorbFrmQTxt', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQTxt 	;
+        IF OBJECT_ID('tempdb..#tmp_morb_root', 'U') IS NOT NULL  DROP TABLE    	#tmp_morb_root 	;
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQ', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQ 	;
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQCoded', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQCoded 	;
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQDate', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQDate 	;
+        IF OBJECT_ID('tempdb..#tmp_MorbFrmQTxt', 'U') IS NOT NULL  DROP TABLE    	#tmp_MorbFrmQTxt 	;
 
         EXEC ('IF OBJECT_ID(''tempdb..'+@tmp_MorbFrmQCoded2+''', ''U'') IS NOT NULL
 		BEGIN

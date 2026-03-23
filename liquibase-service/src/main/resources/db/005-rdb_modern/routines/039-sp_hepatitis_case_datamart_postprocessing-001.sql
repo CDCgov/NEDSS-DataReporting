@@ -63,7 +63,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'GENERATING #OBS_CODED_Hepatitis_Case';
 
-            IF OBJECT_ID('#OBS_CODED_Hepatitis_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_CODED_Hepatitis_Case', 'U') IS NOT NULL
                 drop table #OBS_CODED_Hepatitis_Case;
 
 
@@ -114,7 +114,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #OBS_TXT_Hepatitis_Case';
 
-            IF OBJECT_ID('#OBS_TXT_Hepatitis_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_TXT_Hepatitis_Case', 'U') IS NOT NULL
                 drop table #OBS_TXT_Hepatitis_Case;
 
             select public_health_case_uid,
@@ -152,7 +152,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #OBS_DATE_Hepatitis_Case';
 
-            IF OBJECT_ID('#OBS_DATE_Hepatitis_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_DATE_Hepatitis_Case', 'U') IS NOT NULL
                 drop table #OBS_DATE_Hepatitis_Case;
 
             select public_health_case_uid,
@@ -190,7 +190,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_Hepatitis_Case';
 
-            IF OBJECT_ID('#OBS_NUMERIC_Hepatitis_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_NUMERIC_Hepatitis_Case', 'U') IS NOT NULL
                 drop table #OBS_NUMERIC_Hepatitis_Case;
 
             select rom.public_health_case_uid,
@@ -233,7 +233,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'GENERATING #OBS_CODED_HEP_multi_value_field';
 
-            IF OBJECT_ID('#OBS_CODED_HEP_multi_value_field', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_CODED_HEP_multi_value_field', 'U') IS NOT NULL
                 drop table #OBS_CODED_HEP_multi_value_field;
 
 
@@ -274,7 +274,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #OBS_TXT_HEP_multi_value_field';
 
-            IF OBJECT_ID('#OBS_TXT_HEP_multi_value_field', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_TXT_HEP_multi_value_field', 'U') IS NOT NULL
                 drop table #OBS_TXT_HEP_multi_value_field;
 
             select public_health_case_uid,
@@ -313,7 +313,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #OBS_DATE_HEP_multi_value_field';
 
-            IF OBJECT_ID('#OBS_DATE_HEP_multi_value_field', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_DATE_HEP_multi_value_field', 'U') IS NOT NULL
                 drop table #OBS_DATE_HEP_multi_value_field;
 
             select public_health_case_uid,
@@ -352,7 +352,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_HEP_multi_value_field';
 
-            IF OBJECT_ID('#OBS_NUMERIC_HEP_multi_value_field', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_NUMERIC_HEP_multi_value_field', 'U') IS NOT NULL
                 drop table #OBS_NUMERIC_HEP_multi_value_field;
 
             select rom.public_health_case_uid,
@@ -407,7 +407,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #HEP_MULTI_VAL_IDS';
 
-            IF OBJECT_ID('#HEP_MULTI_VAL_IDS', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#HEP_MULTI_VAL_IDS', 'U') IS NOT NULL
                 drop table #HEP_MULTI_VAL_IDS;
 
 
@@ -467,7 +467,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'GENERATING #OLD_GRP_KEYS';
 
-            IF OBJECT_ID('#OLD_GRP_KEYS', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OLD_GRP_KEYS', 'U') IS NOT NULL
                 drop table #OLD_GRP_KEYS;
 
 
@@ -580,7 +580,7 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = ' GENERATING #KEY_ATTR_INIT';
 
-            IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#KEY_ATTR_INIT', 'U') IS NOT NULL
                 drop table #KEY_ATTR_INIT;
 
             select inv.public_health_case_uid,

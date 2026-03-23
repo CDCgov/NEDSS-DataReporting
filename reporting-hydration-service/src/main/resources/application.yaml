@@ -3,6 +3,36 @@ spring:
     name: reporting-hydration-service
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
+    group-id: ${KAFKA_CONSUMER_APP:hydration-consumer-app}
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+      key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+    input:
+      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+    output:
+      providerElastic:
+        topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
+      providerReporting:
+        topic-name: ${PROVIDER_REPORTING:nrt_provider}
+      patientElastic:
+        topic-name: ${PATIENT_ELASTIC:elastic_search_patient}
+      patientReporting:
+        topic-name: ${PATIENT_REPORTING:nrt_patient}
+      userReporting:
+        topic-name: ${USER_REPORTING:nrt_auth_user}
+    dlq:
+      retry-suffix: _retry
+      dlq-suffix: _dlt
+    consumer:
+      max-retry: 3
+      maxPollIntervalMs: 30000
+      maxPollRecs: ${KAFKA_CONSUMER_MAX_POLL_RECS:200}
+      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    admin:
+      auto-create: true
+
   datasource:
     password: ${DB_PASSWORD}
     username: ${DB_USERNAME}
@@ -12,7 +42,19 @@ server:
   port: "8095"
 
 management:
+  endpoint:
+    prometheus:
+      access: read_only
   endpoints:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+featureFlag:
+  elastic-search-enable: ${FF_ES_ENABLE:false}
+  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+  thread-pool-size: ${FF_THREAD_POOL_SIZE:1}

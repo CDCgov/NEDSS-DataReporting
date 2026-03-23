@@ -56,7 +56,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_HC_PROV_TY_3_PHC_LIST TABLE';
 
-        IF OBJECT_ID('#D_HC_PROV_TY_3_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_HC_PROV_TY_3_PHC_LIST', 'U') IS NOT NULL
             drop table #D_HC_PROV_TY_3_PHC_LIST;
 
         SELECT value
@@ -85,7 +85,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_HC_PROV_TY_3_TRANSLATED';
 
-            IF OBJECT_ID('#S_D_HC_PROV_TY_3_TRANSLATED', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_HC_PROV_TY_3_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_HC_PROV_TY_3_TRANSLATED;
             
             SELECT DISTINCT
@@ -136,7 +136,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_HC_PROV_TY_3';
 
-            IF OBJECT_ID('#S_D_HC_PROV_TY_3', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_HC_PROV_TY_3', 'U') IS NOT NULL
                 DROP TABLE #S_D_HC_PROV_TY_3;
 
 
@@ -170,7 +170,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_HC_PROV_TY_3_DEL';
 
-            IF OBJECT_ID('#TEMP_D_HC_PROV_TY_3_DEL', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_HC_PROV_TY_3_DEL', 'U') IS NOT NULL
             drop table #TEMP_D_HC_PROV_TY_3_DEL;
 
             SELECT 
@@ -348,7 +348,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #D_TB_PAM_TEMP';
 
-            IF OBJECT_ID('#D_TB_PAM_TEMP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#D_TB_PAM_TEMP', 'U') IS NOT NULL
                 DROP TABLE #D_TB_PAM_TEMP;
             
 
@@ -384,7 +384,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_HC_PROV_TY_3_GROUP';
 
-            IF OBJECT_ID('#L_D_HC_PROV_TY_3_GROUP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_HC_PROV_TY_3_GROUP', 'U') IS NOT NULL
                 DROP TABLE #L_GT_12_REAS_GROUP;
 
             SELECT 
@@ -417,7 +417,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_HC_PROV_TY_3';
 
-            IF OBJECT_ID('#L_D_HC_PROV_TY_3', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_HC_PROV_TY_3', 'U') IS NOT NULL
                 DROP TABLE #L_D_HC_PROV_TY_3;
 
             SELECT 
@@ -452,7 +452,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_HC_PROV_TY_3';
 
-            IF OBJECT_ID('#TEMP_D_HC_PROV_TY_3', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_HC_PROV_TY_3', 'U') IS NOT NULL
                 DROP TABLE #TEMP_D_HC_PROV_TY_3;
 
             SELECT L.TB_PAM_UID,

@@ -56,7 +56,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #D_OUT_OF_CNTRY_PHC_LIST TABLE';
 
-        IF OBJECT_ID('#D_OUT_OF_CNTRY_PHC_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#D_OUT_OF_CNTRY_PHC_LIST', 'U') IS NOT NULL
             drop table #D_OUT_OF_CNTRY_PHC_LIST;
 
         SELECT value
@@ -85,7 +85,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_OUT_OF_CNTRY_TRANSLATED';
 
-            IF OBJECT_ID('#S_D_OUT_OF_CNTRY_TRANSLATED', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_OUT_OF_CNTRY_TRANSLATED', 'U') IS NOT NULL
                 DROP TABLE #S_D_OUT_OF_CNTRY_TRANSLATED;
             
             SELECT DISTINCT
@@ -136,7 +136,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #S_D_OUT_OF_CNTRY';
 
-            IF OBJECT_ID('#S_D_OUT_OF_CNTRY', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#S_D_OUT_OF_CNTRY', 'U') IS NOT NULL
                 DROP TABLE #S_D_OUT_OF_CNTRY;
 
 
@@ -170,7 +170,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_OUT_OF_CNTRY_DEL';
 
-            IF OBJECT_ID('#TEMP_D_OUT_OF_CNTRY_DEL', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_OUT_OF_CNTRY_DEL', 'U') IS NOT NULL
             drop table #TEMP_D_OUT_OF_CNTRY_DEL;
 
             SELECT 
@@ -350,7 +350,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #D_TB_PAM_TEMP';
 
-            IF OBJECT_ID('#D_TB_PAM_TEMP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#D_TB_PAM_TEMP', 'U') IS NOT NULL
                 DROP TABLE #D_TB_PAM_TEMP;
             
 
@@ -386,7 +386,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_OUT_OF_CNTRY_GROUP';
 
-            IF OBJECT_ID('#L_D_OUT_OF_CNTRY_GROUP', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_OUT_OF_CNTRY_GROUP', 'U') IS NOT NULL
                 DROP TABLE #L_GT_12_REAS_GROUP;
 
             SELECT 
@@ -419,7 +419,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #L_D_OUT_OF_CNTRY';
 
-            IF OBJECT_ID('#L_D_OUT_OF_CNTRY', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#L_D_OUT_OF_CNTRY', 'U') IS NOT NULL
                 DROP TABLE #L_D_OUT_OF_CNTRY;
 
             SELECT 
@@ -454,7 +454,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #TEMP_D_OUT_OF_CNTRY';
 
-            IF OBJECT_ID('#TEMP_D_OUT_OF_CNTRY', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#TEMP_D_OUT_OF_CNTRY', 'U') IS NOT NULL
                 DROP TABLE #TEMP_D_OUT_OF_CNTRY;
 
             SELECT L.TB_PAM_UID,

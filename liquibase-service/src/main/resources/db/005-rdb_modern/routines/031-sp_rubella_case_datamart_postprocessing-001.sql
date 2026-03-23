@@ -69,7 +69,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = ' GENERATING #KEY_ATTR_INIT';
 
-            IF OBJECT_ID('#KEY_ATTR_INIT', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#KEY_ATTR_INIT', 'U') IS NOT NULL
             drop table #KEY_ATTR_INIT;
 
             select public_health_case_uid,
@@ -111,7 +111,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #OBS_CODED_Rubella_Case';
 
-            IF OBJECT_ID('#OBS_CODED_Rubella_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_CODED_Rubella_Case', 'U') IS NOT NULL
             drop table #OBS_CODED_Rubella_Case;
 
 
@@ -155,7 +155,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = ' GENERATING #OBS_TXT_Rubella_Case';
 
-            IF OBJECT_ID('#OBS_TXT_Rubella_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_TXT_Rubella_Case', 'U') IS NOT NULL
             drop table #OBS_TXT_Rubella_Case;
 
             select public_health_case_uid,
@@ -195,7 +195,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = ' GENERATING #OBS_DATE_Rubella_Case';
 
-            IF OBJECT_ID('#OBS_DATE_Rubella_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_DATE_Rubella_Case', 'U') IS NOT NULL
             drop table #OBS_DATE_Rubella_Case;
 
             select public_health_case_uid,
@@ -235,7 +235,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = ' GENERATING #OBS_NUMERIC_Rubella_Case';
 
-            IF OBJECT_ID('#OBS_NUMERIC_Rubella_Case', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#OBS_NUMERIC_Rubella_Case', 'U') IS NOT NULL
             drop table #OBS_NUMERIC_Rubella_Case;
 
 

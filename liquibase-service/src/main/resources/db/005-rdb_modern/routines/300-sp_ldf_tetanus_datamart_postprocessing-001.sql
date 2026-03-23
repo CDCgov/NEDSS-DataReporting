@@ -64,7 +64,7 @@ BEGIN
 		SET @PROC_STEP_NAME = 'LDF_UID_LIST';  
 	
 		--------- Create #LDF_UID_LIST table 
-        IF OBJECT_ID('#LDF_UID_LIST', 'U') IS NOT NULL   
+        IF OBJECT_ID('tempdb..#LDF_UID_LIST', 'U') IS NOT NULL   
             DROP TABLE #LDF_UID_LIST; 
     
         SELECT distinct TRIM(value) AS value into #LDF_UID_LIST FROM STRING_SPLIT(@phc_id_list, ',')		
@@ -88,7 +88,7 @@ BEGIN
 		SET
 			@PROC_STEP_NAME = 'GENERATING #LDF_PHC_UID_LIST TABLE';
 
-		IF OBJECT_ID('#LDF_PHC_UID_LIST', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb..#LDF_PHC_UID_LIST', 'U') IS NOT NULL
 			DROP TABLE #LDF_PHC_UID_LIST;
 
 		SELECT 
@@ -140,7 +140,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #BASE_TETANUS';
             
-            IF OBJECT_ID('#BASE_TETANUS', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#BASE_TETANUS', 'U') IS NOT NULL
 			    DROP TABLE #BASE_TETANUS;
 
             SELECT DISTINCT
@@ -187,7 +187,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #LINKED_TETANUS';
             
-            IF OBJECT_ID('#LINKED_TETANUS', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#LINKED_TETANUS', 'U') IS NOT NULL
 			    DROP TABLE #LINKED_TETANUS;
 
             SELECT 
@@ -244,7 +244,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #ALL_TETANUS';
             
-            IF OBJECT_ID('#ALL_TETANUS', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#ALL_TETANUS', 'U') IS NOT NULL
 			    DROP TABLE #ALL_TETANUS;
 
             SELECT 
@@ -316,7 +316,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #ALL_TETANUS_SHORT_COL';
             
-            IF OBJECT_ID('#ALL_TETANUS_SHORT_COL', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#ALL_TETANUS_SHORT_COL', 'U') IS NOT NULL
 			    DROP TABLE #ALL_TETANUS_SHORT_COL;
 
             SELECT 
@@ -353,7 +353,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #ALL_TETANUS_TA';
             
-            IF OBJECT_ID('#ALL_TETANUS_TA', 'U') IS NOT NULL
+            IF OBJECT_ID('tempdb..#ALL_TETANUS_TA', 'U') IS NOT NULL
 			    DROP TABLE #ALL_TETANUS_TA;
 
             SELECT 
@@ -664,7 +664,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #MISSED_COLS';
 
-            IF OBJECT_ID('#MISSED_COLS') IS NOT NULL
+            IF OBJECT_ID('tempdb..#MISSED_COLS') IS NOT NULL
                 DROP TABLE #MISSED_COLS;
 
             SELECT 
@@ -745,7 +745,7 @@ BEGIN
             SET
                 @PROC_STEP_NAME = 'GENERATING #COL_LIST TO INSERT';
 
-            IF OBJECT_ID('#COL_LIST') IS NOT NULL
+            IF OBJECT_ID('tempdb..#COL_LIST') IS NOT NULL
                 DROP TABLE #COL_LIST;
 
             SELECT DISTINCT ic.COLUMN_NAME, ORDINAL_POSITION
@@ -786,7 +786,7 @@ BEGIN
                 SET
                     @PROC_STEP_NAME = 'DELETING INCOMING RECORDS FROM LDF_TETANUS';
 
-                IF OBJECT_ID('#LDF_PHC_UID_DEL') IS NOT NULL
+                IF OBJECT_ID('tempdb..#LDF_PHC_UID_DEL') IS NOT NULL
                     DROP TABLE #LDF_PHC_UID_DEL;
                 
                 SELECT DISTINCT L.INVESTIGATION_KEY 

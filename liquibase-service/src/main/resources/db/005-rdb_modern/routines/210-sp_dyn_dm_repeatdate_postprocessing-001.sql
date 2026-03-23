@@ -858,7 +858,7 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_METADATA_OUT';
 
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_BLOCK_METADATA_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_DynDM_REPEAT_BLOCK_METADATA_OUT', 'U') IS NOT NULL
             drop table #tmp_DynDM_REPEAT_BLOCK_METADATA_OUT;
 
 
@@ -879,7 +879,7 @@ BEGIN
         SET @Proc_Step_Name = 'GENERATING  tmp_DynDM_REPEAT_BLOCK_METADATA_OUT_FINAL';
 
 
-        IF OBJECT_ID('#tmp_DynDM_REPEAT_BLOCK_METADATA_OUT_FINAL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#tmp_DynDM_REPEAT_BLOCK_METADATA_OUT_FINAL', 'U') IS NOT NULL
             drop table #tmp_DynDM_REPEAT_BLOCK_METADATA_OUT_FINAL;
 
         SELECT

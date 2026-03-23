@@ -49,7 +49,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING S_INVESTIGATION_LIST TABLE';
           
-        IF OBJECT_ID('#S_INVESTIGATION_LIST', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_INVESTIGATION_LIST', 'U') IS NOT NULL
             drop table #S_INVESTIGATION_LIST;
 
         SELECT DISTINCT
@@ -81,7 +81,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING S_INVESTIGATION_LIST_DEL TABLE';
           
-        IF OBJECT_ID('#S_INVESTIGATION_LIST_DEL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#S_INVESTIGATION_LIST_DEL', 'U') IS NOT NULL
             drop table #S_INVESTIGATION_LIST_DEL;
 
         SELECT DISTINCT
@@ -112,7 +112,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TB_HIV_WITH_UID';
 
-        IF OBJECT_ID('#TB_HIV_WITH_UID') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TB_HIV_WITH_UID') IS NOT NULL
             DROP TABLE #TB_HIV_WITH_UID;
 
         -- Create temporary table #TB_HIV_WITH_UID
@@ -148,7 +148,7 @@ BEGIN
         SET
             @PROC_STEP_NAME = 'GENERATING #TB_HIV_DATAMART';
         
-        IF OBJECT_ID('#TB_HIV_DATAMART') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TB_HIV_DATAMART') IS NOT NULL
             DROP TABLE #TB_HIV_DATAMART;
 
         -- Create temporary table #TB_HIV_DATAMART

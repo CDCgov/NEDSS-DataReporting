@@ -1,0 +1,1489 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": [
+      {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "int64",
+            "optional": false,
+            "field": "person_uid"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "add_reason_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "add_time"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "add_user_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "administrative_gender_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "age_calc"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "age_calc_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_calc_unit_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_category_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_reported"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "age_reported_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_reported_unit_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_gender_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "birth_order_nbr"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "birth_time"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "birth_time_calc"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "cd_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "curr_sex_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "deceased_ind_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "deceased_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "description"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "education_level_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "education_level_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnic_group_ind"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "last_chg_reason_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "last_chg_time"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "last_chg_user_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "local_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "marital_status_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "marital_status_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "mothers_maiden_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "multiple_birth_ind"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "occupation_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "preferred_gender_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "prim_lang_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "prim_lang_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "record_status_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "record_status_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "status_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "status_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "survived_ind_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "user_affiliation_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "first_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "last_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "middle_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "nm_prefix"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "nm_suffix"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "preferred_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_street_addr1"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_street_addr2"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_city_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_city_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_zip_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_cnty_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_phone_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_phone_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_email_addr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "cell_phone_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_street_addr1"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_street_addr2"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_city_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_city_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_zip_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_cnty_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_phone_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_phone_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_email_addr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "SSN"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "medicaid_num"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "dl_num"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "dl_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "race_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "race_seq_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "race_category_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnicity_group_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "ethnic_group_seq_nbr"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "adults_in_house_nbr"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "children_in_house_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_city_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_city_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "race_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnic_group_desc_txt"
+          },
+          {
+            "type": "int16",
+            "optional": false,
+            "field": "version_ctrl_nbr"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_admin"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_ethnicity"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_general"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_morbidity"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_sex"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "electronic_ind"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "person_parent_uid"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "dedup_match_ind"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "field": "group_nbr"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "group_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "edx_ind"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "speaks_english_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "additional_gender_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ehars_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnic_unk_reason_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "sex_unk_reason_cd"
+          }
+        ],
+        "optional": true,
+        "name": "cdc.nbs_odse.dbo.Person.Value",
+        "field": "before"
+      },
+      {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "int64",
+            "optional": false,
+            "field": "person_uid"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "add_reason_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "add_time"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "add_user_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "administrative_gender_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "age_calc"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "age_calc_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_calc_unit_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_category_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_reported"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "age_reported_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "age_reported_unit_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_gender_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "birth_order_nbr"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "birth_time"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "birth_time_calc"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "cd_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "curr_sex_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "deceased_ind_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "deceased_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "description"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "education_level_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "education_level_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnic_group_ind"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "last_chg_reason_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "last_chg_time"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "last_chg_user_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "local_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "marital_status_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "marital_status_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "mothers_maiden_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "multiple_birth_ind"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "occupation_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "preferred_gender_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "prim_lang_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "prim_lang_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "record_status_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "record_status_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "status_cd"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "status_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "survived_ind_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "user_affiliation_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "first_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "last_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "middle_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "nm_prefix"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "nm_suffix"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "preferred_nm"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_street_addr1"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_street_addr2"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_city_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_city_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_zip_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_cnty_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_phone_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_phone_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "hm_email_addr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "cell_phone_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_street_addr1"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_street_addr2"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_city_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_city_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_zip_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_cnty_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_phone_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_phone_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "wk_email_addr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "SSN"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "medicaid_num"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "dl_num"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "dl_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "race_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "race_seq_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "race_category_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnicity_group_cd"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "ethnic_group_seq_nbr"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "adults_in_house_nbr"
+          },
+          {
+            "type": "int16",
+            "optional": true,
+            "field": "children_in_house_nbr"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_city_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_city_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_cntry_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "birth_state_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "race_desc_txt"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnic_group_desc_txt"
+          },
+          {
+            "type": "int16",
+            "optional": false,
+            "field": "version_ctrl_nbr"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_admin"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_ethnicity"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_general"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_morbidity"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "as_of_date_sex"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "electronic_ind"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "person_parent_uid"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "dedup_match_ind"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "field": "group_nbr"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "name": "io.debezium.time.Timestamp",
+            "version": 1,
+            "field": "group_time"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "edx_ind"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "speaks_english_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "additional_gender_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ehars_id"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "ethnic_unk_reason_cd"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "sex_unk_reason_cd"
+          }
+        ],
+        "optional": true,
+        "name": "cdc.nbs_odse.dbo.Person.Value",
+        "field": "after"
+      },
+      {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "string",
+            "optional": false,
+            "field": "version"
+          },
+          {
+            "type": "string",
+            "optional": false,
+            "field": "connector"
+          },
+          {
+            "type": "string",
+            "optional": false,
+            "field": "name"
+          },
+          {
+            "type": "int64",
+            "optional": false,
+            "field": "ts_ms"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Enum",
+            "version": 1,
+            "parameters": {
+              "allowed": "true,last,false,incremental"
+            },
+            "default": "false",
+            "field": "snapshot"
+          },
+          {
+            "type": "string",
+            "optional": false,
+            "field": "db"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "sequence"
+          },
+          {
+            "type": "string",
+            "optional": false,
+            "field": "schema"
+          },
+          {
+            "type": "string",
+            "optional": false,
+            "field": "table"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "change_lsn"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "commit_lsn"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "event_serial_no"
+          }
+        ],
+        "optional": false,
+        "name": "io.debezium.connector.sqlserver.Source",
+        "field": "source"
+      },
+      {
+        "type": "string",
+        "optional": false,
+        "field": "op"
+      },
+      {
+        "type": "int64",
+        "optional": true,
+        "field": "ts_ms"
+      },
+      {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "string",
+            "optional": false,
+            "field": "id"
+          },
+          {
+            "type": "int64",
+            "optional": false,
+            "field": "total_order"
+          },
+          {
+            "type": "int64",
+            "optional": false,
+            "field": "data_collection_order"
+          }
+        ],
+        "optional": true,
+        "name": "event.block",
+        "version": 1,
+        "field": "transaction"
+      }
+    ],
+    "optional": false,
+    "name": "cdc.nbs_odse.dbo.Person.Envelope",
+    "version": 1
+  },
+  "payload": {
+    "before": {
+      "person_uid": 9005400,
+      "add_reason_cd": "ProviderUpdate",
+      "add_time": 1428000557830,
+      "add_user_id": null,
+      "administrative_gender_cd": null,
+      "age_calc": null,
+      "age_calc_time": null,
+      "age_calc_unit_cd": null,
+      "age_category_cd": null,
+      "age_reported": null,
+      "age_reported_time": null,
+      "age_reported_unit_cd": null,
+      "birth_gender_cd": "F",
+      "birth_order_nbr": null,
+      "birth_time": -170121600000,
+      "birth_time_calc": null,
+      "cd": "PAT",
+      "cd_desc_txt": null,
+      "curr_sex_cd": null,
+      "deceased_ind_cd": null,
+      "deceased_time": null,
+      "description": "Family Medicine",
+      "education_level_cd": null,
+      "education_level_desc_txt": null,
+      "ethnic_group_ind": null,
+      "last_chg_reason_cd": null,
+      "last_chg_time": 1554715875677,
+      "last_chg_user_id": null,
+      "local_id": "PSN09005400AL01",
+      "marital_status_cd": null,
+      "marital_status_desc_txt": null,
+      "mothers_maiden_nm": null,
+      "multiple_birth_ind": null,
+      "occupation_cd": null,
+      "preferred_gender_cd": null,
+      "prim_lang_cd": null,
+      "prim_lang_desc_txt": null,
+      "record_status_cd": "ACTIVE",
+      "record_status_time": 1428000557830,
+      "status_cd": "A",
+      "status_time": 1428000557830,
+      "survived_ind_cd": null,
+      "user_affiliation_txt": null,
+      "first_nm": "Lee",
+      "last_nm": "Savoia-McHugh",
+      "middle_nm": "Anne",
+      "nm_prefix": null,
+      "nm_suffix": null,
+      "preferred_nm": null,
+      "hm_street_addr1": null,
+      "hm_street_addr2": null,
+      "hm_city_cd": null,
+      "hm_city_desc_txt": null,
+      "hm_state_cd": null,
+      "hm_zip_cd": null,
+      "hm_cnty_cd": null,
+      "hm_cntry_cd": null,
+      "hm_phone_nbr": null,
+      "hm_phone_cntry_cd": null,
+      "hm_email_addr": null,
+      "cell_phone_nbr": null,
+      "wk_street_addr1": null,
+      "wk_street_addr2": null,
+      "wk_city_cd": null,
+      "wk_city_desc_txt": null,
+      "wk_state_cd": null,
+      "wk_zip_cd": null,
+      "wk_cnty_cd": null,
+      "wk_cntry_cd": null,
+      "wk_phone_nbr": null,
+      "wk_phone_cntry_cd": null,
+      "wk_email_addr": null,
+      "SSN": null,
+      "medicaid_num": null,
+      "dl_num": null,
+      "dl_state_cd": null,
+      "race_cd": null,
+      "race_seq_nbr": null,
+      "race_category_cd": null,
+      "ethnicity_group_cd": null,
+      "ethnic_group_seq_nbr": null,
+      "adults_in_house_nbr": null,
+      "children_in_house_nbr": null,
+      "birth_city_cd": null,
+      "birth_city_desc_txt": null,
+      "birth_cntry_cd": null,
+      "birth_state_cd": null,
+      "race_desc_txt": null,
+      "ethnic_group_desc_txt": null,
+      "version_ctrl_nbr": 1,
+      "as_of_date_admin": 1428000557830,
+      "as_of_date_ethnicity": null,
+      "as_of_date_general": null,
+      "as_of_date_morbidity": null,
+      "as_of_date_sex": null,
+      "electronic_ind": "N",
+      "person_parent_uid": 9005400,
+      "dedup_match_ind": null,
+      "group_nbr": null,
+      "group_time": null,
+      "edx_ind": null,
+      "speaks_english_cd": null,
+      "additional_gender_cd": null,
+      "ehars_id": null,
+      "ethnic_unk_reason_cd": null,
+      "sex_unk_reason_cd": null
+    },
+    "after": {
+      "person_uid": 9005400,
+      "add_reason_cd": "ProviderUpdate",
+      "add_time": 1428000557830,
+      "add_user_id": null,
+      "administrative_gender_cd": null,
+      "age_calc": null,
+      "age_calc_time": null,
+      "age_calc_unit_cd": null,
+      "age_category_cd": null,
+      "age_reported": null,
+      "age_reported_time": null,
+      "age_reported_unit_cd": null,
+      "birth_gender_cd": "F",
+      "birth_order_nbr": null,
+      "birth_time": -170121600000,
+      "birth_time_calc": null,
+      "cd": "PAT",
+      "cd_desc_txt": null,
+      "curr_sex_cd": null,
+      "deceased_ind_cd": null,
+      "deceased_time": null,
+      "description": "Family Medicine",
+      "education_level_cd": null,
+      "education_level_desc_txt": null,
+      "ethnic_group_ind": null,
+      "last_chg_reason_cd": null,
+      "last_chg_time": 1554715875677,
+      "last_chg_user_id": null,
+      "local_id": "PSN09005400AL01",
+      "marital_status_cd": null,
+      "marital_status_desc_txt": null,
+      "mothers_maiden_nm": null,
+      "multiple_birth_ind": null,
+      "occupation_cd": null,
+      "preferred_gender_cd": null,
+      "prim_lang_cd": null,
+      "prim_lang_desc_txt": null,
+      "record_status_cd": "ACTIVE",
+      "record_status_time": 1428000557830,
+      "status_cd": "A",
+      "status_time": 1428000557830,
+      "survived_ind_cd": null,
+      "user_affiliation_txt": null,
+      "first_nm": "Lee1",
+      "last_nm": "Savoia-McHugh",
+      "middle_nm": "Anne",
+      "nm_prefix": null,
+      "nm_suffix": null,
+      "preferred_nm": null,
+      "hm_street_addr1": null,
+      "hm_street_addr2": null,
+      "hm_city_cd": null,
+      "hm_city_desc_txt": null,
+      "hm_state_cd": null,
+      "hm_zip_cd": null,
+      "hm_cnty_cd": null,
+      "hm_cntry_cd": null,
+      "hm_phone_nbr": null,
+      "hm_phone_cntry_cd": null,
+      "hm_email_addr": null,
+      "cell_phone_nbr": null,
+      "wk_street_addr1": null,
+      "wk_street_addr2": null,
+      "wk_city_cd": null,
+      "wk_city_desc_txt": null,
+      "wk_state_cd": null,
+      "wk_zip_cd": null,
+      "wk_cnty_cd": null,
+      "wk_cntry_cd": null,
+      "wk_phone_nbr": null,
+      "wk_phone_cntry_cd": null,
+      "wk_email_addr": null,
+      "SSN": null,
+      "medicaid_num": null,
+      "dl_num": null,
+      "dl_state_cd": null,
+      "race_cd": null,
+      "race_seq_nbr": null,
+      "race_category_cd": null,
+      "ethnicity_group_cd": null,
+      "ethnic_group_seq_nbr": null,
+      "adults_in_house_nbr": null,
+      "children_in_house_nbr": null,
+      "birth_city_cd": null,
+      "birth_city_desc_txt": null,
+      "birth_cntry_cd": null,
+      "birth_state_cd": null,
+      "race_desc_txt": null,
+      "ethnic_group_desc_txt": null,
+      "version_ctrl_nbr": 1,
+      "as_of_date_admin": 1428000557830,
+      "as_of_date_ethnicity": null,
+      "as_of_date_general": null,
+      "as_of_date_morbidity": null,
+      "as_of_date_sex": null,
+      "electronic_ind": "N",
+      "person_parent_uid": 9005400,
+      "dedup_match_ind": null,
+      "group_nbr": null,
+      "group_time": null,
+      "edx_ind": null,
+      "speaks_english_cd": null,
+      "additional_gender_cd": null,
+      "ehars_id": null,
+      "ethnic_unk_reason_cd": null,
+      "sex_unk_reason_cd": null
+    },
+    "source": {
+      "version": "2.4.1.Final",
+      "connector": "sqlserver",
+      "name": "cdc",
+      "ts_ms": 1708702627693,
+      "snapshot": "false",
+      "db": "nbs_odse",
+      "sequence": null,
+      "schema": "dbo",
+      "table": "Person",
+      "change_lsn": "000fd2f8:001b3ca6:0002",
+      "commit_lsn": "000fd2f8:001b3ca6:004c",
+      "event_serial_no": 2
+    },
+    "op": "u",
+    "ts_ms": 1708702633619,
+    "transaction": null
+  }
+}

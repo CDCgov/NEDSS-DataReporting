@@ -33,7 +33,7 @@ BEGIN
         ;
 
 
-        IF OBJECT_ID('#TMP_S_PERSON_AMER_INDIAN_RACE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_AMER_INDIAN_RACE', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_AMER_INDIAN_RACE ;
 
 
@@ -46,7 +46,7 @@ BEGIN
         ;
 
 
-        IF OBJECT_ID('#TMP_S_PERSON_BLACK_RACE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_BLACK_RACE', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_BLACK_RACE ;
 
 
@@ -59,7 +59,7 @@ BEGIN
         ;
 
 
-        IF OBJECT_ID('#TMP_S_PERSON_WHITE_RACE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_WHITE_RACE', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_WHITE_RACE ;
 
         SELECT *
@@ -71,7 +71,7 @@ BEGIN
         ;
 
 
-        IF OBJECT_ID('#TMP_S_PERSON_ASIAN_RACE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_ASIAN_RACE', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_ASIAN_RACE ;
 
         SELECT *
@@ -83,7 +83,7 @@ BEGIN
         ;
 
 
-        IF OBJECT_ID('#TMP_S_PERSON_HAWAIIAN_RACE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_HAWAIIAN_RACE', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_HAWAIIAN_RACE ;
 
         SELECT *
@@ -97,7 +97,7 @@ BEGIN
 
 /*Calculate Person Race*/
 
-        IF OBJECT_ID('#TMP_S_PERSON_ROOT_RACE', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_ROOT_RACE', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_ROOT_RACE;
 
         select *
@@ -263,7 +263,7 @@ BEGIN
                     end;
 
 
-        IF OBJECT_ID('#TEMP_AMER_IND_RACE_ALL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_AMER_IND_RACE_ALL', 'U') IS NOT NULL
             drop table #TEMP_AMER_IND_RACE_ALL ;
 
 
@@ -386,7 +386,7 @@ BEGIN
                     end;
 
 
-        IF OBJECT_ID('#TEMP_BLACK_RACE_ALL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_BLACK_RACE_ALL', 'U') IS NOT NULL
             drop table #TEMP_BLACK_RACE_ALL ;
 
 
@@ -509,7 +509,7 @@ BEGIN
                     end;
 
 
-        IF OBJECT_ID('#TEMP_WHITE_RACE_ALL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_WHITE_RACE_ALL', 'U') IS NOT NULL
             drop table #TEMP_WHITE_RACE_ALL ;
 
 
@@ -632,7 +632,7 @@ BEGIN
                     end;
 
 
-        IF OBJECT_ID('#TEMP_ASIAN_RACE_ALL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_ASIAN_RACE_ALL', 'U') IS NOT NULL
             drop table #TEMP_ASIAN_RACE_ALL ;
 
 
@@ -755,7 +755,7 @@ BEGIN
                     end;
 
 
-        IF OBJECT_ID('#TEMP_HAWAIIAN_RACE_ALL', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TEMP_HAWAIIAN_RACE_ALL', 'U') IS NOT NULL
             drop table #TEMP_HAWAIIAN_RACE_ALL ;
 
 
@@ -777,7 +777,7 @@ BEGIN
 
 
 /*Person Race Out*/
-        IF OBJECT_ID('#TMP_S_PERSON_RACE_OUT', 'U') IS NOT NULL
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_RACE_OUT', 'U') IS NOT NULL
             DROP TABLE #TMP_S_PERSON_RACE_OUT ;
 
 
