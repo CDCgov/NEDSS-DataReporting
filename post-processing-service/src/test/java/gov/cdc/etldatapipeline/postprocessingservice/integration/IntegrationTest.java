@@ -2,6 +2,7 @@ package gov.cdc.etldatapipeline.postprocessingservice.integration;
 
 import java.io.File;
 import java.time.Duration;
+import java.util.Scanner;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
@@ -40,13 +41,30 @@ abstract class IntegrationTest {
 
   @BeforeAll
   static void setUp() {
+    logContainerStatus("BEFORE starting environment");
     // Start up necessary containers
     environment.start();
+    logContainerStatus("AFTER starting environment");
   }
 
   @AfterAll
   static void tearDown() {
     // Stop all containers
     environment.stop();
+  }
+
+  private static void logContainerStatus(String stage) {
+    logger.info("Listing all running containers ({}):", stage);
+    try {
+      Process process = new ProcessBuilder("docker", "ps", "-a").start();
+      try (Scanner scanner = new Scanner(process.getInputStream())) {
+        while (scanner.hasNextLine()) {
+          logger.info("DOCKER ({}): {}", stage, scanner.nextLine());
+        }
+      }
+      process.waitFor();
+    } catch (Exception e) {
+      logger.error("Failed to list containers ({}): {}", stage, e.getMessage());
+    }
   }
 }
