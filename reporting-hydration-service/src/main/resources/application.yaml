@@ -1,6 +1,12 @@
 spring:
   application:
     name: reporting-hydration-service
+
+  featureFlag:
+    elastic-search-enable: ${FF_ES_ENABLE:false}
+    phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+    thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
     group-id: ${KAFKA_CONSUMER_APP:hydration-consumer-app}
@@ -8,9 +14,37 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
       key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
     input:
-      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+      # Investigation
+      topic-name-phc: ${INPUT_TOPIC_PHC:nbs_Public_health_case}
+      topic-name-ntf: ${INPUT_TOPIC_NTF:nbs_Notification}
+      topic-name-int: ${INPUT_TOPIC_INT:nbs_Interview}
+      topic-name-ctr: ${INPUT_TOPIC_CTR:nbs_CT_contact}
+      topic-name-vac: ${INPUT_TOPIC_VAC:nbs_Intervention}
+      topic-name-tmt: ${INPUT_TOPIC_TMT:nbs_Treatment}
+      topic-name-ar: ${INPUT_TOPIC_AR:nbs_Act_relationship}
+
+      # Person
+      topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
       topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
     output:
+      # Investigation
+      topic-name-reporting: ${OUTPUT_TOPIC_REPORTING:nrt_investigation}
+      topic-name-confirmation: ${OUTPUT_TOPIC_CONFIRMATION:nrt_investigation_confirmation}
+      topic-name-observation: ${OUTPUT_TOPIC_OBSERVATION:nrt_investigation_observation}
+      topic-name-notifications: ${OUTPUT_TOPIC_NOTIFICATIONS:nrt_investigation_notification}
+      topic-name-page-case-answer: ${OUTPUT_TOPIC_PAGE_CASE_ANSWER:nrt_page_case_answer}
+      topic-name-aggregate: ${OUTPUT_TOPIC_AGGREGATE:nrt_investigation_aggregate}
+      topic-name-case-management: ${OUTPUT_TOPIC_CASE_MANAGEMENT:nrt_investigation_case_management}
+      topic-name-interview: ${OUTPUT_TOPIC_INTERVIEW:nrt_interview}
+      topic-name-interview-answer: ${OUTPUT_TOPIC_INTERVIEW_ANSWER:nrt_interview_answer}
+      topic-name-interview-note: ${OUTPUT_TOPIC_INTERVIEW_NOTE:nrt_interview_note}
+      topic-name-rdb-metadata-columns: ${OUTPUT_TOPIC_METADATA_COLUMNS:nrt_metadata_columns}
+      topic-name-contact-answer: ${OUTPUT_TOPIC_CONTACT_ANSWER:nrt_contact_answer} 
+      topic-name-vaccination: ${OUTPUT_TOPIC_VACCINATION:nrt_vaccination}
+      topic-name-vaccination-answer: ${OUTPUT_TOPIC_VACCINATION_ANSWER:nrt_vaccination_answer}
+      topic-name-treatment: ${OUTPUT_TOPIC_TREATMENT:nrt_treatment}
+
+      # Person
       providerElastic:
         topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
       providerReporting:
@@ -38,9 +72,6 @@ spring:
     username: ${DB_USERNAME}
     url: ${DB_HOST}
 
-server:
-  port: "8095"
-
 management:
   endpoint:
     prometheus:
@@ -54,7 +85,5 @@ management:
       export:
         enabled: true
 
-featureFlag:
-  elastic-search-enable: ${FF_ES_ENABLE:false}
-  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
-  thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
+server:
+  port: "8095"
