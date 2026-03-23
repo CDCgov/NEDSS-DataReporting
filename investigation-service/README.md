@@ -12,7 +12,7 @@ spring:
   datasource:
     password: ${DB_PASSWORD:PizzaIsGood33!}
     username: ${DB_USERNAME:sa}
-    url: ${DB_HOST:jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;}
+    url: ${DB_HOST:jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;}
 ```
 2. Ensure the `kafka` and `nbs-mssql` containers running. <em>You likely want all your RTR containers running for complete testing!</em>
 ```shell
