@@ -26,6 +26,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
@@ -46,17 +47,20 @@ public class LdfDataService {
       new ObjectMapper().registerModule(new JavaTimeModule());
   private ExecutorService ldfExecutor;
 
-  @Value("${spring.kafka.input.topic-name}")
+  @Value("${spring.kafka.input.topic-name-sdfd}")
   private String ldfDataTopic;
 
-  @Value("${spring.kafka.output.topic-name-reporting}")
+  @Value("${spring.kafka.output.topic-name-reporting-ldf-data}")
   public String ldfDataTopicReporting;
 
   @Value("${featureFlag.thread-pool-size:1}")
   private int threadPoolSize;
 
   private final LdfDataRepository ldfDataRepository;
+
+  @Qualifier("ldfdataKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
+
   LdfDataKey ldfDataKey = new LdfDataKey();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
@@ -99,8 +103,11 @@ public class LdfDataService {
         DeserializationException.class,
         RuntimeException.class,
         NoDataException.class
-      })
-  @KafkaListener(topics = "${spring.kafka.input.topic-name}")
+      },
+      kafkaTemplate = "ldfdataKafkaTemplate")
+  @KafkaListener(
+      topics = "${spring.kafka.input.topic-name-sdfd}",
+      containerFactory = "ldfdataKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
     String topic = rec.topic();
     String message = rec.value();

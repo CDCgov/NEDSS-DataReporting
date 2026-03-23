@@ -16,7 +16,7 @@ public class KafkaProducerConfig {
   @Value("${spring.kafka.bootstrap-servers}")
   private String bootstrapServers = "";
 
-  @Bean
+  @Bean("ldfdataProducerFactory")
   public ProducerFactory<String, String> producerFactory() {
     final Map<String, Object> config = new HashMap<>();
     config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -26,8 +26,8 @@ public class KafkaProducerConfig {
     return new DefaultKafkaProducerFactory<>(config);
   }
 
-  @Bean
-  public KafkaTemplate<String, String> kafkaTemplate() {
+  @Bean("ldfdataKafkaTemplate")
+  public KafkaTemplate<String, String> ldfdataKafkaTemplate() {
     // set factory for both producer and consumer
     return new KafkaTemplate<>(producerFactory());
   }

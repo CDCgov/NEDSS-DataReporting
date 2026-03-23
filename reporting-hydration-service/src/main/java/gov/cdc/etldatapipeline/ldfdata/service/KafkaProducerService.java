@@ -1,16 +1,18 @@
 package gov.cdc.etldatapipeline.ldfdata.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service("LDFDataKafkaProducerService")
 public class KafkaProducerService {
 
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   @Autowired
-  public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate) {
+  public KafkaProducerService(
+      @Qualifier("ldfdataKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
     this.kafkaTemplate = kafkaTemplate;
   }
 

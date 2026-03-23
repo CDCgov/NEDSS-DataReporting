@@ -15,7 +15,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 
 @Slf4j
 @EnableKafka
-@Configuration
+@Configuration("LDFDataKafkaConsumerConfig")
 public class KafkaConsumerConfig {
   @Value("${spring.kafka.group-id}")
   private String groupId = "";
@@ -31,7 +31,7 @@ public class KafkaConsumerConfig {
   @Value("${spring.kafka.consumer.maxPollRecs}")
   private String maxPollRecords = "";
 
-  @Bean
+  @Bean("ldfdataConsumerFactory")
   public ConsumerFactory<String, String> consumerFactory() {
     final Map<String, Object> config = new HashMap<>();
     config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -44,7 +44,7 @@ public class KafkaConsumerConfig {
   }
 
   // Config for kafka listener aka consumer
-  @Bean
+  @Bean("ldfdataKafkaListenerContainerFactory")
   public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
