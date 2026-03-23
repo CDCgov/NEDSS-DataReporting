@@ -26,6 +26,8 @@ spring:
       # Person
       topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
       topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+
+      # Organization
       topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
       topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
     output:
@@ -57,6 +59,8 @@ spring:
         topic-name: ${PATIENT_REPORTING:nrt_patient}
       userReporting:
         topic-name: ${USER_REPORTING:nrt_auth_user}
+
+      # Organization
       organizationElastic:
         topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
       organizationReporting:

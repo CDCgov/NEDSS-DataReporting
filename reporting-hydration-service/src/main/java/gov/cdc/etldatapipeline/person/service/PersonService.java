@@ -136,7 +136,6 @@ public class PersonService {
   }
 
   @RetryableTopic(
-      kafkaTemplate = "personKafkaTemplate",
       attempts = "${spring.kafka.consumer.max-retry}",
       autoCreateTopics = "false",
       dltStrategy = DltStrategy.FAIL_ON_ERROR,
