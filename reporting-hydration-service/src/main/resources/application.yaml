@@ -2,11 +2,6 @@ spring:
   application:
     name: reporting-hydration-service
 
-  featureFlag:
-    elastic-search-enable: ${FF_ES_ENABLE:false}
-    phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
-    thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
-
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
     group-id: ${KAFKA_CONSUMER_APP:hydration-consumer-app}
@@ -26,6 +21,10 @@ spring:
       # Person
       topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
       topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+
+      # Organization
+      topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
+      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
     output:
       # Investigation
       topic-name-reporting: ${OUTPUT_TOPIC_REPORTING:nrt_investigation}
@@ -39,7 +38,8 @@ spring:
       topic-name-interview-answer: ${OUTPUT_TOPIC_INTERVIEW_ANSWER:nrt_interview_answer}
       topic-name-interview-note: ${OUTPUT_TOPIC_INTERVIEW_NOTE:nrt_interview_note}
       topic-name-rdb-metadata-columns: ${OUTPUT_TOPIC_METADATA_COLUMNS:nrt_metadata_columns}
-      topic-name-contact-answer: ${OUTPUT_TOPIC_CONTACT_ANSWER:nrt_contact_answer} 
+      topic-name-contact: ${OUTPUT_TOPIC_CONTACT:nrt_contact}
+      topic-name-contact-answer: ${OUTPUT_TOPIC_CONTACT_ANSWER:nrt_contact_answer}
       topic-name-vaccination: ${OUTPUT_TOPIC_VACCINATION:nrt_vaccination}
       topic-name-vaccination-answer: ${OUTPUT_TOPIC_VACCINATION_ANSWER:nrt_vaccination_answer}
       topic-name-treatment: ${OUTPUT_TOPIC_TREATMENT:nrt_treatment}
@@ -55,6 +55,16 @@ spring:
         topic-name: ${PATIENT_REPORTING:nrt_patient}
       userReporting:
         topic-name: ${USER_REPORTING:nrt_auth_user}
+
+      # Organization
+      organizationElastic:
+        topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
+      organizationReporting:
+        topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
+      placeReporting:
+        topic-name: ${PLACE_REPORTING:nrt_place}
+      placeTeleReporting:
+        topic-name: ${PLACE_TELE_REPORTING:nrt_place_tele}
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt
@@ -71,6 +81,11 @@ spring:
     password: ${DB_PASSWORD}
     username: ${DB_USERNAME}
     url: ${DB_HOST}
+
+featureFlag:
+  elastic-search-enable: ${FF_ES_ENABLE:false}
+  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+  thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
 
 management:
   endpoint:

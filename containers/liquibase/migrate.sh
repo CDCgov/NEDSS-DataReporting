@@ -6,7 +6,7 @@ liquibase \
     --searchPath="./" \
     --url="jdbc:sqlserver://${DB_HOST};databaseName=NBS_ODSE;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
     --username="${DB_USERNAME}" \
-    --password="${DB_PASSWORD}"\
+    --password="${DB_PASSWORD}" \
     update
 
 # ODSE
@@ -15,7 +15,7 @@ liquibase \
     --searchPath="./" \
     --url="jdbc:sqlserver://${DB_HOST};databaseName=nbs_odse;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
     --username="${DB_USERNAME}" \
-    --password="${DB_PASSWORD}"\
+    --password="${DB_PASSWORD}" \
     update
 
 # SRTE Admin tasks
@@ -36,7 +36,6 @@ liquibase \
     --password="${DB_PASSWORD}" \
     update
 
-
 # RDB_Modern
 liquibase \
     --changelog-file="db.rdb_modern.changelog-16.1.yaml" \
@@ -46,13 +45,11 @@ liquibase \
     --password="${DB_PASSWORD}" \
     update
 
-
 # Apply onboarding scripts
 echo "Applying onboarding scripts"
-for sql in $(find "./onboarding" -iname "*.sql" | sort) ;
-do
+for sql in $(find "./onboarding" -iname "*.sql" | sort); do
     echo "Executing: $sql"
-    /opt/mssql-tools18/bin/sqlcmd -C -S "${DB_HOST}" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -i "$sql"
+    sqlcmd -C -S "${DB_HOST}" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -i "$sql"
 
     echo "Completed: $sql"
 done

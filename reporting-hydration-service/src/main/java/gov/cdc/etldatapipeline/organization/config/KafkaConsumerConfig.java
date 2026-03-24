@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.person.config;
+package gov.cdc.etldatapipeline.organization.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,12 +10,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.*;
 
 @Slf4j
 @EnableKafka
-@Configuration("personKafkaConsumerConfig")
+@Configuration("organizationKafkaConsumerConfig")
 public class KafkaConsumerConfig {
   @Value("${spring.kafka.group-id}")
   private String groupId = "";
@@ -32,7 +31,7 @@ public class KafkaConsumerConfig {
   private String maxPollRecords = "";
 
   @Bean
-  public ConsumerFactory<String, String> personConsumerFactory() {
+  public ConsumerFactory<String, String> organizationConsumerFactory() {
     final Map<String, Object> config = new HashMap<>();
     config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -46,10 +45,10 @@ public class KafkaConsumerConfig {
   // Config for kafka listener aka consumer
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, String>
-      personKafkaListenerContainerFactory() {
+      organizationKafkaListenerContainerFactory() {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
-    factory.setConsumerFactory(personConsumerFactory());
+    factory.setConsumerFactory(organizationConsumerFactory());
     factory.getContainerProperties().setAsyncAcks(true);
     return factory;
   }
