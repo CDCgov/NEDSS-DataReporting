@@ -11,7 +11,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
-@Configuration
+@Configuration("personKafkaProducerConfig")
 public class KafkaProducerConfig {
   @Value("${spring.kafka.bootstrap-servers}")
   private String bootstrapServers = "";
@@ -26,7 +26,7 @@ public class KafkaProducerConfig {
     return new DefaultKafkaProducerFactory<>(config);
   }
 
-  @Bean
+  @Bean(name = "personKafkaTemplate")
   public KafkaTemplate<String, String> personKafkaTemplate() {
     // set factory for both producer
     return new KafkaTemplate<>(personProducerFactory());

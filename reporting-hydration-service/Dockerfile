@@ -1,4 +1,4 @@
-FROM amazoncorretto:21 as builder
+FROM amazoncorretto:21 AS builder
 
 RUN yum update -y && yum clean all
 
@@ -17,8 +17,11 @@ WORKDIR /usr/src/
 #Build service along with any required libraries
 RUN ./gradlew :reporting-hydration-service:buildNeeded -x test --no-daemon
 FROM amazoncorretto:21
-RUN yum update -y && yum clean all
+RUN yum update -y && yum install -y curl && yum clean all
 COPY --from=builder /usr/src/reporting-hydration-service/build/libs/reporting-hydration-service*.jar reporting-hydration-service.jar
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD curl -f http://localhost:8095/actuator/health || exit 1
 
 # Run jar
 ENTRYPOINT ["java", "-jar", "reporting-hydration-service.jar"]

@@ -42,10 +42,11 @@ jobs:
       - name: Build and analyze
         working-directory: ./
         run: |
-          ./gradlew clean build jacocoTestReport
+          ./gradlew clean build jacocoTestReport --continue
 
       - name: Publish Testing Reports
-        uses: actions/upload-artifact@v6
+        if: always()
+        uses: actions/upload-artifact@v7
         with:
           name: testing
           path: ./**/build/reports
