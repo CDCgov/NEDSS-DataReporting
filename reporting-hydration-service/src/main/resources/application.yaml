@@ -25,6 +25,9 @@ spring:
       # Organization
       topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
       topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
+
+      # Observation
+      topic-name-observation: ${INPUT_TOPIC_OBSERVATION:nbs_Observation}
     output:
       # Investigation
       topic-name-reporting: ${OUTPUT_TOPIC_REPORTING:nrt_investigation}
@@ -65,6 +68,24 @@ spring:
         topic-name: ${PLACE_REPORTING:nrt_place}
       placeTeleReporting:
         topic-name: ${PLACE_TELE_REPORTING:nrt_place_tele}
+
+      # Observation
+      observationReporting:
+        topic-name: ${OUTPUT_TOPIC_OBS_REPORTING:nrt_observation}
+      observationCoded:
+        topic-name: ${OUTPUT_TOPIC_OBS_CODED:nrt_observation_coded}
+      observationDate:
+        topic-name: ${OUTPUT_TOPIC_OBS_DATE:nrt_observation_date}
+      observationEdx:
+        topic-name: ${OUTPUT_TOPIC_OBS_EDX:nrt_observation_edx}
+      observationMaterial:
+        topic-name: ${OUTPUT_TOPIC_OBS_MATERIAL:nrt_observation_material}
+      observationNumeric:
+        topic-name: ${OUTPUT_TOPIC_OBS_NUMERIC:nrt_observation_numeric}
+      observationReason:
+        topic-name: ${OUTPUT_TOPIC_OBS_REASON:nrt_observation_reason}
+      observationTxt:
+        topic-name: ${OUTPUT_TOPIC_OBS_TXT:nrt_observation_txt}
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt
