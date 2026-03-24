@@ -19,6 +19,15 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
         apk add --allow-untrusted mssql-tools18_18.4.1.1-1_arm64.apk; \
     fi
 
+# Install Microsoft SQL Server JDBC driver for Liquibase
+ARG MSSQL_JDBC_VERSION=13.4.0
+ARG MSSQL_JDBC_SHA256=e36f5237c1267983e5b88dc2169f6b9d7e50eceec6dc1ca31018e3877e14af66
+
+RUN apk add --no-cache wget coreutils && \
+    wget -O /liquibase/lib/mssql-jdbc-${MSSQL_JDBC_VERSION}.jre11.jar \
+      https://github.com/microsoft/mssql-jdbc/releases/download/v${MSSQL_JDBC_VERSION}/mssql-jdbc-${MSSQL_JDBC_VERSION}.jre11.jar && \
+    echo "${MSSQL_JDBC_SHA256}  /liquibase/lib/mssql-jdbc-${MSSQL_JDBC_VERSION}.jre11.jar" | sha256sum -c -
+
 #Copy sources
 #changelog
 COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
@@ -40,7 +49,7 @@ COPY liquibase-service/src/main/resources/db/005-rdb_modern/routines /liquibase/
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
-# Onboarding 
+# Onboarding
 COPY liquibase-service/src/main/resources/db/001-master/01_onboarding_scripts_user_creation/ /liquibase/changelog/onboarding/
 COPY liquibase-service/src/main/resources/db/001-master/02_onboarding_script_data_load/ /liquibase/changelog/onboarding/
 
