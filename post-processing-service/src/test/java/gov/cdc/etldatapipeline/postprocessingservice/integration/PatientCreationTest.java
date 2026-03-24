@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+@Disabled("The liquibase container is having startup issues, enable after resolution")
 @SpringBootTest
 @Disabled("Temporarily disabled due to instability")
 class PatientCreationTest extends IntegrationTest {

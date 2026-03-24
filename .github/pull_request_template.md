@@ -1,30 +1,15 @@
-## Notes
+## Description
+Please include a summary of the changes
 
-Please include a summary of the change and which issue is fixed or which feature is added. 
+## Related Issue
+[Jira Ticket](url)
 
-## JIRA
-
-- **Related story**: [Jira Ticket](url)
+## Additional Notes
+Additional notes and context if necessary
 
 ## Checklist
-
-- [ ] PR focuses on a single story.
-- [ ] New unit tests added and ensured they pass.
-- [ ] Service has been tested in local and it works as expected.
-- [ ] Documentation has been updated for this code change (if needed).
-- [ ] Code follows the Java Coding Conventions (https://www.oracle.com/java/technologies/javase/codeconventions-programmingpractices.html).
-
-## Types of changes
-
-What types of changes does this PR introduces?
-
-- [ ] Bugfix
-- [ ] New feature
-- [ ] Breaking change
-
-## Testing
-
-- [ ] Does this PR has >90% code coverage?
-- [ ] Is the screenshot attached for code coverage?
-- [ ] Does the `gradle build` pass in your local? 
-- [ ] Is the `gradle build` logs attached?
+- [ ] I have ensured that the pull request is of a manageable size, allowing it to be reviewed within a single session.
+- [ ] I have reviewed my changes to ensure they are clear, concise, and well-documented.
+- [ ] I have updated the documentation, if applicable.
+- [ ] I have added or updated test cases to cover my changes, if applicable.
+ 

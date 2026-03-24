@@ -2,11 +2,6 @@ spring:
   application:
     name: reporting-hydration-service
 
-  featureFlag:
-    elastic-search-enable: ${FF_ES_ENABLE:false}
-    phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
-    thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
-
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
     group-id: ${KAFKA_CONSUMER_APP:hydration-consumer-app}
@@ -29,6 +24,10 @@ spring:
       # Person
       topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
       topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+
+      # Organization
+      topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
+      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
     output:
       # Investigation
       topic-name-reporting: ${OUTPUT_TOPIC_REPORTING:nrt_investigation}
@@ -62,6 +61,16 @@ spring:
         topic-name: ${PATIENT_REPORTING:nrt_patient}
       userReporting:
         topic-name: ${USER_REPORTING:nrt_auth_user}
+
+      # Organization
+      organizationElastic:
+        topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
+      organizationReporting:
+        topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
+      placeReporting:
+        topic-name: ${PLACE_REPORTING:nrt_place}
+      placeTeleReporting:
+        topic-name: ${PLACE_TELE_REPORTING:nrt_place_tele}
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt
@@ -78,6 +87,11 @@ spring:
     password: ${DB_PASSWORD}
     username: ${DB_USERNAME}
     url: ${DB_HOST}
+
+featureFlag:
+  elastic-search-enable: ${FF_ES_ENABLE:false}
+  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+  thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
 
 management:
   endpoint:
