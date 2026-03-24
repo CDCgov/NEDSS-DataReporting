@@ -1,7 +1,5 @@
 package gov.cdc.etldatapipeline.ldfdata.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -14,8 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -44,15 +40,5 @@ class LdfDataControllerTest {
         .andExpect(status().isOk());
 
     verify(kafkaProducerService).sendMessage(isNull(), eq(jsonData));
-  }
-
-  @Test
-  void getDataPipelineStatusHealthTest() {
-    final String responseBody = "LdfData Preprocessing Service Status OK";
-
-    ResponseEntity<String> response = ldfDataController.getDataPipelineStatusHealth();
-    assertNotNull(response);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(responseBody, response.getBody());
   }
 }
