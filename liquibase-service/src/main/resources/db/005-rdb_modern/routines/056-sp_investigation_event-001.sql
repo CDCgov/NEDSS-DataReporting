@@ -261,9 +261,16 @@ BEGIN
                          end as      hospitalized_ind,
                      phc.transmission_mode_cd,
                      case
-                         when (phc.transmission_mode_cd is not null or phc.transmission_mode_cd != '') then (select *
-                                                                                                             from dbo.fn_get_value_by_cd_codeset(phc.transmission_mode_cd, 'INV157'))
-                         end as                   transmission_mode,
+                         when phc.transmission_mode_cd is not null
+                              and phc.transmission_mode_cd <> '' then
+                             coalesce(
+                                 (
+                                     select *
+                                     from dbo.fn_get_value_by_cd_codeset(phc.transmission_mode_cd, 'INV157')
+                                 ),
+                                 phc.transmission_mode_cd
+                             )
+                     end as transmission_mode,
                      phc.outcome_cd,
                      case
                          when (phc.outcome_cd != '') then (select *
