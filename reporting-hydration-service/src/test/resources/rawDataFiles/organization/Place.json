@@ -1,0 +1,19 @@
+{
+  "placeUid": 10045001,
+  "cd": "N",
+  "placeTypeDescription": "Shopping Mall",
+  "placeLocalId": "PLC10095000GA01",
+  "placeName": "CVS",
+  "placeGeneralComments": null,
+  "placeAddTime": "2020-10-20 20:20:20",
+  "placeAddUserId": 10010001,
+  "placeLastChangeTime": "2020-10-20 20:20:21",
+  "placeLastChgUserId": 10010005,
+  "placeRecordStatus": "ACTIVE",
+  "placeRecordStatusTime": "2020-10-20 20:20:22",
+  "placeStatusCd": "A",
+  "placeStatusTime": "2020-10-20 20:20:23",
+  "placeEntity": "[{\"place_quick_code\":\"SHM\",\"assigning_authority_cd\":null}]",
+  "placeAddress": "[{\"place_postal_uid\":10070007,\"place_zip\":\"60099\",\"place_state_desc\":\"Alabama\",\"place_city\": \"Zion\",\"place_country\": \"840\",\"place_street_address_1\":\"10820 Hamilton Lane\",\"place_street_address_2\":\"unit 691\",\"place_county_desc\":\"Autauga County\",\"place_country_desc\":\"United States\",\"place_county_code\":\"01001\",\"place_state_code\":\"01\",\"place_address_comments\":null,\"place_elp_cd\":\"PLC\"}]",
+  "placeTele": "[{\"place_uid\":10045001,\"place_tele_locator_uid\":10040080,\"place_phone_ext\":null,\"place_phone\":\"560-930-5880\",\"place_email\":\"guest@cvs.com\",\"place_phone_comments\":null,\"tele_use_cd\":\"WP\",\"tele_cd\":\"PH\",\"place_tele_type\":\"Phone\",\"place_tele_use\":\"Work Place\"}]"
+}

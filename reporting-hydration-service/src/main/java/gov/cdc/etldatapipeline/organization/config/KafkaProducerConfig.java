@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.person.config;
+package gov.cdc.etldatapipeline.organization.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,13 +11,13 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
-@Configuration("personKafkaProducerConfig")
+@Configuration("organizationKafkaProducerConfig")
 public class KafkaProducerConfig {
   @Value("${spring.kafka.bootstrap-servers}")
   private String bootstrapServers = "";
 
   @Bean
-  public ProducerFactory<String, String> personProducerFactory() {
+  public ProducerFactory<String, String> organizationProducerFactory() {
     final Map<String, Object> config = new HashMap<>();
     config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -26,9 +26,9 @@ public class KafkaProducerConfig {
     return new DefaultKafkaProducerFactory<>(config);
   }
 
-  @Bean(name = "personKafkaTemplate")
-  public KafkaTemplate<String, String> personKafkaTemplate() {
-    // set factory for both producer
-    return new KafkaTemplate<>(personProducerFactory());
+  @Bean
+  public KafkaTemplate<String, String> organizationKafkaTemplate() {
+    // set factory for both producer and consumer
+    return new KafkaTemplate<>(organizationProducerFactory());
   }
 }
