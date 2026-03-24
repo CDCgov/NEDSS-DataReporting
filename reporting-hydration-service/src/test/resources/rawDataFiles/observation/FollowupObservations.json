@@ -1,0 +1,26 @@
+[
+  {
+    "result_observation_uid": 56789012,
+    "cd": "LAB234",
+    "cd_desc_txt": "No Information Given",
+    "domain_cd_st_1": "Result"
+  },
+  {
+    "result_observation_uid": 56789013,
+    "cd": "LAB235",
+    "cd_desc_txt": "No Information Given",
+    "domain_cd_st_1": "Result"
+  },
+  {
+    "result_observation_uid": 56789014,
+    "cd": "LAB345",
+    "cd_desc_txt": "No Information Given",
+    "domain_cd_st_1": "Order"
+  },
+  {
+    "result_observation_uid": 56789015,
+    "cd": "LAB346",
+    "cd_desc_txt": "No Information Given",
+    "domain_cd_st_1": null
+  }
+]
