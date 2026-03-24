@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.5'
+	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'jacoco'
 	id 'org.sonarqube' version '4.2.1.3168'
@@ -78,10 +78,12 @@ dependencies {
 
 dependencyManagement {
 	dependencies {
-		dependency 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
-		dependency 'org.apache.tomcat.embed:tomcat-embed-el:11.0.10'
-		dependency 'org.apache.tomcat.embed:tomcat-embed-websocket:11.0.10'
-	}
+		dependency 'org.apache.tomcat.embed:tomcat-embed-core:11.0.11'
+		dependency 'org.apache.tomcat.embed:tomcat-embed-el:11.0.11'
+		dependency 'org.apache.tomcat.embed:tomcat-embed-websocket:11.0.11'
+        dependency 'com.fasterxml.jackson.core:jackson-core:2.21.1'
+        dependency 'org.apache.kafka:kafka-clients:3.9.2'
+    }
 }
 
 tasks.named('test') {
