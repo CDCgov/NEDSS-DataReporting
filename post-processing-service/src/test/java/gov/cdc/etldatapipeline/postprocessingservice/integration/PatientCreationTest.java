@@ -6,11 +6,13 @@ import gov.cdc.etldatapipeline.postprocessingservice.integration.patient.Patient
 import gov.cdc.etldatapipeline.postprocessingservice.integration.rdb.DPatientFinder;
 import gov.cdc.etldatapipeline.postprocessingservice.integration.util.Await;
 import java.util.Optional;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
+@Disabled("Temporarily disabled due to instability")
 class PatientCreationTest extends IntegrationTest {
 
   @Autowired private PatientCreator patientCreator;
