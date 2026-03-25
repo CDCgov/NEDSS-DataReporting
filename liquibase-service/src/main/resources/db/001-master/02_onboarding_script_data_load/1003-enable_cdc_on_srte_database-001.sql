@@ -12,7 +12,10 @@ if exists (select 1
     end;
 else
     begin
-        exec sys.sp_cdc_enable_db 'nbs_srte'
+        if not exists (select 1 FROM sys.databases WHERE is_cdc_enabled = 1 and name = 'nbs_srte')
+            begin
+                exec sys.sp_cdc_enable_db;
+            end;
     end;
 
 select name, is_cdc_enabled
