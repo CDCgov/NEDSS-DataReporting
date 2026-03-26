@@ -19,3 +19,5 @@ include 'ldfdata-service'
 include 'liquibase-service'
 
 include 'reporting-hydration-service'
+
+include 'testing'
