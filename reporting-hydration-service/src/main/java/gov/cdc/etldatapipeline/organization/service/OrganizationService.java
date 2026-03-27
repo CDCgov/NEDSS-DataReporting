@@ -77,7 +77,7 @@ public class OrganizationService {
   @Value("${spring.kafka.input.topic-name-place}")
   private String placeTopic;
 
-  @Value("${spring.kafka.output.organizationElastic.topic-name}")
+  @Value("${spring.kafka.topics.elastic.organization}")
   private String orgElasticSearchTopic;
 
   @Value("${spring.kafka.output.organizationReporting.topic-name}")

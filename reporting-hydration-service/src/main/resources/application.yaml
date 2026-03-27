@@ -8,6 +8,53 @@ spring:
     producer:
       value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
       key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+
+    # CTHLU-56 Updates
+    topics:
+      elastic:
+        organization: ${TOPIC_ELASTIC_ORGANIZATION:elastic_search_organization}
+        patient: ${TOPIC_ELASTIC_PATIENT:elastic_search_patient}
+        provider: ${TOPIC_ELASTIC_PROVIDER:elastic_search_provider}
+
+    # Post Processing
+    topic:
+      investigation: nrt_investigation
+      observation: nrt_observation
+      organization: nrt_organization
+      patient: nrt_patient
+      provider: nrt_provider
+      notification: nrt_investigation_notification
+      treatment: nrt_treatment
+      case_management: nrt_investigation_case_management
+      interview: nrt_interview
+      ldf_data: nrt_ldf_data
+      place: nrt_place
+      auth_user: nrt_auth_user
+      contact_record: nrt_contact
+      vaccination: nrt_vaccination
+      page: nrt_odse_NBS_page
+      datamart: nbs_Datamart
+      state_defined_field_metadata: nrt_odse_state_defined_field_metadata
+      condition: nrt_srte_Condition_code
+    investigation-topic:
+      topic-name-phc: nbs_Public_health_case
+      topic-name-ntf: nbs_Notification
+      topic-name-int: nbs_Interview
+      topic-name-ctr: nbs_CT_contact
+      topic-name-vac: nbs_Intervention
+      topic-name-tmt: nbs_Treatment
+      topic-name-ar: nbs_Act_relationship
+    ldf-topic:
+      topic-name: nbs_state_defined_field_data
+    observation-topic:
+      topic-name: nbs_Observation
+      topic-name-ar: nbs_Act_relationship
+    organization-topic:
+      topic-name: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
+      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
+    person-topic:
+      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
     input:
       # Investigation
       topic-name-phc: ${INPUT_TOPIC_PHC:nbs_Public_health_case}
@@ -54,20 +101,20 @@ spring:
       topic-name-reporting-ldf-data: ${OUTPUT_TOPIC_REPORTING_LDF:nrt_ldf_data}
 
       # Person
-      providerElastic:
-        topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
+#      providerElastic:
+#        topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
       providerReporting:
         topic-name: ${PROVIDER_REPORTING:nrt_provider}
-      patientElastic:
-        topic-name: ${PATIENT_ELASTIC:elastic_search_patient}
+#      patientElastic:
+#        topic-name: ${PATIENT_ELASTIC:elastic_search_patient}
       patientReporting:
         topic-name: ${PATIENT_REPORTING:nrt_patient}
       userReporting:
         topic-name: ${USER_REPORTING:nrt_auth_user}
 
       # Organization
-      organizationElastic:
-        topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
+#      organizationElastic:
+#        topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
       organizationReporting:
         topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
       placeReporting:
