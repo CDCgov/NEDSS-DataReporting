@@ -8,8 +8,6 @@ spring:
     producer:
       value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
       key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
-
-    # CTHLU-56 Updates
     topics:
       elastic:
         organization: ${TOPIC_ELASTIC_ORGANIZATION:elastic_search_organization}
@@ -61,91 +59,6 @@ spring:
         treatment: ${TOPIC_NRT_TREATMENT:nrt_treatment}
         vaccination: ${TOPIC_NRT_VACCINATION:nrt_vaccination}
         vaccination-answer: ${TOPIC_NRT_VACCINATION_ANSWER:nrt_vaccination_answer}
-
-    input:
-      # Investigation
-#      topic-name-phc: ${INPUT_TOPIC_PHC:nbs_Public_health_case}
-#      topic-name-ntf: ${INPUT_TOPIC_NTF:nbs_Notification}
-#      topic-name-int: ${INPUT_TOPIC_INT:nbs_Interview}
-#      topic-name-ctr: ${INPUT_TOPIC_CTR:nbs_CT_contact}
-#      topic-name-vac: ${INPUT_TOPIC_VAC:nbs_Intervention}
-#      topic-name-tmt: ${INPUT_TOPIC_TMT:nbs_Treatment}
-#      topic-name-ar: ${INPUT_TOPIC_AR:nbs_Act_relationship}
-
-      # Ldf Data
-#      topic-name-sdfd: ${INPUT_TOPIC_SDFD:nbs_state_defined_field_data}
-
-      # Person
-#      topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
-#      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
-
-      # Organization
-#      topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
-#      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
-
-      # Observation
-#      topic-name-observation: ${INPUT_TOPIC_OBSERVATION:nbs_Observation}
-    output:
-      # Investigation
-#      topic-name-reporting: ${OUTPUT_TOPIC_REPORTING:nrt_investigation}
-#      topic-name-confirmation: ${OUTPUT_TOPIC_CONFIRMATION:nrt_investigation_confirmation}
-#      topic-name-observation: ${OUTPUT_TOPIC_OBSERVATION:nrt_investigation_observation}
-#      topic-name-notifications: ${OUTPUT_TOPIC_NOTIFICATIONS:nrt_investigation_notification}
-#      topic-name-page-case-answer: ${OUTPUT_TOPIC_PAGE_CASE_ANSWER:nrt_page_case_answer}
-#      topic-name-aggregate: ${OUTPUT_TOPIC_AGGREGATE:nrt_investigation_aggregate}
-#      topic-name-case-management: ${OUTPUT_TOPIC_CASE_MANAGEMENT:nrt_investigation_case_management}
-#      topic-name-interview: ${OUTPUT_TOPIC_INTERVIEW:nrt_interview}
-#      topic-name-interview-answer: ${OUTPUT_TOPIC_INTERVIEW_ANSWER:nrt_interview_answer}
-#      topic-name-interview-note: ${OUTPUT_TOPIC_INTERVIEW_NOTE:nrt_interview_note}
-#      topic-name-rdb-metadata-columns: ${OUTPUT_TOPIC_METADATA_COLUMNS:nrt_metadata_columns}
-#      topic-name-contact: ${OUTPUT_TOPIC_CONTACT:nrt_contact}
-#      topic-name-contact-answer: ${OUTPUT_TOPIC_CONTACT_ANSWER:nrt_contact_answer}
-#      topic-name-vaccination: ${OUTPUT_TOPIC_VACCINATION:nrt_vaccination}
-#      topic-name-vaccination-answer: ${OUTPUT_TOPIC_VACCINATION_ANSWER:nrt_vaccination_answer}
-#      topic-name-treatment: ${OUTPUT_TOPIC_TREATMENT:nrt_treatment}
-
-      # Ldf Data
-#      topic-name-reporting-ldf-data: ${OUTPUT_TOPIC_REPORTING_LDF:nrt_ldf_data}
-
-      # Person
-#      providerElastic:
-#        topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
-#      providerReporting:
-#        topic-name: ${PROVIDER_REPORTING:nrt_provider}
-#      patientElastic:
-#        topic-name: ${PATIENT_ELASTIC:elastic_search_patient}
-#      patientReporting:
-#        topic-name: ${PATIENT_REPORTING:nrt_patient}
-#      userReporting:
-#        topic-name: ${USER_REPORTING:nrt_auth_user}
-
-      # Organization
-#      organizationElastic:
-#        topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
-#      organizationReporting:
-#        topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
-#      placeReporting:
-#        topic-name: ${PLACE_REPORTING:nrt_place}
-#      placeTeleReporting:
-#        topic-name: ${PLACE_TELE_REPORTING:nrt_place_tele}
-
-      # Observation
-#      observationReporting:
-#        topic-name: ${OUTPUT_TOPIC_OBS_REPORTING:nrt_observation}
-#      observationCoded:
-#        topic-name: ${OUTPUT_TOPIC_OBS_CODED:nrt_observation_coded}
-#      observationDate:
-#        topic-name: ${OUTPUT_TOPIC_OBS_DATE:nrt_observation_date}
-#      observationEdx:
-#        topic-name: ${OUTPUT_TOPIC_OBS_EDX:nrt_observation_edx}
-#      observationMaterial:
-#        topic-name: ${OUTPUT_TOPIC_OBS_MATERIAL:nrt_observation_material}
-#      observationNumeric:
-#        topic-name: ${OUTPUT_TOPIC_OBS_NUMERIC:nrt_observation_numeric}
-#      observationReason:
-#        topic-name: ${OUTPUT_TOPIC_OBS_REASON:nrt_observation_reason}
-#      observationTxt:
-#        topic-name: ${OUTPUT_TOPIC_OBS_TXT:nrt_observation_txt}
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt
