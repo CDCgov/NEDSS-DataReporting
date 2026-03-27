@@ -51,7 +51,7 @@ public class InvestigationService {
       Executors.newFixedThreadPool(nProc * 2, new CustomizableThreadFactory("phc-"));
   private ExecutorService invExecutor;
 
-  @Value("${spring.kafka.input.topic-name-phc}")
+  @Value("${spring.kafka.topics.nbs.public-health-case}")
   private String investigationTopic;
 
   @Value("${spring.kafka.topics.nbs.notification}")
@@ -66,7 +66,7 @@ public class InvestigationService {
   @Value("${spring.kafka.topics.nbs.intervention}")
   private String vaccinationTopic;
 
-  @Value("${spring.kafka.input.topic-name-tmt}")
+  @Value("${spring.kafka.topics.nbs.treatment}")
   private String treatmentTopic;
 
   @Value("${spring.kafka.topics.nbs.act-relationship}")
@@ -147,12 +147,12 @@ public class InvestigationService {
       kafkaTemplate = "investigationKafkaTemplate")
   @KafkaListener(
       topics = {
-        "${spring.kafka.input.topic-name-phc}",
+        "${spring.kafka.topics.nbs.public-health-case}",
         "${spring.kafka.topics.nbs.notification}",
         "${spring.kafka.topics.nbs.interview}",
         "${spring.kafka.topics.nbs.ct-contact}",
         "${spring.kafka.topics.nbs.intervention}",
-        "${spring.kafka.input.topic-name-tmt}",
+        "${spring.kafka.topics.nbs.treatment}",
         "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "investigationKafkaListenerContainerFactory")

@@ -47,7 +47,7 @@ public class LdfDataService {
       new ObjectMapper().registerModule(new JavaTimeModule());
   private ExecutorService ldfExecutor;
 
-  @Value("${spring.kafka.input.topic-name-sdfd}")
+  @Value("${spring.kafka.topics.nbs.state-defined-field-data}")
   private String ldfDataTopic;
 
   @Value("${spring.kafka.output.topic-name-reporting-ldf-data}")
@@ -106,7 +106,7 @@ public class LdfDataService {
       },
       kafkaTemplate = "ldfdataKafkaTemplate")
   @KafkaListener(
-      topics = "${spring.kafka.input.topic-name-sdfd}",
+      topics = "${spring.kafka.topics.nbs.state-defined-field-data}",
       containerFactory = "ldfdataKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
     String topic = rec.topic();

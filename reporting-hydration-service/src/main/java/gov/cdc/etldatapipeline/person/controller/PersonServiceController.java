@@ -19,7 +19,7 @@ public class PersonServiceController {
 
   private static final String PRODUCED = "Produced : ";
 
-  @Value("${spring.kafka.input.topic-name-person}")
+  @Value("${spring.kafka.topics.nbs.person}")
   private String personTopicName = "nbs_Person";
 
   @Value("${spring.kafka.topics.nbs.user}")

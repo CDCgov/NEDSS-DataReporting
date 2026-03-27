@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 public class InvestigationController {
   private final KafkaProducerService producerService;
 
-  @Value("${spring.kafka.input.topic-name-phc}")
+  @Value("${spring.kafka.topics.nbs.public-health-case}")
   private String investigationTopic;
 
   @Value("${spring.kafka.topics.nbs.notification}")
@@ -27,7 +27,7 @@ public class InvestigationController {
   @Value("${spring.kafka.topics.nbs.intervention}")
   private String vaccinationTopic;
 
-  @Value("${spring.kafka.input.topic-name-tmt}")
+  @Value("${spring.kafka.topics.nbs.treatment}")
   private String treatmentTopic;
 
   @PostMapping("/reporting/investigation-svc/investigation")

@@ -76,7 +76,7 @@ public class PersonService {
   @Qualifier("personKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  @Value("${spring.kafka.input.topic-name-person}")
+  @Value("${spring.kafka.topics.nbs.person}")
   private String personTopic;
 
   @Value("${spring.kafka.topics.nbs.user}")
@@ -153,7 +153,7 @@ public class PersonService {
       },
       kafkaTemplate = "personKafkaTemplate")
   @KafkaListener(
-      topics = {"${spring.kafka.input.topic-name-person}", "${spring.kafka.topics.nbs.user}"},
+      topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.user}"},
       containerFactory = "personKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {

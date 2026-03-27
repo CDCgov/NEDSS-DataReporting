@@ -63,7 +63,7 @@ public class ObservationService {
   private static final Logger logger = LoggerFactory.getLogger(ObservationService.class);
   private static final String BEFORE_PATH = "before";
 
-  @Value("${spring.kafka.input.topic-name-observation}")
+  @Value("${spring.kafka.topics.nbs.observation}")
   private String observationTopic;
 
   @Value("${spring.kafka.topics.nbs.act-relationship}")
@@ -131,7 +131,7 @@ public class ObservationService {
       kafkaTemplate = "observationKafkaTemplate")
   @KafkaListener(
       topics = {
-        "${spring.kafka.input.topic-name-observation}",
+        "${spring.kafka.topics.nbs.observation}",
         "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "observationKafkaListenerContainerFactory")

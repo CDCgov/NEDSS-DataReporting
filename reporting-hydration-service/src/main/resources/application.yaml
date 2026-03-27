@@ -21,31 +21,38 @@ spring:
         intervention: ${TOPIC_NBS_INTERVENTION:nbs_Intervention}
         interview: ${TOPIC_NBS_INTERVIEW:nbs_Interview}
         notification: ${TOPIC_NBS_NOTIFICATION:nbs_Notification}
+        observation: ${TOPIC_NBS_OBSERVATION:nbs_Observation}
+        organization: ${TOPIC_NBS_ORGANIZATION:nbs_Organization}
+        person: ${TOPIC_NBS_PERSON:nbs_Person}
+        place: ${TOPIC_NBS_PLACE:nbs_Place}
+        public-health-case: ${TOPIC_NBS_PUBLIC_HEALTH_CASE:nbs_Public_health_case}
+        state-defined-field-data: ${TOPIC_NBS_STATE_DEFINED_FIELD_DATA:nbs_state_defined_field_data}
+        treatment: ${TOPIC_NBS_TREATMENT:nbs_Treatment}
         user: ${TOPIC_NBS_USER:nbs_Auth_user}
 
     input:
       # Investigation
-      topic-name-phc: ${INPUT_TOPIC_PHC:nbs_Public_health_case}
+#      topic-name-phc: ${INPUT_TOPIC_PHC:nbs_Public_health_case}
 #      topic-name-ntf: ${INPUT_TOPIC_NTF:nbs_Notification}
 #      topic-name-int: ${INPUT_TOPIC_INT:nbs_Interview}
 #      topic-name-ctr: ${INPUT_TOPIC_CTR:nbs_CT_contact}
 #      topic-name-vac: ${INPUT_TOPIC_VAC:nbs_Intervention}
-      topic-name-tmt: ${INPUT_TOPIC_TMT:nbs_Treatment}
+#      topic-name-tmt: ${INPUT_TOPIC_TMT:nbs_Treatment}
 #      topic-name-ar: ${INPUT_TOPIC_AR:nbs_Act_relationship}
 
       # Ldf Data
-      topic-name-sdfd: ${INPUT_TOPIC_SDFD:nbs_state_defined_field_data}
+#      topic-name-sdfd: ${INPUT_TOPIC_SDFD:nbs_state_defined_field_data}
 
       # Person
-      topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
+#      topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
 #      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
 
       # Organization
-      topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
-      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
+#      topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
+#      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
 
       # Observation
-      topic-name-observation: ${INPUT_TOPIC_OBSERVATION:nbs_Observation}
+#      topic-name-observation: ${INPUT_TOPIC_OBSERVATION:nbs_Observation}
     output:
       # Investigation
       topic-name-reporting: ${OUTPUT_TOPIC_REPORTING:nrt_investigation}
