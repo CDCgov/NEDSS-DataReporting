@@ -7,6 +7,10 @@ import gov.cdc.nbs.etldatapipeline.testing.patient.address.PatientAddress;
 import gov.cdc.nbs.etldatapipeline.testing.patient.address.PatientAddressManager;
 import gov.cdc.nbs.etldatapipeline.testing.patient.name.PatientName;
 import gov.cdc.nbs.etldatapipeline.testing.patient.name.PatientNameManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.phone.PatientPhoneAndEmail;
+import gov.cdc.nbs.etldatapipeline.testing.patient.phone.PatientPhoneAndEmailManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.race.PatientRace;
+import gov.cdc.nbs.etldatapipeline.testing.patient.race.PatientRaceManager;
 
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,16 +28,22 @@ public class PatientCreator {
   private JdbcClient client;
   private PatientNameManager nameManager;
   private PatientAddressManager addressManager;
+  private PatientPhoneAndEmailManager phoneEmailManager;
+  private PatientRaceManager raceManager;
 
   public PatientCreator(
       final IdGenerator idGenerator,
       @Qualifier("testClient") final JdbcClient client,
       final PatientNameManager nameManager,
-      final PatientAddressManager addressManager) {
+      final PatientAddressManager addressManager,
+      final PatientPhoneAndEmailManager phoneEmailManager,
+      final PatientRaceManager raceManager) {
     this.idGenerator = idGenerator;
     this.client = client;
     this.nameManager = nameManager;
     this.addressManager = addressManager;
+    this.phoneEmailManager = phoneEmailManager;
+    this.raceManager = raceManager;
   }
 
   private static final String CREATE_QUERY = """
@@ -97,9 +107,15 @@ public class PatientCreator {
     addressManager.add(patient, address);
   }
 
+  public void addPhoneAndEmail(final long patient, final PatientPhoneAndEmail phone) {
+    phoneEmailManager.add(patient, phone);
+  }
+
+  public void addRace(final long patient, final PatientRace race) {
+    this.raceManager.add(patient, race);
+  }
+
   // Create a Person with
-  // Phone number
-  // Race
   // Ethnicity
   // Identifier
 }

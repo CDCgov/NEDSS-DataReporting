@@ -101,6 +101,7 @@ public class PatientAddressManager {
         .param("countyCode", address.countyCode())
         .param("censusTract", address.censusTract())
         .param("countryCode", address.countryCode())
-        .param("comment", address.comment());
+        .param("comment", address.comment())
+        .update();
   }
 }

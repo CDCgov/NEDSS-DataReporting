@@ -9,13 +9,11 @@ import java.time.LocalDateTime;
  * would be prohibitive.
  * 
  * <pre>
- * 
  * Sample Values
  * stateCode: 13 -> "Georgia"
  * countyCode: 13121 -> "Fulton County, GA"
  * contryCode: 840 -> "United States"
- * 
- * <pre>
+ * </pre>
  */
 public record PatientAddress(
     LocalDateTime asOf,
