@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import gov.cdc.etldatapipeline.postprocessingservice.integration.rdb.DPatientFinder;
 import gov.cdc.nbs.etldatapipeline.testing.IntegrationTest;
-import gov.cdc.nbs.etldatapipeline.testing.patient.PatientCreator;
+import gov.cdc.nbs.etldatapipeline.testing.patient.PatientManager;
 import gov.cdc.nbs.etldatapipeline.testing.util.Await;
 
 import java.util.Optional;
@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class PatientCreationTest extends IntegrationTest {
 
   @Autowired
-  private PatientCreator patientCreator;
+  private PatientManager patientManager;
 
   @Autowired
   private DPatientFinder dPatientFinder;
@@ -24,7 +24,7 @@ class PatientCreationTest extends IntegrationTest {
   @Test
   void patientDataIsSuccessfullyProcessed() {
     // Insert a patient into NBS_ODSE
-    long createdPatient = patientCreator.create();
+    long createdPatient = patientManager.create();
     assertThat(createdPatient).isNotZero();
 
     // Validate patient data arrives in D_PATIENT with retry

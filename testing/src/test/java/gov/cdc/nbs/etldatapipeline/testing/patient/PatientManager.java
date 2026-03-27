@@ -1,10 +1,23 @@
 package gov.cdc.nbs.etldatapipeline.testing.patient;
 
+import java.time.LocalDateTime;
+
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Component;
+
 import gov.cdc.nbs.etldatapipeline.testing.identifier.IdGenerator;
 import gov.cdc.nbs.etldatapipeline.testing.identifier.IdGenerator.EntityType;
 import gov.cdc.nbs.etldatapipeline.testing.identifier.IdGenerator.GeneratedId;
 import gov.cdc.nbs.etldatapipeline.testing.patient.address.PatientAddress;
 import gov.cdc.nbs.etldatapipeline.testing.patient.address.PatientAddressManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.birth.PatientSexAndBirth;
+import gov.cdc.nbs.etldatapipeline.testing.patient.birth.PatientSexAndBirthManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.comment.PatientComment;
+import gov.cdc.nbs.etldatapipeline.testing.patient.comment.PatientCommentManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.ethnicity.PatientEthnicity;
+import gov.cdc.nbs.etldatapipeline.testing.patient.ethnicity.PatientEthnicityManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.identification.PatientIdentification;
+import gov.cdc.nbs.etldatapipeline.testing.patient.identification.PatientIdentificationManager;
 import gov.cdc.nbs.etldatapipeline.testing.patient.name.PatientName;
 import gov.cdc.nbs.etldatapipeline.testing.patient.name.PatientNameManager;
 import gov.cdc.nbs.etldatapipeline.testing.patient.phone.PatientPhoneAndEmail;
@@ -12,38 +25,45 @@ import gov.cdc.nbs.etldatapipeline.testing.patient.phone.PatientPhoneAndEmailMan
 import gov.cdc.nbs.etldatapipeline.testing.patient.race.PatientRace;
 import gov.cdc.nbs.etldatapipeline.testing.patient.race.PatientRaceManager;
 
-import java.time.LocalDateTime;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.stereotype.Component;
-
 /**
  * Responsible for creating and inserting patient data into the NBS_ODSE for
  * testing
  */
 @Component
-public class PatientCreator {
+public class PatientManager {
 
-  private IdGenerator idGenerator;
-  private JdbcClient client;
-  private PatientNameManager nameManager;
-  private PatientAddressManager addressManager;
-  private PatientPhoneAndEmailManager phoneEmailManager;
-  private PatientRaceManager raceManager;
+  private final IdGenerator idGenerator;
+  private final JdbcClient client;
+  private final PatientNameManager nameManager;
+  private final PatientAddressManager addressManager;
+  private final PatientPhoneAndEmailManager phoneEmailManager;
+  private final PatientRaceManager raceManager;
+  private final PatientEthnicityManager ethnicityManager;
+  private final PatientIdentificationManager identificationManager;
+  private final PatientCommentManager commentManager;
+  private final PatientSexAndBirthManager sexAndBirthManager;
 
-  public PatientCreator(
+  public PatientManager(
       final IdGenerator idGenerator,
-      @Qualifier("testClient") final JdbcClient client,
+      final JdbcClient client,
       final PatientNameManager nameManager,
       final PatientAddressManager addressManager,
       final PatientPhoneAndEmailManager phoneEmailManager,
-      final PatientRaceManager raceManager) {
+      final PatientRaceManager raceManager,
+      final PatientEthnicityManager ethnicityManager,
+      final PatientIdentificationManager identificationManager,
+      final PatientCommentManager commentManager,
+      final PatientSexAndBirthManager sexAndBirthManager) {
     this.idGenerator = idGenerator;
     this.client = client;
     this.nameManager = nameManager;
     this.addressManager = addressManager;
     this.phoneEmailManager = phoneEmailManager;
     this.raceManager = raceManager;
+    this.ethnicityManager = ethnicityManager;
+    this.identificationManager = identificationManager;
+    this.commentManager = commentManager;
+    this.sexAndBirthManager = sexAndBirthManager;
   }
 
   private static final String CREATE_QUERY = """
@@ -115,7 +135,22 @@ public class PatientCreator {
     this.raceManager.add(patient, race);
   }
 
-  // Create a Person with
-  // Ethnicity
-  // Identifier
+  public void addEthnicity(final long patient, final PatientEthnicity ethnicity) {
+    this.ethnicityManager.add(patient, ethnicity);
+  }
+
+  public void addIdentification(final long patient, final PatientIdentification identification) {
+    this.identificationManager.add(patient, identification);
+  }
+
+  public void setComment(final long patient, final PatientComment comment) {
+    commentManager.set(patient, comment);
+  }
+
+  public void setSexAndBirthInfo(final long patient, final PatientSexAndBirth patientSexAndBirth) {
+    sexAndBirthManager.set(patient, patientSexAndBirth);
+  }
+
+  // mortality info
+  // general patient info
 }

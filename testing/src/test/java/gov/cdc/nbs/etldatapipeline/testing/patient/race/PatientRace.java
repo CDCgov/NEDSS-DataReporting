@@ -3,6 +3,19 @@ package gov.cdc.nbs.etldatapipeline.testing.patient.race;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Contains the data necessary for creating a new race associated with a
+ * patient. A patient may have multiple race entries. Both Patient race and
+ * detailed race information is stored in the Person_race table within NBS. The
+ * primary race is stored so that race_cd and race_category_cd are both set to
+ * the selected race code. Detailed race information is stored where race_cd is
+ * the detailed race code and race_category_cd is set to the primary race code.
+ * 
+ * <pre>
+ * NBS_ODSE
+ * Person.person_uid -> Person_race.person_uid *
+ * </pre>
+ */
 public record PatientRace(
     LocalDateTime asOf,
     Race race,
