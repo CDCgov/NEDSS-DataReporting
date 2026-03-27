@@ -17,14 +17,19 @@ spring:
         provider: ${TOPIC_ELASTIC_PROVIDER:elastic_search_provider}
       nbs:
         act-relationship: ${TOPIC_NBS_ACT_RELATIONSHIP:nbs_Act_relationship}
+        ct-contact: ${TOPIC_NBS_CT_CONTACT:nbs_CT_contact}
+        intervention: ${TOPIC_NBS_INTERVENTION:nbs_Intervention}
+        interview: ${TOPIC_NBS_INTERVIEW:nbs_Interview}
+        notification: ${TOPIC_NBS_NOTIFICATION:nbs_Notification}
+        user: ${TOPIC_NBS_USER:nbs_Auth_user}
 
     input:
       # Investigation
       topic-name-phc: ${INPUT_TOPIC_PHC:nbs_Public_health_case}
-      topic-name-ntf: ${INPUT_TOPIC_NTF:nbs_Notification}
-      topic-name-int: ${INPUT_TOPIC_INT:nbs_Interview}
-      topic-name-ctr: ${INPUT_TOPIC_CTR:nbs_CT_contact}
-      topic-name-vac: ${INPUT_TOPIC_VAC:nbs_Intervention}
+#      topic-name-ntf: ${INPUT_TOPIC_NTF:nbs_Notification}
+#      topic-name-int: ${INPUT_TOPIC_INT:nbs_Interview}
+#      topic-name-ctr: ${INPUT_TOPIC_CTR:nbs_CT_contact}
+#      topic-name-vac: ${INPUT_TOPIC_VAC:nbs_Intervention}
       topic-name-tmt: ${INPUT_TOPIC_TMT:nbs_Treatment}
 #      topic-name-ar: ${INPUT_TOPIC_AR:nbs_Act_relationship}
 
@@ -33,7 +38,7 @@ spring:
 
       # Person
       topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
-      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+#      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
 
       # Organization
       topic-name-organization: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}

@@ -15,16 +15,16 @@ public class InvestigationController {
   @Value("${spring.kafka.input.topic-name-phc}")
   private String investigationTopic;
 
-  @Value("${spring.kafka.input.topic-name-ntf}")
+  @Value("${spring.kafka.topics.nbs.notification}")
   private String notificationTopic;
 
-  @Value("${spring.kafka.input.topic-name-int}")
+  @Value("${spring.kafka.topics.nbs.interview}")
   private String interviewTopic;
 
-  @Value("${spring.kafka.input.topic-name-ctr}")
+  @Value("${spring.kafka.topics.nbs.ct-contact}")
   private String contactTopic;
 
-  @Value("${spring.kafka.input.topic-name-vac}")
+  @Value("${spring.kafka.topics.nbs.intervention}")
   private String vaccinationTopic;
 
   @Value("${spring.kafka.input.topic-name-tmt}")

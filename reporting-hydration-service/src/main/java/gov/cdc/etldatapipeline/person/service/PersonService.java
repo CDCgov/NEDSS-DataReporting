@@ -79,7 +79,7 @@ public class PersonService {
   @Value("${spring.kafka.input.topic-name-person}")
   private String personTopic;
 
-  @Value("${spring.kafka.input.topic-name-user}")
+  @Value("${spring.kafka.topics.nbs.user}")
   private String userTopic;
 
   @Value("${spring.kafka.topics.elastic.patient}")
@@ -153,7 +153,7 @@ public class PersonService {
       },
       kafkaTemplate = "personKafkaTemplate")
   @KafkaListener(
-      topics = {"${spring.kafka.input.topic-name-person}", "${spring.kafka.input.topic-name-user}"},
+      topics = {"${spring.kafka.input.topic-name-person}", "${spring.kafka.topics.nbs.user}"},
       containerFactory = "personKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {

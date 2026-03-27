@@ -22,7 +22,7 @@ public class PersonServiceController {
   @Value("${spring.kafka.input.topic-name-person}")
   private String personTopicName = "nbs_Person";
 
-  @Value("${spring.kafka.input.topic-name-user}")
+  @Value("${spring.kafka.topics.nbs.user}")
   private String userTopicName = "nbs_Auth_user";
 
   @PostMapping(value = "/reporting/person-svc/provider")

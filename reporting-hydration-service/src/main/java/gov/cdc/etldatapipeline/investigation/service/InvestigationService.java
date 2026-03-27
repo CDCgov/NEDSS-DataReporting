@@ -54,16 +54,16 @@ public class InvestigationService {
   @Value("${spring.kafka.input.topic-name-phc}")
   private String investigationTopic;
 
-  @Value("${spring.kafka.input.topic-name-ntf}")
+  @Value("${spring.kafka.topics.nbs.notification}")
   private String notificationTopic;
 
-  @Value("${spring.kafka.input.topic-name-int}")
+  @Value("${spring.kafka.topics.nbs.interview}")
   private String interviewTopic;
 
-  @Value("${spring.kafka.input.topic-name-ctr}")
+  @Value("${spring.kafka.topics.nbs.ct-contact}")
   private String contactTopic;
 
-  @Value("${spring.kafka.input.topic-name-vac}")
+  @Value("${spring.kafka.topics.nbs.intervention}")
   private String vaccinationTopic;
 
   @Value("${spring.kafka.input.topic-name-tmt}")
@@ -148,10 +148,10 @@ public class InvestigationService {
   @KafkaListener(
       topics = {
         "${spring.kafka.input.topic-name-phc}",
-        "${spring.kafka.input.topic-name-ntf}",
-        "${spring.kafka.input.topic-name-int}",
-        "${spring.kafka.input.topic-name-ctr}",
-        "${spring.kafka.input.topic-name-vac}",
+        "${spring.kafka.topics.nbs.notification}",
+        "${spring.kafka.topics.nbs.interview}",
+        "${spring.kafka.topics.nbs.ct-contact}",
+        "${spring.kafka.topics.nbs.intervention}",
         "${spring.kafka.input.topic-name-tmt}",
         "${spring.kafka.topics.nbs.act-relationship}"
       },
