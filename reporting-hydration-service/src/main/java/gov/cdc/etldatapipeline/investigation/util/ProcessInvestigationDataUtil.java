@@ -43,7 +43,7 @@ public class ProcessInvestigationDataUtil {
   @Value("${spring.kafka.topics.nrt.investigation-notification}")
   public String investigationNotificationsOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-page-case-answer}")
+  @Value("${spring.kafka.topics.nrt.page-case-answer}")
   public String pageCaseAnswerOutputTopicName;
 
   @Value("${spring.kafka.topics.nrt.investigation-aggregate}")
@@ -67,10 +67,10 @@ public class ProcessInvestigationDataUtil {
   @Value("${spring.kafka.topics.nrt.contact-answer}")
   private String contactAnswerOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-vaccination}")
+  @Value("${spring.kafka.topics.nrt.vaccination}")
   private String vaccinationOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-vaccination-answer}")
+  @Value("${spring.kafka.topics.nrt.vaccination-answer}")
   private String vaccinationAnswerOutputTopicName;
 
   @Value("${spring.kafka.topics.nrt.metadata-columns}")

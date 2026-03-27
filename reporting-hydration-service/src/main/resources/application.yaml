@@ -47,6 +47,20 @@ spring:
         observation: ${TOPIC_NRT_OBSERVATION:nrt_observation}
         observation-coded: ${TOPIC_NRT_OBSERVATION_CODED:nrt_observation_coded}
         observation-date: ${TOPIC_NRT_OBSERVATION_DATE:nrt_observation_date}
+        observation-edx: ${TOPIC_NRT_OBSERVATION_EDX:nrt_observation_edx}
+        observation-material: ${TOPIC_NRT_OBSERVATION_MATERIAL:nrt_observation_material}
+        observation-numeric: ${TOPIC_NRT_OBSERVATION_NUMERIC:nrt_observation_numeric}
+        observation-reason: ${TOPIC_NRT_OBSERVATION_REASON:nrt_observation_reason}
+        observation-txt: ${TOPIC_NRT_OBSERVATION_TXT:nrt_observation_txt}
+        organization: ${TOPIC_NRT_ORGANIZATION:nrt_organization}
+        page-case-answer: ${TOPIC_NRT_PAGE_CASE_ANSWER:nrt_page_case_answer}
+        patient: ${TOPIC_NRT_PATIENT:nrt_patient}
+        place: ${TOPIC_NRT_PLACE:nrt_place}
+        place-tele: ${TOPIC_NRT_PLACE_TELE:nrt_place_tele}
+        provider: ${TOPIC_NRT_PROVIDER:nrt_provider}
+        treatment: ${TOPIC_NRT_TREATMENT:nrt_treatment}
+        vaccination: ${TOPIC_NRT_VACCINATION:nrt_vaccination}
+        vaccination-answer: ${TOPIC_NRT_VACCINATION_ANSWER:nrt_vaccination_answer}
 
     input:
       # Investigation
@@ -77,7 +91,7 @@ spring:
 #      topic-name-confirmation: ${OUTPUT_TOPIC_CONFIRMATION:nrt_investigation_confirmation}
 #      topic-name-observation: ${OUTPUT_TOPIC_OBSERVATION:nrt_investigation_observation}
 #      topic-name-notifications: ${OUTPUT_TOPIC_NOTIFICATIONS:nrt_investigation_notification}
-      topic-name-page-case-answer: ${OUTPUT_TOPIC_PAGE_CASE_ANSWER:nrt_page_case_answer}
+#      topic-name-page-case-answer: ${OUTPUT_TOPIC_PAGE_CASE_ANSWER:nrt_page_case_answer}
 #      topic-name-aggregate: ${OUTPUT_TOPIC_AGGREGATE:nrt_investigation_aggregate}
 #      topic-name-case-management: ${OUTPUT_TOPIC_CASE_MANAGEMENT:nrt_investigation_case_management}
 #      topic-name-interview: ${OUTPUT_TOPIC_INTERVIEW:nrt_interview}
@@ -86,9 +100,9 @@ spring:
 #      topic-name-rdb-metadata-columns: ${OUTPUT_TOPIC_METADATA_COLUMNS:nrt_metadata_columns}
 #      topic-name-contact: ${OUTPUT_TOPIC_CONTACT:nrt_contact}
 #      topic-name-contact-answer: ${OUTPUT_TOPIC_CONTACT_ANSWER:nrt_contact_answer}
-      topic-name-vaccination: ${OUTPUT_TOPIC_VACCINATION:nrt_vaccination}
-      topic-name-vaccination-answer: ${OUTPUT_TOPIC_VACCINATION_ANSWER:nrt_vaccination_answer}
-      topic-name-treatment: ${OUTPUT_TOPIC_TREATMENT:nrt_treatment}
+#      topic-name-vaccination: ${OUTPUT_TOPIC_VACCINATION:nrt_vaccination}
+#      topic-name-vaccination-answer: ${OUTPUT_TOPIC_VACCINATION_ANSWER:nrt_vaccination_answer}
+#      topic-name-treatment: ${OUTPUT_TOPIC_TREATMENT:nrt_treatment}
 
       # Ldf Data
 #      topic-name-reporting-ldf-data: ${OUTPUT_TOPIC_REPORTING_LDF:nrt_ldf_data}
@@ -96,24 +110,24 @@ spring:
       # Person
 #      providerElastic:
 #        topic-name: ${PROVIDER_ELASTIC:elastic_search_provider}
-      providerReporting:
-        topic-name: ${PROVIDER_REPORTING:nrt_provider}
+#      providerReporting:
+#        topic-name: ${PROVIDER_REPORTING:nrt_provider}
 #      patientElastic:
 #        topic-name: ${PATIENT_ELASTIC:elastic_search_patient}
-      patientReporting:
-        topic-name: ${PATIENT_REPORTING:nrt_patient}
+#      patientReporting:
+#        topic-name: ${PATIENT_REPORTING:nrt_patient}
 #      userReporting:
 #        topic-name: ${USER_REPORTING:nrt_auth_user}
 
       # Organization
 #      organizationElastic:
 #        topic-name: ${ORGANIZATION_ELASTIC:elastic_search_organization}
-      organizationReporting:
-        topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
-      placeReporting:
-        topic-name: ${PLACE_REPORTING:nrt_place}
-      placeTeleReporting:
-        topic-name: ${PLACE_TELE_REPORTING:nrt_place_tele}
+#      organizationReporting:
+#        topic-name: ${ORGANIZATION_REPORTING:nrt_organization}
+#      placeReporting:
+#        topic-name: ${PLACE_REPORTING:nrt_place}
+#      placeTeleReporting:
+#        topic-name: ${PLACE_TELE_REPORTING:nrt_place_tele}
 
       # Observation
 #      observationReporting:
@@ -122,16 +136,16 @@ spring:
 #        topic-name: ${OUTPUT_TOPIC_OBS_CODED:nrt_observation_coded}
 #      observationDate:
 #        topic-name: ${OUTPUT_TOPIC_OBS_DATE:nrt_observation_date}
-      observationEdx:
-        topic-name: ${OUTPUT_TOPIC_OBS_EDX:nrt_observation_edx}
-      observationMaterial:
-        topic-name: ${OUTPUT_TOPIC_OBS_MATERIAL:nrt_observation_material}
-      observationNumeric:
-        topic-name: ${OUTPUT_TOPIC_OBS_NUMERIC:nrt_observation_numeric}
-      observationReason:
-        topic-name: ${OUTPUT_TOPIC_OBS_REASON:nrt_observation_reason}
-      observationTxt:
-        topic-name: ${OUTPUT_TOPIC_OBS_TXT:nrt_observation_txt}
+#      observationEdx:
+#        topic-name: ${OUTPUT_TOPIC_OBS_EDX:nrt_observation_edx}
+#      observationMaterial:
+#        topic-name: ${OUTPUT_TOPIC_OBS_MATERIAL:nrt_observation_material}
+#      observationNumeric:
+#        topic-name: ${OUTPUT_TOPIC_OBS_NUMERIC:nrt_observation_numeric}
+#      observationReason:
+#        topic-name: ${OUTPUT_TOPIC_OBS_REASON:nrt_observation_reason}
+#      observationTxt:
+#        topic-name: ${OUTPUT_TOPIC_OBS_TXT:nrt_observation_txt}
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt

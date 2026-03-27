@@ -72,7 +72,7 @@ public class InvestigationService {
   @Value("${spring.kafka.topics.nbs.act-relationship}")
   private String actRelationshipTopic;
 
-  @Value("${spring.kafka.output.topic-name-treatment}")
+  @Value("${spring.kafka.topics.nrt.treatment}")
   private String treatmentOutputTopicName;
 
   @Value("${spring.kafka.topics.nrt.investigation}")

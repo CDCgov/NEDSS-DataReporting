@@ -80,13 +80,13 @@ public class OrganizationService {
   @Value("${spring.kafka.topics.elastic.organization}")
   private String orgElasticSearchTopic;
 
-  @Value("${spring.kafka.output.organizationReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.organization}")
   private String orgReportingOutputTopic;
 
-  @Value("${spring.kafka.output.placeReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.place}")
   private String placeReportingOutputTopic;
 
-  @Value("${spring.kafka.output.placeTeleReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.place-tele}")
   private String teleOutputTopic;
 
   @Value("${featureFlag.elastic-search-enable}")
