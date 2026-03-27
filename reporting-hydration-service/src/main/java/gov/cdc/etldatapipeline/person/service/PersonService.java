@@ -79,7 +79,7 @@ public class PersonService {
   @Value("${spring.kafka.topics.nbs.person}")
   private String personTopic;
 
-  @Value("${spring.kafka.topics.nbs.user}")
+  @Value("${spring.kafka.topics.nbs.auth-user}")
   private String userTopic;
 
   @Value("${spring.kafka.topics.elastic.patient}")
@@ -94,7 +94,7 @@ public class PersonService {
   @Value("${spring.kafka.output.providerReporting.topic-name}")
   private String providerReportingOutputTopic;
 
-  @Value("${spring.kafka.output.userReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.auth-user}")
   private String userReportingOutputTopic;
 
   @Value("${featureFlag.elastic-search-enable}")
@@ -153,7 +153,7 @@ public class PersonService {
       },
       kafkaTemplate = "personKafkaTemplate")
   @KafkaListener(
-      topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.user}"},
+      topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
       containerFactory = "personKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {

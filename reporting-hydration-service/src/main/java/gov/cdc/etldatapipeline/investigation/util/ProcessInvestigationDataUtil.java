@@ -34,37 +34,37 @@ public class ProcessInvestigationDataUtil {
       new ObjectMapper().registerModule(new JavaTimeModule());
   public static final String ENTITY_ID = "entity_id";
 
-  @Value("${spring.kafka.output.topic-name-confirmation}")
+  @Value("${spring.kafka.topics.nrt.investigation-confirmation}")
   public String investigationConfirmationOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-observation}")
+  @Value("${spring.kafka.topics.nrt.investigation-observation}")
   public String investigationObservationOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-notifications}")
+  @Value("${spring.kafka.topics.nrt.investigation-notification}")
   public String investigationNotificationsOutputTopicName;
 
   @Value("${spring.kafka.output.topic-name-page-case-answer}")
   public String pageCaseAnswerOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-aggregate}")
+  @Value("${spring.kafka.topics.nrt.investigation-aggregate}")
   public String investigationAggregateOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-case-management}")
+  @Value("${spring.kafka.topics.nrt.investigation-case-management}")
   public String investigationCaseManagementTopicName;
 
-  @Value("${spring.kafka.output.topic-name-interview}")
+  @Value("${spring.kafka.topics.nrt.interview}")
   private String interviewOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-interview-answer}")
+  @Value("${spring.kafka.topics.nrt.interview-answer}")
   private String interviewAnswerOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-interview-note}")
+  @Value("${spring.kafka.topics.nrt.interview-note}")
   private String interviewNoteOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-contact}")
+  @Value("${spring.kafka.topics.nrt.contact}")
   private String contactOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-contact-answer}")
+  @Value("${spring.kafka.topics.nrt.contact-answer}")
   private String contactAnswerOutputTopicName;
 
   @Value("${spring.kafka.output.topic-name-vaccination}")
@@ -73,7 +73,7 @@ public class ProcessInvestigationDataUtil {
   @Value("${spring.kafka.output.topic-name-vaccination-answer}")
   private String vaccinationAnswerOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-rdb-metadata-columns}")
+  @Value("${spring.kafka.topics.nrt.metadata-columns}")
   private String rdbMetadataColumnsOutputTopicName;
 
   @Qualifier("investigationKafkaTemplate")

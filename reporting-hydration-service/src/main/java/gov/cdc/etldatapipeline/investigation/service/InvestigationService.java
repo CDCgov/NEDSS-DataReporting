@@ -75,7 +75,7 @@ public class InvestigationService {
   @Value("${spring.kafka.output.topic-name-treatment}")
   private String treatmentOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-reporting}")
+  @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopicReporting;
 
   @Value("${featureFlag.phc-datamart-disable}")

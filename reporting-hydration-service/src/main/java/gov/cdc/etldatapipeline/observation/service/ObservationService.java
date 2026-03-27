@@ -69,7 +69,7 @@ public class ObservationService {
   @Value("${spring.kafka.topics.nbs.act-relationship}")
   private String actRelationshipTopic;
 
-  @Value("${spring.kafka.output.observationReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation}")
   private String observationTopicOutputReporting;
 
   @Value("${featureFlag.thread-pool-size:1}")

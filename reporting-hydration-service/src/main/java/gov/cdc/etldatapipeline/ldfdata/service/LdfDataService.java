@@ -50,7 +50,7 @@ public class LdfDataService {
   @Value("${spring.kafka.topics.nbs.state-defined-field-data}")
   private String ldfDataTopic;
 
-  @Value("${spring.kafka.output.topic-name-reporting-ldf-data}")
+  @Value("${spring.kafka.topics.nrt.ldf-data}")
   public String ldfDataTopicReporting;
 
   @Value("${featureFlag.thread-pool-size:1}")

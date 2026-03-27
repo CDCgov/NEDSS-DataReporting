@@ -35,10 +35,10 @@ public class ProcessObservationDataUtil {
 
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
-  @Value("${spring.kafka.output.observationCoded.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-coded}")
   public String codedTopicName;
 
-  @Value("${spring.kafka.output.observationDate.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-date}")
   public String dateTopicName;
 
   @Value("${spring.kafka.output.observationEdx.topic-name}")
