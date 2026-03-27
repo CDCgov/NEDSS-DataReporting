@@ -64,13 +64,13 @@ public class PersonService {
     @Value("${spring.kafka.input.topic-name-user}")
     private String userTopic;
 
-    @Value("${spring.kafka.topics.elastic.patient}")
+    @Value("${spring.kafka.output.patientElastic.topic-name}")
     private String patientElasticSearchOutputTopic;
 
     @Value("${spring.kafka.output.patientReporting.topic-name}")
     private String patientReportingOutputTopic;
 
-    @Value("${spring.kafka.topics.elastic.provider}")
+    @Value("${spring.kafka.output.providerElastic.topic-name}")
     private String providerElasticSearchOutputTopic;
 
     @Value("${spring.kafka.output.providerReporting.topic-name}")
