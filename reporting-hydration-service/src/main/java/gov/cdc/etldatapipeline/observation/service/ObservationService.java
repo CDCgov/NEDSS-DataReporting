@@ -66,7 +66,7 @@ public class ObservationService {
   @Value("${spring.kafka.input.topic-name-observation}")
   private String observationTopic;
 
-  @Value("${spring.kafka.input.topic-name-ar}")
+  @Value("${spring.kafka.topics.nbs.act-relationship}")
   private String actRelationshipTopic;
 
   @Value("${spring.kafka.output.observationReporting.topic-name}")
@@ -132,7 +132,7 @@ public class ObservationService {
   @KafkaListener(
       topics = {
         "${spring.kafka.input.topic-name-observation}",
-        "${spring.kafka.input.topic-name-ar}"
+        "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "observationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {

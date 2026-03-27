@@ -69,7 +69,7 @@ public class InvestigationService {
   @Value("${spring.kafka.input.topic-name-tmt}")
   private String treatmentTopic;
 
-  @Value("${spring.kafka.input.topic-name-ar}")
+  @Value("${spring.kafka.topics.nbs.act-relationship}")
   private String actRelationshipTopic;
 
   @Value("${spring.kafka.output.topic-name-treatment}")
@@ -153,7 +153,7 @@ public class InvestigationService {
         "${spring.kafka.input.topic-name-ctr}",
         "${spring.kafka.input.topic-name-vac}",
         "${spring.kafka.input.topic-name-tmt}",
-        "${spring.kafka.input.topic-name-ar}"
+        "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "investigationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {

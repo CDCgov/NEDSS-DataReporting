@@ -15,6 +15,8 @@ spring:
         organization: ${TOPIC_ELASTIC_ORGANIZATION:elastic_search_organization}
         patient: ${TOPIC_ELASTIC_PATIENT:elastic_search_patient}
         provider: ${TOPIC_ELASTIC_PROVIDER:elastic_search_provider}
+      nbs:
+        act-relationship: ${TOPIC_NBS_ACT_RELATIONSHIP:nbs_Act_relationship}
 
     # Post Processing
     topic:
@@ -63,7 +65,7 @@ spring:
       topic-name-ctr: ${INPUT_TOPIC_CTR:nbs_CT_contact}
       topic-name-vac: ${INPUT_TOPIC_VAC:nbs_Intervention}
       topic-name-tmt: ${INPUT_TOPIC_TMT:nbs_Treatment}
-      topic-name-ar: ${INPUT_TOPIC_AR:nbs_Act_relationship}
+#      topic-name-ar: ${INPUT_TOPIC_AR:nbs_Act_relationship}
 
       # Ldf Data
       topic-name-sdfd: ${INPUT_TOPIC_SDFD:nbs_state_defined_field_data}
