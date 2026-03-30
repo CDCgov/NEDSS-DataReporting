@@ -18,6 +18,9 @@ spring:
       topic-name-tmt: ${INPUT_TOPIC_TMT:nbs_Treatment}
       topic-name-ar: ${INPUT_TOPIC_AR:nbs_Act_relationship}
 
+      # Ldf Data
+      topic-name-sdfd: ${INPUT_TOPIC_SDFD:nbs_state_defined_field_data}
+
       # Person
       topic-name-person: ${INPUT_TOPIC_PERSON:nbs_Person}
       topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
@@ -46,6 +49,9 @@ spring:
       topic-name-vaccination: ${OUTPUT_TOPIC_VACCINATION:nrt_vaccination}
       topic-name-vaccination-answer: ${OUTPUT_TOPIC_VACCINATION_ANSWER:nrt_vaccination_answer}
       topic-name-treatment: ${OUTPUT_TOPIC_TREATMENT:nrt_treatment}
+
+      # Ldf Data
+      topic-name-reporting-ldf-data: ${OUTPUT_TOPIC_REPORTING_LDF:nrt_ldf_data}
 
       # Person
       providerElastic:

@@ -109,7 +109,7 @@ public class ObservationService {
         NoDataException.class
       })
   @KafkaListener(
-      topics = {"${spring.kafka.input.topic-name-person}", "${spring.kafka.input.topic-name-ar}"})
+      topics = {"${spring.kafka.input.topic-name}", "${spring.kafka.input.topic-name-ar}"})
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
 
     long batchId = toBatchId.applyAsLong(rec);
