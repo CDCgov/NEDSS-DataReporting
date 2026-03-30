@@ -142,9 +142,9 @@ spring:
       auto-create: true
 
   datasource:
-    password: reporting_hydration_service
-    username: reporting_hydration_service_rdb
-    url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME}
+    url: ${DB_HOST}
 
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
