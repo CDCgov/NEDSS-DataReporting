@@ -26,7 +26,7 @@ public class KafkaProducerConfig {
     return new DefaultKafkaProducerFactory<>(config);
   }
 
-  @Bean
+  @Bean(name = "investigationKafkaTemplate")
   public KafkaTemplate<String, String> investigationKafkaTemplate() {
     // set factory for both producer and consumer
     return new KafkaTemplate<>(investigationProducerFactory());

@@ -20,6 +20,7 @@ public abstract class AbstractIntegrationTest {
   @SuppressWarnings("resource")
   protected static final ComposeContainer environment =
       new ComposeContainer(new File("../docker-compose.yaml"))
+          .withRemoveVolumes(true) // ensures volumes are purged at tearDown
           .withServices("nbs-mssql", "liquibase", "kafka", "reporting-hydration-service")
           .waitingFor("nbs-mssql", Wait.forHealthcheck())
           .waitingFor("kafka", Wait.forHealthcheck())

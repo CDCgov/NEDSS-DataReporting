@@ -1,0 +1,13 @@
+[
+  {
+    "observation_uid": 10001234,
+    "ovc_display_name": "Normal]",
+    "ovc_code": "CE[10020004",
+    "ovc_code_system_cd": "SNM",
+    "ovc_code_system_desc_txt": "SNOMED",
+    "ovc_alt_cd": "A-124",
+    "ovc_alt_cd_desc_txt": "NORMAL",
+    "ovc_alt_cd_system_cd": null,
+    "ovc_alt_cd_system_desc_txt": null
+  }
+]
