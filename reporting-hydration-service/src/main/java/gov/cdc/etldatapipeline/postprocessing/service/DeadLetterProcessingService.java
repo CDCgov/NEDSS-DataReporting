@@ -42,28 +42,28 @@ public class DeadLetterProcessingService {
         "${spring.kafka.topic.condition}${spring.kafka.dlq.dlq-suffix}",
 
         // investigation-topic
-        "${spring.kafka.investigation-topic.topic-name-phc}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.investigation-topic.topic-name-ntf}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.investigation-topic.topic-name-int}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.investigation-topic.topic-name-ctr}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.investigation-topic.topic-name-vac}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.investigation-topic.topic-name-tmt}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.investigation-topic.topic-name-ar}${spring.kafka.dlq.dlq-suffix-format-2}",
+        "${spring.kafka.investigation-topic.topic-name-phc}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.investigation-topic.topic-name-ntf}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.investigation-topic.topic-name-int}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.investigation-topic.topic-name-ctr}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.investigation-topic.topic-name-vac}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.investigation-topic.topic-name-tmt}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.act-relationship}${spring.kafka.dlq.dlq-suffix}",
 
         // ldf-topic
-        "${spring.kafka.ldf-topic.topic-name}${spring.kafka.dlq.dlq-suffix-format-2}",
+        "${spring.kafka.ldf-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
 
         // observation-topic
-        "${spring.kafka.observation-topic.topic-name}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.observation-topic.topic-name-ar}${spring.kafka.dlq.dlq-suffix-format-2}",
+        "${spring.kafka.observation-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.observation-topic.topic-name-ar}${spring.kafka.dlq.dlq-suffix}",
 
         // organization-topic
-        "${spring.kafka.organization-topic.topic-name}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.organization-topic.topic-name-place}${spring.kafka.dlq.dlq-suffix-format-2}",
+        "${spring.kafka.organization-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.organization-topic.topic-name-place}${spring.kafka.dlq.dlq-suffix}",
 
         // person-topic
-        "${spring.kafka.person-topic.topic-name}${spring.kafka.dlq.dlq-suffix-format-2}",
-        "${spring.kafka.person-topic.topic-name-user}${spring.kafka.dlq.dlq-suffix-format-2}"
+        "${spring.kafka.person-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.person-topic.topic-name-user}${spring.kafka.dlq.dlq-suffix}"
       },
       containerFactory = "kafkaListenerContainerFactoryDlt")
   public void handlingDeadLetter(

@@ -148,7 +148,7 @@ spring:
       dlq-suffix: _dlt
 
       # FIXME: post-processing kafka config
-      dlq-suffix-format-2: _dlt
+#      dlq-suffix-format-2: _dlt
     consumer:
       max-retry: 3
       maxPollIntervalMs: 30000
@@ -159,9 +159,9 @@ spring:
       auto-create: true
 
   datasource:
-    password: ${DB_PASSWORD}
-    username: ${DB_USERNAME}
-    url: ${DB_HOST}
+    password: reporting_hydration_service
+    username: reporting_hydration_service_rdb
+    url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
 
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
