@@ -186,22 +186,22 @@ public class PostProcessingService {
   @KafkaListener(
       topics = {
         "${spring.kafka.topics.nrt.investigation}",
-        "${spring.kafka.topic.organization}",
-        "${spring.kafka.topic.patient}",
-        "${spring.kafka.topic.provider}",
+        "${spring.kafka.topics.nrt.organization}",
+        "${spring.kafka.topics.nrt.patient}",
+        "${spring.kafka.topics.nrt.provider}",
         "${spring.kafka.topics.nrt.investigation-notification}",
         "${spring.kafka.topics.nrt.investigation-case-management}",
         "${spring.kafka.topics.nrt.interview}",
-        "${spring.kafka.topic.ldf_data}",
-        "${spring.kafka.topic.observation}",
-        "${spring.kafka.topic.place}",
+        "${spring.kafka.topics.nrt.ldf-data}",
+        "${spring.kafka.topics.nrt.observation}",
+        "${spring.kafka.topics.nrt.place}",
         "${spring.kafka.topics.nrt.auth-user}",
         "${spring.kafka.topics.nrt.contact}",
-        "${spring.kafka.topic.treatment}",
-        "${spring.kafka.topic.vaccination}",
-        "${spring.kafka.topic.state_defined_field_metadata}",
-        "${spring.kafka.topic.page}",
-        "${spring.kafka.topic.condition}"
+        "${spring.kafka.topics.nrt.treatment}",
+        "${spring.kafka.topics.nrt.vaccination}",
+        "${spring.kafka.topics.nrt.odse-state-defined-field-metadata}",
+        "${spring.kafka.topics.nrt.odse-nbs-page}",
+        "${spring.kafka.topics.nrt.srte-condition-code}"
       },
       containerFactory = "kafkaListenerContainerFactoryDefault")
   public void processNrtMessage(
