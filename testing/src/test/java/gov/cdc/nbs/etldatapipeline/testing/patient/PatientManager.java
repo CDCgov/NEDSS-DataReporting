@@ -16,8 +16,12 @@ import gov.cdc.nbs.etldatapipeline.testing.patient.comment.PatientComment;
 import gov.cdc.nbs.etldatapipeline.testing.patient.comment.PatientCommentManager;
 import gov.cdc.nbs.etldatapipeline.testing.patient.ethnicity.PatientEthnicity;
 import gov.cdc.nbs.etldatapipeline.testing.patient.ethnicity.PatientEthnicityManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.general.PatientGeneralInfo;
+import gov.cdc.nbs.etldatapipeline.testing.patient.general.PatientGeneralInfoManager;
 import gov.cdc.nbs.etldatapipeline.testing.patient.identification.PatientIdentification;
 import gov.cdc.nbs.etldatapipeline.testing.patient.identification.PatientIdentificationManager;
+import gov.cdc.nbs.etldatapipeline.testing.patient.mortality.PatientMortality;
+import gov.cdc.nbs.etldatapipeline.testing.patient.mortality.PatientMortalityManager;
 import gov.cdc.nbs.etldatapipeline.testing.patient.name.PatientName;
 import gov.cdc.nbs.etldatapipeline.testing.patient.name.PatientNameManager;
 import gov.cdc.nbs.etldatapipeline.testing.patient.phone.PatientPhoneAndEmail;
@@ -42,6 +46,8 @@ public class PatientManager {
   private final PatientIdentificationManager identificationManager;
   private final PatientCommentManager commentManager;
   private final PatientSexAndBirthManager sexAndBirthManager;
+  private final PatientMortalityManager mortalityManager;
+  private final PatientGeneralInfoManager generalInfoManager;
 
   public PatientManager(
       final IdGenerator idGenerator,
@@ -53,7 +59,9 @@ public class PatientManager {
       final PatientEthnicityManager ethnicityManager,
       final PatientIdentificationManager identificationManager,
       final PatientCommentManager commentManager,
-      final PatientSexAndBirthManager sexAndBirthManager) {
+      final PatientSexAndBirthManager sexAndBirthManager,
+      final PatientMortalityManager mortalityManager,
+      final PatientGeneralInfoManager generalInfoManager) {
     this.idGenerator = idGenerator;
     this.client = client;
     this.nameManager = nameManager;
@@ -64,6 +72,8 @@ public class PatientManager {
     this.identificationManager = identificationManager;
     this.commentManager = commentManager;
     this.sexAndBirthManager = sexAndBirthManager;
+    this.mortalityManager = mortalityManager;
+    this.generalInfoManager = generalInfoManager;
   }
 
   private static final String CREATE_QUERY = """
@@ -151,6 +161,12 @@ public class PatientManager {
     sexAndBirthManager.set(patient, patientSexAndBirth);
   }
 
-  // mortality info
-  // general patient info
+  public void setMortalityInfo(final long patient, final PatientMortality patientMortality) {
+    mortalityManager.set(patient, patientMortality);
+  }
+
+  public void setGeneralInfo(final long patient, final PatientGeneralInfo patientGeneralInfo) {
+    generalInfoManager.set(patient, patientGeneralInfo);
+  }
+
 }
