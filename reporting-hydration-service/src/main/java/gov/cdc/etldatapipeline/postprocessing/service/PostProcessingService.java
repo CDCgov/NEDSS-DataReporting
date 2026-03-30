@@ -36,6 +36,7 @@ import lombok.Setter;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
@@ -88,6 +89,8 @@ public class PostProcessingService {
   private int maxRetries;
 
   private final PostProcRepository postProcRepository;
+
+  @Qualifier("ppInvestigationRepository")
   private final InvestigationRepository investigationRepository;
 
   private final ProcessDatamartData dmProcessor;

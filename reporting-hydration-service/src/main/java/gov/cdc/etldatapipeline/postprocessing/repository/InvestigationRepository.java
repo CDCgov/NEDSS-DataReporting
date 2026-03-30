@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-@Repository
+@Repository("ppInvestigationRepository")
 public interface InvestigationRepository extends JpaRepository<DatamartData, Long> {
   @Query(
       value = "EXEC sp_nrt_investigation_postprocessing :publicHealthCaseUids",
