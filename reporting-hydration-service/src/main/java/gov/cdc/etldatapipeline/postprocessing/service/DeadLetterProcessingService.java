@@ -37,33 +37,33 @@ public class DeadLetterProcessingService {
         "${spring.kafka.topic.contact_record}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.vaccination}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.page}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.topic.datamart}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.datamart}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.state_defined_field_metadata}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.condition}${spring.kafka.dlq.dlq-suffix}",
 
         // investigation-topic
-        "${spring.kafka.investigation-topic.topic-name-phc}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.investigation-topic.topic-name-ntf}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.investigation-topic.topic-name-int}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.investigation-topic.topic-name-ctr}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.investigation-topic.topic-name-vac}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.public-health-case}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.notification}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.interview}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.ct-contact}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.intervention}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.investigation-topic.topic-name-tmt}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topics.nbs.act-relationship}${spring.kafka.dlq.dlq-suffix}",
 
         // ldf-topic
-        "${spring.kafka.ldf-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.state-defined-field-data}${spring.kafka.dlq.dlq-suffix}",
 
         // observation-topic
-        "${spring.kafka.observation-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.observation-topic.topic-name-ar}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.observation}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.act-relationship}${spring.kafka.dlq.dlq-suffix}",
 
         // organization-topic
-        "${spring.kafka.organization-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.organization-topic.topic-name-place}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.organization}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.place}${spring.kafka.dlq.dlq-suffix}",
 
         // person-topic
-        "${spring.kafka.person-topic.topic-name}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.person-topic.topic-name-user}${spring.kafka.dlq.dlq-suffix}"
+        "${spring.kafka.topics.nbs.person}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.auth-user}${spring.kafka.dlq.dlq-suffix}"
       },
       containerFactory = "kafkaListenerContainerFactoryDlt")
   public void handlingDeadLetter(

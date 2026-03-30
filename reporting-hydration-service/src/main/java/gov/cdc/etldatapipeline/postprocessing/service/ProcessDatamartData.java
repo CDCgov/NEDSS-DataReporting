@@ -84,7 +84,7 @@ public class ProcessDatamartData {
 
   static final String SERVICE_NAME = "post-process-reporting";
 
-  @Value("${spring.kafka.topic.datamart}")
+  @Value("${spring.kafka.topics.nbs.datamart}")
   public String datamartTopic;
 
   private final CustomMetrics metrics;

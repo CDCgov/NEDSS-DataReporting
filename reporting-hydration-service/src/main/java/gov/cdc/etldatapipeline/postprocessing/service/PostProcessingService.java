@@ -368,7 +368,7 @@ public class PostProcessingService {
       },
       kafkaTemplate = "postProcessingKafkaTemplate")
   @KafkaListener(
-      topics = {"${spring.kafka.topic.datamart}"},
+      topics = {"${spring.kafka.topics.nbs.datamart}"},
       containerFactory = "kafkaListenerContainerFactoryDefault")
   public void processDmMessage(
       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Payload String payload) {

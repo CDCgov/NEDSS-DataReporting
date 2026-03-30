@@ -11,6 +11,22 @@ spring:
     name: reporting-hydration-service
 
   kafka:
+    # FIXME: updated post-processing kafka config, merge with rest once https://github.com/CDCgov/NEDSS-DataReporting/pull/723 is merged
+    topics:
+      nbs:
+        act-relationship: ${TOPIC_NBS_ACT_RELATIONSHIP:nbs_Act_relationship}
+        auth-user: ${TOPIC_NBS_AUTH_USER:nbs_Auth_user}
+        ct-contact: ${TOPIC_NBS_CT_CONTACT:nbs_CT_contact}
+        datamart: ${TOPIC_NBS_DATAMART:nbs_Datamart}
+        intervention: ${TOPIC_NBS_INTERVENTION:nbs_Intervention}
+        interview: ${TOPIC_NBS_INTERVIEW:nbs_Interview}
+        notification: ${TOPIC_NBS_NOTIFICATION:nbs_Notification}
+        observation: ${TOPIC_NBS_OBSERVATION:nbs_Observation}
+        organization: ${TOPIC_NBS_ORGANIZATION:nbs_Organization}
+        person: ${TOPIC_NBS_PERSON:nbs_Person}
+        place: ${TOPIC_NBS_PLACE:nbs_Place}
+        public-health-case: ${TOPIC_NBS_PUBLIC_HEALTH_CASE:nbs_Public_health_case}
+        state-defined-field-data: ${TOPIC_NBS_STATE_DEFINED_FIELD_DATA:nbs_state_defined_field_data}
 
     # FIXME: post-procssing kafka config
     dlt-group-id: rtr-dlt-group
@@ -30,28 +46,28 @@ spring:
       contact_record: nrt_contact
       vaccination: nrt_vaccination
       page: nrt_odse_NBS_page
-      datamart: nbs_Datamart
+#      datamart: nbs_Datamart
       state_defined_field_metadata: nrt_odse_state_defined_field_metadata
       condition: nrt_srte_Condition_code
     investigation-topic:
-      topic-name-phc: nbs_Public_health_case
-      topic-name-ntf: nbs_Notification
-      topic-name-int: nbs_Interview
-      topic-name-ctr: nbs_CT_contact
-      topic-name-vac: nbs_Intervention
+#      topic-name-phc: nbs_Public_health_case
+#      topic-name-ntf: nbs_Notification
+#      topic-name-int: nbs_Interview
+#      topic-name-ctr: nbs_CT_contact
+#      topic-name-vac: nbs_Intervention
       topic-name-tmt: nbs_Treatment
-      topic-name-ar: nbs_Act_relationship
+#      topic-name-ar: nbs_Act_relationship
     ldf-topic:
-      topic-name: nbs_state_defined_field_data
+#      topic-name: nbs_state_defined_field_data
     observation-topic:
-      topic-name: nbs_Observation
-      topic-name-ar: nbs_Act_relationship
+#      topic-name: nbs_Observation
+#      topic-name-ar: nbs_Act_relationship
     organization-topic:
-      topic-name: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
-      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
+#      topic-name: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
+#      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
     person-topic:
-      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
-      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+#      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+#      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
 
     # FIXME: put back to normal
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
@@ -167,8 +183,6 @@ featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
-
-  # FIXME: post-processing config
   service-disable: ${FF_SERVICE_DISABLE:false}
 
 management:
