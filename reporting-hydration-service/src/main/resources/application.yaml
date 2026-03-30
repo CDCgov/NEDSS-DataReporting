@@ -1,9 +1,60 @@
+# FIXME: post-processing config
+service:
+  fixed-delay:
+    cached-ids: ${FIXED_DELAY_ID:20000}
+    datamart: ${FIXED_DELAY_DM:60000}
+    backfill: ${FIXED_DELAY_BF:600000}
+  max-retries: ${MAX_RETRIES:3}
+
 spring:
   application:
     name: reporting-hydration-service
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
+
+    # FIXME: post-procssing kafka config
+    dlt-group-id: rtr-dlt-group
+    topic:
+      investigation: nrt_investigation
+      observation: nrt_observation
+      organization: nrt_organization
+      patient: nrt_patient
+      provider: nrt_provider
+      notification: nrt_investigation_notification
+      treatment: nrt_treatment
+      case_management: nrt_investigation_case_management
+      interview: nrt_interview
+      ldf_data: nrt_ldf_data
+      place: nrt_place
+      auth_user: nrt_auth_user
+      contact_record: nrt_contact
+      vaccination: nrt_vaccination
+      page: nrt_odse_NBS_page
+      datamart: nbs_Datamart
+      state_defined_field_metadata: nrt_odse_state_defined_field_metadata
+      condition: nrt_srte_Condition_code
+    investigation-topic:
+      topic-name-phc: nbs_Public_health_case
+      topic-name-ntf: nbs_Notification
+      topic-name-int: nbs_Interview
+      topic-name-ctr: nbs_CT_contact
+      topic-name-vac: nbs_Intervention
+      topic-name-tmt: nbs_Treatment
+      topic-name-ar: nbs_Act_relationship
+    ldf-topic:
+      topic-name: nbs_state_defined_field_data
+    observation-topic:
+      topic-name: nbs_Observation
+      topic-name-ar: nbs_Act_relationship
+    organization-topic:
+      topic-name: ${INPUT_TOPIC_ORGANIZATION:nbs_Organization}
+      topic-name-place: ${INPUT_TOPIC_PLACE:nbs_Place}
+    person-topic:
+      topic-name: ${INPUT_TOPIC_PERSON:nbs_Person}
+      topic-name-user: ${INPUT_TOPIC_USER:nbs_Auth_user}
+
+    # FIXME: put back to normal
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
     group-id: ${KAFKA_CONSUMER_APP:hydration-consumer-app}
     producer:
       value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
@@ -95,6 +146,9 @@ spring:
     dlq:
       retry-suffix: _retry
       dlq-suffix: _dlt
+
+      # FIXME: post-processing kafka config
+      dlq-suffix-format-2: _dlt
     consumer:
       max-retry: 3
       maxPollIntervalMs: 30000
@@ -113,6 +167,9 @@ featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
+
+  # FIXME: post-processing config
+  service-disable: ${FF_SERVICE_DISABLE:false}
 
 management:
   endpoint:
