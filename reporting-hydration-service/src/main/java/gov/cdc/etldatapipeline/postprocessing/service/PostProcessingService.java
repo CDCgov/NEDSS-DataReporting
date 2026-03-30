@@ -113,7 +113,7 @@ public class PostProcessingService {
   private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
   private final Object cacheLock = new Object();
 
-  @Value("${spring.kafka.topic.investigation}")
+  @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopic;
 
   @Value("${featureFlag.service-disable}")
@@ -185,18 +185,18 @@ public class PostProcessingService {
       kafkaTemplate = "postProcessingKafkaTemplate")
   @KafkaListener(
       topics = {
-        "${spring.kafka.topic.investigation}",
+        "${spring.kafka.topics.nrt.investigation}",
         "${spring.kafka.topic.organization}",
         "${spring.kafka.topic.patient}",
         "${spring.kafka.topic.provider}",
-        "${spring.kafka.topic.notification}",
-        "${spring.kafka.topic.case_management}",
-        "${spring.kafka.topic.interview}",
+        "${spring.kafka.topics.nrt.investigation-notification}",
+        "${spring.kafka.topics.nrt.investigation-case-management}",
+        "${spring.kafka.topics.nrt.interview}",
         "${spring.kafka.topic.ldf_data}",
         "${spring.kafka.topic.observation}",
         "${spring.kafka.topic.place}",
-        "${spring.kafka.topic.auth_user}",
-        "${spring.kafka.topic.contact_record}",
+        "${spring.kafka.topics.nrt.auth-user}",
+        "${spring.kafka.topics.nrt.contact}",
         "${spring.kafka.topic.treatment}",
         "${spring.kafka.topic.vaccination}",
         "${spring.kafka.topic.state_defined_field_metadata}",

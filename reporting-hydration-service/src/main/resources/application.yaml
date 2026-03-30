@@ -27,23 +27,32 @@ spring:
         place: ${TOPIC_NBS_PLACE:nbs_Place}
         public-health-case: ${TOPIC_NBS_PUBLIC_HEALTH_CASE:nbs_Public_health_case}
         state-defined-field-data: ${TOPIC_NBS_STATE_DEFINED_FIELD_DATA:nbs_state_defined_field_data}
+        treatment: ${TOPIC_NBS_TREATMENT:nbs_Treatment}
+      nrt:
+        auth-user: ${TOPIC_NRT_AUTH_USER:nrt_auth_user}
+        contact: ${TOPIC_NRT_CONTACT:nrt_contact}
+        interview: ${TOPIC_NRT_INTERVIEW:nrt_interview}
+        investigation: ${TOPIC_NRT_INVESTIGATION:nrt_investigation}
+        investigation-case-management: ${TOPIC_NRT_INVESTIGATION_CASE_MANAGEMENT:nrt_investigation_case_management}
+        investigation-notification: ${TOPIC_NRT_INVESTIGATION_NOTIFICATION:nrt_investigation_notification}
+#        notification: nrt_investigation_notification
 
     # FIXME: post-procssing kafka config
     dlt-group-id: rtr-dlt-group
     topic:
-      investigation: nrt_investigation
+#      investigation: nrt_investigation
       observation: nrt_observation
       organization: nrt_organization
       patient: nrt_patient
       provider: nrt_provider
-      notification: nrt_investigation_notification
+#      notification: nrt_investigation_notification
       treatment: nrt_treatment
-      case_management: nrt_investigation_case_management
-      interview: nrt_interview
+#      case_management: nrt_investigation_case_management
+#      interview: nrt_interview
       ldf_data: nrt_ldf_data
       place: nrt_place
-      auth_user: nrt_auth_user
-      contact_record: nrt_contact
+#      auth_user: nrt_auth_user
+#      contact_record: nrt_contact
       vaccination: nrt_vaccination
       page: nrt_odse_NBS_page
 #      datamart: nbs_Datamart
@@ -55,7 +64,7 @@ spring:
 #      topic-name-int: nbs_Interview
 #      topic-name-ctr: nbs_CT_contact
 #      topic-name-vac: nbs_Intervention
-      topic-name-tmt: nbs_Treatment
+#      topic-name-tmt: nbs_Treatment
 #      topic-name-ar: nbs_Act_relationship
     ldf-topic:
 #      topic-name: nbs_state_defined_field_data

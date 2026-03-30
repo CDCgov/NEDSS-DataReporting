@@ -22,19 +22,19 @@ public class DeadLetterProcessingService {
 
   @KafkaListener(
       topics = {
-        "${spring.kafka.topic.investigation}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nrt.investigation}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.observation}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.organization}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.patient}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.provider}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.topic.notification}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nrt.investigation-notification}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.treatment}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.topic.case_management}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.topic.interview}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nrt.investigation-case-management}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nrt.interview}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.ldf_data}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.place}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.topic.auth_user}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.topic.contact_record}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nrt.auth-user}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nrt.contact}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.vaccination}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topic.page}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topics.nbs.datamart}${spring.kafka.dlq.dlq-suffix}",
@@ -47,7 +47,7 @@ public class DeadLetterProcessingService {
         "${spring.kafka.topics.nbs.interview}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topics.nbs.ct-contact}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topics.nbs.intervention}${spring.kafka.dlq.dlq-suffix}",
-        "${spring.kafka.investigation-topic.topic-name-tmt}${spring.kafka.dlq.dlq-suffix}",
+        "${spring.kafka.topics.nbs.treatment}${spring.kafka.dlq.dlq-suffix}",
         "${spring.kafka.topics.nbs.act-relationship}${spring.kafka.dlq.dlq-suffix}",
 
         // ldf-topic
