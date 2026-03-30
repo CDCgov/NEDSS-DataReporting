@@ -181,7 +181,8 @@ public class PostProcessingService {
         SerializationException.class,
         DeserializationException.class,
         RuntimeException.class
-      })
+      },
+      kafkaTemplate = "postProcessingKafkaTemplate")
   @KafkaListener(
       topics = {
         "${spring.kafka.topic.investigation}",
@@ -364,7 +365,8 @@ public class PostProcessingService {
         SerializationException.class,
         DeserializationException.class,
         RuntimeException.class
-      })
+      },
+      kafkaTemplate = "postProcessingKafkaTemplate")
   @KafkaListener(
       topics = {"${spring.kafka.topic.datamart}"},
       containerFactory = "kafkaListenerContainerFactoryDefault")

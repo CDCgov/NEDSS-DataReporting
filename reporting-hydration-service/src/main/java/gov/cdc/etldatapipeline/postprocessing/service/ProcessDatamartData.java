@@ -50,7 +50,9 @@ public class ProcessDatamartData {
   private final ExecutorService dynDmExecutor =
       Executors.newFixedThreadPool(nProc, new CustomizableThreadFactory("dynDm-"));
 
+  @Qualifier("postProcessingKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
+
   private final PostProcRepository procRepository;
 
   @Qualifier("ppInvestigationRepository")
