@@ -1,5 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.6' apply false
+    id 'java-library'
+    id 'java-test-fixtures'
 }
 
 group = 'gov.cdc.nbs.etldatapipeline.testing'
@@ -8,11 +9,6 @@ testing {
     suites {
         test {
             useJUnitJupiter()
-
-            dependencies {
-                implementation 'org.assertj:assertj-core:3.27.4'
-
-            }
         }
     }
 }
@@ -26,15 +22,12 @@ repositories {
 
 dependencies {
     // Spring
-    implementation 'org.springframework.boot:spring-boot-starter:3.5.6'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.5.6'
-    implementation 'org.springframework.boot:spring-boot-starter-test:3.5.6'
+    testFixturesApi 'org.springframework.boot:spring-boot-starter:3.5.6'
+    testFixturesApi 'org.springframework.boot:spring-boot-starter-jdbc:3.5.6'
+    testFixturesApi 'org.springframework.boot:spring-boot-starter-test:3.5.6'
 
     // TestContainers
-    testImplementation 'org.testcontainers:testcontainers:2.0.3'
-    testImplementation 'org.testcontainers:testcontainers-kafka:2.0.3'
-    testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.3'
+    testFixturesApi 'org.testcontainers:testcontainers:2.0.3'
+    testFixturesApi 'org.testcontainers:testcontainers-junit-jupiter:2.0.3'
 
-    // AssertJ
-    
 }

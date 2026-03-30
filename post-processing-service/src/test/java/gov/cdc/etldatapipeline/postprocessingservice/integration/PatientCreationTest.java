@@ -3,25 +3,28 @@ package gov.cdc.etldatapipeline.postprocessingservice.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import gov.cdc.etldatapipeline.postprocessingservice.integration.rdb.DPatientFinder;
-import gov.cdc.nbs.etldatapipeline.testing.IntegrationTest;
-import gov.cdc.nbs.etldatapipeline.testing.patient.PatientManager;
-import gov.cdc.nbs.etldatapipeline.testing.util.Await;
-
+import gov.cdc.etldatapipeline.testing.IntegrationTest;
+import gov.cdc.etldatapipeline.testing.patient.PatientManager;
+import gov.cdc.etldatapipeline.testing.util.Await;
 import java.util.Optional;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 @SpringBootTest
-@Disabled("Temporarily disabled due to instability")
 class PatientCreationTest extends IntegrationTest {
 
-  @Autowired
-  private PatientManager patientManager;
+  private PatientManager patientManager = null;
+  private DPatientFinder dPatientFinder = null;
 
-  @Autowired
-  private DPatientFinder dPatientFinder;
+  public PatientCreationTest(
+      @Qualifier("rdbClient") JdbcClient jdbcClient,
+      @Qualifier("odseClient") JdbcClient odseClient) {
+    // must manually create due to class is in imported testing lib
+    this.patientManager = new PatientManager(odseClient);
+    this.dPatientFinder = new DPatientFinder(jdbcClient);
+  }
 
   @Test
   void patientDataIsSuccessfullyProcessed() {
@@ -30,7 +33,8 @@ class PatientCreationTest extends IntegrationTest {
     assertThat(createdPatient).isNotZero();
 
     // Validate patient data arrives in D_PATIENT with retry
-    Optional<Long> dPatientKey = Await.waitFor(dPatientFinder::findDPatientKeyWithRetry, createdPatient);
+    Optional<Long> dPatientKey =
+        Await.waitFor(dPatientFinder::findDPatientKeyWithRetry, createdPatient);
 
     assertThat(dPatientKey).isPresent();
     assertThat(dPatientKey.get()).isNotZero();

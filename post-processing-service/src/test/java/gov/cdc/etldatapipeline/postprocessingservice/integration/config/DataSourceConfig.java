@@ -27,26 +27,26 @@ public class DataSourceConfig {
     return properties.initializeDataSourceBuilder().build();
   }
 
-  @Bean
   @Primary
+  @Bean("rdbClient")
   public JdbcClient jdbcClient(DataSource dataSource) {
     return JdbcClient.create(dataSource);
   }
 
   // Testing specific datasource with db ownership
-  @Bean("testProperties")
+  @Bean("odseProperties")
   @ConfigurationProperties("spring.datasource.test")
   public DataSourceProperties testDataSourceProperties() {
     return new DataSourceProperties();
   }
 
-  @Bean("testDataSource")
-  public DataSource testDataSource(@Qualifier("testProperties") DataSourceProperties properties) {
+  @Bean("odseDataSource")
+  public DataSource testDataSource(@Qualifier("odseProperties") DataSourceProperties properties) {
     return properties.initializeDataSourceBuilder().build();
   }
 
-  @Bean("testClient")
-  public JdbcClient testJdbcClient(@Qualifier("testDataSource") DataSource dataSource) {
+  @Bean("odseClient")
+  public JdbcClient testJdbcClient(@Qualifier("odseDataSource") DataSource dataSource) {
     return JdbcClient.create(dataSource);
   }
 }
