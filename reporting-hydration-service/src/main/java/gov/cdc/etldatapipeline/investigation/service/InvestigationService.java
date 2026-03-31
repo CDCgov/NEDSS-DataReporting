@@ -51,31 +51,31 @@ public class InvestigationService {
       Executors.newFixedThreadPool(nProc * 2, new CustomizableThreadFactory("phc-"));
   private ExecutorService invExecutor;
 
-  @Value("${spring.kafka.input.topic-name-phc}")
+  @Value("${spring.kafka.topics.nbs.public-health-case}")
   private String investigationTopic;
 
-  @Value("${spring.kafka.input.topic-name-ntf}")
+  @Value("${spring.kafka.topics.nbs.notification}")
   private String notificationTopic;
 
-  @Value("${spring.kafka.input.topic-name-int}")
+  @Value("${spring.kafka.topics.nbs.interview}")
   private String interviewTopic;
 
-  @Value("${spring.kafka.input.topic-name-ctr}")
+  @Value("${spring.kafka.topics.nbs.ct-contact}")
   private String contactTopic;
 
-  @Value("${spring.kafka.input.topic-name-vac}")
+  @Value("${spring.kafka.topics.nbs.intervention}")
   private String vaccinationTopic;
 
-  @Value("${spring.kafka.input.topic-name-tmt}")
+  @Value("${spring.kafka.topics.nbs.treatment}")
   private String treatmentTopic;
 
-  @Value("${spring.kafka.input.topic-name-ar}")
+  @Value("${spring.kafka.topics.nbs.act-relationship}")
   private String actRelationshipTopic;
 
-  @Value("${spring.kafka.output.topic-name-treatment}")
+  @Value("${spring.kafka.topics.nrt.treatment}")
   private String treatmentOutputTopicName;
 
-  @Value("${spring.kafka.output.topic-name-reporting}")
+  @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopicReporting;
 
   @Value("${featureFlag.phc-datamart-disable}")
@@ -147,13 +147,13 @@ public class InvestigationService {
       kafkaTemplate = "investigationKafkaTemplate")
   @KafkaListener(
       topics = {
-        "${spring.kafka.input.topic-name-phc}",
-        "${spring.kafka.input.topic-name-ntf}",
-        "${spring.kafka.input.topic-name-int}",
-        "${spring.kafka.input.topic-name-ctr}",
-        "${spring.kafka.input.topic-name-vac}",
-        "${spring.kafka.input.topic-name-tmt}",
-        "${spring.kafka.input.topic-name-ar}"
+        "${spring.kafka.topics.nbs.public-health-case}",
+        "${spring.kafka.topics.nbs.notification}",
+        "${spring.kafka.topics.nbs.interview}",
+        "${spring.kafka.topics.nbs.ct-contact}",
+        "${spring.kafka.topics.nbs.intervention}",
+        "${spring.kafka.topics.nbs.treatment}",
+        "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "investigationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {

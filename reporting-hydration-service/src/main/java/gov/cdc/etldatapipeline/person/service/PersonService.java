@@ -76,25 +76,25 @@ public class PersonService {
   @Qualifier("personKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  @Value("${spring.kafka.input.topic-name-person}")
+  @Value("${spring.kafka.topics.nbs.person}")
   private String personTopic;
 
-  @Value("${spring.kafka.input.topic-name-user}")
+  @Value("${spring.kafka.topics.nbs.auth-user}")
   private String userTopic;
 
-  @Value("${spring.kafka.output.patientElastic.topic-name}")
+  @Value("${spring.kafka.topics.elastic.patient}")
   private String patientElasticSearchOutputTopic;
 
-  @Value("${spring.kafka.output.patientReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.patient}")
   private String patientReportingOutputTopic;
 
-  @Value("${spring.kafka.output.providerElastic.topic-name}")
+  @Value("${spring.kafka.topics.elastic.provider}")
   private String providerElasticSearchOutputTopic;
 
-  @Value("${spring.kafka.output.providerReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.provider}")
   private String providerReportingOutputTopic;
 
-  @Value("${spring.kafka.output.userReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.auth-user}")
   private String userReportingOutputTopic;
 
   @Value("${featureFlag.elastic-search-enable}")
@@ -153,7 +153,7 @@ public class PersonService {
       },
       kafkaTemplate = "personKafkaTemplate")
   @KafkaListener(
-      topics = {"${spring.kafka.input.topic-name-person}", "${spring.kafka.input.topic-name-user}"},
+      topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
       containerFactory = "personKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {

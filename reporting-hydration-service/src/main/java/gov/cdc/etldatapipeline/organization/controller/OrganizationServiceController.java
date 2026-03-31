@@ -17,10 +17,10 @@ public class OrganizationServiceController {
   @Qualifier("organizationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  @Value("${spring.kafka.input.topic-name-organization}")
+  @Value("${spring.kafka.topics.nbs.organization}")
   private String orgTopicName = "nbs_Organization";
 
-  @Value("${spring.kafka.input.topic-name-place}")
+  @Value("${spring.kafka.topics.nbs.place}")
   private String placeTopicName = "nbs_Place";
 
   @PostMapping(value = "/reporting/organization-svc/organization")

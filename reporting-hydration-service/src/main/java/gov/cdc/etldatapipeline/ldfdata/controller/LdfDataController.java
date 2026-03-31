@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 public class LdfDataController {
   private final KafkaProducerService producerService;
 
-  @Value("${spring.kafka.input.topic-name-sdfd}")
+  @Value("${spring.kafka.topics.nbs.state-defined-field-data}")
   private String topicName;
 
   @PostMapping("/reporting/ldfdata-svc/publish")
