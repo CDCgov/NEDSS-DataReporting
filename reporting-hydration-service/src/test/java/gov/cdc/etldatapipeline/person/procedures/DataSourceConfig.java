@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.postprocessingservice.integration.config;
+package gov.cdc.etldatapipeline.person.procedures;
 
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Qualifier;

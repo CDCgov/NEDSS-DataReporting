@@ -65,7 +65,7 @@ public class PatientPhoneAndEmailManager {
                     :countryCode,
                     :number,
                     :extension,
-                    :email
+                    :email,
                     getDate(),
                     getDate(),
                     'ACTIVE',
@@ -78,17 +78,17 @@ public class PatientPhoneAndEmailManager {
 
     this.client
         .sql(ADD_PHONE_EMAIL)
-        .param(":patient", patient)
-        .param(":locator", phoneEmailId)
-        .param(":asOf", phoneEmail.asOf())
-        .param(":use", phoneEmail.use().code())
-        .param(":type", phoneEmail.type().code())
-        .param(":comments", phoneEmail.comments())
-        .param(":locator", phoneEmailId)
-        .param(":countryCode", phoneEmail.countryCode())
-        .param(":number", phoneEmail.phoneNumber())
-        .param(":extension", phoneEmail.extension())
-        .param(":email", phoneEmail.email())
+        .param("patient", patient)
+        .param("locator", phoneEmailId.id())
+        .param("asOf", phoneEmail.asOf())
+        .param("use", phoneEmail.use().code())
+        .param("type", phoneEmail.type().code())
+        .param("comments", phoneEmail.comments())
+        .param("locator", phoneEmailId.id())
+        .param("countryCode", phoneEmail.countryCode())
+        .param("number", phoneEmail.phoneNumber())
+        .param("extension", phoneEmail.extension())
+        .param("email", phoneEmail.email())
         .update();
   }
 }

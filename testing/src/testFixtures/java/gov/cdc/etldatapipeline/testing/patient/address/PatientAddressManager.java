@@ -95,6 +95,7 @@ public class PatientAddressManager {
         .param("address2", address.address2())
         .param("city", address.city())
         .param("stateCode", address.stateCode())
+        .param("zip", address.zip())
         .param("countyCode", address.countyCode())
         .param("censusTract", address.censusTract())
         .param("countryCode", address.countryCode())

@@ -85,7 +85,11 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-kafka:2.0.3'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.3'
     testImplementation 'org.awaitility:awaitility:4.2.0'
-    testImplementation project(':testing')
+
+    testImplementation testFixtures(project(':testing'))
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:testcontainers:2.0.3'
 }
 
 dependencyManagement {

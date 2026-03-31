@@ -42,7 +42,7 @@ public class PatientNameManager {
                 :first,
                 soundex(:first),
                 :middle,
-                :middle2
+                :middle2,
                 :last,
                 soundex(:last),
                 :last2,
@@ -50,10 +50,10 @@ public class PatientNameManager {
                 :suffix,
                 :degree,
                 'A',
-                getDate(),
-                getDate(),
-                getDate(),
-                getDate(),
+                :asOf,
+                :asOf,
+                :asOf,
+                :asOf,
                 'ACTIVE'
             );
       """;

@@ -28,30 +28,6 @@ public record PatientAddress(
     String countryCode,
     String comment) {
 
-  public PatientAddress(
-      String address1,
-      String address2,
-      String city,
-      String stateCode,
-      String zip,
-      String countyCode,
-      String censusTract,
-      String countryCode) {
-    this(
-        LocalDateTime.now(),
-        Type.HOUSE,
-        Use.HOME,
-        address1,
-        address2,
-        city,
-        stateCode,
-        zip,
-        countyCode,
-        censusTract,
-        countryCode,
-        null);
-  }
-
   public enum Type {
     APARTMENT_CONDOMINIUM("A"),
     COUNTRY_OF_ORIGIN("F"),

@@ -96,7 +96,7 @@ public class PatientManager {
       );
       """;
 
-  public long create() {
+  public GeneratedId create(LocalDateTime addedOn) {
 
     GeneratedId identifier = idGenerator.next(EntityType.PERSON);
 
@@ -104,11 +104,11 @@ public class PatientManager {
         .sql(CREATE_QUERY)
         .param("id", identifier.id())
         .param("local", identifier.toLocalId())
-        .param("addedOn", LocalDateTime.now())
+        .param("addedOn", addedOn)
         .param("addedBy", "9999")
         .update();
 
-    return identifier.id();
+    return identifier;
   }
 
   public void addName(final long patient, final PatientName name) {

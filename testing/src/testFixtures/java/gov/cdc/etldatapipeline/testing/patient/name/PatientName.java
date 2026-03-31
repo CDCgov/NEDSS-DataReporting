@@ -23,14 +23,6 @@ public record PatientName(
     Suffix suffix,
     Degree degree) {
 
-  public PatientName(LocalDateTime asOf, String first, String middle, String last, Suffix suffix) {
-    this(asOf, Type.LEGAL, null, first, middle, null, last, null, suffix, null);
-  }
-
-  public PatientName(String first, String last) {
-    this(LocalDateTime.now(), Type.LEGAL, null, last, null, first, null, null, null, null);
-  }
-
   public enum Type {
     ADOPTED("AD"),
     ALIAS("AL"),

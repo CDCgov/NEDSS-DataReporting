@@ -1,11 +1,15 @@
 spring:
   datasource:
-    username: test
-    url: jdbc:sqlserver://localhost:1433;databaseName=test;
-    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    password: test
+    rdb:
+      username: reporting_hydration_service_rdb
+      password: reporting_hydration_service
+      url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+    odse:
+      username: sa
+      password: PizzaIsGood33!
+      url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
   jpa:
-    show-sql: 'true'
+    show-sql: "true"
     hibernate:
       ddl-auto: none
   kafka:
