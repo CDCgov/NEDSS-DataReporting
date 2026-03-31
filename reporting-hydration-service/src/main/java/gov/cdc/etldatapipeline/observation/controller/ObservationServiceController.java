@@ -17,7 +17,7 @@ public class ObservationServiceController {
   @Qualifier("observationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  @Value("${spring.kafka.input.topic-name-observation}")
+  @Value("${spring.kafka.topics.nbs.observation}")
   private String observationTopic = "nbs_Observation";
 
   @PostMapping(value = "/reporting/observation-svc/observation")
