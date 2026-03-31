@@ -63,13 +63,13 @@ public class ObservationService {
   private static final Logger logger = LoggerFactory.getLogger(ObservationService.class);
   private static final String BEFORE_PATH = "before";
 
-  @Value("${spring.kafka.input.topic-name-observation}")
+  @Value("${spring.kafka.topics.nbs.observation}")
   private String observationTopic;
 
-  @Value("${spring.kafka.input.topic-name-ar}")
+  @Value("${spring.kafka.topics.nbs.act-relationship}")
   private String actRelationshipTopic;
 
-  @Value("${spring.kafka.output.observationReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation}")
   private String observationTopicOutputReporting;
 
   @Value("${featureFlag.thread-pool-size:1}")
@@ -131,8 +131,8 @@ public class ObservationService {
       kafkaTemplate = "observationKafkaTemplate")
   @KafkaListener(
       topics = {
-        "${spring.kafka.input.topic-name-observation}",
-        "${spring.kafka.input.topic-name-ar}"
+        "${spring.kafka.topics.nbs.observation}",
+        "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "observationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {

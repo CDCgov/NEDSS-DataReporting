@@ -71,22 +71,22 @@ public class OrganizationService {
   @Qualifier("organizationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  @Value("${spring.kafka.input.topic-name-organization}")
+  @Value("${spring.kafka.topics.nbs.organization}")
   private String orgTopic;
 
-  @Value("${spring.kafka.input.topic-name-place}")
+  @Value("${spring.kafka.topics.nbs.place}")
   private String placeTopic;
 
-  @Value("${spring.kafka.output.organizationElastic.topic-name}")
+  @Value("${spring.kafka.topics.elastic.organization}")
   private String orgElasticSearchTopic;
 
-  @Value("${spring.kafka.output.organizationReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.organization}")
   private String orgReportingOutputTopic;
 
-  @Value("${spring.kafka.output.placeReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.place}")
   private String placeReportingOutputTopic;
 
-  @Value("${spring.kafka.output.placeTeleReporting.topic-name}")
+  @Value("${spring.kafka.topics.nrt.place-tele}")
   private String teleOutputTopic;
 
   @Value("${featureFlag.elastic-search-enable}")
@@ -144,10 +144,7 @@ public class OrganizationService {
         NoDataException.class
       })
   @KafkaListener(
-      topics = {
-        "${spring.kafka.input.topic-name-organization}",
-        "${spring.kafka.input.topic-name-place}"
-      },
+      topics = {"${spring.kafka.topics.nbs.organization}", "${spring.kafka.topics.nbs.place}"},
       containerFactory = "organizationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {

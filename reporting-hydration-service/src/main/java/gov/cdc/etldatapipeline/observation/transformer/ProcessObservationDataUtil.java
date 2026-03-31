@@ -35,25 +35,25 @@ public class ProcessObservationDataUtil {
 
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
-  @Value("${spring.kafka.output.observationCoded.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-coded}")
   public String codedTopicName;
 
-  @Value("${spring.kafka.output.observationDate.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-date}")
   public String dateTopicName;
 
-  @Value("${spring.kafka.output.observationEdx.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-edx}")
   public String edxTopicName;
 
-  @Value("${spring.kafka.output.observationMaterial.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-material}")
   public String materialTopicName;
 
-  @Value("${spring.kafka.output.observationNumeric.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-numeric}")
   public String numericTopicName;
 
-  @Value("${spring.kafka.output.observationReason.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-reason}")
   public String reasonTopicName;
 
-  @Value("${spring.kafka.output.observationTxt.topic-name}")
+  @Value("${spring.kafka.topics.nrt.observation-txt}")
   public String txtTopicName;
 
   ObservationKey observationKey = new ObservationKey();
