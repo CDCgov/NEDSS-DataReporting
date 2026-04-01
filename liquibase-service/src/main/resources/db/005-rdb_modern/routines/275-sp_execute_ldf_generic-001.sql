@@ -193,7 +193,7 @@ CREATE PROCEDURE [dbo].[sp_execute_ldf_generic]
 				DROP TABLE #TMP_ALL_GENERIC; 
 
 			SELECT A.*,  
-			B.DATAMART_COLUMN_NM 'DM', 
+			B.DATAMART_COLUMN_NM AS DM,
 			CASE WHEN  DATALENGTH(REPLACE(A.CONDITION_CD, ' ', ''))>1 THEN A.CONDITION_CD
 			ELSE A.phc_cd END AS DISEASE_CD, 
 			A.page_set AS DISEASE_NM
@@ -234,7 +234,7 @@ CREATE PROCEDURE [dbo].[sp_execute_ldf_generic]
 						PATIENT_LOCAL_ID, 
 						DISEASE_NAME, 
 						DISEASE_CD, 
-						DATAMART_COLUMN_NM, 
+						DM AS DATAMART_COLUMN_NM,
 						SUBSTRING(COL1, 1, 8000) as ANSWERCOL
 			INTO #TMP_ALL_GENERIC_SHORT_COL 
 			FROM #TMP_ALL_GENERIC
@@ -267,7 +267,7 @@ CREATE PROCEDURE [dbo].[sp_execute_ldf_generic]
 						PATIENT_LOCAL_ID, 
 						DISEASE_NAME, 
 						DISEASE_CD, 
-						DATAMART_COLUMN_NM, 
+						DM AS DATAMART_COLUMN_NM,
 						SUBSTRING(COL1, 1, 8000) as ANSWERCOL  
 			INTO #TMP_ALL_GENERIC_TA 
 			FROM #TMP_ALL_GENERIC
@@ -599,20 +599,22 @@ CREATE PROCEDURE [dbo].[sp_execute_ldf_generic]
 					
 					--UPDATE LDF DM TO NULLS WHEN THERE IS NO RECORD IN LDF_DIMENSTIONAL
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1; 
-			SET @PROC_STEP_NAME = 'UPDATE LDF_GENERIC when there is no record in the LDF_DIMENSIONAL_DATA';  
+			SET @PROC_STEP_NAME = 'UPDATE '+@target_table_name+' when there is no record in the LDF_DIMENSIONAL_DATA';
 				
 			BEGIN TRANSACTION; 
 
 			SET @dynamiccolumnUpdate=''; 
 				
 			SELECT   @dynamiccolumnUpdate= @dynamiccolumnUpdate + 'TBL.[' +  COLUMN_NAME  + '] = NULL ,' 
-			FROM  INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'LDF_GENERIC'
+			FROM  INFORMATION_SCHEMA.COLUMNS WHERE table_name = @target_table_name
 				AND COLUMN_NAME NOT IN  ('INVESTIGATION_KEY', 'INVESTIGATION_LOCAL_ID', 'PROGRAM_JURISDICTION_OID', 'PATIENT_KEY', 'PATIENT_LOCAL_ID', 'DISEASE_NAME', 'DISEASE_CD')
 				
-			SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
+			IF @dynamiccolumnUpdate IS NOT NULL AND @dynamiccolumnUpdate != ''
+			BEGIN
+				SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1) 
 
 				EXEC ('update TBL SET ' +   @dynamiccolumnUpdate + ' FROM  
-				dbo.LDF_GENERIC TBL inner join  
+				dbo.'+@target_table_name+' TBL inner join  
 				dbo.INVESTIGATION INV with (nolock) 
 				ON TBL.INVESTIGATION_KEY = INV.INVESTIGATION_KEY
 				INNER JOIN #LDF_UID_LIST LDF_UID_LIST ON 
@@ -621,6 +623,7 @@ CREATE PROCEDURE [dbo].[sp_execute_ldf_generic]
 				ON LDF_DIMENSIONAL_DATA.INVESTIGATION_UID = INV.CASE_UID
 			WHERE LDF_DIMENSIONAL_DATA.INVESTIGATION_UID IS NULL;
 				');
+			END
 
 			SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
 			
