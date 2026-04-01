@@ -11,7 +11,8 @@ public class PatientNameManager {
     this.client = client;
   }
 
-  private static final String ADD_NAME = """
+  private static final String ADD_NAME =
+      """
       insert into Person_name (
                 person_uid,
                 person_name_seq,

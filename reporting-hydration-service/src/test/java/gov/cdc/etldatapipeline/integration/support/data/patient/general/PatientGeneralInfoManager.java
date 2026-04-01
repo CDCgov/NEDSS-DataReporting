@@ -10,7 +10,8 @@ public class PatientGeneralInfoManager {
     this.client = client;
   }
 
-  public static final String SET_GENERAL_INFO = """
+  public static final String SET_GENERAL_INFO =
+      """
       update person set
         as_of_date_general = :asOf,
         marital_status_cd = :maritalStatusCode,

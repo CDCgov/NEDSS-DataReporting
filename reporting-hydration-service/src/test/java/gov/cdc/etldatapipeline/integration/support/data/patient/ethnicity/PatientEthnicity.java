@@ -4,14 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Contains the data necessary for setting the ethnicity for a patient. Patients
- * only have 1
- * ethnicity but may have multiple Spanish Origins if the selected Ethnicity is
- * "Hispanic or
- * Latino". An "Unknown Reason" can only be specified if the Ethnicity is
- * "Unknown". The Ethnicity,
- * Unknown Reason, and asOf dates are stored on the person table. Any specified
- * Spanish Origin
+ * Contains the data necessary for setting the ethnicity for a patient. Patients only have 1
+ * ethnicity but may have multiple Spanish Origins if the selected Ethnicity is "Hispanic or
+ * Latino". An "Unknown Reason" can only be specified if the Ethnicity is "Unknown". The Ethnicity,
+ * Unknown Reason, and asOf dates are stored on the person table. Any specified Spanish Origin
  * values are stored in the Person_ethnic_group table.
  *
  * <pre>

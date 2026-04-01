@@ -10,7 +10,8 @@ public class PatientIdentificationManager {
     this.client = client;
   }
 
-  private static final String ADD_IDENTIFICATION = """
+  private static final String ADD_IDENTIFICATION =
+      """
       insert into Entity_id (
           entity_uid,
           entity_id_seq,

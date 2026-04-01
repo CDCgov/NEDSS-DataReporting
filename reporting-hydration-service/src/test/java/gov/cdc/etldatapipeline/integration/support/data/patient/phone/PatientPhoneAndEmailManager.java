@@ -1,10 +1,9 @@
 package gov.cdc.etldatapipeline.integration.support.data.patient.phone;
 
-import org.springframework.jdbc.core.simple.JdbcClient;
-
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.EntityType;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.GeneratedId;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 public class PatientPhoneAndEmailManager {
 
@@ -16,7 +15,8 @@ public class PatientPhoneAndEmailManager {
     this.idGenerator = idGenerator;
   }
 
-  private static final String ADD_PHONE_EMAIL = """
+  private static final String ADD_PHONE_EMAIL =
+      """
                 --- Entity Participation
                 insert into Entity_locator_participation (
                     version_ctrl_nbr,

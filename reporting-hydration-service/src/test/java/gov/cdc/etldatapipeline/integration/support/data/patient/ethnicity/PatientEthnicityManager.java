@@ -1,8 +1,7 @@
 package gov.cdc.etldatapipeline.integration.support.data.patient.ethnicity;
 
-import org.springframework.jdbc.core.simple.JdbcClient;
-
 import gov.cdc.etldatapipeline.integration.support.data.patient.ethnicity.PatientEthnicity.Ethnicity;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 public class PatientEthnicityManager {
 
@@ -12,7 +11,8 @@ public class PatientEthnicityManager {
     this.client = client;
   }
 
-  private static final String SET_ETHNICITY = """
+  private static final String SET_ETHNICITY =
+      """
        update person set
             ethnic_group_ind = :ethnicity,
             as_of_date_ethnicity = :asOf,
@@ -20,7 +20,8 @@ public class PatientEthnicityManager {
         where person_uid = :patient
       """;
 
-  private static final String ADD_SPANISH_ORIGIN = """
+  private static final String ADD_SPANISH_ORIGIN =
+      """
         insert into Person_ethnic_group(
             person_uid,
             ethnic_group_cd,

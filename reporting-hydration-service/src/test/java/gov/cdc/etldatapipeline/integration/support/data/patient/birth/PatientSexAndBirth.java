@@ -3,14 +3,10 @@ package gov.cdc.etldatapipeline.integration.support.data.patient.birth;
 import java.time.LocalDateTime;
 
 /**
- * Contains the data necessary for setting patient Sex and Birth information.
- * The appropriate codes
- * will need to be supplied for Birth State, Birth County, and Birth Country.
- * Most of the Sex and
- * Birth information is stored within the Person table. However, if birth
- * location info is specified
- * then an entry will be added to the Entity_locator_participation and
- * postal_locator tables similar
+ * Contains the data necessary for setting patient Sex and Birth information. The appropriate codes
+ * will need to be supplied for Birth State, Birth County, and Birth Country. Most of the Sex and
+ * Birth information is stored within the Person table. However, if birth location info is specified
+ * then an entry will be added to the Entity_locator_participation and postal_locator tables similar
  * to an address except the "Entity_locator_participation.use_cd" will be "BIR".
  *
  * <pre>

@@ -16,7 +16,8 @@ public class DPatientFinder {
     this.client = client;
   }
 
-  private static final String SELECT_KEY_BY_ID = """
+  private static final String SELECT_KEY_BY_ID =
+      """
       SELECT TOP 1
           patient_key
       FROM

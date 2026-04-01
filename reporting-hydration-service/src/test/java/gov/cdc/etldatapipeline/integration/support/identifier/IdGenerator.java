@@ -12,7 +12,8 @@ public class IdGenerator {
     this.client = client;
   }
 
-  private static final String SELECT = """
+  private static final String SELECT =
+      """
       SELECT TOP 1
           UID_prefix_cd,
           seed_value_nbr,
@@ -25,7 +26,8 @@ public class IdGenerator {
 
       """;
 
-  private static final String INCREMENT = """
+  private static final String INCREMENT =
+      """
       UPDATE
           NBS_ODSE.dbo.local_uid_generator
       SET
@@ -36,8 +38,7 @@ public class IdGenerator {
       """;
 
   /**
-   * Gets the next valid Id for the provided Type and increments the value. Will
-   * throw an exception
+   * Gets the next valid Id for the provided Type and increments the value. Will throw an exception
    * if the provided type is not found.
    *
    * @param type {@link EntityType}
@@ -46,15 +47,17 @@ public class IdGenerator {
   @Transactional
   public GeneratedId next(EntityType type) {
     // Retrieve next valid Id
-    GeneratedId identifier = client
-        .sql(SELECT)
-        .param("type", type.toString())
-        .query(
-            (rs, rn) -> new GeneratedId(
-                rs.getString("UID_prefix_cd"),
-                rs.getLong("seed_value_nbr"),
-                rs.getString("UID_suffix_cd")))
-        .single();
+    GeneratedId identifier =
+        client
+            .sql(SELECT)
+            .param("type", type.toString())
+            .query(
+                (rs, rn) ->
+                    new GeneratedId(
+                        rs.getString("UID_prefix_cd"),
+                        rs.getLong("seed_value_nbr"),
+                        rs.getString("UID_suffix_cd")))
+            .single();
 
     // Increment table
     client.sql(INCREMENT).param("type", type.toString()).update();
@@ -69,10 +72,8 @@ public class IdGenerator {
   }
 
   /**
-   * Matches the class_name_cd column of the Local_UID_generator table, other than
-   * the NBS entry.
-   * Which references the type_cd column as the class_name_cd for type NBS is
-   * dynamic based on the
+   * Matches the class_name_cd column of the Local_UID_generator table, other than the NBS entry.
+   * Which references the type_cd column as the class_name_cd for type NBS is dynamic based on the
    * jurisdiction
    */
   public enum EntityType {

@@ -10,7 +10,8 @@ public class PatientRaceManager {
     this.client = client;
   }
 
-  private static final String ADD_RACE = """
+  private static final String ADD_RACE =
+      """
       insert into Person_race (
                     person_uid,
                     as_of_date,
@@ -36,7 +37,8 @@ public class PatientRaceManager {
                 );
       """;
 
-  private static final String ADD_DETAILED_RACE = """
+  private static final String ADD_DETAILED_RACE =
+      """
       insert into Person_race (
                     person_uid,
                     as_of_date,
@@ -77,13 +79,14 @@ public class PatientRaceManager {
     if (race.detailedRaceCodes() != null) {
       race.detailedRaceCodes()
           .forEach(
-              dr -> client
-                  .sql(ADD_DETAILED_RACE)
-                  .param("patient", patient)
-                  .param("asOf", race.asOf())
-                  .param("race", race.race().code())
-                  .param("detailedRace", dr)
-                  .update());
+              dr ->
+                  client
+                      .sql(ADD_DETAILED_RACE)
+                      .param("patient", patient)
+                      .param("asOf", race.asOf())
+                      .param("race", race.race().code())
+                      .param("detailedRace", dr)
+                      .update());
     }
   }
 }

@@ -10,7 +10,8 @@ public class PatientCommentManager {
     this.client = client;
   }
 
-  private static final String SET_COMMENT = """
+  private static final String SET_COMMENT =
+      """
       update person set
         as_of_date_admin = :asOf,
         description = :comment

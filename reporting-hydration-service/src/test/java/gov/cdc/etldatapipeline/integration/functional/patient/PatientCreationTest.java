@@ -2,23 +2,20 @@ package gov.cdc.etldatapipeline.integration.functional.patient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import gov.cdc.etldatapipeline.integration.functional.FunctionalTest;
+import gov.cdc.etldatapipeline.integration.support.Await;
+import gov.cdc.etldatapipeline.integration.support.data.patient.PatientManager;
+import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.GeneratedId;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import gov.cdc.etldatapipeline.integration.functional.FunctionalTest;
-import gov.cdc.etldatapipeline.integration.support.Await;
-import gov.cdc.etldatapipeline.integration.support.data.patient.PatientManager;
-import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.GeneratedId;
-
 class PatientCreationTest extends FunctionalTest {
 
-  @Autowired
-  private PatientManager patientManager;
+  @Autowired private PatientManager patientManager;
 
-  @Autowired
-  private DPatientFinder dPatientFinder;
+  @Autowired private DPatientFinder dPatientFinder;
 
   @Test
   void patientDataIsSuccessfullyProcessed() {
@@ -27,7 +24,8 @@ class PatientCreationTest extends FunctionalTest {
     assertThat(createdPatient.id()).isNotZero();
 
     // Validate patient data arrives in D_PATIENT with retry
-    Optional<Long> dPatientKey = Await.waitFor(dPatientFinder::findDPatientKeyWithRetry, createdPatient.id());
+    Optional<Long> dPatientKey =
+        Await.waitFor(dPatientFinder::findDPatientKeyWithRetry, createdPatient.id());
 
     assertThat(dPatientKey).isPresent();
     assertThat(dPatientKey.get()).isNotZero();

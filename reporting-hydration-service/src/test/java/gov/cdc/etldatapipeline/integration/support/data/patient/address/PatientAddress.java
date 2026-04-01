@@ -3,10 +3,8 @@ package gov.cdc.etldatapipeline.integration.support.data.patient.address;
 import java.time.LocalDateTime;
 
 /**
- * Contains the data necessary for creating a new address associated with a
- * patient. Valid Type and
- * Use values are provided as enums. The stateCode, countyCode, and countryCodes
- * will need to be
+ * Contains the data necessary for creating a new address associated with a patient. Valid Type and
+ * Use values are provided as enums. The stateCode, countyCode, and countryCodes will need to be
  * supplied as size of the enums would be prohibitive.
  *
  * <pre>

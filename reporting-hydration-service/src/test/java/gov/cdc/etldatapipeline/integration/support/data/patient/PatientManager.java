@@ -1,11 +1,5 @@
 package gov.cdc.etldatapipeline.integration.support.data.patient;
 
-import java.time.LocalDateTime;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Profile;
-import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.stereotype.Component;
-
 import gov.cdc.etldatapipeline.integration.support.data.patient.address.PatientAddress;
 import gov.cdc.etldatapipeline.integration.support.data.patient.address.PatientAddressManager;
 import gov.cdc.etldatapipeline.integration.support.data.patient.birth.PatientSexAndBirth;
@@ -29,11 +23,13 @@ import gov.cdc.etldatapipeline.integration.support.data.patient.race.PatientRace
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.EntityType;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.GeneratedId;
+import java.time.LocalDateTime;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Component;
 
-/**
- * Responsible for creating and inserting patient data into the NBS_ODSE for
- * testing
- */
+/** Responsible for creating and inserting patient data into the NBS_ODSE for testing */
 @Component
 @Profile("test")
 public class PatientManager {
@@ -66,7 +62,8 @@ public class PatientManager {
     this.generalInfoManager = new PatientGeneralInfoManager(client);
   }
 
-  private static final String CREATE_QUERY = """
+  private static final String CREATE_QUERY =
+      """
       insert into NBS_ODSE.dbo.Entity(entity_uid, class_cd) values (:id, 'PSN');
 
       insert into NBS_ODSE.dbo.Person(

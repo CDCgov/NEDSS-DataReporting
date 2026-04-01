@@ -13,12 +13,13 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class UnitTest {
 
   @SuppressWarnings("resource")
-  private static final ComposeContainer environment = new ComposeContainer(
-      DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
-      .withServices("nbs-mssql", "liquibase")
-      .waitingFor("liquibase", Wait.forLogMessage("Migrations complete.*", 1))
-      // Set the maximum startup timeout all the waits set are bounded to
-      .withStartupTimeout(Duration.ofMinutes(5));
+  private static final ComposeContainer environment =
+      new ComposeContainer(
+              DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
+          .withServices("nbs-mssql", "liquibase")
+          .waitingFor("liquibase", Wait.forLogMessage("Migrations complete.*", 1))
+          // Set the maximum startup timeout all the waits set are bounded to
+          .withStartupTimeout(Duration.ofMinutes(5));
 
   @BeforeAll
   static void setUp() {

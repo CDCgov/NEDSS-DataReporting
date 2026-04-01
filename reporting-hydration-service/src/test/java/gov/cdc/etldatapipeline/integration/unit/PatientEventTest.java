@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import gov.cdc.etldatapipeline.integration.support.data.patient.PatientManager;
 import gov.cdc.etldatapipeline.integration.support.data.patient.address.PatientAddress;
 import gov.cdc.etldatapipeline.integration.support.data.patient.birth.PatientSexAndBirth;
@@ -34,7 +33,6 @@ import gov.cdc.etldatapipeline.person.model.dto.persondetail.Name;
 import gov.cdc.etldatapipeline.person.model.dto.persondetail.Phone;
 import gov.cdc.etldatapipeline.person.model.dto.persondetail.Race;
 import gov.cdc.etldatapipeline.person.repository.PatientRepository;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -70,52 +68,56 @@ class PatientEventTest extends UnitTest {
     GeneratedId generatedId = patientManager.create(now);
 
     // Name
-    PatientName patientName = new PatientName(
-        now,
-        PatientName.Type.LEGAL,
-        Prefix.MR,
-        "John",
-        "B",
-        null,
-        "Doe",
-        null,
-        Suffix.JUNIOR,
-        Degree.PHD);
+    PatientName patientName =
+        new PatientName(
+            now,
+            PatientName.Type.LEGAL,
+            Prefix.MR,
+            "John",
+            "B",
+            null,
+            "Doe",
+            null,
+            Suffix.JUNIOR,
+            Degree.PHD);
     patientManager.addName(generatedId.id(), patientName);
 
     // Address
-    PatientAddress patientAddress = new PatientAddress(
-        now,
-        PatientAddress.Type.HOUSE,
-        PatientAddress.Use.HOME,
-        "123 Main Street",
-        null,
-        "Atlanta",
-        "13",
-        "30033",
-        "13121",
-        "1234",
-        "840",
-        "Address Comment");
+    PatientAddress patientAddress =
+        new PatientAddress(
+            now,
+            PatientAddress.Type.HOUSE,
+            PatientAddress.Use.HOME,
+            "123 Main Street",
+            null,
+            "Atlanta",
+            "13",
+            "30033",
+            "13121",
+            "1234",
+            "840",
+            "Address Comment");
 
     patientManager.addAddress(generatedId.id(), patientAddress);
 
     // Ethnicity
-    PatientEthnicity patientEthnicity = new PatientEthnicity(now, Ethnicity.NOT_HISPANIC_OR_LATINO, null, null);
+    PatientEthnicity patientEthnicity =
+        new PatientEthnicity(now, Ethnicity.NOT_HISPANIC_OR_LATINO, null, null);
 
     patientManager.addEthnicity(generatedId.id(), patientEthnicity);
 
     // Phone
-    PatientPhoneAndEmail patientPhone = new PatientPhoneAndEmail(
-        now,
-        PatientPhoneAndEmail.Type.PHONE,
-        PatientPhoneAndEmail.Use.HOME,
-        "1",
-        "234-555-1212",
-        null,
-        null,
-        null,
-        "last known contact");
+    PatientPhoneAndEmail patientPhone =
+        new PatientPhoneAndEmail(
+            now,
+            PatientPhoneAndEmail.Type.PHONE,
+            PatientPhoneAndEmail.Use.HOME,
+            "1",
+            "234-555-1212",
+            null,
+            null,
+            null,
+            "last known contact");
 
     patientManager.addPhoneAndEmail(generatedId.id(), patientPhone);
 
@@ -125,48 +127,52 @@ class PatientEventTest extends UnitTest {
     patientManager.addRace(generatedId.id(), patientRace);
 
     // Identification
-    PatientIdentification patientIdentification = new PatientIdentification(
-        now,
-        PatientIdentification.Type.DRIVERS_LICENSE_NUMBER,
-        PatientIdentification.AssigningAuthority.GA,
-        "1234567890");
+    PatientIdentification patientIdentification =
+        new PatientIdentification(
+            now,
+            PatientIdentification.Type.DRIVERS_LICENSE_NUMBER,
+            PatientIdentification.AssigningAuthority.GA,
+            "1234567890");
     patientManager.addIdentification(generatedId.id(), patientIdentification);
 
     // General Info
-    PatientGeneralInfo patientGeneralInfo = new PatientGeneralInfo(
-        now,
-        MaritalStatus.MARRIED,
-        "Does",
-        1,
-        2,
-        Occupation.CONSTRUCTION,
-        Education.BACHELORS_DEGREE,
-        Language.ENGLISH,
-        SpeaksEnglish.YES,
-        null);
+    PatientGeneralInfo patientGeneralInfo =
+        new PatientGeneralInfo(
+            now,
+            MaritalStatus.MARRIED,
+            "Does",
+            1,
+            2,
+            Occupation.CONSTRUCTION,
+            Education.BACHELORS_DEGREE,
+            Language.ENGLISH,
+            SpeaksEnglish.YES,
+            null);
 
     patientManager.setGeneralInfo(generatedId.id(), patientGeneralInfo);
 
     // Sex and Birth Info
-    PatientSexAndBirth patientSexAndBirthInfo = new PatientSexAndBirth(
-        now,
-        now.minusYears(24),
-        Sex.MALE,
-        null,
-        null,
-        "AdditionalGender Value",
-        Sex.MALE,
-        MultipleBirth.NO,
-        null,
-        "Atlanta",
-        "13",
-        "13121",
-        "840");
+    PatientSexAndBirth patientSexAndBirthInfo =
+        new PatientSexAndBirth(
+            now,
+            now.minusYears(24),
+            Sex.MALE,
+            null,
+            null,
+            "AdditionalGender Value",
+            Sex.MALE,
+            MultipleBirth.NO,
+            null,
+            "Atlanta",
+            "13",
+            "13121",
+            "840");
 
     patientManager.setSexAndBirthInfo(generatedId.id(), patientSexAndBirthInfo);
 
     // Call stored procedure to collect data
-    List<PatientSp> patientDataList = patientRepository.computePatients(String.valueOf(generatedId.id()));
+    List<PatientSp> patientDataList =
+        patientRepository.computePatients(String.valueOf(generatedId.id()));
 
     // Validate data
     String expectedAsOf = now.format(formatter);
@@ -231,8 +237,7 @@ class PatientEventTest extends UnitTest {
     assertThat(data.getStatusTime()).isEqualTo(expectedAsOf);
 
     // Names validation
-    List<Name> names = mapper.readValue(data.getNameNested(), new TypeReference<List<Name>>() {
-    });
+    List<Name> names = mapper.readValue(data.getNameNested(), new TypeReference<List<Name>>() {});
     assertThat(names).hasSize(1);
     Name nameValue = names.get(0);
 
@@ -251,8 +256,8 @@ class PatientEventTest extends UnitTest {
     assertThat(nameValue.getLastChgTime()).isEqualTo(now.format(format2));
 
     // Address validation
-    List<Address> addresses = mapper.readValue(data.getAddressNested(), new TypeReference<List<Address>>() {
-    });
+    List<Address> addresses =
+        mapper.readValue(data.getAddressNested(), new TypeReference<List<Address>>() {});
     assertThat(addresses).hasSize(2);
     Address postalAddress = addresses.get(0);
 
@@ -289,8 +294,8 @@ class PatientEventTest extends UnitTest {
     assertThat(birthAddress.getBirthCountry()).isEqualTo("UNITED STATES");
 
     // Telephone validation
-    List<Phone> phones = mapper.readValue(data.getTelephoneNested(), new TypeReference<List<Phone>>() {
-    });
+    List<Phone> phones =
+        mapper.readValue(data.getTelephoneNested(), new TypeReference<List<Phone>>() {});
     assertThat(phones).hasSize(1);
     Phone phone = phones.get(0);
 
@@ -300,9 +305,8 @@ class PatientEventTest extends UnitTest {
     assertThat(phone.getExtensionTxt()).isEqualTo(patientPhone.extension());
 
     // Race validation
-    List<gov.cdc.etldatapipeline.person.model.dto.persondetail.Race> races = mapper.readValue(data.getRaceNested(),
-        new TypeReference<List<Race>>() {
-        });
+    List<gov.cdc.etldatapipeline.person.model.dto.persondetail.Race> races =
+        mapper.readValue(data.getRaceNested(), new TypeReference<List<Race>>() {});
     assertThat(races).hasSize(1);
     Race race = races.get(0);
 
@@ -319,9 +323,8 @@ class PatientEventTest extends UnitTest {
     assertThat(data.getEmailNested()).isNull();
 
     // Identification validation
-    List<EntityData> identifications = mapper.readValue(data.getEntityDataNested(),
-        new TypeReference<List<EntityData>>() {
-        });
+    List<EntityData> identifications =
+        mapper.readValue(data.getEntityDataNested(), new TypeReference<List<EntityData>>() {});
     assertThat(identifications).hasSize(1);
     EntityData identification = identifications.get(0);
 

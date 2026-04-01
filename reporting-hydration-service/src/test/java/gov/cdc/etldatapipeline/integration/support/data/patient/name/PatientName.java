@@ -3,10 +3,8 @@ package gov.cdc.etldatapipeline.integration.support.data.patient.name;
 import java.time.LocalDateTime;
 
 /**
- * Contains the data necessary for creating a new name associated with a
- * patient. A patient may have
- * multiple name entries. Patient name information is stored in the Person_name
- * table within NBS.
+ * Contains the data necessary for creating a new name associated with a patient. A patient may have
+ * multiple name entries. Patient name information is stored in the Person_name table within NBS.
  *
  * <pre>
  * NBS_ODSE

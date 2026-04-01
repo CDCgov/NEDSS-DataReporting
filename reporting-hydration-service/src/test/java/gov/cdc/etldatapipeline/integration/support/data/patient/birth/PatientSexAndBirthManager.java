@@ -1,11 +1,10 @@
 package gov.cdc.etldatapipeline.integration.support.data.patient.birth;
 
-import org.springframework.jdbc.core.simple.JdbcClient;
-
 import gov.cdc.etldatapipeline.integration.support.data.patient.birth.PatientSexAndBirth.Sex;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.EntityType;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.GeneratedId;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 public class PatientSexAndBirthManager {
 
@@ -17,7 +16,8 @@ public class PatientSexAndBirthManager {
     this.idGenerator = idGenerator;
   }
 
-  private static final String SET_SEX_AND_BIRTH_INFO = """
+  private static final String SET_SEX_AND_BIRTH_INFO =
+      """
       update Person set
         as_of_date_sex = :asOf,
         birth_time = :birthDate,
@@ -31,7 +31,8 @@ public class PatientSexAndBirthManager {
       where person_uid = :patient
       """;
 
-  private static final String ADD_BIRTH_LOCATOR = """
+  private static final String ADD_BIRTH_LOCATOR =
+      """
       --- Entity Participation
         insert into Entity_locator_participation (
             version_ctrl_nbr,

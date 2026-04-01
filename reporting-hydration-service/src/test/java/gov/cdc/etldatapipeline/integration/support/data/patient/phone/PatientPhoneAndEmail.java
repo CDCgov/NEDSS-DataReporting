@@ -3,10 +3,8 @@ package gov.cdc.etldatapipeline.integration.support.data.patient.phone;
 import java.time.LocalDateTime;
 
 /**
- * Contains the data necessary for creating a new phone/email address associated
- * with a patient.
- * Phone and Email information is stored in the same table. A patient may have
- * multiple phone/email
+ * Contains the data necessary for creating a new phone/email address associated with a patient.
+ * Phone and Email information is stored in the same table. A patient may have multiple phone/email
  * entries.
  *
  * <pre>
