@@ -11,6 +11,7 @@ services:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
       - 3433:1433
+    mem_limit: 2.5G
 
   liquibase:
     build:
@@ -22,6 +23,7 @@ services:
     depends_on:
       nbs-mssql:
         condition: service_healthy
+    mem_limit: 200M
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1

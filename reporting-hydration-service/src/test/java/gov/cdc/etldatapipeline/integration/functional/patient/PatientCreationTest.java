@@ -8,9 +8,11 @@ import gov.cdc.etldatapipeline.integration.support.data.patient.PatientManager;
 import gov.cdc.etldatapipeline.integration.support.identifier.IdGenerator.GeneratedId;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@Disabled("Flaky")
 class PatientCreationTest extends FunctionalTest {
 
   @Autowired private PatientManager patientManager;

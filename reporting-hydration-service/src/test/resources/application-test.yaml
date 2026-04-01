@@ -23,3 +23,4 @@ spring:
       key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       maxPollIntervalMs: 3000
+      metadata.max.age.ms: 6000
