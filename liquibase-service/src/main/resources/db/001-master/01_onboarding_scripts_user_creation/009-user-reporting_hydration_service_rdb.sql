@@ -97,6 +97,11 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         EXEC sp_executesql @AddRdbRoleWriterJobFlowLog;
         PRINT 'Granted INSERT permission on [dbo].[job_flow_log] to [' + @UserName + ']';
 
+        -- Grant data reader role
+        DECLARE @AddRdbRoleReader NVARCHAR(MAX) = 'EXEC sp_addrolemember ''db_datareader'', ''' + @UserName + '''';
+        EXEC sp_executesql @AddRdbRoleReader;
+        PRINT 'Added [' + @UserName + '] to db_datareader role in ' + @RDB_DB;
+
         -- Grant execute
         DECLARE @GrantExecute NVARCHAR(MAX) = 'GRANT EXECUTE TO [' + @UserName + ']';
         EXEC sp_executesql @GrantExecute;
