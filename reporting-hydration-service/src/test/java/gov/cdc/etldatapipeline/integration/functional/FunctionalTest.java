@@ -4,6 +4,7 @@ import java.io.File;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +16,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Tag("Functional")
 public abstract class FunctionalTest {
 
   private static final Logger logger = LoggerFactory.getLogger(FunctionalTest.class);
