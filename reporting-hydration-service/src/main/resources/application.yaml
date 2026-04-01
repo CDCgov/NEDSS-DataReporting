@@ -5,6 +5,7 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
     group-id: ${KAFKA_CONSUMER_APP:hydration-consumer-app}
+    dlt-group-id: rtr-dlt-group
     producer:
       value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
       key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
@@ -17,6 +18,7 @@ spring:
         act-relationship: ${TOPIC_NBS_ACT_RELATIONSHIP:nbs_Act_relationship}
         auth-user: ${TOPIC_NBS_AUTH_USER:nbs_Auth_user}
         ct-contact: ${TOPIC_NBS_CT_CONTACT:nbs_CT_contact}
+        datamart: ${TOPIC_NBS_DATAMART:nbs_Datamart}
         intervention: ${TOPIC_NBS_INTERVENTION:nbs_Intervention}
         interview: ${TOPIC_NBS_INTERVIEW:nbs_Interview}
         notification: ${TOPIC_NBS_NOTIFICATION:nbs_Notification}
@@ -50,12 +52,15 @@ spring:
         observation-numeric: ${TOPIC_NRT_OBSERVATION_NUMERIC:nrt_observation_numeric}
         observation-reason: ${TOPIC_NRT_OBSERVATION_REASON:nrt_observation_reason}
         observation-txt: ${TOPIC_NRT_OBSERVATION_TXT:nrt_observation_txt}
+        odse-nbs-page: ${TOPIC_NRT_ODSE_NBS_PAGE:nrt_odse_NBS_page}
+        odse-state-defined-field-metadata: ${TOPIC_NRT_ODSE_STATE_DEFINED_FIELD_METADATA:nrt_odse_state_defined_field_metadata}
         organization: ${TOPIC_NRT_ORGANIZATION:nrt_organization}
         page-case-answer: ${TOPIC_NRT_PAGE_CASE_ANSWER:nrt_page_case_answer}
         patient: ${TOPIC_NRT_PATIENT:nrt_patient}
         place: ${TOPIC_NRT_PLACE:nrt_place}
         place-tele: ${TOPIC_NRT_PLACE_TELE:nrt_place_tele}
         provider: ${TOPIC_NRT_PROVIDER:nrt_provider}
+        srte-condition-code: ${TOPIC_NRT_CONDITION_CODE:nrt_srte_Condition_code}
         treatment: ${TOPIC_NRT_TREATMENT:nrt_treatment}
         vaccination: ${TOPIC_NRT_VACCINATION:nrt_vaccination}
         vaccination-answer: ${TOPIC_NRT_VACCINATION_ANSWER:nrt_vaccination_answer}
@@ -80,6 +85,7 @@ featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
+  service-disable: ${FF_SERVICE_DISABLE:false}
 
 management:
   endpoint:
@@ -93,6 +99,13 @@ management:
     metrics:
       export:
         enabled: true
+
+service:
+  fixed-delay:
+    cached-ids: ${FIXED_DELAY_ID:20000}
+    datamart: ${FIXED_DELAY_DM:60000}
+    backfill: ${FIXED_DELAY_BF:600000}
+  max-retries: ${MAX_RETRIES:3}
 
 server:
   port: "8095"
