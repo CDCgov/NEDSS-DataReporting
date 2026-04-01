@@ -1,10 +1,10 @@
 spring:
   datasource:
-    rdb:
+    default:
       username: reporting_hydration_service_rdb
       password: reporting_hydration_service
       url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-    odse:
+    admin:
       username: sa
       password: PizzaIsGood33!
       url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;

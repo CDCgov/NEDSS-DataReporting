@@ -12,7 +12,7 @@ public class DPatientFinder {
 
   private final JdbcClient client;
 
-  public DPatientFinder(@Qualifier("rdbClient") JdbcClient client) {
+  public DPatientFinder(@Qualifier("adminClient") JdbcClient client) {
     this.client = client;
   }
 
@@ -21,7 +21,7 @@ public class DPatientFinder {
       SELECT TOP 1
           patient_key
       FROM
-          D_PATIENT
+          RDB_Modern..D_PATIENT
       WHERE
           patient_mpr_uid = :id
       """;

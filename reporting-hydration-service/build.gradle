@@ -87,7 +87,6 @@ dependencies {
     testImplementation 'org.awaitility:awaitility:4.2.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:testcontainers:2.0.3'
 }
 

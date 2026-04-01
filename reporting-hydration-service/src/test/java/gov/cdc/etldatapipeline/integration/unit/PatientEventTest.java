@@ -39,11 +39,9 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 /** Validates the sp_patient_event stored procedure */
-@SpringBootTest
 class PatientEventTest extends UnitTest {
 
   private final PatientRepository patientRepository;
@@ -55,9 +53,9 @@ class PatientEventTest extends UnitTest {
 
   PatientEventTest(
       @Autowired final PatientRepository patientRepository,
-      @Qualifier("odseClient") JdbcClient odseClient) {
+      @Qualifier("adminClient") JdbcClient adminClient) {
     this.patientRepository = patientRepository;
-    this.patientManager = new PatientManager(odseClient);
+    this.patientManager = new PatientManager(adminClient);
   }
 
   @Test

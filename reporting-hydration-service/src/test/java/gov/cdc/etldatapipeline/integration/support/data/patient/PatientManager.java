@@ -47,7 +47,7 @@ public class PatientManager {
   private final PatientMortalityManager mortalityManager;
   private final PatientGeneralInfoManager generalInfoManager;
 
-  public PatientManager(@Qualifier("odseClient") final JdbcClient client) {
+  public PatientManager(@Qualifier("adminClient") final JdbcClient client) {
     this.client = client;
     this.idGenerator = new IdGenerator(client);
     this.nameManager = new PatientNameManager(client);

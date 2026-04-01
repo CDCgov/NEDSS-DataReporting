@@ -16,7 +16,7 @@ public class DataSourceConfig {
   // Standard RTR datasource with appropriate permissions
   @Bean
   @Primary
-  @ConfigurationProperties("spring.datasource.rdb")
+  @ConfigurationProperties("spring.datasource.default")
   public DataSourceProperties dataSourceProperties() {
     return new DataSourceProperties();
   }
@@ -28,25 +28,25 @@ public class DataSourceConfig {
   }
 
   @Primary
-  @Bean("rdbClient")
+  @Bean
   public JdbcClient jdbcClient(DataSource dataSource) {
     return JdbcClient.create(dataSource);
   }
 
   // Testing specific datasource with db ownership
-  @Bean("odseProperties")
-  @ConfigurationProperties("spring.datasource.odse")
+  @Bean("adminProperties")
+  @ConfigurationProperties("spring.datasource.admin")
   public DataSourceProperties testDataSourceProperties() {
     return new DataSourceProperties();
   }
 
-  @Bean("odseDataSource")
-  public DataSource testDataSource(@Qualifier("odseProperties") DataSourceProperties properties) {
+  @Bean("adminDataSource")
+  public DataSource testDataSource(@Qualifier("adminProperties") DataSourceProperties properties) {
     return properties.initializeDataSourceBuilder().build();
   }
 
-  @Bean("odseClient")
-  public JdbcClient testJdbcClient(@Qualifier("odseDataSource") DataSource dataSource) {
+  @Bean("adminClient")
+  public JdbcClient testJdbcClient(@Qualifier("adminDataSource") DataSource dataSource) {
     return JdbcClient.create(dataSource);
   }
 }
