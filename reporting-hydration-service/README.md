@@ -30,3 +30,11 @@ Run `reporting-hydration-service` using the following Gradle command:
 ```shell
 ./gradlew reporting-hydration-service:bootRun --args='--spring.profiles.active=local'
 ```
+
+If you would like to debug with your IDE, use the following:
+
+```shell
+./gradlew reporting-hydration-service:bootRun --args='--spring.profiles.active=local' --debug-jvm
+```
+
+and you can attach your debugger on port `5005`.
