@@ -52,6 +52,14 @@ class UidGeneratorEntry:
     uid_suffix_cd: str
 
 
+@dataclass(frozen=True)
+class ManagedCdcState:
+    """Persist exactly which CDC state the tracer owns so later cleanup does not overreach."""
+
+    tables: list[dict[str, str]]
+    database_cdc_enabled_by_tracer: bool
+
+
 class SqlCmdError(RuntimeError):
     """Differentiate sqlcmd failures from normal control-flow exits."""
 
@@ -72,6 +80,9 @@ DEFAULT_STATE_FILE_DIR = LOCAL_RUNTIME_DIR
 LEGACY_STATE_FILE = LOCAL_TRACING_DIR / "enabled-cdc-tables.json"
 REPLAY_METADATA_CACHE_PREFIX = "replay-metadata-"
 REPLAY_METADATA_CACHE_VERSION = 2
+EXCLUDED_TRACE_TABLES = {
+    ("dbo", "job_flow_log"),
+}
 
 class SqlCmdClient:
     """Centralize sqlcmd execution so every metadata and CDC query uses the same calling convention."""
@@ -248,6 +259,12 @@ def serialize_table_key(schema_name: str, table_name: str) -> str:
     return f"{schema_name}.{table_name}"
 
 
+def is_excluded_trace_table(schema_name: str, table_name: str) -> bool:
+    """Keep known high-noise internal tables out of CDC enablement and capture output."""
+
+    return (schema_name.lower(), table_name.lower()) in EXCLUDED_TRACE_TABLES
+
+
 def value_key(value: object) -> str:
     """Create stable dictionary keys for replay values so `1`, `"1"`, and `NULL` stay distinct."""
 
@@ -274,11 +291,11 @@ def normalize_table_entries(entries: Iterable[dict[str, str]]) -> list[dict[str,
     return normalized
 
 
-def read_state_file_tables(
+def read_state_file(
     state_file: Path,
     expected_database: str,
     strict_database_match: bool,
-) -> list[dict[str, str]] | None:
+) -> ManagedCdcState | None:
     """Validate persisted cleanup state before using it to disable CDC on live tables."""
 
     if not state_file.exists():
@@ -307,27 +324,35 @@ def read_state_file_tables(
     normalized = normalize_table_entries(raw_tables)
     if len(normalized) != len(raw_tables):
         raise SystemExit(f"State file contains invalid table entries: {state_file}")
-    return normalized
+
+    database_cdc_enabled_by_tracer = payload.get("database_cdc_enabled_by_tracer", False)
+    if not isinstance(database_cdc_enabled_by_tracer, bool):
+        raise SystemExit(f"State file database CDC flag is invalid: {state_file}")
+
+    return ManagedCdcState(
+        tables=normalized,
+        database_cdc_enabled_by_tracer=database_cdc_enabled_by_tracer,
+    )
 
 
 def load_managed_tables(
     state_file: Path,
     database: str,
     legacy_state_file: Path | None = None,
-) -> tuple[list[dict[str, str]], Path | None]:
+) -> tuple[ManagedCdcState, Path | None]:
     """Prefer database-scoped cleanup state but fall back to the legacy file so older runs remain recoverable."""
 
-    tables = read_state_file_tables(state_file, database, strict_database_match=True)
-    if tables is not None:
-        return tables, state_file
+    state = read_state_file(state_file, database, strict_database_match=True)
+    if state is not None:
+        return state, state_file
 
     if legacy_state_file and legacy_state_file != state_file:
-        legacy_tables = read_state_file_tables(legacy_state_file, database, strict_database_match=False)
-        if legacy_tables is not None:
+        legacy_state = read_state_file(legacy_state_file, database, strict_database_match=False)
+        if legacy_state is not None:
             print(f"Using legacy state file for this run: {legacy_state_file}")
-            return legacy_tables, legacy_state_file
+            return legacy_state, legacy_state_file
 
-    return [], None
+    return ManagedCdcState(tables=[], database_cdc_enabled_by_tracer=False), None
 
 
 def save_managed_tables(
@@ -335,6 +360,7 @@ def save_managed_tables(
     server: str,
     database: str,
     tables: list[dict[str, str]],
+    database_cdc_enabled_by_tracer: bool = False,
     last_run_output_dir: str | None = None,
 ) -> None:
     """Persist only the tables this tracer is responsible for so later cleanup stays safe and targeted."""
@@ -346,6 +372,7 @@ def save_managed_tables(
         "database": database,
         "saved_at_utc": utc_now(),
         "tables": normalized,
+        "database_cdc_enabled_by_tracer": database_cdc_enabled_by_tracer,
     }
     if last_run_output_dir:
         payload["last_run_output_dir"] = last_run_output_dir
@@ -429,6 +456,44 @@ WHERE name = '{sql_quote(database)}';
     return client.query(sql, database="master").strip() == "1"
 
 
+def enable_database_cdc(client: SqlCmdClient, database: str) -> tuple[bool, str]:
+    """Enable database-level CDC in the target database so the tracer can bootstrap itself."""
+
+    sql = """
+SET NOCOUNT ON;
+BEGIN TRY
+    EXEC sys.sp_cdc_enable_db;
+    SELECT 'ENABLED' AS status, '' AS detail;
+END TRY
+BEGIN CATCH
+    SELECT 'SKIPPED' AS status, ERROR_MESSAGE() AS detail;
+END CATCH;
+"""
+    rows = list(read_tsv(client.query(sql, database=database)))
+    if not rows:
+        return False, "No response from SQL Server"
+    return rows[0][0] == "ENABLED", rows[0][1] if len(rows[0]) > 1 else ""
+
+
+def disable_database_cdc(client: SqlCmdClient, database: str) -> tuple[bool, str]:
+    """Disable database-level CDC only when this tracer previously enabled it and cleanup is requested."""
+
+    sql = """
+SET NOCOUNT ON;
+BEGIN TRY
+    EXEC sys.sp_cdc_disable_db;
+    SELECT 'DISABLED' AS status, '' AS detail;
+END TRY
+BEGIN CATCH
+    SELECT 'SKIPPED' AS status, ERROR_MESSAGE() AS detail;
+END CATCH;
+"""
+    rows = list(read_tsv(client.query(sql, database=database)))
+    if not rows:
+        return False, "No response from SQL Server"
+    return rows[0][0] == "DISABLED", rows[0][1] if len(rows[0]) > 1 else ""
+
+
 def fetch_table_statuses(client: SqlCmdClient) -> list[TableStatus]:
     """Snapshot table tracking status once so enablement decisions are based on a consistent baseline."""
 
@@ -466,6 +531,8 @@ ORDER BY s.name, t.name;
 """
     captures = []
     for row in read_tsv(client.query(sql)):
+        if is_excluded_trace_table(row[0], row[1]):
+            continue
         captures.append(CaptureInstance(row[0], row[1], row[2]))
     return captures
 
@@ -590,17 +657,20 @@ ORDER BY s.name, t.name, c.column_id;
 
 
 def fetch_uid_generator_entries(client: SqlCmdClient) -> list[UidGeneratorEntry]:
-    """Read Local_UID_generator so ODSE replay can ask the database for IDs instead of inventing them."""
+    """Read Local_UID_generator when present; some traced databases like RDB_MODERN do not have it."""
 
     sql = """
 SET NOCOUNT ON;
-SELECT
-    ISNULL(class_name_cd, ''),
-    ISNULL(type_cd, ''),
-    ISNULL(UID_prefix_cd, ''),
-    ISNULL(UID_suffix_CD, '')
-FROM dbo.Local_UID_generator
-ORDER BY class_name_cd;
+IF OBJECT_ID(N'dbo.Local_UID_generator', N'U') IS NOT NULL
+BEGIN
+    SELECT
+        ISNULL(class_name_cd, ''),
+        ISNULL(type_cd, ''),
+        ISNULL(UID_prefix_cd, ''),
+        ISNULL(UID_suffix_CD, '')
+    FROM dbo.Local_UID_generator
+    ORDER BY class_name_cd;
+END;
 """
     entries: list[UidGeneratorEntry] = []
     for row in read_tsv(client.query(sql)):
@@ -1930,8 +2000,9 @@ def run_disable_only(
 ) -> int:
     """Let the tracer act as a cleanup tool when the user wants to turn CDC back off later."""
 
-    managed_tables, loaded_state_file = load_managed_tables(state_file, args.database, legacy_state_file)
-    if not managed_tables:
+    managed_state, loaded_state_file = load_managed_tables(state_file, args.database, legacy_state_file)
+    managed_tables = managed_state.tables
+    if not managed_tables and not managed_state.database_cdc_enabled_by_tracer:
         print(f"No tracer-managed CDC tables recorded in {state_file}")
         clear_managed_table_files(state_file, loaded_state_file, legacy_state_file)
         return 0
@@ -1939,12 +2010,24 @@ def run_disable_only(
     print(f"Disabling tracer-managed CDC tables from: {loaded_state_file or state_file}")
     print(f"Tables recorded: {len(managed_tables)}")
     remaining_failures = disable_managed_tables(client, managed_tables)
+    database_disable_failed = False
+
+    if not remaining_failures and managed_state.database_cdc_enabled_by_tracer:
+        disabled, detail = disable_database_cdc(client, args.database)
+        if disabled:
+            print(f"Disabled database-level CDC: {args.database}")
+            managed_state = ManagedCdcState(tables=[], database_cdc_enabled_by_tracer=False)
+        else:
+            database_disable_failed = True
+            print(f"Database CDC cleanup failed: {detail}")
+
     if remaining_failures:
         save_managed_tables(
             state_file,
             args.server,
             args.database,
             [{"schema_name": item["schema_name"], "table_name": item["table_name"]} for item in remaining_failures],
+            database_cdc_enabled_by_tracer=managed_state.database_cdc_enabled_by_tracer,
         )
         if loaded_state_file and loaded_state_file != state_file:
             clear_managed_tables(loaded_state_file)
@@ -1952,6 +2035,18 @@ def run_disable_only(
         print("Some tables could not be disabled and remain in the state file:")
         for item in remaining_failures:
             print(f"- {item['schema_name']}.{item['table_name']}: {item['detail']}")
+        return 1
+
+    if database_disable_failed:
+        save_managed_tables(
+            state_file,
+            args.server,
+            args.database,
+            [],
+            database_cdc_enabled_by_tracer=True,
+        )
+        if loaded_state_file and loaded_state_file != state_file:
+            clear_managed_tables(loaded_state_file)
         return 1
 
     clear_managed_table_files(state_file, loaded_state_file, legacy_state_file)
@@ -1970,10 +2065,18 @@ def main() -> int:
     if args.disable_only:
         return run_disable_only(args, client, state_file, legacy_state_file)
 
-    if not fetch_database_cdc_enabled(client, args.database):
-        raise SystemExit(f"Database-level CDC is not enabled for {args.database}. Enable it first, then rerun.")
+    managed_state, loaded_state_file = load_managed_tables(state_file, args.database, legacy_state_file)
+    managed_tables = managed_state.tables
+    database_cdc_enabled_by_tracer = managed_state.database_cdc_enabled_by_tracer
 
-    managed_tables, loaded_state_file = load_managed_tables(state_file, args.database, legacy_state_file)
+    if not fetch_database_cdc_enabled(client, args.database):
+        print(f"Database-level CDC is not enabled for {args.database}; attempting to enable it...")
+        enabled, detail = enable_database_cdc(client, args.database)
+        if not enabled and not fetch_database_cdc_enabled(client, args.database):
+            message = detail.strip() or "Unknown SQL Server error"
+            raise SystemExit(f"Could not enable database-level CDC for {args.database}: {message}")
+        database_cdc_enabled_by_tracer = True
+        print(f"Enabled database-level CDC: {args.database}")
     primary_keys_by_table, identity_columns_by_table, foreign_keys_by_source, column_sql_types, uid_generator_entries = get_replay_metadata(
         client,
         args.database,
@@ -1982,15 +2085,29 @@ def main() -> int:
     initial_statuses = fetch_table_statuses(client)
     initially_tracked_count = sum(1 for item in initial_statuses if item.is_tracked_by_cdc)
 
-    to_enable = [item for item in initial_statuses if not item.is_tracked_by_cdc]
+    excluded_tables = [item for item in initial_statuses if is_excluded_trace_table(item.schema_name, item.table_name)]
+    to_enable = [
+        item
+        for item in initial_statuses
+        if not item.is_tracked_by_cdc and not is_excluded_trace_table(item.schema_name, item.table_name)
+    ]
     enabled_tables: list[dict[str, str]] = []
-    skipped_tables: list[dict[str, str]] = []
+    skipped_tables: list[dict[str, str]] = [
+        {
+            "schema_name": item.schema_name,
+            "table_name": item.table_name,
+            "detail": "Excluded from tracing",
+        }
+        for item in excluded_tables
+    ]
     cleanup_failures: list[dict[str, str]] = []
     run_dir: Path | None = None
 
     print(f"Database: {args.database}")
     print(f"Initial CDC-enabled tables: {initially_tracked_count}")
     print(f"Tables to attempt enabling: {len(to_enable)}")
+    if excluded_tables:
+        print(f"Tables excluded from tracing: {len(excluded_tables)}")
     if managed_tables:
         print(f"Tracer-managed tables already recorded: {len(managed_tables)}")
 
@@ -2044,6 +2161,7 @@ def main() -> int:
         manifest = {
             "server": args.server,
             "database": args.database,
+            "database_cdc_enabled_by_tracer": database_cdc_enabled_by_tracer,
             "start_time_utc": start_time_utc,
             "end_time_utc": end_time_utc,
             "start_lsn": start_lsn,
@@ -2086,6 +2204,7 @@ def main() -> int:
                 *[{"schema_name": item["schema_name"], "table_name": item["table_name"]} for item in enabled_tables],
             ]
         )
+        database_cleanup_failed = False
 
         if should_disable_tables(args, len(managed_tables_after_run)):
             cleanup_failures = disable_managed_tables(client, managed_tables_after_run)
@@ -2095,19 +2214,42 @@ def main() -> int:
                     args.server,
                     args.database,
                     [{"schema_name": item["schema_name"], "table_name": item["table_name"]} for item in cleanup_failures],
-                    str(run_dir) if run_dir else None,
+                    database_cdc_enabled_by_tracer=database_cdc_enabled_by_tracer,
+                    last_run_output_dir=str(run_dir) if run_dir else None,
                 )
                 if loaded_state_file and loaded_state_file != state_file:
                     clear_managed_tables(loaded_state_file)
             else:
-                clear_managed_table_files(state_file, loaded_state_file, legacy_state_file)
-        elif managed_tables_after_run:
+                if database_cdc_enabled_by_tracer:
+                    disabled, detail = disable_database_cdc(client, args.database)
+                    if disabled:
+                        database_cdc_enabled_by_tracer = False
+                        print(f"Disabled database-level CDC: {args.database}")
+                    else:
+                        database_cleanup_failed = True
+                        print(f"Database CDC cleanup failed: {detail}")
+
+                if database_cleanup_failed:
+                    save_managed_tables(
+                        state_file,
+                        args.server,
+                        args.database,
+                        [],
+                        database_cdc_enabled_by_tracer=True,
+                        last_run_output_dir=str(run_dir) if run_dir else None,
+                    )
+                    if loaded_state_file and loaded_state_file != state_file:
+                        clear_managed_tables(loaded_state_file)
+                else:
+                    clear_managed_table_files(state_file, loaded_state_file, legacy_state_file)
+        elif managed_tables_after_run or database_cdc_enabled_by_tracer:
             save_managed_tables(
                 state_file,
                 args.server,
                 args.database,
                 managed_tables_after_run,
-                str(run_dir) if run_dir else None,
+                database_cdc_enabled_by_tracer=database_cdc_enabled_by_tracer,
+                last_run_output_dir=str(run_dir) if run_dir else None,
             )
             if loaded_state_file and loaded_state_file != state_file:
                 clear_managed_tables(loaded_state_file)
@@ -2120,6 +2262,9 @@ def main() -> int:
             print("Cleanup failures detected:")
             for item in cleanup_failures:
                 print(f"- {item['schema_name']}.{item['table_name']}: {item['detail']}")
+        if database_cleanup_failed:
+            print()
+            print(f"Cleanup failure detected: database-level CDC is still enabled for {args.database}")
 
     return 0
 

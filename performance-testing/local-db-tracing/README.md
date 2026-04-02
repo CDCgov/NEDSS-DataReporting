@@ -69,6 +69,7 @@ Notes
 
 - The script expects database-level CDC to already be enabled for the database named by `--database`.
 - Some tables may be skipped if SQL Server rejects CDC enablement for them.
+- Internal noise tables such as dbo.job_flow_log are excluded from tracing and are never CDC-enabled by the script.
 - changes.jsonl is the best file to mine later when turning observed behavior into tests.
 - The reconstructed SQL now allocates fresh root primary key values and threads them through related inserts by following cached PK/FK metadata, which avoids rerun conflicts on captured IDs.
 - The reconstructed SQL forces any column whose name ends with `user_id` to use `9999` so replayed audit values do not depend on the captured environment.
