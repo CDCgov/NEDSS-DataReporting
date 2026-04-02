@@ -35,6 +35,25 @@ RTR uses Kafka to stream change events from transactional data sources into repo
 
 To set up a local development environment follow the guide [here](documentation/DevSetup.md)
 
+## Testing
+Each service has its own suite of test cases. These can be executed with the following command.
+
+```sh
+./gradlew clean test
+``` 
+
+The `reporting-hydration-service` has an additional set of containerized tests that are divided into `unit` and `functional` tests. These unit tests validate stored procedures and the functional tests validate the entire data flow pipeline.
+
+To run only the `unit` tests in the reporting-hydration-service
+```sh
+./gradlew clean reporting-hydration-service:test-unit
+```
+
+To run only the `functional` tests in the reporting-hydration-service
+```sh
+./gradlew clean reporting-hydration-service:test-functional
+```
+
 ## Code Quality and Formatting
 
 This project uses [Spotless](https://github.com/diffplug/spotless) with [Google Java Format](https://github.com/google/google-java-format) to maintain consistent code style.
