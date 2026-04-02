@@ -10,7 +10,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from time import perf_counter
+from time import perf_counter, sleep
 from typing import Iterable
 
 
@@ -83,6 +83,9 @@ REPLAY_METADATA_CACHE_VERSION = 2
 EXCLUDED_TRACE_TABLES = {
     ("dbo", "job_flow_log"),
 }
+DEFAULT_POST_PROCESSING_CONTAINER_PREFIX = "nedss-datareporting-post-processing-service"
+DEFAULT_POST_PROCESSING_IDLE_MESSAGE = "No ids to process from the topics."
+DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS = 3
 
 class SqlCmdClient:
     """Centralize sqlcmd execution so every metadata and CDC query uses the same calling convention."""
@@ -184,6 +187,27 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Disable the tracer-managed CDC tables recorded in the state file, then exit",
     )
+    parser.add_argument(
+        "--skip-post-processing-wait",
+        action="store_true",
+        help="Do not wait for the post-processing service container to report it is idle after the UI action",
+    )
+    parser.add_argument(
+        "--post-processing-container-prefix",
+        default=DEFAULT_POST_PROCESSING_CONTAINER_PREFIX,
+        help="Docker container-name prefix to watch after the UI action",
+    )
+    parser.add_argument(
+        "--post-processing-idle-message",
+        default=DEFAULT_POST_PROCESSING_IDLE_MESSAGE,
+        help="Container log message that indicates post-processing is idle",
+    )
+    parser.add_argument(
+        "--post-processing-wait-timeout",
+        type=int,
+        default=DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS,
+        help="Seconds to wait for the post-processing service idle log message after the UI action",
+    )
     return parser.parse_args()
 
 
@@ -218,6 +242,86 @@ def log_progress(action: str) -> None:
     """Emit timestamped progress so long CDC phases can be correlated with the current bottleneck."""
 
     print(f"[{progress_now()}] {action}")
+
+
+def run_process(command: list[str]) -> subprocess.CompletedProcess[str]:
+    """Run a local process with consistent text handling for docker and sqlcmd helper commands."""
+
+    return subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+
+
+def find_container_name_by_prefix(docker_executable: str, prefix: str) -> tuple[str | None, str]:
+    """Resolve the post-processing container dynamically because Compose appends numeric suffixes."""
+
+    result = run_process([docker_executable, "ps", "--format", "{{.Names}}"])
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "docker ps failed").strip()
+        return None, detail
+
+    names = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    matches = sorted(name for name in names if name.startswith(prefix))
+    if not matches:
+        return None, f"No running container name starts with {prefix}"
+    if len(matches) > 1:
+        return matches[0], f"Multiple containers matched; using {matches[0]}"
+    return matches[0], ""
+
+
+def fetch_container_logs_since(docker_executable: str, container_name: str, since_utc: str) -> tuple[bool, str]:
+    """Read recent container logs from the action window without tailing indefinitely."""
+
+    result = run_process([docker_executable, "logs", "--since", since_utc, container_name])
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "docker logs failed").strip()
+        return False, detail
+    return True, "\n".join(part for part in (result.stdout, result.stderr) if part)
+
+
+def wait_for_post_processing_idle(
+    container_prefix: str,
+    idle_message: str,
+    since_utc: str,
+    timeout_seconds: int,
+) -> None:
+    """Pause capture until the post-processing container reports its queue is drained."""
+
+    docker_executable = shutil.which("docker")
+    if not docker_executable:
+        print("docker executable not found; skipping post-processing log wait")
+        return
+
+    container_name, detail = find_container_name_by_prefix(docker_executable, container_prefix)
+    if container_name is None:
+        print(f"Skipping post-processing log wait: {detail}")
+        return
+
+    if detail:
+        print(detail)
+
+    log_progress(
+        f"Waiting up to {timeout_seconds}s for {container_name} to log: {idle_message}"
+    )
+    deadline = perf_counter() + max(timeout_seconds, 0)
+    while perf_counter() <= deadline:
+        success, output = fetch_container_logs_since(docker_executable, container_name, since_utc)
+        if not success:
+            print(f"Skipping post-processing log wait: {output}")
+            return
+        if idle_message in output:
+            log_progress(f"Observed idle message in {container_name}")
+            return
+        sleep(2)
+
+    print(
+        f"Timed out after {timeout_seconds}s waiting for {container_name} to log the idle message; continuing capture"
+    )
 
 
 def database_name_slug(database: str) -> str:
@@ -2127,7 +2231,15 @@ def main() -> int:
         print()
         print(f"Start time (UTC): {start_time_utc}")
         print(f"Start LSN:        {start_lsn}")
+        post_processing_wait_since_utc = utc_now()
         input("Perform the UI action now, then press Enter to capture changes... ")
+        if not args.skip_post_processing_wait:
+            wait_for_post_processing_idle(
+                args.post_processing_container_prefix,
+                args.post_processing_idle_message,
+                post_processing_wait_since_utc,
+                args.post_processing_wait_timeout,
+            )
 
         end_lsn = fetch_max_lsn(client)
         end_time_utc = utc_now()

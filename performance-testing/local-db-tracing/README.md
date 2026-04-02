@@ -77,12 +77,14 @@ Notes
 - CDC rows are now fetched in one batched query after first checking which capture instances actually have rows in the LSN window, which avoids spawning one `sqlcmd` process per table and skips JSON reconstruction for unchanged tables.
 - Reconstructed SQL is only generated when the capture actually contains replayable row operations.
 - The default cleanup mode is interactive: the script asks whether to disable tracer-managed CDC tables at the end.
+- After you press Enter at the UI-action prompt, the script waits for the running post-processing container whose name starts with `nedss-datareporting-post-processing-service` to log `No ids to process from the topics.` before capturing the end LSN.
 - If you answer `n`, the script writes the tracer-managed table list to a database-specific state file like enabled-cdc-tables-NBS_ODSE.json so a later `--disable-only` run can turn CDC back off.
 - `--cleanup yes` skips the prompt and always disables tracer-managed tables after the run.
 - `--cleanup no` and `--keep-enabled` skip cleanup and persist the tracer-managed table list.
+- `--skip-post-processing-wait` disables the Docker log wait if you are not running the service in Compose or want to capture immediately.
 - The tracer logic is database-agnostic; switching from `NBS_ODSE` to `RDB_Modern` is just a `--database` change as long as CDC is enabled there.
 - If an older shared state file named enabled-cdc-tables.json exists in the top-level local-db-tracing folder, the tracer will still read it once and migrate future saves to .local/.
-- Hint: wait for the PostProcessingService to report "No ids to process from the topics." to ensure all changes are captured.
+- Hint: use `--post-processing-wait-timeout` or `--post-processing-container-prefix` if your local Compose project name differs.
 
 To Do:
 
