@@ -1836,6 +1836,7 @@ def reconstruct_insert_sql(
         return None
 
     prelude_lines: list[str] = []
+    post_insert_lines: list[str] = []
     if generated_primary_key and generated_primary_key in row:
         generated_value = row[generated_primary_key]
         variable_name = variable_name_for_value(table_key[0], table_key[1], generated_primary_key, generated_value)
@@ -1903,10 +1904,10 @@ def reconstruct_insert_sql(
     if generated_primary_key and generated_primary_key in row:
         variable_name = variable_registry[(table_key[0], table_key[1], generated_primary_key, value_key(row[generated_primary_key]))]
         output_table_name = output_table_name_for_variable(variable_name)
-        prelude_lines.append(f"SELECT TOP 1 {variable_name} = [value] FROM {output_table_name};")
+        post_insert_lines.append(f"SELECT TOP 1 {variable_name} = [value] FROM {output_table_name};")
 
     register_direct_primary_key_references(table_key, row, primary_keys_by_table, variable_registry, foreign_keys_by_source)
-    return "\n".join([*prelude_lines, insert_sql])
+    return "\n".join([*prelude_lines, insert_sql, *post_insert_lines])
 
 
 def reconstruct_delete_sql(
