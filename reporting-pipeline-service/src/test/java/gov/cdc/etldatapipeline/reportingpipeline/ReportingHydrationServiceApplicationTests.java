@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.reportinghydration;
+package gov.cdc.etldatapipeline.reportingpipeline;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;

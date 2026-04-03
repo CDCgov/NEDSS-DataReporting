@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.reportinghydration.integration;
+package gov.cdc.etldatapipeline.reportingpipeline.integration;
 
 import java.io.File;
 import java.time.Duration;
@@ -21,14 +21,14 @@ public abstract class AbstractIntegrationTest {
   protected static final ComposeContainer environment =
       new ComposeContainer(new File("../docker-compose.yaml"))
           .withRemoveVolumes(true) // ensures volumes are purged at tearDown
-          .withServices("nbs-mssql", "liquibase", "kafka", "reporting-hydration-service")
+          .withServices("nbs-mssql", "liquibase", "kafka", "reporting-pipeline-service")
           .waitingFor("nbs-mssql", Wait.forHealthcheck())
           .waitingFor("kafka", Wait.forHealthcheck())
-          .waitingFor("reporting-hydration-service", Wait.forHealthcheck())
+          .waitingFor("reporting-pipeline-service", Wait.forHealthcheck())
           .withLogConsumer("nbs-mssql", consumer)
           .withLogConsumer("liquibase", consumer)
           .withLogConsumer("kafka", consumer)
-          .withLogConsumer("reporting-hydration-service", consumer)
+          .withLogConsumer("reporting-pipeline-service", consumer)
           .withStartupTimeout(Duration.ofMinutes(5));
 
   @BeforeAll

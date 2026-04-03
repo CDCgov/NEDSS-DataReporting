@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.reportinghydration.util;
+package gov.cdc.etldatapipeline.reportingpipeline.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
