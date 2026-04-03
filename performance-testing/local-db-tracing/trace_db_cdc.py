@@ -79,13 +79,14 @@ LOCAL_RUNTIME_DIR = LOCAL_TRACING_DIR / ".local"
 DEFAULT_STATE_FILE_DIR = LOCAL_RUNTIME_DIR
 LEGACY_STATE_FILE = LOCAL_TRACING_DIR / "enabled-cdc-tables.json"
 REPLAY_METADATA_CACHE_PREFIX = "replay-metadata-"
-REPLAY_METADATA_CACHE_VERSION = 2
+REPLAY_METADATA_CACHE_VERSION = 3
 EXCLUDED_TRACE_TABLES = {
     ("dbo", "job_flow_log"),
 }
 DEFAULT_POST_PROCESSING_CONTAINER_PREFIX = "nedss-datareporting-post-processing-service"
 DEFAULT_POST_PROCESSING_IDLE_MESSAGE = "No ids to process from the topics."
 DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS = 3
+DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS = 5
 
 class SqlCmdClient:
     """Centralize sqlcmd execution so every metadata and CDC query uses the same calling convention."""
@@ -208,6 +209,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS,
         help="Seconds to wait for the post-processing service idle log message after the UI action",
     )
+    parser.add_argument(
+        "--post-processing-initial-wait",
+        type=int,
+        default=DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS,
+        help="Seconds to wait before polling post-processing logs so stale idle messages do not win immediately",
+    )
     return parser.parse_args()
 
 
@@ -284,11 +291,35 @@ def fetch_container_logs_since(docker_executable: str, container_name: str, sinc
     return True, "\n".join(part for part in (result.stdout, result.stderr) if part)
 
 
+def extract_meaningful_log_lines(output: str) -> list[str]:
+    """Normalize docker log output into comparable lines for idle-transition detection."""
+
+    return [line.strip() for line in output.splitlines() if line.strip()]
+
+
+def has_post_processing_idle_transition(lines: list[str], idle_message: str) -> bool:
+    """Require a non-idle line before the final idle line so a preexisting idle message does not satisfy the wait."""
+
+    if not lines:
+        return False
+
+    idle_indexes = [index for index, line in enumerate(lines) if idle_message in line]
+    if not idle_indexes:
+        return False
+
+    last_idle_index = idle_indexes[-1]
+    if idle_message not in lines[-1]:
+        return False
+
+    return any(idle_message not in line for line in lines[:last_idle_index])
+
+
 def wait_for_post_processing_idle(
     container_prefix: str,
     idle_message: str,
     since_utc: str,
     timeout_seconds: int,
+    initial_wait_seconds: int,
 ) -> None:
     """Pause capture until the post-processing container reports its queue is drained."""
 
@@ -308,13 +339,18 @@ def wait_for_post_processing_idle(
     log_progress(
         f"Waiting up to {timeout_seconds}s for {container_name} to log: {idle_message}"
     )
+    if initial_wait_seconds > 0:
+        log_progress(f"Sleeping {initial_wait_seconds}s before polling logs")
+        sleep(initial_wait_seconds)
+
     deadline = perf_counter() + max(timeout_seconds, 0)
     while perf_counter() <= deadline:
         success, output = fetch_container_logs_since(docker_executable, container_name, since_utc)
         if not success:
             print(f"Skipping post-processing log wait: {output}")
             return
-        if idle_message in output:
+        lines = extract_meaningful_log_lines(output)
+        if has_post_processing_idle_transition(lines, idle_message):
             log_progress(f"Observed idle message in {container_name}")
             return
         sleep(2)
@@ -760,6 +796,28 @@ ORDER BY s.name, t.name, c.column_id;
     return column_types
 
 
+def fetch_generated_always_columns(client: SqlCmdClient) -> set[tuple[str, str, str]]:
+    """Detect columns SQL Server manages automatically so replay SQL does not try to assign them."""
+
+    sql = """
+SET NOCOUNT ON;
+SELECT
+    s.name,
+    t.name,
+    c.name
+FROM sys.tables t
+JOIN sys.schemas s ON s.schema_id = t.schema_id
+JOIN sys.columns c ON c.object_id = t.object_id
+WHERE t.is_ms_shipped = 0
+  AND c.generated_always_type <> 0
+ORDER BY s.name, t.name, c.column_id;
+"""
+    generated_columns: set[tuple[str, str, str]] = set()
+    for row in read_tsv(client.query(sql)):
+        generated_columns.add((row[0], row[1], row[2]))
+    return generated_columns
+
+
 def fetch_uid_generator_entries(client: SqlCmdClient) -> list[UidGeneratorEntry]:
     """Read Local_UID_generator when present; some traced databases like RDB_MODERN do not have it."""
 
@@ -796,6 +854,7 @@ def save_replay_metadata_cache(
     identity_columns_by_table: dict[tuple[str, str], list[str]],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     column_sql_types: dict[tuple[str, str, str], str],
+    generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
 ) -> None:
     """Persist replay metadata so repeated trace runs do not keep rediscovering the same schema facts."""
@@ -842,6 +901,14 @@ def save_replay_metadata_cache(
             }
             for (schema_name, table_name, column_name), sql_type in sorted(column_sql_types.items())
         ],
+        "generated_always_columns": [
+            {
+                "schema_name": schema_name,
+                "table_name": table_name,
+                "column_name": column_name,
+            }
+            for (schema_name, table_name, column_name) in sorted(generated_always_columns)
+        ],
         "uid_generators": [
             {
                 "class_name_cd": entry.class_name_cd,
@@ -864,6 +931,7 @@ def load_replay_metadata_cache(
     dict[tuple[str, str], list[str]],
     dict[tuple[str, str, str], tuple[str, str, str]],
     dict[tuple[str, str, str], str],
+    set[tuple[str, str, str]],
     list[UidGeneratorEntry],
 ] | None:
     """Reject stale or mismatched replay caches so generated SQL never depends on wrong schema metadata."""
@@ -886,7 +954,7 @@ def load_replay_metadata_cache(
     if payload_database != database:
         return None
 
-    if "uid_generators" not in payload:
+    if "uid_generators" not in payload or "generated_always_columns" not in payload:
         return None
 
     primary_keys_by_table: dict[tuple[str, str], list[str]] = {}
@@ -909,6 +977,10 @@ def load_replay_metadata_cache(
     for item in payload.get("column_sql_types", []):
         column_sql_types[(item["schema_name"], item["table_name"], item["column_name"])] = item["sql_type"]
 
+    generated_always_columns: set[tuple[str, str, str]] = set()
+    for item in payload.get("generated_always_columns", []):
+        generated_always_columns.add((item["schema_name"], item["table_name"], item["column_name"]))
+
     uid_generator_entries: list[UidGeneratorEntry] = []
     for item in payload.get("uid_generators", []):
         uid_generator_entries.append(
@@ -920,7 +992,7 @@ def load_replay_metadata_cache(
             )
         )
 
-    return primary_keys_by_table, identity_columns_by_table, foreign_keys_by_source, column_sql_types, uid_generator_entries
+    return primary_keys_by_table, identity_columns_by_table, foreign_keys_by_source, column_sql_types, generated_always_columns, uid_generator_entries
 
 
 def get_replay_metadata(
@@ -931,6 +1003,7 @@ def get_replay_metadata(
     dict[tuple[str, str], list[str]],
     dict[tuple[str, str, str], tuple[str, str, str]],
     dict[tuple[str, str, str], str],
+    set[tuple[str, str, str]],
     list[UidGeneratorEntry],
 ]:
     """Hide cache-vs-query decisions from the rest of the tracer so replay always gets a complete metadata bundle."""
@@ -944,6 +1017,7 @@ def get_replay_metadata(
     identity_columns_by_table = fetch_identity_columns(client)
     foreign_keys_by_source = fetch_foreign_key_columns(client)
     column_sql_types = fetch_column_sql_types(client)
+    generated_always_columns = fetch_generated_always_columns(client)
     uid_generator_entries = fetch_uid_generator_entries(client)
     save_replay_metadata_cache(
         cache_file,
@@ -952,9 +1026,10 @@ def get_replay_metadata(
         identity_columns_by_table,
         foreign_keys_by_source,
         column_sql_types,
+        generated_always_columns,
         uid_generator_entries,
     )
-    return primary_keys_by_table, identity_columns_by_table, foreign_keys_by_source, column_sql_types, uid_generator_entries
+    return primary_keys_by_table, identity_columns_by_table, foreign_keys_by_source, column_sql_types, generated_always_columns, uid_generator_entries
 
 
 def fetch_max_lsn(client: SqlCmdClient) -> str:
@@ -1388,6 +1463,34 @@ def output_table_name_for_variable(variable_name: str) -> str:
     return "@" + sanitize_sql_name(variable_name.lstrip("@") + "_output")
 
 
+def register_nrt_patient_mpr_uid_reference(
+    table_key: tuple[str, str],
+    row: dict[str, object],
+    variable_registry: dict[tuple[str, str, str, str], str],
+    column_sql_types: dict[tuple[str, str, str], str],
+    prelude_lines: list[str],
+) -> None:
+    """Treat nrt_patient.patient_mpr_uid as replay-generated from the new patient_uid so downstream rows reuse it."""
+
+    if table_key != ("dbo", "nrt_patient"):
+        return
+    if "patient_uid" not in row or "patient_mpr_uid" not in row:
+        return
+
+    patient_uid_reference = variable_registry.get((table_key[0], table_key[1], "patient_uid", value_key(row["patient_uid"])))
+    if not patient_uid_reference:
+        return
+
+    patient_mpr_uid_key = (table_key[0], table_key[1], "patient_mpr_uid", value_key(row["patient_mpr_uid"]))
+    if patient_mpr_uid_key in variable_registry:
+        return
+
+    variable_name = variable_name_for_value(table_key[0], table_key[1], "patient_mpr_uid", row["patient_mpr_uid"])
+    sql_type = column_sql_types.get((table_key[0], table_key[1], "patient_mpr_uid"), "bigint")
+    prelude_lines.append(f"DECLARE {variable_name} {sql_type} = {patient_uid_reference} + 1;")
+    variable_registry[patient_mpr_uid_key] = variable_name
+
+
 def infer_uid_class_from_local_id(local_id: object, uid_generator_entries: list[UidGeneratorEntry]) -> str | None:
     """Infer allocator class from ODSE-style local IDs when the table name alone is not enough."""
 
@@ -1495,10 +1598,12 @@ def resolve_suffix_variable_reference(
     # Some tables share a generated key value through subtype/supertype naming that is not represented as a direct FK.
     matches: list[str] = []
     serialized_value = value_key(value)
+    normalized_column_name = column_name.lower()
     for (_, _, registered_column, registered_value), variable_name in variable_registry.items():
         if registered_value != serialized_value:
             continue
-        if registered_column.endswith(column_name) or column_name.endswith(registered_column):
+        normalized_registered_column = registered_column.lower()
+        if normalized_registered_column.endswith(normalized_column_name) or normalized_column_name.endswith(normalized_registered_column):
             matches.append(variable_name)
 
     unique_matches = list(dict.fromkeys(matches))
@@ -1617,6 +1722,16 @@ def sql_update_assignment_expression(
     return sql_replay_assignment_expression(table_key, column_name, value, variable_registry, foreign_keys_by_source)
 
 
+def is_generated_always_column(
+    table_key: tuple[str, str],
+    column_name: str,
+    generated_always_columns: set[tuple[str, str, str]],
+) -> bool:
+    """Skip replay assignments for columns SQL Server computes automatically."""
+
+    return (table_key[0], table_key[1], column_name) in generated_always_columns
+
+
 def select_key_columns(
     row: dict[str, object],
     preferred_columns: list[str],
@@ -1673,6 +1788,7 @@ def reconstruct_insert_sql(
     identity_columns_by_table: dict[tuple[str, str], list[str]],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     column_sql_types: dict[tuple[str, str, str], str],
+    generated_always_columns: set[tuple[str, str, str]],
     variable_registry: dict[tuple[str, str, str, str], str],
     uid_class_registry: dict[tuple[str, str, str, str], str],
 ) -> str | None:
@@ -1710,7 +1826,12 @@ def reconstruct_insert_sql(
             ):
                 root_generated_primary_key = primary_key_column
 
-    columns = [column_name for column_name in data_columns(row) if column_name != generated_primary_key]
+    columns = [
+        column_name
+        for column_name in data_columns(row)
+        if column_name != generated_primary_key
+        and not is_generated_always_column(table_key, column_name, generated_always_columns)
+    ]
     if not columns:
         return None
 
@@ -1746,6 +1867,14 @@ def reconstruct_insert_sql(
             prelude_lines.append(
                 f"DECLARE {variable_name} {sql_type} = (SELECT ISNULL(MAX({quote_identifier(root_generated_primary_key)}), 0) + 1 FROM {quote_identifier(table_key[0])}.{quote_identifier(table_key[1])});"
             )
+
+    register_nrt_patient_mpr_uid_reference(
+        table_key,
+        row,
+        variable_registry,
+        column_sql_types,
+        prelude_lines,
+    )
 
     column_sql = ", ".join(quote_identifier(column_name) for column_name in columns)
     value_sql = ", ".join(
@@ -1801,6 +1930,7 @@ def reconstruct_update_sql(
     before_record: dict[str, object],
     after_record: dict[str, object],
     primary_key_columns: list[str],
+    generated_always_columns: set[tuple[str, str, str]],
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
 ) -> str | None:
@@ -1817,6 +1947,7 @@ def reconstruct_update_sql(
         column_name
         for column_name in data_columns(after_row)
         if before_row.get(column_name) != after_row.get(column_name)
+        and not is_generated_always_column(table_key, column_name, generated_always_columns)
     ]
     if not changed_columns:
         return None
@@ -1856,6 +1987,7 @@ def reconstruct_sql_statements(
     identity_columns_by_table: dict[tuple[str, str], list[str]],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     column_sql_types: dict[tuple[str, str, str], str],
+    generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
 ) -> list[str]:
     """Walk the CDC stream once and emit replay SQL in the same logical order the source database saw."""
@@ -1888,6 +2020,7 @@ def reconstruct_sql_statements(
                 identity_columns_by_table,
                 foreign_keys_by_source,
                 column_sql_types,
+                generated_always_columns,
                 variable_registry,
                 uid_class_registry,
             )
@@ -1919,6 +2052,7 @@ def reconstruct_sql_statements(
                 before_record,
                 record,
                 primary_key_columns,
+                generated_always_columns,
                 variable_registry,
                 foreign_keys_by_source,
             )
@@ -2024,6 +2158,7 @@ def write_summary(
     identity_columns_by_table: dict[tuple[str, str], list[str]],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     column_sql_types: dict[tuple[str, str, str], str],
+    generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
 ) -> None:
     """Produce one human-friendly artifact that explains both what changed and how to replay it."""
@@ -2085,6 +2220,7 @@ def write_summary(
             identity_columns_by_table,
             foreign_keys_by_source,
             column_sql_types,
+            generated_always_columns,
             uid_generator_entries,
         )
     if reconstructed_sql:
@@ -2181,7 +2317,7 @@ def main() -> int:
             raise SystemExit(f"Could not enable database-level CDC for {args.database}: {message}")
         database_cdc_enabled_by_tracer = True
         print(f"Enabled database-level CDC: {args.database}")
-    primary_keys_by_table, identity_columns_by_table, foreign_keys_by_source, column_sql_types, uid_generator_entries = get_replay_metadata(
+    primary_keys_by_table, identity_columns_by_table, foreign_keys_by_source, column_sql_types, generated_always_columns, uid_generator_entries = get_replay_metadata(
         client,
         args.database,
     )
@@ -2239,6 +2375,7 @@ def main() -> int:
                 args.post_processing_idle_message,
                 post_processing_wait_since_utc,
                 args.post_processing_wait_timeout,
+                args.post_processing_initial_wait,
             )
 
         end_lsn = fetch_max_lsn(client)
@@ -2302,6 +2439,7 @@ def main() -> int:
             identity_columns_by_table,
             foreign_keys_by_source,
             column_sql_types,
+            generated_always_columns,
             uid_generator_entries,
         )
         log_progress("Finished writing output artifacts")
