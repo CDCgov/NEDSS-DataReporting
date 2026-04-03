@@ -77,7 +77,7 @@ if not exist logs mkdir logs
 set "LOG_FILE=logs\manual_run_log_!LOG_DATE!_%DATABASE%.log"
 
 REM Determine paths to search for scripts
-set "PATHS=tables views functions routines remove"
+set "PATHS=. tables views functions routines remove"
 if /i "!load_data!"=="true" (
     set "PATHS=."
 )
