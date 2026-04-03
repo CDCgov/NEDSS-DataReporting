@@ -1594,6 +1594,10 @@ def register_nrt_patient_mpr_uid_reference(
     prelude_lines.append(f"DECLARE {variable_name} {sql_type} = {patient_uid_reference} + 1;")
     variable_registry[patient_mpr_uid_key] = variable_name
 
+    # Downstream rows sometimes refer to the MPR patient through patient_uid-shaped columns.
+    patient_uid_alias_key = (table_key[0], table_key[1], "patient_uid", value_key(row["patient_mpr_uid"]))
+    variable_registry.setdefault(patient_uid_alias_key, variable_name)
+
 
 def infer_uid_class_from_local_id(local_id: object, uid_generator_entries: list[UidGeneratorEntry]) -> str | None:
     """Infer allocator class from ODSE-style local IDs when the table name alone is not enough."""
