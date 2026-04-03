@@ -2,7 +2,6 @@ package gov.cdc.etldatapipeline.integration.unit;
 
 import java.io.File;
 import java.time.Duration;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +14,7 @@ import org.testcontainers.utility.DockerImageName;
 @ActiveProfiles("test")
 @Tag("Unit")
 public abstract class UnitTest {
+  private static boolean started = false;
 
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
@@ -27,13 +27,11 @@ public abstract class UnitTest {
 
   @BeforeAll
   static void setUp() {
-    // Start up necessary containers
-    environment.start();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    // Stop all containers
-    environment.stop();
+    // Start up necessary containers if they are not already running.
+    // ComposeContainer does not allow container reuse natively
+    if (!started) {
+      environment.start();
+      started = true;
+    }
   }
 }

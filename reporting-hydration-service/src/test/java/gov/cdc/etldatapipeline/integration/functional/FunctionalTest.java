@@ -2,7 +2,6 @@ package gov.cdc.etldatapipeline.integration.functional;
 
 import java.io.File;
 import java.time.Duration;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
@@ -21,6 +20,7 @@ public abstract class FunctionalTest {
 
   private static final Logger logger = LoggerFactory.getLogger(FunctionalTest.class);
   private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(logger);
+  private static boolean started = false;
 
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
@@ -41,13 +41,11 @@ public abstract class FunctionalTest {
 
   @BeforeAll
   static void setUp() {
-    // Start up necessary containers
-    environment.start();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    // Stop all containers
-    environment.stop();
+    // Start up necessary containers if they are not already running.
+    // ComposeContainer does not allow container reuse natively
+    if (!started) {
+      environment.start();
+      started = true;
+    }
   }
 }
