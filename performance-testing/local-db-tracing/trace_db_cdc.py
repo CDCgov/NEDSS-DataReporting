@@ -245,6 +245,19 @@ def sql_quote(value: str) -> str:
     return value.replace("'", "''")
 
 
+def sql_identifier(value: str) -> str:
+    """Bracket-escape SQL Server identifiers before embedding database names in administrative SQL."""
+
+    return value.replace("]", "]]")
+
+
+def output_name_component(value: str) -> str:
+    """Keep run-directory suffixes readable while stripping characters Windows paths cannot use."""
+
+    cleaned = re.sub(r'[^A-Za-z0-9._-]+', '_', value.strip())
+    return cleaned or "database"
+
+
 def require_sqlcmd(executable: str) -> str:
     """Fail early when sqlcmd is missing so the user does not get partial tracing state."""
 
@@ -703,20 +716,44 @@ WHERE name = '{sql_quote(database)}';
 def enable_database_cdc(client: SqlCmdClient, database: str) -> tuple[bool, str]:
     """Enable database-level CDC in the target database so the tracer can bootstrap itself."""
 
-    sql = """
+    database_literal = sql_quote(database)
+    database_identifier = sql_identifier(database)
+    sql = f"""
 SET NOCOUNT ON;
+USE [{database_identifier}];
 BEGIN TRY
     EXEC sys.sp_cdc_enable_db;
     SELECT 'ENABLED' AS status, '' AS detail;
 END TRY
 BEGIN CATCH
-    SELECT 'SKIPPED' AS status, ERROR_MESSAGE() AS detail;
+    IF ERROR_MESSAGE() LIKE '%principal "dbo" does not exist%'
+    BEGIN
+        BEGIN TRY
+            EXEC (N'ALTER AUTHORIZATION ON DATABASE::[{database_identifier}] TO [sa];');
+            EXEC sys.sp_cdc_enable_db;
+            SELECT 'ENABLED' AS status, 'Assigned database owner to sa before enabling CDC.' AS detail;
+        END TRY
+        BEGIN CATCH
+            SELECT 'SKIPPED' AS status, ERROR_MESSAGE() AS detail;
+        END CATCH;
+    END
+    ELSE
+    BEGIN
+        SELECT 'SKIPPED' AS status, ERROR_MESSAGE() AS detail;
+    END
 END CATCH;
+SELECT CASE WHEN is_cdc_enabled = 1 THEN '1' ELSE '0' END
+FROM sys.databases
+WHERE name = '{database_literal}';
 """
-    rows = list(read_tsv(client.query(sql, database=database)))
+    rows = list(read_tsv(client.query(sql, database="master")))
     if not rows:
         return False, "No response from SQL Server"
-    return rows[0][0] == "ENABLED", rows[0][1] if len(rows[0]) > 1 else ""
+
+    status = rows[0][0]
+    detail = rows[0][1] if len(rows[0]) > 1 else ""
+    is_enabled = rows[-1][0] == "1"
+    return status == "ENABLED" or is_enabled, detail
 
 
 def disable_database_cdc(client: SqlCmdClient, database: str) -> tuple[bool, str]:
@@ -2667,7 +2704,7 @@ def main() -> int:
 
         log_progress("Creating output directory")
         output_root = Path(args.output_dir)
-        run_dir = output_root / datetime.now().strftime("%Y%m%d-%H%M%S")
+        run_dir = output_root / f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{output_name_component(args.database)}"
         run_dir.mkdir(parents=True, exist_ok=True)
 
         managed_tables_after_run = normalize_table_entries(
