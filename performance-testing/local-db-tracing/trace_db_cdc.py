@@ -2484,6 +2484,7 @@ def write_summary(
         lines.append("")
 
     lines.extend([
+        f"Database:    {manifest['database']}",
         f"Run started: {manifest['start_time_utc']}",
         f"Run ended:   {manifest['end_time_utc']}",
         f"Start LSN:   {manifest['start_lsn']}",
@@ -2532,6 +2533,8 @@ def write_summary(
     if reconstructed_sql:
         lines.append("")
         lines.append("Reconstructed SQL:")
+        lines.append(f"USE {quote_identifier(str(manifest['database']))};")
+        lines.append("")
         for statement in reconstructed_sql:
             lines.append(statement)
 
