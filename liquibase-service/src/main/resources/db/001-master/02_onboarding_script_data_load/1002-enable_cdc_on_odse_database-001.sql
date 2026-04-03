@@ -1,23 +1,19 @@
---Use admin user created in 000-create_rtr_admin_user-001.sql
-use nbs_odse;
-if exists (select 1
-           from sys.databases
-           where name = 'rdsadmin') -- for aws
-    begin
-
-        if not exists (select 1 FROM sys.databases WHERE is_cdc_enabled = 1 and name = 'nbs_odse')
-            begin
-                exec msdb.dbo.rds_cdc_enable_db 'nbs_odse';
-            end;
-    end;
-else
-    begin
-        if not exists (select 1 FROM sys.databases WHERE is_cdc_enabled = 1 and name = 'nbs_odse')
-            begin
-                exec sys.sp_cdc_enable_db;
-            end;
-    end;
-
-select name, is_cdc_enabled
-from sys.databases
-where name = 'nbs_odse';
+IF (SELECT is_cdc_enabled FROM sys.databases WHERE name = 'NBS_ODSE') = 1
+BEGIN
+    PRINT 'CDC is already enabled for NBS_ODSE';
+END
+ELSE
+BEGIN
+    IF EXISTS (SELECT 1 FROM sys.databases WHERE NAME = 'rdsadmin') -- for aws
+    BEGIN
+        PRINT 'AWS RDS detected. Enabling CDC for NBS_ODSE using rds_cdc_enable_db';
+        EXEC msdb.dbo.rds_cdc_enable_db 'NBS_ODSE';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Standard SQL Server detected. Enabling CDC for NBS_ODSE using sp_cdc_enable_db';
+        -- Use dynamic SQL for USE to ensure context switch happens correctly within the block
+        EXEC('USE [NBS_ODSE]; EXEC sys.sp_cdc_enable_db;');
+    END
+END
+GO
