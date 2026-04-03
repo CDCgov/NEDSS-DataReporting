@@ -74,6 +74,7 @@ Notes
 - The reconstructed SQL now allocates fresh root primary key values and threads them through related inserts by following cached PK/FK metadata, which avoids rerun conflicts on captured IDs.
 - The reconstructed SQL forces any column whose name ends with `user_id` to use `9999` so replayed audit values do not depend on the captured environment.
 - The reconstructed SQL also allocates replay-time `version_ctrl_nbr` values for `_hist` inserts and increments `version_ctrl_nbr` on live-row updates so reruns do not collide with existing history-row primary keys.
+- Semantic key aliases that are not represented as SQL foreign keys can be declared in `known_replay_associations.json`; the tracer uses those mappings for replay-time substitution before falling back to FK metadata or suffix matching.
 - CDC rows are now fetched in one batched query after first checking which capture instances actually have rows in the LSN window, which avoids spawning one `sqlcmd` process per table and skips JSON reconstruction for unchanged tables.
 - Reconstructed SQL is only generated when the capture actually contains replayable row operations.
 - The default cleanup mode is interactive: the script asks whether to disable tracer-managed CDC tables at the end.
@@ -82,6 +83,7 @@ Notes
 - `--cleanup yes` skips the prompt and always disables tracer-managed tables after the run.
 - `--cleanup no` and `--keep-enabled` skip cleanup and persist the tracer-managed table list.
 - `--skip-post-processing-wait` disables the Docker log wait if you are not running the service in Compose or want to capture immediately.
+- `--known-associations-file` overrides the default `performance-testing/local-db-tracing/known_replay_associations.json` file if you want to test extra replay mappings locally.
 - The tracer logic is database-agnostic; switching from `NBS_ODSE` to `RDB_Modern` is just a `--database` change as long as CDC is enabled there.
 - If an older shared state file named enabled-cdc-tables.json exists in the top-level local-db-tracing folder, the tracer will still read it once and migrate future saves to .local/.
 - Hint: use `--post-processing-wait-timeout` or `--post-processing-container-prefix` if your local Compose project name differs.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -60,6 +61,19 @@ class ManagedCdcState:
     database_cdc_enabled_by_tracer: bool
 
 
+@dataclass(frozen=True)
+class KnownAssociation:
+    """Describe a row-conditional source-to-target key mapping when the schema does not expose an FK."""
+
+    source_schema: str
+    source_table: str
+    source_column: str
+    target_schema: str
+    target_table: str
+    target_column: str
+    when: dict[str, object]
+
+
 class SqlCmdError(RuntimeError):
     """Differentiate sqlcmd failures from normal control-flow exits."""
 
@@ -78,6 +92,7 @@ LOCAL_TRACING_DIR = Path("performance-testing") / "local-db-tracing"
 LOCAL_RUNTIME_DIR = LOCAL_TRACING_DIR / ".local"
 DEFAULT_STATE_FILE_DIR = LOCAL_RUNTIME_DIR
 LEGACY_STATE_FILE = LOCAL_TRACING_DIR / "enabled-cdc-tables.json"
+DEFAULT_KNOWN_ASSOCIATIONS_FILE = LOCAL_TRACING_DIR / "known_replay_associations.json"
 REPLAY_METADATA_CACHE_PREFIX = "replay-metadata-"
 REPLAY_METADATA_CACHE_VERSION = 3
 EXCLUDED_TRACE_TABLES = {
@@ -85,8 +100,9 @@ EXCLUDED_TRACE_TABLES = {
 }
 DEFAULT_POST_PROCESSING_CONTAINER_PREFIX = "nedss-datareporting-post-processing-service"
 DEFAULT_POST_PROCESSING_IDLE_MESSAGE = "No ids to process from the topics."
-DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS = 3
+DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS = 180
 DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS = 5
+LOG_EVENT_TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
 
 class SqlCmdClient:
     """Centralize sqlcmd execution so every metadata and CDC query uses the same calling convention."""
@@ -173,6 +189,11 @@ def parse_args() -> argparse.Namespace:
         help="JSON file used to track tracer-managed CDC tables left enabled across runs; defaults to enabled-cdc-tables-<database>.json",
     )
     parser.add_argument(
+        "--known-associations-file",
+        default=str(DEFAULT_KNOWN_ASSOCIATIONS_FILE),
+        help="JSON file describing replay-time key associations for polymorphic columns such as EVENT_UID",
+    )
+    parser.add_argument(
         "--cleanup",
         choices=("ask", "yes", "no"),
         default="ask",
@@ -251,6 +272,60 @@ def log_progress(action: str) -> None:
     print(f"[{progress_now()}] {action}")
 
 
+def parse_known_association_entry(item: object, index: int) -> KnownAssociation:
+    """Validate one association entry so replay-time lookups fail fast on malformed config."""
+
+    if not isinstance(item, dict):
+        raise SystemExit(f"Known association #{index} must be a JSON object")
+
+    source = item.get("source")
+    target = item.get("target")
+    when = item.get("when", {})
+
+    if not isinstance(source, dict) or not isinstance(target, dict):
+        raise SystemExit(f"Known association #{index} must contain object-valued 'source' and 'target' entries")
+    if not isinstance(when, dict):
+        raise SystemExit(f"Known association #{index} has an invalid 'when' value; expected an object")
+
+    required_keys = ("schema", "table", "column")
+    missing_source_keys = [key for key in required_keys if not isinstance(source.get(key), str) or not source.get(key)]
+    missing_target_keys = [key for key in required_keys if not isinstance(target.get(key), str) or not target.get(key)]
+    if missing_source_keys:
+        missing = ", ".join(missing_source_keys)
+        raise SystemExit(f"Known association #{index} source is missing required string fields: {missing}")
+    if missing_target_keys:
+        missing = ", ".join(missing_target_keys)
+        raise SystemExit(f"Known association #{index} target is missing required string fields: {missing}")
+
+    return KnownAssociation(
+        source_schema=source["schema"],
+        source_table=source["table"],
+        source_column=source["column"],
+        target_schema=target["schema"],
+        target_table=target["table"],
+        target_column=target["column"],
+        when=when,
+    )
+
+
+def load_known_associations(path: Path) -> list[KnownAssociation]:
+    """Load optional semantic key mappings so replay can resolve polymorphic identifiers."""
+
+    if not path.exists():
+        return []
+
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Could not parse known associations file {path}: {exc}") from exc
+
+    entries = payload.get("associations") if isinstance(payload, dict) else payload
+    if not isinstance(entries, list):
+        raise SystemExit(f"Known associations file {path} must contain a top-level array or an 'associations' array")
+
+    return [parse_known_association_entry(item, index + 1) for index, item in enumerate(entries)]
+
+
 def run_process(command: list[str]) -> subprocess.CompletedProcess[str]:
     """Run a local process with consistent text handling for docker and sqlcmd helper commands."""
 
@@ -291,21 +366,55 @@ def fetch_container_logs_since(docker_executable: str, container_name: str, sinc
     return True, "\n".join(part for part in (result.stdout, result.stderr) if part)
 
 
-def extract_meaningful_log_lines(output: str) -> list[str]:
-    """Normalize docker log output into comparable lines for tail-based idle detection."""
+def extract_meaningful_log_events(output: str) -> list[str]:
+    """Group multiline docker log output into complete timestamped events for tail-based idle detection."""
 
-    return [line.strip() for line in output.splitlines() if line.strip()]
+    events: list[str] = []
+    current_event_lines: list[str] = []
+    for raw_line in output.splitlines():
+        line = raw_line.rstrip()
+        if not line.strip():
+            continue
+
+        if LOG_EVENT_TIMESTAMP_PATTERN.match(line):
+            if current_event_lines:
+                events.append("\n".join(current_event_lines))
+            current_event_lines = [line]
+            continue
+
+        if current_event_lines:
+            current_event_lines.append(line)
+        else:
+            current_event_lines = [line]
+
+    if current_event_lines:
+        events.append("\n".join(current_event_lines))
+    return events
 
 
-def has_post_processing_idle_tail(lines: list[str], idle_message: str) -> bool:
-    """Proceed only when the latest two meaningful log lines are non-idle followed by idle."""
+def has_post_processing_idle_tail(events: list[str], idle_message: str) -> bool:
+    """Proceed only when the latest two complete log events are non-idle followed by idle."""
 
-    if len(lines) < 2:
+    if len(events) < 2:
         return False
 
-    previous_line = lines[-2]
-    last_line = lines[-1]
-    return not previous_line.endswith(idle_message) and last_line.endswith(idle_message)
+    previous_event = events[-2].rstrip()
+    last_event = events[-1].rstrip()
+    return not previous_event.endswith(idle_message) and last_event.endswith(idle_message)
+
+
+def print_post_processing_log_tail(events: list[str]) -> None:
+    """Print the current log tail being evaluated so wait timing can be debugged from stdout."""
+
+    if len(events) >= 2:
+        print(f"Post-processing second-last line: {events[-2]}")
+        print(f"Post-processing last line:        {events[-1]}")
+    elif len(events) == 1:
+        print("Post-processing second-last line: <missing>")
+        print(f"Post-processing last line:        {events[-1]}")
+    else:
+        print("Post-processing second-last line: <missing>")
+        print("Post-processing last line:        <missing>")
 
 
 def wait_for_post_processing_idle(
@@ -343,8 +452,9 @@ def wait_for_post_processing_idle(
         if not success:
             print(f"Skipping post-processing log wait: {output}")
             return
-        lines = extract_meaningful_log_lines(output)
-        if has_post_processing_idle_tail(lines, idle_message):
+        events = extract_meaningful_log_events(output)
+        print_post_processing_log_tail(events)
+        if has_post_processing_idle_tail(events, idle_message):
             log_progress(f"Observed idle message in {container_name}")
             return
         sleep(2)
@@ -1582,6 +1692,93 @@ def generated_primary_key_column(
     return primary_key_column
 
 
+def should_generate_non_identity_primary_key(
+    primary_key_column: str,
+    column_sql_type: str,
+    table_key: tuple[str, str],
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+) -> bool:
+    """Restrict max+1 key synthesis to UID-style roots; dimension-style *_KEY rows should keep captured keys unless mapped."""
+
+    if not is_numeric_sql_type(column_sql_type):
+        return False
+    if (table_key[0], table_key[1], primary_key_column) in foreign_keys_by_source:
+        return False
+    return not primary_key_column.lower().endswith("_key")
+
+
+def lookup_variable_reference(
+    variable_registry: dict[tuple[str, str, str, str], str],
+    schema_name: str,
+    table_name: str,
+    column_name: str,
+    serialized_value: str,
+) -> str | None:
+    """Resolve a registered replay variable while tolerating casing differences in metadata and CDC payloads."""
+
+    direct_match = variable_registry.get((schema_name, table_name, column_name, serialized_value))
+    if direct_match:
+        return direct_match
+
+    normalized_schema = schema_name.lower()
+    normalized_table = table_name.lower()
+    normalized_column = column_name.lower()
+    for (registered_schema, registered_table, registered_column, registered_value), variable_name in variable_registry.items():
+        if registered_value != serialized_value:
+            continue
+        if (
+            registered_schema.lower() == normalized_schema
+            and registered_table.lower() == normalized_table
+            and registered_column.lower() == normalized_column
+        ):
+            return variable_name
+    return None
+
+
+def row_matches_association(row: dict[str, object], association: KnownAssociation) -> bool:
+    """Apply row-level discriminator filters so polymorphic source columns resolve to the right target."""
+
+    for column_name, expected_value in association.when.items():
+        if value_key(row.get(column_name)) != value_key(expected_value):
+            return False
+    return True
+
+
+def resolve_known_association_reference(
+    table_key: tuple[str, str],
+    row: dict[str, object],
+    column_name: str,
+    value: object,
+    variable_registry: dict[tuple[str, str, str, str], str],
+    known_associations: list[KnownAssociation],
+) -> str | None:
+    """Consult user-maintained semantic mappings for columns whose meaning depends on other row values."""
+
+    normalized_schema = table_key[0].lower()
+    normalized_table = table_key[1].lower()
+    normalized_column = column_name.lower()
+    serialized_value = value_key(value)
+    for association in known_associations:
+        if association.source_schema.lower() != normalized_schema:
+            continue
+        if association.source_table.lower() != normalized_table:
+            continue
+        if association.source_column.lower() != normalized_column:
+            continue
+        if not row_matches_association(row, association):
+            continue
+        target_reference = lookup_variable_reference(
+            variable_registry,
+            association.target_schema,
+            association.target_table,
+            association.target_column,
+            serialized_value,
+        )
+        if target_reference:
+            return target_reference
+    return None
+
+
 def resolve_suffix_variable_reference(
     column_name: str,
     value: object,
@@ -1608,23 +1805,43 @@ def resolve_suffix_variable_reference(
 
 def resolve_variable_reference(
     table_key: tuple[str, str],
+    row: dict[str, object],
     column_name: str,
     value: object,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str | None:
     """Prefer a replay variable over a literal whenever the captured value represents a generated key."""
 
-    direct_key = (table_key[0], table_key[1], column_name, value_key(value))
-    if direct_key in variable_registry:
-        return variable_registry[direct_key]
+    serialized_value = value_key(value)
+    direct_reference = lookup_variable_reference(variable_registry, table_key[0], table_key[1], column_name, serialized_value)
+    if direct_reference:
+        return direct_reference
+
+    associated_reference = resolve_known_association_reference(
+        table_key,
+        row,
+        column_name,
+        value,
+        variable_registry,
+        known_associations,
+    )
+    if associated_reference:
+        return associated_reference
 
     # Prefer the schema FK when it exists, then fall back to the looser suffix match for subtype tables.
     foreign_key_target = foreign_keys_by_source.get((table_key[0], table_key[1], column_name))
     if foreign_key_target is None:
         return resolve_suffix_variable_reference(column_name, value, variable_registry)
 
-    target_reference = variable_registry.get((foreign_key_target[0], foreign_key_target[1], foreign_key_target[2], value_key(value)))
+    target_reference = lookup_variable_reference(
+        variable_registry,
+        foreign_key_target[0],
+        foreign_key_target[1],
+        foreign_key_target[2],
+        serialized_value,
+    )
     if target_reference:
         return target_reference
 
@@ -1633,14 +1850,24 @@ def resolve_variable_reference(
 
 def sql_value_expression(
     table_key: tuple[str, str],
+    row: dict[str, object],
     column_name: str,
     value: object,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str:
     """Centralize value rendering so replay stays consistent about literals versus generated-key variables."""
 
-    variable_reference = resolve_variable_reference(table_key, column_name, value, variable_registry, foreign_keys_by_source)
+    variable_reference = resolve_variable_reference(
+        table_key,
+        row,
+        column_name,
+        value,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+    )
     if variable_reference:
         return variable_reference
     return sql_literal(value)
@@ -1648,16 +1875,18 @@ def sql_value_expression(
 
 def sql_replay_assignment_expression(
     table_key: tuple[str, str],
+    row: dict[str, object],
     column_name: str,
     value: object,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str:
     """Normalize environment-specific audit users while preserving existing replay key substitution logic."""
 
     if is_user_id_column(column_name):
         return "9999"
-    return sql_value_expression(table_key, column_name, value, variable_registry, foreign_keys_by_source)
+    return sql_value_expression(table_key, row, column_name, value, variable_registry, foreign_keys_by_source, known_associations)
 
 
 def build_version_lookup_predicates(
@@ -1666,13 +1895,14 @@ def build_version_lookup_predicates(
     primary_keys_by_table: dict[tuple[str, str], list[str]],
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str:
     """Match existing versioned rows on the stable key columns so replay can pick the next version number."""
 
     key_columns = [column_name for column_name in primary_keys_by_table.get(table_key, []) if not is_version_column(column_name)]
     if not key_columns:
         key_columns = [column_name for column_name in data_columns(row) if not is_version_column(column_name)]
-    return build_where_clause(table_key, row, key_columns, variable_registry, foreign_keys_by_source)
+    return build_where_clause(table_key, row, key_columns, variable_registry, foreign_keys_by_source, known_associations)
 
 
 def sql_insert_assignment_expression(
@@ -1683,6 +1913,7 @@ def sql_insert_assignment_expression(
     primary_keys_by_table: dict[tuple[str, str], list[str]],
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str:
     """Allocate replay-safe insert values for environment-specific users and versioned history rows."""
 
@@ -1693,27 +1924,30 @@ def sql_insert_assignment_expression(
             primary_keys_by_table,
             variable_registry,
             foreign_keys_by_source,
+            known_associations,
         )
         return (
             f"(SELECT ISNULL(MAX({quote_identifier(column_name)}), 0) + 1 "
             f"FROM {quote_identifier(table_key[0])}.{quote_identifier(table_key[1])} "
             f"WHERE {predicates})"
         )
-    return sql_replay_assignment_expression(table_key, column_name, value, variable_registry, foreign_keys_by_source)
+    return sql_replay_assignment_expression(table_key, row, column_name, value, variable_registry, foreign_keys_by_source, known_associations)
 
 
 def sql_update_assignment_expression(
     table_key: tuple[str, str],
+    row: dict[str, object],
     column_name: str,
     value: object,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str:
     """Allocate replay-safe update values for row versions while preserving existing substitution rules."""
 
     if is_version_column(column_name):
         return f"ISNULL({quote_identifier(column_name)}, 0) + 1"
-    return sql_replay_assignment_expression(table_key, column_name, value, variable_registry, foreign_keys_by_source)
+    return sql_replay_assignment_expression(table_key, row, column_name, value, variable_registry, foreign_keys_by_source, known_associations)
 
 
 def is_generated_always_column(
@@ -1744,6 +1978,7 @@ def build_where_clause(
     key_columns: list[str],
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str:
     """Build predicates from replay-aware key expressions so updates and deletes follow regenerated IDs."""
 
@@ -1754,7 +1989,7 @@ def build_where_clause(
             predicates.append(f"{quote_identifier(column_name)} IS NULL")
         else:
             predicates.append(
-                f"{quote_identifier(column_name)} = {sql_value_expression(table_key, column_name, value, variable_registry, foreign_keys_by_source)}"
+                f"{quote_identifier(column_name)} = {sql_value_expression(table_key, row, column_name, value, variable_registry, foreign_keys_by_source, known_associations)}"
             )
     return " AND ".join(predicates) if predicates else "1 = 0"
 
@@ -1765,13 +2000,22 @@ def register_direct_primary_key_references(
     primary_keys_by_table: dict[tuple[str, str], list[str]],
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> None:
     """Backfill PK lookups after an insert so later rows can reuse the same generated value."""
 
     for column_name in primary_keys_by_table.get(table_key, []):
         if column_name not in row:
             continue
-        variable_reference = resolve_variable_reference(table_key, column_name, row[column_name], variable_registry, foreign_keys_by_source)
+        variable_reference = resolve_variable_reference(
+            table_key,
+            row,
+            column_name,
+            row[column_name],
+            variable_registry,
+            foreign_keys_by_source,
+            known_associations,
+        )
         if variable_reference:
             variable_registry[(table_key[0], table_key[1], column_name, value_key(row[column_name]))] = variable_reference
 
@@ -1785,6 +2029,7 @@ def reconstruct_insert_sql(
     generated_always_columns: set[tuple[str, str, str]],
     variable_registry: dict[tuple[str, str, str, str], str],
     uid_class_registry: dict[tuple[str, str, str, str], str],
+    known_associations: list[KnownAssociation],
 ) -> str | None:
     """Rebuild inserts in a rerunnable form, replacing captured generated keys with replay-time variables."""
 
@@ -1802,10 +2047,12 @@ def reconstruct_insert_sql(
         primary_key_column = primary_key_columns[0]
         existing_primary_key_variable = resolve_variable_reference(
             table_key,
+            row,
             primary_key_column,
             row[primary_key_column],
             variable_registry,
             foreign_keys_by_source,
+            known_associations,
         )
         if existing_primary_key_variable:
             variable_registry[(table_key[0], table_key[1], primary_key_column, value_key(row[primary_key_column]))] = (
@@ -1814,9 +2061,11 @@ def reconstruct_insert_sql(
         elif generated_primary_key is None:
             # Non-identity root tables still need a synthetic variable so dependent inserts can refer to the same replay value.
             column_sql_type = column_sql_types.get((table_key[0], table_key[1], primary_key_column), "")
-            if (
-                is_numeric_sql_type(column_sql_type)
-                and (table_key[0], table_key[1], primary_key_column) not in foreign_keys_by_source
+            if should_generate_non_identity_primary_key(
+                primary_key_column,
+                column_sql_type,
+                table_key,
+                foreign_keys_by_source,
             ):
                 root_generated_primary_key = primary_key_column
 
@@ -1881,6 +2130,7 @@ def reconstruct_insert_sql(
             primary_keys_by_table,
             variable_registry,
             foreign_keys_by_source,
+            known_associations,
         )
         for column_name in columns
     )
@@ -1900,7 +2150,14 @@ def reconstruct_insert_sql(
         output_table_name = output_table_name_for_variable(variable_name)
         post_insert_lines.append(f"SELECT TOP 1 {variable_name} = [value] FROM {output_table_name};")
 
-    register_direct_primary_key_references(table_key, row, primary_keys_by_table, variable_registry, foreign_keys_by_source)
+    register_direct_primary_key_references(
+        table_key,
+        row,
+        primary_keys_by_table,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+    )
     return "\n".join([*prelude_lines, insert_sql, *post_insert_lines])
 
 
@@ -1909,6 +2166,7 @@ def reconstruct_delete_sql(
     primary_key_columns: list[str],
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str | None:
     """Rebuild deletes against replay-aware keys so cleanup operations target regenerated rows."""
 
@@ -1917,7 +2175,7 @@ def reconstruct_delete_sql(
         return None
     table_key = (str(record["schema_name"]), str(record["table_name"]))
     key_columns = select_key_columns(row, primary_key_columns)
-    where_clause = build_where_clause(table_key, row, key_columns, variable_registry, foreign_keys_by_source)
+    where_clause = build_where_clause(table_key, row, key_columns, variable_registry, foreign_keys_by_source, known_associations)
     return f"DELETE FROM {quote_identifier(str(record['schema_name']))}.{quote_identifier(str(record['table_name']))} WHERE {where_clause};"
 
 
@@ -1928,6 +2186,7 @@ def reconstruct_update_sql(
     generated_always_columns: set[tuple[str, str, str]],
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
 ) -> str | None:
     """Collapse CDC before/after images into one UPDATE statement that preserves replay key substitutions."""
 
@@ -1948,11 +2207,11 @@ def reconstruct_update_sql(
         return None
 
     set_clause = ", ".join(
-        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, column_name, after_row.get(column_name), variable_registry, foreign_keys_by_source)}"
+        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, after_row, column_name, after_row.get(column_name), variable_registry, foreign_keys_by_source, known_associations)}"
         for column_name in changed_columns
     )
     key_columns = select_key_columns(before_row, primary_key_columns)
-    where_clause = build_where_clause(table_key, before_row, key_columns, variable_registry, foreign_keys_by_source)
+    where_clause = build_where_clause(table_key, before_row, key_columns, variable_registry, foreign_keys_by_source, known_associations)
     return (
         f"UPDATE {quote_identifier(str(after_record['schema_name']))}.{quote_identifier(str(after_record['table_name']))} "
         f"SET {set_clause} WHERE {where_clause};"
@@ -1984,6 +2243,7 @@ def reconstruct_sql_statements(
     column_sql_types: dict[tuple[str, str, str], str],
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
+    known_associations: list[KnownAssociation],
 ) -> list[str]:
     """Walk the CDC stream once and emit replay SQL in the same logical order the source database saw."""
 
@@ -2018,13 +2278,20 @@ def reconstruct_sql_statements(
                 generated_always_columns,
                 variable_registry,
                 uid_class_registry,
+                known_associations,
             )
             if sql_statement:
                 last_table_key = append_sql_statement(statements, last_table_key, table_key, sql_statement)
             continue
 
         if operation == "delete":
-            sql_statement = reconstruct_delete_sql(record, primary_key_columns, variable_registry, foreign_keys_by_source)
+            sql_statement = reconstruct_delete_sql(
+                record,
+                primary_key_columns,
+                variable_registry,
+                foreign_keys_by_source,
+                known_associations,
+            )
             if sql_statement:
                 last_table_key = append_sql_statement(statements, last_table_key, table_key, sql_statement)
             continue
@@ -2050,6 +2317,7 @@ def reconstruct_sql_statements(
                 generated_always_columns,
                 variable_registry,
                 foreign_keys_by_source,
+                known_associations,
             )
             if sql_statement:
                 last_table_key = append_sql_statement(statements, last_table_key, table_key, sql_statement)
@@ -2155,6 +2423,7 @@ def write_summary(
     column_sql_types: dict[tuple[str, str, str], str],
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
+    known_associations: list[KnownAssociation],
 ) -> None:
     """Produce one human-friendly artifact that explains both what changed and how to replay it."""
 
@@ -2217,6 +2486,7 @@ def write_summary(
             column_sql_types,
             generated_always_columns,
             uid_generator_entries,
+            known_associations,
         )
     if reconstructed_sql:
         lines.append("")
@@ -2296,6 +2566,7 @@ def main() -> int:
     executable = require_sqlcmd(args.sqlcmd)
     client = SqlCmdClient(executable, args.server, args.database, args.user, args.password)
     state_file, legacy_state_file = resolve_state_files(args)
+    known_associations = load_known_associations(Path(args.known_associations_file))
 
     if args.disable_only:
         return run_disable_only(args, client, state_file, legacy_state_file)
@@ -2436,6 +2707,7 @@ def main() -> int:
             column_sql_types,
             generated_always_columns,
             uid_generator_entries,
+            known_associations,
         )
         log_progress("Finished writing output artifacts")
 
