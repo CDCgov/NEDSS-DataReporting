@@ -12,13 +12,7 @@
 1. [kafka](../docker-compose.yaml) - Message broker
 1. [kafka-connect](../containers/kafka-connect/Dockerfile) - Reads from the `nrt_*` topics and inserts into `rdb_modern` tables. Requires POST of [mssql-connector.json](../containers/kafka-connect/mssql-connector.json) after container start up.
 1. [debezium](../docker-compose.yaml) - Reads Change Data Capture logs and posts messages to Kafka. Requires POST for each connector to be sent after container start up.
-1. [investigation-service](../investigation-service/Dockerfile) - Processes Kafka message for Investigation data
-1. [ldfdata-service](../ldfdata-service/Dockerfile) - Processes Kafka message for Locally Defined Field (LDF) data
-1. [observation-service](../observation-service/Dockerfile) - Processes Kafka message for Observation data
-1. [organization-service](../organization-service/Dockerfile) - Processes Kafka message for Organization data
-1. [person-service](../person-service/Dockerfile) - Processes Kafka message for Person data
-1. [post-processing-service](../post-processing-service/Dockerfile) - Handles mapping key-uid mappings
-1. [reporting-hydration-service](../reporting-hydration-service/Dockerfile) - **FUTURE** service for consolidating all the DataReporting microserices
+1. [reporting-hydration-service](../reporting-hydration-service/Dockerfile) - Process Kafka messages for investigation, ldf, observation, organization, and person data (also handles key-uid mappings)
 
 ### Prerequisites:
 
