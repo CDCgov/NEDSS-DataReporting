@@ -26,8 +26,7 @@ class ReportingPipelineServiceApplicationTests {
       mocked
           .when(
               () ->
-                  SpringApplication.run(
-                      ReportingPipelineServiceApplication.class, new String[] {}))
+                  SpringApplication.run(ReportingPipelineServiceApplication.class, new String[] {}))
           .thenReturn(null);
 
       ReportingPipelineServiceApplication.main(new String[] {});
