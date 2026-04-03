@@ -15,7 +15,7 @@ on:
 
 jobs:
   pipeline:
-    name: Build and analyze
+    name: Run JUnit Tests
     runs-on: ubuntu-latest
 
     permissions:

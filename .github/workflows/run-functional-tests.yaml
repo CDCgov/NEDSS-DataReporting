@@ -9,7 +9,7 @@ on:
 
 jobs:
   pipeline:
-    name: Build and analyze
+    name: Run functional tests
     runs-on: ubuntu-latest
 
     permissions:
