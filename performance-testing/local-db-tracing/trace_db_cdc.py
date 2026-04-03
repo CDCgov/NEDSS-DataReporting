@@ -292,26 +292,20 @@ def fetch_container_logs_since(docker_executable: str, container_name: str, sinc
 
 
 def extract_meaningful_log_lines(output: str) -> list[str]:
-    """Normalize docker log output into comparable lines for idle-transition detection."""
+    """Normalize docker log output into comparable lines for tail-based idle detection."""
 
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
-def has_post_processing_idle_transition(lines: list[str], idle_message: str) -> bool:
-    """Require a non-idle line before the final idle line so a preexisting idle message does not satisfy the wait."""
+def has_post_processing_idle_tail(lines: list[str], idle_message: str) -> bool:
+    """Proceed only when the latest two meaningful log lines are non-idle followed by idle."""
 
-    if not lines:
+    if len(lines) < 2:
         return False
 
-    idle_indexes = [index for index, line in enumerate(lines) if idle_message in line]
-    if not idle_indexes:
-        return False
-
-    last_idle_index = idle_indexes[-1]
-    if idle_message not in lines[-1]:
-        return False
-
-    return any(idle_message not in line for line in lines[:last_idle_index])
+    previous_line = lines[-2]
+    last_line = lines[-1]
+    return not previous_line.endswith(idle_message) and last_line.endswith(idle_message)
 
 
 def wait_for_post_processing_idle(
@@ -350,7 +344,7 @@ def wait_for_post_processing_idle(
             print(f"Skipping post-processing log wait: {output}")
             return
         lines = extract_meaningful_log_lines(output)
-        if has_post_processing_idle_transition(lines, idle_message):
+        if has_post_processing_idle_tail(lines, idle_message):
             log_progress(f"Observed idle message in {container_name}")
             return
         sleep(2)
