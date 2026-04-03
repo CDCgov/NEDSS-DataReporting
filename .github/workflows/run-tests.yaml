@@ -1,8 +1,14 @@
-name: Containerized Unit Tests
+name: Application Tests
 on:
   pull_request:
     paths:
+      - "investigation-service/**"
+      - "ldfdata-service/**"
+      - "person-service/**"
       - "reporting-hydration-service/**"
+      - "post-processing-service/**"
+      - "observation-service/**"
+      - "organization-service/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
@@ -36,7 +42,7 @@ jobs:
       - name: Build and analyze
         working-directory: ./
         run: |
-          ./gradlew clean reporting-hydration-service:test-unit --continue
+          ./gradlew clean build jacocoTestReport --continue
 
       - name: Publish Testing Reports
         if: always()

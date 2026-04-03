@@ -21,7 +21,24 @@ repositories {
 }
 
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+      excludeTags 'Functional'
+      excludeTags 'Unit'
+    }
+    finalizedBy jacocoTestReport
+}
+
+tasks.register("test-functional", Test) {
+    useJUnitPlatform {
+        includeTags "Functional"
+    }
+    finalizedBy jacocoTestReport
+}
+
+tasks.register("test-unit", Test) {
+    useJUnitPlatform {
+        includeTags "Unit"
+    }
     finalizedBy jacocoTestReport
 }
 
@@ -31,7 +48,6 @@ jacoco {
 }
 
 jacocoTestReport {
-    dependsOn test
     reports {
         xml.required = true
         csv.required = false
@@ -85,6 +101,9 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-kafka:2.0.3'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.3'
     testImplementation 'org.awaitility:awaitility:4.2.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    testImplementation 'org.testcontainers:testcontainers:2.0.3'
 }
 
 dependencyManagement {
@@ -94,10 +113,6 @@ dependencyManagement {
         dependency 'org.apache.tomcat.embed:tomcat-embed-websocket:11.0.11'
         dependency 'com.fasterxml.jackson.core:jackson-core:2.21.1'
     }
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
 }
 
 sonarqube {

@@ -1,4 +1,4 @@
-name: Containerized Unit Tests
+name: Containerized Functional Tests
 on:
   pull_request:
     paths:
@@ -36,7 +36,7 @@ jobs:
       - name: Build and analyze
         working-directory: ./
         run: |
-          ./gradlew clean reporting-hydration-service:test-unit --continue
+          ./gradlew clean reporting-hydration-service:test-functional --continue
 
       - name: Publish Testing Reports
         if: always()

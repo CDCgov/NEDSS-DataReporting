@@ -3,6 +3,7 @@ package gov.cdc.etldatapipeline.reportinghydration;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
+import gov.cdc.etldatapipeline.ReportingHydrationServiceApplication;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
