@@ -3166,3 +3166,12 @@ databaseChangeLog:
             path: 380-sp_populate_nrt_multikey-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 958
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 385-sp_init_nrt_tables-001.sql
+            splitStatements: true
+            endDelimiter: GO
