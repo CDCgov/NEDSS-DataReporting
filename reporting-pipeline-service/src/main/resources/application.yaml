@@ -1,10 +1,10 @@
 spring:
   application:
-    name: reporting-hydration-service
+    name: reporting-pipeline-service
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
-    group-id: ${KAFKA_CONSUMER_APP:hydration-consumer-app}
+    group-id: ${KAFKA_CONSUMER_APP:pipeline-consumer-app}
     dlt-group-id: rtr-dlt-group
     producer:
       value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
