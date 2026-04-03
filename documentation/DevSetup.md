@@ -12,7 +12,7 @@
 1. [kafka](../docker-compose.yaml) - Message broker
 1. [kafka-connect](../containers/kafka-connect/Dockerfile) - Reads from the `nrt_*` topics and inserts into `rdb_modern` tables. Requires POST of [mssql-connector.json](../containers/kafka-connect/mssql-connector.json) after container start up.
 1. [debezium](../docker-compose.yaml) - Reads Change Data Capture logs and posts messages to Kafka. Requires POST for each connector to be sent after container start up.
-1. [reporting-hydration-service](../reporting-hydration-service/Dockerfile) - Process Kafka messages for investigation, ldf, observation, organization, and person data (also handles key-uid mappings)
+1. [reporting-pipeline-service](../reporting-pipeline-service/Dockerfile) - Process Kafka messages for investigation, ldf, observation, organization, and person data (also handles key-uid mappings)
 
 ### Prerequisites:
 

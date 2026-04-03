@@ -1,16 +1,17 @@
 package gov.cdc.etldatapipeline.person.config;
 
-import gov.cdc.etldatapipeline.reportinghydration.util.TestUtils;
+import gov.cdc.etldatapipeline.reportingpipeline.util.TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-class KafkaProducerConfigTest {
-  private static KafkaProducerConfig kafkaProducerConfig;
+class KafkaConsumerConfigTest {
+  private static KafkaConsumerConfig kafkaConsumerConfig;
   private static final DockerImageName image = TestUtils.getComposeImageName("kafka");
 
   @Container
@@ -19,7 +20,7 @@ class KafkaProducerConfigTest {
   @BeforeAll
   static void setUp() {
     kafkaContainer.start();
-    kafkaProducerConfig = new KafkaProducerConfig();
+    kafkaConsumerConfig = new KafkaConsumerConfig();
   }
 
   @AfterAll
@@ -28,22 +29,13 @@ class KafkaProducerConfigTest {
   }
 
   @Test
-  void producerFactory_configValid() {
+  void personKafkaListenerContainerFactory_ConfigurationIsValid() {
 
     // Act
-    var target = kafkaProducerConfig.personProducerFactory();
+    ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory =
+        kafkaConsumerConfig.personKafkaListenerContainerFactory();
 
     // Assert
-    Assertions.assertNotNull(target);
-  }
-
-  @Test
-  void kafkaTemplate_configValid() {
-
-    // Act
-    var target = kafkaProducerConfig.personKafkaTemplate();
-
-    // Assert
-    Assertions.assertNotNull(target);
+    Assertions.assertNotNull(kafkaListenerContainerFactory);
   }
 }

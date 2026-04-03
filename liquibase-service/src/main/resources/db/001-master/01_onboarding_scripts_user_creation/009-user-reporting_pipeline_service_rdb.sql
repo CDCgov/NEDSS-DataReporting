@@ -1,11 +1,11 @@
 -- ==========================================
--- USER: reporting_hydration_service_rdb
--- SERVICE: reporting-hydration-service
+-- USER: reporting_pipeline_service_rdb
+-- SERVICE: reporting-pipeline-service
 -- ==========================================
 USE [master];
 
-DECLARE @UserName NVARCHAR(150) = 'reporting_hydration_service_rdb';
-DECLARE @UserPassword NVARCHAR(128) = N'reporting_hydration_service'; --Please provide your generated password.
+DECLARE @UserName NVARCHAR(150) = 'reporting_pipeline_service_rdb';
+DECLARE @UserPassword NVARCHAR(128) = N'reporting_pipeline_service'; --Please provide your generated password.
 
 -- Check if login already exists before creating
 IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = @UserName)
@@ -103,4 +103,4 @@ IF EXISTS (SELECT * FROM sys.database_principals WHERE name = @UserName)
         PRINT 'Granted EXECUTE permission to [' + @UserName + ']';
     END
 
-PRINT 'Reporting hydration service permission grants completed.';
+PRINT 'Reporting pipeline service permission grants completed.';

@@ -1,9 +1,9 @@
-package gov.cdc.etldatapipeline.reportinghydration;
+package gov.cdc.etldatapipeline.reportingpipeline;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
-import gov.cdc.etldatapipeline.ReportingHydrationServiceApplication;
+import gov.cdc.etldatapipeline.ReportingPipelineServiceApplication;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 @SpringBootTest
-class ReportingHydrationServiceApplicationTests {
+class ReportingPipelineServiceApplicationTests {
 
   @Autowired private ApplicationContext context;
 
@@ -26,13 +26,12 @@ class ReportingHydrationServiceApplicationTests {
       mocked
           .when(
               () ->
-                  SpringApplication.run(
-                      ReportingHydrationServiceApplication.class, new String[] {}))
+                  SpringApplication.run(ReportingPipelineServiceApplication.class, new String[] {}))
           .thenReturn(null);
 
-      ReportingHydrationServiceApplication.main(new String[] {});
+      ReportingPipelineServiceApplication.main(new String[] {});
       mocked.verify(
-          () -> SpringApplication.run(ReportingHydrationServiceApplication.class, new String[] {}),
+          () -> SpringApplication.run(ReportingPipelineServiceApplication.class, new String[] {}),
           Mockito.times(1));
     }
   }

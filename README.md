@@ -6,17 +6,10 @@ Real Time Reporting (RTR) enables immediate data transformation by transitioning
 - Support scalable microservices
 - Improve access to actionable analytics
 
-RTR uses Kafka to stream change events from transactional data sources into reporting-optimized Kafka topics and the reporting database. This repository contains the following microservices, except for liquibase which is a standalone job for managing database objects.
+RTR uses Kafka to stream change events from transactional data sources into reporting-optimized Kafka topics and the reporting database.   This repository consists of two primary packages: 
 
-| Service Name                      | Description                                                                                                                                                |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| liquibase _(Job)_                 | Database version control via Liquibase. Deploys stored procedures, tables, and views required for the RTR pipeline.                                        |
-| investigation-reporting-service   | Processes `Public_health_case` change events. Supports page builder, notifications, confirmation methods, and updates the `PublicHealthCaseFact` datamart. |
-| ldfdata-reporting-service         | Handles change events related to Local Defined Fields (LDFs) and state-defined field data.                                                                 |
-| observation-reporting-service     | Processes `Observation` change events.                                                                                                                     |
-| organization-reporting-service    | Processes `Organization` change events.                                                                                                                    |
-| person-reporting-service          | Processes change events for `Patient`, `Provider`, and `Auth_user` entities.                                                                               |
-| post-processing-reporting-service | Executes post-processing stored procedures to hydrate dimensions, fact tables, and datamarts.                                                              |
+- `liquibase-service` - A job that handles database version control via Liquibase. Deploys stored procedures, tables, and views required for the RTR pipeline.
+- `reporting-pipeline-service` - Handles all change events (e.g. LDF, People, Observation) and executes post-processing logic to hydrate dimensions, fact tables, and datamarts.
 
 ## Documentation and Related Repositories
 
@@ -24,8 +17,8 @@ RTR uses Kafka to stream change events from transactional data sources into repo
 - Helm Charts:
   - [Liquibase](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/liquibase)
   - [Debezium Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/debezium)
-  - [Confluent Sink Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/kafka-connect-sink)
-  - [Consolidate RTR Services](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/rtr)
+  - [Kafka Connect Sink Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/kafka-connect-sink)
+  - [RTR Services](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/rtr)
 - [Database Upgrade Notes](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
 - [Database Upgrade without Liquibase](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
 
@@ -42,16 +35,16 @@ Each service has its own suite of test cases. These can be executed with the fol
 ./gradlew clean test
 ``` 
 
-The `reporting-hydration-service` has an additional set of containerized tests that are divided into `unit` and `functional` tests. These unit tests validate stored procedures and the functional tests validate the entire data flow pipeline.
+The `reporting-pipeline-service` has an additional set of containerized tests that are divided into `unit` and `functional` tests. These unit tests validate stored procedures and the functional tests validate the entire data flow pipeline.
 
-To run only the `unit` tests in the reporting-hydration-service
+To run only the `unit` tests in the reporting-pipeline-service
 ```sh
-./gradlew clean reporting-hydration-service:test-unit
+./gradlew clean reporting-pipeline-service:test-unit
 ```
 
-To run only the `functional` tests in the reporting-hydration-service
+To run only the `functional` tests in the reporting-pipeline-service
 ```sh
-./gradlew clean reporting-hydration-service:test-functional
+./gradlew clean reporting-pipeline-service:test-functional
 ```
 
 ## Code Quality and Formatting
