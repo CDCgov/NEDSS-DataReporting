@@ -9,7 +9,7 @@ on:
 
 jobs:
   pipeline:
-    name: Build and analyze
+    name: Run stored procedure unit tests
     runs-on: ubuntu-latest
 
     permissions:
