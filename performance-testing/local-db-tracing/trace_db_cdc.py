@@ -120,6 +120,7 @@ DEFAULT_POST_PROCESSING_IDLE_MESSAGE = "No ids to process from the topics."
 DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS = 180
 DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS = 5
 LOG_EVENT_TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
+GENERIC_LOCAL_ID_PATTERN = re.compile(r"^(?P<prefix>[^0-9]+)(?P<number>\d+)(?P<suffix>.*)$")
 REPLAY_DATETIME_LITERAL_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$"
 )
@@ -1813,6 +1814,62 @@ def infer_fallback_local_id_allocation(
     )
 
 
+def infer_local_id_components(
+    local_id: object,
+    uid_generator_entries: list[UidGeneratorEntry],
+) -> tuple[str, str, str] | None:
+    """Split a captured local ID into prefix, numeric payload, and suffix for replay-time regeneration."""
+
+    if not isinstance(local_id, str):
+        return None
+
+    entry = find_uid_generator_entry_for_local_id(local_id, uid_generator_entries)
+    if entry is not None:
+        end_index = len(local_id) - len(entry.uid_suffix_cd) if entry.uid_suffix_cd else len(local_id)
+        middle = local_id[len(entry.uid_prefix_cd) : end_index]
+        if middle.isdigit():
+            return entry.uid_prefix_cd, middle, entry.uid_suffix_cd
+
+    match = GENERIC_LOCAL_ID_PATTERN.match(local_id)
+    if match is None:
+        return None
+    return match.group("prefix"), match.group("number"), match.group("suffix")
+
+
+def local_id_max_plus_one_statements(
+    variable_name: str,
+    table_key: tuple[str, str],
+    prefix: str,
+    suffix: str,
+) -> list[str]:
+    """Generate a replay-time local_id value by incrementing the largest matching numeric payload in the target table."""
+
+    prefix_length = len(prefix)
+    suffix_length = len(suffix)
+    local_id_column = quote_identifier("local_id")
+    number_start = prefix_length + 1
+    number_length_expression = f"LEN({local_id_column}) - {prefix_length} - {suffix_length}"
+    numeric_payload_expression = (
+        f"TRY_CONVERT(bigint, SUBSTRING({local_id_column}, {number_start}, {number_length_expression}))"
+    )
+    predicates = [
+        f"{local_id_column} IS NOT NULL",
+        f"{local_id_column} LIKE N'{sql_quote(prefix)}%'",
+        f"LEN({local_id_column}) > {prefix_length + suffix_length}",
+    ]
+    if suffix:
+        predicates.append(f"RIGHT({local_id_column}, {suffix_length}) = N'{sql_quote(suffix)}'")
+    where_clause = " AND ".join(predicates)
+    return [
+        f"DECLARE {variable_name} nvarchar(40);",
+        (
+            f"SET {variable_name} = (SELECT N'{sql_quote(prefix)}' + CONVERT(nvarchar(20), "
+            f"ISNULL(MAX({numeric_payload_expression}), 0) + 1) + N'{sql_quote(suffix)}' "
+            f"FROM {quote_identifier(table_key[0])}.{quote_identifier(table_key[1])} WHERE {where_clause});"
+        ),
+    ]
+
+
 def find_nbs_uid_generator_entry(uid_generator_entries: list[UidGeneratorEntry]) -> UidGeneratorEntry | None:
     """Return the sole NBS allocator entry when ODSE exposes exactly one root UID generator class."""
 
@@ -2509,6 +2566,19 @@ def reconstruct_insert_sql(
             f"SET {local_id_variable} = CONVERT(nvarchar(40), ISNULL({prefix_variable}, '') + {from_variable} + ISNULL({suffix_variable}, ''));"
         )
         variable_registry[local_id_key] = local_id_variable
+    elif "local_id" in row and local_id_key not in variable_registry:
+        local_id_components = infer_local_id_components(row.get("local_id"), uid_generator_entries)
+        if local_id_components is not None:
+            local_id_variable = variable_name_for_value(table_key[0], table_key[1], "local_id", row["local_id"])
+            prelude_lines.extend(
+                local_id_max_plus_one_statements(
+                    local_id_variable,
+                    table_key,
+                    local_id_components[0],
+                    local_id_components[2],
+                )
+            )
+            variable_registry[local_id_key] = local_id_variable
 
     register_nrt_patient_mpr_uid_reference(
         table_key,
