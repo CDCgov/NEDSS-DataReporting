@@ -33,52 +33,52 @@ The tracer script:
 Run from the repository root:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
 ```
 
 The default behavior is:
 
-- output goes to `performance-testing/local-db-tracing/output`
+- output goes to `utilities/local-db-tracing/output`
 - cleanup mode is `ask`
 - post-processing wait is enabled
-- known replay associations are loaded from `performance-testing/local-db-tracing/known_replay_associations.json`
+- known replay associations are loaded from `utilities/local-db-tracing/known_replay_associations.json`
 
 ## Common Commands
 
 Show help:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --help
+python utilities/local-db-tracing/trace_db_cdc.py --help
 ```
 
 Write artifacts to a custom output directory:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --output-dir performance-testing/local-db-tracing/output
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --output-dir utilities/local-db-tracing/output
 ```
 
 Always clean up tracer-managed CDC objects after the run:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
 ```
 
 Keep tracer-managed CDC enabled for later cleanup:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
 ```
 
 Disable whatever the tracer previously left enabled, then exit:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
 ```
 
 Trace a different database:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
 ```
 
 ## Important Options
