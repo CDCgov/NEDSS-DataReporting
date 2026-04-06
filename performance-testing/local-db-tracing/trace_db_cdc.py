@@ -54,6 +54,17 @@ class UidGeneratorEntry:
 
 
 @dataclass(frozen=True)
+class UidAllocation:
+    """Capture one generator reservation so replay can ask ODSE for a fresh value the same way the source did."""
+
+    class_name_cd: str
+    count: int
+    type_cd: str
+    uid_prefix_cd: str
+    uid_suffix_cd: str
+
+
+@dataclass(frozen=True)
 class ManagedCdcState:
     """Persist exactly which CDC state the tracer owns so later cleanup does not overreach."""
 
@@ -97,6 +108,12 @@ REPLAY_METADATA_CACHE_PREFIX = "replay-metadata-"
 REPLAY_METADATA_CACHE_VERSION = 3
 EXCLUDED_TRACE_TABLES = {
     ("dbo", "job_flow_log"),
+}
+DEFAULT_UID_BLOCK_SIZE_BY_CLASS = {
+    # GA is the ODSE NBS allocator for root entity/act UIDs and reserves IDs in blocks.
+    "GA": 1000,
+    # Person creation reserves a PERSON local-id block and uses the first visible PSN value from it.
+    "PERSON": 1000,
 }
 DEFAULT_POST_PROCESSING_CONTAINER_PREFIX = "nedss-datareporting-post-processing-service"
 DEFAULT_POST_PROCESSING_IDLE_MESSAGE = "No ids to process from the topics."
@@ -1573,6 +1590,26 @@ def sql_literal(value: object) -> str:
     return f"N'{sql_quote(str(value))}'"
 
 
+def parse_int_value(value: object) -> int | None:
+    """Parse integer-like CDC payload values conservatively so replay logic can compare generator seeds safely."""
+
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value) if value.is_integer() else None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.startswith("+"):
+            stripped = stripped[1:]
+        if stripped.startswith("-"):
+            digits = stripped[1:]
+            return int(stripped) if digits.isdigit() else None
+        return int(stripped) if stripped.isdigit() else None
+    return None
+
+
 def is_numeric_sql_type(sql_type: str) -> bool:
     """Limit synthetic key generation to numeric columns because the fallback strategy depends on ordering."""
 
@@ -1596,6 +1633,12 @@ def sanitize_sql_name(name: str) -> str:
 def variable_name_for_value(schema_name: str, table_name: str, column_name: str, value: object) -> str:
     # Keep the captured source value in the variable name so generated IDs remain easy to trace in the summary output.
     return "@" + sanitize_sql_name(f"{schema_name}_{table_name}_{column_name}_{value}")
+
+
+def derived_variable_name(variable_name: str, suffix: str) -> str:
+    """Keep helper variables tied to the main replay variable so generated SQL stays readable."""
+
+    return "@" + sanitize_sql_name(variable_name.lstrip("@") + "_" + suffix)
 
 
 def output_table_name_for_variable(variable_name: str) -> str:
@@ -1647,6 +1690,206 @@ def infer_uid_class_from_local_id(local_id: object, uid_generator_entries: list[
             if middle.isdigit():
                 return entry.class_name_cd
     return None
+
+
+def extract_local_id_numeric_value(local_id: object, uid_generator_entries: list[UidGeneratorEntry]) -> int | None:
+    """Recover the numeric payload of an ODSE local ID so it can be matched to Local_UID_generator reservations."""
+
+    if not isinstance(local_id, str):
+        return None
+    for entry in uid_generator_entries:
+        if local_id.startswith(entry.uid_prefix_cd) and local_id.endswith(entry.uid_suffix_cd):
+            end_index = len(local_id) - len(entry.uid_suffix_cd) if entry.uid_suffix_cd else len(local_id)
+            middle = local_id[len(entry.uid_prefix_cd) : end_index]
+            if middle.isdigit():
+                return int(middle)
+    return None
+
+
+def find_uid_generator_entry_for_local_id(
+    local_id: object,
+    uid_generator_entries: list[UidGeneratorEntry],
+) -> UidGeneratorEntry | None:
+    """Resolve a captured local_id string back to its generator metadata when CDC missed the allocator updates."""
+
+    if not isinstance(local_id, str):
+        return None
+    for entry in uid_generator_entries:
+        if local_id.startswith(entry.uid_prefix_cd) and local_id.endswith(entry.uid_suffix_cd):
+            end_index = len(local_id) - len(entry.uid_suffix_cd) if entry.uid_suffix_cd else len(local_id)
+            middle = local_id[len(entry.uid_prefix_cd) : end_index]
+            if middle.isdigit():
+                return entry
+    return None
+
+
+def fallback_uid_allocation_count(entry: UidGeneratorEntry) -> int:
+    """Choose a safe replay-time reservation size when the CDC window did not capture Local_UID_generator rows."""
+
+    return DEFAULT_UID_BLOCK_SIZE_BY_CLASS.get(entry.class_name_cd.upper(), 1)
+
+
+def infer_fallback_local_id_allocation(
+    local_id: object,
+    uid_generator_entries: list[UidGeneratorEntry],
+) -> UidAllocation | None:
+    """Synthesize a local-id allocation recipe from the captured ID shape when generator CDC rows are unavailable."""
+
+    entry = find_uid_generator_entry_for_local_id(local_id, uid_generator_entries)
+    if entry is None:
+        return None
+    return UidAllocation(
+        class_name_cd=entry.class_name_cd,
+        count=fallback_uid_allocation_count(entry),
+        type_cd=entry.type_cd,
+        uid_prefix_cd=entry.uid_prefix_cd,
+        uid_suffix_cd=entry.uid_suffix_cd,
+    )
+
+
+def find_nbs_uid_generator_entry(uid_generator_entries: list[UidGeneratorEntry]) -> UidGeneratorEntry | None:
+    """Return the sole NBS allocator entry when ODSE exposes exactly one root UID generator class."""
+
+    nbs_entries = [entry for entry in uid_generator_entries if entry.type_cd.upper() == "NBS"]
+    if len(nbs_entries) != 1:
+        return None
+    return nbs_entries[0]
+
+
+def infer_fallback_root_uid_allocation(
+    table_key: tuple[str, str],
+    primary_key_column: str,
+    uid_generator_entries: list[UidGeneratorEntry],
+) -> UidAllocation | None:
+    """Synthesize a replay-time allocation for root ODSE entity/act UIDs when generator CDC rows are missing."""
+
+    if primary_key_column.lower() not in {"entity_uid", "act_uid"}:
+        return None
+    if table_key[1].lower() not in {"entity", "act"}:
+        return None
+
+    entry = find_nbs_uid_generator_entry(uid_generator_entries)
+    if entry is None:
+        return None
+
+    return UidAllocation(
+        class_name_cd=entry.class_name_cd,
+        count=fallback_uid_allocation_count(entry),
+        type_cd=entry.type_cd,
+        uid_prefix_cd=entry.uid_prefix_cd,
+        uid_suffix_cd=entry.uid_suffix_cd,
+    )
+
+
+def allocation_variable_statements(variable_name: str, sql_type: str, allocation: UidAllocation) -> tuple[list[str], str]:
+    """Emit a GetUid reservation block and return the helper variable that carries the allocated seed value."""
+
+    from_variable = derived_variable_name(variable_name, "from_seed")
+    to_variable = derived_variable_name(variable_name, "to_seed")
+    type_variable = derived_variable_name(variable_name, "type_cd")
+    prefix_variable = derived_variable_name(variable_name, "uid_prefix")
+    suffix_variable = derived_variable_name(variable_name, "uid_suffix")
+    lines = [
+        f"DECLARE {variable_name} {sql_type};",
+        f"DECLARE {from_variable} varchar(20);",
+        f"DECLARE {to_variable} varchar(20);",
+        f"DECLARE {type_variable} varchar(10);",
+        f"DECLARE {prefix_variable} varchar(10);",
+        f"DECLARE {suffix_variable} varchar(10);",
+        (
+            f"EXEC dbo.GetUid @classNameCd = N'{sql_quote(allocation.class_name_cd)}', @count = {allocation.count}, "
+            f"@fromseedValueNbr = {from_variable} OUTPUT, @toseedValueNbr = {to_variable} OUTPUT, "
+            f"@typeCd = {type_variable} OUTPUT, @uidPrefixCd = {prefix_variable} OUTPUT, @uidSuffixCd = {suffix_variable} OUTPUT;"
+        ),
+    ]
+    return lines, from_variable
+
+
+def build_uid_allocation_lookup(uid_generator_entries: list[UidGeneratorEntry]) -> dict[str, UidGeneratorEntry]:
+    """Index generator metadata by class name so CDC allocations can reuse the current prefix and suffix definitions."""
+
+    return {entry.class_name_cd.upper(): entry for entry in uid_generator_entries}
+
+
+def infer_uid_allocation_registry(
+    changes: list[dict[str, object]],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    uid_generator_entries: list[UidGeneratorEntry],
+) -> dict[tuple[str, str, str, str], UidAllocation]:
+    """Map captured generated values back to the Local_UID_generator reservation that produced them."""
+
+    generator_entries_by_class = build_uid_allocation_lookup(uid_generator_entries)
+    allocation_by_seed: dict[int, UidAllocation] = {}
+    pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
+
+    for record in sorted(changes, key=change_sort_key):
+        table_key = (str(record["schema_name"]), str(record["table_name"]))
+        if table_key != ("dbo", "Local_UID_generator"):
+            continue
+        if record.get("row_parse_error"):
+            continue
+
+        operation = record.get("operation")
+        if operation == "update_before":
+            pending_updates[update_pair_key(record)] = record
+            continue
+        if operation != "update_after":
+            continue
+
+        before_record = pending_updates.pop(update_pair_key(record), None)
+        if before_record is None:
+            continue
+
+        before_row = before_record.get("row")
+        after_row = record.get("row")
+        if not isinstance(before_row, dict) or not isinstance(after_row, dict):
+            continue
+
+        class_name = str(before_row.get("class_name_cd") or after_row.get("class_name_cd") or "").strip()
+        before_seed = parse_int_value(before_row.get("seed_value_nbr"))
+        after_seed = parse_int_value(after_row.get("seed_value_nbr"))
+        if not class_name or before_seed is None or after_seed is None or after_seed <= before_seed:
+            continue
+
+        metadata = generator_entries_by_class.get(class_name.upper())
+        allocation_by_seed[before_seed] = UidAllocation(
+            class_name_cd=class_name,
+            count=after_seed - before_seed,
+            type_cd="" if metadata is None else metadata.type_cd,
+            uid_prefix_cd="" if metadata is None else metadata.uid_prefix_cd,
+            uid_suffix_cd="" if metadata is None else metadata.uid_suffix_cd,
+        )
+
+    allocation_registry: dict[tuple[str, str, str, str], UidAllocation] = {}
+    for record in sorted(changes, key=change_sort_key):
+        if record.get("operation") != "insert":
+            continue
+        row = record.get("row")
+        if not isinstance(row, dict):
+            continue
+
+        table_key = (str(record["schema_name"]), str(record["table_name"]))
+        primary_key_columns = primary_keys_by_table.get(table_key, [])
+        if len(primary_key_columns) == 1:
+            primary_key_column = primary_key_columns[0]
+            primary_key_value = parse_int_value(row.get(primary_key_column))
+            allocation = None if primary_key_value is None else allocation_by_seed.get(primary_key_value)
+            if allocation is not None:
+                key = (table_key[0], table_key[1], primary_key_column, value_key(row[primary_key_column]))
+                allocation_registry[key] = allocation
+
+                foreign_key_target = foreign_keys_by_source.get((table_key[0], table_key[1], primary_key_column))
+                if foreign_key_target is not None:
+                    allocation_registry[(foreign_key_target[0], foreign_key_target[1], foreign_key_target[2], value_key(row[primary_key_column]))] = allocation
+
+        if "local_id" in row:
+            local_id_value = extract_local_id_numeric_value(row.get("local_id"), uid_generator_entries)
+            allocation = None if local_id_value is None else allocation_by_seed.get(local_id_value)
+            if allocation is not None:
+                allocation_registry[(table_key[0], table_key[1], "local_id", value_key(row["local_id"]))] = allocation
+
+    return allocation_registry
 
 
 def infer_uid_class_registry(
@@ -2069,7 +2312,8 @@ def reconstruct_insert_sql(
     column_sql_types: dict[tuple[str, str, str], str],
     generated_always_columns: set[tuple[str, str, str]],
     variable_registry: dict[tuple[str, str, str, str], str],
-    uid_class_registry: dict[tuple[str, str, str, str], str],
+    uid_allocation_registry: dict[tuple[str, str, str, str], UidAllocation],
+    uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
 ) -> str | None:
     """Rebuild inserts in a rerunnable form, replacing captured generated keys with replay-time variables."""
@@ -2138,20 +2382,33 @@ def reconstruct_insert_sql(
         variable_name = variable_name_for_value(table_key[0], table_key[1], root_generated_primary_key, generated_value)
         sql_type = column_sql_types.get((table_key[0], table_key[1], root_generated_primary_key), "int")
         variable_registry[(table_key[0], table_key[1], root_generated_primary_key, value_key(generated_value))] = variable_name
-        uid_class_name = uid_class_registry.get((table_key[0], table_key[1], root_generated_primary_key, value_key(generated_value)))
-        if uid_class_name:
-            # ODSE-style tables allocate IDs through Local_UID_generator instead of IDENTITY columns.
-            prelude_lines.extend(
-                [
-                    f"DECLARE {variable_name} {sql_type};",
-                    f"EXEC dbo.getNextUid_sp @pClass = N'{sql_quote(uid_class_name)}', @uid = {variable_name} OUTPUT;",
-                ]
-            )
+        uid_allocation = uid_allocation_registry.get((table_key[0], table_key[1], root_generated_primary_key, value_key(generated_value)))
+        if uid_allocation is None:
+            uid_allocation = infer_fallback_root_uid_allocation(table_key, root_generated_primary_key, uid_generator_entries)
+        if uid_allocation:
+            allocation_lines, from_variable = allocation_variable_statements(variable_name, sql_type, uid_allocation)
+            prelude_lines.extend(allocation_lines)
+            prelude_lines.append(f"SET {variable_name} = CONVERT({sql_type}, {from_variable});")
         else:
             # Fall back only when no allocator metadata exists for the captured root key.
             prelude_lines.append(
                 f"DECLARE {variable_name} {sql_type} = (SELECT ISNULL(MAX({quote_identifier(root_generated_primary_key)}), 0) + 1 FROM {quote_identifier(table_key[0])}.{quote_identifier(table_key[1])});"
             )
+
+    local_id_key = (table_key[0], table_key[1], "local_id", value_key(row.get("local_id")))
+    local_id_allocation = uid_allocation_registry.get(local_id_key)
+    if local_id_allocation is None and "local_id" in row:
+        local_id_allocation = infer_fallback_local_id_allocation(row.get("local_id"), uid_generator_entries)
+    if local_id_allocation and "local_id" in row and local_id_key not in variable_registry:
+        local_id_variable = variable_name_for_value(table_key[0], table_key[1], "local_id", row["local_id"])
+        allocation_lines, from_variable = allocation_variable_statements(local_id_variable, "nvarchar(40)", local_id_allocation)
+        prefix_variable = derived_variable_name(local_id_variable, "uid_prefix")
+        suffix_variable = derived_variable_name(local_id_variable, "uid_suffix")
+        prelude_lines.extend(allocation_lines)
+        prelude_lines.append(
+            f"SET {local_id_variable} = CONVERT(nvarchar(40), ISNULL({prefix_variable}, '') + {from_variable} + ISNULL({suffix_variable}, ''));"
+        )
+        variable_registry[local_id_key] = local_id_variable
 
     register_nrt_patient_mpr_uid_reference(
         table_key,
@@ -2291,11 +2548,18 @@ def reconstruct_sql_statements(
     statements: list[str] = []
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
     variable_registry: dict[tuple[str, str, str, str], str] = {}
-    uid_class_registry = infer_uid_class_registry(changes, primary_keys_by_table, foreign_keys_by_source, uid_generator_entries)
+    uid_allocation_registry = infer_uid_allocation_registry(
+        changes,
+        primary_keys_by_table,
+        foreign_keys_by_source,
+        uid_generator_entries,
+    )
     last_table_key: tuple[str, str] | None = None
 
     for record in sorted(changes, key=change_sort_key):
         table_key = (str(record["schema_name"]), str(record["table_name"]))
+        if table_key == ("dbo", "Local_UID_generator"):
+            continue
         if record.get("row_parse_error"):
             table_name = f"{record['schema_name']}.{record['table_name']}"
             last_table_key = append_sql_statement(
@@ -2318,7 +2582,8 @@ def reconstruct_sql_statements(
                 column_sql_types,
                 generated_always_columns,
                 variable_registry,
-                uid_class_registry,
+                uid_allocation_registry,
+                uid_generator_entries,
                 known_associations,
             )
             if sql_statement:
