@@ -6,7 +6,10 @@ services:
       - DATABASE_VERSION=6.0.18.1
       - DEPLOY_ADMIN_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
-      - LIQUIBASE_USER_PASSWORD=${LIQUIBASE_USER_PASSWORD:-db_deploy_admin}
+      - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
+      - LIQUIBASE_ADMIN_NAME=${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
+      - LIQUIBASE_ADMIN_PASSWORD=${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
     volumes:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
@@ -16,8 +19,8 @@ services:
     build:
       dockerfile: ./liquibase-service/Dockerfile.local
     environment:
-      - DB_USERNAME=db_deploy_admin
-      - DB_PASSWORD=${LIQUIBASE_USER_PASSWORD:-db_deploy_admin}
+      - DB_USERNAME=${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
+      - DB_PASSWORD=${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
       - DB_HOST=nbs-mssql
     depends_on:
       nbs-mssql:
@@ -135,8 +138,8 @@ services:
     build:
       dockerfile: ./investigation-service/Dockerfile
     environment:
-      - DB_USERNAME=investigation_service_rdb
-      - DB_PASSWORD=investigation_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:
@@ -151,8 +154,8 @@ services:
     build:
       dockerfile: ./ldfdata-service/Dockerfile
     environment:
-      - DB_USERNAME=ldf_service_rdb
-      - DB_PASSWORD=ldf_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:
@@ -167,8 +170,8 @@ services:
     build:
       dockerfile: ./observation-service/Dockerfile
     environment:
-      - DB_USERNAME=observation_service_rdb
-      - DB_PASSWORD=observation_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:
@@ -183,8 +186,8 @@ services:
     build:
       dockerfile: ./organization-service/Dockerfile
     environment:
-      - DB_USERNAME=organization_service_rdb
-      - DB_PASSWORD=organization_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:
@@ -199,8 +202,8 @@ services:
     build:
       dockerfile: ./person-service/Dockerfile
     environment:
-      - DB_USERNAME=person_service_rdb
-      - DB_PASSWORD=person_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
       - spring.kafka.consumer.maxPollIntervalMs=3000
@@ -216,8 +219,8 @@ services:
     build:
       dockerfile: ./post-processing-service/Dockerfile
     environment:
-      - DB_USERNAME=post_processing_service_rdb
-      - DB_PASSWORD=post_processing_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:
@@ -232,10 +235,12 @@ services:
     build:
       dockerfile: ./reporting-hydration-service/Dockerfile
     environment:
-      - DB_USERNAME=reporting_hydration_service_rdb
-      - DB_PASSWORD=reporting_hydration_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    ports:
+      - "8095:8095"
     depends_on:
       kafka:
         condition: service_healthy
@@ -243,3 +248,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+      debezium:
+        condition: service_healthy
+      kafka-connect:
+        condition: service_healthy
