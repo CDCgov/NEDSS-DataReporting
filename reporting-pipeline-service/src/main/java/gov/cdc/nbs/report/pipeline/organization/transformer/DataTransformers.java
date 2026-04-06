@@ -1,6 +1,6 @@
 package gov.cdc.nbs.report.pipeline.organization.transformer;
 
-import gov.cdc.nbs.report.pipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationElasticSearch;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationKey;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationReporting;

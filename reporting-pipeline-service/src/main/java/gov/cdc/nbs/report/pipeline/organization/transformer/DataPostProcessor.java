@@ -1,6 +1,6 @@
 package gov.cdc.nbs.report.pipeline.organization.transformer;
 
-import static gov.cdc.nbs.report.pipeline.commonutil.UtilHelper.deserializePayload;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
 import static java.util.Objects.requireNonNull;
 
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationElasticSearch;

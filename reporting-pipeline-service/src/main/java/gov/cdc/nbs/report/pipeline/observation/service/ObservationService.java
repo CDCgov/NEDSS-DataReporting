@@ -1,11 +1,11 @@
 package gov.cdc.nbs.report.pipeline.observation.service;
 
-import static gov.cdc.nbs.report.pipeline.commonutil.UtilHelper.*;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.*;
 
-import gov.cdc.nbs.report.pipeline.commonutil.DataProcessingException;
-import gov.cdc.nbs.report.pipeline.commonutil.NoDataException;
-import gov.cdc.nbs.report.pipeline.commonutil.json.CustomJsonGeneratorImpl;
-import gov.cdc.nbs.report.pipeline.commonutil.metrics.CustomMetrics;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;

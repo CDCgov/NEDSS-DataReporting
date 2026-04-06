@@ -1,6 +1,6 @@
 package gov.cdc.nbs.report.pipeline.person.transformer;
 
-import gov.cdc.nbs.report.pipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.person.model.dto.PersonExtendedProps;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientElasticSearch;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientKey;

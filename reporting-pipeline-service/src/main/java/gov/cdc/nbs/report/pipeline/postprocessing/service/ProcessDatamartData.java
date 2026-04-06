@@ -1,12 +1,12 @@
 package gov.cdc.nbs.report.pipeline.postprocessing.service;
 
-import static gov.cdc.nbs.report.pipeline.commonutil.UtilHelper.errorMessage;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.*;
 
 import com.google.common.base.Strings;
-import gov.cdc.nbs.report.pipeline.commonutil.DataProcessingException;
-import gov.cdc.nbs.report.pipeline.commonutil.json.CustomJsonGeneratorImpl;
-import gov.cdc.nbs.report.pipeline.commonutil.metrics.CustomMetrics;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
+import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.BackfillData;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import gov.cdc.nbs.report.pipeline.commonutil.json.CustomJsonGeneratorImpl;
+import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.*;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationTransformed;

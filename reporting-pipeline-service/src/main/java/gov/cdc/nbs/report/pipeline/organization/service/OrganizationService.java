@@ -1,11 +1,11 @@
 package gov.cdc.nbs.report.pipeline.organization.service;
 
-import static gov.cdc.nbs.report.pipeline.commonutil.UtilHelper.errorMessage;
-import static gov.cdc.nbs.report.pipeline.commonutil.UtilHelper.extractUid;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
-import gov.cdc.nbs.report.pipeline.commonutil.DataProcessingException;
-import gov.cdc.nbs.report.pipeline.commonutil.NoDataException;
-import gov.cdc.nbs.report.pipeline.commonutil.metrics.CustomMetrics;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
+import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.place.Place;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.place.PlaceTele;

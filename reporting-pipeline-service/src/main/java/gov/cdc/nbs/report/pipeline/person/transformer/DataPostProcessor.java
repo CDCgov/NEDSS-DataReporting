@@ -1,6 +1,6 @@
 package gov.cdc.nbs.report.pipeline.person.transformer;
 
-import static gov.cdc.nbs.report.pipeline.commonutil.UtilHelper.deserializePayload;
+import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
