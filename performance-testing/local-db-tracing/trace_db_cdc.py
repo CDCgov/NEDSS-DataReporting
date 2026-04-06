@@ -120,6 +120,9 @@ DEFAULT_POST_PROCESSING_IDLE_MESSAGE = "No ids to process from the topics."
 DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS = 180
 DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS = 5
 LOG_EVENT_TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
+REPLAY_DATETIME_LITERAL_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$"
+)
 
 class SqlCmdClient:
     """Centralize sqlcmd execution so every metadata and CDC query uses the same calling convention."""
@@ -1590,6 +1593,69 @@ def sql_literal(value: object) -> str:
     return f"N'{sql_quote(str(value))}'"
 
 
+def parse_iso_datetime(value: str) -> datetime | None:
+    """Parse ISO-like timestamps from manifests and CDC payloads while tolerating trailing Z."""
+
+    candidate = value.strip()
+    if not candidate:
+        return None
+    if candidate.endswith("Z"):
+        candidate = candidate[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(candidate)
+    except ValueError:
+        return None
+
+
+def normalize_utc_datetime(value: datetime) -> datetime:
+    """Compare replay timestamps in UTC even when one side is naive and the other is timezone-aware."""
+
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def replay_now_window_from_manifest(manifest: dict[str, object]) -> tuple[datetime, datetime] | None:
+    """Build the UTC run window once so replay literals can detect event-time timestamps."""
+
+    start_time = manifest.get("start_time_utc")
+    end_time = manifest.get("end_time_utc")
+    if not isinstance(start_time, str) or not isinstance(end_time, str):
+        return None
+
+    parsed_start = parse_iso_datetime(start_time)
+    parsed_end = parse_iso_datetime(end_time)
+    if parsed_start is None or parsed_end is None:
+        return None
+
+    normalized_start = normalize_utc_datetime(parsed_start)
+    normalized_end = normalize_utc_datetime(parsed_end)
+    if normalized_end < normalized_start:
+        return None
+    return normalized_start, normalized_end
+
+
+def should_replace_datetime_literal_with_now(
+    value: object,
+    replay_now_window: tuple[datetime, datetime] | None,
+) -> bool:
+    """Treat captured datetimes inside the trace window as event-time values that should replay as SYSUTCDATETIME()."""
+
+    if replay_now_window is None or not isinstance(value, str):
+        return False
+
+    candidate = value.strip()
+    if not REPLAY_DATETIME_LITERAL_PATTERN.match(candidate):
+        return False
+
+    parsed_value = parse_iso_datetime(candidate)
+    if parsed_value is None:
+        return False
+
+    normalized_value = normalize_utc_datetime(parsed_value)
+    return replay_now_window[0] <= normalized_value <= replay_now_window[1]
+
+
 def parse_int_value(value: object) -> int | None:
     """Parse integer-like CDC payload values conservatively so replay logic can compare generator seeds safely."""
 
@@ -2137,6 +2203,7 @@ def sql_value_expression(
     row: dict[str, object],
     column_name: str,
     value: object,
+    replay_now_window: tuple[datetime, datetime] | None,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
@@ -2154,6 +2221,8 @@ def sql_value_expression(
     )
     if variable_reference:
         return variable_reference
+    if should_replace_datetime_literal_with_now(value, replay_now_window):
+        return "SYSUTCDATETIME()"
     return sql_literal(value)
 
 
@@ -2162,6 +2231,7 @@ def sql_replay_assignment_expression(
     row: dict[str, object],
     column_name: str,
     value: object,
+    replay_now_window: tuple[datetime, datetime] | None,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
@@ -2170,7 +2240,16 @@ def sql_replay_assignment_expression(
 
     if is_user_id_column(column_name):
         return "9999"
-    return sql_value_expression(table_key, row, column_name, value, variable_registry, foreign_keys_by_source, known_associations)
+    return sql_value_expression(
+        table_key,
+        row,
+        column_name,
+        value,
+        replay_now_window,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+    )
 
 
 def build_version_lookup_predicates(
@@ -2195,6 +2274,7 @@ def sql_insert_assignment_expression(
     column_name: str,
     value: object,
     primary_keys_by_table: dict[tuple[str, str], list[str]],
+    replay_now_window: tuple[datetime, datetime] | None,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
@@ -2215,7 +2295,16 @@ def sql_insert_assignment_expression(
             f"FROM {quote_identifier(table_key[0])}.{quote_identifier(table_key[1])} "
             f"WHERE {predicates})"
         )
-    return sql_replay_assignment_expression(table_key, row, column_name, value, variable_registry, foreign_keys_by_source, known_associations)
+    return sql_replay_assignment_expression(
+        table_key,
+        row,
+        column_name,
+        value,
+        replay_now_window,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+    )
 
 
 def sql_update_assignment_expression(
@@ -2223,6 +2312,7 @@ def sql_update_assignment_expression(
     row: dict[str, object],
     column_name: str,
     value: object,
+    replay_now_window: tuple[datetime, datetime] | None,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
@@ -2231,7 +2321,16 @@ def sql_update_assignment_expression(
 
     if is_version_column(column_name):
         return f"ISNULL({quote_identifier(column_name)}, 0) + 1"
-    return sql_replay_assignment_expression(table_key, row, column_name, value, variable_registry, foreign_keys_by_source, known_associations)
+    return sql_replay_assignment_expression(
+        table_key,
+        row,
+        column_name,
+        value,
+        replay_now_window,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+    )
 
 
 def is_generated_always_column(
@@ -2311,6 +2410,7 @@ def reconstruct_insert_sql(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     column_sql_types: dict[tuple[str, str, str], str],
     generated_always_columns: set[tuple[str, str, str]],
+    replay_now_window: tuple[datetime, datetime] | None,
     variable_registry: dict[tuple[str, str, str, str], str],
     uid_allocation_registry: dict[tuple[str, str, str, str], UidAllocation],
     uid_generator_entries: list[UidGeneratorEntry],
@@ -2426,6 +2526,7 @@ def reconstruct_insert_sql(
             column_name,
             row[column_name],
             primary_keys_by_table,
+            replay_now_window,
             variable_registry,
             foreign_keys_by_source,
             known_associations,
@@ -2482,6 +2583,7 @@ def reconstruct_update_sql(
     after_record: dict[str, object],
     primary_key_columns: list[str],
     generated_always_columns: set[tuple[str, str, str]],
+    replay_now_window: tuple[datetime, datetime] | None,
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
@@ -2505,7 +2607,7 @@ def reconstruct_update_sql(
         return None
 
     set_clause = ", ".join(
-        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, after_row, column_name, after_row.get(column_name), variable_registry, foreign_keys_by_source, known_associations)}"
+        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, after_row, column_name, after_row.get(column_name), replay_now_window, variable_registry, foreign_keys_by_source, known_associations)}"
         for column_name in changed_columns
     )
     key_columns = select_key_columns(before_row, primary_key_columns)
@@ -2542,6 +2644,7 @@ def reconstruct_sql_statements(
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
+    replay_now_window: tuple[datetime, datetime] | None = None,
 ) -> list[str]:
     """Walk the CDC stream once and emit replay SQL in the same logical order the source database saw."""
 
@@ -2581,6 +2684,7 @@ def reconstruct_sql_statements(
                 foreign_keys_by_source,
                 column_sql_types,
                 generated_always_columns,
+                replay_now_window,
                 variable_registry,
                 uid_allocation_registry,
                 uid_generator_entries,
@@ -2621,6 +2725,7 @@ def reconstruct_sql_statements(
                 record,
                 primary_key_columns,
                 generated_always_columns,
+                replay_now_window,
                 variable_registry,
                 foreign_keys_by_source,
                 known_associations,
@@ -2733,6 +2838,7 @@ def write_summary(
 ) -> None:
     """Produce one human-friendly artifact that explains both what changed and how to replay it."""
 
+    replay_now_window = replay_now_window_from_manifest(manifest)
     op_counts = Counter(record["operation"] for record in changes)
     table_counts: defaultdict[str, int] = defaultdict(int)
     table_records: defaultdict[str, list[dict[str, object]]] = defaultdict(list)
@@ -2794,6 +2900,7 @@ def write_summary(
             generated_always_columns,
             uid_generator_entries,
             known_associations,
+            replay_now_window,
         )
     if reconstructed_sql:
         lines.append("")

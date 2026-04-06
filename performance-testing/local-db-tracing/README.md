@@ -73,6 +73,7 @@ Notes
 - changes.jsonl is the best file to mine later when turning observed behavior into tests.
 - The reconstructed SQL now allocates fresh root primary key values and threads them through related inserts by following cached PK/FK metadata, which avoids rerun conflicts on captured IDs.
 - The reconstructed SQL forces any column whose name ends with `user_id` to use `9999` so replayed audit values do not depend on the captured environment.
+- The reconstructed SQL replaces captured datetime literals with `SYSUTCDATETIME()` when the timestamp falls between the recorded run start and end times, so event-time values replay relative to the new run.
 - The reconstructed SQL also allocates replay-time `version_ctrl_nbr` values for `_hist` inserts and increments `version_ctrl_nbr` on live-row updates so reruns do not collide with existing history-row primary keys.
 - Semantic key aliases that are not represented as SQL foreign keys can be declared in `known_replay_associations.json`; the tracer uses those mappings for replay-time substitution before falling back to FK metadata or suffix matching.
 - CDC rows are now fetched in one batched query after first checking which capture instances actually have rows in the LSN window, which avoids spawning one `sqlcmd` process per table and skips JSON reconstruction for unchanged tables.
