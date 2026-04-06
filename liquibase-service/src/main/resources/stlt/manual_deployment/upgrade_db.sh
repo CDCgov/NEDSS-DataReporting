@@ -161,7 +161,7 @@ fi
 for path in "${PATHS[@]}"; do
     f_dir="$SCRIPT_DIR/$path"
     if [[ -d "$f_dir" ]]; then
-        for file in "$f_dir"/*.sql; do
+        for file in $(find "$f_dir" -maxdepth 1 -name "*.sql" | sort -V); do
             [[ -f "$file" ]] || continue
             echo "Executing $file..."
             echo "[$(date '+%F %T')] Executing $file..." >> "$LOG_FILE"
