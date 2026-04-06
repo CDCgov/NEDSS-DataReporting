@@ -1,94 +1,142 @@
-Local Database CDC Tracing
+# Local Database CDC Tracing
 
-This folder is a local scratch area for tracing SQL Server database changes caused by UI actions.
-It is intended for personal investigation and test design, not for committing into the repository.
+This directory contains a local investigation tool for tracing SQL Server Change Data Capture (CDC) changes caused by UI actions. It is designed for ad hoc debugging and test design around NBS and downstream processing.
 
-Git
+Local cache and state files are written under `.local/`. Per-run artifacts are written under `output/`.
 
-This folder is ignored locally through .git/info/exclude.
-That means it stays out of git status on this machine without changing the shared .gitignore.
-
-Local-only cache and state files are written under .local/ so they can be excluded cleanly when this tracer is eventually committed.
-
-What The Script Does
+## What The Script Does
 
 The tracer script:
 
-- checks which tables in the target database already have CDC enabled
-- enables CDC on all remaining eligible user tables
-- records a start LSN and timestamp
+- checks whether database-level CDC is enabled and enables it if needed
+- fixes the common restored-database owner issue by reassigning the database owner to `sa` if SQL Server blocks CDC enablement because `dbo` is orphaned
+- checks which user tables are already CDC-enabled
+- enables CDC on remaining eligible tables, except known noisy exclusions such as `dbo.job_flow_log`
+- records a start log sequence number (LSN) and timestamp
 - waits for you to perform a UI action and press Enter
-- prompts you for a one-line description of the actions you took in NBS
-- captures CDC rows between the start and end markers
-- writes a summary and change log into an output folder
-- prompts before disabling tracer-managed CDC tables
-- records any tracer-managed tables left enabled into a local state file
+- optionally waits for the post-processing container to report that it is idle before taking the end LSN
+- prompts for a short description of the NBS actions you performed
+- captures CDC rows in the recorded LSN window
+- writes summary and machine-readable output files for the run
+- optionally disables tracer-managed CDC tables and database-level CDC during cleanup
+- persists cleanup state in `.local/` when tracer-managed CDC is intentionally left enabled or cleanup partially fails
 
-Prerequisites
+## Prerequisites
 
-- Docker environment running with SQL Server available on localhost:3433
-- sqlcmd installed and available on PATH
+- Docker environment running with SQL Server reachable at the target `--server`
+- `sqlcmd` installed and available on `PATH`, or passed explicitly with `--sqlcmd`
 - a SQL login with permission to enable and disable CDC in the target database
-- Python 3.10+ recommended
+- Python 3.10+
 
-Files Written Per Run
+## Basic Usage
 
-The script creates a timestamped folder under output/ containing:
-
-- summary.txt, including a reconstructed SQL section in CDC order
-- manifest.json
-- changes.jsonl
-
-The top of summary.txt now includes the one-line NBS action note you entered after stopping the recording.
-
-It may also maintain a database-specific local state file under .local/ such as .local/enabled-cdc-tables-NBS_ODSE.json or .local/enabled-cdc-tables-RDB_Modern.json when you leave tracer-managed CDC enabled.
-It also caches replay metadata per database under .local/ in files like .local/replay-metadata-NBS_ODSE.json so PK/FK discovery only has to happen once per database.
-
-The manifest is a per-run summary. The external state file is the source of truth only for deferred cleanup.
-
-Usage
-
-From the repository root:
+Run from the repository root:
 
 ```powershell
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "PizzaIsGood33!"
+python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
 ```
 
-Useful options:
+The default behavior is:
+
+- output goes to `performance-testing/local-db-tracing/output`
+- cleanup mode is `ask`
+- post-processing wait is enabled
+- known replay associations are loaded from `performance-testing/local-db-tracing/known_replay_associations.json`
+
+## Common Commands
+
+Show help:
 
 ```powershell
 python performance-testing/local-db-tracing/trace_db_cdc.py --help
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "PizzaIsGood33!" --output-dir performance-testing/local-db-tracing/output
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "..." --cleanup yes
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "..." --cleanup no
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "..." --disable-only
-python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_Modern --user sa --password "..."
 ```
 
-Notes
+Write artifacts to a custom output directory:
 
-- The script expects database-level CDC to already be enabled for the database named by `--database`.
-- Some tables may be skipped if SQL Server rejects CDC enablement for them.
-- Internal noise tables such as dbo.job_flow_log are excluded from tracing and are never CDC-enabled by the script.
-- changes.jsonl is the best file to mine later when turning observed behavior into tests.
-- The reconstructed SQL now allocates fresh root primary key values and threads them through related inserts by following cached PK/FK metadata, which avoids rerun conflicts on captured IDs.
-- The reconstructed SQL forces any column whose name ends with `user_id` to use `9999` so replayed audit values do not depend on the captured environment.
-- The reconstructed SQL replaces captured datetime literals with `SYSUTCDATETIME()` when the timestamp falls between the recorded run start and end times, so event-time values replay relative to the new run.
-- The reconstructed SQL also allocates replay-time `version_ctrl_nbr` values for `_hist` inserts and increments `version_ctrl_nbr` on live-row updates so reruns do not collide with existing history-row primary keys.
-- Semantic key aliases that are not represented as SQL foreign keys can be declared in `known_replay_associations.json`; the tracer uses those mappings for replay-time substitution before falling back to FK metadata or suffix matching.
-- CDC rows are now fetched in one batched query after first checking which capture instances actually have rows in the LSN window, which avoids spawning one `sqlcmd` process per table and skips JSON reconstruction for unchanged tables.
-- Reconstructed SQL is only generated when the capture actually contains replayable row operations.
-- The default cleanup mode is interactive: the script asks whether to disable tracer-managed CDC tables at the end.
-- After you press Enter at the UI-action prompt, the script waits for the running post-processing container whose name starts with `nedss-datareporting-post-processing-service` to log `No ids to process from the topics.` before capturing the end LSN.
-- If you answer `n`, the script writes the tracer-managed table list to a database-specific state file like enabled-cdc-tables-NBS_ODSE.json so a later `--disable-only` run can turn CDC back off.
-- `--cleanup yes` skips the prompt and always disables tracer-managed tables after the run.
-- `--cleanup no` and `--keep-enabled` skip cleanup and persist the tracer-managed table list.
-- `--skip-post-processing-wait` disables the Docker log wait if you are not running the service in Compose or want to capture immediately.
-- `--known-associations-file` overrides the default `performance-testing/local-db-tracing/known_replay_associations.json` file if you want to test extra replay mappings locally.
-- The tracer logic is database-agnostic; switching from `NBS_ODSE` to `RDB_Modern` is just a `--database` change as long as CDC is enabled there.
-- If an older shared state file named enabled-cdc-tables.json exists in the top-level local-db-tracing folder, the tracer will still read it once and migrate future saves to .local/.
-- Hint: use `--post-processing-wait-timeout` or `--post-processing-container-prefix` if your local Compose project name differs.
+```powershell
+python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --output-dir performance-testing/local-db-tracing/output
+```
 
-To Do:
+Always clean up tracer-managed CDC objects after the run:
 
-- suppress low-signal fields like last_chg_time, record_status_time, status_time, and version_ctrl_nbr unless they are the only things that changed.
+```powershell
+python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
+```
+
+Keep tracer-managed CDC enabled for later cleanup:
+
+```powershell
+python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
+```
+
+Disable whatever the tracer previously left enabled, then exit:
+
+```powershell
+python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
+```
+
+Trace a different database:
+
+```powershell
+python performance-testing/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
+```
+
+## Important Options
+
+- `--cleanup ask|yes|no`: prompt, always clean up, or always leave tracer-managed CDC enabled
+- `--disable-only`: disable tracer-managed CDC based on the recorded state file, then exit
+- `--state-file`: override the default database-specific cleanup state file
+- `--sqlcmd`: override the `sqlcmd` executable name or path
+- `--skip-post-processing-wait`: capture immediately after you press Enter instead of waiting for the post-processing container to go idle
+- `--post-processing-container-prefix`: override the container name prefix to watch
+- `--post-processing-idle-message`: override the log message that indicates the post-processing container is idle
+- `--post-processing-initial-wait`: delay log polling long enough to avoid matching stale idle messages
+- `--post-processing-wait-timeout`: cap the post-processing wait in seconds
+- `--known-associations-file`: override the default replay association mapping file
+
+## Output Files
+
+Each run creates a timestamped directory under `output/`, for example `output/20260406-123456-NBS_ODSE/`.
+
+That directory contains:
+
+- `summary.txt`: human-readable run summary, including the NBS action note and reconstructed SQL when replayable row operations were captured
+- `manifest.json`: structured run metadata, including enabled tables, skipped tables, capture instances, and tracked cleanup state
+- `changes.jsonl`: one JSON object per captured CDC row in sorted CDC order
+
+The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
+
+## Local State And Cleanup
+
+When cleanup is skipped or partially fails, the tracer writes database-specific state under `.local/`, such as:
+
+- `.local/enabled-cdc-tables-NBS_ODSE.json`
+- `.local/enabled-cdc-tables-RDB_Modern.json`
+
+That state file is the source of truth for later `--disable-only` cleanup. The script also honors the older shared `enabled-cdc-tables.json` file once during migration if it exists.
+
+Replay metadata is cached per database under `.local/` in files such as `.local/replay-metadata-NBS_ODSE.json` so expensive PK and FK discovery does not have to run on every trace.
+
+If the tracer enabled database-level CDC itself, cleanup also attempts to disable database-level CDC when the run finishes.
+
+## Reconstructed SQL Behavior
+
+When the capture contains replayable row operations, `summary.txt` includes reconstructed SQL that tries to be rerunnable in a local environment.
+
+Current replay behavior includes:
+
+- allocating fresh root primary key values and threading them through related inserts using cached PK and FK metadata
+- applying semantic associations from `known_replay_associations.json` before falling back to FK metadata or column-name matching
+- replacing captured datetime literals inside the trace window with `SYSUTCDATETIME()`
+- forcing columns whose names end with `user_id` to use `9999`
+- assigning replay-safe `version_ctrl_nbr` values for `_hist` inserts and live-row updates
+- preserving CDC order so the reconstructed SQL follows the original transaction sequence as closely as possible
+
+If no replayable row operations were captured, the summary still gets written but the reconstructed SQL section is omitted.
+
+## Notes
+
+- Some tables may still be skipped if SQL Server refuses CDC enablement for them.
+- The tracer batches CDC reads across capture instances instead of spawning one `sqlcmd` process per table.
+- By default, after you press Enter, the script waits for a running container whose name starts with `nedss-datareporting-post-processing-service` to log `No ids to process from the topics.` before capturing the end LSN.
+- The tracer is database-agnostic enough to work against `NBS_ODSE` and `RDB_Modern`, but table eligibility and replay quality still depend on the schema and available metadata in the selected database.
