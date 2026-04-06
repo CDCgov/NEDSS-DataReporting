@@ -221,11 +221,6 @@ def parse_args() -> argparse.Namespace:
         help="Whether to disable tracer-managed CDC tables after the run: ask, yes, or no",
     )
     parser.add_argument(
-        "--keep-enabled",
-        action="store_true",
-        help="Legacy alias for --cleanup no",
-    )
-    parser.add_argument(
         "--disable-only",
         action="store_true",
         help="Disable the tracer-managed CDC tables recorded in the state file, then exit",
@@ -675,8 +670,6 @@ def should_disable_tables(args: argparse.Namespace, table_count: int) -> bool:
     """Resolve cleanup intent once so the finally block can focus on applying it consistently."""
 
     if table_count == 0:
-        return False
-    if args.keep_enabled:
         return False
     if args.cleanup == "yes":
         return True
