@@ -90,21 +90,6 @@ def has_post_processing_idle_tail(events: list[str], idle_message: str) -> bool:
 
 
 
-def print_post_processing_log_tail(events: list[str]) -> None:
-    """Print the current log tail being evaluated so wait timing can be debugged from stdout."""
-
-    if len(events) >= 2:
-        print(f"Post-processing second-last line: {events[-2]}")
-        print(f"Post-processing last line:        {events[-1]}")
-    elif len(events) == 1:
-        print("Post-processing second-last line: <missing>")
-        print(f"Post-processing last line:        {events[-1]}")
-    else:
-        print("Post-processing second-last line: <missing>")
-        print("Post-processing last line:        <missing>")
-
-
-
 def wait_for_post_processing_idle(
     container_prefix: str,
     idle_message: str,
@@ -133,18 +118,22 @@ def wait_for_post_processing_idle(
         sleep(initial_wait_seconds)
 
     deadline = perf_counter() + max(timeout_seconds, 0)
+    print(f"[{progress_now()}] Waiting for {container_name}: ", end="", flush=True)
     while perf_counter() <= deadline:
         success, output = fetch_container_logs_since(docker_executable, container_name, since_utc)
         if not success:
+            print()
             print(f"Skipping post-processing log wait: {output}")
             return
         events = extract_meaningful_log_events(output)
-        print_post_processing_log_tail(events)
         if has_post_processing_idle_tail(events, idle_message):
+            print()
             log_progress(f"Observed idle message in {container_name}")
             return
+        print(".", end="", flush=True)
         sleep(2)
 
+    print()
     print(
         f"Timed out after {timeout_seconds}s waiting for {container_name} to log the idle message; continuing capture"
     )
