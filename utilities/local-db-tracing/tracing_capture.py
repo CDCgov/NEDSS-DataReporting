@@ -1,3 +1,5 @@
+"""Capture CDC rows and manage table-level CDC enablement for tracing runs."""
+
 from __future__ import annotations
 
 import json
@@ -10,6 +12,18 @@ from tracing_sql import SqlCmdClient, quote_identifier, read_tsv, sql_quote
 
 
 def fetch_max_lsn(client: SqlCmdClient) -> str:
+    """Fetch the current maximum CDC LSN from SQL Server.
+
+    Args:
+        client: SQL Server client used to query CDC metadata.
+
+    Returns:
+        str: The current CDC max LSN encoded as a SQL Server hex literal.
+
+    Raises:
+        SystemExit: If SQL Server does not return an LSN value.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT master.dbo.fn_varbintohexstr(sys.fn_cdc_get_max_lsn());
@@ -22,6 +36,18 @@ SELECT master.dbo.fn_varbintohexstr(sys.fn_cdc_get_max_lsn());
 
 
 def enable_table_cdc(client: SqlCmdClient, schema_name: str, table_name: str) -> tuple[bool, str]:
+    """Attempt to enable CDC for one source table.
+
+    Args:
+        client: SQL Server client used to execute the CDC enable command.
+        schema_name: Source schema name.
+        table_name: Source table name.
+
+    Returns:
+        tuple[bool, str]: Whether the table was enabled and any detail returned
+        by SQL Server.
+    """
+
     sql = f"""
 SET NOCOUNT ON;
 BEGIN TRY
@@ -44,6 +70,18 @@ END CATCH;
 
 
 def disable_table_cdc(client: SqlCmdClient, schema_name: str, table_name: str) -> tuple[bool, str]:
+    """Attempt to disable CDC for one source table.
+
+    Args:
+        client: SQL Server client used to execute the CDC disable command.
+        schema_name: Source schema name.
+        table_name: Source table name.
+
+    Returns:
+        tuple[bool, str]: Whether the table was disabled and any detail returned
+        by SQL Server.
+    """
+
     sql = f"""
 SET NOCOUNT ON;
 BEGIN TRY
@@ -65,6 +103,16 @@ END CATCH;
 
 
 def disable_managed_tables(client: SqlCmdClient, managed_tables: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Disable all tracer-managed tables and keep only failed cleanup entries.
+
+    Args:
+        client: SQL Server client used to disable CDC.
+        managed_tables: Table entries previously recorded as tracer-managed.
+
+    Returns:
+        list[dict[str, str]]: Remaining table entries that still need cleanup.
+    """
+
     remaining_tables: list[dict[str, str]] = []
     for entry in managed_tables:
         disabled, detail = disable_table_cdc(client, entry["schema_name"], entry["table_name"])
@@ -96,6 +144,19 @@ def fetch_changes_for_capture(
     start_lsn: str,
     end_lsn: str,
 ) -> list[dict[str, object]]:
+    """Fetch CDC rows for one capture instance within an LSN window.
+
+    Args:
+        client: SQL Server client used to query CDC rows.
+        capture: Capture instance metadata for the source table.
+        start_lsn: Exclusive lower bound of the capture window.
+        end_lsn: Inclusive upper bound of the capture window.
+
+    Returns:
+        list[dict[str, object]]: Parsed CDC records for the requested capture
+        instance.
+    """
+
     sql = f"""
 SET NOCOUNT ON;
 SELECT
@@ -160,6 +221,19 @@ def fetch_changes_for_captures(
     start_lsn: str,
     end_lsn: str,
 ) -> list[dict[str, object]]:
+    """Fetch CDC rows for many capture instances with one batched query.
+
+    Args:
+        client: SQL Server client used to query CDC rows.
+        captures: Capture instances to inspect.
+        start_lsn: Exclusive lower bound of the capture window.
+        end_lsn: Inclusive upper bound of the capture window.
+
+    Returns:
+        list[dict[str, object]]: Parsed CDC records across all requested
+        capture instances.
+    """
+
     if not captures:
         return []
 

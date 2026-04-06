@@ -1,3 +1,10 @@
+"""Trace SQL Server CDC changes for a local NBS workflow run.
+
+This script enables CDC as needed, waits for a user-driven UI action,
+captures the resulting change rows, and writes manifest, raw change, and
+summary artifacts for later inspection or replay.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -47,6 +54,12 @@ from tracing_state import (
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for a local CDC tracing run.
+
+    Returns:
+        argparse.Namespace: Parsed command-line options for the tracer.
+    """
+
     parser = argparse.ArgumentParser(
         description="Enable CDC on a SQL Server database for tracing, capture changes, and optionally clean up afterward."
     )
@@ -112,6 +125,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def prompt_nbs_actions() -> list[str]:
+    """Collect a short description of the UI actions performed by the user.
+
+    Returns:
+        list[str]: A single-item list containing the entered action summary,
+        or an empty list when the user leaves the prompt blank.
+    """
+
     action = input("Describe the actions you took in NBS: ").strip()
     return [action] if action else []
 
@@ -123,6 +143,19 @@ def run_disable_only(
     state_file: Path,
     legacy_state_file: Path | None,
 ) -> int:
+    """Disable previously recorded tracer-managed CDC state and exit.
+
+    Args:
+        args: Parsed CLI arguments.
+        client: SQL Server client used for CDC operations.
+        state_file: Primary cleanup-state file for the selected database.
+        legacy_state_file: Optional legacy cleanup-state file to clear during
+            migration.
+
+    Returns:
+        int: Process exit code indicating whether cleanup fully succeeded.
+    """
+
     managed_state, loaded_state_file = load_managed_tables(state_file, args.database, legacy_state_file)
     managed_tables = managed_state.tables
     if not managed_tables and not managed_state.database_cdc_enabled_by_tracer:
@@ -179,6 +212,12 @@ def run_disable_only(
 
 
 def main() -> int:
+    """Run the end-to-end CDC tracing workflow.
+
+    Returns:
+        int: Process exit code for the tracing run.
+    """
+
     args = parse_args()
     executable = require_sqlcmd(args.sqlcmd)
     client = SqlCmdClient(executable, args.server, args.database, args.user, args.password)

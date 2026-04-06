@@ -1,3 +1,5 @@
+"""Write tracing artifacts and user-facing summaries for CDC capture runs."""
+
 from __future__ import annotations
 
 import json
@@ -18,6 +20,15 @@ from tracing_sql import quote_identifier
 
 
 def summarize_row_identifier(record: dict[str, object]) -> str:
+    """Build a concise identifier string for one captured CDC row.
+
+    Args:
+        record: Captured CDC record including operation metadata and row payload.
+
+    Returns:
+        str: Short human-readable summary of the record identity.
+    """
+
     row = record.get("row")
     if not isinstance(row, dict):
         return f"{record['operation']} seqval={record['seqval']}"
@@ -59,6 +70,15 @@ def summarize_row_identifier(record: dict[str, object]) -> str:
 
 
 def summarize_record_identity(record: dict[str, object]) -> str:
+    """Strip the operation prefix from a row summary.
+
+    Args:
+        record: Captured CDC record to summarize.
+
+    Returns:
+        str: Record identity without the leading operation name.
+    """
+
     summary = summarize_row_identifier(record)
     parts = summary.split(" ", 1)
     return parts[1] if len(parts) == 2 else summary
@@ -66,6 +86,16 @@ def summarize_record_identity(record: dict[str, object]) -> str:
 
 
 def summarize_update_pair(before_record: dict[str, object], after_record: dict[str, object]) -> str:
+    """Summarize an update by comparing its before and after CDC rows.
+
+    Args:
+        before_record: CDC row emitted before the update.
+        after_record: CDC row emitted after the update.
+
+    Returns:
+        str: Short human-readable description of the changed columns.
+    """
+
     before_row = before_record.get("row") if isinstance(before_record.get("row"), dict) else {}
     after_row = after_record.get("row") if isinstance(after_record.get("row"), dict) else {}
 
@@ -91,6 +121,15 @@ def summarize_update_pair(before_record: dict[str, object], after_record: dict[s
 
 
 def summarize_table_records(records: list[dict[str, object]]) -> list[str]:
+    """Summarize all captured rows for one table.
+
+    Args:
+        records: CDC records already grouped by table.
+
+    Returns:
+        list[str]: Bullet-ready summary lines for the grouped records.
+    """
+
     lines: list[str] = []
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
 
@@ -117,6 +156,13 @@ def summarize_table_records(records: list[dict[str, object]]) -> list[str]:
 
 
 def write_jsonl(path: Path, records: Iterable[dict[str, object]]) -> None:
+    """Write captured CDC records to a JSON Lines file.
+
+    Args:
+        path: Output file path.
+        records: Records to serialize.
+    """
+
     with path.open("w", encoding="utf-8", newline="\n") as handle:
         for record in records:
             handle.write(json.dumps(record, ensure_ascii=True))
@@ -125,6 +171,13 @@ def write_jsonl(path: Path, records: Iterable[dict[str, object]]) -> None:
 
 
 def write_manifest(path: Path, manifest: dict[str, object]) -> None:
+    """Write run metadata to the manifest artifact.
+
+    Args:
+        path: Output file path.
+        manifest: Manifest payload describing the run.
+    """
+
     path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
 
@@ -142,6 +195,22 @@ def write_summary(
     uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
 ) -> None:
+    """Write the human-readable summary artifact for a tracing run.
+
+    Args:
+        path: Output file path.
+        nbs_actions: User-entered descriptions of the triggering UI actions.
+        manifest: Run metadata written alongside the summary.
+        changes: Captured CDC records.
+        primary_keys_by_table: Ordered primary-key columns by table.
+        identity_columns_by_table: Identity columns by table.
+        foreign_keys_by_source: Foreign-key column mappings.
+        column_sql_types: Replay-ready SQL type strings by column.
+        generated_always_columns: Generated-always columns.
+        uid_generator_entries: Local UID generator metadata.
+        known_associations: Supplemental replay-time semantic key mappings.
+    """
+
     replay_now_window = replay_now_window_from_manifest(manifest)
     op_counts = Counter(record["operation"] for record in changes)
     table_counts: defaultdict[str, int] = defaultdict(int)

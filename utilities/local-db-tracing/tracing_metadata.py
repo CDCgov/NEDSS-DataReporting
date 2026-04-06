@@ -1,3 +1,5 @@
+"""Load and cache SQL Server metadata needed to reconstruct CDC replay."""
+
 from __future__ import annotations
 
 import json
@@ -13,6 +15,16 @@ from tracing_state import utc_now
 
 
 def fetch_database_cdc_enabled(client: SqlCmdClient, database: str) -> bool:
+    """Check whether CDC is enabled at the database level.
+
+    Args:
+        client: SQL Server client used to query metadata.
+        database: Database name to inspect.
+
+    Returns:
+        bool: True when database-level CDC is enabled.
+    """
+
     sql = f"""
 SET NOCOUNT ON;
 SELECT CASE WHEN is_cdc_enabled = 1 THEN '1' ELSE '0' END
@@ -24,6 +36,17 @@ WHERE name = '{sql_quote(database)}';
 
 
 def enable_database_cdc(client: SqlCmdClient, database: str) -> tuple[bool, str]:
+    """Attempt to enable CDC for a database.
+
+    Args:
+        client: SQL Server client used to execute the CDC enable command.
+        database: Database name to enable.
+
+    Returns:
+        tuple[bool, str]: Whether CDC ended up enabled and any detail returned
+        by SQL Server.
+    """
+
     database_literal = sql_quote(database)
     database_identifier = sql_identifier(database)
     sql = f"""
@@ -66,6 +89,17 @@ WHERE name = '{database_literal}';
 
 
 def disable_database_cdc(client: SqlCmdClient, database: str) -> tuple[bool, str]:
+    """Attempt to disable CDC for a database.
+
+    Args:
+        client: SQL Server client used to execute the CDC disable command.
+        database: Database name to disable.
+
+    Returns:
+        tuple[bool, str]: Whether CDC was disabled and any detail returned by
+        SQL Server.
+    """
+
     sql = """
 SET NOCOUNT ON;
 BEGIN TRY
@@ -84,6 +118,15 @@ END CATCH;
 
 
 def fetch_table_statuses(client: SqlCmdClient) -> list[TableStatus]:
+    """Fetch CDC tracking status for user tables in the active database.
+
+    Args:
+        client: SQL Server client used to query table metadata.
+
+    Returns:
+        list[TableStatus]: Table status entries ordered by schema and table.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT
@@ -101,6 +144,15 @@ ORDER BY s.name, t.name;
 
 
 def fetch_capture_instances(client: SqlCmdClient) -> list[CaptureInstance]:
+    """Fetch CDC capture instances for tracked tables.
+
+    Args:
+        client: SQL Server client used to query CDC metadata.
+
+    Returns:
+        list[CaptureInstance]: Capture instances ordered by schema and table.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT
@@ -117,6 +169,16 @@ ORDER BY s.name, t.name;
 
 
 def fetch_primary_key_columns(client: SqlCmdClient) -> dict[tuple[str, str], list[str]]:
+    """Fetch ordered primary-key columns for each user table.
+
+    Args:
+        client: SQL Server client used to query relational metadata.
+
+    Returns:
+        dict[tuple[str, str], list[str]]: Mapping of table keys to ordered
+        primary-key column names.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT
@@ -151,6 +213,16 @@ ORDER BY s.name, t.name, ic.key_ordinal;
 
 
 def fetch_identity_columns(client: SqlCmdClient) -> dict[tuple[str, str], list[str]]:
+    """Fetch identity columns for each user table.
+
+    Args:
+        client: SQL Server client used to query relational metadata.
+
+    Returns:
+        dict[tuple[str, str], list[str]]: Mapping of table keys to identity
+        column names.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT
@@ -172,6 +244,16 @@ ORDER BY s.name, t.name, c.column_id;
 
 
 def fetch_foreign_key_columns(client: SqlCmdClient) -> dict[tuple[str, str, str], tuple[str, str, str]]:
+    """Fetch source-to-target foreign-key column mappings.
+
+    Args:
+        client: SQL Server client used to query relational metadata.
+
+    Returns:
+        dict[tuple[str, str, str], tuple[str, str, str]]: Mapping from source
+        schema, table, and column to the referenced schema, table, and column.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT
@@ -200,6 +282,16 @@ ORDER BY src_schema.name, src_table.name, fkc.constraint_column_id;
 
 
 def fetch_column_sql_types(client: SqlCmdClient) -> dict[tuple[str, str, str], str]:
+    """Fetch normalized SQL type strings for user-table columns.
+
+    Args:
+        client: SQL Server client used to query column metadata.
+
+    Returns:
+        dict[tuple[str, str, str], str]: Mapping of schema, table, and column
+        to a replay-ready SQL type string.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT
@@ -232,6 +324,16 @@ ORDER BY s.name, t.name, c.column_id;
 
 
 def fetch_generated_always_columns(client: SqlCmdClient) -> set[tuple[str, str, str]]:
+    """Fetch columns that SQL Server always generates automatically.
+
+    Args:
+        client: SQL Server client used to query column metadata.
+
+    Returns:
+        set[tuple[str, str, str]]: Schema, table, and column tuples for
+        generated-always columns.
+    """
+
     sql = """
 SET NOCOUNT ON;
 SELECT
@@ -253,6 +355,16 @@ ORDER BY s.name, t.name, c.column_id;
 
 
 def fetch_uid_generator_entries(client: SqlCmdClient) -> list[UidGeneratorEntry]:
+    """Fetch Local_UID_generator rows when the table exists.
+
+    Args:
+        client: SQL Server client used to query ODSE metadata.
+
+    Returns:
+        list[UidGeneratorEntry]: Generator rows used for replay-time ID
+        allocation.
+    """
+
     sql = """
 SET NOCOUNT ON;
 IF OBJECT_ID(N'dbo.Local_UID_generator', N'U') IS NOT NULL
@@ -290,6 +402,19 @@ def save_replay_metadata_cache(
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
 ) -> None:
+    """Persist replay metadata so repeated tracing runs can skip re-querying it.
+
+    Args:
+        cache_file: Cache file path to write.
+        database: Database name the metadata belongs to.
+        primary_keys_by_table: Ordered primary-key columns by table.
+        identity_columns_by_table: Identity columns by table.
+        foreign_keys_by_source: Foreign-key column mappings.
+        column_sql_types: Replay-ready SQL type strings by column.
+        generated_always_columns: Generated-always columns.
+        uid_generator_entries: Local UID generator metadata.
+    """
+
     payload = {
         "cache_version": REPLAY_METADATA_CACHE_VERSION,
         "database": database,
@@ -354,6 +479,20 @@ def load_replay_metadata_cache(
     set[tuple[str, str, str]],
     list[UidGeneratorEntry],
 ] | None:
+    """Load cached replay metadata when it matches the current database.
+
+    Args:
+        cache_file: Cache file path to read.
+        database: Database name expected in the cache.
+
+    Returns:
+        tuple[...] | None: Cached replay metadata when present and compatible,
+        otherwise None.
+
+    Raises:
+        SystemExit: If the cache file exists but is malformed.
+    """
+
     if not cache_file.exists():
         return None
 
@@ -429,6 +568,20 @@ def get_replay_metadata(
     set[tuple[str, str, str]],
     list[UidGeneratorEntry],
 ]:
+    """Load replay metadata from cache or SQL Server.
+
+    Args:
+        client: SQL Server client used when cache data is unavailable.
+        database: Database name whose metadata should be returned.
+
+    Returns:
+        tuple[dict[tuple[str, str], list[str]], dict[tuple[str, str], list[str]],
+        dict[tuple[str, str, str], tuple[str, str, str]],
+        dict[tuple[str, str, str], str], set[tuple[str, str, str]],
+        list[UidGeneratorEntry]]: Replay metadata collections used by summary
+        generation and SQL reconstruction.
+    """
+
     cache_file = replay_metadata_cache_file_for_database(database)
     cached = load_replay_metadata_cache(cache_file, database)
     if cached is not None:

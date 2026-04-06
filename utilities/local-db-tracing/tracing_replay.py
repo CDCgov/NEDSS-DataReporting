@@ -1,3 +1,5 @@
+"""Reconstruct replayable SQL statements from captured CDC row payloads."""
+
 from __future__ import annotations
 
 import json
@@ -21,16 +23,45 @@ from tracing_sql import quote_identifier, sql_literal, sql_quote
 
 
 def value_key(value: object) -> str:
+    """Create a stable string key for arbitrary JSON-compatible values.
+
+    Args:
+        value: Value to normalize for registry lookups.
+
+    Returns:
+        str: Deterministic JSON representation of the value.
+    """
+
     return json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
 
 
 
 def update_pair_key(record: dict[str, object]) -> tuple[str, str, int | None]:
+    """Build the pairing key for CDC update-before and update-after rows.
+
+    Args:
+        record: Captured CDC record.
+
+    Returns:
+        tuple[str, str, int | None]: Key derived from LSN, sequence value, and
+        command id.
+    """
+
     return (str(record["start_lsn"]), str(record["seqval"]), record.get("command_id"))
 
 
 
 def change_sort_key(record: dict[str, object]) -> tuple[str, str, int, int]:
+    """Build a stable sort key for CDC rows.
+
+    Args:
+        record: Captured CDC record.
+
+    Returns:
+        tuple[str, str, int, int]: Key that keeps records ordered by LSN,
+        sequence value, command id, and operation code.
+    """
+
     command_id = record.get("command_id")
     return (
         str(record["start_lsn"]),
@@ -42,11 +73,30 @@ def change_sort_key(record: dict[str, object]) -> tuple[str, str, int, int]:
 
 
 def format_value(value: object) -> str:
+    """Render a Python value the same way it will appear in summaries.
+
+    Args:
+        value: Value to render.
+
+    Returns:
+        str: JSON-style string representation of the value.
+    """
+
     return json.dumps(value, ensure_ascii=True)
 
 
 
 def parse_iso_datetime(value: str) -> datetime | None:
+    """Parse an ISO-like timestamp string into a datetime.
+
+    Args:
+        value: Timestamp string to parse.
+
+    Returns:
+        datetime | None: Parsed datetime when the value is valid, otherwise
+        None.
+    """
+
     candidate = value.strip()
     if not candidate:
         return None
@@ -60,6 +110,15 @@ def parse_iso_datetime(value: str) -> datetime | None:
 
 
 def normalize_utc_datetime(value: datetime) -> datetime:
+    """Normalize a datetime value into UTC.
+
+    Args:
+        value: Datetime to normalize.
+
+    Returns:
+        datetime: UTC-normalized datetime.
+    """
+
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc)
@@ -67,6 +126,16 @@ def normalize_utc_datetime(value: datetime) -> datetime:
 
 
 def replay_now_window_from_manifest(manifest: dict[str, object]) -> tuple[datetime, datetime] | None:
+    """Extract the replay-time NOW replacement window from a manifest.
+
+    Args:
+        manifest: Tracing manifest containing start and end timestamps.
+
+    Returns:
+        tuple[datetime, datetime] | None: Inclusive UTC window for replacing
+        captured timestamps with runtime NOW values, or None when unavailable.
+    """
+
     start_time = manifest.get("start_time_utc")
     end_time = manifest.get("end_time_utc")
     if not isinstance(start_time, str) or not isinstance(end_time, str):
@@ -89,6 +158,16 @@ def should_replace_datetime_literal_with_now(
     value: object,
     replay_now_window: tuple[datetime, datetime] | None,
 ) -> bool:
+    """Check whether a captured datetime literal should be replaced with NOW.
+
+    Args:
+        value: Captured value under consideration.
+        replay_now_window: Inclusive UTC window derived from the manifest.
+
+    Returns:
+        bool: True when the literal falls inside the replay NOW window.
+    """
+
     if replay_now_window is None or not isinstance(value, str):
         return False
 
@@ -106,6 +185,15 @@ def should_replace_datetime_literal_with_now(
 
 
 def parse_int_value(value: object) -> int | None:
+    """Coerce a loosely typed JSON value to an integer when safe.
+
+    Args:
+        value: Value to inspect.
+
+    Returns:
+        int | None: Parsed integer value, or None when coercion is unsafe.
+    """
+
     if isinstance(value, bool):
         return int(value)
     if isinstance(value, int):
@@ -125,6 +213,15 @@ def parse_int_value(value: object) -> int | None:
 
 
 def is_numeric_sql_type(sql_type: str) -> bool:
+    """Determine whether a SQL type should be treated as numeric.
+
+    Args:
+        sql_type: SQL type string from metadata.
+
+    Returns:
+        bool: True when the SQL type represents a numeric column family.
+    """
+
     lowered = sql_type.lower()
     return lowered.startswith(("tinyint", "smallint", "int", "bigint", "decimal", "numeric"))
 
