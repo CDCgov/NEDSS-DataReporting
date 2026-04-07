@@ -12,7 +12,6 @@ from tracing_models import KnownAssociation, UidGeneratorEntry
 from tracing_replay import (
     format_value,
     reconstruct_sql_statements,
-    replay_now_window_from_manifest,
     update_pair_key,
 )
 from tracing_sql import quote_identifier
@@ -212,7 +211,6 @@ def write_summary(
         known_associations: Supplemental replay-time semantic key mappings.
     """
 
-    replay_now_window = replay_now_window_from_manifest(manifest)
     op_counts = Counter(record["operation"] for record in changes)
     table_counts: defaultdict[str, int] = defaultdict(int)
     table_records: defaultdict[str, list[dict[str, object]]] = defaultdict(list)
@@ -274,7 +272,6 @@ def write_summary(
             generated_always_columns,
             uid_generator_entries,
             known_associations,
-            replay_now_window,
             superuser_id,
         )
     if reconstructed_sql:

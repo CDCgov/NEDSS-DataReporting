@@ -151,7 +151,7 @@ Current replay behavior includes:
 
 - declaring a shared negative replay seed (`@id = -1000`) and deriving replay-safe PK/local-id variables from it while threading those values through related inserts using cached PK and FK metadata
 - applying semantic associations from `known_replay_associations.json` before falling back to FK metadata or column-name matching
-- replacing captured datetime literals inside the trace window with `SYSUTCDATETIME()`
+- preserving captured datetime literals exactly as they appeared in the CDC payload
 - forcing columns whose names end with `user_id` to use the resolved `superuser` ID for the traced database, falling back to `10009282`
 - assigning replay-safe `version_ctrl_nbr` values for `_hist` inserts and live-row updates
 - preserving CDC order so the reconstructed SQL follows the original transaction sequence as closely as possible

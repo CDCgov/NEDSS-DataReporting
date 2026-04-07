@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 
 from tracing_constants import (
     CDC_METADATA_COLUMNS,
     DEFAULT_UID_BLOCK_SIZE_BY_CLASS,
     GENERIC_LOCAL_ID_PATTERN,
-    REPLAY_DATETIME_LITERAL_PATTERN,
 )
 from tracing_models import KnownAssociation, UidAllocation, UidGeneratorEntry
 from tracing_paths import (
@@ -83,104 +82,6 @@ def format_value(value: object) -> str:
     """
 
     return json.dumps(value, ensure_ascii=True)
-
-
-
-def parse_iso_datetime(value: str) -> datetime | None:
-    """Parse an ISO-like timestamp string into a datetime.
-
-    Args:
-        value: Timestamp string to parse.
-
-    Returns:
-        datetime | None: Parsed datetime when the value is valid, otherwise
-        None.
-    """
-
-    candidate = value.strip()
-    if not candidate:
-        return None
-    if candidate.endswith("Z"):
-        candidate = candidate[:-1] + "+00:00"
-    try:
-        return datetime.fromisoformat(candidate)
-    except ValueError:
-        return None
-
-
-
-def normalize_utc_datetime(value: datetime) -> datetime:
-    """Normalize a datetime value into UTC.
-
-    Args:
-        value: Datetime to normalize.
-
-    Returns:
-        datetime: UTC-normalized datetime.
-    """
-
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
-
-
-
-def replay_now_window_from_manifest(manifest: dict[str, object]) -> tuple[datetime, datetime] | None:
-    """Extract the replay-time NOW replacement window from a manifest.
-
-    Args:
-        manifest: Tracing manifest containing start and end timestamps.
-
-    Returns:
-        tuple[datetime, datetime] | None: Inclusive UTC window for replacing
-        captured timestamps with runtime NOW values, or None when unavailable.
-    """
-
-    start_time = manifest.get("start_time_utc")
-    end_time = manifest.get("end_time_utc")
-    if not isinstance(start_time, str) or not isinstance(end_time, str):
-        return None
-
-    parsed_start = parse_iso_datetime(start_time)
-    parsed_end = parse_iso_datetime(end_time)
-    if parsed_start is None or parsed_end is None:
-        return None
-
-    normalized_start = normalize_utc_datetime(parsed_start)
-    normalized_end = normalize_utc_datetime(parsed_end)
-    if normalized_end < normalized_start:
-        return None
-    return normalized_start, normalized_end
-
-
-
-def should_replace_datetime_literal_with_now(
-    value: object,
-    replay_now_window: tuple[datetime, datetime] | None,
-) -> bool:
-    """Check whether a captured datetime literal should be replaced with NOW.
-
-    Args:
-        value: Captured value under consideration.
-        replay_now_window: Inclusive UTC window derived from the manifest.
-
-    Returns:
-        bool: True when the literal falls inside the replay NOW window.
-    """
-
-    if replay_now_window is None or not isinstance(value, str):
-        return False
-
-    candidate = value.strip()
-    if not REPLAY_DATETIME_LITERAL_PATTERN.match(candidate):
-        return False
-
-    parsed_value = parse_iso_datetime(candidate)
-    if parsed_value is None:
-        return False
-
-    normalized_value = normalize_utc_datetime(parsed_value)
-    return replay_now_window[0] <= normalized_value <= replay_now_window[1]
 
 
 
@@ -793,8 +694,6 @@ def sql_value_expression(
     )
     if variable_reference:
         return variable_reference
-    if should_replace_datetime_literal_with_now(value, replay_now_window):
-        return "SYSUTCDATETIME()"
     return sql_literal(value)
 
 

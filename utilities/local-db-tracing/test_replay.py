@@ -77,6 +77,7 @@ class ReplaySqlTest(unittest.TestCase):
                 "operation_code": 2,
                 "row": {
                     "person_uid": 10009297,
+                    "add_time": "2026-04-07T19:30:46.130",
                     "person_parent_uid": 10009297,
                     "local_id": "PSN10067007GA01",
                     "add_user_id": 7777,
@@ -134,6 +135,8 @@ class ReplaySqlTest(unittest.TestCase):
             "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';",
             sql,
         )
+        self.assertIn("N'2026-04-07T19:30:46.130'", sql)
+        self.assertNotIn("SYSUTCDATETIME()", sql)
         self.assertIn(str(DEFAULT_SUPERUSER_ID), sql)
         self.assertIn(
             "VALUES (@dbo_Entity_entity_uid, @dbo_Postal_locator_postal_locator_uid, N'H');",
