@@ -6,6 +6,7 @@ on:
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
+      - "docker-compose.yaml"
 
 jobs:
   pipeline:
