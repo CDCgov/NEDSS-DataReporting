@@ -272,14 +272,12 @@ def write_summary(
             generated_always_columns,
             uid_generator_entries,
             known_associations,
-            superuser_id,
+            superuser_id=superuser_id,
         )
     if reconstructed_sql:
         lines.append("")
         lines.append("Reconstructed SQL:")
         lines.append(f"USE {quote_identifier(str(manifest['database']))};")
-        lines.append("DECLARE @id bigint = -1000;")
-        lines.append("")
         lines.extend(reconstructed_sql)
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

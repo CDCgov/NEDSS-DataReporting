@@ -128,9 +128,9 @@ class ReplaySqlTest(unittest.TestCase):
 
         self.assertNotIn("GetUid", sql)
         self.assertNotIn("MAX([postal_locator_uid])", sql)
-        self.assertIn("DECLARE @dbo_Security_log_security_log_uid bigint = CONVERT(bigint, @id);", sql)
-        self.assertIn("DECLARE @dbo_Entity_entity_uid bigint = CONVERT(bigint, @id - 1);", sql)
-        self.assertIn("DECLARE @dbo_Postal_locator_postal_locator_uid bigint = CONVERT(bigint, @id - 2);", sql)
+        self.assertIn("DECLARE @dbo_Security_log_security_log_uid bigint = -1000;", sql)
+        self.assertIn("DECLARE @dbo_Entity_entity_uid bigint = -1001;", sql)
+        self.assertIn("DECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1002;", sql)
         self.assertIn(
             "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';",
             sql,
@@ -143,7 +143,7 @@ class ReplaySqlTest(unittest.TestCase):
             sql,
         )
 
-    def test_summary_declares_id_after_use(self) -> None:
+    def test_summary_declares_only_required_uids(self) -> None:
         manifest = {
             "database": "NBS_ODSE",
             "start_time_utc": "2026-04-07T14:08:36+00:00",
@@ -172,7 +172,11 @@ class ReplaySqlTest(unittest.TestCase):
             )
             summary = summary_path.read_text(encoding="utf-8")
 
-        self.assertIn("USE [NBS_ODSE];\nDECLARE @id bigint = -1000;\n", summary)
+        self.assertIn(
+            "USE [NBS_ODSE];\nDECLARE @dbo_Security_log_security_log_uid bigint = -1000;\nDECLARE @dbo_Entity_entity_uid bigint = -1001;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1002;\n",
+            summary,
+        )
+        self.assertNotIn("DECLARE @id bigint", summary)
 
 
 if __name__ == "__main__":

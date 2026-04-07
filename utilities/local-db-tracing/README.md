@@ -99,6 +99,18 @@ Convert a logical change capture into a human-friendly Markdown report:
 python utilities/local-db-tracing/logical_changes_to_markdown.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json
 ```
 
+Regenerate `summary.txt` from an existing `changes.jsonl` run artifact:
+
+```powershell
+python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
+```
+
+Regenerate `summary.txt` and include the original action note again:
+
+```powershell
+python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
+```
+
 ## Important Options
 
 - `--cleanup ask|yes|no`: prompt, always clean up, or always leave tracer-managed CDC enabled
@@ -111,6 +123,13 @@ python utilities/local-db-tracing/logical_changes_to_markdown.py --input-file ut
 - `--post-processing-initial-wait`: delay log polling long enough to avoid matching stale idle messages
 - `--post-processing-wait-timeout`: cap the post-processing wait in seconds
 - `--known-associations-file`: override the default replay association mapping file
+
+For `regenerate_summary.py` specifically:
+
+- `--input-file`: required path to the existing `changes.jsonl`
+- `--manifest-file`: optional path to the corresponding `manifest.json`; defaults to the file next to `changes.jsonl`
+- `--output-file`: optional output path for the regenerated `summary.txt`; defaults to the file next to `changes.jsonl`
+- `--action`: optional NBS action note to include in the regenerated summary; repeat for multiple actions
 
 ## Output Files
 
@@ -129,6 +148,8 @@ The logical-change tracer writes a different machine-readable artifact:
 - `logical-changes.md`: human-friendly Markdown rendering of a single `logical-changes.json` artifact with run summary, touched tables, and per-change details
 
 The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
+
+`changes.jsonl` does not store the freeform NBS action note, so regenerated summaries only include that section when you pass one or more `--action` values.
 
 ## Local State And Cleanup
 
@@ -149,7 +170,7 @@ When the capture contains replayable row operations, `summary.txt` includes reco
 
 Current replay behavior includes:
 
-- declaring a shared negative replay seed (`@id = -1000`) and deriving replay-safe PK/local-id variables from it while threading those values through related inserts using cached PK and FK metadata
+- declaring only the replay-safe UID variables actually required by the reconstructed SQL and threading those values through related inserts using cached PK and FK metadata
 - applying semantic associations from `known_replay_associations.json` before falling back to FK metadata or column-name matching
 - preserving captured datetime literals exactly as they appeared in the CDC payload
 - forcing columns whose names end with `user_id` to use the resolved `superuser` ID for the traced database, falling back to `10009282`

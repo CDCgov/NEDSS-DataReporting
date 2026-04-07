@@ -299,14 +299,14 @@ def allocate_replay_variable_name(
     return derived_variable_name(base_name, str(count))
 
 
-def next_negative_id_expression(id_state: dict[str, int]) -> str:
-    offset = id_state["next_offset"]
-    id_state["next_offset"] = offset + 1
-    return "@id" if offset == 0 else f"@id - {offset}"
+def next_negative_id_literal(id_state: dict[str, int]) -> str:
+    next_value = id_state["next_value"]
+    id_state["next_value"] = next_value - 1
+    return str(next_value)
 
 
 def negative_id_variable_statement(variable_name: str, sql_type: str, id_state: dict[str, int]) -> str:
-    return f"DECLARE {variable_name} {sql_type} = CONVERT({sql_type}, {next_negative_id_expression(id_state)});"
+    return f"DECLARE {variable_name} {sql_type} = {next_negative_id_literal(id_state)};"
 
 
 def local_id_literal_statement(variable_name: str, prefix: str, suffix: str, numeric_expression: str) -> str:
@@ -883,6 +883,7 @@ def reconstruct_insert_sql(
     variable_name_counts: dict[str, int],
     id_state: dict[str, int],
     superuser_id: int,
+    top_level_declarations: list[str],
 ) -> str | None:
     row = record.get("row")
     if not isinstance(row, dict):
@@ -941,7 +942,7 @@ def reconstruct_insert_sql(
         variable_name = allocate_replay_variable_name(table_key[0], table_key[1], root_generated_primary_key, variable_name_counts)
         sql_type = column_sql_types.get((table_key[0], table_key[1], root_generated_primary_key), "int")
         variable_registry[(table_key[0], table_key[1], root_generated_primary_key, value_key(generated_value))] = variable_name
-        prelude_lines.append(negative_id_variable_statement(variable_name, sql_type, id_state))
+        top_level_declarations.append(negative_id_variable_statement(variable_name, sql_type, id_state))
 
     local_id_key = (table_key[0], table_key[1], "local_id", value_key(row.get("local_id")))
     if "local_id" in row and local_id_key not in variable_registry:
@@ -958,7 +959,7 @@ def reconstruct_insert_sql(
                 known_associations,
             )
             if numeric_expression is None:
-                numeric_expression = next_negative_id_expression(id_state)
+                numeric_expression = next_negative_id_literal(id_state)
             prelude_lines.append(local_id_literal_statement(local_id_variable, local_id_components[0], local_id_components[2], numeric_expression))
             variable_registry[local_id_key] = local_id_variable
 
@@ -1086,10 +1087,11 @@ def reconstruct_sql_statements(
     superuser_id: int = 10009282,
 ) -> list[str]:
     statements: list[str] = []
+    top_level_declarations: list[str] = []
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
     variable_registry: dict[tuple[str, str, str, str], str] = {}
     variable_name_counts: dict[str, int] = {}
-    id_state = {"next_offset": 0}
+    id_state = {"next_value": -1000}
     last_table_key: tuple[str, str] | None = None
 
     for record in sorted(changes, key=change_sort_key):
@@ -1124,6 +1126,7 @@ def reconstruct_sql_statements(
                 variable_name_counts,
                 id_state,
                 superuser_id,
+                top_level_declarations,
             )
             if sql_statement:
                 last_table_key = append_sql_statement(statements, last_table_key, table_key, sql_statement)
@@ -1179,4 +1182,10 @@ def reconstruct_sql_statements(
             f"-- Skipped update for {orphan['schema_name']}.{orphan['table_name']} at {orphan['start_lsn']} because the after image was missing",
         )
 
-    return statements
+    if not top_level_declarations:
+        return statements
+
+    if not statements:
+        return top_level_declarations
+
+    return [*top_level_declarations, "", *statements]
