@@ -194,6 +194,7 @@ def write_summary(
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
+    superuser_id: int = 10009282,
 ) -> None:
     """Write the human-readable summary artifact for a tracing run.
 
@@ -274,6 +275,7 @@ def write_summary(
             uid_generator_entries,
             known_associations,
             replay_now_window,
+            superuser_id,
         )
     if reconstructed_sql:
         lines.append("")

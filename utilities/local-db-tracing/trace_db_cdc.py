@@ -29,6 +29,7 @@ from tracing_constants import (
 from tracing_metadata import (
     fetch_capture_instances,
     fetch_database_cdc_enabled,
+    fetch_superuser_id,
     fetch_table_statuses,
     get_replay_metadata,
 )
@@ -243,6 +244,7 @@ def main() -> int:
         generated_always_columns,
         uid_generator_entries,
     ) = get_replay_metadata(client, args.database)
+    superuser_id = fetch_superuser_id(client, args.database)
 
     initial_statuses = fetch_table_statuses(client)
     initially_tracked_count = sum(1 for item in initial_statuses if item.is_tracked_by_cdc)
@@ -364,6 +366,7 @@ def main() -> int:
             generated_always_columns,
             uid_generator_entries,
             known_associations,
+            superuser_id,
         )
         log_progress("Finished writing output artifacts")
 

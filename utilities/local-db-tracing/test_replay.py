@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from tracing_models import KnownAssociation, UidGeneratorEntry
+from tracing_metadata import DEFAULT_SUPERUSER_ID
 from tracing_output import write_summary
 from tracing_replay import reconstruct_sql_statements
 
@@ -78,6 +79,7 @@ class ReplaySqlTest(unittest.TestCase):
                     "person_uid": 10009297,
                     "person_parent_uid": 10009297,
                     "local_id": "PSN10067007GA01",
+                    "add_user_id": 7777,
                     "first_nm": "Bart",
                     "last_nm": "Simpson",
                 },
@@ -132,6 +134,7 @@ class ReplaySqlTest(unittest.TestCase):
             "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';",
             sql,
         )
+        self.assertIn(str(DEFAULT_SUPERUSER_ID), sql)
         self.assertIn(
             "VALUES (@dbo_Entity_entity_uid, @dbo_Postal_locator_postal_locator_uid, N'H');",
             sql,

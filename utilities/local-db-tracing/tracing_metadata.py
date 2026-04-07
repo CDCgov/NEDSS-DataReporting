@@ -13,6 +13,9 @@ from tracing_sql import SqlCmdClient, read_tsv, sql_identifier, sql_quote
 from tracing_state import utc_now
 
 
+DEFAULT_SUPERUSER_ID = 10009282
+
+
 
 def fetch_database_cdc_enabled(client: SqlCmdClient, database: str) -> bool:
     """Check whether CDC is enabled at the database level.
@@ -389,6 +392,45 @@ END;
             )
         )
     return entries
+
+
+def fetch_superuser_id(client: SqlCmdClient, database: str) -> int:
+    """Fetch the superuser nedss_entry_id for replay-time user references.
+
+    Args:
+        client: SQL Server client used to query metadata.
+        database: Database name whose auth-user table should be queried.
+
+    Returns:
+        int: Superuser nedss_entry_id when found, otherwise the fallback ID.
+    """
+
+    normalized_database = database.upper()
+    if normalized_database == "NBS_ODSE":
+        sql = f"""
+SET NOCOUNT ON;
+SELECT CAST([nedss_entry_id] AS varchar(20))
+FROM [{sql_identifier(database)}].[dbo].[Auth_user]
+WHERE [user_id] = 'superuser';
+"""
+    elif normalized_database == "RDB_MODERN":
+        sql = f"""
+SET NOCOUNT ON;
+SELECT CAST([nedss_entry_id] AS varchar(20))
+FROM [{sql_identifier(database)}].[dbo].[nrt_auth_user]
+WHERE [user_id] = 'superuser';
+"""
+    else:
+        return DEFAULT_SUPERUSER_ID
+
+    rows = list(read_tsv(client.query(sql, database=database)))
+    if not rows or not rows[0]:
+        return DEFAULT_SUPERUSER_ID
+
+    try:
+        return int(rows[0][0])
+    except ValueError:
+        return DEFAULT_SUPERUSER_ID
 
 
 

@@ -808,9 +808,10 @@ def sql_replay_assignment_expression(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    superuser_id: int,
 ) -> str:
     if is_user_id_column(column_name):
-        return "9999"
+        return str(superuser_id)
     return sql_value_expression(
         table_key,
         row,
@@ -849,6 +850,7 @@ def sql_insert_assignment_expression(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    superuser_id: int,
 ) -> str:
     if is_version_column(column_name) and is_history_table(table_key):
         predicates = build_version_lookup_predicates(
@@ -873,6 +875,7 @@ def sql_insert_assignment_expression(
         variable_registry,
         foreign_keys_by_source,
         known_associations,
+        superuser_id,
     )
 
 
@@ -886,6 +889,7 @@ def sql_update_assignment_expression(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    superuser_id: int,
 ) -> str:
     if is_version_column(column_name):
         return f"ISNULL({quote_identifier(column_name)}, 0) + 1"
@@ -898,6 +902,7 @@ def sql_update_assignment_expression(
         variable_registry,
         foreign_keys_by_source,
         known_associations,
+        superuser_id,
     )
 
 
@@ -978,6 +983,7 @@ def reconstruct_insert_sql(
     known_associations: list[KnownAssociation],
     variable_name_counts: dict[str, int],
     id_state: dict[str, int],
+    superuser_id: int,
 ) -> str | None:
     row = record.get("row")
     if not isinstance(row, dict):
@@ -1078,6 +1084,7 @@ def reconstruct_insert_sql(
             variable_registry,
             foreign_keys_by_source,
             known_associations,
+            superuser_id,
         )
         for column_name in columns
     )
@@ -1125,6 +1132,7 @@ def reconstruct_update_sql(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    superuser_id: int,
 ) -> str | None:
     before_row = before_record.get("row")
     after_row = after_record.get("row")
@@ -1142,7 +1150,7 @@ def reconstruct_update_sql(
         return None
 
     set_clause = ", ".join(
-        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, after_row, column_name, after_row.get(column_name), replay_now_window, variable_registry, foreign_keys_by_source, known_associations)}"
+        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, after_row, column_name, after_row.get(column_name), replay_now_window, variable_registry, foreign_keys_by_source, known_associations, superuser_id)}"
         for column_name in changed_columns
     )
     key_columns = select_key_columns(before_row, primary_key_columns)
@@ -1176,6 +1184,7 @@ def reconstruct_sql_statements(
     uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
     replay_now_window: tuple[datetime, datetime] | None = None,
+    superuser_id: int = 10009282,
 ) -> list[str]:
     statements: list[str] = []
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
@@ -1215,6 +1224,7 @@ def reconstruct_sql_statements(
                 known_associations,
                 variable_name_counts,
                 id_state,
+                superuser_id,
             )
             if sql_statement:
                 last_table_key = append_sql_statement(statements, last_table_key, table_key, sql_statement)
@@ -1255,6 +1265,7 @@ def reconstruct_sql_statements(
                 variable_registry,
                 foreign_keys_by_source,
                 known_associations,
+                superuser_id,
             )
             if sql_statement:
                 last_table_key = append_sql_statement(statements, last_table_key, table_key, sql_statement)
