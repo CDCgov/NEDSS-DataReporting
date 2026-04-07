@@ -1,8 +1,8 @@
 spring:
   datasource:
     default:
-      username: sa
-      password: PizzaIsGood33!
+      username: reporting_pipeline_service_rdb
+      password: reporting_pipeline_service
       url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
     admin:
       username: sa
