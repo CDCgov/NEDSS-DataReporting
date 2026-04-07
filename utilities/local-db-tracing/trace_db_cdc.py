@@ -39,6 +39,7 @@ from tracing_output import write_jsonl, write_manifest, write_summary
 from tracing_paths import is_excluded_trace_table, output_name_component, resolve_state_files
 from tracing_post_processing import log_progress, wait_for_post_processing_idle
 from tracing_replay import change_sort_key
+from tracing_env import load_database_connection_defaults, resolve_server_argument
 from tracing_sql import SqlCmdClient, require_sqlcmd
 from tracing_state import (
     clear_managed_table_files,
@@ -60,13 +61,27 @@ def parse_args() -> argparse.Namespace:
         argparse.Namespace: Parsed command-line options for the tracer.
     """
 
+    defaults = load_database_connection_defaults()
+
     parser = argparse.ArgumentParser(
         description="Enable CDC on a SQL Server database for tracing, capture changes, and optionally clean up afterward."
     )
-    parser.add_argument("--server", default="localhost,3433", help="SQL Server host and port")
+    parser.add_argument(
+        "--server",
+        default=resolve_server_argument(defaults),
+        help="SQL Server host and port; defaults to DATABASE_SERVER and DATABASE_PORT from .env",
+    )
     parser.add_argument("--database", default="NBS_ODSE", help="Database to trace")
-    parser.add_argument("--user", required=True, help="SQL Server login")
-    parser.add_argument("--password", required=True, help="SQL Server password")
+    parser.add_argument(
+        "--user",
+        default=defaults.get("DATABASE_USERNAME"),
+        help="SQL Server login; defaults to DATABASE_USERNAME from .env",
+    )
+    parser.add_argument(
+        "--password",
+        default=defaults.get("DATABASE_PASSWORD"),
+        help="SQL Server password; defaults to DATABASE_PASSWORD from .env",
+    )
     parser.add_argument("--sqlcmd", default="sqlcmd", help="sqlcmd executable name or path")
     parser.add_argument(
         "--output-dir",
@@ -120,7 +135,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS,
         help="Seconds to wait before polling post-processing logs so stale idle messages do not win immediately",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not args.user:
+        parser.error("--user is required unless DATABASE_USERNAME is set in .env or the environment")
+    if not args.password:
+        parser.error("--password is required unless DATABASE_PASSWORD is set in .env or the environment")
+    return args
 
 
 
