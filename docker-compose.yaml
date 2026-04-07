@@ -14,6 +14,7 @@ services:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
       - 3433:1433
+    mem_limit: 2.5G
 
   liquibase:
     build:
@@ -25,6 +26,7 @@ services:
     depends_on:
       nbs-mssql:
         condition: service_healthy
+    mem_limit: 200M
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
@@ -231,9 +233,9 @@ services:
       liquibase:
         condition: service_completed_successfully
 
-  reporting-hydration-service:
+  reporting-pipeline-service:
     build:
-      dockerfile: ./reporting-hydration-service/Dockerfile
+      dockerfile: ./reporting-pipeline-service/Dockerfile
     environment:
       - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}

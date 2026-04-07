@@ -1,0 +1,52 @@
+name: Application Tests
+on:
+  pull_request:
+    paths:
+      - "investigation-service/**"
+      - "ldfdata-service/**"
+      - "person-service/**"
+      - "reporting-pipeline-service/**"
+      - "post-processing-service/**"
+      - "observation-service/**"
+      - "organization-service/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle/**"
+
+jobs:
+  pipeline:
+    name: Run JUnit Tests
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: "zulu" # Alternative distribution options are available
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Build and analyze
+        working-directory: ./
+        run: |
+          ./gradlew clean build jacocoTestReport --continue
+
+      - name: Publish Testing Reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: testing
+          path: ./**/build/reports

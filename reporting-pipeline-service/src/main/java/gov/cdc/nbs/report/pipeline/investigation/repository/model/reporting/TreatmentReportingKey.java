@@ -1,0 +1,16 @@
+package gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting;
+
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+public class TreatmentReportingKey {
+  @NonNull private Long treatmentUid;
+}
