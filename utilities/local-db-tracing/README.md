@@ -93,6 +93,12 @@ Compare a baseline logical change capture against a target logical change captur
 python utilities/local-db-tracing/compare_logical_changes.py --baseline-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file utilities/local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
 ```
 
+Convert a logical change capture into a human-friendly Markdown report:
+
+```powershell
+python utilities/local-db-tracing/logical_changes_to_markdown.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json
+```
+
 ## Important Options
 
 - `--cleanup ask|yes|no`: prompt, always clean up, or always leave tracer-managed CDC enabled
@@ -120,6 +126,7 @@ The logical-change tracer writes a different machine-readable artifact:
 
 - `logical-changes.json`: one JSON array per run containing row-level insert, update, and delete events with stable comparison identity, changed fields for updates, and full inserted or updated row state
 - `compare-results-*.json`: one-way compare output that reports which baseline logical changes were matched, missing, or skipped when checked against a target `logical-changes.json`
+- `logical-changes.md`: human-friendly Markdown rendering of a single `logical-changes.json` artifact with run summary, touched tables, and per-change details
 
 The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
 
