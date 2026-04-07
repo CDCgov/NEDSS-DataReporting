@@ -149,7 +149,7 @@ When the capture contains replayable row operations, `summary.txt` includes reco
 
 Current replay behavior includes:
 
-- allocating fresh root primary key values and threading them through related inserts using cached PK and FK metadata
+- declaring a shared negative replay seed (`@id = -1000`) and deriving replay-safe PK/local-id variables from it while threading those values through related inserts using cached PK and FK metadata
 - applying semantic associations from `known_replay_associations.json` before falling back to FK metadata or column-name matching
 - replacing captured datetime literals inside the trace window with `SYSUTCDATETIME()`
 - forcing columns whose names end with `user_id` to use `9999`

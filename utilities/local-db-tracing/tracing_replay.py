@@ -233,6 +233,7 @@ def register_nrt_patient_mpr_uid_reference(
     variable_registry: dict[tuple[str, str, str, str], str],
     column_sql_types: dict[tuple[str, str, str], str],
     prelude_lines: list[str],
+    variable_name_counts: dict[str, int],
 ) -> None:
     if table_key != ("dbo", "nrt_patient"):
         return
@@ -247,7 +248,7 @@ def register_nrt_patient_mpr_uid_reference(
     if patient_mpr_uid_key in variable_registry:
         return
 
-    variable_name = variable_name_for_value(table_key[0], table_key[1], "patient_mpr_uid", row["patient_mpr_uid"])
+    variable_name = allocate_replay_variable_name(table_key[0], table_key[1], "patient_mpr_uid", variable_name_counts)
     sql_type = column_sql_types.get((table_key[0], table_key[1], "patient_mpr_uid"), "bigint")
     prelude_lines.append(f"DECLARE {variable_name} {sql_type} = {patient_uid_reference} + 1;")
     variable_registry[patient_mpr_uid_key] = variable_name
@@ -377,6 +378,41 @@ def find_nbs_uid_generator_entry(uid_generator_entries: list[UidGeneratorEntry])
     if len(nbs_entries) != 1:
         return None
     return nbs_entries[0]
+
+
+def replay_base_variable_name(schema_name: str, table_name: str, column_name: str) -> str:
+    return "@" + sanitize_sql_name(f"{schema_name}_{table_name}_{column_name}")
+
+
+def allocate_replay_variable_name(
+    schema_name: str,
+    table_name: str,
+    column_name: str,
+    variable_name_counts: dict[str, int],
+) -> str:
+    base_name = replay_base_variable_name(schema_name, table_name, column_name)
+    count = variable_name_counts.get(base_name, 0) + 1
+    variable_name_counts[base_name] = count
+    if count == 1:
+        return base_name
+    return derived_variable_name(base_name, str(count))
+
+
+def next_negative_id_expression(id_state: dict[str, int]) -> str:
+    offset = id_state["next_offset"]
+    id_state["next_offset"] = offset + 1
+    return "@id" if offset == 0 else f"@id - {offset}"
+
+
+def negative_id_variable_statement(variable_name: str, sql_type: str, id_state: dict[str, int]) -> str:
+    return f"DECLARE {variable_name} {sql_type} = CONVERT({sql_type}, {next_negative_id_expression(id_state)});"
+
+
+def local_id_literal_statement(variable_name: str, prefix: str, suffix: str, numeric_expression: str) -> str:
+    return (
+        f"DECLARE {variable_name} nvarchar(40) = N'{sql_quote(prefix)}' + "
+        f"CONVERT(nvarchar(20), ABS(CONVERT(bigint, {numeric_expression}))) + N'{sql_quote(suffix)}';"
+    )
 
 
 
@@ -694,6 +730,47 @@ def resolve_variable_reference(
     return resolve_suffix_variable_reference(column_name, value, variable_registry)
 
 
+def local_id_numeric_expression(
+    table_key: tuple[str, str],
+    row: dict[str, object],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    column_sql_types: dict[tuple[str, str, str], str],
+    variable_registry: dict[tuple[str, str, str, str], str],
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
+) -> str | None:
+    candidate_columns = primary_keys_by_table.get(table_key, []) + [
+        column_name
+        for column_name in row
+        if column_name != "local_id" and column_name.lower().endswith(("_uid", "_key", "_id"))
+    ]
+    seen_columns: set[str] = set()
+
+    for column_name in candidate_columns:
+        if column_name in seen_columns or column_name not in row:
+            continue
+        seen_columns.add(column_name)
+        sql_type = column_sql_types.get((table_key[0], table_key[1], column_name), "")
+        if not is_numeric_sql_type(sql_type):
+            continue
+        value = row.get(column_name)
+        if value is None:
+            continue
+        variable_reference = resolve_variable_reference(
+            table_key,
+            row,
+            column_name,
+            value,
+            variable_registry,
+            foreign_keys_by_source,
+            known_associations,
+        )
+        if variable_reference:
+            return variable_reference
+
+    return None
+
+
 
 def sql_value_expression(
     table_key: tuple[str, str],
@@ -897,9 +974,10 @@ def reconstruct_insert_sql(
     generated_always_columns: set[tuple[str, str, str]],
     replay_now_window: tuple[datetime, datetime] | None,
     variable_registry: dict[tuple[str, str, str, str], str],
-    uid_allocation_registry: dict[tuple[str, str, str, str], UidAllocation],
     uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
+    variable_name_counts: dict[str, int],
+    id_state: dict[str, int],
 ) -> str | None:
     row = record.get("row")
     if not isinstance(row, dict):
@@ -945,7 +1023,7 @@ def reconstruct_insert_sql(
     post_insert_lines: list[str] = []
     if generated_primary_key and generated_primary_key in row:
         generated_value = row[generated_primary_key]
-        variable_name = variable_name_for_value(table_key[0], table_key[1], generated_primary_key, generated_value)
+        variable_name = allocate_replay_variable_name(table_key[0], table_key[1], generated_primary_key, variable_name_counts)
         output_table_name = output_table_name_for_variable(variable_name)
         sql_type = column_sql_types.get((table_key[0], table_key[1], generated_primary_key), "int")
         variable_registry[(table_key[0], table_key[1], generated_primary_key, value_key(generated_value))] = variable_name
@@ -955,43 +1033,38 @@ def reconstruct_insert_sql(
         ])
     elif root_generated_primary_key and root_generated_primary_key in row:
         generated_value = row[root_generated_primary_key]
-        variable_name = variable_name_for_value(table_key[0], table_key[1], root_generated_primary_key, generated_value)
+        variable_name = allocate_replay_variable_name(table_key[0], table_key[1], root_generated_primary_key, variable_name_counts)
         sql_type = column_sql_types.get((table_key[0], table_key[1], root_generated_primary_key), "int")
         variable_registry[(table_key[0], table_key[1], root_generated_primary_key, value_key(generated_value))] = variable_name
-        uid_allocation = uid_allocation_registry.get((table_key[0], table_key[1], root_generated_primary_key, value_key(generated_value)))
-        if uid_allocation is None:
-            uid_allocation = infer_fallback_root_uid_allocation(table_key, root_generated_primary_key, uid_generator_entries)
-        if uid_allocation:
-            allocation_lines, from_variable = allocation_variable_statements(variable_name, sql_type, uid_allocation)
-            prelude_lines.extend(allocation_lines)
-            prelude_lines.append(f"SET {variable_name} = CONVERT({sql_type}, {from_variable});")
-        else:
-            prelude_lines.append(
-                f"DECLARE {variable_name} {sql_type} = (SELECT ISNULL(MAX({quote_identifier(root_generated_primary_key)}), 0) + 1 FROM {quote_identifier(table_key[0])}.{quote_identifier(table_key[1])});"
-            )
+        prelude_lines.append(negative_id_variable_statement(variable_name, sql_type, id_state))
 
     local_id_key = (table_key[0], table_key[1], "local_id", value_key(row.get("local_id")))
-    local_id_allocation = uid_allocation_registry.get(local_id_key)
-    if local_id_allocation is None and "local_id" in row:
-        local_id_allocation = infer_fallback_local_id_allocation(row.get("local_id"), uid_generator_entries)
-    if local_id_allocation and "local_id" in row and local_id_key not in variable_registry:
-        local_id_variable = variable_name_for_value(table_key[0], table_key[1], "local_id", row["local_id"])
-        allocation_lines, from_variable = allocation_variable_statements(local_id_variable, "nvarchar(40)", local_id_allocation)
-        prefix_variable = derived_variable_name(local_id_variable, "uid_prefix")
-        suffix_variable = derived_variable_name(local_id_variable, "uid_suffix")
-        prelude_lines.extend(allocation_lines)
-        prelude_lines.append(
-            f"SET {local_id_variable} = CONVERT(nvarchar(40), ISNULL({prefix_variable}, '') + {from_variable} + ISNULL({suffix_variable}, ''));"
-        )
-        variable_registry[local_id_key] = local_id_variable
-    elif "local_id" in row and local_id_key not in variable_registry:
+    if "local_id" in row and local_id_key not in variable_registry:
         local_id_components = infer_local_id_components(row.get("local_id"), uid_generator_entries)
         if local_id_components is not None:
-            local_id_variable = variable_name_for_value(table_key[0], table_key[1], "local_id", row["local_id"])
-            prelude_lines.extend(local_id_max_plus_one_statements(local_id_variable, table_key, local_id_components[0], local_id_components[2]))
+            local_id_variable = allocate_replay_variable_name(table_key[0], table_key[1], "local_id", variable_name_counts)
+            numeric_expression = local_id_numeric_expression(
+                table_key,
+                row,
+                primary_keys_by_table,
+                column_sql_types,
+                variable_registry,
+                foreign_keys_by_source,
+                known_associations,
+            )
+            if numeric_expression is None:
+                numeric_expression = next_negative_id_expression(id_state)
+            prelude_lines.append(local_id_literal_statement(local_id_variable, local_id_components[0], local_id_components[2], numeric_expression))
             variable_registry[local_id_key] = local_id_variable
 
-    register_nrt_patient_mpr_uid_reference(table_key, row, variable_registry, column_sql_types, prelude_lines)
+    register_nrt_patient_mpr_uid_reference(
+        table_key,
+        row,
+        variable_registry,
+        column_sql_types,
+        prelude_lines,
+        variable_name_counts,
+    )
 
     column_sql = ", ".join(quote_identifier(column_name) for column_name in columns)
     value_sql = ", ".join(
@@ -1107,12 +1180,8 @@ def reconstruct_sql_statements(
     statements: list[str] = []
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
     variable_registry: dict[tuple[str, str, str, str], str] = {}
-    uid_allocation_registry = infer_uid_allocation_registry(
-        changes,
-        primary_keys_by_table,
-        foreign_keys_by_source,
-        uid_generator_entries,
-    )
+    variable_name_counts: dict[str, int] = {}
+    id_state = {"next_offset": 0}
     last_table_key: tuple[str, str] | None = None
 
     for record in sorted(changes, key=change_sort_key):
@@ -1142,9 +1211,10 @@ def reconstruct_sql_statements(
                 generated_always_columns,
                 replay_now_window,
                 variable_registry,
-                uid_allocation_registry,
                 uid_generator_entries,
                 known_associations,
+                variable_name_counts,
+                id_state,
             )
             if sql_statement:
                 last_table_key = append_sql_statement(statements, last_table_key, table_key, sql_statement)

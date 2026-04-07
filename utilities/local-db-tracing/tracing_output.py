@@ -279,6 +279,7 @@ def write_summary(
         lines.append("")
         lines.append("Reconstructed SQL:")
         lines.append(f"USE {quote_identifier(str(manifest['database']))};")
+        lines.append("DECLARE @id bigint = -1000;")
         lines.append("")
         lines.extend(reconstructed_sql)
 
