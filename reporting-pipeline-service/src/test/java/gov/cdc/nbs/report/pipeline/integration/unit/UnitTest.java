@@ -1,18 +1,24 @@
 package gov.cdc.nbs.report.pipeline.integration.unit;
 
+import gov.cdc.nbs.report.pipeline.integration.support.config.DataSourceConfig;
 import java.io.File;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
-@SpringBootTest
 @ActiveProfiles("test")
 @Tag("Unit")
+@DataJpaTest
+@Import(DataSourceConfig.class)
+@AutoConfigureTestDatabase(replace = Replace.NONE)
 public abstract class UnitTest {
   private static boolean started = false;
 
