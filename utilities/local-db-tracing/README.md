@@ -81,6 +81,12 @@ Trace a different database:
 python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
 ```
 
+Capture logical row-level changes for a database run:
+
+```powershell
+python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
+```
+
 ## Important Options
 
 - `--cleanup ask|yes|no`: prompt, always clean up, or always leave tracer-managed CDC enabled
@@ -103,6 +109,10 @@ That directory contains:
 - `summary.txt`: human-readable run summary, including the NBS action note and reconstructed SQL when replayable row operations were captured
 - `manifest.json`: structured run metadata, including enabled tables, skipped tables, capture instances, and tracked cleanup state
 - `changes.jsonl`: one JSON object per captured CDC row in sorted CDC order
+
+The logical-change tracer writes a different machine-readable artifact:
+
+- `logical-changes.json`: one JSON array per run containing row-level insert, update, and delete events with stable comparison identity, changed fields for updates, and full inserted or updated row state
 
 The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
 
