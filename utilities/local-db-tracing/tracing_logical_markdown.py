@@ -94,12 +94,51 @@ def render_changed_fields_table(changed_fields: dict[str, object]) -> list[str]:
     return lines
 
 
+def render_run_summary_table(
+    database_name: object,
+    capture_window: str,
+    logical_change_count: int,
+    insert_count: int,
+    update_count: int,
+    delete_count: int,
+    action_descriptions: list[str],
+) -> list[str]:
+    source_actions = "<br>".join(action_descriptions) if action_descriptions else "None recorded"
+    return [
+        "| Metric | Value |",
+        "| --- | --- |",
+        f"| Database | {database_name} |",
+        f"| Capture window | {capture_window} |",
+        f"| Total logical changes | {logical_change_count} |",
+        f"| Inserts | {insert_count} |",
+        f"| Updates | {update_count} |",
+        f"| Deletes | {delete_count} |",
+        f"| Source actions | {source_actions} |",
+    ]
+
+
+def render_tables_touched_table(table_counts: Counter[str]) -> list[str]:
+    lines = ["| Table | Change count |", "| --- | --- |"]
+    for table_name, change_count in sorted(table_counts.items()):
+        lines.append(f"| {table_name} | {change_count} |")
+    return lines
+
+
+def render_change_metadata_table(change: dict[str, object]) -> list[str]:
+    return [
+        "| Metric | Value |",
+        "| --- | --- |",
+        f"| Identity | {format_identity(change)} |",
+        f"| Transaction end | {format_metadata_value(change, 'tran_end_time')} |",
+        f"| LSN | {format_metadata_value(change, 'start_lsn')} |",
+    ]
+
+
 def render_change(change: dict[str, object], change_number: int) -> list[str]:
     operation = str(change.get("operation", "unknown")).upper()
     lines = [f"## {change_number}. {operation} {format_table_name(change)}", ""]
-    lines.append(f"- Identity: {format_identity(change)}")
-    lines.append(f"- Transaction end: {format_metadata_value(change, 'tran_end_time')}")
-    lines.append(f"- LSN: {format_metadata_value(change, 'start_lsn')}")
+    lines.extend(render_change_metadata_table(change))
+    lines.append("")
 
     if operation == "UPDATE":
         changed_fields = change.get("changed_fields")
@@ -151,23 +190,22 @@ def render_logical_changes_markdown(logical_changes: list[dict[str, object]], so
 
     lines.append("## Run Summary")
     lines.append("")
-    lines.append(f"- Database: {database_name}")
-    lines.append(f"- Capture window: {format_capture_window(first_change)}")
-    lines.append(f"- Total logical changes: {len(logical_changes)}")
-    lines.append(f"- Inserts: {operation_counts.get('insert', 0)}")
-    lines.append(f"- Updates: {operation_counts.get('update', 0)}")
-    lines.append(f"- Deletes: {operation_counts.get('delete', 0)}")
-
-    if action_descriptions:
-        lines.append("- Source actions:")
-        for action_description in action_descriptions:
-            lines.append(f"  - {action_description}")
+    lines.extend(
+        render_run_summary_table(
+            database_name,
+            format_capture_window(first_change),
+            len(logical_changes),
+            operation_counts.get('insert', 0),
+            operation_counts.get('update', 0),
+            operation_counts.get('delete', 0),
+            action_descriptions,
+        )
+    )
 
     lines.append("")
     lines.append("## Tables Touched")
     lines.append("")
-    for table_name, change_count in sorted(table_counts.items()):
-        lines.append(f"- {table_name}: {change_count}")
+    lines.extend(render_tables_touched_table(table_counts))
 
     lines.append("")
     lines.append("## Changes")
