@@ -1,12 +1,12 @@
 spring:
   datasource:
     default:
-      username: ${RTR_SERVICE_USER_NAME:rtr_service_user}
-      password: ${RTR_SERVICE_USER_PASSWORD:rtr_service_user}
+      username: rtr_service_user
+      password: rtr_service_user
       url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
     admin:
-      username: sa
-      password: PizzaIsGood33!
+      username: rtr_admin
+      password: rtr_admin
       url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: "true"
