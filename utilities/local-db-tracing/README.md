@@ -138,6 +138,18 @@ Regenerate `summary.txt` and include the original action note again:
 python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
 ```
 
+Generate an `rdb-selects.sql` scaffold from a paired dual-capture run. This copies the source `DECLARE` block and builds target `SELECT` statements from `logical-changes.json` identities:
+
+```powershell
+python utilities/local-db-tracing/generate_rdb_selects.py --paired-run-dir utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
+```
+
+Or point directly at the paired manifest:
+
+```powershell
+python utilities/local-db-tracing/generate_rdb_selects.py --combined-manifest utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
+```
+
 Include helper-table writes in reconstructed SQL when needed:
 
 ```powershell
@@ -187,6 +199,7 @@ The dual-capture tracer writes a parent directory such as `output/20260408-11121
 - `combined-manifest.json`: top-level pointers to the paired source and target artifacts for the same traced action
 - `cdc-<database>/`: the usual CDC artifacts for the source database, including `summary.txt`
 - `logical-<database>/`: the usual logical-change artifacts for the target database, including `logical-changes.json` and `logical-changes.md`
+- `rdb-selects.sql`: optional generated scaffold with copied source `DECLARE` statements and deduplicated target `SELECT` queries
 
 The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
 
