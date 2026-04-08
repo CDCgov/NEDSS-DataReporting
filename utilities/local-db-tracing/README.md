@@ -102,6 +102,18 @@ Capture logical row-level changes for a database run. This now writes both `logi
 python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
 ```
 
+Capture `NBS_ODSE` CDC and `RDB_Modern` logical changes in one synchronized run with one prompt:
+
+```powershell
+python utilities/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
+```
+
+Use different databases when needed:
+
+```powershell
+python utilities/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --cdc-database NBS_ODSE --logical-database RDB_MODERN --user sa --password "<password>"
+```
+
 Compare a baseline logical change capture against a target logical change capture:
 
 ```powershell
@@ -169,6 +181,12 @@ The logical-change tracer writes a different machine-readable artifact set:
 - `logical-changes.json`: one JSON array per run containing row-level insert, update, and delete events with stable comparison identity, changed fields for updates, and full inserted or updated row state
 - `compare-results-*.json`: one-way compare output that reports which baseline logical changes were matched, missing, or skipped when checked against a target `logical-changes.json`
 - `logical-changes.md`: human-friendly Markdown rendering written automatically next to `logical-changes.json`, with run summary, touched tables, and per-change details
+
+The dual-capture tracer writes a parent directory such as `output/20260408-111218-NBS_ODSE-to-RDB_MODERN/` with:
+
+- `combined-manifest.json`: top-level pointers to the paired source and target artifacts for the same traced action
+- `cdc-<database>/`: the usual CDC artifacts for the source database, including `summary.txt`
+- `logical-<database>/`: the usual logical-change artifacts for the target database, including `logical-changes.json` and `logical-changes.md`
 
 The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
 

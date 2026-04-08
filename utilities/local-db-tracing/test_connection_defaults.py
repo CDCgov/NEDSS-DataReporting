@@ -9,6 +9,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import trace_db_cdc
+import trace_db_dual_capture
 import trace_db_logical_changes
 
 
@@ -48,6 +49,26 @@ class ConnectionDefaultsTest(unittest.TestCase):
         self.assertEqual(args.server, "dbhost,1544")
         self.assertEqual(args.user, "trace_user")
         self.assertEqual(args.password, "secret")
+
+    @patch.object(
+        trace_db_dual_capture,
+        "load_database_connection_defaults",
+        return_value={
+            "DATABASE_SERVER": "dbhost",
+            "DATABASE_PORT": "1544",
+            "DATABASE_USERNAME": "trace_user",
+            "DATABASE_PASSWORD": "secret",
+        },
+    )
+    def test_trace_db_dual_capture_uses_database_env_defaults(self, _: object) -> None:
+        with patch("sys.argv", ["trace_db_dual_capture.py"]):
+            args = trace_db_dual_capture.parse_args()
+
+        self.assertEqual(args.server, "dbhost,1544")
+        self.assertEqual(args.user, "trace_user")
+        self.assertEqual(args.password, "secret")
+        self.assertEqual(args.cdc_database, "NBS_ODSE")
+        self.assertEqual(args.logical_database, "RDB_Modern")
 
     @patch.object(
         trace_db_cdc,
