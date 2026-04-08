@@ -20,6 +20,9 @@ from tracing_paths import (
 from tracing_sql import quote_identifier, sql_literal, sql_quote
 
 
+SUPERUSER_ID_VARIABLE = "@superuser_id"
+
+
 
 def value_key(value: object) -> str:
     """Create a stable string key for arbitrary JSON-compatible values.
@@ -710,7 +713,7 @@ def sql_replay_assignment_expression(
     superuser_id: int,
 ) -> str:
     if is_user_id_column(column_name):
-        return str(superuser_id)
+        return SUPERUSER_ID_VARIABLE
     return sql_value_expression(
         table_key,
         row,
@@ -1087,7 +1090,7 @@ def reconstruct_sql_statements(
     superuser_id: int = 10009282,
 ) -> list[str]:
     statements: list[str] = []
-    top_level_declarations: list[str] = []
+    top_level_declarations: list[str] = [f"DECLARE {SUPERUSER_ID_VARIABLE} bigint = {superuser_id};"]
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
     variable_registry: dict[tuple[str, str, str, str], str] = {}
     variable_name_counts: dict[str, int] = {}
