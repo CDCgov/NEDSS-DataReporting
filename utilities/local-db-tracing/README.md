@@ -31,7 +31,12 @@ The tracer script:
 If database-level CDC is not enabled yet, enable it manually before running the tracer:
 
 ```sql
-USE <database_name>;
+-- If SQL Server reports an orphaned dbo owner or similar authorization error,
+-- you may need to run this first:
+ALTER AUTHORIZATION ON DATABASE::[<database_name>] TO [<username>];
+GO
+
+USE [<database_name>];
 GO
 EXEC sys.sp_cdc_enable_db;
 GO

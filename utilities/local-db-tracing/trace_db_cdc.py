@@ -38,7 +38,7 @@ from tracing_paths import is_excluded_trace_table, output_name_component, resolv
 from tracing_post_processing import log_progress, wait_for_post_processing_idle
 from tracing_replay import change_sort_key
 from tracing_env import load_database_connection_defaults, resolve_server_argument
-from tracing_sql import SqlCmdClient, require_sqlcmd
+from tracing_sql import SqlCmdClient, manual_enable_database_cdc_instructions, require_sqlcmd
 from tracing_state import (
     clear_managed_table_files,
     clear_managed_tables,
@@ -232,14 +232,7 @@ def main() -> int:
     managed_tables = managed_state.tables
 
     if not fetch_database_cdc_enabled(client, args.database):
-        print(f"Database-level CDC is not enabled for {args.database}.")
-        print("Enable database-level CDC manually, then rerun trace_db_cdc.py.")
-        print("");
-        print(f"USE {args.database};");
-        print("GO");
-        print("EXEC sys.sp_cdc_enable_db;");
-        print("GO");
-        print("");
+        print(manual_enable_database_cdc_instructions(args.database, "trace_db_cdc.py", args.user))
         return 1
 
     (

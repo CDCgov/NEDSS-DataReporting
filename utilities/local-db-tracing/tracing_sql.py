@@ -89,6 +89,28 @@ def quote_identifier(identifier: str) -> str:
 
 
 
+def manual_enable_database_cdc_instructions(database: str, script_name: str, owner_login: str) -> str:
+    """Build the shared guidance shown when database-level CDC must be enabled manually."""
+
+    return "\n".join(
+        [
+            f"Database-level CDC is not enabled for {database}.",
+            f"Enable database-level CDC manually, then rerun {script_name}.",
+            "",
+            "If SQL Server reports an orphaned dbo owner or similar authorization error, you may need to run this first:",
+            f"ALTER AUTHORIZATION ON DATABASE::[{sql_identifier(database)}] TO [{sql_identifier(owner_login)}];",
+            "GO",
+            "",
+            f"USE [{sql_identifier(database)}];",
+            "GO",
+            "EXEC sys.sp_cdc_enable_db;",
+            "GO",
+            "",
+        ]
+    )
+
+
+
 def sql_literal(value: object) -> str:
     """Translate JSON-like payload values back into SQL literals for the reconstructed replay section."""
 
