@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -76,6 +77,49 @@ class ConnectionDefaultsTest(unittest.TestCase):
         self.assertEqual(args.server, "overridehost,9999")
         self.assertEqual(args.user, "override_user")
         self.assertEqual(args.password, "override_password")
+
+    def test_trace_db_logical_changes_writes_markdown_artifact(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            run_dir = Path(temp_dir)
+            logical_changes = [
+                {
+                    "database": "RDB_MODERN",
+                    "schema_name": "dbo",
+                    "table_name": "D_PATIENT",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"PATIENT_LOCAL_ID": "PAT10001"},
+                    },
+                    "after": {"PATIENT_LOCAL_ID": "PAT10001"},
+                    "metadata": {
+                        "start_lsn": "0x01",
+                        "tran_end_time": "2026-04-08T12:00:01+00:00",
+                        "capture_window": {
+                            "start_time_utc": "2026-04-08T12:00:00+00:00",
+                            "end_time_utc": "2026-04-08T12:01:00+00:00",
+                            "start_lsn": "0x01",
+                            "end_lsn": "0x02",
+                        },
+                        "action_descriptions": ["Created a patient"],
+                    },
+                }
+            ]
+
+            trace_db_logical_changes.write_run_artifacts(
+                run_dir,
+                {"database": "RDB_MODERN"},
+                [],
+                logical_changes,
+            )
+
+            markdown_path = run_dir / "logical-changes.md"
+            self.assertTrue(markdown_path.exists())
+            markdown = markdown_path.read_text(encoding="utf-8")
+            self.assertIn("# Logical Change Report", markdown)
+            self.assertIn("Source artifact:", markdown)
+            self.assertIn("logical-changes.json", markdown)
 
 
 if __name__ == "__main__":

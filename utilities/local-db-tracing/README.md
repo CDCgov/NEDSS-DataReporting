@@ -96,7 +96,7 @@ Trace a different database:
 python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
 ```
 
-Capture logical row-level changes for a database run:
+Capture logical row-level changes for a database run. This now writes both `logical-changes.json` and `logical-changes.md` automatically:
 
 ```powershell
 python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
@@ -108,7 +108,7 @@ Compare a baseline logical change capture against a target logical change captur
 python utilities/local-db-tracing/compare_logical_changes.py --baseline-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file utilities/local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
 ```
 
-Convert a logical change capture into a human-friendly Markdown report:
+Convert an existing logical change capture into a human-friendly Markdown report:
 
 ```powershell
 python utilities/local-db-tracing/logical_changes_to_markdown.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json
@@ -164,11 +164,11 @@ That directory contains:
 - `manifest.json`: structured run metadata, including enabled tables, skipped tables, capture instances, and tracked cleanup state
 - `changes.jsonl`: one JSON object per captured CDC row in sorted CDC order
 
-The logical-change tracer writes a different machine-readable artifact:
+The logical-change tracer writes a different machine-readable artifact set:
 
 - `logical-changes.json`: one JSON array per run containing row-level insert, update, and delete events with stable comparison identity, changed fields for updates, and full inserted or updated row state
 - `compare-results-*.json`: one-way compare output that reports which baseline logical changes were matched, missing, or skipped when checked against a target `logical-changes.json`
-- `logical-changes.md`: human-friendly Markdown rendering of a single `logical-changes.json` artifact with run summary, touched tables, and per-change details
+- `logical-changes.md`: human-friendly Markdown rendering written automatically next to `logical-changes.json`, with run summary, touched tables, and per-change details
 
 The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
 

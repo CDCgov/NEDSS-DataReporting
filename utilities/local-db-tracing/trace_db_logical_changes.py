@@ -21,6 +21,7 @@ from tracing_constants import (
     LOCAL_TRACING_DIR,
 )
 from tracing_logical_changes import build_logical_changes, write_logical_changes
+from tracing_logical_markdown import write_logical_changes_markdown
 from tracing_metadata import (
     fetch_capture_instances,
     fetch_database_cdc_enabled,
@@ -160,6 +161,25 @@ def run_disable_only(
     return 0
 
 
+def write_run_artifacts(
+    run_dir: Path,
+    manifest: dict[str, object],
+    changes: list[dict[str, object]],
+    logical_changes: list[dict[str, object]],
+) -> None:
+    logical_changes_path = run_dir / "logical-changes.json"
+
+    log_progress("Writing manifest.json")
+    write_manifest(run_dir / "manifest.json", manifest)
+    log_progress("Writing changes.jsonl")
+    write_jsonl(run_dir / "changes.jsonl", changes)
+    log_progress("Writing logical-changes.json")
+    write_logical_changes(logical_changes_path, logical_changes)
+    log_progress("Writing logical-changes.md")
+    write_logical_changes_markdown(run_dir / "logical-changes.md", logical_changes, str(logical_changes_path))
+    log_progress("Finished writing output artifacts")
+
+
 def main() -> int:
     args = parse_args()
     executable = require_sqlcmd(args.sqlcmd)
@@ -292,13 +312,7 @@ def main() -> int:
             "logical_change_count": len(logical_changes),
         }
 
-        log_progress("Writing manifest.json")
-        write_manifest(run_dir / "manifest.json", manifest)
-        log_progress("Writing changes.jsonl")
-        write_jsonl(run_dir / "changes.jsonl", changes)
-        log_progress("Writing logical-changes.json")
-        write_logical_changes(run_dir / "logical-changes.json", logical_changes)
-        log_progress("Finished writing output artifacts")
+        write_run_artifacts(run_dir, manifest, changes, logical_changes)
 
         print()
         print(f"Captured {len(changes)} CDC rows")
