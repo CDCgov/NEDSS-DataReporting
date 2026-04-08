@@ -1076,6 +1076,10 @@ def append_sql_statement(
     return table_key
 
 
+def should_skip_reconstructed_change(table_key: tuple[str, str], operation: str) -> bool:
+    return operation == "insert" and table_key == ("dbo", "Security_log")
+
+
 
 def reconstruct_sql_statements(
     changes: list[dict[str, object]],
@@ -1105,6 +1109,9 @@ def reconstruct_sql_statements(
         table_key = (str(record["schema_name"]), str(record["table_name"]))
         if table_key == ("dbo", "Local_UID_generator"):
             continue
+        operation = str(record["operation"])
+        if should_skip_reconstructed_change(table_key, operation):
+            continue
         if record.get("row_parse_error"):
             table_name = f"{record['schema_name']}.{record['table_name']}"
             last_table_key = append_sql_statement(
@@ -1116,7 +1123,6 @@ def reconstruct_sql_statements(
             continue
 
         primary_key_columns = primary_keys_by_table.get(table_key, [])
-        operation = record["operation"]
 
         if operation == "insert":
             sql_statement = reconstruct_insert_sql(

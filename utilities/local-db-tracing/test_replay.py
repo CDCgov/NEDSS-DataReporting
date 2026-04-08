@@ -153,9 +153,9 @@ class ReplaySqlTest(unittest.TestCase):
             "DECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\n",
             sql,
         )
-        self.assertIn("DECLARE @dbo_Security_log_security_log_uid bigint = -1000;", sql)
-        self.assertIn("DECLARE @dbo_Entity_entity_uid bigint = -1001;", sql)
-        self.assertIn("DECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1002;", sql)
+        self.assertNotIn("DECLARE @dbo_Security_log_security_log_uid bigint = -1000;", sql)
+        self.assertIn("DECLARE @dbo_Entity_entity_uid bigint = -1000;", sql)
+        self.assertIn("DECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1001;", sql)
         self.assertIn(
             "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';",
             sql,
@@ -165,6 +165,7 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertIn(str(DEFAULT_SUPERUSER_ID), sql)
         self.assertIn("@superuser_id", sql)
         self.assertNotIn(", 7777,", sql)
+        self.assertNotIn("INSERT INTO [dbo].[Security_log]", sql)
         self.assertIn(
             "VALUES (@dbo_Entity_entity_uid, @dbo_Postal_locator_postal_locator_uid, N'H');",
             sql,
@@ -200,9 +201,11 @@ class ReplaySqlTest(unittest.TestCase):
             summary = summary_path.read_text(encoding="utf-8")
 
         self.assertIn(
-            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Security_log_security_log_uid bigint = -1000;\nDECLARE @dbo_Entity_entity_uid bigint = -1001;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1002;\n",
+            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = -1000;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1001;\n",
             summary,
         )
+        self.assertNotIn("Security_log_security_log_uid", summary)
+        self.assertNotIn("INSERT INTO [dbo].[Security_log]", summary)
         self.assertNotIn("DECLARE @id bigint", summary)
 
     def test_core_replay_skips_cached_helper_tables(self) -> None:

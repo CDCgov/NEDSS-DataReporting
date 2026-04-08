@@ -195,6 +195,7 @@ Current replay behavior includes:
 
 - declaring only the replay-safe UID variables actually required by the reconstructed SQL and threading those values through related inserts using cached PK and FK metadata
 - applying semantic associations from `known_replay_associations.json` before falling back to FK metadata or column-name matching
+- skipping audit-trail inserts such as `dbo.Security_log`, which are informative for tracing but not useful for replay
 - preserving captured datetime literals exactly as they appeared in the CDC payload
 - forcing columns whose names end with `user_id` to use the resolved `superuser` ID for the traced database, falling back to `10009282`
 - assigning replay-safe `version_ctrl_nbr` values for `_hist` inserts and live-row updates
