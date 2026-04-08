@@ -144,6 +144,8 @@ Generate an `rdb-selects.sql` scaffold from a paired dual-capture run. This copi
 python utilities/local-db-tracing/generate_rdb_selects.py --paired-run-dir utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
 ```
 
+Each generated `SELECT` is followed by a one-line JSON comment such as `-- EXPECTED_ROWS_JSON: [...]` representing the final row set the test should expect from that query.
+
 Or point directly at the paired manifest:
 
 ```powershell
@@ -200,6 +202,7 @@ The dual-capture tracer writes a parent directory such as `output/20260408-11121
 - `cdc-<database>/`: the usual CDC artifacts for the source database, including `summary.txt`
 - `logical-<database>/`: the usual logical-change artifacts for the target database, including `logical-changes.json` and `logical-changes.md`
 - `rdb-selects.sql`: optional generated scaffold with copied source `DECLARE` statements and deduplicated target `SELECT` queries
+- `rdb-selects.sql`: optional generated scaffold with copied source `DECLARE` statements, deduplicated target `SELECT` queries, and one-line JSON expectation comments for test comparisons
 
 The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
 

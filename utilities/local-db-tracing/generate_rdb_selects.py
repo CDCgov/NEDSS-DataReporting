@@ -36,6 +36,7 @@ class SelectScaffold:
     comparison_eligible: bool
     where_fields: tuple[tuple[str, object], ...]
     comments: tuple[str, ...]
+    expected_rows: tuple[dict[str, object], ...]
 
 
 def parse_args() -> argparse.Namespace:
@@ -303,6 +304,13 @@ def build_scaffolds(
     declare_entries: list[DeclareEntry],
 ) -> list[SelectScaffold]:
     grouped: dict[tuple[str, str, tuple[tuple[str, object], ...]], SelectScaffold] = {}
+    grouped_expected_rows: dict[tuple[str, str, tuple[tuple[str, object], ...]], dict[tuple[tuple[str, object], ...], dict[str, object]]] = {}
+
+    def row_instance_key(change: dict[str, object], ordered_fields: tuple[tuple[str, object], ...]) -> tuple[tuple[str, object], ...]:
+        primary_key_values = change.get("primary_key_values")
+        if isinstance(primary_key_values, dict) and primary_key_values:
+            return tuple(sorted((str(key), value) for key, value in primary_key_values.items()))
+        return ordered_fields
 
     for change in logical_changes:
         schema_name = str(change.get("schema_name") or "dbo")
@@ -315,12 +323,21 @@ def build_scaffolds(
         group_key = (schema_name, table_name, ordered_fields)
         existing = grouped.get(group_key)
         operation = str(change.get("operation") or "unknown")
+        expected_rows_by_key = grouped_expected_rows.setdefault(group_key, {})
+        current_row_key = row_instance_key(change, ordered_fields)
 
         comments: list[str] = []
         if strategy != "business_keys":
             comments.append(f"Identity strategy is {strategy}; review the WHERE clause before using it as a regression assertion.")
         if not comparison_eligible:
             comments.append("Logical comparison marked this identity as not comparison-safe.")
+
+        if operation == "delete":
+            expected_rows_by_key.pop(current_row_key, None)
+        else:
+            after_values = change.get("after")
+            if isinstance(after_values, dict) and after_values:
+                expected_rows_by_key[current_row_key] = after_values
 
         if existing is None:
             grouped[group_key] = SelectScaffold(
@@ -331,6 +348,7 @@ def build_scaffolds(
                 comparison_eligible=comparison_eligible,
                 where_fields=ordered_fields,
                 comments=tuple(comments),
+                expected_rows=(),
             )
             continue
 
@@ -344,9 +362,36 @@ def build_scaffolds(
             comparison_eligible=existing.comparison_eligible,
             where_fields=existing.where_fields,
             comments=merged_comments,
+            expected_rows=(),
         )
 
-    return sorted(grouped.values(), key=lambda item: (item.schema_name.lower(), item.table_name.lower(), item.where_fields))
+    finalized: list[SelectScaffold] = []
+    for group_key, scaffold in grouped.items():
+        expected_rows = tuple(
+            row
+            for _, row in sorted(
+                grouped_expected_rows.get(group_key, {}).items(),
+                key=lambda item: tuple(str(part) for field in item[0] for part in field),
+            )
+        )
+        finalized.append(
+            SelectScaffold(
+                schema_name=scaffold.schema_name,
+                table_name=scaffold.table_name,
+                operation_labels=scaffold.operation_labels,
+                identity_strategy=scaffold.identity_strategy,
+                comparison_eligible=scaffold.comparison_eligible,
+                where_fields=scaffold.where_fields,
+                comments=scaffold.comments,
+                expected_rows=expected_rows,
+            )
+        )
+
+    return sorted(finalized, key=lambda item: (item.schema_name.lower(), item.table_name.lower(), item.where_fields))
+
+
+def expected_rows_json(expected_rows: tuple[dict[str, object], ...]) -> str:
+    return json.dumps(list(expected_rows), separators=(",", ":"))
 
 
 def render_sql(
@@ -393,6 +438,7 @@ def render_sql(
         lines.append(f"FROM [{scaffold.schema_name}].[{scaffold.table_name}]")
         lines.extend(predicate_lines)
         lines.append("ORDER BY 1;")
+        lines.append(f"-- EXPECTED_ROWS_JSON: {expected_rows_json(scaffold.expected_rows)}")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"

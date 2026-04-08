@@ -48,6 +48,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
                         "fields": {"PATIENT_LOCAL_ID": "PSN10067006GA01"},
                     },
                     "primary_key_values": {"PATIENT_KEY": 9},
+                    "after": {"PATIENT_KEY": 9},
                 }
             ],
             declare_entries,
@@ -63,6 +64,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertIn("USE [RDB_MODERN];", sql)
         self.assertIn("WHERE [PATIENT_LOCAL_ID] = @dbo_Person_local_id", sql)
         self.assertNotIn("GO", sql)
+        self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
 
     def test_main_generates_output_file_from_combined_manifest(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -93,6 +95,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
                                 "fields": {"PATIENT_LOCAL_ID": "PSN10067006GA01"},
                             },
                             "primary_key_values": {"PATIENT_KEY": 9},
+                            "after": {"PATIENT_KEY": 9},
                         }
                     ],
                     indent=2,
@@ -124,6 +127,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             sql = output_path.read_text(encoding="utf-8")
             self.assertIn("SELECT *", sql)
             self.assertIn("FROM [dbo].[D_PATIENT]", sql)
+            self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
 
 
 if __name__ == "__main__":
