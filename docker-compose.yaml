@@ -95,10 +95,15 @@ services:
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_CONSUMER_METADATA_MAX_AGE_MS: 1000
+      CONNECT_CONFIG_PROVIDERS: "env"
+      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
+      DB_URL: "jdbc:sqlserver://nbs-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;"
+      DB_USERNAME: ${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
+      DB_PASSWORD: ${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
-      interval: 20s
-      timeout: 15s
+      interval: 10s
+      timeout: 5s
       retries: 5
 
   debezium:
@@ -130,6 +135,13 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_CONFIG_PROVIDERS: "env"
+      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
+      DB_HOST: "nbs-mssql"
+      DB_PORT: "1433"
+      DB_USERNAME: ${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
+      DB_PASSWORD: ${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
+      KAFKA_SERVER: "kafka:29092"
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
       interval: 10s
