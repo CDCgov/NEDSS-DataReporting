@@ -8,8 +8,7 @@ Local cache and state files are written under `.local/`. Per-run artifacts are w
 
 The tracer script:
 
-- checks whether database-level CDC is enabled and enables it if needed
-- fixes the common restored-database owner issue by reassigning the database owner to `sa` if SQL Server blocks CDC enablement because `dbo` is orphaned
+- checks whether database-level CDC is enabled and stops with manual SQL instructions if it is not
 - checks which user tables are already CDC-enabled
 - enables CDC on remaining eligible tables, except known noisy exclusions such as `dbo.job_flow_log`
 - records a start log sequence number (LSN) and timestamp
@@ -18,15 +17,25 @@ The tracer script:
 - prompts for a short description of the NBS actions you performed
 - captures CDC rows in the recorded LSN window
 - writes summary and machine-readable output files for the run
-- optionally disables tracer-managed CDC tables and database-level CDC during cleanup
-- persists cleanup state in `.local/` when tracer-managed CDC is intentionally left enabled or cleanup partially fails
+- optionally disables tracer-managed CDC tables during cleanup
+- persists cleanup state in `.local/` when tracer-managed CDC is intentionally left enabled or table cleanup partially fails
 
 ## Prerequisites
 
 - Docker environment running with SQL Server reachable at the target `--server`
 - `sqlcmd` installed and available on `PATH`, or passed explicitly with `--sqlcmd`
-- a SQL login with permission to enable and disable CDC in the target database
+- database-level CDC already enabled in the target database
+- a SQL login with permission to enable and disable CDC on tables in the target database
 - Python 3.10+
+
+If database-level CDC is not enabled yet, enable it manually before running the tracer:
+
+```sql
+USE <database_name>;
+GO
+EXEC sys.sp_cdc_enable_db;
+GO
+```
 
 ## Basic Usage
 
