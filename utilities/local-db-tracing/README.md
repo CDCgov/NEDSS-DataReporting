@@ -244,3 +244,8 @@ If no replayable row operations were captured, the summary still gets written bu
 - The tracer batches CDC reads across capture instances instead of spawning one `sqlcmd` process per table.
 - By default, after you press Enter, the script waits for a running container whose name starts with `nedss-datareporting-post-processing-service` to log `No ids to process from the topics.` before capturing the end LSN.
 - The tracer is database-agnostic enough to work against `NBS_ODSE` and `RDB_Modern`, but table eligibility and replay quality still depend on the schema and available metadata in the selected database.
+
+## To Do
+
+1. Teach the generator to also emit a standalone JSON artifact keyed by query label, so tests do not need to parse SQL comments.
+2. Resolve the remaining ambiguous observation variable mappings so more predicates can use source variables instead of literals.
