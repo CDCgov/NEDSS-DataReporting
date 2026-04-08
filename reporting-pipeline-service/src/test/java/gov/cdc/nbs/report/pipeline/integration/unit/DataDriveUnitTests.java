@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,7 +25,11 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 class DataDriveUnitTests extends UnitTest {
 
   private final JdbcClient client;
-  private final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+  private final ObjectMapper mapper =
+      new ObjectMapper()
+          .enable(SerializationFeature.INDENT_OUTPUT)
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
   DataDriveUnitTests(@Qualifier("adminClient") JdbcClient client) {
     this.client = client;
@@ -72,7 +77,7 @@ class DataDriveUnitTests extends UnitTest {
     client.sql(setup).update();
 
     // Execute query.sql until data is returned
-    Optional<Object> result = Await.waitFor(this::select, query);
+    Optional<List<Map<String, Object>>> result = Await.waitFor(this::select, query);
 
     // Validate data returned matches expected.json
     assertThat(result).isPresent();
@@ -80,7 +85,7 @@ class DataDriveUnitTests extends UnitTest {
     JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
   }
 
-  private Optional<Object> select(String sql) {
+  private Optional<List<Map<String, Object>>> select(String sql) {
     List<Map<String, Object>> result = client.sql(sql).query().listOfRows();
     if (result.isEmpty()) {
       return Optional.empty();

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,7 +25,11 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 class DataDrivenFunctionalTests extends FunctionalTest {
 
   private final JdbcClient client;
-  private final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+  private final ObjectMapper mapper =
+      new ObjectMapper()
+          .enable(SerializationFeature.INDENT_OUTPUT)
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
   DataDrivenFunctionalTests(@Qualifier("adminClient") JdbcClient client) {
     this.client = client;
