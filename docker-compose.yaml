@@ -23,6 +23,8 @@ services:
       - DB_USERNAME=${RTR_ADMIN_NAME:-rtr_admin}
       - DB_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - DB_HOST=nbs-mssql
+      - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
     depends_on:
       nbs-mssql:
         condition: service_healthy
