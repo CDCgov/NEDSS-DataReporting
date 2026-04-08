@@ -12,6 +12,9 @@ from pathlib import Path
 from tracing_constants import LOCAL_TRACING_DIR
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
 SCALAR_DECLARE_PATTERN = re.compile(
     r"^DECLARE\s+(?P<name>@[A-Za-z0-9_]+)\s+(?P<sql_type>[^=;]+?)(?:\s*=\s*(?P<expression>.+?))?;\s*$",
     re.IGNORECASE,
@@ -394,6 +397,14 @@ def expected_rows_json(expected_rows: tuple[dict[str, object], ...]) -> str:
     return json.dumps(list(expected_rows), separators=(",", ":"))
 
 
+def display_path(path_value: str) -> str:
+    path = Path(path_value)
+    try:
+        return path.resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return path_value.replace("\\", "/")
+
+
 def render_sql(
     manifest: dict[str, object],
     declare_lines: list[str],
@@ -401,8 +412,8 @@ def render_sql(
     scaffolds: list[SelectScaffold],
 ) -> str:
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
-    source_summary_file = str(manifest.get("cdc_summary_file") or "")
-    logical_changes_file = str(manifest.get("logical_changes_file") or "")
+    source_summary_file = display_path(str(manifest.get("cdc_summary_file") or ""))
+    logical_changes_file = display_path(str(manifest.get("logical_changes_file") or ""))
 
     lines = [
         f"USE [{logical_database}];",

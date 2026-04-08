@@ -55,13 +55,19 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         )
 
         sql = generate_rdb_selects.render_sql(
-            {"logical_database": "RDB_MODERN", "cdc_summary_file": "summary.txt", "logical_changes_file": "logical-changes.json"},
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
             ["DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';"],
             declare_entries,
             scaffolds,
         )
 
         self.assertIn("USE [RDB_MODERN];", sql)
+        self.assertIn("-- Source summary: summary.txt", sql)
+        self.assertIn("-- Logical changes: logical-changes.json", sql)
         self.assertIn("WHERE [PATIENT_LOCAL_ID] = @dbo_Person_local_id", sql)
         self.assertNotIn("GO", sql)
         self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
