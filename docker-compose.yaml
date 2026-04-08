@@ -8,8 +8,8 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
-      - LIQUIBASE_ADMIN_NAME=${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
-      - LIQUIBASE_ADMIN_PASSWORD=${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
+      - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
+      - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
     volumes:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
@@ -20,8 +20,8 @@ services:
     build:
       dockerfile: ./liquibase-service/Dockerfile.local
     environment:
-      - DB_USERNAME=${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
-      - DB_PASSWORD=${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
+      - DB_USERNAME=${RTR_ADMIN_NAME:-rtr_admin}
+      - DB_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - DB_HOST=nbs-mssql
     depends_on:
       nbs-mssql:
@@ -98,8 +98,8 @@ services:
       CONNECT_CONFIG_PROVIDERS: "env"
       CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
       DB_URL: "jdbc:sqlserver://nbs-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;"
-      DB_USERNAME: ${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
-      DB_PASSWORD: ${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
+      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
+      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
       interval: 10s
@@ -139,8 +139,8 @@ services:
       CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
       DB_HOST: "nbs-mssql"
       DB_PORT: "1433"
-      DB_USERNAME: ${LIQUIBASE_ADMIN_NAME:-rtr_liquibase_admin}
-      DB_PASSWORD: ${LIQUIBASE_ADMIN_PASSWORD:-rtr_liquibase_admin}
+      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
+      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
       KAFKA_SERVER: "kafka:29092"
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
