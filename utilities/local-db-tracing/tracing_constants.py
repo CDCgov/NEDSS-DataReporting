@@ -18,7 +18,11 @@ DEFAULT_STATE_FILE_DIR = LOCAL_RUNTIME_DIR
 LEGACY_STATE_FILE = LOCAL_TRACING_DIR / "enabled-cdc-tables.json"
 DEFAULT_KNOWN_ASSOCIATIONS_FILE = LOCAL_TRACING_DIR / "known_replay_associations.json"
 REPLAY_METADATA_CACHE_PREFIX = "replay-metadata-"
-REPLAY_METADATA_CACHE_VERSION = 3
+REPLAY_METADATA_CACHE_VERSION = 4
+DEFAULT_CORE_REPLAY_IGNORED_TABLES = {
+    ("dbo", "EDX_entity_match"),
+    ("dbo", "EDX_patient_match"),
+}
 EXCLUDED_TRACE_TABLES = {
     ("dbo", "job_flow_log"),
 }

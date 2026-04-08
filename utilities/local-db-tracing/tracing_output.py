@@ -193,6 +193,8 @@ def write_summary(
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
+    core_replay_ignored_tables: set[tuple[str, str]] | None = None,
+    replay_mode: str = "full",
     superuser_id: int = 10009282,
 ) -> None:
     """Write the human-readable summary artifact for a tracing run.
@@ -209,6 +211,10 @@ def write_summary(
         generated_always_columns: Generated-always columns.
         uid_generator_entries: Local UID generator metadata.
         known_associations: Supplemental replay-time semantic key mappings.
+        core_replay_ignored_tables: Tables that core replay should omit from
+            reconstructed SQL.
+        replay_mode: Whether reconstructed SQL should include all replayable
+            writes or skip helper-table writes for functional-test replay.
     """
 
     op_counts = Counter(record["operation"] for record in changes)
@@ -261,6 +267,22 @@ def write_summary(
         for record in changes
         if record.get("operation") in {"insert", "delete", "update_before", "update_after"}
     ]
+    ignored_replay_table_names: list[str] = []
+    if replay_mode == "core":
+        replay_ignored_tables = core_replay_ignored_tables or set()
+        ignored_replay_table_names = sorted(
+            {
+                f"{record['schema_name']}.{record['table_name']}"
+                for record in replay_changes
+                if (str(record["schema_name"]), str(record["table_name"])) in replay_ignored_tables
+            }
+        )
+        replay_changes = [
+            record
+            for record in replay_changes
+            if (str(record["schema_name"]), str(record["table_name"])) not in replay_ignored_tables
+        ]
+
     reconstructed_sql: list[str] = []
     if replay_changes:
         reconstructed_sql = reconstruct_sql_statements(
@@ -274,6 +296,11 @@ def write_summary(
             known_associations,
             superuser_id=superuser_id,
         )
+    if ignored_replay_table_names:
+        lines.append("")
+        lines.append("Tables excluded from reconstructed SQL (core replay):")
+        for table_name in ignored_replay_table_names:
+            lines.append(f"- {table_name}")
     if reconstructed_sql:
         lines.append("")
         lines.append("Reconstructed SQL:")

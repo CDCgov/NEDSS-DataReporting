@@ -61,6 +61,12 @@ def parse_args() -> argparse.Namespace:
         help="JSON file describing replay-time key associations for polymorphic columns such as EVENT_UID",
     )
     parser.add_argument(
+        "--replay-mode",
+        choices=("core", "full"),
+        default="core",
+        help="Whether reconstructed SQL should skip helper-table writes for functional-test replay or include all replayable writes",
+    )
+    parser.add_argument(
         "--action",
         action="append",
         default=[],
@@ -131,6 +137,7 @@ def main() -> int:
         column_sql_types,
         generated_always_columns,
         uid_generator_entries,
+        core_replay_ignored_tables,
     ) = get_replay_metadata(client, database)
     superuser_id = fetch_superuser_id(client, database)
 
@@ -148,6 +155,8 @@ def main() -> int:
         generated_always_columns,
         uid_generator_entries,
         known_associations,
+        core_replay_ignored_tables,
+        args.replay_mode,
         superuser_id,
     )
     print(output_path)

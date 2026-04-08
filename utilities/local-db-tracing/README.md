@@ -42,6 +42,7 @@ The default behavior is:
 - cleanup mode is `ask`
 - post-processing wait is enabled
 - known replay associations are loaded from `utilities/local-db-tracing/known_replay_associations.json`
+- replay mode is `core`, which skips helper-table writes listed in the replay metadata cache
 
 ## Common Commands
 
@@ -111,6 +112,12 @@ Regenerate `summary.txt` and include the original action note again:
 python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
 ```
 
+Include helper-table writes in reconstructed SQL when needed:
+
+```powershell
+python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
+```
+
 ## Important Options
 
 - `--cleanup ask|yes|no`: prompt, always clean up, or always leave tracer-managed CDC enabled
@@ -123,6 +130,7 @@ python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/l
 - `--post-processing-initial-wait`: delay log polling long enough to avoid matching stale idle messages
 - `--post-processing-wait-timeout`: cap the post-processing wait in seconds
 - `--known-associations-file`: override the default replay association mapping file
+- `--replay-mode core|full`: choose functional-test core replay or exact side-effect replay
 
 For `regenerate_summary.py` specifically:
 
@@ -130,6 +138,7 @@ For `regenerate_summary.py` specifically:
 - `--manifest-file`: optional path to the corresponding `manifest.json`; defaults to the file next to `changes.jsonl`
 - `--output-file`: optional output path for the regenerated `summary.txt`; defaults to the file next to `changes.jsonl`
 - `--action`: optional NBS action note to include in the regenerated summary; repeat for multiple actions
+- `--replay-mode`: `core` by default for functional-test SQL, or `full` to include helper-table writes
 
 ## Output Files
 
@@ -160,7 +169,7 @@ When cleanup is skipped or partially fails, the tracer writes database-specific 
 
 That state file is the source of truth for later `--disable-only` cleanup. The script also honors the older shared `enabled-cdc-tables.json` file once during migration if it exists.
 
-Replay metadata is cached per database under `.local/` in files such as `.local/replay-metadata-NBS_ODSE.json` so expensive PK and FK discovery does not have to run on every trace.
+Replay metadata is cached per database under `.local/` in files such as `.local/replay-metadata-NBS_ODSE.json` so expensive PK and FK discovery does not have to run on every trace. The cache also stores durable core-replay preferences, such as helper tables that should be ignored when generating functional-test replay SQL.
 
 If the tracer enabled database-level CDC itself, cleanup also attempts to disable database-level CDC when the run finishes.
 
@@ -176,6 +185,7 @@ Current replay behavior includes:
 - forcing columns whose names end with `user_id` to use the resolved `superuser` ID for the traced database, falling back to `10009282`
 - assigning replay-safe `version_ctrl_nbr` values for `_hist` inserts and live-row updates
 - preserving CDC order so the reconstructed SQL follows the original transaction sequence as closely as possible
+- in `core` replay mode, skipping helper tables listed in the replay metadata cache under `core_replay.ignored_tables`
 
 If no replayable row operations were captured, the summary still gets written but the reconstructed SQL section is omitted.
 

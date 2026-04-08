@@ -6,7 +6,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from tracing_constants import REPLAY_METADATA_CACHE_VERSION
+from tracing_constants import DEFAULT_CORE_REPLAY_IGNORED_TABLES, REPLAY_METADATA_CACHE_VERSION
 from tracing_models import PrimaryKeyColumn, TableStatus, CaptureInstance, UidGeneratorEntry
 from tracing_paths import replay_metadata_cache_file_for_database
 from tracing_sql import SqlCmdClient, read_tsv, sql_identifier, sql_quote
@@ -14,6 +14,56 @@ from tracing_state import utc_now
 
 
 DEFAULT_SUPERUSER_ID = 10009282
+
+
+def infer_core_replay_ignored_tables(
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+) -> set[tuple[str, str]]:
+    """Resolve known helper-table exclusions using database-specific table casing.
+
+    Args:
+        primary_keys_by_table: Tables discovered in the current database.
+
+    Returns:
+        set[tuple[str, str]]: Tables that should be ignored for core replay.
+    """
+
+    actual_names_by_lower = {
+        (schema_name.lower(), table_name.lower()): (schema_name, table_name)
+        for schema_name, table_name in primary_keys_by_table
+    }
+    ignored_tables: set[tuple[str, str]] = set()
+    for schema_name, table_name in DEFAULT_CORE_REPLAY_IGNORED_TABLES:
+        ignored_tables.add(
+            actual_names_by_lower.get((schema_name.lower(), table_name.lower()), (schema_name, table_name))
+        )
+    return ignored_tables
+
+
+def serialize_table_keys(table_keys: set[tuple[str, str]]) -> list[dict[str, str]]:
+    """Serialize schema/table pairs for replay metadata cache storage."""
+
+    return [
+        {"schema_name": schema_name, "table_name": table_name}
+        for schema_name, table_name in sorted(table_keys)
+    ]
+
+
+def deserialize_table_keys(items: object) -> set[tuple[str, str]]:
+    """Deserialize schema/table pairs from replay metadata cache payloads."""
+
+    if not isinstance(items, list):
+        return set()
+
+    table_keys: set[tuple[str, str]] = set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        schema_name = item.get("schema_name")
+        table_name = item.get("table_name")
+        if isinstance(schema_name, str) and isinstance(table_name, str):
+            table_keys.add((schema_name, table_name))
+    return table_keys
 
 
 
@@ -443,6 +493,7 @@ def save_replay_metadata_cache(
     column_sql_types: dict[tuple[str, str, str], str],
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
+    core_replay_ignored_tables: set[tuple[str, str]],
 ) -> None:
     """Persist replay metadata so repeated tracing runs can skip re-querying it.
 
@@ -455,6 +506,7 @@ def save_replay_metadata_cache(
         column_sql_types: Replay-ready SQL type strings by column.
         generated_always_columns: Generated-always columns.
         uid_generator_entries: Local UID generator metadata.
+        core_replay_ignored_tables: Helper tables that core replay should skip.
     """
 
     payload = {
@@ -504,6 +556,9 @@ def save_replay_metadata_cache(
             }
             for entry in uid_generator_entries
         ],
+        "core_replay": {
+            "ignored_tables": serialize_table_keys(core_replay_ignored_tables),
+        },
     }
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -520,6 +575,7 @@ def load_replay_metadata_cache(
     dict[tuple[str, str, str], str],
     set[tuple[str, str, str]],
     list[UidGeneratorEntry],
+    set[tuple[str, str]],
 ] | None:
     """Load cached replay metadata when it matches the current database.
 
@@ -588,6 +644,10 @@ def load_replay_metadata_cache(
         )
         for item in payload.get("uid_generators", [])
     ]
+    core_replay = payload.get("core_replay", {})
+    core_replay_ignored_tables = deserialize_table_keys(
+        core_replay.get("ignored_tables") if isinstance(core_replay, dict) else []
+    )
     return (
         primary_keys_by_table,
         identity_columns_by_table,
@@ -595,6 +655,7 @@ def load_replay_metadata_cache(
         column_sql_types,
         generated_always_columns,
         uid_generator_entries,
+        core_replay_ignored_tables,
     )
 
 
@@ -609,6 +670,7 @@ def get_replay_metadata(
     dict[tuple[str, str, str], str],
     set[tuple[str, str, str]],
     list[UidGeneratorEntry],
+    set[tuple[str, str]],
 ]:
     """Load replay metadata from cache or SQL Server.
 
@@ -620,8 +682,8 @@ def get_replay_metadata(
         tuple[dict[tuple[str, str], list[str]], dict[tuple[str, str], list[str]],
         dict[tuple[str, str, str], tuple[str, str, str]],
         dict[tuple[str, str, str], str], set[tuple[str, str, str]],
-        list[UidGeneratorEntry]]: Replay metadata collections used by summary
-        generation and SQL reconstruction.
+        list[UidGeneratorEntry], set[tuple[str, str]]]: Replay metadata
+        collections used by summary generation and SQL reconstruction.
     """
 
     cache_file = replay_metadata_cache_file_for_database(database)
@@ -635,6 +697,7 @@ def get_replay_metadata(
     column_sql_types = fetch_column_sql_types(client)
     generated_always_columns = fetch_generated_always_columns(client)
     uid_generator_entries = fetch_uid_generator_entries(client)
+    core_replay_ignored_tables = infer_core_replay_ignored_tables(primary_keys_by_table)
     save_replay_metadata_cache(
         cache_file,
         database,
@@ -644,6 +707,7 @@ def get_replay_metadata(
         column_sql_types,
         generated_always_columns,
         uid_generator_entries,
+        core_replay_ignored_tables,
     )
     return (
         primary_keys_by_table,
@@ -652,4 +716,5 @@ def get_replay_metadata(
         column_sql_types,
         generated_always_columns,
         uid_generator_entries,
+        core_replay_ignored_tables,
     )
