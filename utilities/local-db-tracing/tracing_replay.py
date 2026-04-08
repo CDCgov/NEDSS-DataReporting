@@ -1090,7 +1090,11 @@ def reconstruct_sql_statements(
     superuser_id: int = 10009282,
 ) -> list[str]:
     statements: list[str] = []
-    top_level_declarations: list[str] = [f"DECLARE {SUPERUSER_ID_VARIABLE} bigint = {superuser_id};"]
+    top_level_declarations: list[str] = [
+        f"DECLARE {SUPERUSER_ID_VARIABLE} bigint = {superuser_id};",
+        "",
+        "-- Adjust the UID declarations below manually so they remain unique across other tests.",
+    ]
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
     variable_registry: dict[tuple[str, str, str, str], str] = {}
     variable_name_counts: dict[str, int] = {}

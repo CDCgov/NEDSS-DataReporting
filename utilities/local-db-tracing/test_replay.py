@@ -149,6 +149,10 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertNotIn("GetUid", sql)
         self.assertNotIn("MAX([postal_locator_uid])", sql)
         self.assertIn(f"DECLARE @superuser_id bigint = {DEFAULT_SUPERUSER_ID};", sql)
+        self.assertIn(
+            "DECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\n",
+            sql,
+        )
         self.assertIn("DECLARE @dbo_Security_log_security_log_uid bigint = -1000;", sql)
         self.assertIn("DECLARE @dbo_Entity_entity_uid bigint = -1001;", sql)
         self.assertIn("DECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1002;", sql)
@@ -196,7 +200,7 @@ class ReplaySqlTest(unittest.TestCase):
             summary = summary_path.read_text(encoding="utf-8")
 
         self.assertIn(
-            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\nDECLARE @dbo_Security_log_security_log_uid bigint = -1000;\nDECLARE @dbo_Entity_entity_uid bigint = -1001;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1002;\n",
+            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Security_log_security_log_uid bigint = -1000;\nDECLARE @dbo_Entity_entity_uid bigint = -1001;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1002;\n",
             summary,
         )
         self.assertNotIn("DECLARE @id bigint", summary)
