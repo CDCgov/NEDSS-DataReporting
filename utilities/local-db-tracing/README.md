@@ -93,16 +93,16 @@ python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --data
 Trace a different database:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
 ```
 
 Capture logical row-level changes for a database run. This now writes both `logical-changes.json` and `logical-changes.md` automatically:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_Modern --user sa --password "<password>"
+python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
 ```
 
-Capture `NBS_ODSE` CDC and `RDB_Modern` logical changes in one synchronized run with one prompt:
+Capture `NBS_ODSE` CDC and `RDB_MODERN` logical changes in one synchronized run with one prompt:
 
 ```powershell
 python utilities/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
@@ -213,7 +213,7 @@ The most useful file for later test design is usually `changes.jsonl`. The most 
 When cleanup is skipped or partially fails, the tracer writes database-specific state under `.local/`, such as:
 
 - `.local/enabled-cdc-tables-NBS_ODSE.json`
-- `.local/enabled-cdc-tables-RDB_Modern.json`
+- `.local/enabled-cdc-tables-RDB_MODERN.json`
 
 That state file is the source of truth for later `--disable-only` cleanup. The script also honors the older shared `enabled-cdc-tables.json` file once during migration if it exists.
 
@@ -243,7 +243,7 @@ If no replayable row operations were captured, the summary still gets written bu
 - Some tables may still be skipped if SQL Server refuses CDC enablement for them.
 - The tracer batches CDC reads across capture instances instead of spawning one `sqlcmd` process per table.
 - By default, after you press Enter, the script waits for a running container whose name starts with `nedss-datareporting-post-processing-service` to log `No ids to process from the topics.` before capturing the end LSN.
-- The tracer is database-agnostic enough to work against `NBS_ODSE` and `RDB_Modern`, but table eligibility and replay quality still depend on the schema and available metadata in the selected database.
+- The tracer is database-agnostic enough to work against `NBS_ODSE` and `RDB_MODERN`, but table eligibility and replay quality still depend on the schema and available metadata in the selected database.
 
 ## To Do
 

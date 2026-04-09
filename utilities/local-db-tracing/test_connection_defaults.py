@@ -68,7 +68,7 @@ class ConnectionDefaultsTest(unittest.TestCase):
         self.assertEqual(args.user, "trace_user")
         self.assertEqual(args.password, "secret")
         self.assertEqual(args.cdc_database, "NBS_ODSE")
-        self.assertEqual(args.logical_database, "RDB_Modern")
+        self.assertEqual(args.logical_database, "RDB_MODERN")
 
     @patch.object(
         trace_db_cdc,
