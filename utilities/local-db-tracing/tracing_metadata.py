@@ -325,6 +325,44 @@ ORDER BY s.name, t.name, c.column_id;
 
 
 
+def fetch_auto_datetime_columns(client: SqlCmdClient) -> set[tuple[str, str, str]]:
+    """Fetch datetime-typed columns whose value is set automatically via a function-based DEFAULT constraint.
+
+    These columns (e.g. created_dttm DEFAULT (getdate())) will always differ between
+    runs and should be excluded from expected-value comparisons.
+
+    Args:
+        client: SQL Server client used to query column metadata.
+
+    Returns:
+        set[tuple[str, str, str]]: Schema, table, and column tuples for
+        auto-populated datetime columns.
+    """
+
+    sql = """
+SET NOCOUNT ON;
+SELECT
+    s.name,
+    t.name,
+    c.name
+FROM sys.tables t
+JOIN sys.schemas s ON s.schema_id = t.schema_id
+JOIN sys.columns c ON c.object_id = t.object_id
+JOIN sys.types ty ON ty.user_type_id = c.user_type_id
+JOIN sys.default_constraints dc
+    ON dc.parent_object_id = t.object_id
+    AND dc.parent_column_id = c.column_id
+WHERE t.is_ms_shipped = 0
+  AND ty.name IN ('datetime', 'datetime2', 'datetimeoffset', 'smalldatetime', 'date', 'time')
+  AND dc.definition LIKE '%(%)%'
+ORDER BY s.name, t.name, c.column_id;
+"""
+    auto_columns: set[tuple[str, str, str]] = set()
+    for row in read_tsv(client.query(sql)):
+        auto_columns.add((row[0], row[1], row[2]))
+    return auto_columns
+
+
 def fetch_uid_generator_entries(client: SqlCmdClient) -> list[UidGeneratorEntry]:
     """Fetch Local_UID_generator rows when the table exists.
 
@@ -412,6 +450,7 @@ def save_replay_metadata_cache(
     generated_always_columns: set[tuple[str, str, str]],
     uid_generator_entries: list[UidGeneratorEntry],
     core_replay_ignored_tables: set[tuple[str, str]],
+    auto_datetime_defaults: set[tuple[str, str, str]] | None = None,
 ) -> None:
     """Persist replay metadata so repeated tracing runs can skip re-querying it.
 
@@ -464,6 +503,10 @@ def save_replay_metadata_cache(
         "generated_always_columns": [
             {"schema_name": schema_name, "table_name": table_name, "column_name": column_name}
             for (schema_name, table_name, column_name) in sorted(generated_always_columns)
+        ],
+        "auto_datetime_defaults": [
+            {"schema_name": schema_name, "table_name": table_name, "column_name": column_name}
+            for (schema_name, table_name, column_name) in sorted(auto_datetime_defaults or set())
         ],
         "uid_generators": [
             {
@@ -614,6 +657,7 @@ def get_replay_metadata(
     foreign_keys_by_source = fetch_foreign_key_columns(client)
     column_sql_types = fetch_column_sql_types(client)
     generated_always_columns = fetch_generated_always_columns(client)
+    auto_datetime_defaults = fetch_auto_datetime_columns(client)
     uid_generator_entries = fetch_uid_generator_entries(client)
     core_replay_ignored_tables = infer_core_replay_ignored_tables(primary_keys_by_table)
     save_replay_metadata_cache(
@@ -626,6 +670,7 @@ def get_replay_metadata(
         generated_always_columns,
         uid_generator_entries,
         core_replay_ignored_tables,
+        auto_datetime_defaults,
     )
     return (
         primary_keys_by_table,

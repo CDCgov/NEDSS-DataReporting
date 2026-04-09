@@ -49,6 +49,7 @@ class ReplayMetadataCacheTest(unittest.TestCase):
                 generated_always_columns,
                 uid_generator_entries,
                 core_replay_ignored_tables,
+                set(),
             )
 
             payload = cache_file.read_text(encoding="utf-8")
