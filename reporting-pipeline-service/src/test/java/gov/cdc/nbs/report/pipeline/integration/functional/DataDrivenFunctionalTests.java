@@ -1,10 +1,9 @@
 package gov.cdc.nbs.report.pipeline.integration.functional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import gov.cdc.nbs.report.pipeline.integration.support.Await;
+import gov.cdc.nbs.report.pipeline.integration.support.QueryRunner;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +11,6 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 import org.json.JSONException;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,6 +23,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 class DataDrivenFunctionalTests extends FunctionalTest {
 
   private final JdbcClient client;
+
   private final ObjectMapper mapper =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
@@ -87,21 +86,11 @@ class DataDrivenFunctionalTests extends FunctionalTest {
       client.sql(setup).update();
 
       // Execute query.sql until data is returned
-      Optional<Object> result = Await.waitFor(this::select, query);
+      Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
 
       // Validate data returned matches expected.json
-      assertThat(result).isPresent();
-      String actual = mapper.writeValueAsString(result.get());
+      String actual = mapper.writeValueAsString(results);
       JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
-    }
-  }
-
-  private Optional<Object> select(String sql) {
-    List<Map<String, Object>> result = client.sql(sql).query().listOfRows();
-    if (result.isEmpty()) {
-      return Optional.empty();
-    } else {
-      return Optional.of(result);
     }
   }
 }

@@ -7,7 +7,7 @@ import java.util.function.Function;
 public class Await {
 
   private static final Duration DEFAULT_RETRY_DELAY = Duration.ofSeconds(6);
-  private static final int DEFAULT_MAX_RETRY = 20;
+  private static final int DEFAULT_MAX_RETRY = 10;
 
   private Await() {}
 
