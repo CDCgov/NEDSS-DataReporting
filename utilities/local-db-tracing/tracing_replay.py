@@ -1077,7 +1077,7 @@ def append_sql_statement(
 
 
 def should_skip_reconstructed_change(table_key: tuple[str, str], operation: str) -> bool:
-    return operation == "insert" and table_key == ("dbo", "Security_log")
+    return operation == "insert" and (table_key == ("dbo", "Security_log") or is_history_table(table_key))
 
 
 

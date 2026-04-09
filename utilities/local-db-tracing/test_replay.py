@@ -64,6 +64,18 @@ class ReplaySqlTest(unittest.TestCase):
             },
             {
                 "schema_name": "dbo",
+                "table_name": "Person_hist",
+                "operation": "insert",
+                "start_lsn": "0x01",
+                "seqval": "0x01a",
+                "operation_code": 2,
+                "row": {
+                    "person_uid": 10009297,
+                    "version_ctrl_nbr": 1,
+                },
+            },
+            {
+                "schema_name": "dbo",
                 "table_name": "Entity",
                 "operation": "insert",
                 "start_lsn": "0x01",
@@ -166,6 +178,7 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertIn("@superuser_id", sql)
         self.assertNotIn(", 7777,", sql)
         self.assertNotIn("INSERT INTO [dbo].[Security_log]", sql)
+        self.assertNotIn("INSERT INTO [dbo].[Person_hist]", sql)
         self.assertIn(
             "VALUES (@dbo_Entity_entity_uid, @dbo_Postal_locator_postal_locator_uid, N'H');",
             sql,
@@ -206,6 +219,8 @@ class ReplaySqlTest(unittest.TestCase):
         )
         self.assertNotIn("Security_log_security_log_uid", summary)
         self.assertNotIn("INSERT INTO [dbo].[Security_log]", summary)
+        self.assertIn("- dbo.Person_hist: 1", summary)
+        self.assertNotIn("INSERT INTO [dbo].[Person_hist]", summary)
         self.assertNotIn("DECLARE @id bigint", summary)
 
     def test_core_replay_skips_cached_helper_tables(self) -> None:
