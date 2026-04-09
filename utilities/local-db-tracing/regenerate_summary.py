@@ -7,16 +7,13 @@ import json
 import sys
 from pathlib import Path
 
-from tracing_constants import DEFAULT_KNOWN_ASSOCIATIONS_FILE
+from tracing_constants import DEFAULT_KNOWN_ASSOCIATIONS_FILE, DEFAULT_STARTING_UID
 from tracing_env import load_database_connection_defaults, resolve_server_argument
 from tracing_metadata import fetch_superuser_id, get_replay_metadata
 from tracing_output import write_summary
 from tracing_post_processing import log_progress
 from tracing_sql import SqlCmdClient, require_sqlcmd
 from tracing_state import load_known_associations
-
-
-DEFAULT_STARTING_UID = -1000
 
 
 def parse_args() -> argparse.Namespace:
@@ -78,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--starting-uid",
         type=int,
-        help="Starting UID value for reconstructed replay SQL variable declarations; prompts with default -1000 when omitted",
+        help="Starting UID value for reconstructed replay SQL variable declarations; prompts with default 1234 when omitted",
     )
     args = parser.parse_args()
     if not args.user:
@@ -99,7 +96,7 @@ def resolve_starting_uid(cli_starting_uid: int | None) -> int:
         try:
             return int(response)
         except ValueError:
-            print("Please enter a whole number (for example: -1000).")
+            print("Please enter a whole number (for example: 1234).")
 
 
 def load_json(path: Path) -> dict[str, object]:

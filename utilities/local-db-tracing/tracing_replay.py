@@ -7,6 +7,7 @@ from datetime import datetime
 
 from tracing_constants import (
     CDC_METADATA_COLUMNS,
+    DEFAULT_STARTING_UID,
     DEFAULT_UID_BLOCK_SIZE_BY_CLASS,
     GENERIC_LOCAL_ID_PATTERN,
 )
@@ -304,7 +305,10 @@ def allocate_replay_variable_name(
 
 def next_negative_id_literal(id_state: dict[str, int]) -> str:
     next_value = id_state["next_value"]
-    id_state["next_value"] = next_value - 1
+    if next_value >= 0:
+        id_state["next_value"] = next_value + 1
+    else:
+        id_state["next_value"] = next_value - 1
     return str(next_value)
 
 
@@ -1092,7 +1096,7 @@ def reconstruct_sql_statements(
     known_associations: list[KnownAssociation],
     replay_now_window: tuple[datetime, datetime] | None = None,
     superuser_id: int = 10009282,
-    starting_uid: int = -1000,
+    starting_uid: int = DEFAULT_STARTING_UID,
 ) -> list[str]:
     statements: list[str] = []
     top_level_declarations: list[str] = [

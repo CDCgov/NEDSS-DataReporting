@@ -20,6 +20,7 @@ from tracing_constants import (
     DEFAULT_POST_PROCESSING_IDLE_MESSAGE,
     DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS,
     DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS,
+    DEFAULT_STARTING_UID,
     LOCAL_TRACING_DIR,
 )
 from tracing_env import load_database_connection_defaults, resolve_server_argument
@@ -47,9 +48,6 @@ from tracing_state import (
     save_managed_tables,
     utc_now,
 )
-
-
-DEFAULT_STARTING_UID = -1000
 
 
 @dataclass
@@ -123,7 +121,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--starting-uid",
         type=int,
-        help="Starting UID value for reconstructed replay SQL variable declarations; prompts with default -1000 when omitted",
+        help="Starting UID value for reconstructed replay SQL variable declarations; prompts with default 1234 when omitted",
     )
     parser.add_argument(
         "--cleanup",
@@ -184,7 +182,7 @@ def resolve_starting_uid(cli_starting_uid: int | None) -> int:
         try:
             return int(response)
         except ValueError:
-            print("Please enter a whole number (for example: -1000).")
+            print("Please enter a whole number (for example: 1234).")
 
 
 def prompt_action_descriptions() -> list[str]:

@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable
 
-from tracing_constants import CDC_METADATA_COLUMNS
+from tracing_constants import CDC_METADATA_COLUMNS, DEFAULT_STARTING_UID
 from tracing_models import KnownAssociation, UidGeneratorEntry
 from tracing_replay import (
     format_value,
@@ -196,7 +196,7 @@ def write_summary(
     core_replay_ignored_tables: set[tuple[str, str]] | None = None,
     replay_mode: str = "full",
     superuser_id: int = 10009282,
-    starting_uid: int = -1000,
+    starting_uid: int = DEFAULT_STARTING_UID,
 ) -> None:
     """Write the human-readable summary artifact for a tracing run.
 

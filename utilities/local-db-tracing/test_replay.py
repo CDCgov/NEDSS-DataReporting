@@ -155,6 +155,7 @@ class ReplaySqlTest(unittest.TestCase):
                 self.generated_always_columns,
                 self.uid_generator_entries,
                 self.known_associations,
+                starting_uid=-1000,
             )
         )
 
@@ -214,7 +215,7 @@ class ReplaySqlTest(unittest.TestCase):
             summary = summary_path.read_text(encoding="utf-8")
 
         self.assertIn(
-            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = -1000;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = -1001;\n",
+            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = 1234;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1235;\n",
             summary,
         )
         self.assertNotIn("Security_log_security_log_uid", summary)
