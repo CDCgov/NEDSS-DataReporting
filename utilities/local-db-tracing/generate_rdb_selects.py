@@ -20,6 +20,12 @@ SCALAR_DECLARE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 STRING_PREFIX_PATTERN = re.compile(r"N'(?P<prefix>[A-Za-z]+)'\s*\+")
+LOCAL_ID_EXPRESSION_PATTERN = re.compile(
+    r"^N'(?P<prefix>[^']*)'\s*\+\s*CONVERT\(nvarchar\(\d+\),\s*ABS\(CONVERT\(bigint,\s*(?P<numeric>.+?)\)\)\)\s*\+\s*N'(?P<suffix>[^']*)'$",
+    re.IGNORECASE,
+)
+VAR_PLUS_OFFSET_PATTERN = re.compile(r"^(?P<left>@[A-Za-z0-9_]+)\s*\+\s*(?P<offset>-?\d+)$")
+OFFSET_PLUS_VAR_PATTERN = re.compile(r"^(?P<offset>-?\d+)\s*\+\s*(?P<right>@[A-Za-z0-9_]+)$")
 
 
 @dataclass(frozen=True)
@@ -288,6 +294,108 @@ def sql_literal(value: object) -> str:
     return sql_string_literal(str(value))
 
 
+def parse_int_literal(expression: str) -> int | None:
+    stripped = expression.strip()
+    if stripped.startswith("+"):
+        stripped = stripped[1:]
+    if stripped.startswith("-"):
+        return int(stripped) if stripped[1:].isdigit() else None
+    return int(stripped) if stripped.isdigit() else None
+
+
+def resolve_declare_values(declare_entries: list[DeclareEntry]) -> dict[str, object]:
+    resolved: dict[str, object] = {}
+    pending = {entry.name: entry for entry in declare_entries if entry.expression}
+
+    while pending:
+        progressed = False
+        for variable_name, entry in list(pending.items()):
+            assert entry.expression is not None
+            expression = entry.expression.strip()
+
+            int_literal = parse_int_literal(expression)
+            if int_literal is not None:
+                resolved[variable_name] = int_literal
+                del pending[variable_name]
+                progressed = True
+                continue
+
+            local_id_match = LOCAL_ID_EXPRESSION_PATTERN.match(expression)
+            if local_id_match:
+                numeric_expression = local_id_match.group("numeric").strip()
+                numeric_value: int | None = None
+                numeric_variable_name = numeric_expression if numeric_expression.startswith("@") else None
+                if numeric_variable_name and numeric_variable_name in resolved:
+                    candidate_value = resolved[numeric_variable_name]
+                    if isinstance(candidate_value, int):
+                        numeric_value = candidate_value
+                elif not numeric_variable_name:
+                    numeric_value = parse_int_literal(numeric_expression)
+
+                if numeric_value is not None:
+                    resolved[variable_name] = (
+                        local_id_match.group("prefix")
+                        + str(abs(numeric_value))
+                        + local_id_match.group("suffix")
+                    )
+                    del pending[variable_name]
+                    progressed = True
+                    continue
+
+            if expression.startswith("N'") and expression.endswith("'"):
+                resolved[variable_name] = expression[2:-1].replace("''", "'")
+                del pending[variable_name]
+                progressed = True
+                continue
+
+            var_plus_offset_match = VAR_PLUS_OFFSET_PATTERN.match(expression)
+            if var_plus_offset_match:
+                left_variable = var_plus_offset_match.group("left")
+                left_value = resolved.get(left_variable)
+                if isinstance(left_value, int):
+                    resolved[variable_name] = left_value + int(var_plus_offset_match.group("offset"))
+                    del pending[variable_name]
+                    progressed = True
+                    continue
+
+            offset_plus_var_match = OFFSET_PLUS_VAR_PATTERN.match(expression)
+            if offset_plus_var_match:
+                right_variable = offset_plus_var_match.group("right")
+                right_value = resolved.get(right_variable)
+                if isinstance(right_value, int):
+                    resolved[variable_name] = int(offset_plus_var_match.group("offset")) + right_value
+                    del pending[variable_name]
+                    progressed = True
+                    continue
+
+        if not progressed:
+            break
+
+    return resolved
+
+
+def apply_expected_row_overrides(
+    expected_rows: tuple[dict[str, object], ...],
+    declare_entries: list[DeclareEntry],
+) -> tuple[dict[str, object], ...]:
+    resolved_declare_values = resolve_declare_values(declare_entries)
+    if not resolved_declare_values:
+        return expected_rows
+
+    updated_rows: list[dict[str, object]] = []
+    for row in expected_rows:
+        updated_row = dict(row)
+        for column_name, value in row.items():
+            candidates = variable_candidates_for_value(column_name, value, declare_entries)
+            if len(candidates) != 1:
+                continue
+            replacement_value = resolved_declare_values.get(candidates[0])
+            if replacement_value is not None:
+                updated_row[column_name] = replacement_value
+        updated_rows.append(updated_row)
+    return tuple(updated_rows)
+
+
 def predicate_for_field(column_name: str, value: object, declare_entries: list[DeclareEntry]) -> tuple[str, list[str]]:
     column_sql = f"[{column_name}]"
     literal_sql = sql_literal(value)
@@ -393,8 +501,9 @@ def build_scaffolds(
     return sorted(finalized, key=lambda item: (item.schema_name.lower(), item.table_name.lower(), item.where_fields))
 
 
-def expected_rows_json(expected_rows: tuple[dict[str, object], ...]) -> str:
-    return json.dumps(list(expected_rows), separators=(",", ":"))
+def expected_rows_json(expected_rows: tuple[dict[str, object], ...], declare_entries: list[DeclareEntry]) -> str:
+    effective_expected_rows = apply_expected_row_overrides(expected_rows, declare_entries)
+    return json.dumps(list(effective_expected_rows), separators=(",", ":"))
 
 
 def display_path(path_value: str) -> str:
@@ -449,15 +558,16 @@ def render_sql(
         lines.append(f"FROM [{scaffold.schema_name}].[{scaffold.table_name}]")
         lines.extend(predicate_lines)
         lines.append("ORDER BY 1;")
-        lines.append(f"-- EXPECTED_ROWS_JSON: {expected_rows_json(scaffold.expected_rows)}")
+        lines.append(f"-- EXPECTED_ROWS_JSON: {expected_rows_json(scaffold.expected_rows, declare_entries)}")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
 
-def main() -> int:
-    args = parse_args()
-    manifest_path = resolve_manifest_path(args)
+def generate_rdb_selects_from_manifest(
+    manifest_path: Path,
+    output_path: Path | None = None,
+) -> tuple[Path, int]:
     manifest, summary_path, logical_changes_path = load_combined_inputs(manifest_path)
     summary_text = summary_path.read_text(encoding="utf-8")
     logical_changes_obj = load_json(logical_changes_path)
@@ -469,10 +579,18 @@ def main() -> int:
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
     output_sql = render_sql(manifest, declare_lines, declare_entries, scaffolds)
 
-    output_path = Path(args.output_file) if args.output_file else manifest_path.with_name("rdb-selects.sql")
-    output_path.write_text(output_sql, encoding="utf-8")
+    final_output_path = output_path if output_path is not None else manifest_path.with_name("rdb-selects.sql")
+    final_output_path.write_text(output_sql, encoding="utf-8")
+    return final_output_path, len(scaffolds)
+
+
+def main() -> int:
+    args = parse_args()
+    manifest_path = resolve_manifest_path(args)
+    requested_output_path = Path(args.output_file) if args.output_file else None
+    output_path, scaffold_count = generate_rdb_selects_from_manifest(manifest_path, requested_output_path)
     print(f"Wrote RDB select scaffold: {output_path}")
-    print(f"Generated SELECT statements: {len(scaffolds)}")
+    print(f"Generated SELECT statements: {scaffold_count}")
     return 0
 
 

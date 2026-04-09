@@ -135,6 +135,55 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             self.assertIn("FROM [dbo].[D_PATIENT]", sql)
             self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
 
+    def test_expected_rows_json_uses_resolved_declare_values(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries(
+            [
+                "DECLARE @dbo_Entity_entity_uid bigint = -2222;",
+                "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';",
+            ]
+        )
+        scaffolds = generate_rdb_selects.build_scaffolds(
+            [
+                {
+                    "schema_name": "dbo",
+                    "table_name": "D_PATIENT",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"PATIENT_LOCAL_ID": "PSN10067010GA01"},
+                    },
+                    "primary_key_values": {"PATIENT_KEY": 16},
+                    "after": {
+                        "PATIENT_KEY": 16,
+                        "PATIENT_UID": 10009314,
+                        "PATIENT_MPR_UID": 10009314,
+                        "PATIENT_LOCAL_ID": "PSN10067010GA01",
+                    },
+                }
+            ],
+            declare_entries,
+        )
+
+        sql = generate_rdb_selects.render_sql(
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
+            [
+                "DECLARE @dbo_Entity_entity_uid bigint = -2222;",
+                "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';",
+            ],
+            declare_entries,
+            scaffolds,
+        )
+
+        self.assertIn(
+            '-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":16,"PATIENT_UID":-2222,"PATIENT_MPR_UID":-2222,"PATIENT_LOCAL_ID":"PSN2222GA01"}]',
+            sql,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
