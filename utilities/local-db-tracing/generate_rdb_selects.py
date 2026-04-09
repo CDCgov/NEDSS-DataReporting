@@ -70,17 +70,21 @@ def parse_args() -> argparse.Namespace:
 
 def load_rdb_column_metadata(
     logical_database: str,
-) -> tuple[dict[tuple[str, str], list[str]] | None, dict[tuple[str, str], frozenset[str]] | None]:
-    """Load ordered column lists and primary key sets from the replay-metadata cache."""
+) -> tuple[
+    dict[tuple[str, str], list[str]] | None,
+    dict[tuple[str, str], frozenset[str]] | None,
+    dict[tuple[str, str, str], tuple[str, str, str]] | None,
+]:
+    """Load table columns, primary keys, and FK links from replay-metadata cache."""
     cache_file = replay_metadata_cache_file_for_database(logical_database)
     if not cache_file.exists():
-        return None, None
+        return None, None, None
     try:
         payload = json.loads(cache_file.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return None, None
+        return None, None, None
     if not isinstance(payload, dict):
-        return None, None
+        return None, None, None
 
     columns_by_table: dict[tuple[str, str], list[str]] = {}
     for item in payload.get("column_sql_types", []):
@@ -91,7 +95,15 @@ def load_rdb_column_metadata(
         (item["schema_name"], item["table_name"]): frozenset(item["columns"])
         for item in payload.get("primary_keys", [])
     }
-    return columns_by_table, primary_keys_by_table
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] = {
+        (item["source_schema"], item["source_table"], item["source_column"]): (
+            item["target_schema"],
+            item["target_table"],
+            item["target_column"],
+        )
+        for item in payload.get("foreign_keys", [])
+    }
+    return columns_by_table, primary_keys_by_table, foreign_keys_by_source
 
 
 def latest_combined_manifest() -> Path:
@@ -437,6 +449,129 @@ def predicate_for_field(column_name: str, value: object, declare_entries: list[D
     return f"{column_sql} = {literal_sql}", []
 
 
+def build_lookup_scaffold_by_table(scaffolds: list[SelectScaffold]) -> dict[tuple[str, str], SelectScaffold]:
+    """Pick the most stable scaffold per table for FK subquery lookups."""
+
+    def score(scaffold: SelectScaffold) -> tuple[int, int, int]:
+        return (
+            1 if scaffold.identity_strategy == "business_keys" else 0,
+            1 if scaffold.comparison_eligible else 0,
+            -len(scaffold.where_fields),
+        )
+
+    selected: dict[tuple[str, str], SelectScaffold] = {}
+    for scaffold in scaffolds:
+        key = (normalize_identifier(scaffold.schema_name), normalize_identifier(scaffold.table_name))
+        existing = selected.get(key)
+        if existing is None or score(scaffold) > score(existing):
+            selected[key] = scaffold
+    return selected
+
+
+def canonical_key_name(column_name: str) -> str:
+    normalized = normalize_identifier(column_name)
+    if normalized.startswith("d_"):
+        return normalized[2:]
+    return normalized
+
+
+def infer_target_column_for_source_pk(
+    scaffold: SelectScaffold,
+    source_column: str,
+    primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None,
+    lookup_scaffold_by_table: dict[tuple[str, str], SelectScaffold],
+) -> tuple[str, str, str] | None:
+    if primary_keys_by_table is None:
+        return None
+
+    source_key_name = canonical_key_name(source_column)
+    candidates: list[tuple[str, str, str]] = []
+
+    for (schema_name, table_name), pk_columns in primary_keys_by_table.items():
+        if normalize_identifier(schema_name) == normalize_identifier(scaffold.schema_name) and normalize_identifier(
+            table_name
+        ) == normalize_identifier(scaffold.table_name):
+            continue
+
+        if len(pk_columns) != 1:
+            continue
+
+        target_pk_column = next(iter(pk_columns))
+        if canonical_key_name(target_pk_column) != source_key_name:
+            continue
+
+        lookup_scaffold = lookup_scaffold_by_table.get((normalize_identifier(schema_name), normalize_identifier(table_name)))
+        if lookup_scaffold is None:
+            continue
+
+        candidates.append((schema_name, table_name, target_pk_column))
+
+    if len(candidates) == 1:
+        return candidates[0]
+    return None
+
+
+def fk_subquery_predicate_for_pk(
+    scaffold: SelectScaffold,
+    column_name: str,
+    declare_entries: list[DeclareEntry],
+    primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None,
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
+    lookup_scaffold_by_table: dict[tuple[str, str], SelectScaffold],
+) -> tuple[str | None, list[str]]:
+    if primary_keys_by_table is None or foreign_keys_by_source is None:
+        return None, []
+
+    if scaffold.identity_strategy == "business_keys":
+        return None, []
+
+    table_key = (scaffold.schema_name, scaffold.table_name)
+    pk_columns = primary_keys_by_table.get(table_key, frozenset())
+    if column_name.lower() not in {pk_column.lower() for pk_column in pk_columns}:
+        return None, []
+
+    fk_key = (scaffold.schema_name, scaffold.table_name, column_name)
+    foreign_key = foreign_keys_by_source.get(fk_key)
+    target_comments: list[str] = []
+    if foreign_key is not None:
+        target_schema, target_table, target_column = foreign_key
+    else:
+        inferred_target = infer_target_column_for_source_pk(
+            scaffold,
+            column_name,
+            primary_keys_by_table,
+            lookup_scaffold_by_table,
+        )
+        if inferred_target is None:
+            return None, []
+        target_schema, target_table, target_column = inferred_target
+        target_comments.append(
+            f"Inferred lookup for {column_name} via {target_schema}.{target_table}.{target_column} (no explicit FK metadata found)."
+        )
+
+    lookup_scaffold = lookup_scaffold_by_table.get((normalize_identifier(target_schema), normalize_identifier(target_table)))
+    if lookup_scaffold is None:
+        return None, []
+
+    target_predicates: list[str] = []
+    uses_variable = False
+    for target_field_name, target_field_value in lookup_scaffold.where_fields:
+        predicate_sql, comments = predicate_for_field(target_field_name, target_field_value, declare_entries)
+        target_predicates.append(predicate_sql)
+        target_comments.extend(comments)
+        if "@" in predicate_sql:
+            uses_variable = True
+
+    if not target_predicates or not uses_variable:
+        return None, []
+
+    subquery_sql = (
+        f"(SELECT [{target_column}] FROM [{target_schema}].[{target_table}] "
+        f"WHERE {' AND '.join(target_predicates)})"
+    )
+    return f"[{column_name}] = {subquery_sql}", target_comments
+
+
 def build_scaffolds(
     logical_changes: list[dict[str, object]],
     declare_entries: list[DeclareEntry],
@@ -580,6 +715,7 @@ def render_sql(
     scaffolds: list[SelectScaffold],
     columns_by_table: dict[tuple[str, str], list[str]] | None = None,
     primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None = None,
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None = None,
 ) -> str:
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     source_summary_file = display_path(str(manifest.get("cdc_summary_file") or ""))
@@ -599,6 +735,8 @@ def render_sql(
         lines.extend(declare_lines)
         lines.append("")
 
+    lookup_scaffold_by_table = build_lookup_scaffold_by_table(scaffolds)
+
     for scaffold in scaffolds:
         lines.append(f"-- {scaffold.schema_name}.{scaffold.table_name} | operations: {', '.join(scaffold.operation_labels)}")
         for comment in scaffold.comments:
@@ -607,7 +745,19 @@ def render_sql(
         predicate_lines: list[str] = []
         predicate_comments: list[str] = []
         for index, (column_name, value) in enumerate(scaffold.where_fields):
-            predicate_sql, comments = predicate_for_field(column_name, value, declare_entries)
+            fk_lookup_predicate_sql, fk_lookup_comments = fk_subquery_predicate_for_pk(
+                scaffold,
+                column_name,
+                declare_entries,
+                primary_keys_by_table,
+                foreign_keys_by_source,
+                lookup_scaffold_by_table,
+            )
+            if fk_lookup_predicate_sql is not None:
+                predicate_sql = fk_lookup_predicate_sql
+                comments = fk_lookup_comments
+            else:
+                predicate_sql, comments = predicate_for_field(column_name, value, declare_entries)
             connector = "WHERE" if index == 0 else "  AND"
             predicate_lines.append(f"{connector} {predicate_sql}")
             predicate_comments.extend(comments)
@@ -653,8 +803,16 @@ def generate_rdb_selects_from_manifest(
     declare_entries = parse_declare_entries(declare_lines)
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
-    columns_by_table, primary_keys_by_table = load_rdb_column_metadata(logical_database)
-    output_sql = render_sql(manifest, declare_lines, declare_entries, scaffolds, columns_by_table, primary_keys_by_table)
+    columns_by_table, primary_keys_by_table, foreign_keys_by_source = load_rdb_column_metadata(logical_database)
+    output_sql = render_sql(
+        manifest,
+        declare_lines,
+        declare_entries,
+        scaffolds,
+        columns_by_table,
+        primary_keys_by_table,
+        foreign_keys_by_source,
+    )
 
     final_output_path = output_path if output_path is not None else manifest_path.with_name("rdb-selects.sql")
     final_output_path.write_text(output_sql, encoding="utf-8")
