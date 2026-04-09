@@ -72,7 +72,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertNotIn("GO", sql)
         self.assertIn("FOR JSON PATH;", sql)
         self.assertNotIn("ORDER BY 1;", sql)
-        self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
+        self.assertIn("-- EXPECTED_ROWS_JSON:\n-- [{\"PATIENT_KEY\":9}]", sql)
 
     def test_main_generates_output_file_from_combined_manifest(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -137,7 +137,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             self.assertIn("FROM [dbo].[D_PATIENT]", sql)
             self.assertIn("FOR JSON PATH;", sql)
             self.assertNotIn("ORDER BY 1;", sql)
-            self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
+            self.assertIn("-- EXPECTED_ROWS_JSON:\n-- [{\"PATIENT_KEY\":9}]", sql)
 
     def test_expected_rows_json_uses_resolved_declare_values(self) -> None:
         declare_entries = generate_rdb_selects.parse_declare_entries(
@@ -183,10 +183,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             scaffolds,
         )
 
-        self.assertIn(
-            '-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":16,"PATIENT_UID":-2222,"PATIENT_MPR_UID":-2222,"PATIENT_LOCAL_ID":"PSN2222GA01"}]',
-            sql,
-        )
+        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"PATIENT_KEY":16,"PATIENT_UID":-2222,"PATIENT_MPR_UID":-2222,"PATIENT_LOCAL_ID":"PSN2222GA01"}]', sql)
 
 
 if __name__ == "__main__":
