@@ -70,6 +70,8 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertIn("-- Logical changes: logical-changes.json", sql)
         self.assertIn("WHERE [PATIENT_LOCAL_ID] = @dbo_Person_local_id", sql)
         self.assertNotIn("GO", sql)
+        self.assertIn("FOR JSON PATH;", sql)
+        self.assertNotIn("ORDER BY 1;", sql)
         self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
 
     def test_main_generates_output_file_from_combined_manifest(self) -> None:
@@ -133,6 +135,8 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             sql = output_path.read_text(encoding="utf-8")
             self.assertIn("SELECT *", sql)
             self.assertIn("FROM [dbo].[D_PATIENT]", sql)
+            self.assertIn("FOR JSON PATH;", sql)
+            self.assertNotIn("ORDER BY 1;", sql)
             self.assertIn('-- EXPECTED_ROWS_JSON: [{"PATIENT_KEY":9}]', sql)
 
     def test_expected_rows_json_uses_resolved_declare_values(self) -> None:

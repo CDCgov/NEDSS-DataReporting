@@ -557,7 +557,7 @@ def render_sql(
         lines.append(f"SELECT *")
         lines.append(f"FROM [{scaffold.schema_name}].[{scaffold.table_name}]")
         lines.extend(predicate_lines)
-        lines.append("ORDER BY 1;")
+        lines.append("FOR JSON PATH;")
         lines.append(f"-- EXPECTED_ROWS_JSON: {expected_rows_json(scaffold.expected_rows, declare_entries)}")
         lines.append("")
 
