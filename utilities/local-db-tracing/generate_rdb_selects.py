@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tracing_constants import LOCAL_TRACING_DIR
+from tracing_paths import replay_metadata_cache_file_for_database
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -65,6 +66,32 @@ def parse_args() -> argparse.Namespace:
         help="Path to write the generated SQL scaffold; defaults to rdb-selects.sql next to combined-manifest.json",
     )
     return parser.parse_args()
+
+
+def load_rdb_column_metadata(
+    logical_database: str,
+) -> tuple[dict[tuple[str, str], list[str]] | None, dict[tuple[str, str], frozenset[str]] | None]:
+    """Load ordered column lists and primary key sets from the replay-metadata cache."""
+    cache_file = replay_metadata_cache_file_for_database(logical_database)
+    if not cache_file.exists():
+        return None, None
+    try:
+        payload = json.loads(cache_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None, None
+    if not isinstance(payload, dict):
+        return None, None
+
+    columns_by_table: dict[tuple[str, str], list[str]] = {}
+    for item in payload.get("column_sql_types", []):
+        key = (item["schema_name"], item["table_name"])
+        columns_by_table.setdefault(key, []).append(item["column_name"])
+
+    primary_keys_by_table: dict[tuple[str, str], frozenset[str]] = {
+        (item["schema_name"], item["table_name"]): frozenset(item["columns"])
+        for item in payload.get("primary_keys", [])
+    }
+    return columns_by_table, primary_keys_by_table
 
 
 def latest_combined_manifest() -> Path:
@@ -501,9 +528,41 @@ def build_scaffolds(
     return sorted(finalized, key=lambda item: (item.schema_name.lower(), item.table_name.lower(), item.where_fields))
 
 
-def expected_rows_json(expected_rows: tuple[dict[str, object], ...], declare_entries: list[DeclareEntry]) -> str:
+def expected_rows_json(
+    expected_rows: tuple[dict[str, object], ...],
+    declare_entries: list[DeclareEntry],
+    excluded_columns: frozenset[str] | None = None,
+    output_column_order: list[str] | None = None,
+) -> str:
     effective_expected_rows = apply_expected_row_overrides(expected_rows, declare_entries)
-    return json.dumps(list(effective_expected_rows), separators=(",", ":"))
+
+    excluded_column_names = {column_name.lower() for column_name in excluded_columns} if excluded_columns else set()
+
+    filtered_rows = [
+        {column_name: value for column_name, value in row.items() if column_name.lower() not in excluded_column_names}
+        for row in effective_expected_rows
+    ]
+
+    if output_column_order:
+        ordered_rows: list[dict[str, object]] = []
+        for row in filtered_rows:
+            row_keys_by_lower = {column_name.lower(): column_name for column_name in row}
+            ordered_row: dict[str, object] = {}
+
+            for column_name in output_column_order:
+                row_key = row_keys_by_lower.get(column_name.lower())
+                if row_key is not None:
+                    ordered_row[row_key] = row[row_key]
+
+            for column_name, value in row.items():
+                if column_name not in ordered_row:
+                    ordered_row[column_name] = value
+
+            ordered_rows.append(ordered_row)
+
+        return json.dumps(ordered_rows, separators=(",", ":"))
+
+    return json.dumps(filtered_rows, separators=(",", ":"))
 
 
 def display_path(path_value: str) -> str:
@@ -519,6 +578,8 @@ def render_sql(
     declare_lines: list[str],
     declare_entries: list[DeclareEntry],
     scaffolds: list[SelectScaffold],
+    columns_by_table: dict[tuple[str, str], list[str]] | None = None,
+    primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None = None,
 ) -> str:
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     source_summary_file = display_path(str(manifest.get("cdc_summary_file") or ""))
@@ -554,11 +615,25 @@ def render_sql(
         for comment in dict.fromkeys(predicate_comments):
             lines.append(f"-- {comment}")
 
-        lines.append(f"SELECT *")
+        table_key = (scaffold.schema_name, scaffold.table_name)
+        pk_columns = primary_keys_by_table.get(table_key, frozenset()) if primary_keys_by_table else frozenset()
+        select_columns: list[str] | None = None
+        if columns_by_table is not None:
+            all_columns = columns_by_table.get(table_key)
+            if all_columns:
+                select_columns = [col for col in all_columns if col not in pk_columns]
+        if select_columns:
+            lines.append("SELECT")
+            for i, col in enumerate(select_columns):
+                suffix = "," if i < len(select_columns) - 1 else ""
+                lines.append(f"    [{col}]{suffix}")
+        else:
+            lines.append("SELECT *")
         lines.append(f"FROM [{scaffold.schema_name}].[{scaffold.table_name}]")
         lines.extend(predicate_lines)
         lines.append("FOR JSON PATH;")
-        lines.append(f"-- EXPECTED_ROWS_JSON: {expected_rows_json(scaffold.expected_rows, declare_entries)}")
+        lines.append("-- EXPECTED_ROWS_JSON:")
+        lines.append(f"-- {expected_rows_json(scaffold.expected_rows, declare_entries, pk_columns, select_columns)}")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
@@ -577,7 +652,9 @@ def generate_rdb_selects_from_manifest(
     declare_lines = extract_declare_block(summary_text)
     declare_entries = parse_declare_entries(declare_lines)
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
-    output_sql = render_sql(manifest, declare_lines, declare_entries, scaffolds)
+    logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
+    columns_by_table, primary_keys_by_table = load_rdb_column_metadata(logical_database)
+    output_sql = render_sql(manifest, declare_lines, declare_entries, scaffolds, columns_by_table, primary_keys_by_table)
 
     final_output_path = output_path if output_path is not None else manifest_path.with_name("rdb-selects.sql")
     final_output_path.write_text(output_sql, encoding="utf-8")
