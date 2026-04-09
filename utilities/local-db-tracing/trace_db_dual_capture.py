@@ -48,6 +48,9 @@ from tracing_state import (
 )
 
 
+DEFAULT_STARTING_UID = -1000
+
+
 @dataclass
 class TracePlan:
     label: str
@@ -78,7 +81,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cdc-database", default="NBS_ODSE", help="Database to capture raw CDC rows from")
     parser.add_argument(
         "--logical-database",
-        default="RDB_Modern",
+        default="RDB_MODERN",
         help="Database to capture logical row-level changes from",
     )
     parser.add_argument(
@@ -115,6 +118,11 @@ def parse_args() -> argparse.Namespace:
         choices=("core", "full"),
         default="core",
         help="Whether reconstructed SQL should skip helper-table writes for functional-test replay or include all replayable writes",
+    )
+    parser.add_argument(
+        "--starting-uid",
+        type=int,
+        help="Starting UID value for reconstructed replay SQL variable declarations; prompts with default -1000 when omitted",
     )
     parser.add_argument(
         "--cleanup",
@@ -162,6 +170,20 @@ def parse_args() -> argparse.Namespace:
     if args.cdc_database == args.logical_database:
         parser.error("--cdc-database and --logical-database must be different")
     return args
+
+
+def resolve_starting_uid(cli_starting_uid: int | None) -> int:
+    if cli_starting_uid is not None:
+        return cli_starting_uid
+
+    while True:
+        response = input(f"Starting UID for reconstructed SQL [default {DEFAULT_STARTING_UID}]: ").strip()
+        if not response:
+            return DEFAULT_STARTING_UID
+        try:
+            return int(response)
+        except ValueError:
+            print("Please enter a whole number (for example: -1000).")
 
 
 def prompt_action_descriptions() -> list[str]:
@@ -383,6 +405,8 @@ def main() -> int:
         logical_exit_code = run_disable_only(args, logical_plan)
         return 1 if cdc_exit_code or logical_exit_code else 0
 
+    starting_uid = resolve_starting_uid(args.starting_uid)
+
     (
         primary_keys_by_table,
         identity_columns_by_table,
@@ -545,6 +569,7 @@ def main() -> int:
             core_replay_ignored_tables,
             args.replay_mode,
             superuser_id,
+            starting_uid,
         )
 
         log_progress(f"{plan_prefix(logical_plan)} Writing manifest.json")

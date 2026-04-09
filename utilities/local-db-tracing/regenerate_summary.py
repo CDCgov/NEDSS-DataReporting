@@ -16,6 +16,9 @@ from tracing_sql import SqlCmdClient, require_sqlcmd
 from tracing_state import load_known_associations
 
 
+DEFAULT_STARTING_UID = -1000
+
+
 def parse_args() -> argparse.Namespace:
     defaults = load_database_connection_defaults()
 
@@ -72,12 +75,31 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Optional NBS action note to include in the regenerated summary; repeat for multiple actions",
     )
+    parser.add_argument(
+        "--starting-uid",
+        type=int,
+        help="Starting UID value for reconstructed replay SQL variable declarations; prompts with default -1000 when omitted",
+    )
     args = parser.parse_args()
     if not args.user:
         parser.error("--user is required unless DATABASE_USERNAME is set in .env or the environment")
     if not args.password:
         parser.error("--password is required unless DATABASE_PASSWORD is set in .env or the environment")
     return args
+
+
+def resolve_starting_uid(cli_starting_uid: int | None) -> int:
+    if cli_starting_uid is not None:
+        return cli_starting_uid
+
+    while True:
+        response = input(f"Starting UID for reconstructed SQL [default {DEFAULT_STARTING_UID}]: ").strip()
+        if not response:
+            return DEFAULT_STARTING_UID
+        try:
+            return int(response)
+        except ValueError:
+            print("Please enter a whole number (for example: -1000).")
 
 
 def load_json(path: Path) -> dict[str, object]:
@@ -108,6 +130,7 @@ def load_changes(path: Path) -> list[dict[str, object]]:
 
 def main() -> int:
     args = parse_args()
+    starting_uid = resolve_starting_uid(args.starting_uid)
 
     changes_path = Path(args.input_file).resolve()
     if not changes_path.is_file():
@@ -158,6 +181,7 @@ def main() -> int:
         core_replay_ignored_tables,
         args.replay_mode,
         superuser_id,
+        starting_uid,
     )
     print(output_path)
     return 0

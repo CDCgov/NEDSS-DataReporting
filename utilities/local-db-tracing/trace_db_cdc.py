@@ -51,6 +51,9 @@ from tracing_state import (
 )
 
 
+DEFAULT_STARTING_UID = -1000
+
+
 
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments for a local CDC tracing run.
@@ -102,6 +105,11 @@ def parse_args() -> argparse.Namespace:
         help="Whether reconstructed SQL should skip helper-table writes for functional-test replay or include all replayable writes",
     )
     parser.add_argument(
+        "--starting-uid",
+        type=int,
+        help="Starting UID value for reconstructed replay SQL variable declarations; prompts with default -1000 when omitted",
+    )
+    parser.add_argument(
         "--cleanup",
         choices=("ask", "yes", "no"),
         default="ask",
@@ -145,6 +153,20 @@ def parse_args() -> argparse.Namespace:
     if not args.password:
         parser.error("--password is required unless DATABASE_PASSWORD is set in .env or the environment")
     return args
+
+
+def resolve_starting_uid(cli_starting_uid: int | None) -> int:
+    if cli_starting_uid is not None:
+        return cli_starting_uid
+
+    while True:
+        response = input(f"Starting UID for reconstructed SQL [default {DEFAULT_STARTING_UID}]: ").strip()
+        if not response:
+            return DEFAULT_STARTING_UID
+        try:
+            return int(response)
+        except ValueError:
+            print("Please enter a whole number (for example: -1000).")
 
 
 
@@ -227,6 +249,8 @@ def main() -> int:
 
     if args.disable_only:
         return run_disable_only(args, client, state_file, legacy_state_file)
+
+    starting_uid = resolve_starting_uid(args.starting_uid)
 
     managed_state, loaded_state_file = load_managed_tables(state_file, args.database, legacy_state_file)
     managed_tables = managed_state.tables
@@ -369,6 +393,7 @@ def main() -> int:
             core_replay_ignored_tables,
             args.replay_mode,
             superuser_id,
+            starting_uid,
         )
         log_progress("Finished writing output artifacts")
 

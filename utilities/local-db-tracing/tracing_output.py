@@ -196,6 +196,7 @@ def write_summary(
     core_replay_ignored_tables: set[tuple[str, str]] | None = None,
     replay_mode: str = "full",
     superuser_id: int = 10009282,
+    starting_uid: int = -1000,
 ) -> None:
     """Write the human-readable summary artifact for a tracing run.
 
@@ -295,6 +296,7 @@ def write_summary(
             uid_generator_entries,
             known_associations,
             superuser_id=superuser_id,
+            starting_uid=starting_uid,
         )
     if ignored_replay_table_names:
         lines.append("")

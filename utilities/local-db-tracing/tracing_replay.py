@@ -1092,6 +1092,7 @@ def reconstruct_sql_statements(
     known_associations: list[KnownAssociation],
     replay_now_window: tuple[datetime, datetime] | None = None,
     superuser_id: int = 10009282,
+    starting_uid: int = -1000,
 ) -> list[str]:
     statements: list[str] = []
     top_level_declarations: list[str] = [
@@ -1102,7 +1103,7 @@ def reconstruct_sql_statements(
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
     variable_registry: dict[tuple[str, str, str, str], str] = {}
     variable_name_counts: dict[str, int] = {}
-    id_state = {"next_value": -1000}
+    id_state = {"next_value": starting_uid}
     last_table_key: tuple[str, str] | None = None
 
     for record in sorted(changes, key=change_sort_key):
