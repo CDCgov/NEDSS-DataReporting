@@ -85,16 +85,6 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and xtyp
             SET @max = 1;
         DBCC CHECKIDENT ('dbo.nrt_notification_key', RESEED, @max);
     END
-IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_key' and xtype = 'U')
-	BEGIN
-		
-		SELECT @max=max(LAB_TEST_KEY) from [dbo].LAB_TEST;
-		SELECT @max;
-		IF @max IS NULL   --check when max is returned as null
-			SET @max = 2; -- default to 2, default record with key = 1 is already created
-		DBCC CHECKIDENT ('[dbo].nrt_lab_test_key', RESEED, @max);
-
-	END
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview_key' and xtype = 'U')
     BEGIN
         
