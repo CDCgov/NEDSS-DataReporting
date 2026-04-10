@@ -26,35 +26,34 @@ python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities
 
 7. Review pass/fail details in `utilities/local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
 
-## What The Script Does
+## Overview
 
-The tracer script:
+This toolkit supports two goals:
 
-- checks whether database-level CDC is enabled and stops with manual SQL instructions if it is not
-- checks which user tables are already CDC-enabled
-- enables CDC on remaining eligible tables, except known noisy exclusions such as `dbo.job_flow_log`
-- records a start log sequence number (LSN) and timestamp
-- waits for you to perform a UI action and press Enter
-- optionally waits for the post-processing container to report that it is idle before taking the end LSN
-- prompts for a short description of the NBS actions you performed
-- captures CDC rows in the recorded LSN window
-- writes summary and machine-readable output files for the run
-- optionally disables tracer-managed CDC tables during cleanup
-- persists cleanup state in `.local/` when tracer-managed CDC is intentionally left enabled or table cleanup partially fails
+- trace source-database writes caused by an NBS action
+- verify expected target-database rows for that same action
+
+At a high level, the tracers:
+
+- verify database-level CDC is enabled
+- enable CDC on eligible user tables (excluding noisy tables such as `dbo.job_flow_log`)
+- capture a start LSN, wait for your action, and capture an end LSN
+- write structured artifacts under `utilities/local-db-tracing/output`
+- optionally clean up tracer-managed CDC table configuration
 
 ## Prerequisites
 
 - Docker environment running with SQL Server reachable at the target `--server`
-- `sqlcmd` installed and available on `PATH`, or passed explicitly with `--sqlcmd`
-- database-level CDC already enabled in the target database
-- a SQL login with permission to enable and disable CDC on tables in the target database
+- `sqlcmd` installed and available on `PATH` (or provided with `--sqlcmd`)
+- database-level CDC already enabled in each database you plan to trace
+- SQL login with permission to enable/disable CDC on tables
 - Python 3.10+
 
-If database-level CDC is not enabled yet, enable it manually before running the tracer:
+If database-level CDC is not enabled, run this first:
 
 ```sql
--- If SQL Server reports an orphaned dbo owner or similar authorization error,
--- you may need to run this first:
+-- If SQL Server reports an orphaned dbo owner or similar authorization issue,
+-- you may need this first:
 ALTER AUTHORIZATION ON DATABASE::[<database_name>] TO [<username>];
 GO
 
@@ -64,221 +63,196 @@ EXEC sys.sp_cdc_enable_db;
 GO
 ```
 
-## Basic Usage
+## Main Workflows
 
-Run from the repository root:
+### Dual Capture (Recommended)
 
-```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
-```
-
-The default behavior is:
-
-- output goes to `utilities/local-db-tracing/output`
-- cleanup mode is `ask`
-- post-processing wait is enabled
-- known replay associations are loaded from `utilities/local-db-tracing/known_replay_associations.json`
-- replay mode is `core`, which skips helper-table writes listed in the replay metadata cache
-
-## Common Commands
-
-Show help:
-
-```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --help
-```
-
-Write artifacts to a custom output directory:
-
-```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --output-dir utilities/local-db-tracing/output
-```
-
-Always clean up tracer-managed CDC objects after the run:
-
-```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
-```
-
-Keep tracer-managed CDC enabled for later cleanup:
-
-```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
-```
-
-Disable whatever the tracer previously left enabled, then exit:
-
-```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
-```
-
-Trace a different database:
-
-```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
-```
-
-Capture logical row-level changes for a database run. This now writes both `logical-changes.json` and `logical-changes.md` automatically:
-
-```powershell
-python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
-```
-
-Capture `NBS_ODSE` CDC and `RDB_MODERN` logical changes in one synchronized run with one prompt:
+Captures `NBS_ODSE` CDC and `RDB_MODERN` logical changes for one action window.
 
 ```powershell
 python utilities/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
 ```
 
-Use different databases when needed:
+Use alternate databases when needed:
 
 ```powershell
 python utilities/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --cdc-database NBS_ODSE --logical-database RDB_MODERN --user sa --password "<password>"
 ```
 
-Compare a baseline logical change capture against a target logical change capture:
+During the run you will:
+
+1. perform the action in NBS
+2. press Enter in the tracer
+3. enter an action description
+
+By default, the tracer waits for post-processing idle before ending capture and generates `rdb-selects.sql` in the paired run folder.
+
+### CDC Capture Only
+
+Use when you only need raw CDC details and reconstructed replay SQL.
 
 ```powershell
-python utilities/local-db-tracing/compare_logical_changes.py --baseline-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file utilities/local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
 ```
 
-Convert an existing logical change capture into a human-friendly Markdown report:
+### Logical Capture Only
+
+Use when you only need target row-level logical deltas.
 
 ```powershell
-python utilities/local-db-tracing/logical_changes_to_markdown.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json
+python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
 ```
 
-Regenerate `summary.txt` from an existing `changes.jsonl` run artifact:
+## Common Commands
+
+Show tracer help:
 
 ```powershell
-python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
+python utilities/local-db-tracing/trace_db_cdc.py --help
 ```
 
-Regenerate `summary.txt` and include the original action note again:
+Always clean up tracer-managed tables after a run:
 
 ```powershell
-python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
 ```
 
-Generate an `rdb-selects.sql` scaffold from a paired dual-capture run. This copies the source `DECLARE` block and builds target `SELECT` statements from `logical-changes.json` identities:
+Leave tracer-managed tables enabled for later cleanup:
+
+```powershell
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
+```
+
+Disable previously tracked tracer-managed tables and exit:
+
+```powershell
+python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
+```
+
+Generate `rdb-selects.sql` from an existing paired run:
 
 ```powershell
 python utilities/local-db-tracing/generate_rdb_selects.py --paired-run-dir utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
 ```
 
-Each generated `SELECT` is followed by a one-line JSON comment such as `-- EXPECTED_ROWS_JSON: [...]` representing the final row set the test should expect from that query.
-
-Validate an existing `rdb-selects.sql` file by executing each `SELECT` independently and comparing the returned JSON to `-- EXPECTED_ROWS_JSON`. Query failures are reported per case and do not stop the remaining checks:
-
-```powershell
-python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
-```
-
-This validator writes both:
-
-- `rdb-selects-results.json`: machine-readable pass/fail details for each query
-- `rdb-selects-results.md`: human-readable report with summary tables and highlighted errors
-
-Or point directly at the paired manifest:
+Or generate from a manifest directly:
 
 ```powershell
 python utilities/local-db-tracing/generate_rdb_selects.py --combined-manifest utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
 ```
 
-Include helper-table writes in reconstructed SQL when needed:
+Validate `rdb-selects.sql` against expected JSON row sets:
+
+```powershell
+python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
+```
+
+Compare logical changes between baseline and target runs:
+
+```powershell
+python utilities/local-db-tracing/compare_logical_changes.py --baseline-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file utilities/local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
+```
+
+Regenerate `summary.txt` from `changes.jsonl`:
+
+```powershell
+python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
+```
+
+Regenerate `summary.txt` and include action text:
+
+```powershell
+python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
+```
+
+Include helper-table writes in regenerated SQL when needed:
 
 ```powershell
 python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
 ```
 
-## Important Options
+## Key Options
 
-- `--cleanup ask|yes|no`: prompt, always clean up, or always leave tracer-managed CDC enabled
-- `--disable-only`: disable tracer-managed CDC based on the recorded state file, then exit
-- `--state-file`: override the default database-specific cleanup state file
+Commonly used options across tracers:
+
+- `--cleanup ask|yes|no`: prompt, always clean up, or always leave tracer-managed CDC tables enabled
+- `--disable-only`: disable tracer-managed CDC tables from saved state and exit
+- `--state-file`: override default database-specific cleanup state file
 - `--sqlcmd`: override the `sqlcmd` executable name or path
-- `--skip-post-processing-wait`: capture immediately after you press Enter instead of waiting for the post-processing container to go idle
-- `--post-processing-container-prefix`: override the container name prefix to watch
-- `--post-processing-idle-message`: override the log message that indicates the post-processing container is idle
-- `--post-processing-initial-wait`: delay log polling long enough to avoid matching stale idle messages
-- `--post-processing-wait-timeout`: cap the post-processing wait in seconds
-- `--known-associations-file`: override the default replay association mapping file
-- `--replay-mode core|full`: choose functional-test core replay or exact side-effect replay
+- `--skip-post-processing-wait`: end capture immediately after Enter instead of waiting for post-processing idle
+- `--post-processing-container-prefix`: container name prefix to watch
+- `--post-processing-idle-message`: log message that indicates post-processing idle
+- `--post-processing-initial-wait`: delay log polling to avoid stale idle matches
+- `--post-processing-wait-timeout`: maximum seconds to wait for idle message
+- `--known-associations-file`: override replay association mappings
+- `--replay-mode core|full`: `core` for functional test replay, `full` for all replayable side effects
 
-For `regenerate_summary.py` specifically:
+For `regenerate_summary.py`:
 
-- `--input-file`: required path to the existing `changes.jsonl`
-- `--manifest-file`: optional path to the corresponding `manifest.json`; defaults to the file next to `changes.jsonl`
-- `--output-file`: optional output path for the regenerated `summary.txt`; defaults to the file next to `changes.jsonl`
-- `--action`: optional NBS action note to include in the regenerated summary; repeat for multiple actions
-- `--replay-mode`: `core` by default for functional-test SQL, or `full` to include helper-table writes
+- `--input-file`: required path to `changes.jsonl`
+- `--manifest-file`: optional path to companion `manifest.json`
+- `--output-file`: optional output path for regenerated `summary.txt`
+- `--action`: optional action note (repeatable)
 
-## Output Files
+## Output Structure
 
-Each run creates a timestamped directory under `output/`, for example `output/20260406-123456-NBS_ODSE/`.
+Each run writes a timestamped directory under `utilities/local-db-tracing/output`.
 
-That directory contains:
+Single CDC run (example):
 
-- `summary.txt`: human-readable run summary, including the NBS action note and reconstructed SQL when replayable row operations were captured
-- `manifest.json`: structured run metadata, including enabled tables, skipped tables, capture instances, and tracked cleanup state
-- `changes.jsonl`: one JSON object per captured CDC row in sorted CDC order
+- `summary.txt`: human-readable summary and reconstructed SQL section when replayable operations exist
+- `manifest.json`: structured run metadata
+- `changes.jsonl`: one JSON object per CDC row in CDC order
+- `inserts.sql`: reconstructed replay SQL when replayable operations exist
 
-The logical-change tracer writes a different machine-readable artifact set:
+Logical-only run (example):
 
-- `logical-changes.json`: one JSON array per run containing row-level insert, update, and delete events with stable comparison identity, changed fields for updates, and full inserted or updated row state
-- `compare-results-*.json`: one-way compare output that reports which baseline logical changes were matched, missing, or skipped when checked against a target `logical-changes.json`
-- `logical-changes.md`: human-friendly Markdown rendering written automatically next to `logical-changes.json`, with run summary, touched tables, and per-change details
+- `logical-changes.json`: row-level insert/update/delete events
+- `logical-changes.md`: Markdown rendering of logical changes
 
-The dual-capture tracer writes a parent directory such as `output/20260408-111218-NBS_ODSE-to-RDB_MODERN/` with:
+Dual-capture run (example `.../20260408-111218-NBS_ODSE-to-RDB_MODERN/`):
 
-- `combined-manifest.json`: top-level pointers to the paired source and target artifacts for the same traced action
-- `cdc-<database>/`: the usual CDC artifacts for the source database, including `summary.txt`
-- `logical-<database>/`: the usual logical-change artifacts for the target database, including `logical-changes.json` and `logical-changes.md`
-- `rdb-selects.sql`: optional generated scaffold with copied source `DECLARE` statements and deduplicated target `SELECT` queries
-- `rdb-selects.sql`: optional generated scaffold with copied source `DECLARE` statements, deduplicated target `SELECT` queries, and one-line JSON expectation comments for test comparisons
-
-The most useful file for later test design is usually `changes.jsonl`. The most useful file for replay-oriented debugging is usually `summary.txt`.
-
-`changes.jsonl` does not store the freeform NBS action note, so regenerated summaries only include that section when you pass one or more `--action` values.
+- `combined-manifest.json`: pointers to source/target artifacts for the action window
+- `cdc-<database>/`: CDC artifacts for source database
+- `logical-<database>/`: logical artifacts for target database
+- `rdb-selects.sql`: generated target verification queries with `-- EXPECTED_ROWS_JSON` comments
+- `rdb-selects-results.json`: machine-readable validation results (when validator is run)
+- `rdb-selects-results.md`: human-readable validation report (when validator is run)
 
 ## Local State And Cleanup
 
-When cleanup is skipped or partially fails, the tracer writes database-specific state under `.local/`, such as:
+If cleanup is skipped or partially fails, the tracer writes per-database state under `.local/`, for example:
 
 - `.local/enabled-cdc-tables-NBS_ODSE.json`
 - `.local/enabled-cdc-tables-RDB_MODERN.json`
 
-That state file is the source of truth for later `--disable-only` cleanup. The script also honors the older shared `enabled-cdc-tables.json` file once during migration if it exists.
+These files are the source of truth for later `--disable-only` cleanup.
 
-Replay metadata is cached per database under `.local/` in files such as `.local/replay-metadata-NBS_ODSE.json` so expensive PK and FK discovery does not have to run on every trace. The cache also stores durable core-replay preferences, such as helper tables that should be ignored when generating functional-test replay SQL.
+Replay metadata is cached per database in files such as `.local/replay-metadata-NBS_ODSE.json` to avoid re-discovering PK/FK metadata on every run. The cache also stores durable `core` replay preferences, including ignored helper tables.
 
-If the tracer enabled database-level CDC itself, cleanup also attempts to disable database-level CDC when the run finishes.
+## Reconstructed SQL Notes
 
-## Reconstructed SQL Behavior
+When replayable row operations are captured, reconstructed SQL aims to be rerunnable locally and currently:
 
-When the capture contains replayable row operations, `summary.txt` includes reconstructed SQL that tries to be rerunnable in a local environment.
+- declares only replay-safe UID variables required by the replay
+- applies semantic associations from `known_replay_associations.json` before FK or name-based fallback
+- skips audit-style inserts (for example `dbo.Security_log`)
+- preserves captured datetime literals as seen in CDC payloads
+- maps `*_user_id` columns to the resolved `superuser` ID (fallback `10009282`)
+- assigns replay-safe `version_ctrl_nbr` values for `_hist` inserts and live-row updates
+- preserves CDC order to keep replay behavior close to original transaction flow
+- in `core` mode, skips helper tables listed in replay metadata under `core_replay.ignored_tables`
 
-Current replay behavior includes:
-
-- declaring only the replay-safe UID variables actually required by the reconstructed SQL and threading those values through related inserts using cached PK and FK metadata
-- applying semantic associations from `known_replay_associations.json` before falling back to FK metadata or column-name matching
-- skipping audit-trail inserts such as `dbo.Security_log`, which are informative for tracing but not useful for replay
-- preserving captured datetime literals exactly as they appeared in the CDC payload
-- forcing columns whose names end with `user_id` to use the resolved `superuser` ID for the traced database, falling back to `10009282`
-- assigning replay-safe `version_ctrl_nbr` values for `_hist` inserts and live-row updates
-- preserving CDC order so the reconstructed SQL follows the original transaction sequence as closely as possible
-- in `core` replay mode, skipping helper tables listed in the replay metadata cache under `core_replay.ignored_tables`
-
-If no replayable row operations were captured, the summary still gets written but the reconstructed SQL section is omitted.
+If no replayable row operations are found, `summary.txt` is still written without a reconstructed SQL section.
 
 ## Notes
 
-- Some tables may still be skipped if SQL Server refuses CDC enablement for them.
-- The tracer batches CDC reads across capture instances instead of spawning one `sqlcmd` process per table.
-- By default, after you press Enter, the script waits for a running container whose name starts with `nedss-datareporting-post-processing-service` to log `No ids to process from the topics.` before capturing the end LSN.
-- The tracer is database-agnostic enough to work against `NBS_ODSE` and `RDB_MODERN`, but table eligibility and replay quality still depend on the schema and available metadata in the selected database.
+- Some tables may be skipped if SQL Server refuses CDC enablement.
+- CDC fetches are batched across capture instances (not one `sqlcmd` process per table).
+- By default, after you press Enter, capture end waits for a running container starting with `nedss-datareporting-post-processing-service` to log `No ids to process from the topics.`
+- The tooling is designed for both `NBS_ODSE` and `RDB_MODERN`, but replay quality depends on available schema metadata.
 
 ## To Do
 
-1. Teach the generator to also emit a standalone JSON artifact keyed by query label, so tests do not need to parse SQL comments.
-2. Resolve the remaining ambiguous observation variable mappings so more predicates can use source variables instead of literals.
+1. Emit a standalone JSON artifact keyed by query label so tests do not need to parse SQL comments.
+2. Resolve remaining ambiguous observation variable mappings so more predicates can use source variables instead of literals.
