@@ -1004,6 +1004,7 @@ def generate_rdb_selects_from_manifest(
     declare_entries = parse_declare_entries(declare_lines)
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
     scaffolds = consolidate_fk_scaffolds(scaffolds)
+    scaffolds = [s for s in scaffolds if not s.table_name.lower().startswith("nrt_")]
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
     output_sql = render_sql(
