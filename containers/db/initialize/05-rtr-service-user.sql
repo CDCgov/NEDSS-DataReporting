@@ -51,13 +51,9 @@ IF DB_ID('RDB') IS NOT NULL
 BEGIN
     EXEC('
         USE [RDB];
-        -- Service User (Needs db_owner ONLY if RDB is the target - non-UAT)
-        IF NOT EXISTS(SELECT 1 FROM NBS_ODSE.DBO.NBS_configuration WHERE config_key =''ENV'' AND config_value =''UAT'')
-        BEGIN
-            IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = ''$(RTR_SERVICE_USER_NAME)'')
-                CREATE USER [$(RTR_SERVICE_USER_NAME)] FOR LOGIN [$(RTR_SERVICE_USER_NAME)];
-            ALTER ROLE [db_owner] ADD MEMBER [$(RTR_SERVICE_USER_NAME)];
-        END
+        IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = ''$(RTR_SERVICE_USER_NAME)'')
+            CREATE USER [$(RTR_SERVICE_USER_NAME)] FOR LOGIN [$(RTR_SERVICE_USER_NAME)];
+        ALTER ROLE [db_owner] ADD MEMBER [$(RTR_SERVICE_USER_NAME)];
     ');
 END
 
