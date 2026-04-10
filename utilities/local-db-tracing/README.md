@@ -146,6 +146,17 @@ python utilities/local-db-tracing/generate_rdb_selects.py --paired-run-dir utili
 
 Each generated `SELECT` is followed by a one-line JSON comment such as `-- EXPECTED_ROWS_JSON: [...]` representing the final row set the test should expect from that query.
 
+Validate an existing `rdb-selects.sql` file by executing each `SELECT` independently and comparing the returned JSON to `-- EXPECTED_ROWS_JSON`. Query failures are reported per case and do not stop the remaining checks:
+
+```powershell
+python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
+```
+
+This validator writes both:
+
+- `rdb-selects-results.json`: machine-readable pass/fail details for each query
+- `rdb-selects-results.md`: human-readable report with summary tables and highlighted errors
+
 Or point directly at the paired manifest:
 
 ```powershell
