@@ -154,7 +154,7 @@ Begin
 
         DECLARE @EndTime DATETIME = GETDATE();
 
-        PRINT 'Loading Script for NBS_ODSE.dbo.' + @ODSETable + ' completed at: ' + CONVERT(VARCHAR(50), @StartTime, 121);
+        PRINT 'Loading Script for NBS_ODSE.dbo.' + @ODSETable + ' completed at: ' + CONVERT(VARCHAR(50), @EndTime, 121);
 
         INSERT INTO dbo.job_flow_log
         (
