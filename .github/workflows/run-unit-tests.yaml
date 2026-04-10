@@ -1,21 +1,16 @@
-name: Unit Test Runner
+name: Containerized Unit Tests
 on:
   pull_request:
     paths:
-      - "investigation-service/**"
-      - "ldfdata-service/**"
-      - "person-service/**"
-      - "reporting-hydration-service/**"
-      - "post-processing-service/**"
-      - "observation-service/**"
-      - "organization-service/**"
+      - "reporting-pipeline-service/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
+      - "docker-compose.yaml"
 
 jobs:
   pipeline:
-    name: Build and analyze
+    name: Run stored procedure unit tests
     runs-on: ubuntu-latest
 
     permissions:
@@ -42,7 +37,7 @@ jobs:
       - name: Build and analyze
         working-directory: ./
         run: |
-          ./gradlew clean build jacocoTestReport --continue
+          ./gradlew clean reporting-pipeline-service:test-unit --continue
 
       - name: Publish Testing Reports
         if: always()

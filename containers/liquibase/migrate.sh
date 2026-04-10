@@ -47,7 +47,7 @@ liquibase \
 
 # Apply onboarding scripts
 echo "Applying onboarding scripts"
-for sql in $(find "./onboarding" -iname "*.sql" | sort); do
+for sql in $(find "./onboarding" -iname "*.sql" | sort -V); do
     echo "Executing: $sql"
     sqlcmd -C -S "${DB_HOST}" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -i "$sql"
 
