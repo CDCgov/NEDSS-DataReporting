@@ -120,6 +120,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         summary = {
             "case_count": 2,
             "pass_count": 1,
+            "warning_count": 0,
             "fail_count": 1,
         }
         results = [
@@ -152,6 +153,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
 
         self.assertIn("<style>", report)
         self.assertIn('.error {', report)
+        self.assertIn('.warning {', report)
         self.assertIn('| <span class="error">Fails</span> | 1 |', report)
         self.assertIn('<span class="error">FAIL</span>', report)
         self.assertIn('| Case | Status | Label |', report)
@@ -161,7 +163,97 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         self.assertIn('<a id="case-2"></a>', report)
         self.assertIn('| Field | Expected | Returned |', report)
         self.assertIn('<span class="error">2</span>', report)
+        self.assertIn('## Details', report)
+        self.assertNotIn('## Failure Details', report)
         self.assertIn('<span class="error">3</span>', report)
+
+    def test_null_vs_empty_string_warning(self) -> None:
+        case = validate_rdb_selects.SelectCase(
+            case_index=1,
+            label="null-vs-empty-case",
+            query_sql="SELECT [id], [name] FROM [dbo].[T] FOR JSON PATH;",
+            query_start_line=5,
+            expected_json=[{"id": 1, "name": None}],
+        )
+        client = FakeSqlClient([
+            'JSON_F52E2B61-18A1-11d1-B105-00805F49916B\n[{"id":1,"name":""}]\n',
+        ])
+
+        result = validate_rdb_selects.compare_case(client, "USE [RDB_MODERN];", case)
+
+        self.assertEqual(result["status"], "warning")
+        self.assertIn("null vs empty string", str(result.get("error")))
+
+    def test_mixed_null_vs_empty_and_real_failure(self) -> None:
+        case = validate_rdb_selects.SelectCase(
+            case_index=1,
+            label="mixed-case",
+            query_sql="SELECT [id], [name], [age] FROM [dbo].[T] FOR JSON PATH;",
+            query_start_line=5,
+            expected_json=[{"id": 1, "name": None, "age": 30}],
+        )
+        client = FakeSqlClient([
+            'JSON_F52E2B61-18A1-11d1-B105-00805F49916B\n[{"id":1,"name":"","age":25}]\n',
+        ])
+
+        result = validate_rdb_selects.compare_case(client, "USE [RDB_MODERN];", case)
+
+        self.assertEqual(result["status"], "fail")
+        self.assertIn("does not match", str(result.get("error")))
+
+    def test_markdown_report_details_includes_warnings_and_failures(self) -> None:
+        summary = {
+            "case_count": 3,
+            "pass_count": 1,
+            "warning_count": 1,
+            "fail_count": 1,
+        }
+        results = [
+            {
+                "case_index": 1,
+                "label": "dbo.good | operations: insert",
+                "query_start_line": 10,
+                "status": "pass",
+                "expected": [{"id": 1}],
+                "actual": [{"id": 1}],
+            },
+            {
+                "case_index": 2,
+                "label": "dbo.warning | operations: insert",
+                "query_start_line": 15,
+                "status": "warning",
+                "error": "JSON matches except for null vs empty string differences",
+                "expected": [{"id": 2, "name": None}],
+                "actual": [{"id": 2, "name": ""}],
+            },
+            {
+                "case_index": 3,
+                "label": "dbo.bad | operations: insert",
+                "query_start_line": 20,
+                "status": "fail",
+                "error": "Expected JSON does not match actual query result",
+                "expected": [{"id": 3}],
+                "actual": [{"id": 4}],
+            },
+        ]
+
+        report = validate_rdb_selects.render_markdown_report(
+            Path("input.sql"),
+            Path("results.json"),
+            Path("results.md"),
+            summary,
+            results,
+        )
+
+        self.assertIn("## Details", report)
+        self.assertNotIn("## Failure Details", report)
+        self.assertNotIn("## Warning Details", report)
+        self.assertIn('<a id="case-2"></a>', report)
+        self.assertIn('<a id="case-3"></a>', report)
+        self.assertIn('<a href="#case-2">dbo.warning \\| operations: insert</a>', report)
+        self.assertIn('<a href="#case-3">dbo.bad \\| operations: insert</a>', report)
+        self.assertIn('<span class="warning">JSON matches except for null vs empty string differences</span>', report)
+        self.assertIn('<span class="error">Expected JSON does not match actual query result</span>', report)
 
 
 if __name__ == "__main__":

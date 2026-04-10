@@ -240,9 +240,43 @@ def default_markdown_output_path(output_file: Path) -> Path:
     return output_file.with_suffix(".md")
 
 
+def is_null_vs_empty_mismatch(expected: object, actual: object) -> bool:
+    """Check if the only difference between expected and actual is null vs empty string."""
+    # None vs empty string
+    if (expected is None and actual == "") or (expected == "" and actual is None):
+        return True
+    # None vs missing (treated as equivalent)
+    if expected is None or actual is None:
+        return expected is None and actual is None
+    return False
+
+
+def count_differences(expected: object, actual: object) -> tuple[int, int]:
+    """Return (warning_count, failure_count) for differences between expected and actual."""
+    expected_fields = flatten_json_fields(expected)
+    actual_fields = flatten_json_fields(actual)
+    field_names = set(expected_fields.keys()) | set(actual_fields.keys())
+    
+    warning_count = 0
+    failure_count = 0
+    
+    for field_name in field_names:
+        expected_value = expected_fields.get(field_name)
+        actual_value = actual_fields.get(field_name)
+        if expected_value != actual_value:
+            if is_null_vs_empty_mismatch(expected_value, actual_value):
+                warning_count += 1
+            else:
+                failure_count += 1
+    
+    return warning_count, failure_count
+
+
 def status_span(status: str) -> str:
     if status == "pass":
         return '<span class="ok">PASS</span>'
+    if status == "warning":
+        return '<span class="warning">WARNING</span>'
     return '<span class="error">FAIL</span>'
 
 
@@ -282,11 +316,12 @@ def value_for_table(value: object) -> str:
     return json.dumps(value, sort_keys=True)
 
 
-def comparison_cell(value: object | None, differs: bool) -> str:
+def comparison_cell(value: object | None, differs: bool, is_warning: bool = False) -> str:
     text = html.escape(value_for_table(value)) if value is not None else "<em>missing</em>"
     text = markdown_table_cell(text)
     if differs:
-        return f'<span class="error">{text}</span>'
+        css_class = "warning" if is_warning else "error"
+        return f'<span class="{css_class}">{text}</span>'
     return text
 
 
@@ -304,9 +339,10 @@ def render_field_comparison_table(expected: object, actual: object) -> list[str]
         expected_value = expected_fields.get(field_name)
         actual_value = actual_fields.get(field_name)
         differs = expected_value != actual_value
+        is_warning_diff = differs and is_null_vs_empty_mismatch(expected_value, actual_value)
         safe_field = markdown_table_cell(field_name)
-        expected_cell = comparison_cell(expected_value, differs)
-        actual_cell = comparison_cell(actual_value, differs)
+        expected_cell = comparison_cell(expected_value, differs, is_warning_diff)
+        actual_cell = comparison_cell(actual_value, differs, is_warning_diff)
         lines.append(f"| {safe_field} | {expected_cell} | {actual_cell} |")
 
     return lines
@@ -332,6 +368,9 @@ def render_markdown_report(
         "    .ok {",
         "        color: green;",
         "    }",
+        "    .warning {",
+        "        color: orange;",
+        "    }",
         "</style>",
         "",
         "## Summary",
@@ -340,6 +379,7 @@ def render_markdown_report(
         "| --- | --- |",
         f"| Cases | {summary['case_count']} |",
         f"| Passes | {summary['pass_count']} |",
+        f"| <span class=\"warning\">Warnings</span> | {summary['warning_count']} |",
         f"| <span class=\"error\">Fails</span> | {summary['fail_count']} |",
         "",
         "## Case Results",
@@ -351,21 +391,25 @@ def render_markdown_report(
     for result in results:
         case_index = result["case_index"]
         raw_label = html.escape(str(result["label"]))
-        if result["status"] == "fail":
+        if result["status"] in ("fail", "warning"):
             label = f"<a href=\"#case-{case_index}\">{raw_label}</a>"
         else:
             label = raw_label
         lines.append(f"| {case_index} | {status_span(str(result['status']))} | {markdown_table_cell(label)} |")
 
     failing_results = [result for result in results if result["status"] == "fail"]
-    if failing_results:
-        lines.extend(["", "## Failure Details", ""])
-        for result in failing_results:
+    warning_results = [result for result in results if result["status"] == "warning"]
+    details_results = failing_results + warning_results
+    
+    if details_results:
+        lines.extend(["", "## Details", ""])
+        for result in details_results:
             lines.append(f"<a id=\"case-{result['case_index']}\"></a>")
             lines.append(f"### Case {result['case_index']}: {html.escape(str(result['label']))}")
             lines.append("")
             if result.get("error"):
-                lines.append(f"Error: <span class=\"error\">{html.escape(str(result['error']))}</span>")
+                error_span_class = "error" if result["status"] == "fail" else "warning"
+                lines.append(f"Error: <span class=\"{error_span_class}\">{html.escape(str(result['error']))}</span>")
                 lines.append("")
             if result.get("actual") is not None:
                 lines.extend(render_field_comparison_table(result.get("expected"), result.get("actual")))
@@ -482,17 +526,29 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
     try:
         raw_output = client.query(sql_batch)
         actual_json = parse_actual_json(raw_output)
-        passed = actual_json == case.expected_json
+        if actual_json == case.expected_json:
+            status = "pass"
+        else:
+            # Check if only warnings (null vs empty string differences)
+            warning_count, failure_count = count_differences(case.expected_json, actual_json)
+            if failure_count == 0 and warning_count > 0:
+                status = "warning"
+            else:
+                status = "fail"
+        
         result: dict[str, object] = {
             "case_index": case.case_index,
             "label": case.label,
             "query_start_line": case.query_start_line,
-            "status": "pass" if passed else "fail",
+            "status": status,
             "expected": case.expected_json,
             "actual": actual_json,
         }
-        if not passed:
-            result["error"] = "Expected JSON does not match actual query result"
+        if status != "pass":
+            if status == "warning":
+                result["error"] = "JSON matches except for null vs empty string differences"
+            else:
+                result["error"] = "Expected JSON does not match actual query result"
         return result
     except SqlCmdError as error:
         return {
@@ -548,11 +604,16 @@ def main() -> int:
         result = compare_case(client, prelude_sql, case)
         case_results.append(result)
         status = str(result["status"]).upper()
-        status_color = ANSI_GREEN if status == "PASS" else ANSI_RED
+        if status == "PASS":
+            status_color = ANSI_GREEN
+        elif status == "WARNING":
+            status_color = ANSI_YELLOW
+        else:
+            status_color = ANSI_RED
         print(colorize(f"[{status}] Case {case.case_index}: {case.label} (line {case.query_start_line})", status_color, use_color))
         if result.get("error"):
             print(f"        {result['error']}")
-        if result["status"] == "fail" and result.get("actual") is not None:
+        if result["status"] in ("fail", "warning") and result.get("actual") is not None:
             expected_mask, actual_mask = build_diff_masks(result["expected"], result["actual"])
             print("        Expected:")
             print(render_json_with_mask(result["expected"], expected_mask, use_color, ANSI_YELLOW))
@@ -561,13 +622,15 @@ def main() -> int:
         print()
 
     pass_count = sum(1 for result in case_results if result["status"] == "pass")
-    fail_count = len(case_results) - pass_count
+    warning_count = sum(1 for result in case_results if result["status"] == "warning")
+    fail_count = sum(1 for result in case_results if result["status"] == "fail")
     summary: dict[str, object] = {
         "input_file": str(input_file),
         "server": args.server,
         "database": database,
         "case_count": len(case_results),
         "pass_count": pass_count,
+        "warning_count": warning_count,
         "fail_count": fail_count,
     }
     payload = {"summary": summary, "results": case_results}
@@ -576,6 +639,7 @@ def main() -> int:
     markdown_output_file.write_text(markdown_report, encoding="utf-8")
 
     print(colorize(f"Pass: {pass_count}", ANSI_GREEN, use_color))
+    print(colorize(f"Warning: {warning_count}", ANSI_YELLOW, use_color))
     print(colorize(f"Fail: {fail_count}", ANSI_RED if fail_count else ANSI_GREEN, use_color))
     print(f"Results written to: {output_file}")
     print(f"Markdown report written to: {markdown_output_file}")
