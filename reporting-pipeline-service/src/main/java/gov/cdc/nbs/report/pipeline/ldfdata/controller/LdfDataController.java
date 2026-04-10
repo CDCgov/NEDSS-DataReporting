@@ -1,0 +1,22 @@
+package gov.cdc.nbs.report.pipeline.ldfdata.controller;
+
+import gov.cdc.nbs.report.pipeline.ldfdata.service.KafkaProducerService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+public class LdfDataController {
+  private final KafkaProducerService producerService;
+
+  @Value("${spring.kafka.topics.nbs.state-defined-field-data}")
+  private String topicName;
+
+  @PostMapping("/reporting/ldfdata-svc/publish")
+  public void publishMessageToKafka(@RequestBody String jsonData) {
+    producerService.sendMessage(topicName, jsonData);
+  }
+}

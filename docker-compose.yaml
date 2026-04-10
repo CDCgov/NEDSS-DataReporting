@@ -6,7 +6,10 @@ services:
       - DATABASE_VERSION=6.0.18.1
       - DEPLOY_ADMIN_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
-      - LIQUIBASE_USER_PASSWORD=${LIQUIBASE_USER_PASSWORD:-db_deploy_admin}
+      - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
+      - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
+      - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
     volumes:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
@@ -17,9 +20,11 @@ services:
     build:
       dockerfile: ./liquibase-service/Dockerfile.local
     environment:
-      - DB_USERNAME=db_deploy_admin
-      - DB_PASSWORD=${LIQUIBASE_USER_PASSWORD:-db_deploy_admin}
+      - DB_USERNAME=${RTR_ADMIN_NAME:-rtr_admin}
+      - DB_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - DB_HOST=nbs-mssql
+      - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
     depends_on:
       nbs-mssql:
         condition: service_healthy
@@ -92,10 +97,15 @@ services:
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_CONSUMER_METADATA_MAX_AGE_MS: 1000
+      CONNECT_CONFIG_PROVIDERS: "env"
+      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
+      DB_URL: "jdbc:sqlserver://nbs-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;"
+      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
+      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
-      interval: 20s
-      timeout: 15s
+      interval: 10s
+      timeout: 5s
       retries: 5
 
   debezium:
@@ -127,117 +137,29 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_CONFIG_PROVIDERS: "env"
+      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
+      DB_HOST: "nbs-mssql"
+      DB_PORT: "1433"
+      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
+      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
+      KAFKA_SERVER: "kafka:29092"
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  investigation-service:
-    build:
-      dockerfile: ./investigation-service/Dockerfile
-    environment:
-      - DB_USERNAME=investigation_service_rdb
-      - DB_PASSWORD=investigation_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  ldfdata-service:
-    build:
-      dockerfile: ./ldfdata-service/Dockerfile
-    environment:
-      - DB_USERNAME=ldf_service_rdb
-      - DB_PASSWORD=ldf_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  observation-service:
-    build:
-      dockerfile: ./observation-service/Dockerfile
-    environment:
-      - DB_USERNAME=observation_service_rdb
-      - DB_PASSWORD=observation_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  organization-service:
-    build:
-      dockerfile: ./organization-service/Dockerfile
-    environment:
-      - DB_USERNAME=organization_service_rdb
-      - DB_PASSWORD=organization_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  person-service:
-    build:
-      dockerfile: ./person-service/Dockerfile
-    environment:
-      - DB_USERNAME=person_service_rdb
-      - DB_PASSWORD=person_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-      - spring.kafka.consumer.maxPollIntervalMs=3000
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  post-processing-service:
-    build:
-      dockerfile: ./post-processing-service/Dockerfile
-    environment:
-      - DB_USERNAME=post_processing_service_rdb
-      - DB_PASSWORD=post_processing_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
   reporting-pipeline-service:
     build:
       dockerfile: ./reporting-pipeline-service/Dockerfile
     environment:
-      - DB_USERNAME=reporting_pipeline_service_rdb
-      - DB_PASSWORD=reporting_pipeline_service
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+    ports:
+      - "8095:8095"
     depends_on:
       kafka:
         condition: service_healthy
@@ -245,3 +167,7 @@ services:
         condition: service_healthy
       liquibase:
         condition: service_completed_successfully
+      debezium:
+        condition: service_healthy
+      kafka-connect:
+        condition: service_healthy
