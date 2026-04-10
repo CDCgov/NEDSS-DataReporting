@@ -11,6 +11,7 @@ services:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
     ports:
       - 3433:1433
+    mem_limit: 2.5G
 
   liquibase:
     build:
@@ -22,6 +23,7 @@ services:
     depends_on:
       nbs-mssql:
         condition: service_healthy
+    mem_limit: 200M
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
@@ -131,109 +133,12 @@ services:
       timeout: 5s
       retries: 5
 
-  investigation-service:
+  reporting-pipeline-service:
     build:
-      dockerfile: ./investigation-service/Dockerfile
+      dockerfile: ./reporting-pipeline-service/Dockerfile
     environment:
-      - DB_USERNAME=investigation_service_rdb
-      - DB_PASSWORD=investigation_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  ldfdata-service:
-    build:
-      dockerfile: ./ldfdata-service/Dockerfile
-    environment:
-      - DB_USERNAME=ldf_service_rdb
-      - DB_PASSWORD=ldf_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  observation-service:
-    build:
-      dockerfile: ./observation-service/Dockerfile
-    environment:
-      - DB_USERNAME=observation_service_rdb
-      - DB_PASSWORD=observation_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  organization-service:
-    build:
-      dockerfile: ./organization-service/Dockerfile
-    environment:
-      - DB_USERNAME=organization_service_rdb
-      - DB_PASSWORD=organization_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  person-service:
-    build:
-      dockerfile: ./person-service/Dockerfile
-    environment:
-      - DB_USERNAME=person_service_rdb
-      - DB_PASSWORD=person_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-      - spring.kafka.consumer.maxPollIntervalMs=3000
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  post-processing-service:
-    build:
-      dockerfile: ./post-processing-service/Dockerfile
-    environment:
-      - DB_USERNAME=post_processing_service_rdb
-      - DB_PASSWORD=post_processing_service
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
-    depends_on:
-      kafka:
-        condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
-
-  reporting-hydration-service:
-    build:
-      dockerfile: ./reporting-hydration-service/Dockerfile
-    environment:
-      - DB_USERNAME=reporting_hydration_service_rdb
-      - DB_PASSWORD=reporting_hydration_service
+      - DB_USERNAME=reporting_pipeline_service_rdb
+      - DB_PASSWORD=reporting_pipeline_service
       - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     depends_on:

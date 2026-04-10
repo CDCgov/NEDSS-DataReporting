@@ -2817,6 +2817,14 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 898
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 254-create_nrt_delete_job_log-001.sql
+            splitStatements: false
+  - changeSet:
       id: 900
       author: liquibase
       runOnChange: true

@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    default:
+      username: reporting_pipeline_service_rdb
+      password: reporting_pipeline_service
+      url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+    admin:
+      username: sa
+      password: PizzaIsGood33!
+      url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+  jpa:
+    show-sql: "true"
+    hibernate:
+      ddl-auto: none
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+    streams:
+      application-id: person-reporting-service
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    consumer:
+      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      maxPollIntervalMs: 3000
+      metadata.max.age.ms: 6000
