@@ -490,19 +490,50 @@ def apply_expected_row_overrides(
     return tuple(updated_rows)
 
 
-def predicate_for_field(column_name: str, value: object, declare_entries: list[DeclareEntry]) -> tuple[str, list[str]]:
+def resolve_ambiguous_candidate(
+    column_name: str,
+    candidates: list[str],
+    ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None,
+) -> str | None:
+    if ambiguity_state is None or not candidates:
+        return None
+
+    key = (normalize_identifier(column_name), tuple(candidates))
+    next_index = ambiguity_state.get(key, 0)
+    selected = candidates[next_index % len(candidates)]
+    ambiguity_state[key] = next_index + 1
+    return selected
+
+
+def predicate_for_field(
+    column_name: str,
+    value: object,
+    declare_entries: list[DeclareEntry],
+    ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None = None,
+) -> tuple[str, list[str]]:
     column_sql = f"[{column_name}]"
-    
+
     # Handle tuples as IN clauses
     if isinstance(value, tuple):
         literals = ", ".join(sql_literal(v) for v in sorted(value))
         return f"{column_sql} IN ({literals})", []
-    
+
     literal_sql = sql_literal(value)
     candidates = variable_candidates_for_value(column_name, value, declare_entries)
     if len(candidates) == 1:
         return f"{column_sql} = {candidates[0]}", []
     if len(candidates) > 1:
+        selected_candidate = resolve_ambiguous_candidate(column_name, candidates, ambiguity_state)
+        if selected_candidate is not None:
+            return (
+                f"{column_sql} = {selected_candidate}",
+                [
+                    (
+                        f"Ambiguous variable candidates for {column_name}: {', '.join(candidates)}"
+                        f"; using {selected_candidate} (round-robin)."
+                    )
+                ],
+            )
         return (
             f"{column_sql} = {literal_sql}",
             [f"Ambiguous variable candidates for {column_name}: {', '.join(candidates)}"],
@@ -579,6 +610,7 @@ def fk_subquery_predicate_for_pk(
     primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None,
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
     lookup_scaffold_by_table: dict[tuple[str, str], SelectScaffold],
+    ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None = None,
 ) -> tuple[str | None, list[str]]:
     if primary_keys_by_table is None or foreign_keys_by_source is None:
         return None, []
@@ -627,7 +659,12 @@ def fk_subquery_predicate_for_pk(
     target_predicates: list[str] = []
     uses_variable = False
     for target_field_name, target_field_value in lookup_scaffold.where_fields:
-        predicate_sql, comments = predicate_for_field(target_field_name, target_field_value, declare_entries)
+        predicate_sql, comments = predicate_for_field(
+            target_field_name,
+            target_field_value,
+            declare_entries,
+            ambiguity_state,
+        )
         target_predicates.append(predicate_sql)
         target_comments.extend(comments)
         if "@" in predicate_sql:
@@ -882,6 +919,7 @@ def render_sql(
         lines.append("")
 
     lookup_scaffold_by_table = build_lookup_scaffold_by_table(scaffolds)
+    ambiguity_state: dict[tuple[str, tuple[str, ...]], int] = {}
 
     for scaffold in scaffolds:
         lines.append(f"-- {scaffold.schema_name}.{scaffold.table_name} | operations: {', '.join(scaffold.operation_labels)}")
@@ -898,12 +936,13 @@ def render_sql(
                 primary_keys_by_table,
                 foreign_keys_by_source,
                 lookup_scaffold_by_table,
+                ambiguity_state,
             )
             if fk_lookup_predicate_sql is not None:
                 predicate_sql = fk_lookup_predicate_sql
                 comments = fk_lookup_comments
             else:
-                predicate_sql, comments = predicate_for_field(column_name, value, declare_entries)
+                predicate_sql, comments = predicate_for_field(column_name, value, declare_entries, ambiguity_state)
             connector = "WHERE" if index == 0 else "  AND"
             predicate_lines.append(f"{connector} {predicate_sql}")
             predicate_comments.extend(comments)

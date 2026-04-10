@@ -319,5 +319,41 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertIn('"PATIENT_UID":10002', expected_json)
 
 
+    def test_predicate_for_field_cycles_ambiguous_candidates_round_robin(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries(
+            [
+                "DECLARE @dbo_Act_act_uid bigint = 7784;",
+                "DECLARE @dbo_Observation_local_id nvarchar(40) = N'OBS' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid))) + N'GA01';",
+                "DECLARE @dbo_Observation_local_id_2 nvarchar(40) = N'OBS' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid + 1))) + N'GA01';",
+                "DECLARE @dbo_Observation_local_id_3 nvarchar(40) = N'OBS' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid + 2))) + N'GA01';",
+            ]
+        )
+
+        ambiguity_state: dict[tuple[str, tuple[str, ...]], int] = {}
+        first_predicate, _ = generate_rdb_selects.predicate_for_field(
+            "LOCAL_ID",
+            "OBS10001016GA01",
+            declare_entries,
+            ambiguity_state,
+        )
+        second_predicate, _ = generate_rdb_selects.predicate_for_field(
+            "LOCAL_ID",
+            "OBS10001016GA01",
+            declare_entries,
+            ambiguity_state,
+        )
+        third_predicate, _ = generate_rdb_selects.predicate_for_field(
+            "LOCAL_ID",
+            "OBS10001016GA01",
+            declare_entries,
+            ambiguity_state,
+        )
+
+        self.assertEqual(first_predicate, "[LOCAL_ID] = @dbo_Observation_local_id")
+        self.assertEqual(second_predicate, "[LOCAL_ID] = @dbo_Observation_local_id_2")
+        self.assertEqual(third_predicate, "[LOCAL_ID] = @dbo_Observation_local_id_3")
+
+
 if __name__ == "__main__":
     unittest.main()
+
