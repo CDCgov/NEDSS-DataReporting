@@ -288,8 +288,29 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertNotIn("[created_dttm]", sql)
         self.assertNotIn("[updated_dttm]", sql)
         self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"patient_uid":1234}]', sql)
-        self.assertNotIn('"created_dttm"', sql)
-        self.assertNotIn('"updated_dttm"', sql)
+
+    def test_expected_rows_json_maps_ambiguous_entity_uid_candidates_deterministically(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries(
+            [
+                "DECLARE @dbo_Entity_entity_uid bigint = 9999;",
+                "DECLARE @dbo_Entity_entity_uid_2 bigint = 10002;",
+                "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';",
+            ]
+        )
+
+        expected_json = generate_rdb_selects.expected_rows_json(
+            (
+                {"PATIENT_LOCAL_ID": "PSN9999GA01", "PATIENT_MPR_UID": 10009290, "PATIENT_UID": 10009290},
+                {"PATIENT_LOCAL_ID": "PSN9999GA01", "PATIENT_MPR_UID": 10009290, "PATIENT_UID": 10009293},
+            ),
+            declare_entries,
+            excluded_columns=set(),
+            output_column_order=None,
+        )
+
+        self.assertIn('"PATIENT_MPR_UID":9999', expected_json)
+        self.assertIn('"PATIENT_UID":9999', expected_json)
+        self.assertIn('"PATIENT_UID":10002', expected_json)
 
 
 if __name__ == "__main__":

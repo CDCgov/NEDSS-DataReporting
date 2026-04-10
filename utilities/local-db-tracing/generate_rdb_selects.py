@@ -431,16 +431,55 @@ def apply_expected_row_overrides(
     if not resolved_declare_values:
         return expected_rows
 
+    declare_entries_by_name = {entry.name: entry for entry in declare_entries}
+    multi_candidate_group_overrides: dict[tuple[str, ...], dict[object, object]] = {}
+    compatible_ambiguous_groups = {"entity_uid"}
+
     updated_rows: list[dict[str, object]] = []
     for row in expected_rows:
         updated_row = dict(row)
         for column_name, value in row.items():
             candidates = variable_candidates_for_value(column_name, value, declare_entries)
-            if len(candidates) != 1:
+            if len(candidates) == 0:
                 continue
-            replacement_value = resolved_declare_values.get(candidates[0])
-            if replacement_value is not None:
-                updated_row[column_name] = replacement_value
+
+            if len(candidates) == 1:
+                replacement_value = resolved_declare_values.get(candidates[0])
+                if replacement_value is not None:
+                    updated_row[column_name] = replacement_value
+                continue
+
+            candidate_groups = {
+                declaration_group(declare_entries_by_name[candidate])
+                for candidate in candidates
+                if candidate in declare_entries_by_name
+            }
+            if len(candidate_groups) != 1:
+                continue
+            group_name = next(iter(candidate_groups))
+            if group_name not in compatible_ambiguous_groups:
+                continue
+
+            resolved_candidates = [
+                resolved_declare_values[candidate]
+                for candidate in candidates
+                if candidate in resolved_declare_values
+            ]
+            if not resolved_candidates:
+                continue
+
+            key = tuple(candidates)
+            overrides_for_key = multi_candidate_group_overrides.setdefault(key, {})
+            if value in overrides_for_key:
+                updated_row[column_name] = overrides_for_key[value]
+                continue
+
+            next_value = next((item for item in resolved_candidates if item not in overrides_for_key.values()), None)
+            if next_value is None:
+                continue
+
+            overrides_for_key[value] = next_value
+            updated_row[column_name] = next_value
         updated_rows.append(updated_row)
     return tuple(updated_rows)
 
