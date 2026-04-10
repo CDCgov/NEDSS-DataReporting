@@ -13,10 +13,10 @@ import generate_rdb_selects
 
 
 class GenerateRdbSelectsTest(unittest.TestCase):
-    def test_extracts_declare_block_from_summary(self) -> None:
-        summary = """Actions performed in NBS:\n- Added Lisa\n\nReconstructed SQL:\nUSE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = -1000;\nDECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';\n\n-- dbo.Entity\nINSERT INTO [dbo].[Entity] ([entity_uid]) VALUES (@dbo_Entity_entity_uid);\n"""
+    def test_extracts_declare_block_from_inserts_sql(self) -> None:
+        inserts_sql = """USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = -1000;\nDECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';\n\n-- dbo.Entity\nINSERT INTO [dbo].[Entity] ([entity_uid]) VALUES (@dbo_Entity_entity_uid);\n"""
 
-        declare_lines = generate_rdb_selects.extract_declare_block(summary)
+        declare_lines = generate_rdb_selects.extract_declare_block(inserts_sql)
 
         self.assertEqual(
             declare_lines,
@@ -85,7 +85,12 @@ class GenerateRdbSelectsTest(unittest.TestCase):
 
             summary_path = cdc_dir / "summary.txt"
             summary_path.write_text(
-                """Reconstructed SQL:\nUSE [NBS_ODSE];\nDECLARE @dbo_Entity_entity_uid bigint = -1000;\nDECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';\n\n-- dbo.Person\nINSERT INTO [dbo].[Person] ([person_uid]) VALUES (@dbo_Entity_entity_uid);\n""",
+                """Reconstructed SQL written to: inserts.sql\nRun inserts.sql directly against the source database to replay captured writes.\n""",
+                encoding="utf-8",
+            )
+            inserts_path = cdc_dir / "inserts.sql"
+            inserts_path.write_text(
+                """USE [NBS_ODSE];\nDECLARE @dbo_Entity_entity_uid bigint = -1000;\nDECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';\n\n-- dbo.Person\nINSERT INTO [dbo].[Person] ([person_uid]) VALUES (@dbo_Entity_entity_uid);\n""",
                 encoding="utf-8",
             )
 
@@ -118,6 +123,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
                     {
                         "logical_database": "TEST_DB_NO_CACHE",
                         "cdc_summary_file": str(summary_path),
+                        "cdc_inserts_file": str(inserts_path),
                         "logical_changes_file": str(logical_changes_path),
                     },
                     indent=2,

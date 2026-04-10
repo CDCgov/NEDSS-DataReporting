@@ -199,6 +199,7 @@ class ReplaySqlTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             summary_path = Path(temp_dir) / "summary.txt"
+            inserts_path = Path(temp_dir) / "inserts.sql"
             write_summary(
                 summary_path,
                 ["Added Bart Simpson"],
@@ -213,16 +214,19 @@ class ReplaySqlTest(unittest.TestCase):
                 self.known_associations,
             )
             summary = summary_path.read_text(encoding="utf-8")
+            inserts_sql = inserts_path.read_text(encoding="utf-8")
 
+        self.assertIn("Reconstructed SQL written to: inserts.sql", summary)
+        self.assertIn("Run inserts.sql directly against the source database to replay captured writes.", summary)
         self.assertIn(
             "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = 1234;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1235;\n",
-            summary,
+            inserts_sql,
         )
         self.assertNotIn("Security_log_security_log_uid", summary)
-        self.assertNotIn("INSERT INTO [dbo].[Security_log]", summary)
+        self.assertNotIn("INSERT INTO [dbo].[Security_log]", inserts_sql)
         self.assertIn("- dbo.Person_hist: 1", summary)
-        self.assertNotIn("INSERT INTO [dbo].[Person_hist]", summary)
-        self.assertNotIn("DECLARE @id bigint", summary)
+        self.assertNotIn("INSERT INTO [dbo].[Person_hist]", inserts_sql)
+        self.assertNotIn("DECLARE @id bigint", inserts_sql)
 
     def test_core_replay_skips_cached_helper_tables(self) -> None:
         manifest = {
@@ -238,6 +242,7 @@ class ReplaySqlTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             summary_path = Path(temp_dir) / "summary.txt"
+            inserts_path = Path(temp_dir) / "inserts.sql"
             write_summary(
                 summary_path,
                 ["Added Bart Simpson"],
@@ -254,11 +259,12 @@ class ReplaySqlTest(unittest.TestCase):
                 "core",
             )
             summary = summary_path.read_text(encoding="utf-8")
+            inserts_sql = inserts_path.read_text(encoding="utf-8")
 
         self.assertIn("- dbo.EDX_patient_match: 1", summary)
         self.assertIn("Tables excluded from reconstructed SQL (core replay):", summary)
         self.assertIn("- dbo.EDX_patient_match", summary)
-        self.assertNotIn("INSERT INTO [dbo].[EDX_patient_match]", summary)
+        self.assertNotIn("INSERT INTO [dbo].[EDX_patient_match]", inserts_sql)
 
 
 if __name__ == "__main__":

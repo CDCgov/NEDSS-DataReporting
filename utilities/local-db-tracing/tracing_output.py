@@ -304,9 +304,12 @@ def write_summary(
         for table_name in ignored_replay_table_names:
             lines.append(f"- {table_name}")
     if reconstructed_sql:
+        inserts_path = path.parent / "inserts.sql"
+        inserts_lines = [f"USE {quote_identifier(str(manifest['database']))};", *reconstructed_sql]
+        inserts_path.write_text("\n".join(inserts_lines) + "\n", encoding="utf-8")
+
         lines.append("")
-        lines.append("Reconstructed SQL:")
-        lines.append(f"USE {quote_identifier(str(manifest['database']))};")
-        lines.extend(reconstructed_sql)
+        lines.append(f"Reconstructed SQL written to: {inserts_path.name}")
+        lines.append("Run inserts.sql directly against the source database to replay captured writes.")
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

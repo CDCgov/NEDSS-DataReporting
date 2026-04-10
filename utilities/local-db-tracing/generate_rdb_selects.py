@@ -142,12 +142,13 @@ def load_json(path: Path) -> object:
         raise SystemExit(f"Could not parse JSON file {path}: {error}") from error
 
 
-def load_combined_inputs(manifest_path: Path) -> tuple[dict[str, object], Path, Path]:
+def load_combined_inputs(manifest_path: Path) -> tuple[dict[str, object], Path, Path, Path]:
     manifest_obj = load_json(manifest_path)
     if not isinstance(manifest_obj, dict):
         raise SystemExit(f"Combined manifest has an invalid format: {manifest_path}")
 
     summary_file = manifest_obj.get("cdc_summary_file")
+    inserts_file = manifest_obj.get("cdc_inserts_file")
     logical_changes_file = manifest_obj.get("logical_changes_file")
     if not isinstance(summary_file, str) or not summary_file:
         raise SystemExit(f"Combined manifest is missing cdc_summary_file: {manifest_path}")
@@ -155,17 +156,22 @@ def load_combined_inputs(manifest_path: Path) -> tuple[dict[str, object], Path, 
         raise SystemExit(f"Combined manifest is missing logical_changes_file: {manifest_path}")
 
     summary_path = Path(summary_file)
+    inserts_path = Path(inserts_file) if isinstance(inserts_file, str) and inserts_file else summary_path.with_name("inserts.sql")
     logical_changes_path = Path(logical_changes_file)
     if not summary_path.exists():
         raise SystemExit(f"CDC summary file not found: {summary_path}")
+    if not inserts_path.exists():
+        # Backward-compatible fallback for older artifacts where SQL was embedded in summary.txt.
+        inserts_path = summary_path
     if not logical_changes_path.exists():
         raise SystemExit(f"Logical changes file not found: {logical_changes_path}")
-    return manifest_obj, summary_path, logical_changes_path
+    return manifest_obj, summary_path, inserts_path, logical_changes_path
 
 
-def extract_declare_block(summary_text: str) -> list[str]:
-    lines = summary_text.splitlines()
-    in_reconstructed_sql = False
+def extract_declare_block(sql_text: str) -> list[str]:
+    lines = sql_text.splitlines()
+    has_reconstructed_heading = any(line.strip() == "Reconstructed SQL:" for line in lines)
+    in_reconstructed_sql = not has_reconstructed_heading
     collected: list[str] = []
     previous_was_declare = False
 
@@ -949,13 +955,13 @@ def generate_rdb_selects_from_manifest(
     manifest_path: Path,
     output_path: Path | None = None,
 ) -> tuple[Path, int]:
-    manifest, summary_path, logical_changes_path = load_combined_inputs(manifest_path)
-    summary_text = summary_path.read_text(encoding="utf-8")
+    manifest, summary_path, inserts_path, logical_changes_path = load_combined_inputs(manifest_path)
+    inserts_text = inserts_path.read_text(encoding="utf-8")
     logical_changes_obj = load_json(logical_changes_path)
     if not isinstance(logical_changes_obj, list):
         raise SystemExit(f"Logical changes file has an invalid format: {logical_changes_path}")
 
-    declare_lines = extract_declare_block(summary_text)
+    declare_lines = extract_declare_block(inserts_text)
     declare_entries = parse_declare_entries(declare_lines)
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
     scaffolds = consolidate_fk_scaffolds(scaffolds)

@@ -539,6 +539,7 @@ def main() -> int:
             "cdc_run_dir": str(cdc_plan.run_dir),
             "logical_run_dir": str(logical_plan.run_dir),
             "cdc_summary_file": str(cdc_plan.run_dir / "summary.txt"),
+            "cdc_inserts_file": str(cdc_plan.run_dir / "inserts.sql"),
             "logical_changes_file": str(logical_plan.run_dir / "logical-changes.json"),
             "logical_markdown_file": str(logical_plan.run_dir / "logical-changes.md"),
             "cdc_change_count": len(cdc_changes),
