@@ -28,7 +28,7 @@ class DataDrivenFunctionalTests extends FunctionalTest {
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-          .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+          .setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"));
 
   DataDrivenFunctionalTests(@Qualifier("adminClient") JdbcClient client) {
     this.client = client;

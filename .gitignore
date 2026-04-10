@@ -60,3 +60,5 @@ NEDSSDev/
 # Performance-testing
 venv/
 examples/
+.local/
+output/
