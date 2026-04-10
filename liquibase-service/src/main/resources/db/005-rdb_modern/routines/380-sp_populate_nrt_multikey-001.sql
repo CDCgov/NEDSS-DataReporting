@@ -1,6 +1,3 @@
--- This stored procedure is created in master
-use master;
-
 IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_populate_nrt_multikey]')
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
@@ -41,14 +38,6 @@ Begin
         DECLARE @SQLStatement   NVARCHAR(MAX) = '';
         DECLARE @step_name      nvarchar(200) = '';
 
-        -- Based on configuration, set @RDB_DB to either rdb_modern or rdb
-        DECLARE @RDB_DB NVARCHAR(128) = 'rdb';
-        IF EXISTS(SELECT 1 FROM NBS_ODSE.DBO.NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
-            BEGIN
-                SET @RDB_DB = 'rdb_modern';
-            END
-        PRINT 'Using database ' + @RDB_DB + ' in sp_populate_nrt_multikey';
-
         CREATE TABLE #NRTKeys
         (
             Key1 BIGINT,
@@ -62,11 +51,7 @@ Begin
 
         exec sp_executesql @SQLStatement;
 
-        -- Dynamically construct and executes a SQL INSERT statement against the variable database name (@RDB_DB)
-        -- The sp_executesql stored procedure is used to safely pass parameters (@batch_id, @dataflow_name, @package_name)
-        -- to prevent SQL injection and maintain data integrity.
-        SET @SQLStatement = N'
-        INSERT INTO ' + QUOTENAME(@RDB_DB) + N'.dbo.job_flow_log
+        INSERT INTO dbo.job_flow_log
         (
             batch_id,
             Dataflow_Name,
@@ -82,22 +67,12 @@ Begin
             @batch_id,
             @dataflow_name,
             @package_name,
-            ''START'',
+            'START',
             0,
-            '''',
+            '',
             0,
-            ''''
-        );';
-
-        EXEC sp_executesql
-            @SQLStatement,
-            N'@batch_id bigint,
-            @dataflow_name nvarchar(200),
-            @package_name nvarchar(200)',
-            @batch_id = @batch_id,
-            @dataflow_name = @dataflow_name,
-            @package_name = @package_name;
-        --
+            ''
+        );
 
         PRINT 'Starting Loading Script for NBS_ODSE.dbo.' + @ODSETable + ' at: ' + CONVERT(VARCHAR(50), @StartTime, 121);
 
@@ -149,8 +124,8 @@ Begin
             PRINT CONCAT('Updated ', @Rows, ' rows; last key = (', @LastKey1, ',', @LastKey2, ')');
 
             SET @step_name = LEFT(CONCAT('Updated ', @Rows, ' rows; last key = (', @LastKey1, ',', @LastKey2, ')'), 199);
-            SET @SQLStatement = N'
-            INSERT INTO ' + QUOTENAME(@RDB_DB) + N'.dbo.job_flow_log
+            
+            INSERT INTO dbo.job_flow_log
             (
                 batch_id,
                 Dataflow_Name,
@@ -166,25 +141,12 @@ Begin
                 @batch_id,
                 @dataflow_name,
                 @package_name,
-                ''START'',
+                'START',
                 0,
                 @step_name,
-                @row_count,
-                ''''
-            );';
-
-            EXEC sp_executesql
-                @SQLStatement,
-                N'@batch_id bigint,
-                @dataflow_name nvarchar(200),
-                @package_name nvarchar(200),
-                @step_name nvarchar(200),
-                @row_count int',
-                @batch_id = @batch_id,
-                @dataflow_name = @dataflow_name,
-                @package_name = @package_name,
-                @step_name = @step_name,
-                @row_count = @Rows;
+                @Rows,
+                ''
+            );
 
             -- wait for 1 second between batches
             WAITFOR DELAY '00:00:01';
@@ -194,8 +156,7 @@ Begin
 
         PRINT 'Loading Script for NBS_ODSE.dbo.' + @ODSETable + ' completed at: ' + CONVERT(VARCHAR(50), @EndTime, 121);
 
-       SET @SQLStatement = N'
-        INSERT INTO ' + QUOTENAME(@RDB_DB) + N'.dbo.job_flow_log
+        INSERT INTO dbo.job_flow_log
         (
             batch_id,
             Dataflow_Name,
@@ -211,21 +172,12 @@ Begin
             @batch_id,
             @dataflow_name,
             @package_name,
-            ''COMPLETE'',
+            'COMPLETE',
             0,
-            '''',
+            '',
             0,
-            ''''
-        );';
-
-        EXEC sp_executesql
-            @SQLStatement,
-            N'@batch_id bigint,
-            @dataflow_name nvarchar(200),
-            @package_name nvarchar(200)',
-            @batch_id = @batch_id,
-            @dataflow_name = @dataflow_name,
-            @package_name = @package_name;
+            ''
+        );
     end try
 
     BEGIN CATCH
@@ -240,8 +192,7 @@ Begin
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        SET @SQLStatement = N'
-        INSERT INTO ' + QUOTENAME(@RDB_DB) + N'.dbo.job_flow_log
+        INSERT INTO dbo.job_flow_log
         (
             batch_id,
             Dataflow_Name,
@@ -258,27 +209,17 @@ Begin
             @batch_id,
             @dataflow_name,
             @package_name,
-            ''ERROR'',
+            'ERROR',
             0,
             @dataflow_name,
             0,
-            '''',
+            '',
             @FullErrorMessage
-        );';
-
-        EXEC sp_executesql
-            @SQLStatement,
-            N'@batch_id bigint,
-            @dataflow_name nvarchar(200),
-            @package_name nvarchar(200),
-            @FullErrorMessage varchar(8000)',
-            @batch_id = @batch_id,
-            @dataflow_name = @dataflow_name,
-            @package_name = @package_name,
-            @FullErrorMessage = @FullErrorMessage;
+        );
 
         return @FullErrorMessage;
 
     END CATCH
 
 end;
+GO

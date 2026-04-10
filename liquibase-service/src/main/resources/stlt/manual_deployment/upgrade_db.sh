@@ -129,7 +129,7 @@ if [[ "$load_data" == "true" ]]; then
         exit 1
     fi
 else
-    PATHS=("tables" "views" "functions" "routines" "remove")
+    PATHS=("." "tables" "views" "functions" "routines" "remove")
 fi
 
 # Create logs directory and log file
@@ -161,14 +161,23 @@ fi
 for path in "${PATHS[@]}"; do
     f_dir="$SCRIPT_DIR/$path"
     if [[ -d "$f_dir" ]]; then
-        for file in "$f_dir"/*.sql; do
+        for file in $(find "$f_dir" -maxdepth 1 -name "*.sql" | sort -V); do
             [[ -f "$file" ]] || continue
             echo "Executing $file..."
             echo "[$(date '+%F %T')] Executing $file..." >> "$LOG_FILE"
-            sqlcmd -S "$SERVER_NAME" -d "$lower_db" -U "$DB_USER" -P "$DB_PASS" -i "$file" -I -b -C >> "$LOG_FILE" 2>&1
+            
+            # Capture output to report errors to terminal
+            OUTPUT=$(sqlcmd -S "$SERVER_NAME" -d "$lower_db" -U "$DB_USER" -P "$DB_PASS" -i "$file" -I -b -C 2>&1)
             CURRENT_ERROR=$?
+            
+            # Write captured output to log
+            echo "$OUTPUT" >> "$LOG_FILE"
+            
             if [[ $CURRENT_ERROR -ne 0 ]]; then
-                echo "Error executing $file. Error code: $CURRENT_ERROR"
+                echo "--------------------------------------------------------"
+                echo "ERROR executing $file (Exit Code: $CURRENT_ERROR)"
+                echo "$OUTPUT" | grep -E "Msg [0-9]+|Level [0-9]+|State [0-9]+" -A 2
+                echo "--------------------------------------------------------"
                 echo "[$(date '+%F %T')] Error executing $file. Error code: $CURRENT_ERROR" >> "$LOG_FILE"
                 ((ERROR_COUNT++))
                 FAILED_SCRIPTS+=("$file")
