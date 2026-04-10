@@ -1,0 +1,111 @@
+spring:
+  application:
+    name: reporting-pipeline-service
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
+    group-id: ${KAFKA_CONSUMER_APP:pipeline-consumer-app}
+    dlt-group-id: rtr-dlt-group
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+      key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
+    topics:
+      elastic:
+        organization: ${TOPIC_ELASTIC_ORGANIZATION:elastic_search_organization}
+        patient: ${TOPIC_ELASTIC_PATIENT:elastic_search_patient}
+        provider: ${TOPIC_ELASTIC_PROVIDER:elastic_search_provider}
+      nbs:
+        act-relationship: ${TOPIC_NBS_ACT_RELATIONSHIP:nbs_Act_relationship}
+        auth-user: ${TOPIC_NBS_AUTH_USER:nbs_Auth_user}
+        ct-contact: ${TOPIC_NBS_CT_CONTACT:nbs_CT_contact}
+        datamart: ${TOPIC_NBS_DATAMART:nbs_Datamart}
+        intervention: ${TOPIC_NBS_INTERVENTION:nbs_Intervention}
+        interview: ${TOPIC_NBS_INTERVIEW:nbs_Interview}
+        notification: ${TOPIC_NBS_NOTIFICATION:nbs_Notification}
+        observation: ${TOPIC_NBS_OBSERVATION:nbs_Observation}
+        organization: ${TOPIC_NBS_ORGANIZATION:nbs_Organization}
+        person: ${TOPIC_NBS_PERSON:nbs_Person}
+        place: ${TOPIC_NBS_PLACE:nbs_Place}
+        public-health-case: ${TOPIC_NBS_PUBLIC_HEALTH_CASE:nbs_Public_health_case}
+        state-defined-field-data: ${TOPIC_NBS_STATE_DEFINED_FIELD_DATA:nbs_state_defined_field_data}
+        treatment: ${TOPIC_NBS_TREATMENT:nbs_Treatment}
+      nrt:
+        auth-user: ${TOPIC_NRT_AUTH_USER:nrt_auth_user}
+        contact: ${TOPIC_NRT_CONTACT:nrt_contact}
+        contact-answer: ${TOPIC_NRT_CONTACT_ANSWER:nrt_contact_answer}
+        interview: ${TOPIC_NRT_INTERVIEW:nrt_interview}
+        interview-answer: ${TOPIC_NRT_INTERVIEW_ANSWER:nrt_interview_answer}
+        interview-note: ${TOPIC_NRT_INTERVIEW_NOTE:nrt_interview_note}
+        investigation: ${TOPIC_NRT_INVESTIGATION:nrt_investigation}
+        investigation-aggregate: ${TOPIC_NRT_INVESTIGATION_AGGREGATE:nrt_investigation_aggregate}
+        investigation-case-management: ${TOPIC_NRT_INVESTIGATION_CASE_MANAGEMENT:nrt_investigation_case_management}
+        investigation-confirmation: ${TOPIC_NRT_INVESTIGATION_CONFIRMATION:nrt_investigation_confirmation}
+        investigation-notification: ${TOPIC_NRT_INVESTIGATION_NOTIFICATION:nrt_investigation_notification}
+        investigation-observation: ${TOPIC_NRT_INVESTIGATION_OBSERVATION:nrt_investigation_observation}
+        ldf-data: ${TOPIC_NRT_LDF_DATA:nrt_ldf_data}
+        metadata-columns: ${TOPIC_NRT_METADATA_COLUMNS:nrt_metadata_columns}
+        observation: ${TOPIC_NRT_OBSERVATION:nrt_observation}
+        observation-coded: ${TOPIC_NRT_OBSERVATION_CODED:nrt_observation_coded}
+        observation-date: ${TOPIC_NRT_OBSERVATION_DATE:nrt_observation_date}
+        observation-edx: ${TOPIC_NRT_OBSERVATION_EDX:nrt_observation_edx}
+        observation-material: ${TOPIC_NRT_OBSERVATION_MATERIAL:nrt_observation_material}
+        observation-numeric: ${TOPIC_NRT_OBSERVATION_NUMERIC:nrt_observation_numeric}
+        observation-reason: ${TOPIC_NRT_OBSERVATION_REASON:nrt_observation_reason}
+        observation-txt: ${TOPIC_NRT_OBSERVATION_TXT:nrt_observation_txt}
+        odse-nbs-page: ${TOPIC_NRT_ODSE_NBS_PAGE:nrt_odse_NBS_page}
+        odse-state-defined-field-metadata: ${TOPIC_NRT_ODSE_STATE_DEFINED_FIELD_METADATA:nrt_odse_state_defined_field_metadata}
+        organization: ${TOPIC_NRT_ORGANIZATION:nrt_organization}
+        page-case-answer: ${TOPIC_NRT_PAGE_CASE_ANSWER:nrt_page_case_answer}
+        patient: ${TOPIC_NRT_PATIENT:nrt_patient}
+        place: ${TOPIC_NRT_PLACE:nrt_place}
+        place-tele: ${TOPIC_NRT_PLACE_TELE:nrt_place_tele}
+        provider: ${TOPIC_NRT_PROVIDER:nrt_provider}
+        srte-condition-code: ${TOPIC_NRT_CONDITION_CODE:nrt_srte_Condition_code}
+        treatment: ${TOPIC_NRT_TREATMENT:nrt_treatment}
+        vaccination: ${TOPIC_NRT_VACCINATION:nrt_vaccination}
+        vaccination-answer: ${TOPIC_NRT_VACCINATION_ANSWER:nrt_vaccination_answer}
+    dlq:
+      retry-suffix: _retry
+      dlq-suffix: _dlt
+    consumer:
+      max-retry: 3
+      maxPollIntervalMs: 30000
+      maxPollRecs: ${KAFKA_CONSUMER_MAX_POLL_RECS:200}
+      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    admin:
+      auto-create: true
+
+  datasource:
+    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME}
+    url: ${DB_HOST}
+
+featureFlag:
+  elastic-search-enable: ${FF_ES_ENABLE:false}
+  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+  thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
+  service-disable: ${FF_SERVICE_DISABLE:false}
+
+management:
+  endpoint:
+    prometheus:
+      access: read_only
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+service:
+  fixed-delay:
+    cached-ids: ${FIXED_DELAY_ID:20000}
+    datamart: ${FIXED_DELAY_DM:60000}
+    backfill: ${FIXED_DELAY_BF:600000}
+  max-retries: ${MAX_RETRIES:3}
+
+server:
+  port: "8095"

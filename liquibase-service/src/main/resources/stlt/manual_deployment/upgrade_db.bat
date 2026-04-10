@@ -77,7 +77,7 @@ if not exist logs mkdir logs
 set "LOG_FILE=logs\manual_run_log_!LOG_DATE!_%DATABASE%.log"
 
 REM Determine paths to search for scripts
-set "PATHS=tables views functions routines remove"
+set "PATHS=. tables views functions routines remove"
 if /i "!load_data!"=="true" (
     set "PATHS=."
 )
@@ -101,17 +101,39 @@ if not exist "!SCRIPT_DIR!" (
 REM Execution
 set /a ERROR_COUNT=0
 set "FAILED_SCRIPTS="
+set "TEMP_OUT=%TEMP%\sql_out_%RANDOM%.txt"
 
 for %%p in (!PATHS!) do (
     set "f_dir=!SCRIPT_DIR!\%%p"
     if exist "!f_dir!" (
+        REM If loading data, we need to determine if we target rdb or rdb_modern
+        set "TARGET_DB=%DATABASE%"
+        if /i "!load_data!"=="true" (
+            echo Determining target reporting database...
+            sqlcmd -S %SERVER_NAME% -d "NBS_ODSE" -U %DB_USER% -P %DB_PASS% -Q "SET NOCOUNT ON; SELECT config_value FROM dbo.NBS_configuration WHERE config_key = 'ENV'" -h -1 -W -C > "!TEMP_OUT!" 2>nul
+            set /p ENV_CHECK=<"!TEMP_OUT!"
+            if /i "!ENV_CHECK!"=="UAT" (
+                set "TARGET_DB=rdb_modern"
+            else (
+                set "TARGET_DB=rdb"
+            )
+            echo Target reporting database resolved to: !TARGET_DB!
+        )
+
         for %%F in ("!f_dir!\*.sql") do (
-            echo Executing %%F...
-            echo [%date% %time%] Executing %%F... >> "!LOG_FILE!"
-            sqlcmd -S %SERVER_NAME% -d %DATABASE% -U %DB_USER% -P %DB_PASS% -i "%%F" -I -b -C >> "!LOG_FILE!" 2>&1
+            echo Executing %%F against !TARGET_DB!...
+            echo [%date% %time%] Executing %%F against !TARGET_DB!... >> "!LOG_FILE!"
+            
+            sqlcmd -S %SERVER_NAME% -d !TARGET_DB! -U %DB_USER% -P %DB_PASS% -i "%%F" -I -b -C > "!TEMP_OUT!" 2>&1
             set "CURRENT_ERROR=!errorlevel!"
+            
+            type "!TEMP_OUT!" >> "!LOG_FILE!"
+            
             if !CURRENT_ERROR! neq 0 (
-                echo Error executing %%F. Errorlevel: !CURRENT_ERROR!
+                echo --------------------------------------------------------
+                echo ERROR executing %%F (Exit Code: !CURRENT_ERROR!)
+                type "!TEMP_OUT!"
+                echo --------------------------------------------------------
                 echo [%date% %time%] Error executing %%F. Errorlevel: !CURRENT_ERROR! >> "!LOG_FILE!"
                 set /a ERROR_COUNT+=1
                 set "FAILED_SCRIPTS=!FAILED_SCRIPTS! %%F"
@@ -119,6 +141,7 @@ for %%p in (!PATHS!) do (
         )
     )
 )
+if exist "!TEMP_OUT!" del "!TEMP_OUT!"
 
 REM Final summary
 if !ERROR_COUNT! equ 0 (
