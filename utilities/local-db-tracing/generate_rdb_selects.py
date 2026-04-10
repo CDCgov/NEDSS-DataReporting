@@ -75,17 +75,18 @@ def load_rdb_column_metadata(
     dict[tuple[str, str], frozenset[str]] | None,
     dict[tuple[str, str, str], tuple[str, str, str]] | None,
     set[tuple[str, str, str]] | None,
+    set[tuple[str, str, str]] | None,
 ]:
-    """Load table columns, primary keys, FK links, and auto datetime defaults from replay-metadata cache."""
+    """Load table columns, primary keys, FK links, generated columns, and auto datetime defaults from replay-metadata cache."""
     cache_file = replay_metadata_cache_file_for_database(logical_database)
     if not cache_file.exists():
-        return None, None, None, None
+        return None, None, None, None, None
     try:
         payload = json.loads(cache_file.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return None, None, None, None
+        return None, None, None, None, None
     if not isinstance(payload, dict):
-        return None, None, None, None
+        return None, None, None, None, None
 
     columns_by_table: dict[tuple[str, str], list[str]] = {}
     for item in payload.get("column_sql_types", []):
@@ -104,11 +105,15 @@ def load_rdb_column_metadata(
         )
         for item in payload.get("foreign_keys", [])
     }
+    generated_always_columns: set[tuple[str, str, str]] = {
+        (item["schema_name"], item["table_name"], item["column_name"])
+        for item in payload.get("generated_always_columns", [])
+    }
     auto_datetime_defaults: set[tuple[str, str, str]] = {
         (item["schema_name"], item["table_name"], item["column_name"])
         for item in payload.get("auto_datetime_defaults", [])
     }
-    return columns_by_table, primary_keys_by_table, foreign_keys_by_source, auto_datetime_defaults
+    return columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults
 
 
 def latest_combined_manifest() -> Path:
@@ -721,6 +726,7 @@ def render_sql(
     columns_by_table: dict[tuple[str, str], list[str]] | None = None,
     primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None = None,
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None = None,
+    generated_always_columns: set[tuple[str, str, str]] | None = None,
     auto_datetime_defaults: set[tuple[str, str, str]] | None = None,
 ) -> str:
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
@@ -773,17 +779,27 @@ def render_sql(
 
         table_key = (scaffold.schema_name, scaffold.table_name)
         pk_columns = primary_keys_by_table.get(table_key, frozenset()) if primary_keys_by_table else frozenset()
+        generated_excluded_for_table = frozenset(
+            col for (s, t, col) in (generated_always_columns or set())
+            if normalize_identifier(s) == normalize_identifier(scaffold.schema_name)
+            and normalize_identifier(t) == normalize_identifier(scaffold.table_name)
+        )
         auto_excluded_for_table = frozenset(
             col for (s, t, col) in (auto_datetime_defaults or set())
             if normalize_identifier(s) == normalize_identifier(scaffold.schema_name)
             and normalize_identifier(t) == normalize_identifier(scaffold.table_name)
         )
-        json_excluded_columns = pk_columns | auto_excluded_for_table
+        select_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table
+        json_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table
         select_columns: list[str] | None = None
         if columns_by_table is not None:
             all_columns = columns_by_table.get(table_key)
             if all_columns:
-                select_columns = [col for col in all_columns if col not in pk_columns]
+                select_excluded_normalized = {normalize_identifier(col) for col in select_excluded_columns}
+                select_columns = [
+                    col for col in all_columns
+                    if normalize_identifier(col) not in select_excluded_normalized
+                ]
         if select_columns:
             lines.append("SELECT")
             for i, col in enumerate(select_columns):
@@ -815,7 +831,7 @@ def generate_rdb_selects_from_manifest(
     declare_entries = parse_declare_entries(declare_lines)
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
-    columns_by_table, primary_keys_by_table, foreign_keys_by_source, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
+    columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
     output_sql = render_sql(
         manifest,
         declare_lines,
@@ -824,6 +840,7 @@ def generate_rdb_selects_from_manifest(
         columns_by_table,
         primary_keys_by_table,
         foreign_keys_by_source,
+        generated_always_columns,
         auto_datetime_defaults,
     )
 

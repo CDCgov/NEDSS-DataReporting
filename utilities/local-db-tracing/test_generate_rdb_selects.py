@@ -116,7 +116,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             manifest_path.write_text(
                 json.dumps(
                     {
-                        "logical_database": "RDB_MODERN",
+                        "logical_database": "TEST_DB_NO_CACHE",
                         "cdc_summary_file": str(summary_path),
                         "logical_changes_file": str(logical_changes_path),
                     },
@@ -184,6 +184,112 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         )
 
         self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"PATIENT_KEY":16,"PATIENT_UID":-2222,"PATIENT_MPR_UID":-2222,"PATIENT_LOCAL_ID":"PSN2222GA01"}]', sql)
+
+    def test_generated_always_columns_are_excluded_from_select_and_expected_json(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries(
+            [
+                "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';",
+            ]
+        )
+        scaffolds = generate_rdb_selects.build_scaffolds(
+            [
+                {
+                    "schema_name": "dbo",
+                    "table_name": "nrt_patient",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"local_id": "PSN1234GA01"},
+                    },
+                    "primary_key_values": {},
+                    "after": {
+                        "local_id": "PSN1234GA01",
+                        "patient_uid": 1234,
+                        "refresh_datetime": "2026-04-10T12:39:25.8253214",
+                    },
+                }
+            ],
+            declare_entries,
+        )
+
+        sql = generate_rdb_selects.render_sql(
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
+            ["DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';"],
+            declare_entries,
+            scaffolds,
+            columns_by_table={
+                ("dbo", "nrt_patient"): ["local_id", "patient_uid", "refresh_datetime"],
+            },
+            generated_always_columns={
+                ("dbo", "nrt_patient", "refresh_datetime"),
+            },
+        )
+
+        self.assertIn("SELECT", sql)
+        self.assertIn("    [local_id],", sql)
+        self.assertIn("    [patient_uid]", sql)
+        self.assertNotIn("[refresh_datetime]", sql)
+        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"local_id":"PSN1234GA01","patient_uid":1234}]', sql)
+        self.assertNotIn("refresh_datetime", sql)
+
+    def test_auto_datetime_columns_are_excluded_from_select_and_expected_json(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries(
+            [
+                "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';",
+            ]
+        )
+        scaffolds = generate_rdb_selects.build_scaffolds(
+            [
+                {
+                    "schema_name": "dbo",
+                    "table_name": "nrt_patient_key",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"d_patient_key": 4},
+                    },
+                    "primary_key_values": {},
+                    "after": {
+                        "patient_uid": 1234,
+                        "created_dttm": "2026-04-10T12:39:31.3500000",
+                        "updated_dttm": "2026-04-10T12:39:31.3500000",
+                    },
+                }
+            ],
+            declare_entries,
+        )
+
+        sql = generate_rdb_selects.render_sql(
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
+            ["DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';"],
+            declare_entries,
+            scaffolds,
+            columns_by_table={
+                ("dbo", "nrt_patient_key"): ["patient_uid", "created_dttm", "updated_dttm"],
+            },
+            auto_datetime_defaults={
+                ("dbo", "nrt_patient_key", "created_dttm"),
+                ("dbo", "nrt_patient_key", "updated_dttm"),
+            },
+        )
+
+        self.assertIn("SELECT", sql)
+        self.assertIn("    [patient_uid]", sql)
+        self.assertNotIn("[created_dttm]", sql)
+        self.assertNotIn("[updated_dttm]", sql)
+        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"patient_uid":1234}]', sql)
+        self.assertNotIn('"created_dttm"', sql)
+        self.assertNotIn('"updated_dttm"', sql)
 
 
 if __name__ == "__main__":
