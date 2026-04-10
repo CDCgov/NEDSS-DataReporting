@@ -486,6 +486,12 @@ def apply_expected_row_overrides(
 
 def predicate_for_field(column_name: str, value: object, declare_entries: list[DeclareEntry]) -> tuple[str, list[str]]:
     column_sql = f"[{column_name}]"
+    
+    # Handle tuples as IN clauses
+    if isinstance(value, tuple):
+        literals = ", ".join(sql_literal(v) for v in sorted(value))
+        return f"{column_sql} IN ({literals})", []
+    
     literal_sql = sql_literal(value)
     candidates = variable_candidates_for_value(column_name, value, declare_entries)
     if len(candidates) == 1:
@@ -579,6 +585,16 @@ def fk_subquery_predicate_for_pk(
     if column_name.lower() not in {pk_column.lower() for pk_column in pk_columns}:
         return None, []
 
+    # Find the value for this column
+    value = None
+    for col_name, col_value in scaffold.where_fields:
+        if col_name.lower() == column_name.lower():
+            value = col_value
+            break
+    
+    # For tuples or single values, process normally - FK lookup should work for both
+    # (tuples will be converted to IN by predicate_for_field)
+
     fk_key = (scaffold.schema_name, scaffold.table_name, column_name)
     foreign_key = foreign_keys_by_source.get(fk_key)
     target_comments: list[str] = []
@@ -618,7 +634,80 @@ def fk_subquery_predicate_for_pk(
         f"(SELECT [{target_column}] FROM [{target_schema}].[{target_table}] "
         f"WHERE {' AND '.join(target_predicates)})"
     )
-    return f"[{column_name}] = {subquery_sql}", target_comments
+    # Use IN for both single and multiple FK values - IN works with single values too
+    return f"[{column_name}] IN {subquery_sql}", target_comments
+
+
+def consolidate_fk_scaffolds(scaffolds: list[SelectScaffold]) -> list[SelectScaffold]:
+    """Consolidate scaffolds differing only in FK key values by creating IN clauses."""
+    
+    def is_fk_field(field_name: str, value: object) -> bool:
+        """Check if a field is a foreign key (contains 'key' and has numeric value)."""
+        normalized = normalize_identifier(field_name)
+        return "key" in normalized and isinstance(value, (int, float))
+    
+    def extract_non_fk_fields(where_fields: tuple[tuple[str, object], ...]) -> tuple[tuple[str, object], ...]:
+        """Extract all non-FK fields from where_fields."""
+        return tuple((name, value) for name, value in where_fields if not is_fk_field(name, value))
+    
+    # Group scaffolds by table and non-FK where fields
+    groups: dict[tuple[str, str, tuple[tuple[str, object], ...]], list[SelectScaffold]] = {}
+    for scaffold in scaffolds:
+        non_fk_fields = extract_non_fk_fields(scaffold.where_fields)
+        group_key = (scaffold.schema_name, scaffold.table_name, non_fk_fields)
+        groups.setdefault(group_key, []).append(scaffold)
+    
+    consolidated: list[SelectScaffold] = []
+    for scaffolds_in_group in groups.values():
+        if len(scaffolds_in_group) == 1:
+            # No consolidation needed
+            consolidated.append(scaffolds_in_group[0])
+            continue
+        
+        # Find FK fields and their values
+        all_fk_fields: dict[str, list[object]] = {}
+        first_scaffold = scaffolds_in_group[0]
+        
+        for scaffold in scaffolds_in_group:
+            for field_name, value in scaffold.where_fields:
+                if is_fk_field(field_name, value):
+                    all_fk_fields.setdefault(field_name, []).append(value)
+        
+        if not all_fk_fields:
+            # No FK fields to consolidate
+            consolidated.extend(scaffolds_in_group)
+            continue
+        
+        # Build consolidated where_fields with tuple for FK values
+        fk_field_name = next(iter(all_fk_fields.keys()))
+        fk_values = tuple(sorted(set(all_fk_fields[fk_field_name])))
+        
+        consolidated_where_fields = extract_non_fk_fields(first_scaffold.where_fields) + ((fk_field_name, fk_values),)
+        
+        # Merge expected rows from all scaffolds
+        merged_expected_rows: dict[str, object] = {}
+        for scaffold in scaffolds_in_group:
+            for row in scaffold.expected_rows:
+                row_key = json.dumps(row, sort_keys=True, separators=(',', ':'))
+                if row_key not in merged_expected_rows:
+                    merged_expected_rows[row_key] = row
+        
+        merged_rows = tuple(json.loads(row_key) for row_key in sorted(merged_expected_rows.keys()))
+        
+        # Build consolidated scaffold
+        consolidated_scaffold = SelectScaffold(
+            schema_name=first_scaffold.schema_name,
+            table_name=first_scaffold.table_name,
+            operation_labels=tuple(sorted(set(op for s in scaffolds_in_group for op in s.operation_labels))),
+            identity_strategy=first_scaffold.identity_strategy,
+            comparison_eligible=first_scaffold.comparison_eligible,
+            where_fields=consolidated_where_fields,
+            comments=tuple(dict.fromkeys(c for s in scaffolds_in_group for c in s.comments)),
+            expected_rows=merged_rows,
+        )
+        consolidated.append(consolidated_scaffold)
+    
+    return sorted(consolidated, key=lambda item: (item.schema_name.lower(), item.table_name.lower(), item.where_fields))
 
 
 def build_scaffolds(
@@ -869,6 +958,7 @@ def generate_rdb_selects_from_manifest(
     declare_lines = extract_declare_block(summary_text)
     declare_entries = parse_declare_entries(declare_lines)
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
+    scaffolds = consolidate_fk_scaffolds(scaffolds)
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
     output_sql = render_sql(
