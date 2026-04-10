@@ -4,6 +4,28 @@ This directory contains a local investigation tool for tracing SQL Server Change
 
 Local cache and state files are written under `.local/`. Per-run artifacts are written under `output/`.
 
+## Quick Start
+
+Run from the repository root.
+
+1. (Optional) Set database connection values in `.env`: `DATABASE_SERVER`, `DATABASE_PORT`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`.
+2. Start a dual capture run:
+
+```powershell
+python utilities/local-db-tracing/trace_db_dual_capture.py
+```
+
+3. Perform the action in NBS that you want to turn into a test.
+4. Return to the script, press Enter when prompted, and provide a short action description.
+5. In the new paired output folder, run `cdc-NBS_ODSE/inserts.sql` against the source database to replay the captured writes.
+6. Validate expected target rows:
+
+```powershell
+python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/<paired-run>/rdb-selects.sql
+```
+
+7. Review pass/fail details in `utilities/local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
+
 ## What The Script Does
 
 The tracer script:
