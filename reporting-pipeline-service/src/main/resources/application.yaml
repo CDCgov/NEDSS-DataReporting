@@ -68,6 +68,7 @@ spring:
       retry-suffix: _retry
       dlq-suffix: _dlt
     consumer:
+      auto-offset-reset: earliest
       max-retry: 3
       maxPollIntervalMs: 30000
       maxPollRecs: ${KAFKA_CONSUMER_MAX_POLL_RECS:200}
