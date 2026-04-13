@@ -24,10 +24,3 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       maxPollIntervalMs: 3000
       metadata.max.age.ms: 6000
-
-service:
-  fixed-delay:
-    cached-ids: 3000
-    datamart: 3000
-    backfill: 3000
-  max-retries: 10
