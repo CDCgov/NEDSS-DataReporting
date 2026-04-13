@@ -1,0 +1,38 @@
+{
+    "title": "AddTreatmentFinishSalmonella",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1214,
+            "height": 737,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(2) td:nth-of-type(2) > input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/table:nth-of-type(2) td:nth-of-type(2) > input"
+                ]
+            ],
+            "offsetY": 25,
+            "offsetX": 13.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ManageEvents2.do?method=viewManageSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

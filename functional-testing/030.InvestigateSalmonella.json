@@ -1,0 +1,1049 @@
+{
+    "title": "InvestigateSalmonella",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1214,
+            "height": 737,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Manage Associations button   Manage Associations Create Notifications button   Create Notifications Share Document button   Share Document Transfer Ownership button   Transfer Ownership Edit button  Edit  Delete button  Delete  Print button  Print  Created: 04/08/2026 by: Ariella Kent Updated: 04/08/2026 by: Ariella Kent Name:",
+                    "aria/Edit button[role=\"button\"]"
+                ],
+                [
+                    "thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Edit\"]"
+                ],
+                [
+                    "pierce/thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 22.5,
+            "offsetX": 15.3671875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_01"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 58.0859375
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Yes",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_daycare_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_01"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_02"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_02\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_02"
+                ]
+            ],
+            "offsetY": 12,
+            "offsetX": 40.2421875
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/No",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_daycare_02"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_02\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_02"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_03"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_03\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_03"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 70.2421875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_03"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_03\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_03"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_04"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_04\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_04"
+                ]
+            ],
+            "offsetY": 3,
+            "offsetX": 77.2421875
+        },
+        {
+            "type": "change",
+            "value": "DCT005",
+            "selectors": [
+                [
+                    "aria/child care provided by relative, friend, neighbor",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_daycare_04"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_04\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_04"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_06"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_06\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_06"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 66.2421875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_06"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_06\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_06"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_07"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_07\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_07"
+                ]
+            ],
+            "offsetY": 7,
+            "offsetX": 65.2421875
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "#\\32 019029_daycare_07"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_daycare_07\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_daycare_07"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Food Handler Back to Top  Did patient work as a food handler after onset of illness?",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_foodhandler_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_foodhandler_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_foodhandler_01"
+                ]
+            ],
+            "offsetY": 6.5,
+            "offsetX": 31.8046875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/ Food Handler Back to Top  Did patient work as a food handler after onset of illness? Yes",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_foodhandler_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_foodhandler_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_foodhandler_01"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_foodhandler_02"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_foodhandler_02\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_foodhandler_02"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 68.078125
+        },
+        {
+            "type": "change",
+            "value": "03/21/2026",
+            "selectors": [
+                [
+                    "#\\32 019029_foodhandler_02"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_foodhandler_02\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_foodhandler_02"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_foodhandler_03"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_foodhandler_03\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_foodhandler_03"
+                ]
+            ],
+            "offsetY": 15.5,
+            "offsetX": 68.078125
+        },
+        {
+            "type": "change",
+            "value": "Taco Bell",
+            "selectors": [
+                [
+                    "#\\32 019029_foodhandler_03"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_foodhandler_03\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_foodhandler_03"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Travel History Back to Top ",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_travelhistory_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_01"
+                ]
+            ],
+            "offsetY": 7,
+            "offsetX": 62.796875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Yes[role=\"cell\"]",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_travelhistory_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_01"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "C0085936",
+            "selectors": [
+                [
+                    "aria/business[role=\"cell\"]",
+                    "aria/[role=\"listbox\"]"
+                ],
+                [
+                    "#\\32 019029_travelhistory_03"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_03\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_03"
+                ],
+                [
+                    "text/C0085936"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/business"
+                ],
+                [
+                    "#tr_2019029_travelhistory_03 option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_03\"]/option[2]"
+                ],
+                [
+                    "pierce/#tr_2019029_travelhistory_03 option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 4,
+            "offsetX": 11.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_06"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_06\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_06"
+                ]
+            ],
+            "offsetY": 7,
+            "offsetX": 6.9453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_07A"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_07A\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_07A"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 110.5
+        },
+        {
+            "type": "change",
+            "value": "52",
+            "selectors": [
+                [
+                    "aria/Barbados",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_travelhistory_07A"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_07A\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_07A"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_08"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_08\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_08"
+                ]
+            ],
+            "offsetY": 7,
+            "offsetX": 73.5
+        },
+        {
+            "type": "change",
+            "value": "C0683901",
+            "selectors": [
+                [
+                    "aria/airplane",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_travelhistory_08"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_08\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_08"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_09"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_09\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_09"
+                ]
+            ],
+            "offsetY": 13,
+            "offsetX": 46.5
+        },
+        {
+            "type": "change",
+            "value": "03/01/2026",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_09"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_09\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_09"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_10"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_10\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_10"
+                ]
+            ],
+            "offsetY": 5,
+            "offsetX": 45.5
+        },
+        {
+            "type": "change",
+            "value": "03/03/2026",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_10"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_10\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_10"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_11"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_11\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_11"
+                ]
+            ],
+            "offsetY": 7,
+            "offsetX": 6.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_13"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_13\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_13"
+                ]
+            ],
+            "offsetY": 6,
+            "offsetX": 20.5
+        },
+        {
+            "type": "change",
+            "value": "08",
+            "selectors": [
+                [
+                    "aria/Colorado",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_travelhistory_13"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_13\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_13"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_14"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_14\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_14"
+                ]
+            ],
+            "offsetY": 8,
+            "offsetX": 41.5
+        },
+        {
+            "type": "change",
+            "value": "71783008",
+            "selectors": [
+                [
+                    "aria/car",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_travelhistory_14"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_14\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_14"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_15"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_15\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_15"
+                ]
+            ],
+            "offsetY": 20,
+            "offsetX": 45.5
+        },
+        {
+            "type": "change",
+            "value": "03/05/2026",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_15"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_15\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_15"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_16"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_16\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_16"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 41.5
+        },
+        {
+            "type": "change",
+            "value": "03/07/2026",
+            "selectors": [
+                [
+                    "#\\32 019029_travelhistory_16"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_travelhistory_16\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_travelhistory_16"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_driwatexp_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_01"
+                ]
+            ],
+            "offsetY": 3,
+            "offsetX": 107.078125
+        },
+        {
+            "type": "change",
+            "value": "MUNI",
+            "selectors": [
+                [
+                    "aria/municipal, city, or county",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_driwatexp_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_01"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_driwatexp_04"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_04\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_04"
+                ]
+            ],
+            "offsetY": 6,
+            "offsetX": 109.078125
+        },
+        {
+            "type": "change",
+            "value": "PW",
+            "selectors": [
+                [
+                    "aria/private well",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_driwatexp_04"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_04\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_04"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_driwatexp_05"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_05\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_05"
+                ]
+            ],
+            "offsetY": 11,
+            "offsetX": 121.078125
+        },
+        {
+            "type": "change",
+            "value": "FLT",
+            "selectors": [
+                [
+                    "aria/filtered",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_driwatexp_05"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_05\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_05"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\32 019029_driwatexp_07"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_07\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_07"
+                ]
+            ],
+            "offsetY": 5,
+            "offsetX": 57.078125
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "#\\32 019029_driwatexp_07"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_driwatexp_07\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_driwatexp_07"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Recreational Water Exposure Back to Top  Was there recreational water exposure in the 7 days prior to illness?",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "#\\32 019029_recwatexp_01"
+                ],
+                [
+                    "xpath///*[@id=\"2019029_recwatexp_01\"]"
+                ],
+                [
+                    "pierce/#\\32 019029_recwatexp_01"
+                ]
+            ],
+            "offsetY": 4,
+            "offsetX": 70.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#salmonellosis_1"
+                ],
+                [
+                    "xpath///*[@id=\"salmonellosis_1\"]"
+                ],
+                [
+                    "pierce/#salmonellosis_1"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 64.1640625
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "#salmonellosis_1"
+                ],
+                [
+                    "xpath///*[@id=\"salmonellosis_1\"]"
+                ],
+                [
+                    "pierce/#salmonellosis_1"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#salmonellosis_2"
+                ],
+                [
+                    "xpath///*[@id=\"salmonellosis_2\"]"
+                ],
+                [
+                    "pierce/#salmonellosis_2"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 58.1640625
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "#salmonellosis_2"
+                ],
+                [
+                    "xpath///*[@id=\"salmonellosis_2\"]"
+                ],
+                [
+                    "pierce/#salmonellosis_2"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#salmonellosis_3"
+                ],
+                [
+                    "xpath///*[@id=\"salmonellosis_3\"]"
+                ],
+                [
+                    "pierce/#salmonellosis_3"
+                ]
+            ],
+            "offsetY": 11.5,
+            "offsetX": 56.1640625
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "#salmonellosis_3"
+                ],
+                [
+                    "xpath///*[@id=\"salmonellosis_3\"]"
+                ],
+                [
+                    "pierce/#salmonellosis_3"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Submit button  Submit  Cancel button  Cancel [role=\"cell\"]",
+                    "aria/Submit button[role=\"button\"]"
+                ],
+                [
+                    "tr:nth-of-type(3) > td > table > tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) > td > table > tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 23.171875,
+            "offsetX": 16.2578125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/EditInvestigation2.do?ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}
