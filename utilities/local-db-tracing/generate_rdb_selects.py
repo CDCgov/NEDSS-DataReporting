@@ -852,6 +852,87 @@ def build_scaffolds(
     return sorted(finalized, key=lambda item: (item.schema_name.lower(), item.table_name.lower(), item.where_fields))
 
 
+def apply_known_lookup_keys(
+    scaffolds: list[SelectScaffold],
+    known_lookup_keys: dict[str, dict[str, object]] | None,
+) -> list[SelectScaffold]:
+    """Narrow scaffold WHERE fields using table-specific lookup key hints."""
+    if not known_lookup_keys:
+        return scaffolds
+
+    narrowed_scaffolds: list[SelectScaffold] = []
+    for scaffold in scaffolds:
+        table_key = f"{scaffold.schema_name}.{scaffold.table_name}"
+        table_config = known_lookup_keys.get(table_key)
+        if not isinstance(table_config, dict):
+            narrowed_scaffolds.append(scaffold)
+            continue
+
+        candidate_columns: list[str] = []
+        lookup_column = table_config.get("lookup_column")
+        if isinstance(lookup_column, str) and lookup_column:
+            candidate_columns.append(lookup_column)
+        fallback_columns = table_config.get("fallback_columns")
+        if isinstance(fallback_columns, list):
+            candidate_columns.extend(str(column) for column in fallback_columns if str(column))
+
+        matched_fields: tuple[tuple[str, object], ...] = ()
+        matched_column: str | None = None
+        for candidate_column in candidate_columns:
+            candidate_fields = tuple(
+                field
+                for field in scaffold.where_fields
+                if normalize_identifier(str(field[0])) == normalize_identifier(candidate_column)
+            )
+            if candidate_fields:
+                matched_fields = candidate_fields
+                matched_column = candidate_column
+                break
+
+        if not matched_fields:
+            for candidate_column in candidate_columns:
+                expected_values = []
+                for row in scaffold.expected_rows:
+                    row_value = None
+                    for row_column, value in row.items():
+                        if normalize_identifier(row_column) == normalize_identifier(candidate_column):
+                            row_value = value
+                            break
+                    if row_value is None:
+                        expected_values = []
+                        break
+                    expected_values.append(row_value)
+
+                if expected_values and all(value == expected_values[0] for value in expected_values[1:]):
+                    matched_fields = ((candidate_column, expected_values[0]),)
+                    matched_column = candidate_column
+                    break
+
+        if not matched_fields:
+            narrowed_scaffolds.append(scaffold)
+            continue
+
+        comment = (
+            f"WHERE clause narrowed to known lookup key: {matched_column}"
+            if matched_column == candidate_columns[0]
+            else f"WHERE clause narrowed to fallback lookup key: {matched_column}"
+        )
+        narrowed_scaffolds.append(
+            SelectScaffold(
+                schema_name=scaffold.schema_name,
+                table_name=scaffold.table_name,
+                operation_labels=scaffold.operation_labels,
+                identity_strategy=scaffold.identity_strategy,
+                comparison_eligible=scaffold.comparison_eligible,
+                where_fields=matched_fields,
+                comments=tuple(dict.fromkeys([*scaffold.comments, comment])),
+                expected_rows=scaffold.expected_rows,
+            )
+        )
+
+    return narrowed_scaffolds
+
+
 def expected_rows_json(
     expected_rows: tuple[dict[str, object], ...],
     declare_entries: list[DeclareEntry],
@@ -1011,6 +1092,14 @@ def generate_rdb_selects_from_manifest(
     declare_lines = extract_declare_block(inserts_text)
     declare_entries = parse_declare_entries(declare_lines)
     scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
+    known_lookup_keys_file = Path(__file__).with_name("known_lookup_keys.json")
+    if known_lookup_keys_file.exists():
+        try:
+            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8"))
+            if isinstance(known_lookup_keys_obj, dict):
+                scaffolds = apply_known_lookup_keys(scaffolds, known_lookup_keys_obj.get("known_tables"))
+        except (OSError, json.JSONDecodeError) as error:
+            print(f"Warning: Could not load {known_lookup_keys_file}: {error}", file=sys.stderr)
     scaffolds = consolidate_fk_scaffolds(scaffolds)
     scaffolds = [s for s in scaffolds if not s.table_name.lower().startswith("nrt_")]
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")

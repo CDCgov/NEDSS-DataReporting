@@ -233,6 +233,10 @@ Dual-capture run (example `.../20260408-111218-NBS_ODSE-to-RDB_MODERN/`):
 - `rdb-selects-results.json`: machine-readable validation results (when validator is run)
 - `rdb-selects-results.md`: human-readable validation report (when validator is run)
 
+## Reference Files
+
+- `known_lookup_keys.json`: Documents which column should be used in WHERE predicates for tables with multiple candidate keys. Consult this when reviewing generated rdb-selects.sql predicates or update it to prevent incorrect key selection in future runs.
+
 ## Local State And Cleanup
 
 If cleanup is skipped or partially fails, the tracer writes per-database state under `.local/`, for example:
