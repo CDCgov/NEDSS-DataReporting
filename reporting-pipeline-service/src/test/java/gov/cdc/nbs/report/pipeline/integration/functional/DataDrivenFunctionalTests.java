@@ -1,5 +1,8 @@
 package gov.cdc.nbs.report.pipeline.integration.functional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import gov.cdc.nbs.report.pipeline.integration.support.Await;
@@ -11,6 +14,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.json.JSONException;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -79,18 +83,27 @@ class DataDrivenFunctionalTests extends FunctionalTest {
     for (Path stepDirectory : Files.list(testDirectory).filter(Files::isDirectory).toList()) {
       // Parse test data
       String setup = Files.readString(stepDirectory.resolve("setup.sql"));
-      String query = Files.readString(stepDirectory.resolve("query.sql"));
+      String queries = Files.readString(stepDirectory.resolve("query.sql"));
       String expected = Files.readString(stepDirectory.resolve("expected.json"));
+      JsonNode expectedNode = mapper.readTree(expected);
 
       // Execute setup.sql
       client.sql(setup).update();
 
-      // Execute query.sql until data is returned
-      Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
+      // For each query in query.sql, execute and validate it matches expected. Allow
+      // retry to wait on processing to complete
+      String[] queryList = queries.trim().split(";");
+      for (int i = 0; i < queryList.length; i++) {
+        String query = queryList[i];
+        String expectedResult = expectedNode.get(String.valueOf(i)).toString();
 
-      // Validate data returned matches expected.json
-      String actual = mapper.writeValueAsString(results);
-      JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
+        Optional<List<Map<String, Object>>> results =
+            Await.waitForMatch(() -> QueryRunner.select(query, client), expectedResult);
+
+        assertThat(results).isPresent();
+        String actual = mapper.writeValueAsString(results.get());
+        JSONAssert.assertEquals(expectedResult, actual, JSONCompareMode.LENIENT);
+      }
     }
   }
 }

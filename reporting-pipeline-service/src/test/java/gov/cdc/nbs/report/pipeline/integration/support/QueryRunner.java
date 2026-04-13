@@ -30,7 +30,7 @@ public class QueryRunner {
 
     for (String query : queries) {
       Optional<List<Map<String, Object>>> result =
-          Await.waitFor(q -> QueryRunner.select(q, client), query);
+          Await.waitFor(() -> QueryRunner.select(query, client));
       assertThat(result).isPresent();
       results.put(String.valueOf(queryIndex), result.get());
       queryIndex++;
@@ -39,7 +39,7 @@ public class QueryRunner {
     return results;
   }
 
-  private static Optional<List<Map<String, Object>>> select(String query, JdbcClient client) {
+  public static Optional<List<Map<String, Object>>> select(String query, JdbcClient client) {
     List<Map<String, Object>> result = client.sql(query).query().listOfRows();
     if (result.isEmpty()) {
       return Optional.empty();
