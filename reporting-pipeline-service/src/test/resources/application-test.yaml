@@ -27,6 +27,6 @@ spring:
 
 service:
   fixed-delay:
-    cached-ids: 5000
-    datamart: 10000
+    cached-ids: 7000
+    datamart: 14000
   max-retries: 10

@@ -79,8 +79,17 @@ class DataDrivenFunctionalTests extends FunctionalTest {
   @ParameterizedTest
   @MethodSource("functionalTestDirectoryProvider")
   void testRunner(Path testDirectory) throws IOException, JSONException {
+    System.out.println(
+        "Executing DataDrivenFunctionalTest for directory: " + testDirectory.getFileName());
+
     // For each step in testDirectory
     for (Path stepDirectory : Files.list(testDirectory).filter(Files::isDirectory).toList()) {
+      System.out.println(
+          "Executing DataDrivenFunctionalTest step: "
+              + testDirectory.getFileName()
+              + "/"
+              + stepDirectory.getFileName());
+
       // Parse test data
       String setup = Files.readString(stepDirectory.resolve("setup.sql"));
       String queries = Files.readString(stepDirectory.resolve("query.sql"));

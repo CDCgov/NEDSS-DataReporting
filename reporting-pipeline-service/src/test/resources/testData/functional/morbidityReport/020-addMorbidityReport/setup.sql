@@ -2,7 +2,7 @@ USE [NBS_ODSE]
 DECLARE @superuser_id bigint = 10009282
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid bigint = 20100010
+DECLARE @dbo_Entity_entity_uid bigint = 20100001
 DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 20100011
 DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 20100012
 DECLARE @dbo_Act_act_uid bigint = 20100013
