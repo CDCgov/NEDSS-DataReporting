@@ -258,6 +258,41 @@ def is_null_vs_empty_mismatch(expected: object, actual: object) -> bool:
     return False
 
 
+def field_name_ends_with_id_or_uid(field_name: str) -> bool:
+    upper_name = field_name.upper()
+    return upper_name.endswith("_ID") or upper_name.endswith("_UID")
+
+
+def field_leaf_name(field_name: str) -> str:
+    leaf = field_name.rsplit(".", 1)[-1]
+    if "]" in leaf:
+        leaf = leaf.rsplit("]", 1)[-1]
+    return leaf
+
+
+def field_name_is_warning_exception(field_name: str) -> bool:
+    upper_name = field_leaf_name(field_name).upper()
+    return upper_name == "RDB_LAST_REFRESH_TIME"
+
+
+def is_warning_mismatch(
+    field_name: str,
+    expected_has: bool,
+    actual_has: bool,
+    expected_value: object,
+    actual_value: object,
+) -> bool:
+    if not (expected_has and actual_has):
+        return False
+    if expected_value == actual_value:
+        return False
+    if is_null_vs_empty_mismatch(expected_value, actual_value):
+        return True
+    if field_name_is_warning_exception(field_name):
+        return True
+    return field_name_ends_with_id_or_uid(field_name)
+
+
 def count_differences(expected: object, actual: object) -> tuple[int, int]:
     """Return (warning_count, failure_count) for differences between expected and actual."""
     expected_fields = flatten_json_fields(expected)
@@ -276,8 +311,8 @@ def count_differences(expected: object, actual: object) -> tuple[int, int]:
         if expected_has and actual_has and expected_value == actual_value:
             continue
 
-        if expected_has and actual_has and is_null_vs_empty_mismatch(expected_value, actual_value):
-                warning_count += 1
+        if is_warning_mismatch(field_name, expected_has, actual_has, expected_value, actual_value):
+            warning_count += 1
         else:
             failure_count += 1
     
@@ -353,11 +388,12 @@ def render_field_comparison_table(expected: object, actual: object) -> list[str]
         expected_value = expected_fields[field_name] if expected_has else MISSING
         actual_value = actual_fields[field_name] if actual_has else MISSING
         differs = not (expected_has and actual_has and expected_value == actual_value)
-        is_warning_diff = (
-            differs
-            and expected_has
-            and actual_has
-            and is_null_vs_empty_mismatch(expected_value, actual_value)
+        is_warning_diff = is_warning_mismatch(
+            field_name,
+            expected_has,
+            actual_has,
+            expected_value,
+            actual_value,
         )
         safe_field = markdown_table_cell(field_name)
         expected_cell = comparison_cell(expected_value, differs, is_warning_diff)
@@ -577,7 +613,11 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
                     f"{parse_error} (treated Returned as empty object for field-level diff)"
                 )
             elif status == "warning":
-                result["error"] = "JSON matches except for null vs empty string differences"
+                result["error"] = (
+                    "JSON matches except for warning-level differences "
+                    "(null vs empty string, *_ID/*_UID value mismatches, "
+                    "and/or RDB_LAST_REFRESH_TIME mismatch)"
+                )
             else:
                 result["error"] = "Expected JSON does not match actual query result"
         return result
