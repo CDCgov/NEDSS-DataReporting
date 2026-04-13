@@ -259,7 +259,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_datamart_metadata' and xty
 
         /*CNDE-2506: Adding missing Syphilis, congenital code if Std_Hiv_Datamart has already been registered
           baseline STD condition is fulfilled.*/
-        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Std_Hiv_Datamart' and ndm.condition_cd = 10316)
+        IF NOT EXISTS (SELECT 1 FROM dbo.nrt_datamart_metadata ndm WHERE ndm.Datamart = 'Std_Hiv_Datamart' and ndm.condition_cd = '10316')
             BEGIN
                 INSERT INTO dbo.nrt_datamart_metadata (condition_cd, condition_desc_txt,Datamart,Stored_Procedure)
                 SELECT cc.condition_cd,

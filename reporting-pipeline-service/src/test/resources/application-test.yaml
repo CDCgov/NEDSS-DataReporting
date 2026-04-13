@@ -1,12 +1,12 @@
 spring:
   datasource:
     default:
-      username: reporting_pipeline_service_rdb
-      password: reporting_pipeline_service
+      username: rtr_service_user
+      password: rtr_service_user
       url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
     admin:
-      username: sa
-      password: PizzaIsGood33!
+      username: rtr_admin
+      password: rtr_admin
       url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: "true"
@@ -17,7 +17,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       key-serializer: org.springframework.kafka.support.serializer.StringOrBytesSerializer
     streams:
-      application-id: person-reporting-service
+      application-id: reporting-pipeline-service
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
     consumer:
       key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
