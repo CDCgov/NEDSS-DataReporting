@@ -14,7 +14,7 @@ to begin that step.
 ## Setup
 
 ```
-node install
+npm install
 ```
 
 ## test 01: Create Patient and Morbidity Report
