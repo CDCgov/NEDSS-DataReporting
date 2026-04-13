@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,7 +85,10 @@ class DataDrivenFunctionalTests extends FunctionalTest {
         "Executing DataDrivenFunctionalTest for directory: " + testDirectory.getFileName());
 
     // For each step in testDirectory
-    for (Path stepDirectory : Files.list(testDirectory).filter(Files::isDirectory).toList()) {
+    List<Path> stepList =
+        new ArrayList<Path>(Files.list(testDirectory).filter(Files::isDirectory).toList());
+    stepList.sort(Comparator.comparing(Path::getFileName));
+    for (Path stepDirectory : stepList) {
       System.out.println(
           "Executing DataDrivenFunctionalTest step: "
               + testDirectory.getFileName()
