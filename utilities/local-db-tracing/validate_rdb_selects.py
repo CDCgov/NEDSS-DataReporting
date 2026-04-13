@@ -19,6 +19,8 @@ USE_DATABASE_PATTERN = re.compile(r"^\s*USE\s+\[(?P<database>[^\]]+)\]\s*;\s*$",
 EXPECTED_MARKER = "-- EXPECTED_ROWS_JSON:"
 JSON_HEADER_PREFIX = "JSON_F52E2B61"
 
+MISSING = object()
+
 ANSI_RESET = "\x1b[0m"
 ANSI_RED = "\x1b[31m"
 ANSI_GREEN = "\x1b[32m"
@@ -219,6 +221,11 @@ def parse_actual_json(raw_output: str) -> object:
     cleaned = clean_sqlcmd_output(raw_output)
     if not cleaned:
         raise ValueError("SQL query returned empty output")
+
+    # sqlcmd can emit only this informational line when a SELECT returns no rows.
+    if re.fullmatch(r"Changed database context to '[^']+'\.", cleaned):
+        raise ValueError("0 rows returned from SELECT statement")
+
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError:
@@ -261,13 +268,18 @@ def count_differences(expected: object, actual: object) -> tuple[int, int]:
     failure_count = 0
     
     for field_name in field_names:
-        expected_value = expected_fields.get(field_name)
-        actual_value = actual_fields.get(field_name)
-        if expected_value != actual_value:
-            if is_null_vs_empty_mismatch(expected_value, actual_value):
+        expected_has = field_name in expected_fields
+        actual_has = field_name in actual_fields
+        expected_value = expected_fields[field_name] if expected_has else MISSING
+        actual_value = actual_fields[field_name] if actual_has else MISSING
+
+        if expected_has and actual_has and expected_value == actual_value:
+            continue
+
+        if expected_has and actual_has and is_null_vs_empty_mismatch(expected_value, actual_value):
                 warning_count += 1
-            else:
-                failure_count += 1
+        else:
+            failure_count += 1
     
     return warning_count, failure_count
 
@@ -316,8 +328,8 @@ def value_for_table(value: object) -> str:
     return json.dumps(value, sort_keys=True)
 
 
-def comparison_cell(value: object | None, differs: bool, is_warning: bool = False) -> str:
-    text = html.escape(value_for_table(value)) if value is not None else "<em>missing</em>"
+def comparison_cell(value: object, differs: bool, is_warning: bool = False) -> str:
+    text = "<em>missing</em>" if value is MISSING else html.escape(value_for_table(value))
     text = markdown_table_cell(text)
     if differs:
         css_class = "warning" if is_warning else "error"
@@ -336,10 +348,17 @@ def render_field_comparison_table(expected: object, actual: object) -> list[str]
     ]
 
     for field_name in field_names:
-        expected_value = expected_fields.get(field_name)
-        actual_value = actual_fields.get(field_name)
-        differs = expected_value != actual_value
-        is_warning_diff = differs and is_null_vs_empty_mismatch(expected_value, actual_value)
+        expected_has = field_name in expected_fields
+        actual_has = field_name in actual_fields
+        expected_value = expected_fields[field_name] if expected_has else MISSING
+        actual_value = actual_fields[field_name] if actual_has else MISSING
+        differs = not (expected_has and actual_has and expected_value == actual_value)
+        is_warning_diff = (
+            differs
+            and expected_has
+            and actual_has
+            and is_null_vs_empty_mismatch(expected_value, actual_value)
+        )
         safe_field = markdown_table_cell(field_name)
         expected_cell = comparison_cell(expected_value, differs, is_warning_diff)
         actual_cell = comparison_cell(actual_value, differs, is_warning_diff)
@@ -525,7 +544,15 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
 
     try:
         raw_output = client.query(sql_batch)
-        actual_json = parse_actual_json(raw_output)
+        parse_error: str | None = None
+        try:
+            actual_json = parse_actual_json(raw_output)
+        except ValueError as error:
+            # When sqlcmd emits non-JSON noise (for example only a database context message),
+            # compare against an empty object so expected fields are reported as missing.
+            actual_json = {}
+            parse_error = str(error)
+
         if actual_json == case.expected_json:
             status = "pass"
         else:
@@ -545,7 +572,11 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
             "actual": actual_json,
         }
         if status != "pass":
-            if status == "warning":
+            if parse_error:
+                result["error"] = (
+                    f"{parse_error} (treated Returned as empty object for field-level diff)"
+                )
+            elif status == "warning":
                 result["error"] = "JSON matches except for null vs empty string differences"
             else:
                 result["error"] = "Expected JSON does not match actual query result"
@@ -565,8 +596,9 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
             "label": case.label,
             "query_start_line": case.query_start_line,
             "status": "fail",
-            "error": str(error),
+            "error": f"{error} (treated Returned as empty object for field-level diff)",
             "expected": case.expected_json,
+            "actual": {},
         }
 
 
