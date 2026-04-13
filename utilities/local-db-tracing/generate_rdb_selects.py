@@ -512,6 +512,8 @@ def predicate_for_field(
     ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None = None,
 ) -> tuple[str, list[str]]:
     column_sql = f"[{column_name}]"
+    normalized_column_name = normalize_identifier(column_name)
+    is_local_id_column = normalized_column_name == "local_id" or normalized_column_name.endswith("_local_id")
 
     # Handle tuples as IN clauses
     if isinstance(value, tuple):
@@ -523,6 +525,12 @@ def predicate_for_field(
     if len(candidates) == 1:
         return f"{column_sql} = {candidates[0]}", []
     if len(candidates) > 1:
+        if is_local_id_column:
+            return (
+                f"{column_sql} IN ({', '.join(candidates)})",
+                [f"Ambiguous variable candidates for {column_name}: {', '.join(candidates)}; using IN clause."],
+            )
+
         selected_candidate = resolve_ambiguous_candidate(column_name, candidates, ambiguity_state)
         if selected_candidate is not None:
             return (
