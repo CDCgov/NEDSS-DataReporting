@@ -7,7 +7,7 @@
     "batch.size": "200",
     "connection.url": "${env:DB_URL}",
     "connection.user": "${env:DB_USERNAME}",
-    "connection.password": "${env:DB_USERNAME}",
+    "connection.password": "${env:DB_PASSWORD}",
     "connection.pool.min_size": "1",
     "connection.pool.max_size": "5",
     "connection.pool.acquire_increment": "1",
