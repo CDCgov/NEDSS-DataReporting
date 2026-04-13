@@ -9,13 +9,13 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_key' and xtyp
 		);
 
 		-- RESEED [dbo].nrt_lab_test_key table to align keys with LAB_TEST
+        -- when a table with no rows is reseeded, the third parameter will be the key value of the first added row, so
+        -- we must increment by 1 to prevent key collision with LAB_TEST
 		DECLARE @max BIGINT;
-		SELECT @max=max(LAB_TEST_KEY) from [dbo].LAB_TEST;
+		SELECT @max=max(LAB_TEST_KEY) + 1 from [dbo].LAB_TEST;
 		SELECT @max;
 		IF @max IS NULL
-			SET @max = 1; -- LAB_TEST is expected to have a default null row with LAB_TEST_KEY = 1
-		-- when a table with no rows is reseeded, the third parameter will be the key value of the first added row, so
-        -- we must increment by 1 to prevent key collision with LAB_TEST
-		DBCC CHECKIDENT ('[dbo].nrt_lab_test_key', RESEED, @max+1);
+			SET @max = 2; -- LAB_TEST is expected to have a default null row with LAB_TEST_KEY = 1
+		DBCC CHECKIDENT ('[dbo].nrt_lab_test_key', RESEED, @max);
 
 	END;

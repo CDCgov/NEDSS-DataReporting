@@ -8,7 +8,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_case_management_key' a
         select @max=max(D_CASE_MANAGEMENT_KEY)+1 from dbo.D_CASE_MANAGEMENT;
         select @max;
         if @max IS NULL   --check when max is returned as null
-            SET @max = 1;
+            SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_case_management_key', RESEED, @max);
 
     END;

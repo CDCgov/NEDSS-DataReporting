@@ -16,7 +16,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_organization_key' and xtyp
         select @max=max(organization_key)+1 from dbo.D_ORGANIZATION ;
         select @max;
         if @max IS NULL   --check when max is returned as null
-        SET @max = 1;
+        SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_organization_key', RESEED, @max);
     END
 
@@ -26,7 +26,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient_key' and xtype = '
         select @max=max(patient_key)+1 from dbo.d_patient;
         select @max;
         if @max IS NULL   --check when max is returned as null
-        SET @max = 1;
+        SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_patient_key', RESEED, @max);
     END
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_provider_key' and xtype = 'U')
@@ -35,7 +35,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_provider_key' and xtype = 
         select @max=max(provider_key)+1 from dbo.d_provider;
         select @max;
         if @max IS NULL   --check when max is returned as null
-        SET @max = 1;
+        SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_provider_key', RESEED, @max);
     END;
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_key' and xtype = 'U')
@@ -44,7 +44,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_investigation_key' and xty
         select @max=max(INVESTIGATION_KEY)+1 from dbo.INVESTIGATION;
         select @max;
         if @max IS NULL   --check when max is returned as null
-        SET @max = 1;
+        SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_investigation_key', RESEED, @max);
     END;
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_ldf_data_key' and xtype = 'U')
@@ -82,7 +82,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and xtyp
         select @max=max(notification_key)+1 from dbo.NOTIFICATION ;
         select @max;
         if @max IS NULL   --check when max is returned as null
-            SET @max = 1;
+            SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_notification_key', RESEED, @max);
     END
 IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_interview_key' and xtype = 'U')
@@ -129,7 +129,7 @@ IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_case_management_key' and x
         select @max=max(D_CASE_MANAGEMENT_KEY)+1 from dbo.D_CASE_MANAGEMENT;
         select @max;
         if @max IS NULL   --check when max is returned as null
-            SET @max = 1;
+            SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_case_management_key', RESEED, @max);
 
     END;
