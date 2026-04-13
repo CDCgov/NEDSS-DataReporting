@@ -18,13 +18,19 @@ python utilities/local-db-tracing/trace_db_dual_capture.py
 3. Perform the action in NBS that you want to turn into a test.
 4. Return to the script, press Enter when prompted, and provide a short action description.
 5. In the new paired output folder, run `cdc-NBS_ODSE/inserts.sql` against the source database to replay the captured writes.
-6. Validate expected target rows:
+6. (optional) narrow down local ID lookups from where in to = via
+
+```powershell
+python utilities/local-db-tracing/narrow_rdb_selects_where_in.py --input-file utilities/local-db-tracing/output/<paired-run>/rdb-selects.sql
+```
+
+7. Validate expected target rows:
 
 ```powershell
 python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/<paired-run>/rdb-selects.sql
 ```
 
-7. Review pass/fail details in `utilities/local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
+8. Review pass/fail details in `utilities/local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
 
 ## Overview
 
@@ -141,11 +147,19 @@ Or generate from a manifest directly:
 python utilities/local-db-tracing/generate_rdb_selects.py --combined-manifest utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
 ```
 
-Validate `rdb-selects.sql` against expected JSON row sets:
+Narrow ambiguous `WHERE ... IN (@var1, @var2, ...)` predicates before validation:
+
+```powershell
+python utilities/local-db-tracing/narrow_rdb_selects_where_in.py --input-file utilities/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
+```
+
+Then validate `rdb-selects.sql` against expected JSON row sets:
 
 ```powershell
 python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
 ```
+
+Or skip narrowing to validate directly with broad IN predicates.
 
 Compare logical changes between baseline and target runs:
 
