@@ -43,7 +43,8 @@ INSERT INTO [dbo].[person]
              [as_of_date_sex],
              [electronic_ind],
              [person_parent_uid],
-             [edx_ind])
+             [edx_ind],
+             [description])
 VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:21:26.800',
              @superuser_id,
@@ -70,7 +71,8 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T00:00:00',
              N'N',
              @dbo_Entity_entity_uid,
-             N'Y')
+             N'Y',
+             N'Added as a test')
 
 -- dbo.Person_name
 INSERT INTO [dbo].[person_name]

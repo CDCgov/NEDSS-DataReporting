@@ -29,7 +29,8 @@
       "PATIENT_STATE_CODE": "13",
       "PATIENT_STREET_ADDRESS_1": "1313 Pine Way",
       "PATIENT_UID": 20100000,
-      "PATIENT_ZIP": "30033"
+      "PATIENT_ZIP": "30033",
+      "PATIENT_GENERAL_COMMENTS": "Added as a test"
     }
   ],
   "1": [{ "patient_uid": 20100000 }]
