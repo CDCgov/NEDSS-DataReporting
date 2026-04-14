@@ -29,6 +29,9 @@ test {
 }
 
 tasks.register("test-functional", Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
     useJUnitPlatform {
         includeTags "Functional"
     }
@@ -36,6 +39,9 @@ tasks.register("test-functional", Test) {
 }
 
 tasks.register("test-unit", Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
     useJUnitPlatform {
         includeTags "Unit"
     }
