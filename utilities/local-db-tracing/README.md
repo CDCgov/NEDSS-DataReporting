@@ -91,7 +91,10 @@ During the run you will:
 2. press Enter in the tracer
 3. enter an action description
 
-By default, the tracer waits for post-processing idle before ending capture and generates `rdb-selects.sql` in the paired run folder.
+By default, the tracer uses a two-stage wait before ending capture and generating `rdb-selects.sql` in the paired run folder:
+
+1. wait for configured Kafka consumer-group lag to reach zero
+2. wait for post-processing idle, requiring the final idle event to occur after any datamart stored-proc events seen in the same log window
 
 ### CDC Capture Only
 
@@ -197,7 +200,7 @@ Commonly used options across tracers:
 - `--post-processing-container-prefix`: container name prefix to watch
 - `--post-processing-idle-message`: log message that indicates post-processing idle
 - `--post-processing-initial-wait`: delay log polling to avoid stale idle matches
-- `--post-processing-wait-timeout`: maximum seconds to wait for idle message
+- `--post-processing-wait-timeout`: maximum seconds to wait for each post-action phase (Kafka lag drain and post-processing idle)
 - `--known-associations-file`: override replay association mappings
 - `--replay-mode core|full`: `core` for functional test replay, `full` for all replayable side effects
 
@@ -267,7 +270,8 @@ If no replayable row operations are found, `summary.txt` is still written withou
 
 - Some tables may be skipped if SQL Server refuses CDC enablement.
 - CDC fetches are batched across capture instances (not one `sqlcmd` process per table).
-- By default, after you press Enter, capture end waits for a running container starting with `nedss-datareporting-reporting-pipeline-service-1` to log `No ids to process from the topics.`
+- By default, after you press Enter, capture end first waits for Kafka lag to drain (for `pipeline-consumer-app` and `connect-Kafka-Connect-SqlServer-Sink`) and then waits for a running container starting with `nedss-datareporting-reporting-pipeline-service-1` to log `No ids to process from the topics.`
+- Idle completion is datamart-aware: the final idle line must be newer than any `ProcessDatamartData` stored-proc log events in the same polling window.
 - The tooling is designed for both `NBS_ODSE` and `RDB_MODERN`, but replay quality depends on available schema metadata.
 
 ## To Do

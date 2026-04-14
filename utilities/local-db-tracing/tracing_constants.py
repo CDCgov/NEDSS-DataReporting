@@ -36,6 +36,11 @@ DEFAULT_POST_PROCESSING_CONTAINER_PREFIX = "nedss-datareporting-reporting-pipeli
 DEFAULT_POST_PROCESSING_IDLE_MESSAGE = "No ids to process from the topics."
 DEFAULT_POST_PROCESSING_WAIT_TIMEOUT_SECONDS = 180
 DEFAULT_POST_PROCESSING_INITIAL_WAIT_SECONDS = 5
+DEFAULT_KAFKA_CONTAINER_PREFIX = "nedss-datareporting-kafka-1"
+DEFAULT_KAFKA_CONSUMER_GROUPS = (
+    "pipeline-consumer-app",
+    "connect-Kafka-Connect-SqlServer-Sink",
+)
 LOG_EVENT_TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
 GENERIC_LOCAL_ID_PATTERN = re.compile(r"^(?P<prefix>[^0-9]+)(?P<number>\d+)(?P<suffix>.*)$")
 REPLAY_DATETIME_LITERAL_PATTERN = re.compile(
