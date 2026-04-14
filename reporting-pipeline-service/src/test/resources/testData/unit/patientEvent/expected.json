@@ -1,8 +1,8 @@
 {
   "0": [
     {
-      "person_uid": -1003,
-      "person_parent_uid": -1003,
+      "person_uid": 20000000,
+      "person_parent_uid": 20000000,
       "description": null,
       "add_time": "2026-04-07 20:16:41",
       "age_reported": null,
@@ -63,12 +63,12 @@
       "add_user_name": "Kent, Ariella",
       "last_chg_user_id": 10009282,
       "last_chg_user_name": "Kent, Ariella",
-      "patient_name": "[{\"pn_person_uid\":-1003,\"lastNm\":\"John\",\"lastNmSndx\":\"J500\",\"middleNm\":\"B\",\"firstNm\":\"Doe\",\"firstNmSndx\":\"D000\",\"nm_use_cd\":\"L\",\"status_name_cd\":\"A\",\"nmSuffix\":\"JR\",\"name_suffix\":\"Jr.\",\"nmDegree\":\"PHD\",\"pn_person_name_seq\":1,\"pn_last_chg_time\":\"2026-04-07T20:16:41.707\"}]",
-      "patient_address": "[{\"addr_elp_cd\":\"F\",\"addr_elp_use_cd\":\"BIR\",\"addr_pl_uid\":-1006,\"street_addr1\":null,\"street_addr2\":null,\"city\":\"Atlanta\",\"zip\":null,\"cntyCd\":\"13067\",\"state\":\"13\",\"cntryCd\":\"840\",\"state_desc\":\"Georgia\",\"county\":\"Cobb County\",\"census_tract\":null,\"within_city_limits_ind\":null,\"home_country\":null,\"birth_country\":\"UNITED STATES\"},{\"addr_elp_cd\":\"H\",\"addr_elp_use_cd\":\"H\",\"addr_pl_uid\":-1004,\"street_addr1\":\"123 Main Street\",\"street_addr2\":null,\"city\":\"Atlant\",\"zip\":\"30033\",\"cntyCd\":\"13121\",\"state\":\"13\",\"cntryCd\":\"840\",\"state_desc\":\"Georgia\",\"county\":\"Fulton County\",\"census_tract\":\"1234\",\"within_city_limits_ind\":null,\"home_country\":\"United States\",\"birth_country\":null}]",
-      "patient_telephone": "[{\"ph_tl_uid\":-1005,\"ph_elp_cd\":\"PH\",\"ph_elp_use_cd\":\"H\",\"telephoneNbr\":\"234-555-1212\",\"extensionTxt\":null}]",
+      "patient_name": "[{\"pn_person_uid\":20000000,\"lastNm\":\"John\",\"lastNmSndx\":\"J500\",\"middleNm\":\"B\",\"firstNm\":\"Doe\",\"firstNmSndx\":\"D000\",\"nm_use_cd\":\"L\",\"status_name_cd\":\"A\",\"nmSuffix\":\"JR\",\"name_suffix\":\"Jr.\",\"nmDegree\":\"PHD\",\"pn_person_name_seq\":1,\"pn_last_chg_time\":\"2026-04-07T20:16:41.707\"}]",
+      "patient_address": "[{\"addr_elp_cd\":\"H\",\"addr_elp_use_cd\":\"H\",\"addr_pl_uid\":20000001,\"street_addr1\":\"123 Main Street\",\"street_addr2\":null,\"city\":\"Atlant\",\"zip\":\"30033\",\"cntyCd\":\"13121\",\"state\":\"13\",\"cntryCd\":\"840\",\"state_desc\":\"Georgia\",\"county\":\"Fulton County\",\"census_tract\":\"1234\",\"within_city_limits_ind\":null,\"home_country\":\"United States\",\"birth_country\":null},{\"addr_elp_cd\":\"F\",\"addr_elp_use_cd\":\"BIR\",\"addr_pl_uid\":20000003,\"street_addr1\":null,\"street_addr2\":null,\"city\":\"Atlanta\",\"zip\":null,\"cntyCd\":\"13067\",\"state\":\"13\",\"cntryCd\":\"840\",\"state_desc\":\"Georgia\",\"county\":\"Cobb County\",\"census_tract\":null,\"within_city_limits_ind\":null,\"home_country\":null,\"birth_country\":\"UNITED STATES\"}]",
+      "patient_telephone": "[{\"ph_tl_uid\":20000002,\"ph_elp_cd\":\"PH\",\"ph_elp_use_cd\":\"H\",\"telephoneNbr\":\"234-555-1212\",\"extensionTxt\":null}]",
       "patient_email": null,
-      "patient_race": "[{\"pr_person_uid\":-1003,\"raceCd\":\"2106-3\",\"raceDescTxt\":\"White\",\"raceCategoryCd\":\"2106-3\",\"srte_code_desc_txt\":\"White\",\"srte_parent_is_cd\":\"ROOT\",\"race_calculated\":\"White\",\"race_calc_details\":\"White\",\"race_amer_ind_1\":null,\"race_amer_ind_2\":null,\"race_amer_ind_3\":null,\"race_amer_ind_gt3_ind\":null,\"race_amer_ind_all\":null,\"race_asian_1\":null,\"race_asian_2\":null,\"race_asian_3\":null,\"race_asian_gt3_ind\":null,\"race_asian_all\":null,\"race_black_1\":null,\"race_black_2\":null,\"race_black_3\":null,\"race_black_gt3_ind\":null,\"race_black_all\":null,\"race_nat_hi_1\":null,\"race_nat_hi_2\":null,\"race_nat_hi_3\":null,\"race_nat_hi_gt3_ind\":null,\"race_nat_hi_all\":null,\"race_white_1\":null,\"race_white_2\":null,\"race_white_3\":null,\"race_white_gt3_ind\":null,\"race_white_all\":null,\"race_all\":\"White\"}]",
-      "patient_entity": "[{\"entity_uid\":-1003,\"typeCd\":\"DL\",\"recordStatusCd\":\"ACTIVE\",\"rootExtensionTxt\":\"1234567890\",\"entity_id_seq\":1,\"assigning_authority_cd\":\"GA\"}]"
+      "patient_race": "[{\"pr_person_uid\":20000000,\"raceCd\":\"2106-3\",\"raceDescTxt\":\"White\",\"raceCategoryCd\":\"2106-3\",\"srte_code_desc_txt\":\"White\",\"srte_parent_is_cd\":\"ROOT\",\"race_calculated\":\"White\",\"race_calc_details\":\"White\",\"race_amer_ind_1\":null,\"race_amer_ind_2\":null,\"race_amer_ind_3\":null,\"race_amer_ind_gt3_ind\":null,\"race_amer_ind_all\":null,\"race_asian_1\":null,\"race_asian_2\":null,\"race_asian_3\":null,\"race_asian_gt3_ind\":null,\"race_asian_all\":null,\"race_black_1\":null,\"race_black_2\":null,\"race_black_3\":null,\"race_black_gt3_ind\":null,\"race_black_all\":null,\"race_nat_hi_1\":null,\"race_nat_hi_2\":null,\"race_nat_hi_3\":null,\"race_nat_hi_gt3_ind\":null,\"race_nat_hi_all\":null,\"race_white_1\":null,\"race_white_2\":null,\"race_white_3\":null,\"race_white_gt3_ind\":null,\"race_white_all\":null,\"race_all\":\"White\"}]",
+      "patient_entity": "[{\"entity_uid\":20000000,\"typeCd\":\"DL\",\"recordStatusCd\":\"ACTIVE\",\"rootExtensionTxt\":\"1234567890\",\"entity_id_seq\":1,\"assigning_authority_cd\":\"GA\"}]"
     }
   ]
 }

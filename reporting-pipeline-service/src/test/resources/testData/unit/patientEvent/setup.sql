@@ -1,9 +1,16 @@
--- Uses IDs -1003, -1004, -1005, -1006
+USE [NBS_ODSE]
+
+DECLARE @superuser_id bigint = 10009282
+DECLARE @dbo_Entity_entity_uid bigint = 20000000
+DECLARE @dbo_Postal_locator_uid bigint = 20000001
+DECLARE @dbo_Tele_locator_uid bigint = 20000002
+DECLARE @dbo_Birth_locator_uid bigint = 20000003
+
 -- Entity
 INSERT INTO [dbo].[entity]
             ([entity_uid],
              [class_cd])
-VALUES      ('-1003',
+VALUES      (@dbo_Entity_entity_uid,
              N'PSN');
 
 --- Person
@@ -114,7 +121,7 @@ INSERT INTO [dbo].[person]
              [ehars_id],
              [ethnic_unk_reason_cd],
              [sex_unk_reason_cd])
-VALUES      ('-1003',
+VALUES      (@dbo_Entity_entity_uid,
              NULL,
              '2026-04-07 20:16:41.807',
              '10009282',
@@ -210,7 +217,7 @@ VALUES      ('-1003',
              '2026-04-07 00:00:00.000',
              '2026-04-07 00:00:00.000',
              N'N',
-             '-1003',
+             @dbo_Entity_entity_uid,
              NULL,
              NULL,
              NULL,
@@ -254,7 +261,7 @@ INSERT INTO [dbo].[person_name]
              [to_time],
              [user_affiliation_txt],
              [as_of_date])
-VALUES      ('-1003',
+VALUES      (@dbo_Entity_entity_uid,
              '1',
              N'Add',
              '2026-04-07 20:16:41.707',
@@ -313,8 +320,8 @@ INSERT INTO [dbo].[entity_locator_participation]
              [valid_time_txt],
              [version_ctrl_nbr],
              [as_of_date])
-VALUES      ('-1003',
-             '-1006',
+VALUES      (@dbo_Entity_entity_uid,
+             @dbo_Birth_locator_uid,
              NULL,
              NULL,
              NULL,
@@ -338,8 +345,8 @@ VALUES      ('-1003',
              NULL,
              '1',
              '2026-04-07 00:00:00.000'),
-            ('-1003',
-             '-1005',
+            (@dbo_Entity_entity_uid,
+             @dbo_Tele_locator_uid,
              NULL,
              NULL,
              NULL,
@@ -363,8 +370,8 @@ VALUES      ('-1003',
              NULL,
              '1',
              '2026-04-07 00:00:00.000'),
-            ('-1003',
-             '-1004',
+            (@dbo_Entity_entity_uid,
+             @dbo_Postal_locator_uid,
              NULL,
              NULL,
              NULL,
@@ -406,7 +413,7 @@ INSERT INTO [dbo].[tele_locator]
              [record_status_time],
              [url_address],
              [user_affiliation_txt])
-VALUES      ('-1005',
+VALUES      (@dbo_Tele_locator_uid,
              NULL,
              '2026-04-07 20:16:41.737',
              '10009282',
@@ -452,7 +459,7 @@ INSERT INTO [dbo].[postal_locator]
              [geocode_match_ind],
              [within_city_limits_ind],
              [census_tract])
-VALUES      ('-1006',
+VALUES      (@dbo_Birth_locator_uid,
              NULL,
              NULL,
              NULL,
@@ -480,7 +487,7 @@ VALUES      ('-1006',
              NULL,
              NULL,
              NULL),
-            ('-1004',
+            (@dbo_Postal_locator_uid,
              NULL,
              '2026-04-07 20:16:41.737',
              '10009282',
@@ -537,7 +544,7 @@ INSERT INTO [dbo].[entity_id]
              [valid_to_time],
              [as_of_date],
              [assigning_authority_id_type])
-VALUES      ('-1003',
+VALUES      (@dbo_Entity_entity_uid,
              '1',
              NULL,
              '2026-04-07 20:16:41.707',
@@ -580,7 +587,7 @@ INSERT INTO [dbo].[person_race]
              [record_status_time],
              [user_affiliation_txt],
              [as_of_date])
-VALUES      ('-1003',
+VALUES      (@dbo_Entity_entity_uid,
              N'2106-3',
              NULL,
              '2026-04-07 20:16:41.737',

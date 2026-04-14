@@ -1,10 +1,16 @@
--- Uses IDs -1000, -1001, -1002
+USE [NBS_ODSE]
+
+DECLARE @superuser_id bigint = 10009282
+DECLARE @dbo_Entity_entity_uid bigint = 20001000
+DECLARE @dbo_Tele_locator_uid bigint = 20001001
+DECLARE @dbo_Postal_locator_uid bigint = 20001002
+
 -- Entity
 INSERT INTO [dbo].[entity]
   ([entity_uid],
   [class_cd])
 VALUES
-  (-1000,
+  (@dbo_Entity_entity_uid,
     N'ORG');
 
 --- Organization
@@ -46,7 +52,7 @@ INSERT INTO [dbo].[organization]
   [electronic_ind],
   [edx_ind])
 VALUES
-  (-1000,
+  (@dbo_Entity_entity_uid,
     NULL,
     '2026-04-03 14:43:38.510',
     '9999',
@@ -59,7 +65,7 @@ VALUES
     NULL,
     '2026-04-03 14:43:38.510',
     '9999',
-    'ORG-1000GA01',
+    'ORG20001000GA01',
     N'ACTIVE',
     '2026-04-03 14:43:38.510',
     N'62',
@@ -112,7 +118,7 @@ INSERT INTO [dbo].[entity_id]
   [as_of_date],
   [assigning_authority_id_type])
 VALUES
-  (-1000,
+  (@dbo_Entity_entity_uid,
     '2',
     NULL,
     '2026-04-03 14:43:38.407',
@@ -138,7 +144,7 @@ VALUES
     NULL,
     NULL,
     NULL),
-  (-1000,
+  (@dbo_Entity_entity_uid,
     '1',
     NULL,
     '2026-04-03 14:43:38.407',
@@ -193,8 +199,8 @@ INSERT INTO [dbo].[entity_locator_participation]
   [version_ctrl_nbr],
   [as_of_date])
 VALUES
-  (-1000,
-    -1001,
+  (@dbo_Entity_entity_uid,
+    @dbo_Tele_locator_uid,
     NULL,
     NULL,
     NULL,
@@ -218,8 +224,8 @@ VALUES
     NULL,
     '1',
     NULL),
-  (-1000,
-    -1002,
+  (@dbo_Entity_entity_uid,
+    @dbo_Postal_locator_uid,
     NULL,
     NULL,
     NULL,
@@ -275,7 +281,7 @@ INSERT INTO [dbo].[postal_locator]
   [within_city_limits_ind],
   [census_tract])
 VALUES
-  (-1002,
+  (@dbo_Postal_locator_uid,
     NULL,
     NULL,
     NULL,
@@ -322,7 +328,7 @@ INSERT INTO [dbo].[tele_locator]
   [url_address],
   [user_affiliation_txt])
 VALUES
-  (-1001,
+  (@dbo_Tele_locator_uid,
     NULL,
     NULL,
     NULL,
@@ -347,7 +353,7 @@ INSERT INTO [dbo].[organization_name]
   [record_status_cd],
   [default_nm_ind])
 VALUES
-  (-1000,
+  (@dbo_Entity_entity_uid,
     '0',
     N'Wellstar Cobb Medical Center',
     N'L',
@@ -381,7 +387,7 @@ INSERT INTO [dbo].[role]
   [subject_class_cd],
   [user_affiliation_txt])
 VALUES
-  (-1000,
+  (@dbo_Entity_entity_uid,
     N'LAB',
     '2',
     NULL,
@@ -405,7 +411,7 @@ VALUES
     '2026-04-03 14:43:38.510',
     N'ORG',
     NULL),
-  (-1000,
+  (@dbo_Entity_entity_uid,
     N'HOSP',
     '1',
     NULL,
