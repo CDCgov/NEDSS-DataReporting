@@ -51,13 +51,11 @@ class DataDrivenFunctionalTests extends FunctionalTest {
 
   /**
    * Loops through each step in the provided testDirectory. For each step, the
-   * <strong>setup.sql</strong> is executed followed by the <strong>query.sql</strong>. The returned
-   * value from the query is then asserted to be equal to the data in the
-   * <strong>expected.json</strong> file.
+   * <strong>setup.sql</strong> is executed. Then each query in the <strong>query.sql</strong> is
+   * executed and asserted to match the data in the <strong>expected.json</strong> file.
    *
-   * <p>The <strong>query.sql</strong> is polled until data is returned using the {@link
-   * Await#waitFor} function so queries should be scoped to only return data once a comparison is
-   * ready to be made.
+   * <p>The queries in the <strong>query.sql</strong> are polled until data is returned and matches
+   * the expecectation using the {@link Await#waitForMatch} function.
    *
    * <p>Required folder structure
    *

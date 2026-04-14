@@ -56,6 +56,16 @@ public class Await {
     return result;
   }
 
+  /**
+   * Calls the provided function until it returns a non-empty Optional that matches the expected
+   * value or the retry limit is reached. Compares results to the expected by using {@link
+   * JSONCompare#compareJSON} with compare mode set to LENIENT
+   *
+   * @param <O> Generic Output
+   * @param function Supplier that returns an Optional{@literal <O>}s
+   * @param expected The expected data that the query will return
+   * @return
+   */
   public static <O> Optional<O> waitForMatch(Supplier<Optional<O>> function, String expected)
       throws JsonProcessingException, JSONException {
     return waitForMatch(function, expected, DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY);

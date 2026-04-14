@@ -20,7 +20,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
-class DataDriveUnitTests extends UnitTest {
+class DataDrivenUnitTests extends UnitTest {
 
   private final JdbcClient client;
   private final ObjectMapper mapper =
@@ -29,7 +29,7 @@ class DataDriveUnitTests extends UnitTest {
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-  DataDriveUnitTests(@Qualifier("adminClient") JdbcClient client) {
+  DataDrivenUnitTests(@Qualifier("adminClient") JdbcClient client) {
     this.client = client;
   }
 
