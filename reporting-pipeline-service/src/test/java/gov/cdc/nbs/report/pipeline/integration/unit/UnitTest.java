@@ -27,7 +27,10 @@ public abstract class UnitTest {
       new ComposeContainer(
               DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
           .withServices("nbs-mssql", "liquibase")
-          .waitingFor("liquibase", Wait.forLogMessage("Migrations complete.*", 1))
+          .waitingFor(
+              "liquibase",
+              Wait.forLogMessage("Migrations complete.*", 1)
+                  .withStartupTimeout(Duration.ofMinutes(5)))
           // Set the maximum startup timeout all the waits set are bounded to
           .withStartupTimeout(Duration.ofMinutes(5));
 
