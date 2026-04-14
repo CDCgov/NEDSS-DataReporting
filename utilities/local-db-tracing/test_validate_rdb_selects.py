@@ -201,6 +201,40 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         self.assertEqual(result["status"], "fail")
         self.assertIn("does not match", str(result.get("error")))
 
+    def test_key_field_mismatch_is_warning(self) -> None:
+        case = validate_rdb_selects.SelectCase(
+            case_index=1,
+            label="key-warning-case",
+            query_sql="SELECT [id], [OBSERVATION_KEY] FROM [dbo].[T] FOR JSON PATH;",
+            query_start_line=5,
+            expected_json=[{"id": 1, "OBSERVATION_KEY": 123}],
+        )
+        client = FakeSqlClient([
+            'JSON_F52E2B61-18A1-11d1-B105-00805F49916B\n[{"id":1,"OBSERVATION_KEY":999}]\n',
+        ])
+
+        result = validate_rdb_selects.compare_case(client, "USE [RDB_MODERN];", case)
+
+        self.assertEqual(result["status"], "warning")
+        self.assertIn("*_ID/*_UID/*_KEY", str(result.get("error")))
+
+    def test_key_field_warning_plus_real_mismatch_is_fail(self) -> None:
+        case = validate_rdb_selects.SelectCase(
+            case_index=1,
+            label="key-and-real-fail-case",
+            query_sql="SELECT [id], [OBSERVATION_KEY], [name] FROM [dbo].[T] FOR JSON PATH;",
+            query_start_line=5,
+            expected_json=[{"id": 1, "OBSERVATION_KEY": 123, "name": "Alice"}],
+        )
+        client = FakeSqlClient([
+            'JSON_F52E2B61-18A1-11d1-B105-00805F49916B\n[{"id":1,"OBSERVATION_KEY":999,"name":"Bob"}]\n',
+        ])
+
+        result = validate_rdb_selects.compare_case(client, "USE [RDB_MODERN];", case)
+
+        self.assertEqual(result["status"], "fail")
+        self.assertIn("does not match", str(result.get("error")))
+
     def test_markdown_report_details_includes_warnings_and_failures(self) -> None:
         summary = {
             "case_count": 3,

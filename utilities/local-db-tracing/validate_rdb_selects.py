@@ -258,9 +258,9 @@ def is_null_vs_empty_mismatch(expected: object, actual: object) -> bool:
     return False
 
 
-def field_name_ends_with_id_or_uid(field_name: str) -> bool:
+def field_name_ends_with_id_uid_or_key(field_name: str) -> bool:
     upper_name = field_name.upper()
-    return upper_name.endswith("_ID") or upper_name.endswith("_UID")
+    return upper_name.endswith("_ID") or upper_name.endswith("_UID") or upper_name.endswith("_KEY")
 
 
 def field_leaf_name(field_name: str) -> str:
@@ -290,7 +290,7 @@ def is_warning_mismatch(
         return True
     if field_name_is_warning_exception(field_name):
         return True
-    return field_name_ends_with_id_or_uid(field_name)
+    return field_name_ends_with_id_uid_or_key(field_name)
 
 
 def count_differences(expected: object, actual: object) -> tuple[int, int]:
@@ -615,7 +615,7 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
             elif status == "warning":
                 result["error"] = (
                     "JSON matches except for warning-level differences "
-                    "(null vs empty string, *_ID/*_UID value mismatches, "
+                    "(null vs empty string, *_ID/*_UID/*_KEY value mismatches, "
                     "and/or RDB_LAST_REFRESH_TIME mismatch)"
                 )
             else:
