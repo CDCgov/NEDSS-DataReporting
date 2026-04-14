@@ -154,6 +154,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         self.assertIn("<style>", report)
         self.assertIn('.error {', report)
         self.assertIn('.warning {', report)
+        self.assertIn('| <span class="ok">Passes</span> | 1 |', report)
         self.assertIn('| <span class="error">Fails</span> | 1 |', report)
         self.assertIn('<span class="error">FAIL</span>', report)
         self.assertIn('| Case | Status | Label |', report)

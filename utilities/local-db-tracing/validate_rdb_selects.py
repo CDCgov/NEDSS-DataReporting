@@ -433,7 +433,7 @@ def render_markdown_report(
         "| Metric | Value |",
         "| --- | --- |",
         f"| Cases | {summary['case_count']} |",
-        f"| Passes | {summary['pass_count']} |",
+        f"| <span class=\"ok\">Passes</span> | {summary['pass_count']} |",
         f"| <span class=\"warning\">Warnings</span> | {summary['warning_count']} |",
         f"| <span class=\"error\">Fails</span> | {summary['fail_count']} |",
         "",
