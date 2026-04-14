@@ -10,7 +10,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_test_result_group_
 
 		--RESEED [dbo].nrt_lab_test_result_group_key table 
 		DECLARE @max BIGINT;
-		SELECT @max=max(TEST_RESULT_GRP_KEY) from [dbo].TEST_RESULT_GROUPING;
+		SELECT @max=max(TEST_RESULT_GRP_KEY) + 1 from [dbo].TEST_RESULT_GROUPING;
 		SELECT @max;
 		IF @max IS NULL   --check when max is returned as null
 			SET @max = 2; -- default to 2, default record with key = 1 is already created
