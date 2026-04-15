@@ -9,6 +9,7 @@ on:
       - "settings.gradle"
       - "gradle/**"
       - "docker-compose.yaml"
+      - ".github/workflows/**"
 
 jobs:
   pipeline:
