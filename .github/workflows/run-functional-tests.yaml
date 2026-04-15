@@ -12,7 +12,7 @@ on:
 
 jobs:
   pipeline:
-    name: Run reporting-pipeline-service functional tests
+    name: Run functional tests
     runs-on: ubuntu-latest
 
     permissions:
@@ -46,4 +46,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: testing
-          path: reporting-pipeline-service/build
+          path: reporting-pipeline-service/build/reports
