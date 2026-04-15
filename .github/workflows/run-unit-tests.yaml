@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - "reporting-pipeline-service/**"
+      - "liquibase-service/**"
+      - "common-util/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
@@ -10,7 +12,7 @@ on:
 
 jobs:
   pipeline:
-    name: Run stored procedure unit tests
+    name: Run reporting-pipeline-service stored procedure unit tests
     runs-on: ubuntu-latest
 
     permissions:
@@ -44,4 +46,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: testing
-          path: ./**/build/reports
+          path: reporting-pipeline-service/build
