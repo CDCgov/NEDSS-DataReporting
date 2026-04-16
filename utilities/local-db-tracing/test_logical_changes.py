@@ -42,6 +42,7 @@ class LogicalChangesTest(unittest.TestCase):
                 "table_name": "D_PATIENT",
                 "operation": "insert",
                 "operation_code": 2,
+                "_step": 1,
                 "start_lsn": "0x01",
                 "seqval": "0x01",
                 "tran_begin_time": "2026-04-07T12:00:00+00:00",
@@ -58,6 +59,7 @@ class LogicalChangesTest(unittest.TestCase):
                 "table_name": "D_PATIENT",
                 "operation": "update_before",
                 "operation_code": 3,
+                "_step": 2,
                 "start_lsn": "0x02",
                 "seqval": "0x02",
                 "tran_begin_time": "2026-04-07T12:01:00+00:00",
@@ -74,6 +76,7 @@ class LogicalChangesTest(unittest.TestCase):
                 "table_name": "D_PATIENT",
                 "operation": "update_after",
                 "operation_code": 4,
+                "_step": 2,
                 "start_lsn": "0x02",
                 "seqval": "0x02",
                 "tran_begin_time": "2026-04-07T12:01:00+00:00",
@@ -105,6 +108,7 @@ class LogicalChangesTest(unittest.TestCase):
         self.assertEqual(insert_change["operation"], "insert")
         self.assertEqual(insert_change["stable_identity"]["fields"], {"PATIENT_LOCAL_ID": "PAT10001"})
         self.assertEqual(insert_change["after"]["PATIENT_LAST_NAME"], "Tester")
+        self.assertEqual(insert_change["metadata"]["step"], 1)
 
         self.assertEqual(update_change["operation"], "update")
         self.assertEqual(
@@ -112,6 +116,7 @@ class LogicalChangesTest(unittest.TestCase):
             {"PATIENT_LAST_NAME": {"from": "Tester", "to": "Tester-Smith"}},
         )
         self.assertEqual(update_change["after"]["PATIENT_LAST_NAME"], "Tester-Smith")
+        self.assertEqual(update_change["metadata"]["step"], 2)
 
 
 if __name__ == "__main__":

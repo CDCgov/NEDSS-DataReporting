@@ -168,16 +168,20 @@ def resolve_starting_uid(cli_starting_uid: int | None) -> int:
 
 
 
-def prompt_nbs_actions() -> list[str]:
-    """Collect a short description of the UI actions performed by the user.
+def prompt_another_step() -> bool:
+    """Ask the user whether they want to record another step.
 
     Returns:
-        list[str]: A single-item list containing the entered action summary,
-        or an empty list when the user leaves the prompt blank.
+        bool: True when the user confirms another step, False when done.
     """
 
-    action = input("Describe the actions you took in NBS: ").strip()
-    return [action] if action else []
+    while True:
+        response = input("Record another step? [y/n]: ").strip().lower()
+        if response in {"y", "yes"}:
+            return True
+        if response in {"n", "no"}:
+            return False
+        print("Please answer y or n.")
 
 
 
@@ -307,27 +311,7 @@ def main() -> int:
                 skipped_tables.append(entry)
                 print(f"Skipped CDC: {table.schema_name}.{table.table_name} | {detail}")
 
-        start_lsn = fetch_max_lsn(client)
         start_time_utc = utc_now()
-        print()
-        print(f"Start time (UTC): {start_time_utc}")
-        print(f"Start LSN:        {start_lsn}")
-        post_processing_wait_since_utc = utc_now()
-        input("Perform the UI action now, then press Enter to capture changes... ")
-        if not args.skip_post_processing_wait:
-            wait_for_post_processing_idle(
-                args.post_processing_container_prefix,
-                args.post_processing_idle_message,
-                post_processing_wait_since_utc,
-                args.post_processing_wait_timeout,
-                args.post_processing_initial_wait,
-            )
-
-        end_lsn = fetch_max_lsn(client)
-        end_time_utc = utc_now()
-        print(f"End time (UTC):   {end_time_utc}")
-        print(f"End LSN:          {end_lsn}")
-        nbs_actions = prompt_nbs_actions()
 
         log_progress("Collecting CDC capture instances")
         captures = [
@@ -337,12 +321,59 @@ def main() -> int:
         ]
         log_progress(f"Loaded {len(captures)} CDC capture instances")
 
-        log_progress("Fetching CDC rows within the recorded LSN window")
-        changes = fetch_changes_for_captures(client, captures, start_lsn, end_lsn)
+        nbs_steps: list[dict[str, object]] = []
+        all_changes: list[dict[str, object]] = []
+        step_num = 0
+        while True:
+            step_num += 1
+            step_start_lsn = fetch_max_lsn(client)
+            step_start_time = utc_now()
+            print()
+            print(f"Step {step_num} — Start time (UTC): {step_start_time}")
+            print(f"Step {step_num} — Start LSN:        {step_start_lsn}")
+            post_processing_wait_since_utc = utc_now()
+            input(f"Perform the UI action for step {step_num}, then press Enter to capture changes... ")
+            if not args.skip_post_processing_wait:
+                wait_for_post_processing_idle(
+                    args.post_processing_container_prefix,
+                    args.post_processing_idle_message,
+                    post_processing_wait_since_utc,
+                    args.post_processing_wait_timeout,
+                    args.post_processing_initial_wait,
+                )
+            step_end_lsn = fetch_max_lsn(client)
+            step_end_time = utc_now()
+            print(f"Step {step_num} — End time (UTC):   {step_end_time}")
+            print(f"Step {step_num} — End LSN:          {step_end_lsn}")
+
+            step_description = input(f"Describe what you did in step {step_num}: ").strip()
+
+            log_progress(f"Fetching CDC rows for step {step_num}")
+            step_changes = fetch_changes_for_captures(client, captures, step_start_lsn, step_end_lsn)
+            for change in step_changes:
+                change["_step"] = step_num
+            all_changes.extend(step_changes)
+            log_progress(f"Fetched {len(step_changes)} CDC rows for step {step_num}")
+
+            nbs_steps.append({
+                "step": step_num,
+                "description": step_description,
+                "start_lsn": step_start_lsn,
+                "end_lsn": step_end_lsn,
+                "start_time_utc": step_start_time,
+                "end_time_utc": step_end_time,
+            })
+
+            if not prompt_another_step():
+                break
+
+        start_lsn = str(nbs_steps[0]["start_lsn"])
+        end_lsn = str(nbs_steps[-1]["end_lsn"])
+        end_time_utc = str(nbs_steps[-1]["end_time_utc"])
 
         log_progress("Sorting captured CDC rows")
-        changes.sort(key=change_sort_key)
-        log_progress(f"Sorted {len(changes)} CDC rows")
+        all_changes.sort(key=change_sort_key)
+        log_progress(f"Sorted {len(all_changes)} CDC rows")
 
         log_progress("Creating output directory")
         output_root = Path(args.output_dir)
@@ -363,6 +394,7 @@ def main() -> int:
             "end_time_utc": end_time_utc,
             "start_lsn": start_lsn,
             "end_lsn": end_lsn,
+            "steps": nbs_steps,
             "initially_tracked_table_count": initially_tracked_count,
             "enabled_tables": enabled_tables,
             "skipped_tables": skipped_tables,
@@ -374,13 +406,13 @@ def main() -> int:
         log_progress("Writing manifest.json")
         write_manifest(run_dir / "manifest.json", manifest)
         log_progress("Writing changes.jsonl")
-        write_jsonl(run_dir / "changes.jsonl", changes)
+        write_jsonl(run_dir / "changes.jsonl", all_changes)
         log_progress("Writing summary.txt")
         write_summary(
             run_dir / "summary.txt",
-            nbs_actions,
+            [],
             manifest,
-            changes,
+            all_changes,
             primary_keys_by_table,
             identity_columns_by_table,
             foreign_keys_by_source,
@@ -392,11 +424,12 @@ def main() -> int:
             args.replay_mode,
             superuser_id,
             starting_uid,
+            nbs_steps=nbs_steps,
         )
         log_progress("Finished writing output artifacts")
 
         print()
-        print(f"Captured {len(changes)} CDC rows")
+        print(f"Captured {len(all_changes)} CDC rows across {len(nbs_steps)} step(s)")
         print(f"Output written to: {run_dir}")
     finally:
         managed_tables_after_run = normalize_table_entries(

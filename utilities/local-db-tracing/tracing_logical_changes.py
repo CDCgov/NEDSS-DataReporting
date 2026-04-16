@@ -135,6 +135,15 @@ def build_record_metadata(
     record: dict[str, object],
     run_metadata: dict[str, object],
 ) -> dict[str, object]:
+    step_value = record.get("_step")
+    if step_value is None:
+        normalized_step: int | None = None
+    else:
+        try:
+            normalized_step = int(step_value)
+        except (TypeError, ValueError):
+            normalized_step = None
+
     metadata = {
         "start_lsn": record.get("start_lsn"),
         "seqval": record.get("seqval"),
@@ -142,6 +151,7 @@ def build_record_metadata(
         "operation_code": record.get("operation_code"),
         "tran_begin_time": record.get("tran_begin_time"),
         "tran_end_time": record.get("tran_end_time"),
+        "step": normalized_step,
         "capture_window": {
             "start_time_utc": run_metadata["start_time_utc"],
             "end_time_utc": run_metadata["end_time_utc"],

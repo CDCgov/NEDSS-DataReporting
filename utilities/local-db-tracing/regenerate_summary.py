@@ -163,6 +163,7 @@ def main() -> int:
 
     manifest["database"] = database
     log_progress("Writing regenerated summary.txt")
+    nbs_steps = manifest.get("steps") or None
     write_summary(
         output_path,
         args.action,
@@ -179,6 +180,7 @@ def main() -> int:
         args.replay_mode,
         superuser_id,
         starting_uid,
+        nbs_steps=nbs_steps,
     )
     print(output_path)
     return 0
