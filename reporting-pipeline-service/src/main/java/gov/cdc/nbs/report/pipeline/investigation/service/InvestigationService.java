@@ -78,8 +78,8 @@ public class InvestigationService {
   @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopicReporting;
 
-  @Value("${featureFlag.phc-datamart-disable}")
-  private boolean phcDatamartDisable;
+  @Value("${featureFlag.phc-datamart-enable}")
+  private boolean phcDatamartEnable;
 
   @Value("${featureFlag.thread-pool-size:1}")
   private int threadPoolSize;
@@ -193,7 +193,7 @@ public class InvestigationService {
           try {
             final String phcUid = publicHealthCaseUid = extractUid(value, "public_health_case_uid");
 
-            if (!phcDatamartDisable) {
+            if (phcDatamartEnable) {
               CompletableFuture.runAsync(
                   () -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
             }
