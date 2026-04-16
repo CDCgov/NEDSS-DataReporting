@@ -276,8 +276,8 @@ public class PostProcessingService {
 
     ppMsgProcessed.increment();
     if (!serviceEnable) {
-      return;
-    } // skip processing when not enabled
+      return; // skip processing when not enabled
+    }
     extractIdFromMessage(topic, key, payload);
   }
 
