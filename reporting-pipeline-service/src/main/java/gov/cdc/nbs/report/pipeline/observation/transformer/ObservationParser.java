@@ -411,6 +411,7 @@ public class ObservationParser {
       JsonNode observationEdxJsonArray = parseJsonArray(observationEdx);
       for (JsonNode jsonNode : observationEdxJsonArray) {
         ObservationEdx edx = objectMapper.treeToValue(jsonNode, ObservationEdx.class);
+        edx.setBatchId(parsedObservation.transformed().getBatchId());
 
         parsedObservation.edxEntries().add(edx);
       }

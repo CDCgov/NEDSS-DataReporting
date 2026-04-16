@@ -1,6 +1,10 @@
 package gov.cdc.nbs.report.pipeline.observation.service.observation;
 
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationCoded;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationDate;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationEdx;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationMaterial;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationNumeric;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ParsedObservation;
 import java.util.List;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -30,6 +34,12 @@ public class NrtObservationWriter {
 
   public void persist(ParsedObservation parsedObservation) {
     persistMaterials(parsedObservation.materialEntries());
+    persistCoded(parsedObservation.codedEntries());
+    persistDate(parsedObservation.dateEntries());
+    persistEdx(parsedObservation.edxEntries());
+    persistNumeric(parsedObservation.numericEntries());
+    // TODO ObservationReason
+    // TODO ObservationTxt
   }
 
   private static final String UPSERT_MATERIAL =
@@ -37,43 +47,38 @@ public class NrtObservationWriter {
       MERGE INTO nrt_observation_material
       USING (
         SELECT
-          act_uid,
-          type_cd,
-          material_id,
-          subject_class_cd,
-          record_status,
-          type_desc_txt,
-          last_chg_time,
-          material_cd,
-          material_nm,
-          material_details,
-          material_collection_vol,
-          material_collection_vol_unit,
-          material_desc,
-          risk_cd,
-          risk_desc_txt
-        FROM
-          nrt_observation_material
-        WHERE
-          act_uid = :act_uid
-          AND material_id = :material_id
+          :act_uid AS act_uid,
+          :material_id AS material_id,
+          :type_cd AS type_cd,
+          :subject_class_cd AS subject_class_cd,
+          :record_status AS record_status,
+          :type_desc_txt AS type_desc_txt,
+          :last_chg_time AS last_chg_time,
+          :material_cd AS material_cd,
+          :material_nm AS material_nm,
+          :material_details AS material_details,
+          :material_collection_vol AS material_collection_vol,
+          :material_collection_vol_unit AS material_collection_vol_unit,
+          :material_desc AS material_desc,
+          :risk_cd AS risk_cd,
+          :risk_desc_txt AS risk_desc_txt
       ) AS source
        ON nrt_observation_material.act_uid = source.act_uid AND nrt_observation_material.material_id = source.material_id
       WHEN MATCHED THEN
         UPDATE SET
-          type_cd = :type_cd,
-          subject_class_cd = :subject_class_cd,
-          record_status = :record_status,
-          type_desc_txt = :type_desc_txt,
-          last_chg_time = :last_chg_time,
-          material_cd = :material_cd,
-          material_nm = :material_nm,
-          material_details = :material_details,
-          material_collection_vol = :material_collection_vol,
-          material_collection_vol_unit = :material_collection_vol_unit,
-          material_desc = :material_desc,
-          risk_cd = :risk_cd,
-          risk_desc_txt = :risk_desc_txt
+          type_cd = source.type_cd,
+          subject_class_cd = source.subject_class_cd,
+          record_status = source.record_status,
+          type_desc_txt = source.type_desc_txt,
+          last_chg_time = source.last_chg_time,
+          material_cd = source.material_cd,
+          material_nm = source.material_nm,
+          material_details = source.material_details,
+          material_collection_vol = source.material_collection_vol,
+          material_collection_vol_unit = source.material_collection_vol_unit,
+          material_desc = source.material_desc,
+          risk_cd = source.risk_cd,
+          risk_desc_txt = source.risk_desc_txt
         WHEN NOT MATCHED THEN
         INSERT(
           act_uid,
@@ -91,49 +96,280 @@ public class NrtObservationWriter {
           material_desc,
           risk_cd,
           risk_desc_txt
-        ) values (
-          :act_uid,
-          :type_cd,
-          :material_id,
-          :subject_class_cd,
-          :record_status,
-          :type_desc_txt,
-          :last_chg_time,
-          :material_cd,
-          :material_nm,
-          :material_details,
-          :material_collection_vol,
-          :material_collection_vol_unit,
-          :material_desc,
-          :risk_cd,
-          :risk_desc_txt
-        )
+        ) VALUES (
+          source.act_uid,
+          source.type_cd,
+          source.material_id,
+          source.subject_class_cd,
+          source.record_status,
+          source.type_desc_txt,
+          source.last_chg_time,
+          source.material_cd,
+          source.material_nm,
+          source.material_details,
+          source.material_collection_vol,
+          source.material_collection_vol_unit,
+          source.material_desc,
+          source.risk_cd,
+          source.risk_desc_txt
+        );
       """;
 
   private void persistMaterials(List<ObservationMaterial> materials) {
     materials.forEach(
-        m -> {
-          client
-              .sql(UPSERT_MATERIAL)
-              .param("act_uid", m.getActUid())
-              .param("material_id", m.getMaterialId())
-              .param("type_cd", m.getTypeCd())
-              .param("subject_class_cd", m.getSubjectClassCd())
-              .param("record_status", m.getRecordStatus())
-              .param("type_desc_txt", m.getTypeDescTxt())
-              .param("last_chg_time", m.getLastChgTime())
-              .param("material_cd", m.getMaterialCd())
-              .param("material_nm", m.getMaterialNm())
-              .param("material_details", m.getMaterialDetails())
-              .param("material_collection_vol", m.getMaterialCollectionVol())
-              .param("material_collection_vol_unit", m.getMaterialCollectionVolUnit())
-              .param("material_desc", m.getMaterialDesc())
-              .param("risk_cd", m.getRiskCd())
-              .param("risk_desc_txt", m.getRiskDescTxt())
-              // Are these columns ever set?
-              // :refresh_datetime
-              // :max_datetime
-              .update();
-        });
+        m ->
+            client
+                .sql(UPSERT_MATERIAL)
+                .param("act_uid", m.getActUid())
+                .param("material_id", m.getMaterialId())
+                .param("type_cd", m.getTypeCd())
+                .param("subject_class_cd", m.getSubjectClassCd())
+                .param("record_status", m.getRecordStatus())
+                .param("type_desc_txt", m.getTypeDescTxt())
+                .param("last_chg_time", m.getLastChgTime())
+                .param("material_cd", m.getMaterialCd())
+                .param("material_nm", m.getMaterialNm())
+                .param("material_details", m.getMaterialDetails())
+                .param("material_collection_vol", m.getMaterialCollectionVol())
+                .param("material_collection_vol_unit", m.getMaterialCollectionVolUnit())
+                .param("material_desc", m.getMaterialDesc())
+                .param("risk_cd", m.getRiskCd())
+                .param("risk_desc_txt", m.getRiskDescTxt())
+                .update());
+  }
+
+  private static final String UPSERT_CODED =
+      """
+      MERGE INTO nrt_observation_coded
+      USING (
+        SELECT
+          :observation_uid AS observation_uid,
+          :ovc_code AS ovc_code,
+          :ovc_code_system_cd AS ovc_code_system_cd,
+          :ovc_code_system_desc_txt AS ovc_code_system_desc_txt,
+          :ovc_display_name AS ovc_display_name,
+          :ovc_alt_cd AS ovc_alt_cd,
+          :ovc_alt_cd_desc_txt AS ovc_alt_cd_desc_txt,
+          :ovc_alt_cd_system_cd AS ovc_alt_cd_system_cd,
+          :ovc_alt_cd_system_desc_txt AS ovc_alt_cd_system_desc_txt,
+          :batch_id AS batch_id
+      ) AS source
+       ON nrt_observation_coded.observation_uid = source.observation_uid AND nrt_observation_coded.ovc_code = source.ovc_code
+      WHEN MATCHED THEN
+        UPDATE SET
+          observation_uid = source.observation_uid
+          ovc_code = source.ovc_code
+          ovc_code_system_cd = source.ovc_code_system_cd
+          ovc_code_system_desc_txt = source.ovc_code_system_desc_txt
+          ovc_display_name = source.ovc_display_name
+          ovc_alt_cd = source.ovc_alt_cd
+          ovc_alt_cd_desc_txt = source.ovc_alt_cd_desc_txt
+          ovc_alt_cd_system_cd = source.ovc_alt_cd_system_cd
+          ovc_alt_cd_system_desc_txt = source.ovc_alt_cd_system_desc_txt
+          batch_id = source.batch_id
+      WHEN NOT MATCHED THEN
+      INSERT (
+        observation_uid,
+        ovc_code,
+        ovc_code_system_cd,
+        ovc_code_system_desc_txt,
+        ovc_display_name,
+        ovc_alt_cd,
+        ovc_alt_cd_desc_txt,
+        ovc_alt_cd_system_cd,
+        ovc_alt_cd_system_desc_txt,
+        batch_id
+      ) VALUES (
+        source.observation_uid
+        source.ovc_code
+        source.ovc_code_system_cd
+        source.ovc_code_system_desc_txt
+        source.ovc_display_name
+        source.ovc_alt_cd
+        source.ovc_alt_cd_desc_txt
+        source.ovc_alt_cd_system_cd
+        source.ovc_alt_cd_system_desc_txt
+        source.batch_id
+      );
+      """;
+
+  private void persistCoded(List<ObservationCoded> codedEntries) {
+    codedEntries.forEach(
+        c ->
+            client
+                .sql(UPSERT_CODED)
+                .param("observation_uid", c.getObservationUid())
+                .param("ovc_code", c.getOvcCode())
+                .param("ovc_code_system_cd", c.getOvcCodeSystemCd())
+                .param("ovc_code_system_desc_txt", c.getOvcCodeSystemDescTxt())
+                .param("ovc_display_name", c.getOvcDisplayName())
+                .param("ovc_alt_cd", c.getOvcAltCd())
+                .param("ovc_alt_cd_desc_txt", c.getOvcAltCdDescTxt())
+                .param("ovc_alt_cd_system_cd", c.getOvcAltCdSystemCd())
+                .param("ovc_alt_cd_system_desc_txt", c.getOvcAltCdSystemDescTxt())
+                .param("batch_id", c.getBatchId())
+                .update());
+  }
+
+  private static final String UPSERT_DATE =
+      """
+      MERGE INTO nrt_observation_date
+      USING (
+        SELECT
+          :observation_uid AS observation_uid
+          :ovd_from_date AS ovd_from_date
+          :ovd_to_date AS ovd_to_date
+          :ovd_seq AS ovd_seq
+          :batch_id AS batch_id
+      ) AS source
+       ON nrt_observation_date.observation_uid = source.observation_uid
+      WHEN MATCHED THEN
+        UPDATE SET
+          observation_uid = source.observation_uid
+          ovd_from_date = source.ovd_from_date
+          ovd_to_date = source.ovd_to_date
+          ovd_seq = source.ovd_seq
+          batch_id = source.batch_id
+      WHEN NOT MATCHED THEN
+      INSERT (
+        observation_uid,
+        ovd_from_date,
+        ovd_to_date,
+        ovd_seq,
+        batch_id
+      ) VALUES (
+        source.observation_uid
+        source.ovd_from_date
+        source.ovd_to_date
+        source.ovd_seq
+        source.batch_id
+      );
+      """;
+
+  private void persistDate(List<ObservationDate> dateEntries) {
+    dateEntries.forEach(
+        d ->
+            client
+                .sql(UPSERT_DATE)
+                .param("observation_uid", d.getObservationUid())
+                .param("ovd_from_date", d.getOvdFromDate())
+                .param("ovd_to_date", d.getOvdToDate())
+                .param("ovd_seq", d.getOvdSeq())
+                .param("batch_id", d.getBatchId())
+                .update());
+  }
+
+  private static final String UPSERT_EDX =
+      """
+      MERGE INTO nrt_observation_edx
+      USING (
+        SELECT
+        :edx_document_uid AS edx_document_uid
+        :edx_act_uid AS edx_act_uid
+        :edx_add_time AS edx_add_time
+      ) AS source
+       ON nrt_observation_edx.edx_document_uid = source.edx_document_uid AND nrt_observation_edx.edx_act_uid = source.edx_act_uid
+      WHEN MATCHED THEN
+        UPDATE SET
+          edx_document_uid = source.edx_document_uid
+          edx_act_uid = source.edx_act_uid
+          edx_add_time = source.edx_add_time
+      WHEN NOT MATCHED THEN
+      INSERT (
+        edx_document_uid,
+        edx_act_uid,
+        edx_add_time,
+        batch_id
+      ) VALUES (
+        source.edx_document_uid
+        source.edx_act_uid
+        source.edx_add_time
+        source.batch_id
+      );
+      """;
+
+  private void persistEdx(List<ObservationEdx> edxEntries) {
+    edxEntries.forEach(
+        e ->
+            client
+                .sql(UPSERT_EDX)
+                .param("edx_document_uid", e.getEdxDocumentUid())
+                .param("edx_act_uid", e.getEdxActUid())
+                .param("edx_add_time", e.getEdxAddTime())
+                .param("batch_id", e.getBatchId())
+                .update());
+  }
+
+  private static final String UPSERT_NUMERIC =
+      """
+       MERGE INTO nrt_observation_edx
+      USING (
+        SELECT
+          :observation_uid AS observation_uid
+          :ovn_high_range AS ovn_high_range
+          :ovn_low_range AS ovn_low_range
+          :ovn_comparator_cd_1 AS ovn_comparator_cd_1
+          :ovn_numeric_value_1 AS ovn_numeric_value_1
+          :ovn_numeric_value_2 AS ovn_numeric_value_2
+          :ovn_numeric_unit_cd AS ovn_numeric_unit_cd
+          :ovn_separator_cd AS ovn_separator_cd
+          :ovn_seq AS ovn_seq
+          :batch_id AS batch_id
+      ) AS source
+       ON nrt_observation_edx.observation_uid = source.observation_uid AND nrt_observation_edx.ovn_seq = source.ovn_seq
+      WHEN MATCHED THEN
+        UPDATE SET
+          observation_uid = source.observation_uid
+          ovn_high_range = source.ovn_high_range
+          ovn_low_range = source.ovn_low_range
+          ovn_comparator_cd_1 = source.ovn_comparator_cd_1
+          ovn_numeric_value_1 = source.ovn_numeric_value_1
+          ovn_numeric_value_2 = source.ovn_numeric_value_2
+          ovn_numeric_unit_cd = source.ovn_numeric_unit_cd
+          ovn_separator_cd = source.ovn_separator_cd
+          ovn_seq = source.ovn_seq
+          batch_id = source.batch_id
+      WHEN NOT MATCHED THEN
+      INSERT (
+        observation_uid,
+        ovn_high_range,
+        ovn_low_range,
+        ovn_comparator_cd_1,
+        ovn_numeric_value_1,
+        ovn_numeric_value_2,
+        ovn_numeric_unit_cd,
+        ovn_separator_cd,
+        ovn_seq,
+        batch_id
+      ) VALUES (
+        source.observation_uid,
+        source.ovn_high_range,
+        source.ovn_low_range,
+        source.ovn_comparator_cd_1,
+        source.ovn_numeric_value_1,
+        source.ovn_numeric_value_2,
+        source.ovn_numeric_unit_cd,
+        source.ovn_separator_cd,
+        source.ovn_seq,
+        source.batch_id
+      );
+      """;
+
+  private void persistNumeric(List<ObservationNumeric> numericEntries) {
+    numericEntries.forEach(
+        n ->
+            client
+                .sql(UPSERT_NUMERIC)
+                .param("observation_uid", n.getObservationUid())
+                .param("ovn_seq", n.getOvnSeq())
+                .param("ovn_high_range", n.getOvnHighRange())
+                .param("ovn_low_range", n.getOvnLowRange())
+                .param("ovn_comparator_cd_1", n.getOvnComparatorCd1())
+                .param("ovn_numeric_value_1", n.getOvnNumericValue1())
+                .param("ovn_numeric_value_2", n.getOvnNumericValue2())
+                .param("ovn_numeric_unit_cd", n.getOvnNumericUnitCd())
+                .param("ovn_separator_cd", n.getOvnSeparatorCd())
+                .param("batch_id", n.getBatchId())
+                .update());
   }
 }
