@@ -97,7 +97,7 @@ class PostProcessingServiceEntityTest {
     String topic = "dummy_patient";
     String key = "{\"payload\":{\"patient_uid\":123}}";
 
-    postProcessingServiceMock.setServiceDisabled(true);
+    postProcessingServiceMock.setServiceEnable(false);
     postProcessingServiceMock.processNrtMessage(topic, key, key);
 
     assertTrue(postProcessingServiceMock.idCache.isEmpty());

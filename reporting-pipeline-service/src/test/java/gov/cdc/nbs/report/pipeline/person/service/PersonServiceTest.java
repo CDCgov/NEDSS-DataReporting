@@ -219,7 +219,7 @@ class PersonServiceTest {
   void testProcessPatientDataPhcFactDisabled() {
     String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
 
-    personService.setPhcDatamartDisable(true);
+    personService.setPhcDatamartEnable(false);
     personService.processMessage(patientData, inputTopicPerson);
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
@@ -228,7 +228,7 @@ class PersonServiceTest {
   void testProcessProviderDataPhcFactDisabled() {
     String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
 
-    personService.setPhcDatamartDisable(true);
+    personService.setPhcDatamartEnable(false);
     personService.processMessage(providerData, inputTopicPerson);
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }

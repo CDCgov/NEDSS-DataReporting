@@ -164,7 +164,7 @@ class InvestigationServiceTest {
     when(kafkaTemplate.send(anyString(), anyString(), notNull()))
         .thenReturn(CompletableFuture.completedFuture(null));
 
-    investigationService.setPhcDatamartDisable(true);
+    investigationService.setPhcDatamartEnable(false);
     ConsumerRecord<String, String> rec = getRecord(investigationTopic, payload);
     investigationService.processMessage(rec);
     Awaitility.await()
@@ -232,7 +232,7 @@ class InvestigationServiceTest {
     final NotificationUpdate notification = constructNotificationUpdate(notificationUid);
     when(notificationRepository.computeNotifications(String.valueOf(notificationUid)))
         .thenReturn(Optional.of(notification));
-    investigationService.setPhcDatamartDisable(true);
+    investigationService.setPhcDatamartEnable(false);
 
     investigationService.processMessage(getRecord(notificationTopic, payload));
     when(kafkaTemplate.send(anyString(), anyString(), isNull()))
