@@ -66,9 +66,7 @@ services:
 
     healthcheck:
       test: kafka-topics --bootstrap-server kafka:29092 --list
-      interval: 15s
-      timeout: 10s
-      retries: 5
+      start_period: 10s
 
   kafka-connect:
     build:
@@ -104,9 +102,7 @@ services:
       DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      start_period: 10s
 
   debezium:
     image: debezium/connect:2.4
@@ -146,9 +142,7 @@ services:
       KAFKA_SERVER: "kafka:29092"
     healthcheck:
       test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      start_period: 10s
 
   reporting-pipeline-service:
     build:
