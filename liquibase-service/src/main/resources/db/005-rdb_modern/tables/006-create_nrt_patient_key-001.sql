@@ -8,7 +8,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_patient_key' and xtype
         select @max=max(patient_key)+1 from dbo.d_patient;
         select @max;
         if @max IS NULL   --check when max is returned as null
-        SET @max = 1;
+        SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_patient_key', RESEED, @max);
     END;
 

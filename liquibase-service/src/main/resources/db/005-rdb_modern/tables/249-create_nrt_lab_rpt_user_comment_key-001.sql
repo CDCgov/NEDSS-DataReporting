@@ -15,7 +15,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_lab_rpt_user_comment_k
 
 		--RESEED [dbo].nrt_lab_rpt_user_comment_key table 
 		DECLARE @max BIGINT;
-		SELECT @max=max(USER_COMMENT_KEY) from [dbo].Lab_Rpt_User_Comment;
+		SELECT @max=max(USER_COMMENT_KEY) + 1 from [dbo].Lab_Rpt_User_Comment;
 		SELECT @max;
 		IF @max IS NULL   --check when max is returned as null
 			SET @max = 2; -- default to 2, default record with key = 1 is already created

@@ -63,3 +63,5 @@ examples/
 
 # node libs
 node_modules/
+.local/
+output/

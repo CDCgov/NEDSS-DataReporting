@@ -9,7 +9,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_notification_key' and 
         select @max=max(notification_key)+1 from dbo.NOTIFICATION ;
         select @max;
         if @max IS NULL   --check when max is returned as null
-            SET @max = 1;
+            SET @max = 2;
         DBCC CHECKIDENT ('dbo.nrt_notification_key', RESEED, @max);
 
     END
