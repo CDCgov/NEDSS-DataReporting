@@ -270,7 +270,7 @@ If no replayable row operations are found, `summary.txt` is still written withou
 
 - Some tables may be skipped if SQL Server refuses CDC enablement.
 - CDC fetches are batched across capture instances (not one `sqlcmd` process per table).
-- By default, after you press Enter, capture end first waits for Kafka lag to drain (for `pipeline-consumer-app` and `connect-Kafka-Connect-SqlServer-Sink`) and then waits for a running container starting with `nedss-datareporting-reporting-pipeline-service-1` to log `No ids to process from the topics.`
+- By default, after you press Enter, capture end first waits for Kafka lag to drain (for `pipeline-consumer-app` and `connect-Kafka-Connect-SqlServer-Sink`) and then waits for a running container starting with `nedss-datareporting-reporting-pipeline-service-1` to log `No ids to process from the topics.` three times in a row.
 - Idle completion is datamart-aware: the final idle line must be newer than any `ProcessDatamartData` stored-proc log events in the same polling window.
 - The tooling is designed for both `NBS_ODSE` and `RDB_MODERN`, but replay quality depends on available schema metadata.
 

@@ -211,10 +211,13 @@ def extract_meaningful_log_events(output: str) -> list[str]:
 
 
 
-def has_post_processing_idle_tail(events: list[str], idle_message: str) -> bool:
-    """Proceed when latest event is idle and no pending datamart event appears after the idle boundary."""
+def has_post_processing_idle_tail(events: list[str], idle_message: str, required_consecutive: int = 3) -> bool:
+    """Proceed when required trailing idle events are present after the latest datamart activity."""
 
-    if len(events) < 2:
+    if required_consecutive <= 0:
+        return False
+
+    if len(events) < required_consecutive:
         return False
 
     def is_datamart_event(event: str) -> bool:
@@ -226,12 +229,20 @@ def has_post_processing_idle_tail(events: list[str], idle_message: str) -> bool:
         if is_datamart_event(event):
             last_datamart_index = index
 
-    last_event = events[-1].rstrip()
-    if not last_event.endswith(idle_message):
+    consecutive_idle_count = 0
+    first_idle_index = len(events)
+    for index in range(len(events) - 1, -1, -1):
+        if events[index].rstrip().endswith(idle_message):
+            consecutive_idle_count += 1
+            first_idle_index = index
+            continue
+        break
+
+    if consecutive_idle_count < required_consecutive:
         return False
 
-    # The final idle line is only meaningful if it is newer than any datamart stored-proc activity.
-    return len(events) - 1 > last_datamart_index
+    # The idle streak is only meaningful if it starts after any datamart stored-proc activity.
+    return first_idle_index > last_datamart_index
 
 
 
@@ -266,7 +277,9 @@ def wait_for_post_processing_idle(
     if detail:
         print(detail)
 
-    log_progress(f"Waiting up to {timeout_seconds}s for {container_name} to log: {idle_message}")
+    log_progress(
+        f"Waiting up to {timeout_seconds}s for {container_name} to log three consecutive idle events: {idle_message}"
+    )
     if initial_wait_seconds > 0:
         log_progress(f"Sleeping {initial_wait_seconds}s before polling logs")
         sleep(initial_wait_seconds)
@@ -282,7 +295,7 @@ def wait_for_post_processing_idle(
         events = extract_meaningful_log_events(output)
         if has_post_processing_idle_tail(events, idle_message):
             print()
-            log_progress(f"Observed idle message in {container_name}")
+            log_progress(f"Observed three consecutive idle messages in {container_name}")
             return
         print(".", end="", flush=True)
         sleep(2)

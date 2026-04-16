@@ -60,14 +60,40 @@ pipeline-consumer-app nrt_topic 0 - 12 - - - -
             post_processing.has_post_processing_idle_tail(events, "No ids to process from the topics.")
         )
 
-    def test_idle_boundary_allows_idle_after_datamart_event(self) -> None:
+    def test_idle_boundary_requires_three_consecutive_idle_events(self) -> None:
         events = [
+            "2026-04-14T13:49:31.248Z ... Stored proc execution completed: sp_event_metric_datamart_postprocessing",
             "2026-04-14T13:49:51.247Z ... No ids to process from the topics.",
-            "2026-04-14T13:50:04.865Z ... g.c.n.r.p.p.service.ProcessDatamartData  : Executing stored proc: sp_morbidity_report_datamart_postprocessing",
             "2026-04-14T13:50:11.246Z ... No ids to process from the topics.",
         ]
 
+        self.assertFalse(
+            post_processing.has_post_processing_idle_tail(events, "No ids to process from the topics.")
+        )
+
+    def test_idle_boundary_allows_three_idle_after_datamart_event(self) -> None:
+        events = [
+            "2026-04-14T13:50:04.865Z ... g.c.n.r.p.p.service.ProcessDatamartData  : Executing stored proc: sp_morbidity_report_datamart_postprocessing",
+            "2026-04-14T13:50:11.246Z ... No ids to process from the topics.",
+            "2026-04-14T13:50:21.246Z ... No ids to process from the topics.",
+            "2026-04-14T13:50:31.246Z ... No ids to process from the topics.",
+        ]
+
         self.assertTrue(
+            post_processing.has_post_processing_idle_tail(events, "No ids to process from the topics.")
+        )
+
+    def test_idle_boundary_rejects_idle_streak_if_new_datamart_event_arrives(self) -> None:
+        events = [
+            "2026-04-14T13:50:11.246Z ... No ids to process from the topics.",
+            "2026-04-14T13:50:21.246Z ... No ids to process from the topics.",
+            "2026-04-14T13:50:31.246Z ... No ids to process from the topics.",
+            "2026-04-14T13:50:34.111Z ... g.c.n.r.p.p.service.ProcessDatamartData  : Executing stored proc: sp_morbidity_report_datamart_postprocessing",
+            "2026-04-14T13:50:41.246Z ... No ids to process from the topics.",
+            "2026-04-14T13:50:51.246Z ... No ids to process from the topics.",
+        ]
+
+        self.assertFalse(
             post_processing.has_post_processing_idle_tail(events, "No ids to process from the topics.")
         )
 
