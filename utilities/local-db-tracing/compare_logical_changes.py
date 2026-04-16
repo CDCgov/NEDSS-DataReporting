@@ -27,10 +27,31 @@ def default_output_path(baseline_file: Path, target_file: Path) -> Path:
     return baseline_file.resolve().parent / f"compare-results-{baseline_label}-vs-{target_label}.json"
 
 
+def confirm_expected_filename(file_path: Path) -> bool:
+    expected_name = "logical-changes.json"
+    if file_path.name == expected_name:
+        return True
+
+    prompt = f"expecting {expected_name}, you gave {file_path.name} - are you sure? [y/n] "
+    while True:
+        response = input(prompt).strip().lower()
+        if response == "y":
+            return True
+        if response == "n":
+            return False
+        print("Please answer y or n.")
+
+
 def main() -> int:
     args = parse_args()
     baseline_file = Path(args.baseline_file)
     target_file = Path(args.target_file)
+
+    if not confirm_expected_filename(baseline_file):
+        return 1
+    if not confirm_expected_filename(target_file):
+        return 1
+
     output_file = Path(args.output_file) if args.output_file else default_output_path(baseline_file, target_file)
 
     baseline_changes = load_logical_changes(baseline_file)
