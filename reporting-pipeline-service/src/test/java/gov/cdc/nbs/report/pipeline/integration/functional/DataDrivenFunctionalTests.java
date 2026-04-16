@@ -22,6 +22,7 @@ import org.json.JSONException;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompare;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -75,10 +76,11 @@ class DataDrivenFunctionalTests extends FunctionalTest {
    * @param testDirectory
    * @throws IOException If step folder is missing a file, an exception will be thrown.
    * @throws JSONException
+   * @throws InterruptedException
    */
   @ParameterizedTest
   @MethodSource("functionalTestDirectoryProvider")
-  void testRunner(Path testDirectory) throws IOException, JSONException {
+  void testRunner(Path testDirectory) throws IOException, JSONException, InterruptedException {
     System.out.println(
         "Executing DataDrivenFunctionalTest for directory: " + testDirectory.getFileName());
 
@@ -114,6 +116,10 @@ class DataDrivenFunctionalTests extends FunctionalTest {
 
         assertThat(results).isPresent();
         String actual = mapper.writeValueAsString(results.get());
+        // TEMP!!
+        if (JSONCompare.compareJSON(expectedResult, actual, JSONCompareMode.LENIENT).failed()) {
+          System.out.println("THINGS FAILED! EXAMINE!!!");
+        }
         JSONAssert.assertEquals(expectedResult, actual, JSONCompareMode.LENIENT);
       }
     }

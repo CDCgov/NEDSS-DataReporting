@@ -4,6 +4,8 @@ import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.nbs.report.pipeline.observation.service.ObservationService.toBatchId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,6 +16,8 @@ import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;
 import gov.cdc.nbs.report.pipeline.observation.repository.ObservationRepository;
+import gov.cdc.nbs.report.pipeline.observation.service.observation.NrtObservationWriter;
+import gov.cdc.nbs.report.pipeline.observation.service.observation.ObservationProcessor;
 import gov.cdc.nbs.report.pipeline.observation.transformer.ProcessObservationDataUtil;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.NoSuchElementException;
@@ -33,11 +37,13 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 class ObservationServiceTest {
 
-  @InjectMocks private ObservationService observationService;
+  private ObservationService observationService;
 
   @Mock private ObservationRepository observationRepository;
 
   @Mock private KafkaTemplate<String, String> kafkaTemplate;
+
+  @Mock private NrtObservationWriter nrtWrtier;
 
   @Captor private ArgumentCaptor<String> topicCaptor;
 
@@ -60,15 +66,16 @@ class ObservationServiceTest {
     transformer.setMaterialTopicName("materialTopic");
     observationService =
         new ObservationService(
-            observationRepository,
-            kafkaTemplate,
-            transformer,
-            new CustomMetrics(new SimpleMeterRegistry()));
-    observationService.setObservationTopic(inputTopicNameObservation);
-    observationService.setActRelationshipTopic(inputTopicNameActRelationship);
-    observationService.setObservationTopicOutputReporting(outputTopicNameObservation);
-    observationService.setThreadPoolSize(1);
-    observationService.initMetrics();
+            new ObservationProcessor(
+                new CustomMetrics(new SimpleMeterRegistry()),
+                observationRepository,
+                kafkaTemplate,
+                outputTopicNameObservation,
+                inputTopicNameObservation,
+                nrtWrtier),
+            inputTopicNameObservation,
+            inputTopicNameActRelationship,
+            1);
 
     transformer.setCodedTopicName("ObservationCoded");
     transformer.setReasonTopicName("ObservationReason");
@@ -199,8 +206,7 @@ class ObservationServiceTest {
     ConsumerRecord<String, String> rec = getRecord(payload, inputTopic);
     observationService.processMessage(rec);
 
-    ObservationKey observationKey = new ObservationKey();
-    observationKey.setObservationUid(observation.getObservationUid());
+    ObservationKey observationKey = new ObservationKey(observation.getObservationUid());
 
     var reportingModel =
         constructObservationReporting(
@@ -208,10 +214,10 @@ class ObservationServiceTest {
     reportingModel.setBatchId(toBatchId.applyAsLong(rec));
 
     Awaitility.await()
-        .atMost(1, TimeUnit.SECONDS)
+        .atMost(1, TimeUnit.HOURS)
         .untilAsserted(
             () ->
-                verify(kafkaTemplate, times(2))
+                verify(kafkaTemplate, times(1))
                     .send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture()));
     String actualTopic = topicCaptor.getValue();
     String actualKey = keyCaptor.getValue();

@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.*;
-import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
-import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationTransformed;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,8 +54,6 @@ public class ProcessObservationDataUtil {
   @Value("${spring.kafka.topics.nrt.observation-txt}")
   public String txtTopicName;
 
-  ObservationKey observationKey = new ObservationKey();
-
   private static final String SUBJECT_CLASS_CD = "subject_class_cd";
   public static final String TYPE_CD = "type_cd";
   public static final String ENTITY_ID = "entity_id";
@@ -67,12 +63,13 @@ public class ProcessObservationDataUtil {
   public static final String ROOT_EXTENSION_TXT = "root_extension_txt";
 
   public ObservationTransformed transformObservationData(Observation observation, long batchId) {
+    // Convert to new object
     ObservationTransformed observationTransformed = new ObservationTransformed();
     observationTransformed.setObservationUid(observation.getObservationUid());
     observationTransformed.setReportObservationUid(observation.getObservationUid());
     observationTransformed.setBatchId(batchId);
 
-    observationKey.setObservationUid(observation.getObservationUid());
+    ObservationKey observationKey = new ObservationKey(observation.getObservationUid());
     String obsDomainCdSt1 = observation.getObsDomainCdSt1();
 
     transformPersonParticipations(
@@ -86,9 +83,9 @@ public class ProcessObservationDataUtil {
     transformParentObservations(observation.getParentObservations(), observationTransformed);
     transformActIds(observation.getActIds(), observationTransformed);
     transformObservationCoded(observation.getObsCode(), batchId);
-    transformObservationDate(observation.getObsDate(), batchId);
+    transformObservationDate(observationKey, observation.getObsDate(), batchId);
     transformObservationEdx(observation.getEdxIds());
-    transformObservationNumeric(observation.getObsNum(), batchId);
+    transformObservationNumeric(observationKey, observation.getObsNum(), batchId);
     transformObservationReasons(observation.getObsReason(), batchId);
     transformObservationTxt(observation.getObsTxt(), batchId);
 
@@ -280,8 +277,8 @@ public class ProcessObservationDataUtil {
           ObservationMaterial material =
               objectMapper.treeToValue(jsonNode, ObservationMaterial.class);
           material.setMaterialId(materialId);
-          ObservationMaterialKey key = new ObservationMaterialKey();
-          key.setMaterialId(observationTransformed.getMaterialId());
+          ObservationMaterialKey key =
+              new ObservationMaterialKey(observationTransformed.getMaterialId());
           sendToKafka(
               key,
               material,
@@ -396,12 +393,11 @@ public class ProcessObservationDataUtil {
     try {
       JsonNode observationCodedJsonArray = parseJsonArray(observationCoded);
 
-      ObservationCodedKey codedKey = new ObservationCodedKey();
       for (JsonNode jsonNode : observationCodedJsonArray) {
         ObservationCoded coded = objectMapper.treeToValue(jsonNode, ObservationCoded.class);
         coded.setBatchId(batchId);
-        codedKey.setObservationUid(coded.getObservationUid());
-        codedKey.setOvcCode(coded.getOvcCode());
+        ObservationCodedKey codedKey =
+            new ObservationCodedKey(coded.getObservationUid(), coded.getOvcCode());
         sendToKafka(
             codedKey,
             coded,
@@ -418,7 +414,8 @@ public class ProcessObservationDataUtil {
     }
   }
 
-  private void transformObservationDate(String observationDate, long batchId) {
+  private void transformObservationDate(
+      ObservationKey observationKey, String observationDate, long batchId) {
     try {
       JsonNode observationDateJsonArray = parseJsonArray(observationDate);
 
@@ -463,7 +460,8 @@ public class ProcessObservationDataUtil {
     }
   }
 
-  private void transformObservationNumeric(String observationNumeric, long batchId) {
+  private void transformObservationNumeric(
+      ObservationKey observationKey, String observationNumeric, long batchId) {
     try {
       JsonNode observationNumericJsonArray = parseJsonArray(observationNumeric);
 
