@@ -1,7 +1,41 @@
 package gov.cdc.nbs.report.pipeline.postprocessing.service;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
-import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.*;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.AGGREGATE_REPORT_DATAMART;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.CASE_ANSWERS;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.CASE_COUNT;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.CONDITION;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.CONTACT;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_ADDL_RISK;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_DISEASE_SITE;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_GT_12_REAS;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_HC_PROV_TY_3;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_MOVED_WHERE;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_MOVE_CNTRY;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_MOVE_CNTY;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_MOVE_STATE;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_OUT_OF_CNTRY;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_PCR_SOURCE;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_RASH_LOC_GEN;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_SMR_EXAM_TY;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_TB_HIV;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_TB_PAM;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.D_VAR_PAM;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.F_PAGE_CASE;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.F_TB_PAM;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.F_VAR_PAM;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.INVESTIGATION;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.NOTIFICATION;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.OBSERVATION;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.ORGANIZATION;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.PATIENT;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.PROVIDER;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.SR100_DATAMART;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.SUMMARY_REPORT_CASE;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.TB_PAM_LDF;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.UNKNOWN;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.VACCINATION;
+import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.VAR_PAM_LDF;
 import static gov.cdc.nbs.report.pipeline.postprocessing.service.ProcessDatamartData.MULTI_ID_DATAMART;
 import static gov.cdc.nbs.report.pipeline.postprocessing.service.ProcessDatamartData.STATUS_READY;
 
@@ -19,9 +53,21 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-// import java.util.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -52,6 +98,25 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+/**
+ * Service class for handling post-processing tasks in the Real Time Reporting (RTR) pipeline. This
+ * service is responsible for "hydrating" reporting dimensions, fact tables, and datamarts by
+ * consuming events from various NRT (Near Real Time) topics and executing the appropriate stored
+ * procedures to finalize data transformation for reporting.
+ *
+ * <p>Key responsibilities include:
+ *
+ * <ul>
+ *   <li>Consuming Kafka events for a wide range of entities (Investigations, Notifications,
+ *       Observations, etc.).
+ *   <li>Extracting and caching entity UIDs to facilitate efficient batch processing.
+ *   <li>Executing specialized stored procedures to hydrate Reporting (RDB) dimensions and facts.
+ *   <li>Managing the hydration of various datamarts (e.g., TB, Varicella, Lab, and Summary
+ *       Reports).
+ *   <li>Implementing a robust retry mechanism with backfill support for failed processing attempts.
+ *   <li>Scheduling periodic tasks to process cached IDs and manage data consistency.
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 @Setter
@@ -336,8 +401,8 @@ public class PostProcessingService {
           List<String> resUidList = List.of(resUidNode.asText().split(","));
           resUidList.forEach(
               resUid -> {
-                Long rUid = Long.valueOf(resUid);
-                obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(rUid);
+                Long ruid = Long.valueOf(resUid);
+                obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(ruid);
               });
         }
       }
