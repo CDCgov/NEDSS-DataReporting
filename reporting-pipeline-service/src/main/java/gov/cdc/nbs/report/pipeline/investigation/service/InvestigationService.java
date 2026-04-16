@@ -280,7 +280,7 @@ public class InvestigationService {
           try {
             final String notfUid = notificationUid = extractUid(value, "notification_uid");
 
-            if (!phcDatamartDisable) {
+            if (phcDatamartEnable) {
               CompletableFuture.runAsync(
                   () -> processDataUtil.processPhcFactDatamart("NOTF", notfUid), phcExecutor);
             }

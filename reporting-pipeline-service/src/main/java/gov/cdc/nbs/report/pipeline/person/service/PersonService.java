@@ -260,7 +260,7 @@ public class PersonService {
             .map(String::valueOf)
             .collect(Collectors.joining(","));
 
-    if (!phcDatamartDisable) {
+    if (phcDatamartEnable) {
       CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", uids), rtrExecutor);
     }
 
