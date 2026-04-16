@@ -15,7 +15,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_condition_key' and xty
 
 		--RESEED [dbo].nrt_condition_key table 
 		DECLARE @max BIGINT;
-		SELECT @max=max(CONDITION_KEY) from [dbo].CONDITION;
+		SELECT @max=max(CONDITION_KEY) + 1 from [dbo].CONDITION;
 		SELECT @max;
 		IF @max IS NULL   --check when max is returned as null
 			SET @max = 2; -- default to 2, default record with key = 1 is already created
