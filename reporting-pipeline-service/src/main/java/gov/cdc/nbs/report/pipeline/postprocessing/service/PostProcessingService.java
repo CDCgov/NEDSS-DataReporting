@@ -19,7 +19,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import java.util.*;
+// import java.util.*;
 import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -116,8 +116,8 @@ public class PostProcessingService {
   @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopic;
 
-  @Value("${featureFlag.service-disable}")
-  private boolean serviceDisabled;
+  @Value("${featureFlag.post-processing-enable}")
+  private boolean serviceEnable;
 
   private final CustomMetrics metrics;
 
@@ -210,7 +210,9 @@ public class PostProcessingService {
       @Payload String payload) {
 
     ppMsgProcessed.increment();
-    if (serviceDisabled) return; // skip processing when disabled
+    if (!serviceEnable) {
+      return;
+    } // skip processing when not enabled
     extractIdFromMessage(topic, key, payload);
   }
 
