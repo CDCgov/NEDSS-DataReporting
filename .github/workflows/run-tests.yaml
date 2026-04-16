@@ -2,21 +2,18 @@ name: Application Tests
 on:
   pull_request:
     paths:
-      - "investigation-service/**"
-      - "ldfdata-service/**"
-      - "person-service/**"
       - "reporting-pipeline-service/**"
-      - "post-processing-service/**"
-      - "observation-service/**"
-      - "organization-service/**"
+      - "liquibase-service/**"
+      - "common-util/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
       - "docker-compose.yaml"
+      - ".github/workflows/**"
 
 jobs:
   pipeline:
-    name: Run JUnit Tests
+    name: Run JUnit tests
     runs-on: ubuntu-latest
 
     permissions:
