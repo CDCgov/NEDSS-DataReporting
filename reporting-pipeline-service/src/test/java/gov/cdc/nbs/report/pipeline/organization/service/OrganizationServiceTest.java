@@ -83,6 +83,7 @@ class OrganizationServiceTest {
     organizationService.setPlaceReportingOutputTopic(placeReportingTopic);
     organizationService.setTeleOutputTopic(teleReportingTopic);
     organizationService.setElasticSearchEnable(true);
+    organizationService.setPhcDatamartEnable(true);
     organizationService.setThreadPoolSize(1);
     organizationService.initMetrics();
 

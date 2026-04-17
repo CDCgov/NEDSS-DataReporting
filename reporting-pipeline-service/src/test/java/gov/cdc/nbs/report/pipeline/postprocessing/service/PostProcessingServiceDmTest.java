@@ -61,6 +61,7 @@ class PostProcessingServiceDmTest {
                 new CustomMetrics(new SimpleMeterRegistry())));
     postProcessingServiceMock.initMetrics();
     datamartProcessor.initMetrics();
+    postProcessingServiceMock.setServiceEnable(true);
 
     listAppender.start();
     Logger serviceLogger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);

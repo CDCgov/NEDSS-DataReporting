@@ -104,6 +104,7 @@ class InvestigationServiceTest {
     investigationService.setTreatmentTopic(treatmentTopic);
     investigationService.setTreatmentOutputTopicName(treatmentTopicOutput);
     investigationService.setActRelationshipTopic(actRelationshipTopic);
+    investigationService.setPhcDatamartEnable(true);
     investigationService.setThreadPoolSize(1);
     investigationService.initMetrics();
 

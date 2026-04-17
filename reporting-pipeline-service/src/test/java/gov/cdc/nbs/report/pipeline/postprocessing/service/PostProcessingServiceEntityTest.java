@@ -60,6 +60,7 @@ class PostProcessingServiceEntityTest {
     datamartProcessor.initMetrics();
 
     postProcessingServiceMock.setInvestigationTopic("dummy_investigation");
+    postProcessingServiceMock.setServiceEnable(true);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
     listAppender.start();
