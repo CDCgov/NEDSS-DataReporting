@@ -13,7 +13,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 /**
- * Responsible for writing Observation data to the following tables:
+ * Responsible for upserting Observation data to the following tables:
  *
  * <ul>
  *   <li>nrt_observation_material

@@ -1,7 +1,6 @@
 package gov.cdc.nbs.report.pipeline.observation.service.observation;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
@@ -33,13 +32,13 @@ public class ObservationProcessor {
   private final KafkaTemplate<String, String> kafkaTemplate;
   private final NrtObservationWriter nrtWriter;
 
-  private final String observationTopicOutputReporting;
-  private final String observationTopic;
+  private final String nrtObservationTopic;
 
   private final ModelMapper modelMapper = new ModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
   private final CustomMetrics metrics;
+  private static final String[] TAGS = {"service", "observation-reporting"};
   private Counter msgProcessed;
   private Counter msgSuccess;
   private Counter msgFailure;
@@ -48,47 +47,27 @@ public class ObservationProcessor {
       final CustomMetrics metrics,
       final ObservationRepository observationRepository,
       @Qualifier("observationKafkaTemplate") final KafkaTemplate<String, String> kafkaTemplate,
-      @Value("${spring.kafka.topics.nrt.observation}") final String observationTopicOutputReporting,
-      @Value("${spring.kafka.topics.nbs.observation}") final String observationTopic,
+      @Value("${spring.kafka.topics.nrt.observation}") final String nrtObservationTopic,
       final NrtObservationWriter nrtWriter) {
     this.metrics = metrics;
     this.observationRepository = observationRepository;
     this.kafkaTemplate = kafkaTemplate;
-    this.observationTopicOutputReporting = observationTopicOutputReporting;
-    this.observationTopic = observationTopic;
+    this.nrtObservationTopic = nrtObservationTopic;
     this.nrtWriter = nrtWriter;
 
-    String[] tags = {"service", "observation-reporting"};
-
-    msgProcessed = metrics.counter("obs_msg_processed", tags);
-    msgSuccess = metrics.counter("obs_msg_success", tags);
-    msgFailure = metrics.counter("obs_msg_failure", tags);
+    msgProcessed = metrics.counter("obs_msg_processed", TAGS);
+    msgSuccess = metrics.counter("obs_msg_success", TAGS);
+    msgFailure = metrics.counter("obs_msg_failure", TAGS);
   }
 
-  public void process(
-      String value,
-      long batchId,
-      boolean isFromObservationTopic,
-      String actRelationshipSourceActUid) {
+  public void process(final long batchId, final String observationUid) {
     msgProcessed.increment();
 
     metrics.recordTime(
         "obs_msg_processing_seconds",
         () -> {
-          String observationUid = "";
           try {
-            // Get the relevant observation_uid
-            observationUid =
-                isFromObservationTopic
-                    ? extractUid(value, "observation_uid")
-                    : actRelationshipSourceActUid;
-
-            ObservationKey observationKey = new ObservationKey(Long.valueOf(observationUid));
-
-            logger.info(
-                "Received Observation with id: {} from topic: {}",
-                observationUid,
-                observationTopic);
+            logger.info("Received Observation with id: {}", observationUid);
 
             // Query NBS_ODSE for observation data
             Optional<Observation> observationData =
@@ -110,16 +89,14 @@ public class ObservationProcessor {
             // Push parsed fields into reporting object
             modelMapper.map(parsed.transformed(), reportingModel);
 
-            // Insert parsed data into nrt_ database
+            // Insert parsed data into nrt_observation_* database tables
             nrtWriter.persist(parsed);
 
-            // Send to reporting object to nrt_observation kafka topic
-            pushKeyValuePairToKafka(
-                observationKey, reportingModel, observationTopicOutputReporting);
+            // Send reporting object to nrt_observation kafka topic
+            ObservationKey observationKey = new ObservationKey(Long.valueOf(observationUid));
+            pushKeyValuePairToKafka(observationKey, reportingModel, nrtObservationTopic);
             logger.info(
-                "Observation data (uid={}) sent to {}",
-                observationUid,
-                observationTopicOutputReporting);
+                "Observation data (uid={}) sent to {}", observationUid, nrtObservationTopic);
 
             msgSuccess.increment();
 
@@ -132,8 +109,7 @@ public class ObservationProcessor {
             throw new DataProcessingException(errorMessage("Observation", observationUid, e), e);
           }
         },
-        "service",
-        "observation-reporting");
+        TAGS);
   }
 
   private void pushKeyValuePairToKafka(

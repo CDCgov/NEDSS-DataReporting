@@ -5,6 +5,7 @@ import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractChangeDataCap
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractUid;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractValue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.nbs.report.pipeline.observation.service.observation.ObservationProcessor;
@@ -101,11 +102,9 @@ public class ObservationService {
     logger.debug(TOPIC_DEBUG_LOG, message, topic);
 
     if (topic.equals(observationTopic)) {
-      return CompletableFuture.runAsync(
-          () -> observationProcessor.process(message, batchId, true, ""), obsExecutor);
+      return CompletableFuture.runAsync(() -> handleObservation(message, batchId), obsExecutor);
     } else if (topic.equals(actRelationshipTopic) && message != null) {
-      return CompletableFuture.runAsync(
-          () -> processActRelationship(message, batchId), obsExecutor);
+      return CompletableFuture.runAsync(() -> handleActRelationship(message, batchId), obsExecutor);
     } else {
       return CompletableFuture.failedFuture(
           new DataProcessingException(
@@ -113,7 +112,16 @@ public class ObservationService {
     }
   }
 
-  private void processActRelationship(String value, long batchId) {
+  private void handleObservation(String message, long batchId) {
+    try {
+      String observationUid = extractUid(message, "observation_uid");
+      observationProcessor.process(batchId, observationUid);
+    } catch (JsonProcessingException e) {
+      throw new DataProcessingException(errorMessage("Observation", "", e), e);
+    }
+  }
+
+  private void handleActRelationship(String value, long batchId) {
     String sourceActUid = "";
 
     try {
@@ -136,7 +144,7 @@ public class ObservationService {
       // receive
       // an update in Observation
       if (typeCd.equals("LabReport") && targetClassCd.equals("OBS")) {
-        observationProcessor.process(value, batchId, false, sourceActUid);
+        observationProcessor.process(batchId, sourceActUid);
       }
     } catch (Exception e) {
       throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
