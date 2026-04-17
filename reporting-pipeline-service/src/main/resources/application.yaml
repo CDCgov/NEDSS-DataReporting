@@ -84,9 +84,9 @@ spring:
 
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
-  phc-datamart-disable: ${FF_PHC_DM_DISABLE:false}
+  phc-datamart-enable: ${FF_PHC_DM_ENABLE:true}
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
-  service-disable: ${FF_SERVICE_DISABLE:false}
+  post-processing-enable: ${FF_POST_PROCESSING_ENABLE:true}
 
 management:
   endpoint:

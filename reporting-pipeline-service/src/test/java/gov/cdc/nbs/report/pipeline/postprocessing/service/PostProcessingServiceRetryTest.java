@@ -64,6 +64,7 @@ class PostProcessingServiceRetryTest {
     postProcessingServiceMock.initMetrics();
     datamartProcessor.initMetrics();
     datamartProcessor.setMaxRetries(2);
+    postProcessingServiceMock.setServiceEnable(true);
 
     Logger logger = (Logger) LoggerFactory.getLogger(ProcessDatamartData.class);
     listAppender.start();
