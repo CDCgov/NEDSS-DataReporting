@@ -1,23 +1,24 @@
-package gov.cdc.nbs.report.pipeline.observation.service;
+package gov.cdc.nbs.report.pipeline.observation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+import gov.cdc.nbs.report.pipeline.observation.service.ObservationProcessor;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
-class ObservationServiceTest {
+class ObservationConsumerTest {
 
   private final String observationTopic = "Observation";
   private final String actRelationshipTopic = "Act_relationship";
 
   @Mock ObservationProcessor processor = Mockito.mock(ObservationProcessor.class);
-  private ObservationService service =
-      new ObservationService(processor, observationTopic, actRelationshipTopic, 1);
+  private ObservationConsumer consumer =
+      new ObservationConsumer(processor, observationTopic, actRelationshipTopic, 1);
 
   @Test
   void processesObservationMessage() { // observation_uid
@@ -35,7 +36,7 @@ class ObservationServiceTest {
     ConsumerRecord<String, String> consumerRecord =
         new ConsumerRecord<>(observationTopic, 0, 1l, null, message);
     // receives valid observation message
-    service.processMessage(consumerRecord).join();
+    consumer.processMessage(consumerRecord).join();
 
     // sends to ObservationProcessor
     verify(processor, times(1)).process(0, "123");
@@ -59,7 +60,7 @@ class ObservationServiceTest {
     ConsumerRecord<String, String> consumerRecord =
         new ConsumerRecord<>(actRelationshipTopic, 0, 1l, null, message);
     // receives valid act_relationship message
-    service.processMessage(consumerRecord).join();
+    consumer.processMessage(consumerRecord).join();
 
     // sends to ObservationProcessor
     verify(processor, times(1)).process(0, "1");
@@ -83,7 +84,7 @@ class ObservationServiceTest {
     ConsumerRecord<String, String> consumerRecord =
         new ConsumerRecord<>(actRelationshipTopic, 0, 1l, null, message);
     // receives non 'delete' act_relationship message
-    service.processMessage(consumerRecord).join();
+    consumer.processMessage(consumerRecord).join();
 
     // does not send to ObservationProcessor
     verifyNoInteractions(processor);
@@ -107,7 +108,7 @@ class ObservationServiceTest {
     ConsumerRecord<String, String> consumerRecord =
         new ConsumerRecord<>(actRelationshipTopic, 0, 1l, null, message);
     // receives act_relationship message with a type_cd other than 'LabReport'
-    service.processMessage(consumerRecord).join();
+    consumer.processMessage(consumerRecord).join();
 
     // does not send to ObservationProcessor
     verifyNoInteractions(processor);
@@ -117,7 +118,7 @@ class ObservationServiceTest {
   void throwsExceptionForBadTopic() {
     ConsumerRecord<String, String> consumerRecord =
         new ConsumerRecord<>("bad_topic", 0, 1l, null, "");
-    CompletableFuture<Void> future = service.processMessage(consumerRecord);
+    CompletableFuture<Void> future = consumer.processMessage(consumerRecord);
 
     CompletionException ex = assertThrows(CompletionException.class, future::join);
     assertThat(ex.getCause().getMessage())
@@ -138,7 +139,7 @@ class ObservationServiceTest {
         """;
     ConsumerRecord<String, String> consumerRecord =
         new ConsumerRecord<>(actRelationshipTopic, 0, 1l, null, message);
-    CompletableFuture<Void> future = service.processMessage(consumerRecord);
+    CompletableFuture<Void> future = consumer.processMessage(consumerRecord);
 
     CompletionException ex = assertThrows(CompletionException.class, future::join);
     assertThat(ex.getCause().getMessage())

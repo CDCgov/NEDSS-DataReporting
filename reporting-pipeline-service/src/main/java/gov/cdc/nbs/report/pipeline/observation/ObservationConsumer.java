@@ -1,4 +1,4 @@
-package gov.cdc.nbs.report.pipeline.observation.service;
+package gov.cdc.nbs.report.pipeline.observation;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractChangeDataCaptureOperation;
@@ -8,6 +8,7 @@ import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
+import gov.cdc.nbs.report.pipeline.observation.service.ObservationProcessor;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -49,8 +50,8 @@ import org.springframework.stereotype.Service;
  * </ul>
  */
 @Service
-public class ObservationService {
-  private static final Logger logger = LoggerFactory.getLogger(ObservationService.class);
+public class ObservationConsumer {
+  private static final Logger logger = LoggerFactory.getLogger(ObservationConsumer.class);
   private static final String BEFORE_PATH = "before";
   private static final String TOPIC_DEBUG_LOG = "Received Observation with id: {} from topic: {}";
 
@@ -59,7 +60,7 @@ public class ObservationService {
   private final ObservationProcessor observationProcessor;
   private final ExecutorService obsExecutor;
 
-  public ObservationService(
+  public ObservationConsumer(
       final ObservationProcessor observationProcessor,
       @Value("${spring.kafka.topics.nbs.observation}") final String observationTopic,
       @Value("${spring.kafka.topics.nbs.act-relationship}") final String actRelationshipTopic,

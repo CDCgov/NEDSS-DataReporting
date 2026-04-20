@@ -22,10 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /** Handles the processing of Observation data */
-@Component
+@Service
 public class ObservationProcessor {
   private static final Logger logger = LoggerFactory.getLogger(ObservationProcessor.class);
   private final ModelMapper modelMapper = new ModelMapper();
