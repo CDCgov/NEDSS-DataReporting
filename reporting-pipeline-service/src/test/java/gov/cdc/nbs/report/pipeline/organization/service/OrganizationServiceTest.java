@@ -83,6 +83,7 @@ class OrganizationServiceTest {
     organizationService.setPlaceReportingOutputTopic(placeReportingTopic);
     organizationService.setTeleOutputTopic(teleReportingTopic);
     organizationService.setElasticSearchEnable(true);
+    organizationService.setPhcDatamartEnable(true);
     organizationService.setThreadPoolSize(1);
     organizationService.initMetrics();
 
@@ -224,7 +225,7 @@ class OrganizationServiceTest {
     orgSp.setOrganizationUid(10036000L);
 
     String changeData = "{\"payload\": {\"after\": {\"organization_uid\": \"123456789\"}}}";
-    organizationService.setPhcDatamartDisable(true);
+    organizationService.setPhcDatamartEnable(false);
     organizationService.processMessage(changeData, orgTopic);
 
     verify(orgRepository, never()).updatePhcFact(anyString(), anyString());
