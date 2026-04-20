@@ -30,7 +30,11 @@ import org.springframework.stereotype.Service;
 /**
  * Service class for processing Observation-related change events in the Real Time Reporting (RTR)
  * pipeline. This service handles the "hydration" of data for Observations by consuming Kafka events
- * from transactional source topics, transforming them, and producing them to reporting topics.
+ * from transactional source topics, transforming them, and producing them to reporting topics. This
+ * service operates differently than other RTR services in the fact that it also inserts directly
+ * into the nrt_ database tables to eliminate a race condition between the PostProcessingService and
+ * the Kafka Sink Connector. More info can be found here:
+ * https://cdc-nbs.atlassian.net/browse/APP-519
  *
  * <p>Key responsibilities include:
  *
