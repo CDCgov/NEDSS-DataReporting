@@ -1,115 +1,38 @@
-name: Build and push data-reporting-service image to ECR
+name: Build and push reporting-pipeline-service image to ECR
 on:
   push:
     branches:
       - main
-      - master
       - rel-**
     #      Uncomment the following line only to test the build and deploy from private branches.
     #      - CNDIT-*
     #      - CNDE-*
-    paths-ignore:
-      - "docker-compose.yml"
-      - "**.md"
+    paths:
+      - "reporting-pipeline-service/**"
+      - "liquibase-service/**"
+      - "common-util/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle/**"
+      - ".github/workflows/Build-and-deploy-reporting-services.yaml"
+
 jobs:
-  # person-reporting-microservice
-  call-build-person-reporting-microservice-container-workflow:
+  call-build-reporting-pipeline-service-container-workflow:
     permissions:
       id-token: write
       contents: read
       security-events: write
-    name: Build Person Reporting Service Container
+    name: Build Reporting Pipeline Service Container
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: nbs7-person-reporting
-      dockerfile_relative_path: -f ./person-service/Dockerfile .
+      microservice_name: nbs7-reporting-pipeline
+      dockerfile_relative_path: -f ./reporting-pipeline-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "21"
     secrets:
       NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
 
-  # organization-reporting-microservice
-  call-build-organization-reporting-microservice-container-workflow:
-    permissions:
-      id-token: write
-      contents: read
-      security-events: write
-    name: Build Organization Reporting Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
-    with:
-      microservice_name: nbs7-organization-reporting
-      dockerfile_relative_path: -f ./organization-service/Dockerfile .
-      environment_classifier: SNAPSHOT
-      java_version: "21"
-    secrets:
-      NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
-
-  # investigation-reporting-microservice
-  call-build-investigation-reporting-microservice-container-workflow:
-    permissions:
-      id-token: write
-      contents: read
-      security-events: write
-    name: Build Investigation Reporting Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
-    with:
-      microservice_name: nbs7-investigation-reporting
-      dockerfile_relative_path: -f ./investigation-service/Dockerfile .
-      environment_classifier: SNAPSHOT
-      java_version: "21"
-    secrets:
-      NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
-
-  # post-processing-reporting-microservice
-  call-build-post-processing-reporting-microservice-container-workflow:
-    permissions:
-      id-token: write
-      contents: read
-      security-events: write
-    name: Build post-processing Reporting Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
-    with:
-      microservice_name: nbs7-post-processing-reporting
-      dockerfile_relative_path: -f ./post-processing-service/Dockerfile .
-      environment_classifier: SNAPSHOT
-      java_version: "21"
-    secrets:
-      NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
-
-  # observation-reporting-microservice
-  call-build-observation-reporting-microservice-container-workflow:
-    permissions:
-      id-token: write
-      contents: read
-      security-events: write
-    name: Build Observation Reporting Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
-    with:
-      microservice_name: nbs7-observation-reporting
-      dockerfile_relative_path: -f ./observation-service/Dockerfile .
-      environment_classifier: SNAPSHOT
-      java_version: "21"
-    secrets:
-      NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
-
-  # LdfData-reporting-microservice
-  call-build-ldfdata-reporting-microservice-container-workflow:
-    permissions:
-      id-token: write
-      contents: read
-      security-events: write
-    name: Build LdfData Reporting Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
-    with:
-      microservice_name: nbs7-ldf-data-reporting
-      dockerfile_relative_path: -f ./ldfdata-service/Dockerfile .
-      environment_classifier: SNAPSHOT
-      java_version: "21"
-    secrets:
-      NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
-
-  # liquibase-microservice
-  call-build-liquibase-microservice-container-workflow:
+  call-build-liquibase-service-container-workflow:
     permissions:
       id-token: write
       contents: read

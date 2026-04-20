@@ -100,8 +100,8 @@ public class PersonService {
   @Value("${featureFlag.elastic-search-enable}")
   private boolean elasticSearchEnable;
 
-  @Value("${featureFlag.phc-datamart-disable}")
-  private boolean phcDatamartDisable;
+  @Value("${featureFlag.phc-datamart-enable}")
+  private boolean phcDatamartEnable;
 
   @Value("${featureFlag.thread-pool-size:1}")
   private int threadPoolSize;
@@ -223,7 +223,7 @@ public class PersonService {
             .map(String::valueOf)
             .collect(Collectors.joining(","));
 
-    if (!phcDatamartDisable) {
+    if (phcDatamartEnable) {
       CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", uids), rtrExecutor);
     }
 
@@ -260,7 +260,7 @@ public class PersonService {
             .map(String::valueOf)
             .collect(Collectors.joining(","));
 
-    if (!phcDatamartDisable) {
+    if (phcDatamartEnable) {
       CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", uids), rtrExecutor);
     }
 
