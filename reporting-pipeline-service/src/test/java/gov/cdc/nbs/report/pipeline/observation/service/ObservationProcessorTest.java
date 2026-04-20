@@ -1,4 +1,4 @@
-package gov.cdc.nbs.report.pipeline.observation.service.observation;
+package gov.cdc.nbs.report.pipeline.observation.service;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +15,7 @@ import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;
+import gov.cdc.nbs.report.pipeline.observation.repository.NrtObservationWriter;
 import gov.cdc.nbs.report.pipeline.observation.repository.ObservationRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.Optional;

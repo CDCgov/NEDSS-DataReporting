@@ -1,4 +1,4 @@
-package gov.cdc.nbs.report.pipeline.observation.service.observation;
+package gov.cdc.nbs.report.pipeline.observation.service;
 
 import static gov.cdc.etldatapipeline.commonutil.UtilHelper.errorMessage;
 
@@ -10,6 +10,7 @@ import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ParsedObservation;
+import gov.cdc.nbs.report.pipeline.observation.repository.NrtObservationWriter;
 import gov.cdc.nbs.report.pipeline.observation.repository.ObservationRepository;
 import gov.cdc.nbs.report.pipeline.observation.transformer.ObservationParser;
 import io.micrometer.core.instrument.Counter;

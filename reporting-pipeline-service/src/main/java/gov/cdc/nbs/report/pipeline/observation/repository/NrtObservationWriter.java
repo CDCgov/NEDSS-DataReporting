@@ -1,4 +1,4 @@
-package gov.cdc.nbs.report.pipeline.observation.service.observation;
+package gov.cdc.nbs.report.pipeline.observation.repository;
 
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationCoded;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationDate;
