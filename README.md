@@ -47,6 +47,34 @@ To run only the `functional` tests in the reporting-pipeline-service
 ./gradlew clean reporting-pipeline-service:test-functional
 ```
 
+### Windows Note (Testcontainers EOF Error)
+
+If you see `unexpected EOF` while running containerized tests on Windows, this is usually caused by Testcontainers trying to copy the entire project directory into a container and hitting a locked file.
+
+Issue flow:
+
+- Testcontainers tries to copy your entire project directory into a container.
+- It hits a locked file (`checksums.lock`).
+- The copy fails mid-stream.
+- Docker receives a broken archive and returns `unexpected EOF`.
+- Testcontainers retries and fails again.
+
+Solution:
+
+Make sure `gradlew` is stopped, remove the existing cache directory, and create a new one:
+
+```powershell
+./gradlew --stop
+Remove-Item -Recurse -Force .gradle -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force C:\temp\ndr-project-cache | Out-Null
+```
+
+When running `gradlew`, specify the cache directory:
+
+```powershell
+./gradlew --project-cache-dir C:\temp\ndr-project-cache clean reporting-pipeline-service:test-functional --info
+```
+
 ## Code Quality and Formatting
 
 This project uses [Spotless](https://github.com/diffplug/spotless) with [Google Java Format](https://github.com/google/google-java-format) to maintain consistent code style.
