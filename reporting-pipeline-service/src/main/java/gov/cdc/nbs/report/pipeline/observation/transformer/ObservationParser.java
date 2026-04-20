@@ -47,57 +47,57 @@ public class ObservationParser {
     observationTransformed.setBatchId(batchId);
 
     // Person Participations
-    setPersonParticipations(
+    parsePersonParticipations(
         observation.getPersonParticipations(),
         observation.getObsDomainCdSt1(),
         observationTransformed);
 
     // Organization Participations
-    setOrganizationParticipations(
+    parseOrganizationParticipations(
         observation.getOrganizationParticipations(),
         observation.getObsDomainCdSt1(),
         observationTransformed);
 
     // Material Participations
-    setMaterialParticipations(
+    parseMaterialParticipations(
         observation.getMaterialParticipations(),
         observation.getObsDomainCdSt1(),
         parsedObservation);
 
     // Follow up Observations
-    setFollowupObservations(
+    parseFollowupObservations(
         observation.getFollowupObservations(),
         observation.getObsDomainCdSt1(),
         observationTransformed);
 
     // Parent Observations
-    setParentObservations(observation.getParentObservations(), observationTransformed);
+    parseParentObservations(observation.getParentObservations(), observationTransformed);
 
     // Act Ids
-    setActIds(observation.getActIds(), observationTransformed);
+    parseActIds(observation.getActIds(), observationTransformed);
 
     // Observation Coded data
-    setObservationCoded(observation.getObsCode(), parsedObservation);
+    parseObservationCoded(observation.getObsCode(), parsedObservation);
 
     // Observation Date data
-    setObservationDate(observation.getObsDate(), parsedObservation);
+    parseObservationDate(observation.getObsDate(), parsedObservation);
 
     // Observation Edx data
-    setObservationEdx(observation.getEdxIds(), parsedObservation);
+    parseObservationEdx(observation.getEdxIds(), parsedObservation);
 
     // Observation Numeric data
-    setObservationNumeric(observation.getObsNum(), parsedObservation);
+    parseObservationNumeric(observation.getObsNum(), parsedObservation);
 
     // Observation Reason data
-    setObservationReasons(observation.getObsReason(), parsedObservation);
+    parseObservationReasons(observation.getObsReason(), parsedObservation);
 
     // Observation Text data
-    setObservationTxt(observation.getObsTxt(), parsedObservation);
+    parseObservationTxt(observation.getObsTxt(), parsedObservation);
 
     return parsedObservation;
   }
 
-  private static void setPersonParticipations(
+  private static void parsePersonParticipations(
       String personParticipations, String obsDomainCdSt1, ObservationTransformed transformed) {
     try {
       JsonNode personParticipationsJsonArray = parseJsonArray(personParticipations);
@@ -178,7 +178,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setOrganizationParticipations(
+  private static void parseOrganizationParticipations(
       String organizationParticipations,
       String obsDomainCdSt1,
       ObservationTransformed transformed) {
@@ -228,7 +228,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setMaterialParticipations(
+  private static void parseMaterialParticipations(
       String materialParticipations, String obsDomainCdSt1, ParsedObservation parsedObservation) {
     try {
       JsonNode materialParticipationsJsonArray = parseJsonArray(materialParticipations);
@@ -275,7 +275,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setFollowupObservations(
+  private static void parseFollowupObservations(
       String followupObservations, String obsDomainCdSt1, ObservationTransformed transformed) {
     try {
       JsonNode followupObservationsJsonArray = parseJsonArray(followupObservations);
@@ -310,7 +310,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setParentObservations(
+  private static void parseParentObservations(
       String parentObservations, ObservationTransformed transformed) {
     try {
       JsonNode parentObservationsJsonArray = parseJsonArray(parentObservations);
@@ -339,7 +339,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setActIds(String actIds, ObservationTransformed observationTransformed) {
+  private static void parseActIds(String actIds, ObservationTransformed observationTransformed) {
     try {
       JsonNode actIdsJsonArray = parseJsonArray(actIds);
 
@@ -366,7 +366,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setObservationCoded(
+  private static void parseObservationCoded(
       String observationCoded, ParsedObservation parsedObservation) {
     try {
       JsonNode observationCodedJsonArray = parseJsonArray(observationCoded);
@@ -386,7 +386,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setObservationDate(
+  private static void parseObservationDate(
       String observationDate, ParsedObservation parsedObservation) {
     try {
       JsonNode observationDateJsonArray = parseJsonArray(observationDate);
@@ -405,7 +405,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setObservationEdx(
+  private static void parseObservationEdx(
       String observationEdx, ParsedObservation parsedObservation) {
     try {
       JsonNode observationEdxJsonArray = parseJsonArray(observationEdx);
@@ -422,7 +422,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setObservationNumeric(
+  private static void parseObservationNumeric(
       String observationNumeric, ParsedObservation parsedObservation) {
     try {
       JsonNode observationNumericJsonArray = parseJsonArray(observationNumeric);
@@ -441,7 +441,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setObservationReasons(
+  private static void parseObservationReasons(
       String observationReasons, ParsedObservation parsedObservation) {
     try {
       JsonNode observationReasonsJsonArray = parseJsonArray(observationReasons);
@@ -460,7 +460,7 @@ public class ObservationParser {
     }
   }
 
-  private static void setObservationTxt(
+  private static void parseObservationTxt(
       String observationTxt, ParsedObservation parsedObservation) {
     try {
       JsonNode observationTxtJsonArray = parseJsonArray(observationTxt);

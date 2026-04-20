@@ -27,13 +27,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class ObservationProcessor {
   private static final Logger logger = LoggerFactory.getLogger(ObservationProcessor.class);
-
-  private final ObservationRepository observationRepository;
-  private final KafkaTemplate<String, String> kafkaTemplate;
-  private final NrtObservationWriter nrtWriter;
-
-  private final String nrtObservationTopic;
-
   private final ModelMapper modelMapper = new ModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
@@ -42,6 +35,11 @@ public class ObservationProcessor {
   private Counter msgProcessed;
   private Counter msgSuccess;
   private Counter msgFailure;
+
+  private final ObservationRepository observationRepository;
+  private final KafkaTemplate<String, String> kafkaTemplate;
+  private final NrtObservationWriter nrtWriter;
+  private final String nrtObservationTopic;
 
   public ObservationProcessor(
       final CustomMetrics metrics,
