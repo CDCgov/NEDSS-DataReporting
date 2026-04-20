@@ -214,7 +214,6 @@ class ObservationParserTest {
     edx.setEdxDocumentUid(10101L);
     edx.setEdxActUid(observation.getActUid());
     edx.setEdxAddTime("2024-09-30T21:08:19.017");
-    edx.setBatchId(BATCH_ID);
 
     ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 

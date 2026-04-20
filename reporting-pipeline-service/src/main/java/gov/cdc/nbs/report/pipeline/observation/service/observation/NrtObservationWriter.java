@@ -11,6 +11,7 @@ import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ParsedObser
 import java.util.List;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Responsible for upserting Observation data to the following tables:
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@Transactional
 public class NrtObservationWriter {
 
   private final JdbcClient client;
@@ -117,7 +119,7 @@ public class NrtObservationWriter {
         );
       """;
 
-  private void persistMaterials(List<ObservationMaterial> materials) {
+  void persistMaterials(List<ObservationMaterial> materials) {
     materials.forEach(
         m ->
             client
@@ -195,7 +197,7 @@ public class NrtObservationWriter {
       );
       """;
 
-  private void persistCoded(List<ObservationCoded> codedEntries) {
+  void persistCoded(List<ObservationCoded> codedEntries) {
     codedEntries.forEach(
         c ->
             client
@@ -248,7 +250,7 @@ public class NrtObservationWriter {
       );
       """;
 
-  private void persistDate(List<ObservationDate> dateEntries) {
+  void persistDate(List<ObservationDate> dateEntries) {
     dateEntries.forEach(
         d ->
             client
@@ -288,7 +290,7 @@ public class NrtObservationWriter {
       );
       """;
 
-  private void persistEdx(List<ObservationEdx> edxEntries) {
+  void persistEdx(List<ObservationEdx> edxEntries) {
     edxEntries.forEach(
         e ->
             client
@@ -296,13 +298,12 @@ public class NrtObservationWriter {
                 .param("edx_document_uid", e.getEdxDocumentUid())
                 .param("edx_act_uid", e.getEdxActUid())
                 .param("edx_add_time", e.getEdxAddTime())
-                .param("batch_id", e.getBatchId())
                 .update());
   }
 
   private static final String UPSERT_NUMERIC =
       """
-      MERGE INTO nrt_observation_edx
+      MERGE INTO nrt_observation_numeric
       USING (
         SELECT
           :observation_uid AS observation_uid,
@@ -316,7 +317,7 @@ public class NrtObservationWriter {
           :ovn_seq AS ovn_seq,
           :batch_id AS batch_id
       ) AS source
-       ON nrt_observation_edx.observation_uid = source.observation_uid AND nrt_observation_edx.ovn_seq = source.ovn_seq
+       ON nrt_observation_numeric.observation_uid = source.observation_uid AND nrt_observation_numeric.ovn_seq = source.ovn_seq
       WHEN MATCHED THEN
         UPDATE SET
           observation_uid = source.observation_uid,
@@ -355,7 +356,7 @@ public class NrtObservationWriter {
       );
       """;
 
-  private void persistNumeric(List<ObservationNumeric> numericEntries) {
+  void persistNumeric(List<ObservationNumeric> numericEntries) {
     numericEntries.forEach(
         n ->
             client
@@ -404,7 +405,7 @@ public class NrtObservationWriter {
       );
       """;
 
-  private void persistReason(List<ObservationReason> reasonEntries) {
+  void persistReason(List<ObservationReason> reasonEntries) {
     reasonEntries.forEach(
         r ->
             client
@@ -451,7 +452,7 @@ public class NrtObservationWriter {
       );
       """;
 
-  private void persistText(List<ObservationTxt> textEntries) {
+  void persistText(List<ObservationTxt> textEntries) {
     textEntries.forEach(
         t ->
             client

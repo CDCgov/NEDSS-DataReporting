@@ -12,5 +12,4 @@ public class ObservationEdx {
   private Long edxDocumentUid;
   private Long edxActUid;
   private String edxAddTime;
-  private Long batchId;
 }

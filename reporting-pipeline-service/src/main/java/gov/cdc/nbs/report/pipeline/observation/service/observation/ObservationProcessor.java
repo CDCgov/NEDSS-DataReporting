@@ -92,7 +92,7 @@ public class ObservationProcessor {
             // Insert parsed data into nrt_observation_* database tables
             nrtWriter.persist(parsed);
 
-            // Send reporting object to nrt_observation kafka topic
+            // Send observation data to nrt_observation kafka topic
             ObservationKey observationKey = new ObservationKey(Long.valueOf(observationUid));
             pushKeyValuePairToKafka(observationKey, reportingModel, nrtObservationTopic);
             logger.info(
