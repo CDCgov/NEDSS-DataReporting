@@ -8,7 +8,6 @@ import static gov.cdc.etldatapipeline.commonutil.UtilHelper.extractValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
-
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;

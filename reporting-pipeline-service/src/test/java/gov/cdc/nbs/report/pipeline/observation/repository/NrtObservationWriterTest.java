@@ -13,7 +13,6 @@ import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationNumeric;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReason;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationTxt;
-
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
