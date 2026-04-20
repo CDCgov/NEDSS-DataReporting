@@ -42,6 +42,7 @@ class SelectScaffold:
     schema_name: str
     table_name: str
     operation_labels: tuple[str, ...]
+    step_numbers: tuple[int, ...]
     identity_strategy: str
     comparison_eligible: bool
     where_fields: tuple[tuple[str, object], ...]
@@ -750,6 +751,7 @@ def consolidate_fk_scaffolds(scaffolds: list[SelectScaffold]) -> list[SelectScaf
             schema_name=first_scaffold.schema_name,
             table_name=first_scaffold.table_name,
             operation_labels=tuple(sorted(set(op for s in scaffolds_in_group for op in s.operation_labels))),
+            step_numbers=tuple(sorted(set(step for s in scaffolds_in_group for step in s.step_numbers))),
             identity_strategy=first_scaffold.identity_strategy,
             comparison_eligible=first_scaffold.comparison_eligible,
             where_fields=consolidated_where_fields,
@@ -774,6 +776,18 @@ def build_scaffolds(
             return tuple(sorted((str(key), value) for key, value in primary_key_values.items()))
         return ordered_fields
 
+    def logical_change_step(change: dict[str, object]) -> int | None:
+        metadata = change.get("metadata")
+        if not isinstance(metadata, dict):
+            return None
+        step_value = metadata.get("step")
+        if step_value is None:
+            return None
+        try:
+            return int(step_value)
+        except (TypeError, ValueError):
+            return None
+
     for change in logical_changes:
         schema_name = str(change.get("schema_name") or "dbo")
         table_name = str(change.get("table_name") or "")
@@ -785,6 +799,7 @@ def build_scaffolds(
         group_key = (schema_name, table_name, ordered_fields)
         existing = grouped.get(group_key)
         operation = str(change.get("operation") or "unknown")
+        change_step = logical_change_step(change)
         expected_rows_by_key = grouped_expected_rows.setdefault(group_key, {})
         current_row_key = row_instance_key(change, ordered_fields)
 
@@ -806,6 +821,7 @@ def build_scaffolds(
                 schema_name=schema_name,
                 table_name=table_name,
                 operation_labels=(operation,),
+                step_numbers=() if change_step is None else (change_step,),
                 identity_strategy=strategy,
                 comparison_eligible=comparison_eligible,
                 where_fields=ordered_fields,
@@ -815,11 +831,13 @@ def build_scaffolds(
             continue
 
         operation_labels = tuple(sorted({*existing.operation_labels, operation}))
+        step_numbers = tuple(sorted({*existing.step_numbers, *(() if change_step is None else (change_step,))}))
         merged_comments = tuple(dict.fromkeys([*existing.comments, *comments]))
         grouped[group_key] = SelectScaffold(
             schema_name=existing.schema_name,
             table_name=existing.table_name,
             operation_labels=operation_labels,
+            step_numbers=step_numbers,
             identity_strategy=existing.identity_strategy,
             comparison_eligible=existing.comparison_eligible,
             where_fields=existing.where_fields,
@@ -841,6 +859,7 @@ def build_scaffolds(
                 schema_name=scaffold.schema_name,
                 table_name=scaffold.table_name,
                 operation_labels=scaffold.operation_labels,
+                step_numbers=scaffold.step_numbers,
                 identity_strategy=scaffold.identity_strategy,
                 comparison_eligible=scaffold.comparison_eligible,
                 where_fields=scaffold.where_fields,
@@ -922,6 +941,7 @@ def apply_known_lookup_keys(
                 schema_name=scaffold.schema_name,
                 table_name=scaffold.table_name,
                 operation_labels=scaffold.operation_labels,
+                step_numbers=scaffold.step_numbers,
                 identity_strategy=scaffold.identity_strategy,
                 comparison_eligible=scaffold.comparison_eligible,
                 where_fields=matched_fields,
@@ -1012,6 +1032,11 @@ def render_sql(
 
     for scaffold in scaffolds:
         lines.append(f"-- {scaffold.schema_name}.{scaffold.table_name} | operations: {', '.join(scaffold.operation_labels)}")
+        if scaffold.step_numbers:
+            if len(scaffold.step_numbers) == 1:
+                lines.append(f"-- Step: {scaffold.step_numbers[0]}")
+            else:
+                lines.append(f"-- Steps: {', '.join(str(step) for step in scaffold.step_numbers)}")
         for comment in scaffold.comments:
             lines.append(f"-- {comment}")
 

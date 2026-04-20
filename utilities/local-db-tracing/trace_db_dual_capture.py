@@ -185,9 +185,14 @@ def resolve_starting_uid(cli_starting_uid: int | None) -> int:
             print("Please enter a whole number (for example: 1234).")
 
 
-def prompt_action_descriptions() -> list[str]:
-    action = input("Describe the actions you took in NBS: ").strip()
-    return [action] if action else []
+def prompt_another_step() -> bool:
+    while True:
+        response = input("Record another step? [y/n]: ").strip().lower()
+        if response in {"y", "yes"}:
+            return True
+        if response in {"n", "no"}:
+            return False
+        print("Please answer y or n.")
 
 
 def plan_prefix(plan: TracePlan) -> str:
@@ -424,44 +429,112 @@ def main() -> int:
         print()
         enable_missing_tables(logical_plan, logical_tables_to_enable)
 
-        cdc_start_lsn = fetch_max_lsn(cdc_plan.client)
-        logical_start_lsn = fetch_max_lsn(logical_plan.client)
         start_time_utc = utc_now()
 
-        print()
-        print(f"{plan_prefix(cdc_plan)} Start time (UTC): {start_time_utc}")
-        print(f"{plan_prefix(cdc_plan)} Start LSN:        {cdc_start_lsn}")
-        print(f"{plan_prefix(logical_plan)} Start time (UTC): {start_time_utc}")
-        print(f"{plan_prefix(logical_plan)} Start LSN:        {logical_start_lsn}")
+        log_progress(f"{plan_prefix(cdc_plan)} Collecting CDC capture instances")
+        cdc_captures = [
+            capture
+            for capture in fetch_capture_instances(cdc_plan.client)
+            if not is_excluded_trace_table(capture.schema_name, capture.table_name)
+        ]
+        log_progress(f"{plan_prefix(cdc_plan)} Loaded {len(cdc_captures)} CDC capture instances")
 
-        post_processing_wait_since_utc = utc_now()
-        input("Perform the UI action now, then press Enter to capture both traces... ")
-        if not args.skip_post_processing_wait:
-            wait_for_post_processing_idle(
-                args.post_processing_container_prefix,
-                args.post_processing_idle_message,
-                post_processing_wait_since_utc,
-                args.post_processing_wait_timeout,
-                args.post_processing_initial_wait,
+        log_progress(f"{plan_prefix(logical_plan)} Collecting CDC capture instances")
+        logical_captures = [
+            capture
+            for capture in fetch_capture_instances(logical_plan.client)
+            if not is_excluded_trace_table(capture.schema_name, capture.table_name)
+        ]
+        log_progress(f"{plan_prefix(logical_plan)} Loaded {len(logical_captures)} CDC capture instances")
+
+        nbs_steps: list[dict[str, object]] = []
+        all_cdc_changes: list[dict[str, object]] = []
+        all_logical_cdc_changes: list[dict[str, object]] = []
+        step_num = 0
+        while True:
+            step_num += 1
+            step_cdc_start_lsn = fetch_max_lsn(cdc_plan.client)
+            step_logical_start_lsn = fetch_max_lsn(logical_plan.client)
+            step_start_time = utc_now()
+
+            print()
+            print(f"Step {step_num} — {plan_prefix(cdc_plan)} Start time (UTC): {step_start_time}")
+            print(f"Step {step_num} — {plan_prefix(cdc_plan)} Start LSN:        {step_cdc_start_lsn}")
+            print(f"Step {step_num} — {plan_prefix(logical_plan)} Start LSN:    {step_logical_start_lsn}")
+
+            post_processing_wait_since_utc = utc_now()
+            input(f"Perform the UI action for step {step_num}, then press Enter to capture both traces... ")
+            if not args.skip_post_processing_wait:
+                wait_for_post_processing_idle(
+                    args.post_processing_container_prefix,
+                    args.post_processing_idle_message,
+                    post_processing_wait_since_utc,
+                    args.post_processing_wait_timeout,
+                    args.post_processing_initial_wait,
+                )
+
+            step_cdc_end_lsn = fetch_max_lsn(cdc_plan.client)
+            step_logical_end_lsn = fetch_max_lsn(logical_plan.client)
+            step_end_time = utc_now()
+            print(f"Step {step_num} — {plan_prefix(cdc_plan)} End time (UTC):   {step_end_time}")
+            print(f"Step {step_num} — {plan_prefix(cdc_plan)} End LSN:          {step_cdc_end_lsn}")
+            print(f"Step {step_num} — {plan_prefix(logical_plan)} End LSN:      {step_logical_end_lsn}")
+
+            step_description = input(f"Describe what you did in step {step_num}: ").strip()
+
+            log_progress(f"Step {step_num}: Fetching CDC rows for {plan_prefix(cdc_plan)}")
+            step_cdc_changes = fetch_changes_for_captures(
+                cdc_plan.client, cdc_captures, step_cdc_start_lsn, step_cdc_end_lsn
+            )
+            for change in step_cdc_changes:
+                change["_step"] = step_num
+            all_cdc_changes.extend(step_cdc_changes)
+            log_progress(f"Step {step_num}: Fetched {len(step_cdc_changes)} CDC rows for {plan_prefix(cdc_plan)}")
+
+            log_progress(f"Step {step_num}: Fetching CDC rows for {plan_prefix(logical_plan)}")
+            step_logical_cdc_changes = fetch_changes_for_captures(
+                logical_plan.client, logical_captures, step_logical_start_lsn, step_logical_end_lsn
+            )
+            for change in step_logical_cdc_changes:
+                change["_step"] = step_num
+            all_logical_cdc_changes.extend(step_logical_cdc_changes)
+            log_progress(
+                f"Step {step_num}: Fetched {len(step_logical_cdc_changes)} CDC rows for {plan_prefix(logical_plan)}"
             )
 
-        cdc_end_lsn = fetch_max_lsn(cdc_plan.client)
-        logical_end_lsn = fetch_max_lsn(logical_plan.client)
-        end_time_utc = utc_now()
-        print(f"{plan_prefix(cdc_plan)} End time (UTC):   {end_time_utc}")
-        print(f"{plan_prefix(cdc_plan)} End LSN:          {cdc_end_lsn}")
-        print(f"{plan_prefix(logical_plan)} End time (UTC):   {end_time_utc}")
-        print(f"{plan_prefix(logical_plan)} End LSN:          {logical_end_lsn}")
+            nbs_steps.append({
+                "step": step_num,
+                "description": step_description,
+                "cdc_start_lsn": step_cdc_start_lsn,
+                "cdc_end_lsn": step_cdc_end_lsn,
+                "logical_start_lsn": step_logical_start_lsn,
+                "logical_end_lsn": step_logical_end_lsn,
+                "start_time_utc": step_start_time,
+                "end_time_utc": step_end_time,
+            })
 
-        action_descriptions = prompt_action_descriptions()
+            if not prompt_another_step():
+                break
 
-        cdc_captures, cdc_changes = fetch_sorted_changes(cdc_plan, cdc_start_lsn, cdc_end_lsn)
-        logical_captures, logical_cdc_changes = fetch_sorted_changes(logical_plan, logical_start_lsn, logical_end_lsn)
+        cdc_start_lsn = str(nbs_steps[0]["cdc_start_lsn"])
+        cdc_end_lsn = str(nbs_steps[-1]["cdc_end_lsn"])
+        logical_start_lsn = str(nbs_steps[0]["logical_start_lsn"])
+        logical_end_lsn = str(nbs_steps[-1]["logical_end_lsn"])
+        end_time_utc = str(nbs_steps[-1]["end_time_utc"])
+        action_descriptions = [str(s.get("description", "")) for s in nbs_steps if s.get("description")]
+
+        log_progress(f"{plan_prefix(cdc_plan)} Sorting captured CDC rows")
+        all_cdc_changes.sort(key=change_sort_key)
+        log_progress(f"{plan_prefix(cdc_plan)} Sorted {len(all_cdc_changes)} CDC rows")
+
+        log_progress(f"{plan_prefix(logical_plan)} Sorting captured CDC rows")
+        all_logical_cdc_changes.sort(key=change_sort_key)
+        log_progress(f"{plan_prefix(logical_plan)} Sorted {len(all_logical_cdc_changes)} CDC rows")
 
         log_progress(f"{plan_prefix(logical_plan)} Building logical change events")
         logical_changes = build_logical_changes(
             logical_plan.database,
-            logical_cdc_changes,
+            all_logical_cdc_changes,
             logical_primary_keys_by_table,
             action_descriptions,
             start_time_utc,
@@ -506,6 +579,7 @@ def main() -> int:
             "end_time_utc": end_time_utc,
             "start_lsn": cdc_start_lsn,
             "end_lsn": cdc_end_lsn,
+                        "steps": nbs_steps,
             "initially_tracked_table_count": cdc_plan.initially_tracked_count,
             "enabled_tables": cdc_plan.enabled_tables,
             "skipped_tables": cdc_plan.skipped_tables,
@@ -521,6 +595,7 @@ def main() -> int:
             "end_time_utc": end_time_utc,
             "start_lsn": logical_start_lsn,
             "end_lsn": logical_end_lsn,
+            "steps": nbs_steps,
             "action_descriptions": action_descriptions,
             "initially_tracked_table_count": logical_plan.initially_tracked_count,
             "enabled_tables": logical_plan.enabled_tables,
@@ -533,6 +608,7 @@ def main() -> int:
         combined_manifest = {
             "server": args.server,
             "captured_at_utc": utc_now(),
+            "steps": nbs_steps,
             "action_descriptions": action_descriptions,
             "cdc_database": cdc_plan.database,
             "logical_database": logical_plan.database,
@@ -542,8 +618,8 @@ def main() -> int:
             "cdc_inserts_file": str(cdc_plan.run_dir / "inserts.sql"),
             "logical_changes_file": str(logical_plan.run_dir / "logical-changes.json"),
             "logical_markdown_file": str(logical_plan.run_dir / "logical-changes.md"),
-            "cdc_change_count": len(cdc_changes),
-            "logical_cdc_change_count": len(logical_cdc_changes),
+            "cdc_change_count": len(all_cdc_changes),
+            "logical_cdc_change_count": len(all_logical_cdc_changes),
             "logical_change_count": len(logical_changes),
         }
 
@@ -552,13 +628,13 @@ def main() -> int:
         log_progress(f"{plan_prefix(cdc_plan)} Writing manifest.json")
         write_manifest(cdc_plan.run_dir / "manifest.json", cdc_manifest)
         log_progress(f"{plan_prefix(cdc_plan)} Writing changes.jsonl")
-        write_jsonl(cdc_plan.run_dir / "changes.jsonl", cdc_changes)
+        write_jsonl(cdc_plan.run_dir / "changes.jsonl", all_cdc_changes)
         log_progress(f"{plan_prefix(cdc_plan)} Writing summary.txt")
         write_summary(
             cdc_plan.run_dir / "summary.txt",
-            action_descriptions,
+            [],
             cdc_manifest,
-            cdc_changes,
+            all_cdc_changes,
             primary_keys_by_table,
             identity_columns_by_table,
             foreign_keys_by_source,
@@ -570,12 +646,13 @@ def main() -> int:
             args.replay_mode,
             superuser_id,
             starting_uid,
+            nbs_steps=nbs_steps,
         )
 
         log_progress(f"{plan_prefix(logical_plan)} Writing manifest.json")
         write_manifest(logical_plan.run_dir / "manifest.json", logical_manifest)
         log_progress(f"{plan_prefix(logical_plan)} Writing changes.jsonl")
-        write_jsonl(logical_plan.run_dir / "changes.jsonl", logical_cdc_changes)
+        write_jsonl(logical_plan.run_dir / "changes.jsonl", all_logical_cdc_changes)
         log_progress(f"{plan_prefix(logical_plan)} Writing logical-changes.json")
         logical_changes_path = logical_plan.run_dir / "logical-changes.json"
         write_logical_changes(logical_changes_path, logical_changes)
@@ -594,8 +671,8 @@ def main() -> int:
         log_progress("Finished writing combined output artifacts")
 
         print()
-        print(f"{plan_prefix(cdc_plan)} Captured {len(cdc_changes)} CDC rows")
-        print(f"{plan_prefix(logical_plan)} Captured {len(logical_cdc_changes)} CDC rows")
+        print(f"{plan_prefix(cdc_plan)} Captured {len(all_cdc_changes)} CDC rows across {len(nbs_steps)} step(s)")
+        print(f"{plan_prefix(logical_plan)} Captured {len(all_logical_cdc_changes)} CDC rows across {len(nbs_steps)} step(s)")
         print(f"{plan_prefix(logical_plan)} Built {len(logical_changes)} logical change events")
         print(f"Generated {rdb_select_count} RDB SELECT statements")
         print(f"RDB select scaffold: {rdb_selects_path}")

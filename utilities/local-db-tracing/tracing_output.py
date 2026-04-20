@@ -197,6 +197,7 @@ def write_summary(
     replay_mode: str = "full",
     superuser_id: int = 10009282,
     starting_uid: int = DEFAULT_STARTING_UID,
+    nbs_steps: list[dict[str, object]] | None = None,
 ) -> None:
     """Write the human-readable summary artifact for a tracing run.
 
@@ -227,7 +228,14 @@ def write_summary(
         table_records[table_name].append(record)
 
     lines: list[str] = []
-    if nbs_actions:
+    if nbs_steps:
+        lines.append("Steps:")
+        for step in nbs_steps:
+            num = step.get("step", "?")
+            desc = step.get("description", "")
+            lines.append(f"  Step {num}" + (f": {desc}" if desc else ""))
+        lines.append("")
+    elif nbs_actions:
         lines.append("Actions performed in NBS:")
         for action in nbs_actions:
             lines.append(f"- {action}")
@@ -297,6 +305,7 @@ def write_summary(
             known_associations,
             superuser_id=superuser_id,
             starting_uid=starting_uid,
+            nbs_steps=nbs_steps,
         )
     if ignored_replay_table_names:
         lines.append("")

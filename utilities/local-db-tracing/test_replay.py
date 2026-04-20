@@ -267,5 +267,125 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertNotIn("INSERT INTO [dbo].[EDX_patient_match]", inserts_sql)
 
 
+    def test_step_section_headers_and_per_statement_tags(self) -> None:
+        """Step markers appear in inserts.sql when _step is set on changes."""
+        step1_entity = {
+            "schema_name": "dbo",
+            "table_name": "Entity",
+            "operation": "insert",
+            "start_lsn": "0x01",
+            "seqval": "0x02",
+            "operation_code": 2,
+            "_step": 1,
+            "row": {"entity_uid": 10009297, "class_cd": "PSN"},
+        }
+        step2_postal = {
+            "schema_name": "dbo",
+            "table_name": "Postal_locator",
+            "operation": "insert",
+            "start_lsn": "0x02",
+            "seqval": "0x04",
+            "operation_code": 2,
+            "_step": 2,
+            "row": {"postal_locator_uid": 10009298, "state_cd": "13"},
+        }
+        nbs_steps = [
+            {"step": 1, "description": "Create patient"},
+            {"step": 2, "description": "Add address"},
+        ]
+
+        sql = "\n".join(
+            reconstruct_sql_statements(
+                [step1_entity, step2_postal],
+                self.primary_keys_by_table,
+                self.identity_columns_by_table,
+                self.foreign_keys_by_source,
+                self.column_sql_types,
+                self.generated_always_columns,
+                self.uid_generator_entries,
+                self.known_associations,
+                nbs_steps=nbs_steps,
+            )
+        )
+
+        self.assertIn("-- STEP 1: Create patient", sql)
+        self.assertIn("-- STEP 2: Add address", sql)
+        self.assertIn("-- step: 1", sql)
+        self.assertIn("-- step: 2", sql)
+        step1_pos = sql.index("-- STEP 1: Create patient")
+        step2_pos = sql.index("-- STEP 2: Add address")
+        entity_pos = sql.index("INSERT INTO [dbo].[Entity]")
+        postal_pos = sql.index("INSERT INTO [dbo].[Postal_locator]")
+        self.assertLess(step1_pos, entity_pos)
+        self.assertLess(step2_pos, postal_pos)
+        self.assertLess(entity_pos, step2_pos)
+
+    def test_no_step_tags_without_step_field(self) -> None:
+        """Backward compat: no _step on records means no STEP headers added."""
+        sql = "\n".join(
+            reconstruct_sql_statements(
+                self.changes,
+                self.primary_keys_by_table,
+                self.identity_columns_by_table,
+                self.foreign_keys_by_source,
+                self.column_sql_types,
+                self.generated_always_columns,
+                self.uid_generator_entries,
+                self.known_associations,
+            )
+        )
+
+        self.assertNotIn("-- STEP", sql)
+        self.assertNotIn("-- step:", sql)
+
+    def test_summary_lists_steps_at_top(self) -> None:
+        """summary.txt starts with ordered Steps section when nbs_steps provided."""
+        manifest = {
+            "database": "NBS_ODSE",
+            "start_time_utc": "2026-04-07T14:08:36+00:00",
+            "end_time_utc": "2026-04-07T14:09:47+00:00",
+            "start_lsn": "0x01",
+            "end_lsn": "0x02",
+            "initially_tracked_table_count": 20,
+            "enabled_tables": [],
+            "skipped_tables": [],
+        }
+        nbs_steps = [
+            {"step": 1, "description": "Create patient"},
+            {"step": 2, "description": "Add lab report"},
+            {"step": 3, "description": "Finalize investigation"},
+        ]
+        step_changes = [
+            {**c, "_step": 1} for c in self.changes
+        ]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            summary_path = Path(temp_dir) / "summary.txt"
+            write_summary(
+                summary_path,
+                [],
+                manifest,
+                step_changes,
+                self.primary_keys_by_table,
+                self.identity_columns_by_table,
+                self.foreign_keys_by_source,
+                self.column_sql_types,
+                self.generated_always_columns,
+                self.uid_generator_entries,
+                self.known_associations,
+                nbs_steps=nbs_steps,
+            )
+            summary = summary_path.read_text(encoding="utf-8")
+
+        self.assertTrue(summary.startswith("Steps:"))
+        self.assertIn("  Step 1: Create patient", summary)
+        self.assertIn("  Step 2: Add lab report", summary)
+        self.assertIn("  Step 3: Finalize investigation", summary)
+        steps_pos = summary.index("Steps:")
+        database_pos = summary.index("Database:")
+        self.assertLess(steps_pos, database_pos)
+        self.assertNotIn("Actions performed in NBS:", summary)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -353,6 +353,87 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertEqual(second_predicate, "[LOCAL_ID] = @dbo_Observation_local_id_2")
         self.assertEqual(third_predicate, "[LOCAL_ID] = @dbo_Observation_local_id_3")
 
+    def test_render_sql_includes_step_comment_for_single_step(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries([])
+        scaffolds = generate_rdb_selects.build_scaffolds(
+            [
+                {
+                    "schema_name": "dbo",
+                    "table_name": "D_PATIENT",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"PATIENT_LOCAL_ID": "PSN10067006GA01"},
+                    },
+                    "primary_key_values": {"PATIENT_KEY": 9},
+                    "after": {"PATIENT_KEY": 9},
+                    "metadata": {"step": 1},
+                }
+            ],
+            declare_entries,
+        )
+
+        sql = generate_rdb_selects.render_sql(
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
+            [],
+            declare_entries,
+            scaffolds,
+        )
+
+        self.assertIn("-- Step: 1", sql)
+
+    def test_render_sql_includes_steps_comment_for_multi_step_scaffold(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries([])
+        scaffolds = generate_rdb_selects.build_scaffolds(
+            [
+                {
+                    "schema_name": "dbo",
+                    "table_name": "D_PATIENT",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"PATIENT_LOCAL_ID": "PSN10067006GA01"},
+                    },
+                    "primary_key_values": {"PATIENT_KEY": 9},
+                    "after": {"PATIENT_KEY": 9},
+                    "metadata": {"step": 1},
+                },
+                {
+                    "schema_name": "dbo",
+                    "table_name": "D_PATIENT",
+                    "operation": "update",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"PATIENT_LOCAL_ID": "PSN10067006GA01"},
+                    },
+                    "primary_key_values": {"PATIENT_KEY": 9},
+                    "after": {"PATIENT_KEY": 9, "PATIENT_LAST_NAME": "Tester-Smith"},
+                    "metadata": {"step": 2},
+                },
+            ],
+            declare_entries,
+        )
+
+        sql = generate_rdb_selects.render_sql(
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
+            [],
+            declare_entries,
+            scaffolds,
+        )
+
+        self.assertIn("-- Steps: 1, 2", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -112,6 +112,44 @@ Use when you only need target row-level logical deltas.
 python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
 ```
 
+### RDB vs RDB_MODERN Compare (Two-Window Capture)
+
+Use `trace_rdb_vs_rdb_modern_compare.py` when you want to compare what landed in `RDB`
+after `MasterETL` (baseline) against what changed in `RDB_MODERN` from the original UI
+action (target).
+
+Run from repo root:
+
+```powershell
+python utilities/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --user sa --password "<password>"
+```
+
+What the script does:
+
+1. Captures `RDB_MODERN` logical changes for your UI action window.
+2. Captures `RDB` logical changes for your `MasterETL` window.
+3. Compares `RDB` (baseline) to `RDB_MODERN` (target) and writes JSON + Markdown reports.
+
+During the run:
+
+1. At step 1 prompt, perform the UI action in NBS, then press Enter.
+2. At step 2 prompt, run `MasterETL`, then press Enter.
+3. Review compare output printed at the end (matched, missing, skipped counts).
+
+Useful options:
+
+- `--rdb-modern-database`: target database captured first (default `RDB_MODERN`)
+- `--rdb-database`: baseline database captured second (default `RDB`)
+- `--cleanup yes|no`: disable CDC on tables this script enabled in each window (default `no`)
+- `--output-dir`: base folder for timestamped run directories
+- `--sqlcmd`: override sqlcmd executable path/name
+
+Example with explicit cleanup:
+
+```powershell
+python utilities/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --rdb-modern-database RDB_MODERN --rdb-database RDB --user sa --password "<password>" --cleanup yes
+```
+
 ## Common Commands
 
 Show tracer help:
@@ -188,6 +226,12 @@ Include helper-table writes in regenerated SQL when needed:
 python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
 ```
 
+Show RDB-vs-RDB_MODERN compare tracer help:
+
+```powershell
+python utilities/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --help
+```
+
 ## Key Options
 
 Commonly used options across tracers:
@@ -236,6 +280,13 @@ Dual-capture run (example `.../20260408-111218-NBS_ODSE-to-RDB_MODERN/`):
 - `rdb-selects-results.json`: machine-readable validation results (when validator is run)
 - `rdb-selects-results.md`: human-readable validation report (when validator is run)
 
+RDB-vs-RDB_MODERN compare run (example):
+
+- `.../<timestamp>-RDB_MODERN/`: logical target-capture artifacts
+- `.../<timestamp>-RDB/`: logical baseline-capture artifacts
+- `.../<timestamp>-RDB/compare-results-<rdb-run-dir>-vs-<rdb-modern-run-dir>.json`: structured compare results
+- `.../<timestamp>-RDB/compare-results-<rdb-run-dir>-vs-<rdb-modern-run-dir>.md`: human-readable compare report
+
 ## Reference Files
 
 - `known_lookup_keys.json`: Documents which column should be used in WHERE predicates for tables with multiple candidate keys. Consult this when reviewing generated rdb-selects.sql predicates or update it to prevent incorrect key selection in future runs.
@@ -270,7 +321,7 @@ If no replayable row operations are found, `summary.txt` is still written withou
 
 - Some tables may be skipped if SQL Server refuses CDC enablement.
 - CDC fetches are batched across capture instances (not one `sqlcmd` process per table).
-- By default, after you press Enter, capture end first waits for Kafka lag to drain (for `pipeline-consumer-app` and `connect-Kafka-Connect-SqlServer-Sink`) and then waits for a running container starting with `nedss-datareporting-reporting-pipeline-service-1` to log `No ids to process from the topics.`
+- By default, after you press Enter, capture end first waits for Kafka lag to drain (for `pipeline-consumer-app` and `connect-Kafka-Connect-SqlServer-Sink`) and then waits for a running container starting with `nedss-datareporting-reporting-pipeline-service-1` to log `No ids to process from the topics.` three times in a row.
 - Idle completion is datamart-aware: the final idle line must be newer than any `ProcessDatamartData` stored-proc log events in the same polling window.
 - The tooling is designed for both `NBS_ODSE` and `RDB_MODERN`, but replay quality depends on available schema metadata.
 
