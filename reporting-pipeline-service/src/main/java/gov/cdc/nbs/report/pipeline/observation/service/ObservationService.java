@@ -40,7 +40,8 @@ import org.springframework.stereotype.Service;
  *   <li>Fetching enriched data from the database using stored procedures.
  *   <li>Transforming raw data into reporting-optimized formats for Observation and its related
  *       entities (Coded, Date, EDX, Material, Numeric, Reason, Txt).
- *   <li>Pushing transformed data to corresponding output topics in Kafka.
+ *   <li>Persisting transformed data to corresponding nrt_observation_* tables
+ *   <li>Pushing transformed data to corresponding output topic in Kafka.
  *   <li>Handling retries and dead-letter topics (DLT) for resilient processing.
  * </ul>
  */
@@ -141,8 +142,7 @@ public class ObservationService {
       // For LabReport values, we only need to trigger if the relationship is deleted (not covered
       // in updates to Observation)
       // PHC targets are excluded from the LabReport association updates, as the LabReport will
-      // receive
-      // an update in Observation
+      // receive an update in Observation
       if (typeCd.equals("LabReport") && targetClassCd.equals("OBS")) {
         observationProcessor.process(batchId, sourceActUid);
       }
