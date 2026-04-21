@@ -22,10 +22,14 @@ public abstract class FunctionalTest {
   private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(logger);
   private static boolean started = false;
 
+  private static final File base = new File("../docker-compose.yaml");
+  private static final File override = new File("../docker-compose.override.yaml");
+
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
-      new ComposeContainer(
-              DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
+      (override.exists()
+              ? new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base, override)
+              : new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base))
           // List specific services to prevent launching wildfly container
           .withServices("nbs-mssql", "liquibase", "kafka", "debezium", "kafka-connect")
           .waitingFor("debezium", Wait.forHealthcheck())
