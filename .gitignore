@@ -63,3 +63,9 @@ examples/
 
 # node libs
 node_modules/
+
+# local-db-tracing
+local-db-tracing/__pycache__
+local-db-tracing/.local/*
+local-db-tracing/output/*
+local-db-tracing/known_replay_associations.json
