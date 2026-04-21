@@ -14,7 +14,7 @@ const waitForEnter = (msg) => new Promise(resolve => rl.question(msg, resolve));
 async function runFile(browser, page, file) {
   console.log(`Running ${file}...`);
   const recording = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const runner = await createRunner(recording, new PuppeteerRunnerExtension(browser, page));
+  const runner = await createRunner(recording, new PuppeteerRunnerExtension(browser, page, { timeout: 10000 }));
   await runner.run();
 }
 
