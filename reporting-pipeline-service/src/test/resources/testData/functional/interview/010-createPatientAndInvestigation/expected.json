@@ -1,0 +1,64 @@
+{
+  "0": [
+    {
+      "PATIENT_MPR_UID": 10014313,
+      "PATIENT_RECORD_STATUS": "ACTIVE",
+      "PATIENT_LOCAL_ID": "PSN10014313GA01",
+      "PATIENT_FIRST_NAME": "Jeff",
+      "PATIENT_LAST_NAME": "Doe",
+      "PATIENT_LAST_CHANGE_TIME": "2026-04-20T04:21:34.363",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STATE_CODE": "13",
+      "PATIENT_COUNTRY": "United States",
+      "PATIENT_ENTRY_METHOD": "N",
+      "PATIENT_ADDED_BY": "Kent, Ariella",
+      "PATIENT_LAST_UPDATED_BY": "Kent, Ariella"
+    }
+  ],
+  "1": [
+    {
+      "patient_uid": 10014313,
+      "patient_mpr_uid": 10014313,
+      "record_status": "ACTIVE",
+      "local_id": "PSN10014313GA01",
+      "first_name": "Jeff",
+      "last_name": "Doe",
+      "state": "Georgia",
+      "state_code": "13",
+      "country": "United States",
+      "country_code": "840",
+      "entry_method": "N"
+    }
+  ],
+  "2": [
+    {
+      "patient_uid": 10014315,
+      "patient_mpr_uid": 10014313,
+      "record_status": "ACTIVE",
+      "local_id": "PSN10014313GA01",
+      "first_name": "Jeff",
+      "last_name": "Doe",
+      "state": "Georgia",
+      "state_code": "13"
+    }
+  ],
+  "3": [
+    {
+      "CASE_OID": 1300600015,
+      "CASE_UID": 10014317,
+      "INV_LOCAL_ID": "CAS10014317GA01",
+      "INV_SHARE_IND": "T",
+      "INVESTIGATION_STATUS": "Open",
+      "CASE_TYPE": "I",
+      "JURISDICTION_CD": "130006",
+      "JURISDICTION_NM": "Clayton County",
+      "RECORD_STATUS_CD": "ACTIVE",
+      "PROGRAM_AREA_DESCRIPTION": "STD",
+      "INVESTIGATION_ADDED_BY": "Kent, Ariella",
+      "INVESTIGATION_LAST_UPDATED_BY": "Kent, Ariella",
+      "REFERRAL_BASIS": "P1 - Partner, Sex",
+      "CURR_PROCESS_STATE": "Open Case",
+      "COINFECTION_ID": "COIN1005XX01"
+    }
+  ]
+}
