@@ -3,10 +3,13 @@ on:
   pull_request:
     paths:
       - "reporting-pipeline-service/**"
+      - "liquibase-service/**"
+      - "common-util/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
       - "docker-compose.yaml"
+      - ".github/workflows/**"
 
 jobs:
   pipeline:
@@ -44,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: testing
-          path: ./**/build/reports
+          path: reporting-pipeline-service/build/reports
