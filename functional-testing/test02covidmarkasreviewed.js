@@ -30,7 +30,7 @@ if (stepPause) {
 //
 //
 // step 02: mark the case as reviewed
-// QUEUE: only run this test to collect data if there is nothing
+// NOTE: only run this test to collect data if there is nothing
 // other than this one Lab Report in the Documents Requiring Review Queue.
 await runFile(browser, page, '020.MarkAsReviewedCovid.json');
 
