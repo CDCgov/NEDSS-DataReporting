@@ -12,7 +12,7 @@ Run from the repository root.
 2. Start a dual capture run:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_dual_capture.py
+python local-db-tracing/trace_db_dual_capture.py
 ```
 
 3. Perform the action in NBS that you want to turn into a test.
@@ -21,16 +21,16 @@ python utilities/local-db-tracing/trace_db_dual_capture.py
 6. (optional) narrow down local ID lookups from where in to = via
 
 ```powershell
-python utilities/local-db-tracing/narrow_rdb_selects_where_in.py --input-file utilities/local-db-tracing/output/<paired-run>/rdb-selects.sql
+python local-db-tracing/narrow_rdb_selects_where_in.py --input-file local-db-tracing/output/<paired-run>/rdb-selects.sql
 ```
 
 7. Validate expected target rows:
 
 ```powershell
-python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/<paired-run>/rdb-selects.sql
+python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/rdb-selects.sql
 ```
 
-8. Review pass/fail details in `utilities/local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
+8. Review pass/fail details in `local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
 
 ## Overview
 
@@ -44,7 +44,7 @@ At a high level, the tracers:
 - verify database-level CDC is enabled
 - enable CDC on eligible user tables (excluding noisy tables such as `dbo.job_flow_log`)
 - capture a start LSN, wait for your action, and capture an end LSN
-- write structured artifacts under `utilities/local-db-tracing/output`
+- write structured artifacts under `local-db-tracing/output`
 - optionally clean up tracer-managed CDC table configuration
 
 ## Prerequisites
@@ -76,13 +76,13 @@ GO
 Captures `NBS_ODSE` CDC and `RDB_MODERN` logical changes for one action window.
 
 ```powershell
-python utilities/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
+python local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
 ```
 
 Use alternate databases when needed:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --cdc-database NBS_ODSE --logical-database RDB_MODERN --user sa --password "<password>"
+python local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --cdc-database NBS_ODSE --logical-database RDB_MODERN --user sa --password "<password>"
 ```
 
 During the run you will:
@@ -101,7 +101,7 @@ By default, the tracer uses a two-stage wait before ending capture and generatin
 Use when you only need raw CDC details and reconstructed replay SQL.
 
 ```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
+python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
 ```
 
 ### Logical Capture Only
@@ -109,7 +109,7 @@ python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --data
 Use when you only need target row-level logical deltas.
 
 ```powershell
-python utilities/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
+python local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
 ```
 
 ### RDB vs RDB_MODERN Compare (Two-Window Capture)
@@ -121,7 +121,7 @@ action (target).
 Run from repo root:
 
 ```powershell
-python utilities/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --user sa --password "<password>"
+python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --user sa --password "<password>"
 ```
 
 What the script does:
@@ -147,7 +147,7 @@ Useful options:
 Example with explicit cleanup:
 
 ```powershell
-python utilities/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --rdb-modern-database RDB_MODERN --rdb-database RDB --user sa --password "<password>" --cleanup yes
+python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --rdb-modern-database RDB_MODERN --rdb-database RDB --user sa --password "<password>" --cleanup yes
 ```
 
 ## Common Commands
@@ -155,49 +155,49 @@ python utilities/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server lo
 Show tracer help:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --help
+python local-db-tracing/trace_db_cdc.py --help
 ```
 
 Always clean up tracer-managed tables after a run:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
+python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
 ```
 
 Leave tracer-managed tables enabled for later cleanup:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
+python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
 ```
 
 Disable previously tracked tracer-managed tables and exit:
 
 ```powershell
-python utilities/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
+python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
 ```
 
 Generate `rdb-selects.sql` from an existing paired run:
 
 ```powershell
-python utilities/local-db-tracing/generate_rdb_selects.py --paired-run-dir utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
+python local-db-tracing/generate_rdb_selects.py --paired-run-dir local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
 ```
 
 Or generate from a manifest directly:
 
 ```powershell
-python utilities/local-db-tracing/generate_rdb_selects.py --combined-manifest utilities/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
+python local-db-tracing/generate_rdb_selects.py --combined-manifest local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
 ```
 
 Narrow ambiguous `WHERE ... IN (@var1, @var2, ...)` predicates before validation:
 
 ```powershell
-python utilities/local-db-tracing/narrow_rdb_selects_where_in.py --input-file utilities/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
+python local-db-tracing/narrow_rdb_selects_where_in.py --input-file local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
 ```
 
 Then validate `rdb-selects.sql` against expected JSON row sets:
 
 ```powershell
-python utilities/local-db-tracing/validate_rdb_selects.py --input-file utilities/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
+python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
 ```
 
 Or skip narrowing to validate directly with broad IN predicates.
@@ -205,31 +205,31 @@ Or skip narrowing to validate directly with broad IN predicates.
 Compare logical changes between baseline and target runs:
 
 ```powershell
-python utilities/local-db-tracing/compare_logical_changes.py --baseline-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file utilities/local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
+python local-db-tracing/compare_logical_changes.py --baseline-file local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
 ```
 
 Regenerate `summary.txt` from `changes.jsonl`:
 
 ```powershell
-python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
+python local-db-tracing/regenerate_summary.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
 ```
 
 Regenerate `summary.txt` and include action text:
 
 ```powershell
-python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
+python local-db-tracing/regenerate_summary.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
 ```
 
 Include helper-table writes in regenerated SQL when needed:
 
 ```powershell
-python utilities/local-db-tracing/regenerate_summary.py --input-file utilities/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
+python local-db-tracing/regenerate_summary.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
 ```
 
 Show RDB-vs-RDB_MODERN compare tracer help:
 
 ```powershell
-python utilities/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --help
+python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --help
 ```
 
 ## Key Options
@@ -257,7 +257,7 @@ For `regenerate_summary.py`:
 
 ## Output Structure
 
-Each run writes a timestamped directory under `utilities/local-db-tracing/output`.
+Each run writes a timestamped directory under `local-db-tracing/output`.
 
 Single CDC run (example):
 

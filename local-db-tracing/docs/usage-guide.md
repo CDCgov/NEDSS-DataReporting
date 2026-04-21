@@ -12,7 +12,7 @@
 
 1. Navigate to the tracing directory:
 ```bash
-cd utilities/local-db-tracing
+cd local-db-tracing
 ```
 
 2. Install Python dependencies (if needed):
