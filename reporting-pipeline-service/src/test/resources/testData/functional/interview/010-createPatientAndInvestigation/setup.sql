@@ -145,7 +145,7 @@ VALUES (
     N'', N'I', N'10280', N'Gonorrhea', N'', N'', N'', N'', 1, N'O', N'130006',
     N'2026-04-20T04:21:34.507', @superuser_id, @investigation_local_id, N'16', N'2026',
     N'', N'', N'', N'STD', N'OPEN', N'2026-04-20T04:21:34.507', N'', N'A', N'', N'', N'',
-    1300600015, N'T', 1, N'', N'', N'', N'', N'', N'', N'', N'', N'', N'', N'P1', N'OC',
+    1300600015, N'T', 1, N'', N'', N'', N'', N'', N'', N'', N'', N'', N'', N'', N'P1', N'OC',
     N'COIN1005XX01'
 );
 

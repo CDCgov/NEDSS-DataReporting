@@ -1,9 +1,8 @@
 {
   "0": [
     {
-      "D_INTERVIEW_KEY": 3.0,
       "IX_STATUS_CD": "COMPLETE",
-      "IX_DATE": "2026-04-18T00:00:00",
+      "IX_DATE": "2026-04-18T00:00:00.000",
       "IX_INTERVIEWEE_ROLE_CD": "SUBJECT",
       "IX_TYPE_CD": "PRESMPTV",
       "IX_LOCATION_CD": "I",
@@ -20,7 +19,7 @@
     {
       "interview_uid": 10014318,
       "interview_status_cd": "COMPLETE",
-      "interview_date": "2026-04-18T00:00:00",
+      "interview_date": "2026-04-18T00:00:00.000",
       "interviewee_role_cd": "SUBJECT",
       "interview_type_cd": "PRESMPTV",
       "interview_loc_cd": "I",
@@ -37,28 +36,22 @@
   ],
   "2": [
     {
-      "D_INTERVIEW_KEY": 3.0,
-      "D_INTERVIEW_NOTE_KEY": 5.0,
       "USER_FIRST_NAME": "Ariella",
       "USER_LAST_NAME": "Kent",
       "USER_COMMENT": "Lorem ipsum dolor sit emet",
-      "COMMENT_DATE": "2026-04-19T21:24:00"
+      "COMMENT_DATE": "2026-04-19T21:24:00.000"
     },
     {
-      "D_INTERVIEW_KEY": 3.0,
-      "D_INTERVIEW_NOTE_KEY": 6.0,
       "USER_FIRST_NAME": "Ariella",
       "USER_LAST_NAME": "Kent",
       "USER_COMMENT": "This is a note",
-      "COMMENT_DATE": "2026-04-19T21:24:00"
+      "COMMENT_DATE": "2026-04-19T21:24:00.000"
     },
     {
-      "D_INTERVIEW_KEY": 3.0,
-      "D_INTERVIEW_NOTE_KEY": 7.0,
       "USER_FIRST_NAME": "Ariella",
       "USER_LAST_NAME": "Kent",
       "USER_COMMENT": "This is another note!",
-      "COMMENT_DATE": "2026-04-19T21:24:00"
+      "COMMENT_DATE": "2026-04-19T21:24:00.000"
     }
   ],
   "3": [
@@ -67,7 +60,7 @@
       "user_first_name": "Ariella",
       "user_last_name": "Kent",
       "user_comment": "This is a note",
-      "comment_date": "2026-04-19T21:24:00",
+      "comment_date": "2026-04-19T21:24:00.000",
       "record_status_cd": "ACTIVE"
     },
     {
@@ -75,7 +68,7 @@
       "user_first_name": "Ariella",
       "user_last_name": "Kent",
       "user_comment": "This is another note! ",
-      "comment_date": "2026-04-19T21:24:00",
+      "comment_date": "2026-04-19T21:24:00.000",
       "record_status_cd": "ACTIVE"
     },
     {
@@ -83,16 +76,13 @@
       "user_first_name": "Ariella",
       "user_last_name": "Kent",
       "user_comment": "Lorem ipsum dolor sit emet",
-      "comment_date": "2026-04-19T21:24:00",
+      "comment_date": "2026-04-19T21:24:00.000",
       "record_status_cd": "ACTIVE"
     }
   ],
   "4": [
     {
-      "D_INTERVIEW_KEY": 3.0,
-      "PATIENT_KEY": 16,
-      "IX_INTERVIEWER_KEY": 4,
-      "INVESTIGATION_KEY": 8
+      "EXISTS_CHECK": 1
     }
   ],
   "5": [

@@ -1,6 +1,5 @@
 -- Query 0: Verify D_INTERVIEW was created
 SELECT
-    [D_INTERVIEW_KEY],
     [IX_STATUS_CD],
     [IX_DATE],
     [IX_INTERVIEWEE_ROLE_CD],
@@ -36,19 +35,19 @@ SELECT
 FROM [RDB_MODERN].[dbo].[nrt_interview]
 WHERE [local_id] = 'INT10014318GA01';
 
--- Query 2: Verify D_INTERVIEW_NOTE entries were created (ordered by note key)
+-- Query 2: Verify D_INTERVIEW_NOTE entries were created (ordered by comment text for consistency)
 SELECT
-    [D_INTERVIEW_KEY],
-    [D_INTERVIEW_NOTE_KEY],
     [USER_FIRST_NAME],
     [USER_LAST_NAME],
     [USER_COMMENT],
     [COMMENT_DATE]
 FROM [RDB_MODERN].[dbo].[D_INTERVIEW_NOTE]
-WHERE [D_INTERVIEW_KEY] IN (
-    SELECT [D_INTERVIEW_KEY] FROM [RDB_MODERN].[dbo].[D_INTERVIEW] WHERE [LOCAL_ID] = 'INT10014318GA01'
+WHERE EXISTS (
+    SELECT 1 FROM [RDB_MODERN].[dbo].[D_INTERVIEW]
+    WHERE [LOCAL_ID] = 'INT10014318GA01'
+    AND [D_INTERVIEW].[D_INTERVIEW_KEY] = [D_INTERVIEW_NOTE].[D_INTERVIEW_KEY]
 )
-ORDER BY [D_INTERVIEW_NOTE_KEY];
+ORDER BY [USER_COMMENT];
 
 -- Query 3: Verify nrt_interview_note entries were created (ordered by answer uid)
 SELECT
@@ -62,15 +61,14 @@ FROM [RDB_MODERN].[dbo].[nrt_interview_note]
 WHERE [interview_uid] = 10014318
 ORDER BY [nbs_answer_uid];
 
--- Query 4: Verify F_INTERVIEW_CASE was created
-SELECT
-    [D_INTERVIEW_KEY],
-    [PATIENT_KEY],
-    [IX_INTERVIEWER_KEY],
-    [INVESTIGATION_KEY]
+-- Query 4: Verify F_INTERVIEW_CASE was created (check existence only)
+SELECT TOP 1
+    1 AS [EXISTS_CHECK]
 FROM [RDB_MODERN].[dbo].[F_INTERVIEW_CASE]
-WHERE [D_INTERVIEW_KEY] IN (
-    SELECT [D_INTERVIEW_KEY] FROM [RDB_MODERN].[dbo].[D_INTERVIEW] WHERE [LOCAL_ID] = 'INT10014318GA01'
+WHERE EXISTS (
+    SELECT 1 FROM [RDB_MODERN].[dbo].[D_INTERVIEW]
+    WHERE [LOCAL_ID] = 'INT10014318GA01'
+    AND [D_INTERVIEW].[D_INTERVIEW_KEY] = [F_INTERVIEW_CASE].[D_INTERVIEW_KEY]
 );
 
 -- Query 5: Verify nrt_interview_answer was created

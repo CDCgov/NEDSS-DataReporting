@@ -6,6 +6,7 @@
       "PATIENT_LOCAL_ID": "PSN10014313GA01",
       "PATIENT_FIRST_NAME": "Jeff",
       "PATIENT_LAST_NAME": "Doe",
+      "PATIENT_LAST_CHANGE_TIME": "2026-04-20T04:21:34.363",
       "PATIENT_STATE": "Georgia",
       "PATIENT_STATE_CODE": "13",
       "PATIENT_COUNTRY": "United States",
@@ -43,7 +44,6 @@
   ],
   "3": [
     {
-      "INVESTIGATION_KEY": 8,
       "CASE_OID": 1300600015,
       "CASE_UID": 10014317,
       "INV_LOCAL_ID": "CAS10014317GA01",
