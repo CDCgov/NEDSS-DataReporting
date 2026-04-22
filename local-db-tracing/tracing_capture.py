@@ -265,18 +265,21 @@ def fetch_changes_for_captures(
         capture_table_name = f"cdc.{quote_identifier(capture.capture_instance + '_CT')}"
         statement_parts.extend(
             [
-                "IF EXISTS (",
-                f"    SELECT TOP (1) 1 FROM {capture_table_name} ct",
-                f"    WHERE ct.__$start_lsn > {start_lsn}",
-                f"      AND ct.__$start_lsn <= {end_lsn}",
-                ")",
+                "IF OBJECT_ID(N'" + capture_table_name + "') IS NOT NULL",
                 "BEGIN",
-                "    INSERT INTO #changed_captures (schema_name, table_name, capture_instance)",
-                "    VALUES (",
-                f"        N'{sql_quote(capture.schema_name)}',",
-                f"        N'{sql_quote(capture.table_name)}',",
-                f"        N'{sql_quote(capture.capture_instance)}'",
-                "    );",
+                "    IF EXISTS (",
+                f"        SELECT TOP (1) 1 FROM {capture_table_name} ct",
+                f"        WHERE ct.__$start_lsn > {start_lsn}",
+                f"          AND ct.__$start_lsn <= {end_lsn}",
+                "    )",
+                "    BEGIN",
+                "        INSERT INTO #changed_captures (schema_name, table_name, capture_instance)",
+                "        VALUES (",
+                f"            N'{sql_quote(capture.schema_name)}',",
+                f"            N'{sql_quote(capture.table_name)}',",
+                f"            N'{sql_quote(capture.capture_instance)}'",
+                "        );",
+                "    END;",
                 "END;",
             ]
         )
@@ -286,6 +289,7 @@ def fetch_changes_for_captures(
         statement_parts.extend(
             [
                 f"IF EXISTS (SELECT 1 FROM #changed_captures WHERE capture_instance = N'{sql_quote(capture.capture_instance)}')",
+                "  AND OBJECT_ID(N'" + capture_table_name + "') IS NOT NULL",
                 "BEGIN",
                 "INSERT INTO #cdc_changes (",
                 "    schema_name,",
