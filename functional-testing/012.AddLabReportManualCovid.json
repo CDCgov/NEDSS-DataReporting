@@ -1,0 +1,874 @@
+{
+    "title": "AddLabReportManualCovid",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1310,
+            "height": 953,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 6,
+            "offsetX": 70.8359375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#subsect_Lab input"
+                ],
+                [
+                    "xpath///*[@id=\"subsect_Lab\"]/table/tbody/tr/td[3]/input"
+                ],
+                [
+                    "pierce/#subsect_Lab input"
+                ]
+            ],
+            "offsetY": 9,
+            "offsetX": 24.203125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewFile1.do?ContextAction=AddLab",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Organization as Reporting lab in Lab Test acts"
+                ],
+                [
+                    "#NBS_LAB365Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB365Text\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB365Text"
+                ]
+            ],
+            "offsetY": 7.4375,
+            "offsetX": 74.15625
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/Organization as Reporting lab in Lab Test acts"
+                ],
+                [
+                    "#NBS_LAB365Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB365Text\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB365Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_LAB365CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB365CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB365CodeLookupButton"
+                ]
+            ],
+            "offsetY": 12.9375,
+            "offsetX": 73.4375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Person as Ordering Provider in Lab Test"
+                ],
+                [
+                    "#NBS_LAB366Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB366Text\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB366Text"
+                ]
+            ],
+            "offsetY": 16.9375,
+            "offsetX": 66.15625
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/Person as Ordering Provider in Lab Test"
+                ],
+                [
+                    "#NBS_LAB366Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB366Text\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB366Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_LAB366CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB366CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB366CodeLookupButton"
+                ]
+            ],
+            "offsetY": 6.4375,
+            "offsetX": 77.4375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_14 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_14 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 8.9375,
+            "offsetX": 4
+        },
+        {
+            "type": "change",
+            "value": "GCD",
+            "selectors": [
+                [
+                    "aria/The program area associated with the investigaiton condition.[role=\"listbox\"]"
+                ],
+                [
+                    "#INV108"
+                ],
+                [
+                    "xpath///*[@id=\"INV108\"]"
+                ],
+                [
+                    "pierce/#INV108"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/GCD"
+                ],
+                [
+                    "#NBS_UI_14 > tbody > tr:nth-of-type(1) option:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"INV108\"]/option[3]"
+                ],
+                [
+                    "pierce/#NBS_UI_14 > tbody > tr:nth-of-type(1) option:nth-of-type(3)"
+                ],
+                [
+                    "text/GCD"
+                ]
+            ],
+            "offsetY": 5.9375,
+            "offsetX": 21
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_14 > tbody > tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[2]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_14 > tbody > tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetY": 7.9296875,
+            "offsetX": 10.90625
+        },
+        {
+            "type": "change",
+            "value": "130001",
+            "selectors": [
+                [
+                    "aria/The jurisdiction of the investigation.[role=\"listbox\"]"
+                ],
+                [
+                    "#INV107"
+                ],
+                [
+                    "xpath///*[@id=\"INV107\"]"
+                ],
+                [
+                    "pierce/#INV107"
+                ]
+            ],
+            "target": "main"
+        },
+
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indicates the date/time that the lab released the lab report."
+                ],
+                [
+                    "#NBS_LAB197"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB197\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB197"
+                ]
+            ],
+            "offsetY": 14.9375,
+            "offsetX": 44
+        },
+        {
+            "type": "change",
+            "value": "04/20/2026",
+            "selectors": [
+                [
+                    "aria/Indicates the date/time that the lab released the lab report."
+                ],
+                [
+                    "#NBS_LAB197"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB197\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB197"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_16 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_16\"]/tbody/tr[1]/td[2]/div/img"
+                ],
+                [
+                    "pierce/#NBS_UI_16 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 12.609375,
+            "offsetX": 9
+        },
+        {
+            "type": "change",
+            "value": "T-60825",
+            "selectors": [
+                [
+                    "aria/The ordered test.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS_LAB112"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB112\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB112"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Culture, Skin Biopsy"
+                ],
+                [
+                    "#NBS_UI_16 > tbody > tr:nth-of-type(1) option:nth-of-type(14)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB112\"]/option[14]"
+                ],
+                [
+                    "pierce/#NBS_UI_16 > tbody > tr:nth-of-type(1) option:nth-of-type(14)"
+                ],
+                [
+                    "text/Culture, Skin"
+                ]
+            ],
+            "offsetY": 11.609375,
+            "offsetX": 100
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/A laboratory generated number that identifies the specimen related to this test."
+                ],
+                [
+                    "#LAB125"
+                ],
+                [
+                    "xpath///*[@id=\"LAB125\"]"
+                ],
+                [
+                    "pierce/#LAB125"
+                ]
+            ],
+            "offsetY": 6.609375,
+            "offsetX": 87
+        },
+        {
+            "type": "change",
+            "value": "1234567890",
+            "selectors": [
+                [
+                    "aria/A laboratory generated number that identifies the specimen related to this test."
+                ],
+                [
+                    "#LAB125"
+                ],
+                [
+                    "xpath///*[@id=\"LAB125\"]"
+                ],
+                [
+                    "pierce/#LAB125"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_16 tr:nth-of-type(5) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_16\"]/tbody/tr[5]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_16 tr:nth-of-type(5) img"
+                ]
+            ],
+            "offsetY": 12.609375,
+            "offsetX": 9
+        },
+        {
+            "type": "change",
+            "value": "NOS",
+            "selectors": [
+                [
+                    "aria/Anatomic site or specimen type from which positive lab specimen was collected.[role=\"listbox\"]"
+                ],
+                [
+                    "#LAB165"
+                ],
+                [
+                    "xpath///*[@id=\"LAB165\"]"
+                ],
+                [
+                    "pierce/#LAB165"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Nose (nasal passage)"
+                ],
+                [
+                    "#NBS_UI_16 option:nth-of-type(75)"
+                ],
+                [
+                    "xpath///*[@id=\"LAB165\"]/option[75]"
+                ],
+                [
+                    "pierce/#NBS_UI_16 option:nth-of-type(75)"
+                ],
+                [
+                    "text/Nose (nasal passage)"
+                ]
+            ],
+            "offsetY": 3.609375,
+            "offsetX": 87
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#TestResults tr:nth-of-type(6) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_16\"]/tbody/tr[6]/td[2]/img"
+                ],
+                [
+                    "pierce/#TestResults tr:nth-of-type(6) img"
+                ]
+            ],
+            "offsetY": 11.609375,
+            "offsetX": 12
+        },
+        {
+            "type": "change",
+            "value": "LN",
+            "selectors": [
+                [
+                    "aria/Indicates the physical location on the subject (patient) from which the specimen originated (e.g. Right Internal Jugular, Left Arm, Buttock, Right Eye, etc.).[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS_LAB166"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB166\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB166"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Left Naris"
+                ],
+                [
+                    "#tabs0tab1 tr:nth-of-type(6) option:nth-of-type(22)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB166\"]/option[22]"
+                ],
+                [
+                    "pierce/#tabs0tab1 tr:nth-of-type(6) option:nth-of-type(22)"
+                ],
+                [
+                    "text/Left Naris"
+                ]
+            ],
+            "offsetY": 8.609375,
+            "offsetX": 54
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date of collection of laboratory specimen used for diagnosis of health event reported in this case report. Time of collection is an optional addition to date."
+                ],
+                [
+                    "#LAB163"
+                ],
+                [
+                    "xpath///*[@id=\"LAB163\"]"
+                ],
+                [
+                    "pierce/#LAB163"
+                ]
+            ],
+            "offsetY": 19.609375,
+            "offsetX": 60
+        },
+        {
+            "type": "change",
+            "value": "04/20/2026",
+            "selectors": [
+                [
+                    "aria/Date of collection of laboratory specimen used for diagnosis of health event reported in this case report. Time of collection is an optional addition to date."
+                ],
+                [
+                    "#LAB163"
+                ],
+                [
+                    "xpath///*[@id=\"LAB163\"]"
+                ],
+                [
+                    "pierce/#LAB163"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(8) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_16\"]/tbody/tr[8]/td[2]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(8) img"
+                ]
+            ],
+            "offsetY": 9.609375,
+            "offsetX": 9
+        },
+        {
+            "type": "change",
+            "value": "OUTP",
+            "selectors": [
+                [
+                    "aria/The patient's status (hospitalized or outpatient) at the time of specimen collection[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS_LAB330"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB330\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB330"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/outpatient"
+                ],
+                [
+                    "tr:nth-of-type(8) option:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB330\"]/option[3]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(8) option:nth-of-type(3)"
+                ],
+                [
+                    "text/outpatient"
+                ]
+            ],
+            "offsetY": 5.609375,
+            "offsetX": 27
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#RESULTED_TEST_CONTAINER > tbody > tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"RESULTED_TEST_CONTAINER\"]/tbody/tr[2]/td[2]/div/img"
+                ],
+                [
+                    "pierce/#RESULTED_TEST_CONTAINER > tbody > tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetY": 13.28125,
+            "offsetX": 12
+        },
+        {
+            "type": "change",
+            "value": "T-50130",
+            "selectors": [
+                [
+                    "aria/User either selects a specific reporting lab or the generic local lab option. If a specific reporting lab that has tests mapped to LOINCs, the list will display that labs list of tests for the selected Program Area. When the test name is not in the list[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS_LAB220"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB220\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB220"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#RESULTED_TEST_CONTAINER tr:nth-of-type(2) > td:nth-of-type(2) > div"
+                ],
+                [
+                    "xpath///*[@id=\"RESULTED_TEST_CONTAINER\"]/tbody/tr[2]/td[2]/div"
+                ],
+                [
+                    "pierce/#RESULTED_TEST_CONTAINER tr:nth-of-type(2) > td:nth-of-type(2) > div"
+                ]
+            ],
+            "offsetY": 41.28125,
+            "offsetX": 83
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#RESULTED_TEST_CONTAINER tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"RESULTED_TEST_CONTAINER\"]/tbody/tr[3]/td[2]/div/img"
+                ],
+                [
+                    "pierce/#RESULTED_TEST_CONTAINER tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 17.28125,
+            "offsetX": 13
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Coded result value text description, such as positive, detected. If Organism name is the coded result, an organism name will display in the result field.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS_LAB280"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB280\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB280"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/negative"
+                ],
+                [
+                    "#tabs0tab1 tr:nth-of-type(3) option:nth-of-type(43)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB280\"]/option[43]"
+                ],
+                [
+                    "pierce/#tabs0tab1 tr:nth-of-type(3) option:nth-of-type(43)"
+                ],
+                [
+                    "text/negative"
+                ]
+            ],
+            "offsetY": 9.28125,
+            "offsetX": 33
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indicates textual result values for the lab (as opposed to coded or numeric values)."
+                ],
+                [
+                    "#NBS_LAB208"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB208\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB208"
+                ]
+            ],
+            "offsetY": 38.28125,
+            "offsetX": 35
+        },
+        {
+            "type": "change",
+            "value": "Negative rapid for ",
+            "selectors": [
+                [
+                    "aria/Indicates textual result values for the lab (as opposed to coded or numeric values)."
+                ],
+                [
+                    "#NBS_LAB208"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB208\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB208"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Shift"
+        },
+        {
+            "type": "keyUp",
+            "key": "Shift",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Shift"
+        },
+        {
+            "type": "keyUp",
+            "key": "Shift",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Negative rapid for SARS-COV",
+            "selectors": [
+                [
+                    "aria/Indicates textual result values for the lab (as opposed to coded or numeric values)."
+                ],
+                [
+                    "#NBS_LAB208"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB208\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB208"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "v",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Negative rapid for SARS-COV2",
+            "selectors": [
+                [
+                    "aria/Indicates textual result values for the lab (as opposed to coded or numeric values)."
+                ],
+                [
+                    "#NBS_LAB208"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_LAB208\"]"
+                ],
+                [
+                    "pierce/#NBS_LAB208"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Add "
+                ],
+                [
+                    "#AddButtonToggleRESULTED_TEST_CONTAINER input"
+                ],
+                [
+                    "xpath///*[@id=\"AddButtonToggleRESULTED_TEST_CONTAINER\"]/td/input"
+                ],
+                [
+                    "pierce/#AddButtonToggleRESULTED_TEST_CONTAINER input"
+                ]
+            ],
+            "offsetY": 19.28125,
+            "offsetX": 40.859375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 13.96875,
+            "offsetX": 15.46875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "https://http://localhost:7003/patient/1994482/summary",
+                    "title": "NBS"
+                }
+            ]
+        }
+    ]
+}
