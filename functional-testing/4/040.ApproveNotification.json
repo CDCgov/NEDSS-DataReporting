@@ -1,0 +1,128 @@
+{
+    "title": "ApproveNotification",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1920,
+            "height": 958,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "navigate",
+            "url": "http://localhost:7003/nbs/login",
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/login",
+                    "title": "NBS"
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/User Name:[role=\"textbox\"]"
+                ],
+                [
+                    "#id_UserName"
+                ],
+                [
+                    "xpath///*[@id=\"id_UserName\"]"
+                ],
+                [
+                    "pierce/#id_UserName"
+                ]
+            ],
+            "offsetY": 12,
+            "offsetX": 45.671875
+        },
+        {
+            "type": "change",
+            "value": "superuser",
+            "selectors": [
+                [
+                    "aria/User Name:[role=\"textbox\"]"
+                ],
+                [
+                    "#id_UserName"
+                ],
+                [
+                    "xpath///*[@id=\"id_UserName\"]"
+                ],
+                [
+                    "pierce/#id_UserName"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Enter",
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/HomePage.do?method=loadHomePage",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "keyUp",
+            "key": "Enter",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Approval Queue for Initial Notifications (3)"
+                ],
+                [
+                    "form:nth-of-type(1) > div > div:nth-of-type(3) li:nth-of-type(2) > a"
+                ],
+                [
+                    "xpath///*[@id=\"myQueues\"]/div/div[3]/ul/li[2]/a"
+                ],
+                [
+                    "pierce/form:nth-of-type(1) > div > div:nth-of-type(3) li:nth-of-type(2) > a"
+                ],
+                [
+                    "text/Approval Queue"
+                ]
+            ],
+            "offsetY": 10.53125,
+            "offsetX": 52.828125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/MyTaskList1.do?ContextAction=NNDApproval&initLoad=true",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(1) > td:nth-of-type(1) > img"
+                ],
+                [
+                    "xpath///*[@id=\"parent\"]/tbody/tr[1]/td[1]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(1) > td:nth-of-type(1) > img"
+                ]
+            ],
+            "offsetY": 9.796875,
+            "offsetX": 6.859375
+        }
+    ]
+}
