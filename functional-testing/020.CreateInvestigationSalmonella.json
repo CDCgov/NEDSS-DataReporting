@@ -1,0 +1,1556 @@
+{
+    "title": "CreateInvestigationSalmonella",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1214,
+            "height": 737,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Lab Report[role=\"link\"]"
+                ],
+                [
+                    "#subsect_Reports > div a"
+                ],
+                [
+                    "xpath///*[@id=\"PatSumaryDRRQ\"]/tbody/tr/td[1]/a"
+                ],
+                [
+                    "pierce/#subsect_Reports > div a"
+                ]
+            ],
+            "offsetY": 9.671875,
+            "offsetX": 50,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewFile1.do?ContextAction=ObservationLabIDOnSummary&observationUID=10009337",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div.grayButtonBar input:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"doc3\"]/form/div[2]/table/tbody/tr/td[2]/input[3]"
+                ],
+                [
+                    "pierce/form > div.grayButtonBar input:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 43.703125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewObservationLab2.do?ContextAction=CreateInvestigation&method=viewGenericSubmit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Choose option[role=\"image\"]"
+                ],
+                [
+                    "tr:nth-of-type(3) > td > table > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"ccd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) > td > table > tbody img"
+                ]
+            ],
+            "offsetY": 11,
+            "offsetX": 10
+        },
+        {
+            "type": "change",
+            "value": "50265",
+            "selectors": [
+                [
+                    "aria/ Please select a condition:   Choose option Salmonellosis (excluding S. typhi/paratyphi)[role=\"cell\"]",
+                    "aria/[role=\"listbox\"]"
+                ],
+                [
+                    "#ccd"
+                ],
+                [
+                    "xpath///*[@id=\"ccd\"]"
+                ],
+                [
+                    "pierce/#ccd"
+                ],
+                [
+                    "text/50265"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Salmonellosis (excluding S. typhi/paratyphi)"
+                ],
+                [
+                    "option:nth-of-type(131)"
+                ],
+                [
+                    "xpath///*[@id=\"ccd\"]/option[131]"
+                ],
+                [
+                    "pierce/option:nth-of-type(131)"
+                ],
+                [
+                    "text/Salmonellosis (excluding"
+                ]
+            ],
+            "offsetY": 5,
+            "offsetX": 223
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 22.671875,
+            "offsetX": 14.2578125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/SelectCondition2.do",
+                    "title": "NBS"
+                }
+            ]
+        },
+        {
+            "type": "change",
+            "value": "",
+            "selectors": [
+                [
+                    "aria/State Case ID:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.actIdDT_s\\[0\\]\\.rootExtensionTxt"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.actIdDT_s[0].rootExtensionTxt\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.actIdDT_s\\[0\\]\\.rootExtensionTxt"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Investigation Start Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.activityFromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.activityFromTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.activityFromTime_s"
+                ]
+            ],
+            "offsetY": 8,
+            "offsetX": 49.890625
+        },
+        {
+            "type": "change",
+            "value": "04/08/2026",
+            "selectors": [
+                [
+                    "aria/Investigation Start Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.activityFromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.activityFromTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.activityFromTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabControlN115F3 tr:nth-of-type(2) tr:nth-of-type(7) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-investigator.personUid\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(2) tr:nth-of-type(7) input[type='text']"
+                ]
+            ],
+            "offsetY": 9.75,
+            "offsetX": 27.3046875
+        },
+        {
+            "type": "change",
+            "value": "3",
+            "selectors": [
+                [
+                    "#tabControlN115F3 tr:nth-of-type(2) tr:nth-of-type(7) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-investigator.personUid\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(2) tr:nth-of-type(7) input[type='text']"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/3 Code Lookup",
+                    "aria/Code Lookup"
+                ],
+                [
+                    "tr:nth-of-type(2) td:nth-of-type(2) > input[type='button']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-investigator.personUid\"]/thead/tr/td[2]/input[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) td:nth-of-type(2) > input[type='button']"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 24.3046875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date Assigned to Investigation:[role=\"textbox\"]"
+                ],
+                [
+                    "#dateAssignedToInvestigation"
+                ],
+                [
+                    "xpath///*[@id=\"dateAssignedToInvestigation\"]"
+                ],
+                [
+                    "pierce/#dateAssignedToInvestigation"
+                ]
+            ],
+            "offsetY": 14,
+            "offsetX": 53.890625
+        },
+        {
+            "type": "change",
+            "value": "04/08/2026",
+            "selectors": [
+                [
+                    "aria/Date Assigned to Investigation:[role=\"textbox\"]"
+                ],
+                [
+                    "#dateAssignedToInvestigation"
+                ],
+                [
+                    "xpath///*[@id=\"dateAssignedToInvestigation\"]"
+                ],
+                [
+                    "pierce/#dateAssignedToInvestigation"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date of Report: 04/08/2026 Select a Date mm/dd/yyyy Reporting Source: Choose option Earliest Date Reported to County: Select a Date mm/dd/yyyy State:",
+                    "aria/Choose option[role=\"image\"]"
+                ],
+                [
+                    "tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.rptSourceCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 14.5,
+            "offsetX": 9.234375
+        },
+        {
+            "type": "change",
+            "value": "LA",
+            "selectors": [
+                [
+                    "aria/Reporting Source:[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptSourceCd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.rptSourceCd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptSourceCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Laboratory"
+                ],
+                [
+                    "table:nth-of-type(2) > tbody > tr:nth-of-type(3) option:nth-of-type(12)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.rptSourceCd\"]/option[12]"
+                ],
+                [
+                    "pierce/table:nth-of-type(2) > tbody > tr:nth-of-type(3) option:nth-of-type(12)"
+                ]
+            ],
+            "offsetY": 3.5,
+            "offsetX": 133.234375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/County:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToCountyTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.rptToCountyTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToCountyTime_s"
+                ]
+            ],
+            "offsetY": 17.5,
+            "offsetX": 52.234375
+        },
+        {
+            "type": "change",
+            "value": "04/07/2026",
+            "selectors": [
+                [
+                    "aria/County:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToCountyTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.rptToCountyTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToCountyTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/State:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToStateTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.rptToStateTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToStateTime_s"
+                ]
+            ],
+            "offsetY": 14.5,
+            "offsetX": 14.3515625
+        },
+        {
+            "type": "change",
+            "value": "04/08/2026",
+            "selectors": [
+                [
+                    "aria/State:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToStateTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.rptToStateTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.rptToStateTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(2) > tbody > tr:nth-of-type(3) tr:nth-of-type(17) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-reporter.personUid\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/table:nth-of-type(2) > tbody > tr:nth-of-type(3) tr:nth-of-type(17) input[type='text']"
+                ]
+            ],
+            "offsetY": 11.25,
+            "offsetX": 30.3046875
+        },
+        {
+            "type": "change",
+            "value": "3",
+            "selectors": [
+                [
+                    "table:nth-of-type(2) > tbody > tr:nth-of-type(3) tr:nth-of-type(17) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-reporter.personUid\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/table:nth-of-type(2) > tbody > tr:nth-of-type(3) tr:nth-of-type(17) input[type='text']"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(17) td:nth-of-type(2) > input[type='button']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-reporter.personUid\"]/thead/tr/td[2]/input[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(17) td:nth-of-type(2) > input[type='button']"
+                ]
+            ],
+            "offsetY": 2,
+            "offsetX": 24.3046875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(4) tr:nth-of-type(8) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[0].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) tr:nth-of-type(8) img"
+                ]
+            ],
+            "offsetY": 11.5,
+            "offsetX": 6.0390625
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Was the patient hospitalized for this illness?[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[0\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[0].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[0\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "tr:nth-of-type(4) tr:nth-of-type(8) option:nth-of-type(4)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[0].obsValueCodedDT_s[0].code\"]/option[4]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) tr:nth-of-type(8) option:nth-of-type(4)"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 33.0390625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Admission Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[10\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[10].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[10\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "offsetY": 3,
+            "offsetX": 63.890625
+        },
+        {
+            "type": "change",
+            "value": "04/02/2026",
+            "selectors": [
+                [
+                    "aria/Admission Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[10\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[10].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[10\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Discharge Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[11\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[11].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[11\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "offsetY": 8,
+            "offsetX": 9.9921875
+        },
+        {
+            "type": "change",
+            "target": "main",
+            "selectors": [
+                "aria/Discharge Date:[role=\"textbox\"]",
+                "#proxy\\.observationVO_s\\[11\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s",
+                "xpath///*[@id=\"proxy.observationVO_s[11].obsValueDateDT_s[0].fromTime_s\"]",
+                "pierce/#proxy\\.observationVO_s\\[11\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+            ],
+            "value": "04/08/2026"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Duration of Stay:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[3\\]\\.obsValueNumericDT_s\\[0\\]\\.numericValue1_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[3].obsValueNumericDT_s[0].numericValue1_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[3\\]\\.obsValueNumericDT_s\\[0\\]\\.numericValue1_s"
+                ]
+            ],
+            "offsetY": 15,
+            "offsetX": 14.890625
+        },
+        {
+            "type": "change",
+            "value": "9",
+            "selectors": [
+                [
+                    "aria/Duration of Stay:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[3\\]\\.obsValueNumericDT_s\\[0\\]\\.numericValue1_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[3].obsValueNumericDT_s[0].numericValue1_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[3\\]\\.obsValueNumericDT_s\\[0\\]\\.numericValue1_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/9 days"
+                ],
+                [
+                    "tr:nth-of-type(4) tr:nth-of-type(7) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"nestedElementsControllerPayloadINV128\"]/tr[7]/td[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) tr:nth-of-type(7) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 17,
+            "offsetX": 138.890625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Diagnosis Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.diagnosisTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.diagnosisTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.diagnosisTime_s"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 17.0390625
+        },
+        {
+            "type": "change",
+            "value": "04/03/2026",
+            "selectors": [
+                [
+                    "aria/Diagnosis Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.diagnosisTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.diagnosisTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.diagnosisTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Illness Onset Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveFromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.effectiveFromTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveFromTime_s"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 43.0390625
+        },
+        {
+            "type": "change",
+            "value": "03/20/2026",
+            "selectors": [
+                [
+                    "aria/Illness Onset Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveFromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.effectiveFromTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveFromTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Illness End Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveToTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.effectiveToTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveToTime_s"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 14.8515625
+        },
+        {
+            "type": "change",
+            "value": "03/24/2026",
+            "selectors": [
+                [
+                    "aria/Illness End Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveToTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.effectiveToTime_s\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveToTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Illness Duration:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveDurationAmt"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.effectiveDurationAmt\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveDurationAmt"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 45.0390625
+        },
+        {
+            "type": "change",
+            "value": "4",
+            "selectors": [
+                [
+                    "aria/Illness Duration:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveDurationAmt"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.effectiveDurationAmt\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.effectiveDurationAmt"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Age at Onset:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.patAgeAtOnset"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.patAgeAtOnset\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.patAgeAtOnset"
+                ]
+            ],
+            "offsetY": 18.5,
+            "offsetX": 11.0390625
+        },
+        {
+            "type": "change",
+            "value": "41",
+            "selectors": [
+                [
+                    "aria/Age at Onset:[role=\"textbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.patAgeAtOnset"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.patAgeAtOnset\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.patAgeAtOnset"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(4) tr:nth-of-type(23) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[2].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) tr:nth-of-type(23) img"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 8.0390625
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Does the patient have pelvic inflammatory disease?[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[2\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[2].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[2\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "tr:nth-of-type(4) tr:nth-of-type(23) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[2].obsValueCodedDT_s[0].code\"]/option[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) tr:nth-of-type(23) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 39.0390625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(26) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outcomeCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(26) img"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 6.0390625
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Did the patient die from this illness?[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.outcomeCd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outcomeCd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.outcomeCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "tr:nth-of-type(26) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outcomeCd\"]/option[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(26) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 43.0390625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[4].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 12.3203125
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Is this patient associated with a day care facility?[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[4\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[4].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[4\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(1) option:nth-of-type(4)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[4].obsValueCodedDT_s[0].code\"]/option[4]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(1) option:nth-of-type(4)"
+                ]
+            ],
+            "offsetY": 0,
+            "offsetX": 44.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[5].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 14,
+            "offsetX": 6.3203125
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Is this patient a food handler?[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.observationVO_s\\[5\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[5].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#proxy\\.observationVO_s\\[5\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "tr:nth-of-type(5) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.observationVO_s[5].obsValueCodedDT_s[0].code\"]/option[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 6,
+            "offsetX": 46.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabControlN115F3 tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(6) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outbreakInd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(6) img"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 6.3203125
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Is this case part of an outbreak?[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.outbreakInd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outbreakInd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.outbreakInd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(6) option:nth-of-type(4)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outbreakInd\"]/option[4]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) > td > table > tbody > tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(6) option:nth-of-type(4)"
+                ]
+            ],
+            "offsetY": 2,
+            "offsetX": 30.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(5) tbody > tr:nth-of-type(7) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outbreakName_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) tbody > tr:nth-of-type(7) img"
+                ]
+            ],
+            "offsetY": 13,
+            "offsetX": 4.2578125
+        },
+        {
+            "type": "change",
+            "value": "WHS",
+            "selectors": [
+                [
+                    "aria/Outbreak Name:[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.outbreakName"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outbreakName\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.outbreakName"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Waffle House - Syrup"
+                ],
+                [
+                    "tr:nth-of-type(5) tr:nth-of-type(7) option:nth-of-type(4)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.outbreakName\"]/option[4]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) tr:nth-of-type(7) option:nth-of-type(4)"
+                ],
+                [
+                    "text/Waffle House"
+                ]
+            ],
+            "offsetY": 2,
+            "offsetX": 147.7578125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(12) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.diseaseImportedCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(12) img"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 7.3203125
+        },
+        {
+            "type": "change",
+            "value": "IND",
+            "selectors": [
+                [
+                    "aria/Where was the disease acquired?[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.diseaseImportedCd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.diseaseImportedCd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.diseaseImportedCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indigenous, within jurisdiction"
+                ],
+                [
+                    "tr:nth-of-type(5) tr:nth-of-type(12) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.diseaseImportedCd\"]/option[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) tr:nth-of-type(12) option:nth-of-type(2)"
+                ],
+                [
+                    "text/Indigenous, within"
+                ]
+            ],
+            "offsetY": 2,
+            "offsetX": 202.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(17) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.transmissionModeCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(17) img"
+                ]
+            ],
+            "offsetY": 8,
+            "offsetX": 7.8203125
+        },
+        {
+            "type": "change",
+            "value": "F",
+            "selectors": [
+                [
+                    "aria/Transmission Mode:[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.transmissionModeCd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.transmissionModeCd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.transmissionModeCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Foodborne"
+                ],
+                [
+                    "#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(17) option:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.transmissionModeCd\"]/option[5]"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(17) option:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 6,
+            "offsetX": 109.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Choose option[role=\"cell\"]",
+                    "aria/[role=\"image\"]"
+                ],
+                [
+                    "tr:nth-of-type(5) tr:nth-of-type(19) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.detectionMethodCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) tr:nth-of-type(19) img"
+                ]
+            ],
+            "offsetY": 11,
+            "offsetX": 12.3203125
+        },
+        {
+            "type": "change",
+            "value": "PR",
+            "selectors": [
+                [
+                    "aria/Detection Method:[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.detectionMethodCd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.detectionMethodCd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.detectionMethodCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Provider reported"
+                ],
+                [
+                    "tr:nth-of-type(5) tr:nth-of-type(19) option:nth-of-type(6)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.detectionMethodCd\"]/option[6]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) tr:nth-of-type(19) option:nth-of-type(6)"
+                ],
+                [
+                    "text/Provider reported"
+                ]
+            ],
+            "offsetY": 3,
+            "offsetX": 89.3203125
+        },
+        {
+            "type": "change",
+            "value": "LD",
+            "selectors": [
+                [
+                    "aria/Confirmation Method:"
+                ],
+                [
+                    "#confirmationMethods"
+                ],
+                [
+                    "xpath///*[@id=\"confirmationMethods\"]"
+                ],
+                [
+                    "pierce/#confirmationMethods"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Laboratory confirmed"
+                ],
+                [
+                    "tr:nth-of-type(21) option:nth-of-type(6)"
+                ],
+                [
+                    "xpath///*[@id=\"confirmationMethods\"]/option[6]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(21) option:nth-of-type(6)"
+                ],
+                [
+                    "text/Laboratory confirmed"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 103.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Confirmation Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#confirmationDate"
+                ],
+                [
+                    "xpath///*[@id=\"confirmationDate\"]"
+                ],
+                [
+                    "pierce/#confirmationDate"
+                ]
+            ],
+            "offsetY": 14,
+            "offsetX": 52.3203125
+        },
+        {
+            "type": "change",
+            "value": "04/08/2026",
+            "selectors": [
+                [
+                    "aria/Confirmation Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#confirmationDate"
+                ],
+                [
+                    "xpath///*[@id=\"confirmationDate\"]"
+                ],
+                [
+                    "pierce/#confirmationDate"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/(Required for Notification) Choose option",
+                    "aria/[role=\"image\"]"
+                ],
+                [
+                    "#tabControlN115F3 tr:nth-of-type(25) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.caseClassCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(25) img"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 11.3203125
+        },
+        {
+            "type": "change",
+            "value": "C",
+            "selectors": [
+                [
+                    "aria/Case Status:"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.caseClassCd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.caseClassCd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.caseClassCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Confirmed"
+                ],
+                [
+                    "#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(25) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.caseClassCd\"]/option[2]"
+                ],
+                [
+                    "pierce/#tabControlN115F3 tr:nth-of-type(5) tr:nth-of-type(25) option:nth-of-type(2)"
+                ],
+                [
+                    "text/Confirmed"
+                ]
+            ],
+            "offsetY": 7,
+            "offsetX": 55.3203125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Submit button  Submit  Cancel button  Cancel [role=\"cell\"]",
+                    "aria/Submit button[role=\"button\"]"
+                ],
+                [
+                    "tr:nth-of-type(3) > td > table > tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) > td > table > tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 26.171875,
+            "offsetX": 14.2578125
+        }
+    ]
+}

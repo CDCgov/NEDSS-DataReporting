@@ -1,0 +1,221 @@
+{
+    "title": "CloseInvestigationSalmonellaAndCreateNotification",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1214,
+            "height": 737,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Manage Associations button   Manage Associations Create Notifications button   Create Notifications Share Document button   Share Document Transfer Ownership button   Transfer Ownership Edit button  Edit  Delete button  Delete  Print button  Print  Created: 04/08/2026 by: Ariella Kent Updated: 04/08/2026 by: Ariella Kent Name:",
+                    "aria/Edit button[role=\"button\"]"
+                ],
+                [
+                    "thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Edit\"]"
+                ],
+                [
+                    "pierce/thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 19.5,
+            "offsetX": 13.3671875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/        * Jurisdiction: Fulton County         Program Area: GCD         State Case ID:         Investigation Start Date: 04/08/2026 Select a Date mm/dd/yyyy         Investigation Status:",
+                    "aria/Choose option"
+                ],
+                [
+                    "tr:nth-of-type(10) img"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.investigationStatusCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(10) img"
+                ]
+            ],
+            "offsetY": 11,
+            "offsetX": 11.390625
+        },
+        {
+            "type": "change",
+            "value": "C",
+            "selectors": [
+                [
+                    "aria/Investigation Status:[role=\"listbox\"]"
+                ],
+                [
+                    "#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.investigationStatusCd"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.investigationStatusCd\"]"
+                ],
+                [
+                    "pierce/#proxy\\.publicHealthCaseVO_s\\.thePublicHealthCaseDT\\.investigationStatusCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Closed"
+                ],
+                [
+                    "#tabControlN1165F > table:nth-of-type(2) > tbody > tr:nth-of-type(2) option:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"proxy.publicHealthCaseVO_s.thePublicHealthCaseDT.investigationStatusCd\"]/option[1]"
+                ],
+                [
+                    "pierce/#tabControlN1165F > table:nth-of-type(2) > tbody > tr:nth-of-type(2) option:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 39.890625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Submit button  Submit  Cancel button  Cancel  Created: 04/08/2026 by: Ariella Kent Updated: 04/08/2026 by: Ariella Kent Name: Taylor",
+                    "aria/Submit button[role=\"button\"]"
+                ],
+                [
+                    "thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 20.5,
+            "offsetX": 14.2578125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/EditInvestigation2.do?ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Manage Associations button   Manage Associations Create Notifications button   Create Notifications Share Document button   Share Document Transfer Ownership button   Transfer Ownership Edit button  Edit  Delete button  Delete  Print button  Print  Created: 04/08/2026 by: Ariella Kent Updated: 04/09/2026 by: Ariella Kent Name:",
+                    "aria/Create Notifications button[role=\"button\"]"
+                ],
+                [
+                    "thead td:nth-of-type(2) > table:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"Create Notifications\"]"
+                ],
+                [
+                    "pierce/thead td:nth-of-type(2) > table:nth-of-type(2) input"
+                ]
+            ],
+            "offsetY": 20.5,
+            "offsetX": 16,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=CreateNotification",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/General Comments:[role=\"textbox\"]"
+                ],
+                [
+                    "#NTF137"
+                ],
+                [
+                    "xpath///*[@id=\"NTF137\"]"
+                ],
+                [
+                    "pierce/#NTF137"
+                ]
+            ],
+            "offsetY": 19.5,
+            "offsetX": 21.9921875
+        },
+        {
+            "type": "change",
+            "value": "case closed so tell cdc",
+            "selectors": [
+                [
+                    "aria/General Comments:[role=\"textbox\"]"
+                ],
+                [
+                    "#NTF137"
+                ],
+                [
+                    "xpath///*[@id=\"NTF137\"]"
+                ],
+                [
+                    "pierce/#NTF137"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 19.5,
+            "offsetX": 17.2578125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/CreateNotification3.do",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+{
+  "_comment": "Maps tables to their preferred lookup columns for rdb-selects.sql WHERE clause generation. Use when multiple candidate keys exist and you want to specify which column should be used in the WHERE predicate.",
+  "_usage": "Reference this file when reviewing generated rdb-selects.sql or update it to guide generate_rdb_selects.py toward correct predicates for multi-key tables.",
+  "known_tables": {
+    "dbo.D_PATIENT": {
+      "lookup_column": "PATIENT_LOCAL_ID",
+      "type": "person_local_id",
+      "reason": "D_PATIENT is the patient dimension and is keyed by person LOCAL_ID"
+    },
+    "dbo.EVENT_METRIC": {
+      "lookup_column": "LOCAL_ID",
+      "type": "observation_local_id",
+      "reason": "EVENT_METRIC is keyed by the observation LOCAL_ID, not by individual observation instance variables"
+    },
+    "dbo.EVENT_METRIC_INC": {
+      "lookup_column": "LOCAL_ID",
+      "type": "observation_local_id",
+      "reason": "EVENT_METRIC_INC (incremental) is keyed by observation LOCAL_ID"
+    },
+    "dbo.MORBIDITY_REPORT": {
+      "lookup_column": "MORB_RPT_LOCAL_ID",
+      "type": "observation_local_id",
+      "reason": "MORBIDITY_REPORT is keyed by the morbidity report LOCAL_ID (observation derived)"
+    },
+    "dbo.MORBIDITY_REPORT_EVENT": {
+      "lookup_column": "PATIENT_KEY",
+      "reason": "MORBIDITY_REPORT_EVENT tracks events by patient; PATIENT_KEY is the business key. Other keys like NURSING_HOME_KEY, PHYSICIAN_KEY, etc. are dimensional references, not identity.",
+      "fallback_columns": ["MORB_RPT_KEY", "CONDITION_KEY"],
+      "incorrect_columns": ["NURSING_HOME_KEY", "PHYSICIAN_KEY"]
+    }
+  }
+}
