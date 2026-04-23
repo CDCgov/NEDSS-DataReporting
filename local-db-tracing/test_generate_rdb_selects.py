@@ -295,6 +295,63 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertNotIn("[updated_dttm]", sql)
         self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"patient_uid":1234}]', sql)
 
+    def test_known_refresh_timestamps_are_excluded_from_select_and_expected_json(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries(
+            [
+                "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';",
+            ]
+        )
+        scaffolds = generate_rdb_selects.build_scaffolds(
+            [
+                {
+                    "schema_name": "dbo",
+                    "table_name": "LAB_REPORT",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"PATIENT_LOCAL_ID": "PSN1234GA01"},
+                    },
+                    "primary_key_values": {},
+                    "after": {
+                        "PATIENT_LOCAL_ID": "PSN1234GA01",
+                        "RDB_LAST_REFRESH_TIME": "2026-04-23T12:34:56",
+                        "LAB_RPT_LAST_UPDATE_DT": "2026-04-23T12:35:56",
+                        "RESULT_STATUS": "FINAL",
+                    },
+                }
+            ],
+            declare_entries,
+        )
+
+        sql = generate_rdb_selects.render_sql(
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
+            ["DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';"],
+            declare_entries,
+            scaffolds,
+            columns_by_table={
+                ("dbo", "LAB_REPORT"): [
+                    "PATIENT_LOCAL_ID",
+                    "RDB_LAST_REFRESH_TIME",
+                    "LAB_RPT_LAST_UPDATE_DT",
+                    "RESULT_STATUS",
+                ],
+            },
+        )
+
+        self.assertIn("SELECT", sql)
+        self.assertIn("    [PATIENT_LOCAL_ID],", sql)
+        self.assertIn("    [RESULT_STATUS]", sql)
+        self.assertNotIn("[RDB_LAST_REFRESH_TIME]", sql)
+        self.assertNotIn("[LAB_RPT_LAST_UPDATE_DT]", sql)
+        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"PATIENT_LOCAL_ID":"PSN1234GA01","RESULT_STATUS":"FINAL"}]', sql)
+        self.assertNotIn("RDB_LAST_REFRESH_TIME", sql)
+        self.assertNotIn("LAB_RPT_LAST_UPDATE_DT", sql)
+
     def test_expected_rows_json_maps_ambiguous_entity_uid_candidates_deterministically(self) -> None:
         declare_entries = generate_rdb_selects.parse_declare_entries(
             [

@@ -28,6 +28,13 @@ LOCAL_ID_EXPRESSION_PATTERN = re.compile(
 VAR_PLUS_OFFSET_PATTERN = re.compile(r"^(?P<left>@[A-Za-z0-9_]+)\s*\+\s*(?P<offset>-?\d+)$")
 OFFSET_PLUS_VAR_PATTERN = re.compile(r"^(?P<offset>-?\d+)\s*\+\s*(?P<right>@[A-Za-z0-9_]+)$")
 
+IGNORED_OUTPUT_COLUMNS = frozenset(
+    {
+        "RDB_LAST_REFRESH_TIME",
+        "LAB_RPT_LAST_UPDATE_DT",
+    }
+)
+
 
 @dataclass(frozen=True)
 class DeclareEntry:
@@ -1076,8 +1083,8 @@ def render_sql(
             if normalize_identifier(s) == normalize_identifier(scaffold.schema_name)
             and normalize_identifier(t) == normalize_identifier(scaffold.table_name)
         )
-        select_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table
-        json_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table
+        select_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table | IGNORED_OUTPUT_COLUMNS
+        json_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table | IGNORED_OUTPUT_COLUMNS
         select_columns: list[str] | None = None
         if columns_by_table is not None:
             all_columns = columns_by_table.get(table_key)
