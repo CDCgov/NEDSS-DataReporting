@@ -32,6 +32,53 @@ python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/ou
 
 8. Review pass/fail details in `local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
 
+### Step-By-Step Checks
+
+Dual capture runs also generate per-step artifacts so you can replay and validate one step at a time.
+
+For a paired run such as `local-db-tracing/output/<paired-run>/`:
+
+- replay SQL for each source step is written under `cdc-<database>/step-<N>/setup.sql`
+- target verification SQL for each target step is written under `logical-<database>/step-<N>/query.sql`
+- each `query.sql` is cumulative through that step, so step 2 reflects the expected target state after both step 1 and step 2 have been applied
+
+Manual step-by-step workflow:
+
+1. Run `cdc-<database>/step-1/setup.sql` against the source database.
+2. Wait for `nedss-datareporting-reporting-pipeline-service-1` to have "No ids to process from the topics."
+3. Run:
+
+```powershell
+python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/logical-<database>/step-1/query.sql
+```
+
+4. Review the generated Markdown report for step 1, `local-db-tracing/output/<paired-run>/logical-<database>/step-1/rdb-selects-results.md`.
+5. Run `cdc-<database>/step-2/setup.sql`.
+6. Run:
+
+```powershell
+python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/logical-<database>/step-2/query.sql
+```
+
+7. Review the generated Markdown report for step 2, `local-db-tracing/output/<paired-run>/logical-<database>/step-2/rdb-selects-results.md`.
+8. Repeat for later steps.
+
+Example validator command for a step query file:
+
+```powershell
+python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/logical-RDB_MODERN/step-2/query.sql
+```
+
+When only `--input-file` is provided, the validator writes results next to that step query file using default names:
+
+- `rdb-selects-results.json`
+- `rdb-selects-results.md`
+
+For example, validating `logical-RDB_MODERN/step-2/query.sql` writes:
+
+- `logical-RDB_MODERN/step-2/rdb-selects-results.json`
+- `logical-RDB_MODERN/step-2/rdb-selects-results.md`
+
 ## Overview
 
 This toolkit supports two goals:
@@ -275,7 +322,9 @@ Dual-capture run (example `.../20260408-111218-NBS_ODSE-to-RDB_MODERN/`):
 
 - `combined-manifest.json`: pointers to source/target artifacts for the action window
 - `cdc-<database>/`: CDC artifacts for source database
+- `cdc-<database>/step-<N>/setup.sql`: replay SQL for individual source steps
 - `logical-<database>/`: logical artifacts for target database
+- `logical-<database>/step-<N>/query.sql`: cumulative verification SQL for each target step
 - `rdb-selects.sql`: generated target verification queries with `-- EXPECTED_ROWS_JSON` comments
 - `rdb-selects-results.json`: machine-readable validation results (when validator is run)
 - `rdb-selects-results.md`: human-readable validation report (when validator is run)
