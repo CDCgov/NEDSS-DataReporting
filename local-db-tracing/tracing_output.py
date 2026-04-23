@@ -17,6 +17,76 @@ from tracing_replay import (
 from tracing_sql import quote_identifier
 
 
+def step_numbers_from_changes(
+    changes: list[dict[str, object]],
+    nbs_steps: list[dict[str, object]] | None = None,
+) -> list[int]:
+    ordered_steps: list[int] = []
+    seen: set[int] = set()
+
+    if nbs_steps:
+        for step in nbs_steps:
+            step_value = step.get("step")
+            try:
+                step_number = int(step_value)
+            except (TypeError, ValueError):
+                continue
+            if step_number not in seen:
+                seen.add(step_number)
+                ordered_steps.append(step_number)
+
+    for change in changes:
+        step_value = change.get("_step")
+        try:
+            step_number = int(step_value)
+        except (TypeError, ValueError):
+            continue
+        if step_number not in seen:
+            seen.add(step_number)
+            ordered_steps.append(step_number)
+
+    return ordered_steps
+
+
+def write_step_setup_files(
+    output_dir: Path,
+    database: str,
+    replay_changes: list[dict[str, object]],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    identity_columns_by_table: dict[tuple[str, str], list[str]],
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    column_sql_types: dict[tuple[str, str, str], str],
+    generated_always_columns: set[tuple[str, str, str]],
+    uid_generator_entries: list[UidGeneratorEntry],
+    known_associations: list[KnownAssociation],
+    nbs_steps: list[dict[str, object]] | None,
+    superuser_id: int,
+    starting_uid: int,
+) -> None:
+    for step_number in step_numbers_from_changes(replay_changes, nbs_steps):
+        step_dir = output_dir / f"step-{step_number}"
+        step_dir.mkdir(parents=True, exist_ok=True)
+        step_changes = [change for change in replay_changes if change.get("_step") == step_number]
+        step_sql = reconstruct_sql_statements(
+            step_changes,
+            primary_keys_by_table,
+            identity_columns_by_table,
+            foreign_keys_by_source,
+            column_sql_types,
+            generated_always_columns,
+            uid_generator_entries,
+            known_associations,
+            superuser_id=superuser_id,
+            starting_uid=starting_uid,
+            nbs_steps=nbs_steps,
+        )
+        if step_sql:
+            lines = [f"USE {quote_identifier(database)};", *step_sql]
+        else:
+            lines = [f"USE {quote_identifier(database)};", f"-- No replayable SQL generated for step {step_number}."]
+        (step_dir / "setup.sql").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 
 def summarize_row_identifier(record: dict[str, object]) -> str:
     """Build a concise identifier string for one captured CDC row.
@@ -312,6 +382,22 @@ def write_summary(
         lines.append("Tables excluded from reconstructed SQL (core replay):")
         for table_name in ignored_replay_table_names:
             lines.append(f"- {table_name}")
+    if nbs_steps or any(record.get("_step") is not None for record in replay_changes):
+        write_step_setup_files(
+            path.parent,
+            str(manifest["database"]),
+            replay_changes,
+            primary_keys_by_table,
+            identity_columns_by_table,
+            foreign_keys_by_source,
+            column_sql_types,
+            generated_always_columns,
+            uid_generator_entries,
+            known_associations,
+            nbs_steps,
+            superuser_id,
+            starting_uid,
+        )
     if reconstructed_sql:
         inserts_path = path.parent / "inserts.sql"
         inserts_lines = [f"USE {quote_identifier(str(manifest['database']))};", *reconstructed_sql]
