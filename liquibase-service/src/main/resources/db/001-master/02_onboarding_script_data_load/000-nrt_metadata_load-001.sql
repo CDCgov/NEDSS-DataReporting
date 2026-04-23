@@ -334,3 +334,12 @@ begin
 	truncate table dbo.nrt_srte_Zipcnty_code_value; 
 	insert into dbo.nrt_srte_Zipcnty_code_value select * from nbs_srte.dbo.Zipcnty_code_value;
 end;
+
+
+-- Ensure dbo.Condition table is populated
+DECLARE @condition_cd_list VARCHAR(MAX)
+
+SELECT @condition_cd_list = STRING_AGG(CAST(CONDITION_CD AS VARCHAR), ',')
+FROM dbo.nrt_srte_Condition_code
+
+EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = @condition_cd_list;

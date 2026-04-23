@@ -3148,3 +3148,12 @@ databaseChangeLog:
             path: 008-fn_get_value_to_pascal_case-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 956
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 258-create_rdb_date-001.sql
+            splitStatements: true
+            endDelimiter: GO

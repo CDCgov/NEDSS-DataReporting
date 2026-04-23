@@ -1,0 +1,310 @@
+{
+    "title": "AddTreatmentPopupSalmonella",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1214,
+            "height": 737,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/Provider that administered the treatment."
+                ],
+                [
+                    "#NBS475Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS475Text\"]"
+                ],
+                [
+                    "pierce/#NBS475Text"
+                ]
+            ],
+            "offsetX": 62.1640625,
+            "offsetY": 13.1640625
+        },
+        {
+            "type": "change",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/Provider that administered the treatment."
+                ],
+                [
+                    "#NBS475Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS475Text\"]"
+                ],
+                [
+                    "pierce/#NBS475Text"
+                ]
+            ],
+            "value": "1"
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "#NBS475CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS475CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS475CodeLookupButton"
+                ]
+            ],
+            "offsetX": 46.453125,
+            "offsetY": 5.9140625
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/The reporting facility that reported the treatment."
+                ],
+                [
+                    "#NBS477Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS477Text\"]"
+                ],
+                [
+                    "pierce/#NBS477Text"
+                ]
+            ],
+            "offsetX": 47.1640625,
+            "offsetY": 7.6640625
+        },
+        {
+            "type": "change",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/The reporting facility that reported the treatment."
+                ],
+                [
+                    "#NBS477Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS477Text\"]"
+                ],
+                [
+                    "pierce/#NBS477Text"
+                ]
+            ],
+            "value": "3"
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/Quick Code Lookup"
+                ],
+                [
+                    "#NBS477CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS477CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS477CodeLookupButton"
+                ]
+            ],
+            "offsetX": 28.453125,
+            "offsetY": 5.4140625
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/The date the patient was treated."
+                ],
+                [
+                    "#NBS465"
+                ],
+                [
+                    "xpath///*[@id=\"NBS465\"]"
+                ],
+                [
+                    "pierce/#NBS465"
+                ]
+            ],
+            "offsetX": 59,
+            "offsetY": 5.1640625
+        },
+        {
+            "type": "change",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/The date the patient was treated."
+                ],
+                [
+                    "#NBS465"
+                ],
+                [
+                    "xpath///*[@id=\"NBS465\"]"
+                ],
+                [
+                    "pierce/#NBS465"
+                ]
+            ],
+            "value": "04/05/2026"
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/Choose option"
+                ],
+                [
+                    "#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_TRMT_05\"]/tbody/tr[2]/td[2]/div/img"
+                ],
+                [
+                    "pierce/#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetX": 8,
+            "offsetY": 11.1640625
+        },
+        {
+            "type": "change",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/The treatment the patient received.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS481"
+                ],
+                [
+                    "xpath///*[@id=\"NBS481\"]"
+                ],
+                [
+                    "pierce/#NBS481"
+                ]
+            ],
+            "value": "174"
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/Azithromycin, 1 gm, PO, QW, x 3 weeks"
+                ],
+                [
+                    "#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) option:nth-of-type(19)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS481\"]/option[19]"
+                ],
+                [
+                    "pierce/#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) option:nth-of-type(19)"
+                ],
+                [
+                    "text/Azithromycin, 1 gm, PO, QW,"
+                ]
+            ],
+            "offsetX": 240.7421875,
+            "offsetY": 8.1640625
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/Any treatment comments that the user would like to add."
+                ],
+                [
+                    "#NBS474"
+                ],
+                [
+                    "xpath///*[@id=\"NBS474\"]"
+                ],
+                [
+                    "pierce/#NBS474"
+                ]
+            ],
+            "offsetX": 84,
+            "offsetY": 17.1640625
+        },
+        {
+            "type": "change",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "aria/Any treatment comments that the user would like to add."
+                ],
+                [
+                    "#NBS474"
+                ],
+                [
+                    "xpath///*[@id=\"NBS474\"]"
+                ],
+                [
+                    "pierce/#NBS474"
+                ]
+            ],
+            "value": "treatment comment"
+        },
+        {
+            "type": "click",
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=createGenericSubmit&ContextAction=Submit&addAnother=false&coinfList=&mapView=NBS481CodeId$A$174NEXTCODENBS481Description$A$Azithromycin,%201%20gm,%20PO,%20QW,%20x%203%20weeksNEXTCODENBS481$A$174$$Azithromycin,%201%20gm,%20PO,%20QW,%20x%203%20weeksNEXTCODENBS481DescriptionId$A$Azithromycin,%201%20gm,%20PO,%20QW,%20x%203%20weeks(174)",
+                    "title": ""
+                }
+            ],
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericLoad&mode=Create&Action=InvPath&businessObjectType=TRMT",
+            "selectors": [
+                [
+                    "div:nth-of-type(3) > div.popupButtonBar > input:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/div[4]/input[3]"
+                ],
+                [
+                    "pierce/div:nth-of-type(3) > div.popupButtonBar > input:nth-of-type(3)"
+                ]
+            ],
+            "offsetX": 17.3828125,
+            "offsetY": 10.6640625
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/PageAction.do?method=createGenericSubmit&ContextAction=Submit&addAnother=false&coinfList=&mapView=NBS481CodeId$A$174NEXTCODENBS481Description$A$Azithromycin,%201%20gm,%20PO,%20QW,%20x%203%20weeksNEXTCODENBS481$A$174$$Azithromycin,%201%20gm,%20PO,%20QW,%20x%203%20weeksNEXTCODENBS481DescriptionId$A$Azithromycin,%201%20gm,%20PO,%20QW,%20x%203%20weeks(174)",
+            "selectors": [
+                [
+                    "div:nth-of-type(4) input:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/div[3]/input[5]"
+                ],
+                [
+                    "pierce/div:nth-of-type(4) input:nth-of-type(5)"
+                ]
+            ],
+            "offsetX": 19.2421875,
+            "offsetY": 9.4375
+        }
+    ]
+}

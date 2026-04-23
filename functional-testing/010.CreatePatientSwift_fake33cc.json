@@ -1,0 +1,957 @@
+{
+    "title": "CreatePatientSwift_fake33cc",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1214,
+            "height": 737,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "navigate",
+            "url": "http://localhost:7003/nbs/login",
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/login",
+                    "title": "NBS"
+                }
+            ]
+        },
+        {
+            "type": "change",
+            "value": "superuser",
+            "selectors": [
+                [
+                    "aria/User Name:[role=\"textbox\"]"
+                ],
+                [
+                    "#id_UserName"
+                ],
+                [
+                    "xpath///*[@id=\"id_UserName\"]"
+                ],
+                [
+                    "pierce/#id_UserName"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#id_Submit_top_ToolbarButtonLabel"
+                ],
+                [
+                    "xpath///*[@id=\"id_Submit_top_ToolbarButtonLabel\"]"
+                ],
+                [
+                    "pierce/#id_Submit_top_ToolbarButtonLabel"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 14.4609375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/HomePage.do?method=loadHomePage",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "change",
+            "value": "Swift_fake33cc",
+            "selectors": [
+                [
+                    "aria/The patient's last name. When searching for a patient, data entered into the last name field search the database using 'Starts with' logic by default. To perform a search for 'Contains', enter '%' at the beginning of the field (e.g. %Doe) or use Advanced Search"
+                ],
+                [
+                    "#DEM102"
+                ],
+                [
+                    "xpath///*[@id=\"DEM102\"]"
+                ],
+                [
+                    "pierce/#DEM102"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The patient's first name. When searching for a patient, data entered into the first name field search the database using 'Starts with' logic by default. To perform a search for 'Contains', enter '%' at the beginning of the field (e.g. %Doe) or use Advanced Search"
+                ],
+                [
+                    "#DEM104"
+                ],
+                [
+                    "xpath///*[@id=\"DEM104\"]"
+                ],
+                [
+                    "pierce/#DEM104"
+                ]
+            ],
+            "offsetY": 9.359375,
+            "offsetX": 150.9609375
+        },
+        {
+            "type": "change",
+            "value": "Taylor",
+            "selectors": [
+                [
+                    "aria/The patient's first name. When searching for a patient, data entered into the first name field search the database using 'Starts with' logic by default. To perform a search for 'Contains', enter '%' at the beginning of the field (e.g. %Doe) or use Advanced Search"
+                ],
+                [
+                    "#DEM104"
+                ],
+                [
+                    "xpath///*[@id=\"DEM104\"]"
+                ],
+                [
+                    "pierce/#DEM104"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Search"
+                ],
+                [
+                    "tr:nth-of-type(8) input:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"patientSearchByDetails\"]/table[2]/tbody/tr[8]/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(8) input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 7.9609375,
+            "offsetX": 19.46875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/HomePage.do?method=patientSearchSubmit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#doc3 div.grayButtonBar input"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/div[2]/table/tbody/tr/td[2]/input"
+                ],
+                [
+                    "pierce/#doc3 div.grayButtonBar input"
+                ]
+            ],
+            "offsetY": 14,
+            "offsetX": 16,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PatientSearchResults1.do?ContextAction=Add",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Reported date of birth of patient"
+                ],
+                [
+                    "#patientDOB"
+                ],
+                [
+                    "xpath///*[@id=\"patientDOB\"]"
+                ],
+                [
+                    "pierce/#patientDOB"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 53.40625
+        },
+        {
+            "type": "change",
+            "value": "03/17/1985",
+            "selectors": [
+                [
+                    "aria/Reported date of birth of patient"
+                ],
+                [
+                    "#patientDOB"
+                ],
+                [
+                    "xpath///*[@id=\"patientDOB\"]"
+                ],
+                [
+                    "pierce/#patientDOB"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#otherDetails_subsection tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"otherDetails_subsection\"]/tbody/tr[3]/td[2]/img"
+                ],
+                [
+                    "pierce/#otherDetails_subsection tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 6.40625
+        },
+        {
+            "type": "change",
+            "value": "F",
+            "selectors": [
+                [
+                    "aria/The patient's current sex[role=\"listbox\"]"
+                ],
+                [
+                    "#DEM113"
+                ],
+                [
+                    "xpath///*[@id=\"DEM113\"]"
+                ],
+                [
+                    "pierce/#DEM113"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#otherDetails_subsection tr:nth-of-type(3) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"otherDetails_subsection\"]/tbody/tr[3]/td[2]"
+                ],
+                [
+                    "pierce/#otherDetails_subsection tr:nth-of-type(3) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 43.5,
+            "offsetX": 42.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#otherDetails_subsection tr:nth-of-type(4) img"
+                ],
+                [
+                    "xpath///*[@id=\"otherDetails_subsection\"]/tbody/tr[4]/td[2]/img"
+                ],
+                [
+                    "pierce/#otherDetails_subsection tr:nth-of-type(4) img"
+                ]
+            ],
+            "offsetY": 12.5,
+            "offsetX": 11.40625
+        },
+        {
+            "type": "change",
+            "value": "F",
+            "selectors": [
+                [
+                    "aria/Patient Birth Sex[role=\"listbox\"]"
+                ],
+                [
+                    "#DEM114"
+                ],
+                [
+                    "xpath///*[@id=\"DEM114\"]"
+                ],
+                [
+                    "pierce/#DEM114"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#otherDetails_subsection tr:nth-of-type(4) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"otherDetails_subsection\"]/tbody/tr[4]/td[2]"
+                ],
+                [
+                    "pierce/#otherDetails_subsection tr:nth-of-type(4) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 50.5,
+            "offsetX": 47.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(5) img"
+                ],
+                [
+                    "xpath///*[@id=\"otherDetails_subsection\"]/tbody/tr[5]/td[2]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) img"
+                ]
+            ],
+            "offsetY": 12.5,
+            "offsetX": 7.40625
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Is the patient deceased?[role=\"listbox\"]"
+                ],
+                [
+                    "#DEM127"
+                ],
+                [
+                    "xpath///*[@id=\"DEM127\"]"
+                ],
+                [
+                    "pierce/#DEM127"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#otherDetails_subsection tr:nth-of-type(5) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"otherDetails_subsection\"]/tbody/tr[5]/td[2]"
+                ],
+                [
+                    "pierce/#otherDetails_subsection tr:nth-of-type(5) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 47.5,
+            "offsetX": 43.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(7) img"
+                ],
+                [
+                    "xpath///*[@id=\"otherDetails_subsection\"]/tbody/tr[7]/td[2]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(7) img"
+                ]
+            ],
+            "offsetY": 12.5,
+            "offsetX": 8.90625
+        },
+        {
+            "type": "change",
+            "value": "M",
+            "selectors": [
+                [
+                    "aria/The patient's marital status[role=\"listbox\"]"
+                ],
+                [
+                    "#DEM140"
+                ],
+                [
+                    "xpath///*[@id=\"DEM140\"]"
+                ],
+                [
+                    "pierce/#DEM140"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Married"
+                ],
+                [
+                    "#otherDetails_subsection option:nth-of-type(9)"
+                ],
+                [
+                    "xpath///*[@id=\"DEM140\"]/option[9]"
+                ],
+                [
+                    "pierce/#otherDetails_subsection option:nth-of-type(9)"
+                ],
+                [
+                    "text/Married"
+                ]
+            ],
+            "offsetY": 3.5,
+            "offsetX": 42.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Line one of the address label."
+                ],
+                [
+                    "#DEM159"
+                ],
+                [
+                    "xpath///*[@id=\"DEM159\"]"
+                ],
+                [
+                    "pierce/#DEM159"
+                ]
+            ],
+            "offsetY": 16,
+            "offsetX": 161.40625
+        },
+        {
+            "type": "change",
+            "value": "1313 Pine W",
+            "selectors": [
+                [
+                    "aria/Line one of the address label."
+                ],
+                [
+                    "#DEM159"
+                ],
+                [
+                    "xpath///*[@id=\"DEM159\"]"
+                ],
+                [
+                    "pierce/#DEM159"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "w",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1313 Pine Way",
+            "selectors": [
+                [
+                    "aria/Line one of the address label."
+                ],
+                [
+                    "#DEM159"
+                ],
+                [
+                    "xpath///*[@id=\"DEM159\"]"
+                ],
+                [
+                    "pierce/#DEM159"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The city for a postal location."
+                ],
+                [
+                    "#DEM161"
+                ],
+                [
+                    "xpath///*[@id=\"DEM161\"]"
+                ],
+                [
+                    "pierce/#DEM161"
+                ]
+            ],
+            "offsetY": 4,
+            "offsetX": 133.40625
+        },
+        {
+            "type": "change",
+            "value": "A",
+            "selectors": [
+                [
+                    "aria/The city for a postal location."
+                ],
+                [
+                    "#DEM161"
+                ],
+                [
+                    "xpath///*[@id=\"DEM161\"]"
+                ],
+                [
+                    "pierce/#DEM161"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "a",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Atlanta",
+            "selectors": [
+                [
+                    "aria/The city for a postal location."
+                ],
+                [
+                    "#DEM161"
+                ],
+                [
+                    "xpath///*[@id=\"DEM161\"]"
+                ],
+                [
+                    "pierce/#DEM161"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The zip code of a residence of the case patient or entity."
+                ],
+                [
+                    "#DEM163"
+                ],
+                [
+                    "xpath///*[@id=\"DEM163\"]"
+                ],
+                [
+                    "pierce/#DEM163"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 48.40625
+        },
+        {
+            "type": "change",
+            "value": "30033",
+            "selectors": [
+                [
+                    "aria/The zip code of a residence of the case patient or entity."
+                ],
+                [
+                    "#DEM163"
+                ],
+                [
+                    "xpath///*[@id=\"DEM163\"]"
+                ],
+                [
+                    "pierce/#DEM163"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#addressSubsection tr:nth-of-type(6) img"
+                ],
+                [
+                    "xpath///*[@id=\"addressSubsection\"]/tbody/tr[6]/td[2]/img"
+                ],
+                [
+                    "pierce/#addressSubsection tr:nth-of-type(6) img"
+                ]
+            ],
+            "offsetY": 12,
+            "offsetX": 5.40625
+        },
+        {
+            "type": "change",
+            "value": "13121",
+            "selectors": [
+                [
+                    "aria/The county of a postal location[role=\"listbox\"]"
+                ],
+                [
+                    "#DEM165"
+                ],
+                [
+                    "xpath///*[@id=\"DEM165\"]"
+                ],
+                [
+                    "pierce/#DEM165"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Fulton County"
+                ],
+                [
+                    "tr:nth-of-type(6) option:nth-of-type(61)"
+                ],
+                [
+                    "xpath///*[@id=\"DEM165\"]/option[61]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(6) option:nth-of-type(61)"
+                ],
+                [
+                    "text/Fulton County"
+                ]
+            ],
+            "offsetY": 4,
+            "offsetX": 68.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The patient's home phone number."
+                ],
+                [
+                    "#DEM177"
+                ],
+                [
+                    "xpath///*[@id=\"DEM177\"]"
+                ],
+                [
+                    "pierce/#DEM177"
+                ]
+            ],
+            "offsetY": 8.5,
+            "offsetX": 22.40625
+        },
+        {
+            "type": "change",
+            "value": "201-555-1212",
+            "selectors": [
+                [
+                    "aria/The patient's home phone number."
+                ],
+                [
+                    "#DEM177"
+                ],
+                [
+                    "xpath///*[@id=\"DEM177\"]"
+                ],
+                [
+                    "pierce/#DEM177"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The patient's email address."
+                ],
+                [
+                    "#DEM182"
+                ],
+                [
+                    "xpath///*[@id=\"DEM182\"]"
+                ],
+                [
+                    "pierce/#DEM182"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 36.40625
+        },
+        {
+            "type": "change",
+            "value": "taylor@example.com",
+            "selectors": [
+                [
+                    "aria/The patient's email address."
+                ],
+                [
+                    "#DEM182"
+                ],
+                [
+                    "xpath///*[@id=\"DEM182\"]"
+                ],
+                [
+                    "pierce/#DEM182"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#whiteRace"
+                ],
+                [
+                    "xpath///*[@id=\"whiteRace\"]"
+                ],
+                [
+                    "pierce/#whiteRace"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 5.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"IdSubSection\"]/tbody/tr[2]/td[2]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetY": 6.171875,
+            "offsetX": 12.40625
+        },
+        {
+            "type": "change",
+            "value": "DL",
+            "selectors": [
+                [
+                    "aria/Identification type[role=\"listbox\"]"
+                ],
+                [
+                    "#typeID"
+                ],
+                [
+                    "xpath///*[@id=\"typeID\"]"
+                ],
+                [
+                    "pierce/#typeID"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Driver's license number"
+                ],
+                [
+                    "tr:nth-of-type(2) option:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"typeID\"]/option[5]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) option:nth-of-type(5)"
+                ],
+                [
+                    "text/Driver's license"
+                ]
+            ],
+            "offsetY": 6.171875,
+            "offsetX": 149.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#IdSubSection tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"IdSubSection\"]/tbody/tr[3]/td[2]/img"
+                ],
+                [
+                    "pierce/#IdSubSection tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 11.171875,
+            "offsetX": 6.90625
+        },
+        {
+            "type": "change",
+            "value": "GA",
+            "selectors": [
+                [
+                    "aria/Identification Assigning Authority[role=\"listbox\"]"
+                ],
+                [
+                    "#assigningAuthority"
+                ],
+                [
+                    "xpath///*[@id=\"assigningAuthority\"]"
+                ],
+                [
+                    "pierce/#assigningAuthority"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/GA"
+                ],
+                [
+                    "tr:nth-of-type(3) option:nth-of-type(11)"
+                ],
+                [
+                    "xpath///*[@id=\"assigningAuthority\"]/option[11]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) option:nth-of-type(11)"
+                ],
+                [
+                    "text/GA"
+                ]
+            ],
+            "offsetY": 5.171875,
+            "offsetX": 128.40625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Identification value."
+                ],
+                [
+                    "#idValue"
+                ],
+                [
+                    "xpath///*[@id=\"idValue\"]"
+                ],
+                [
+                    "pierce/#idValue"
+                ]
+            ],
+            "offsetY": 14.171875,
+            "offsetX": 129.40625
+        },
+        {
+            "type": "change",
+            "value": "123987456",
+            "selectors": [
+                [
+                    "aria/Identification value."
+                ],
+                [
+                    "#idValue"
+                ],
+                [
+                    "xpath///*[@id=\"idValue\"]"
+                ],
+                [
+                    "pierce/#idValue"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Add ID "
+                ],
+                [
+                    "#AddButtonToggleIdSubSection input"
+                ],
+                [
+                    "xpath///*[@id=\"AddButtonToggleIdSubSection\"]/td/input"
+                ],
+                [
+                    "pierce/#AddButtonToggleIdSubSection input"
+                ],
+                [
+                    "text/Add ID"
+                ]
+            ],
+            "offsetY": 15.171875,
+            "offsetX": 23.015625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div.printexport > input:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/form > div.printexport > input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 6.171875,
+            "offsetX": 36.046875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/AddPatientBasic1.do?ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

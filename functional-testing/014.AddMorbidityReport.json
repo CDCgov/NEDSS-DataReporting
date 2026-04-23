@@ -1,0 +1,1137 @@
+{
+    "title": "AddMorbidityReport",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1214,
+            "height": 737,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 13,
+            "offsetX": 71.8359375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#subsect_Morb input"
+                ],
+                [
+                    "xpath///*[@id=\"subsect_Morb\"]/table/tbody/tr/td[3]/input"
+                ],
+                [
+                    "pierce/#subsect_Morb input"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 29.203125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewFile1.do?ContextAction=AddMorb",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "change",
+            "value": "S",
+            "selectors": [
+                [
+                    "tr:nth-of-type(2) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) input"
+                ],
+                [
+                    "xpath///*[@id=\"conditionCd_ac_table\"]/tbody/tr[1]/td/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "s",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Salmonello",
+            "selectors": [
+                [
+                    "tr:nth-of-type(2) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) input"
+                ],
+                [
+                    "xpath///*[@id=\"conditionCd_ac_table\"]/tbody/tr[1]/td/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) tr:nth-of-type(3) > td > table > tbody > tr:nth-of-type(3) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(6) tbody > tr:nth-of-type(7) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityReport.theObservationDT.jurisdictionCd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(6) tbody > tr:nth-of-type(7) img"
+                ]
+            ],
+            "offsetY": 4,
+            "offsetX": 9.1796875
+        },
+        {
+            "type": "change",
+            "value": "130001",
+            "selectors": [
+                [
+                    "aria/* Jurisdiction:[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityReport\\.theObservationDT\\.jurisdictionCd"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityReport.theObservationDT.jurisdictionCd\"]"
+                ],
+                [
+                    "pierce/#morbidityReport\\.theObservationDT\\.jurisdictionCd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Fulton County"
+                ],
+                [
+                    "tr:nth-of-type(2) tr:nth-of-type(7) option:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityReport.theObservationDT.jurisdictionCd\"]/option[5]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) tr:nth-of-type(7) option:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 4,
+            "offsetX": 70.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/* Date of Morbidity Report:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityReport\\.theObservationDT\\.activityToTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityReport.theObservationDT.activityToTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityReport\\.theObservationDT\\.activityToTime_s"
+                ]
+            ],
+            "offsetY": 13,
+            "offsetX": 56.6796875
+        },
+        {
+            "type": "change",
+            "value": "04/09/2026",
+            "selectors": [
+                [
+                    "aria/* Date of Morbidity Report:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityReport\\.theObservationDT\\.activityToTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityReport.theObservationDT.activityToTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityReport\\.theObservationDT\\.activityToTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(21) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Org-ReportingOrganizationUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(21) input[type='text']"
+                ]
+            ],
+            "offsetY": 15.75,
+            "offsetX": 16.3046875
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "tr:nth-of-type(21) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Org-ReportingOrganizationUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(21) input[type='text']"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/1 Code Lookup",
+                    "aria/Code Lookup"
+                ],
+                [
+                    "tr:nth-of-type(21) td:nth-of-type(2) > input[type='button']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Org-ReportingOrganizationUID\"]/thead/tr/td[2]/input[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(21) td:nth-of-type(2) > input[type='button']"
+                ]
+            ],
+            "offsetY": 10.5,
+            "offsetX": 31.3046875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(25) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Prov-entity.providerUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(25) input[type='text']"
+                ]
+            ],
+            "offsetY": 13.25,
+            "offsetX": 57.3046875
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "tr:nth-of-type(25) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Prov-entity.providerUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(25) input[type='text']"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/2 Code Lookup",
+                    "aria/Code Lookup"
+                ],
+                [
+                    "tr:nth-of-type(25) td:nth-of-type(2) > input[type='button']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Prov-entity.providerUID\"]/thead/tr/td[2]/input[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(25) td:nth-of-type(2) > input[type='button']"
+                ]
+            ],
+            "offsetY": 10,
+            "offsetX": 29.3046875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Code Lookup[role=\"cell\"]",
+                    "aria/[role=\"textbox\"]"
+                ],
+                [
+                    "tr:nth-of-type(29) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Prov-entity.reporterUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(29) input[type='text']"
+                ]
+            ],
+            "offsetY": 15.75,
+            "offsetX": 60.3046875
+        },
+        {
+            "type": "change",
+            "value": "3",
+            "selectors": [
+                [
+                    "aria/Code Lookup[role=\"cell\"]",
+                    "aria/[role=\"textbox\"]"
+                ],
+                [
+                    "tr:nth-of-type(29) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Prov-entity.reporterUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(29) input[type='text']"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/3 Code Lookup",
+                    "aria/Code Lookup"
+                ],
+                [
+                    "tr:nth-of-type(29) td:nth-of-type(2) > input[type='button']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Prov-entity.reporterUID\"]/thead/tr/td[2]/input[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(29) td:nth-of-type(2) > input[type='button']"
+                ]
+            ],
+            "offsetY": 10.5,
+            "offsetX": 30.3046875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date of Onset:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[2\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[2].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[2\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "offsetY": 13.5,
+            "offsetX": 47.6796875
+        },
+        {
+            "type": "change",
+            "value": "04/02/2026",
+            "selectors": [
+                [
+                    "aria/Date of Onset:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[2\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[2].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[2\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date of Diagnosis:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[3\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[3].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[3\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "offsetY": 10.5,
+            "offsetX": 34.6796875
+        },
+        {
+            "type": "change",
+            "value": "04/05/2026",
+            "selectors": [
+                [
+                    "aria/Date of Diagnosis:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[3\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[3].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[3\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(39) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[4].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(39) img"
+                ]
+            ],
+            "offsetY": 10.5,
+            "offsetX": 9.6796875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Did patient die from this illness?[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[4\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[4].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[4\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "tr:nth-of-type(39) option:nth-of-type(4)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[4].obsValueCodedDT_s[0].code\"]/option[4]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(39) option:nth-of-type(4)"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 30.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(42) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[5].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(42) img"
+                ]
+            ],
+            "offsetY": 5.5,
+            "offsetX": 11.6796875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Was the patient hospitalized for this illness?[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[5\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[5].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[5\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "tr:nth-of-type(42) option:nth-of-type(4)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[5].obsValueCodedDT_s[0].code\"]/option[4]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(42) option:nth-of-type(4)"
+                ]
+            ],
+            "offsetY": 0.5,
+            "offsetX": 39.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Admission Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[6\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[6].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[6\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "offsetY": 16.5,
+            "offsetX": 23.1171875
+        },
+        {
+            "type": "change",
+            "value": "04/03/2026",
+            "selectors": [
+                [
+                    "aria/Admission Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[6\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[6].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[6\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Discharge Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[7\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[7].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[7\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "offsetY": 11.5,
+            "offsetX": 10.1171875
+        },
+        {
+            "type": "change",
+            "value": "04/09/2026",
+            "selectors": [
+                [
+                    "aria/Discharge Date:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[7\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[7].obsValueDateDT_s[0].fromTime_s\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[7\\]\\.obsValueDateDT_s\\[0\\]\\.fromTime_s"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Code Lookup[role=\"cell\"]",
+                    "aria/[role=\"textbox\"]"
+                ],
+                [
+                    "tr:nth-of-type(43) tr:nth-of-type(7) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Org-HospitalUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(43) tr:nth-of-type(7) input[type='text']"
+                ]
+            ],
+            "offsetY": 11.75,
+            "offsetX": 13.3046875
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/Code Lookup[role=\"cell\"]",
+                    "aria/[role=\"textbox\"]"
+                ],
+                [
+                    "tr:nth-of-type(43) tr:nth-of-type(7) input[type='text']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Org-HospitalUID\"]/thead/tr/td[2]/input[1]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(43) tr:nth-of-type(7) input[type='text']"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(43) td:nth-of-type(2) > input[type='button']"
+                ],
+                [
+                    "xpath///*[@id=\"entity-table-Org-HospitalUID\"]/thead/tr/td[2]/input[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(43) td:nth-of-type(2) > input[type='button']"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 26.3046875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#morbidityProxy\\.observationVO_s\\[8\\]\\.obsValueCodedDT_s\\[0\\]\\.code_ac_table input"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[8].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/input"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[8\\]\\.obsValueCodedDT_s\\[0\\]\\.code_ac_table input"
+                ]
+            ],
+            "offsetY": 13.5,
+            "offsetX": 39.6796875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "#morbidityProxy\\.observationVO_s\\[8\\]\\.obsValueCodedDT_s\\[0\\]\\.code_ac_table input"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[8].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/input"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[8\\]\\.obsValueCodedDT_s\\[0\\]\\.code_ac_table input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Weeks:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityReport\\.theObservationDT\\.pregnantWeek"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityReport.theObservationDT.pregnantWeek\"]"
+                ],
+                [
+                    "pierce/#morbidityReport\\.theObservationDT\\.pregnantWeek"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 13.0390625
+        },
+        {
+            "type": "change",
+            "value": "15",
+            "selectors": [
+                [
+                    "aria/Weeks:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityReport\\.theObservationDT\\.pregnantWeek"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityReport.theObservationDT.pregnantWeek\"]"
+                ],
+                [
+                    "pierce/#morbidityReport\\.theObservationDT\\.pregnantWeek"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabControlN11609 tr:nth-of-type(55) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[9].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/#tabControlN11609 tr:nth-of-type(55) img"
+                ]
+            ],
+            "offsetY": 9.5,
+            "offsetX": 9.6796875
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Food Handler:[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[9\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[9].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[9\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "#tabControlN11609 tr:nth-of-type(55) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[9].obsValueCodedDT_s[0].code\"]/option[2]"
+                ],
+                [
+                    "pierce/#tabControlN11609 tr:nth-of-type(55) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 39.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(57) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[10].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(57) img"
+                ]
+            ],
+            "offsetY": 10.5,
+            "offsetX": 10.6796875
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Associated with Day Care Facility:[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[10\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[10].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[10\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "tr:nth-of-type(57) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[10].obsValueCodedDT_s[0].code\"]/option[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(57) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 12.5,
+            "offsetX": 40.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabControlN11609 tr:nth-of-type(59) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[11].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/#tabControlN11609 tr:nth-of-type(59) img"
+                ]
+            ],
+            "offsetY": 10.5,
+            "offsetX": 8.6796875
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Affiliated with Nursing Home:[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[11\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[11].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[11\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "#tabControlN11609 tr:nth-of-type(59) option:nth-of-type(4)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[11].obsValueCodedDT_s[0].code\"]/option[4]"
+                ],
+                [
+                    "pierce/#tabControlN11609 tr:nth-of-type(59) option:nth-of-type(4)"
+                ]
+            ],
+            "offsetY": 4.5,
+            "offsetX": 35.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(61) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[12].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(61) img"
+                ]
+            ],
+            "offsetY": 7.5,
+            "offsetX": 8.6796875
+        },
+        {
+            "type": "change",
+            "value": "UNK",
+            "selectors": [
+                [
+                    "aria/Affiliated with Health Care Organization:[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[12\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[12].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[12\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Unknown"
+                ],
+                [
+                    "tr:nth-of-type(61) option:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[12].obsValueCodedDT_s[0].code\"]/option[3]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(61) option:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 3.5,
+            "offsetX": 38.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(63) img"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[13].obsValueCodedDT_s[0].code_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(63) img"
+                ]
+            ],
+            "offsetY": 12.5,
+            "offsetX": 7.6796875
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Suspected Food or Waterborne Illness:[role=\"listbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[13\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[13].obsValueCodedDT_s[0].code\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[13\\]\\.obsValueCodedDT_s\\[0\\]\\.code"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "tr:nth-of-type(63) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[13].obsValueCodedDT_s[0].code\"]/option[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(63) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 3.5,
+            "offsetX": 44.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Other, specify:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[14\\]\\.obsValueTxtDT_s\\[0\\]\\.valueTxt"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[14].obsValueTxtDT_s[0].valueTxt\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[14\\]\\.obsValueTxtDT_s\\[0\\]\\.valueTxt"
+                ]
+            ],
+            "offsetY": 13.5,
+            "offsetX": 45.6796875
+        },
+        {
+            "type": "change",
+            "value": "other something",
+            "selectors": [
+                [
+                    "aria/Other, specify:[role=\"textbox\"]"
+                ],
+                [
+                    "#morbidityProxy\\.observationVO_s\\[14\\]\\.obsValueTxtDT_s\\[0\\]\\.valueTxt"
+                ],
+                [
+                    "xpath///*[@id=\"morbidityProxy.observationVO_s[14].obsValueTxtDT_s[0].valueTxt\"]"
+                ],
+                [
+                    "pierce/#morbidityProxy\\.observationVO_s\\[14\\]\\.obsValueTxtDT_s\\[0\\]\\.valueTxt"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/other something[role=\"cell\"]"
+                ],
+                [
+                    "#tabControlN11609 tr:nth-of-type(65) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"1\"]/tbody/tr[2]/td/table/tbody/tr[3]/td/table/tbody/tr[65]/td[2]"
+                ],
+                [
+                    "pierce/#tabControlN11609 tr:nth-of-type(65) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 0.5,
+            "offsetX": 190.6796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Submit button  Submit  Submit and Create Investigation button  Submit and Create Investigation  Cancel button  Cancel  Name: Taylor Swift_fake33cc DOB: 03/17/1985 Current Sex: Female",
+                    "aria/Submit button[role=\"button\"]"
+                ],
+                [
+                    "thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/thead td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 24.5,
+            "offsetX": 16.3515625,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/AddObservationMorb2.do",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}
