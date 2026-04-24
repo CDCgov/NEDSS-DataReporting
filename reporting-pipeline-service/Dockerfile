@@ -20,7 +20,7 @@ FROM amazoncorretto:21
 RUN yum update -y && yum install -y curl && yum clean all
 COPY --from=builder /usr/src/reporting-pipeline-service/build/libs/reporting-pipeline-service*.jar reporting-pipeline-service.jar
 
-HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+HEALTHCHECK --start-period=5s --timeout=10s \
   CMD curl -f http://localhost:8095/actuator/health || exit 1
 
 # Run jar

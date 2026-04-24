@@ -1,0 +1,264 @@
+{
+    "title": "MarkAsReviewedCovid",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1325,
+            "height": 953,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Home"
+                ],
+                [
+                    "table.nedssNavTable td:nth-of-type(1) td:nth-of-type(1) > a"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/table[1]/tbody/tr/td[1]/table/tbody/tr/td[1]/a"
+                ],
+                [
+                    "pierce/table.nedssNavTable td:nth-of-type(1) td:nth-of-type(1) > a"
+                ]
+            ],
+            "offsetY": 6,
+            "offsetX": 25,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/HomePage.do?method=loadHomePage",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Documents Requiring Review (3)"
+                ],
+                [
+                    "form:nth-of-type(1) > div > div:nth-of-type(3) li:nth-of-type(6) > a"
+                ],
+                [
+                    "xpath///*[@id=\"myQueues\"]/div/div[3]/ul/li[6]/a"
+                ],
+                [
+                    "pierce/form:nth-of-type(1) > div > div:nth-of-type(3) li:nth-of-type(6) > a"
+                ],
+                [
+                    "text/Documents Requiring Review"
+                ]
+            ],
+            "offsetY": 0.53125,
+            "offsetX": 150.109375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "https://http://localhost:7003/nbs/MyTaskList1.do?ContextAction=Review&initLoad=true&labReportsCount=3",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#parent > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"parent\"]/tbody/tr[1]/td[1]/input"
+                ],
+                [
+                    "pierce/#parent > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 6.34375,
+            "offsetX": 5.8125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Mark As Reviewed",
+                    "aria/[role=\"generic\"]"
+                ],
+                [
+                    "#removeFilters > table > tbody > tr > td:nth-of-type(1) font"
+                ],
+                [
+                    "xpath///*[@id=\"removeFilters\"]/table/tbody/tr/td[1]/a/font"
+                ],
+                [
+                    "pierce/#removeFilters > table > tbody > tr > td:nth-of-type(1) font"
+                ],
+                [
+                    "text/Mark As Reviewed"
+                ]
+            ],
+            "offsetY": 10.84375,
+            "offsetX": 44.375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Choose option"
+                ],
+                [
+                    "#addMarkAsReviewedBlock img"
+                ],
+                [
+                    "xpath///*[@id=\"addMarkAsReviewedBlock\"]/table/tbody/tr[3]/td[2]/img"
+                ],
+                [
+                    "pierce/#addMarkAsReviewedBlock img"
+                ]
+            ],
+            "offsetY": 9.484375,
+            "offsetX": 5.109375
+        },
+        {
+            "type": "change",
+            "value": "NEGLAB",
+            "selectors": [
+                [
+                    "aria/Select Reason For No Further Action[role=\"listbox\"]"
+                ],
+                [
+                    "#processingDecisionStyle"
+                ],
+                [
+                    "xpath///*[@id=\"processingDecisionStyle\"]"
+                ],
+                [
+                    "pierce/#processingDecisionStyle"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Negative Lab Result"
+                ],
+                [
+                    "#addMarkAsReviewedBlock option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"processingDecisionStyle\"]/option[2]"
+                ],
+                [
+                    "pierce/#addMarkAsReviewedBlock option:nth-of-type(2)"
+                ],
+                [
+                    "text/Negative Lab"
+                ]
+            ],
+            "offsetY": 8.09375,
+            "offsetX": 72.109375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Enter Comments"
+                ],
+                [
+                    "#markAsReviewedComments"
+                ],
+                [
+                    "xpath///*[@id=\"markAsReviewedComments\"]"
+                ],
+                [
+                    "pierce/#markAsReviewedComments"
+                ]
+            ],
+            "offsetY": 34.4375,
+            "offsetX": 76.84375
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Enter Comments"
+                ],
+                [
+                    "#markAsReviewedComments"
+                ],
+                [
+                    "xpath///*[@id=\"markAsReviewedComments\"]"
+                ],
+                [
+                    "pierce/#markAsReviewedComments"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "n",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No investigation needed",
+            "selectors": [
+                [
+                    "aria/Enter Comments"
+                ],
+                [
+                    "#markAsReviewedComments"
+                ],
+                [
+                    "xpath///*[@id=\"markAsReviewedComments\"]"
+                ],
+                [
+                    "pierce/#markAsReviewedComments"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Submit"
+                ],
+                [
+                    "#addMarkAsReviewedBlock tr:nth-of-type(5) input:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"addMarkAsReviewedBlock\"]/table/tbody/tr[5]/td/input[1]"
+                ],
+                [
+                    "pierce/#addMarkAsReviewedBlock tr:nth-of-type(5) input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 14.125,
+            "offsetX": 41.375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "https://http://localhost:7003/nbs/MarkAsReviewedBulk1.do?method=markAsReviewedBulk",
+                    "title": "Documents Requiring Review"
+                }
+            ]
+        }
+    ]
+}
