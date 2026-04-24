@@ -161,8 +161,6 @@ public class NrtObservationWriter {
        ON nrt_observation_coded.observation_uid = source.observation_uid AND nrt_observation_coded.ovc_code = source.ovc_code
       WHEN MATCHED THEN
         UPDATE SET
-          observation_uid = source.observation_uid,
-          ovc_code = source.ovc_code,
           ovc_code_system_cd = source.ovc_code_system_cd,
           ovc_code_system_desc_txt = source.ovc_code_system_desc_txt,
           ovc_display_name = source.ovc_display_name,
@@ -229,7 +227,6 @@ public class NrtObservationWriter {
        ON nrt_observation_date.observation_uid = source.observation_uid
       WHEN MATCHED THEN
         UPDATE SET
-          observation_uid = source.observation_uid,
           ovd_from_date = source.ovd_from_date,
           ovd_to_date = source.ovd_to_date,
           ovd_seq = source.ovd_seq,
@@ -275,8 +272,6 @@ public class NrtObservationWriter {
        ON nrt_observation_edx.edx_document_uid = source.edx_document_uid AND nrt_observation_edx.edx_act_uid = source.edx_act_uid
       WHEN MATCHED THEN
         UPDATE SET
-          edx_document_uid = source.edx_document_uid,
-          edx_act_uid = source.edx_act_uid,
           edx_add_time = source.edx_add_time
       WHEN NOT MATCHED THEN
       INSERT (
@@ -320,7 +315,6 @@ public class NrtObservationWriter {
        ON nrt_observation_numeric.observation_uid = source.observation_uid AND nrt_observation_numeric.ovn_seq = source.ovn_seq
       WHEN MATCHED THEN
         UPDATE SET
-          observation_uid = source.observation_uid,
           ovn_high_range = source.ovn_high_range,
           ovn_low_range = source.ovn_low_range,
           ovn_comparator_cd_1 = source.ovn_comparator_cd_1,
@@ -328,7 +322,6 @@ public class NrtObservationWriter {
           ovn_numeric_value_2 = source.ovn_numeric_value_2,
           ovn_numeric_unit_cd = source.ovn_numeric_unit_cd,
           ovn_separator_cd = source.ovn_separator_cd,
-          ovn_seq = source.ovn_seq,
           batch_id = source.batch_id
       WHEN NOT MATCHED THEN
       INSERT (
@@ -387,8 +380,6 @@ public class NrtObservationWriter {
        ON nrt_observation_reason.observation_uid = source.observation_uid AND nrt_observation_reason.reason_cd = source.reason_cd
       WHEN MATCHED THEN
         UPDATE SET
-          observation_uid = source.observation_uid,
-          reason_cd = source.reason_cd,
           reason_desc_txt = source.reason_desc_txt,
           batch_id = source.batch_id
       WHEN NOT MATCHED THEN
@@ -431,8 +422,6 @@ public class NrtObservationWriter {
        ON nrt_observation_txt.observation_uid = source.observation_uid AND nrt_observation_txt.ovt_seq = source.ovt_seq
       WHEN MATCHED THEN
         UPDATE SET
-          observation_uid = source.observation_uid,
-          ovt_seq = source.ovt_seq,
           ovt_txt_type_cd = source.ovt_txt_type_cd,
           ovt_value_txt = source.ovt_value_txt,
           batch_id = source.batch_id
