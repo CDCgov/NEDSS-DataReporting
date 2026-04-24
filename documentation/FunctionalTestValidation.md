@@ -6,38 +6,36 @@ This documentation was produced as a deliverable for the Jira Ticket [APP-473](h
 ## Process
 These instructions should be performed in the order displayed here.
 
-### 1) Prepare test SQL inputs (steps 1–3)
+### 1) Prepare test SQL inputs
 
 1. Create temporary copies of `setup.sql`.
 2. Update all `last_chg_time` values to the current UTC timestamp using `GETDATE()`.
 3. (OPTIONAL) Increment all UIDs declared at the top of `setup.sql` by 1. This step will likely be needed if the instructions were not followed in order, requiring a <em>retry</em>. (ONLY FOR GENERATING DATA!).
 
-### 2) Prepare for tracing and execute SQL in sequence (steps 4–5)
-
-4. Using `sqlcmd`, execute the SQL files.
-```shell
-sqlcmd -S localhost,3433 -U sa -P "PizzaIsGood33\!" -b -C -i 010-<xxx-myFunctionalTestStep>/setup.sql
-```
-5. Run `trace_db_logical_changes.py` pointing to RDB.
+### 2) Prepare for tracing and execute SQL in sequence
+4. Run `trace_db_logical_changes.py` pointing to RDB.
 ```shell
 python utilities/local-db-tracing/trace_db_logical_changes.py --database RDB --user sa --password PizzaIsGood33\!
 ```
-6. Execute the SQL files in the most logical order (e.g., first patient, then morbidity report).
-
-### 3) Run MasterEtl and capture changes (steps 6–11)
-7. When the program prompts you to press **ENTER**, run Master ETL.
-8. After MasterEtl has completed, press **ENTER** in the Python program to capture changes.
+5. Using `sqlcmd`, execute the SQL files in the most logical order (e.g., first patient, then morbidity report).
+```shell
+sqlcmd -S localhost,3433 -U sa -P "PizzaIsGood33\!" -b -C -i <xxx-myFunctionalTestStep>/setup.sql
+```
+### 3) Run MasterEtl and capture changes 
+7. When the tracing program prompts you to press **ENTER**, run Master ETL.
+8. After MasterEtl has completed, press **ENTER** in the tracing program to capture changes.
 9. Fill in the prompts at your discretion.
-10. Review results in the Python program output.
-11. Use `logical_changes.md` or `logical_changes.json` to focus on relevant changes.
+10. Review results in `logical_changes.md` or `logical_changes.json` to focus on relevant changes.
 
-### 4) Update validation artifacts (steps 12–16)
+### 4) Update validation artifacts
 
-12. Compare inserts of expected RDB tables to your `query.sql` file.
-13. Modify `query.sql` as needed.
-14. Compare inserts of expected RDB tables to your `expected.json` file.
-15. Modify `expected.json` as needed.
-16. Consider any additional non-log tables that may need validation.
+11. Compare inserts of expected RDB tables to your `query.sql` and `expected.json` files.
+
+    i. Ignore the timestamp differences as `GETDATE()` is only used for ensuring MasterEtl picks up the records.
+
+    ii. If you modified the values of any ID fields in the copied `setup.sql` you can ignore those as well when comparing your existing validation to the changes.
+
+    iii. Carefully review which tables are populated by MasterEtl and be sure to add entries to your validation files for any <em>missing</em> tables.
 
 ### 5) Functional Tests
 Execute the functional tests and determine what modifications are needed!
