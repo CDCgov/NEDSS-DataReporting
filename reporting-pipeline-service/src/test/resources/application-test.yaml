@@ -27,4 +27,4 @@ spring:
 service:
   fixed-delay:
     cached-ids: 1000
-    datamart: 3000
+    datamart: 20000
