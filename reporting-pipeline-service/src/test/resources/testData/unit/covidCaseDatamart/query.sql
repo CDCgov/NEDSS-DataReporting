@@ -1,0 +1,1 @@
+SELECT * FROM dbo.COVID_CASE_DATAMART WHERE public_health_case_uid = 10009289;
