@@ -1,0 +1,264 @@
+{
+    "title": "035.AddTreatmentSyphilisPopup",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 980,
+            "height": 807,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Provider that administered the treatment."
+                ],
+                [
+                    "#NBS475Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS475Text\"]"
+                ],
+                [
+                    "pierce/#NBS475Text"
+                ]
+            ],
+            "offsetY": 18.1640625,
+            "offsetX": 51.1640625
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Provider that administered the treatment."
+                ],
+                [
+                    "#NBS475Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS475Text\"]"
+                ],
+                [
+                    "pierce/#NBS475Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS475CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS475CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS475CodeLookupButton"
+                ]
+            ],
+            "offsetY": 12.9140625,
+            "offsetX": 28.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The reporting facility that reported the treatment."
+                ],
+                [
+                    "#NBS477Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS477Text\"]"
+                ],
+                [
+                    "pierce/#NBS477Text"
+                ]
+            ],
+            "offsetY": 6.6640625,
+            "offsetX": 35.1640625
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/The reporting facility that reported the treatment."
+                ],
+                [
+                    "#NBS477Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS477Text\"]"
+                ],
+                [
+                    "pierce/#NBS477Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Quick Code Lookup"
+                ],
+                [
+                    "#NBS477CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS477CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS477CodeLookupButton"
+                ]
+            ],
+            "offsetY": 9.4140625,
+            "offsetX": 24.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date the patient was treated."
+                ],
+                [
+                    "#NBS465"
+                ],
+                [
+                    "xpath///*[@id=\"NBS465\"]"
+                ],
+                [
+                    "pierce/#NBS465"
+                ]
+            ],
+            "offsetY": 11.1640625,
+            "offsetX": 57
+        },
+        {
+            "type": "change",
+            "value": "04/22/2026",
+            "selectors": [
+                [
+                    "aria/The date the patient was treated."
+                ],
+                [
+                    "#NBS465"
+                ],
+                [
+                    "xpath///*[@id=\"NBS465\"]"
+                ],
+                [
+                    "pierce/#NBS465"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Choose option"
+                ],
+                [
+                    "#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_TRMT_05\"]/tbody/tr[2]/td[2]/div/img"
+                ],
+                [
+                    "pierce/#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetY": 9.1640625,
+            "offsetX": 5
+        },
+        {
+            "type": "change",
+            "value": "176",
+            "selectors": [
+                [
+                    "aria/The treatment the patient received.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS481"
+                ],
+                [
+                    "xpath///*[@id=\"NBS481\"]"
+                ],
+                [
+                    "pierce/#NBS481"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Benzathine penicillin G (Bicillin), 2.4 mu, IM, x 1 dose"
+                ],
+                [
+                    "#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) option:nth-of-type(23)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS481\"]/option[23]"
+                ],
+                [
+                    "pierce/#NBS_UI_TRMT_05 > tbody > tr:nth-of-type(2) option:nth-of-type(23)"
+                ],
+                [
+                    "text/Benzathine penicillin G (Bicillin), 2.4 mu, IM, x"
+                ]
+            ],
+            "offsetY": 6.1640625,
+            "offsetX": 95.7421875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "div:nth-of-type(3) > div.popupButtonBar > input:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/div[4]/input[3]"
+                ],
+                [
+                    "pierce/div:nth-of-type(3) > div.popupButtonBar > input:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 8.6640625,
+            "offsetX": 40.3828125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=createGenericSubmit&ContextAction=Submit&addAnother=false&coinfList=&mapView=NBS481CodeId$A$176NEXTCODENBS481Description$A$Benzathine%20penicillin%20G%20(Bicillin),%202.4%20mu,%20IM,%20x%201%20doseNEXTCODENBS481$A$176$$Benzathine%20penicillin%20G%20(Bicillin),%202.4%20mu,%20IM,%20x%201%20doseNEXTCODENBS481DescriptionId$A$Benzathine%20penicillin%20G%20(Bicillin),%202.4%20mu,%20IM,%20x%201%20dose(176)",
+                    "title": "NBS: Window"
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+              ["#doc3 > form > div.popupButtonBar > input[type=button]:nth-child(5)"]
+            ],
+            "offsetX": 10,
+            "offsetY": 10
+          }
+
+    ]
+}
