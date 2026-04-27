@@ -1,0 +1,357 @@
+{
+    "title": "CloseInvestigation",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Open Investigations"
+                ],
+                [
+                    "td:nth-of-type(7) > a"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/table[1]/tbody/tr/td[1]/table/tbody/tr/td[7]/a"
+                ],
+                [
+                    "pierce/td:nth-of-type(7) > a"
+                ],
+                [
+                    "text/Open Investigations"
+                ]
+            ],
+            "offsetY": 5,
+            "offsetX": 61.265625,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/LoadNavbar.do?ContextAction=GlobalInvestigations&initLoad=true",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Syphilis, secondary[role=\"link\"]"
+                ],
+                [
+                    "tr.even > td:nth-of-type(6) > a"
+                ],
+                [
+                    "xpath///*[@id=\"parent\"]/tbody/tr[2]/td[6]/a"
+                ],
+                [
+                    "pierce/tr.even > td:nth-of-type(6) > a"
+                ]
+            ],
+            "offsetY": 7.34375,
+            "offsetX": 42.671875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/MyProgramAreaInvestigations1.do?ContextAction=InvestigationID&publicHealthCaseUID=10009300&investigationFormCode=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 18.5859375,
+            "offsetX": 76.171875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath///*[@id=\"delete\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ]
+            ],
+            "offsetY": 26,
+            "offsetX": 11.6484375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit&invFormCd=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(4) > tbody > tr:nth-of-type(3) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/table:nth-of-type(4) > tbody > tr:nth-of-type(3) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 11.6328125,
+            "offsetX": 83.171875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS185"
+                ],
+                [
+                    "xpath///*[@id=\"NBS185\"]"
+                ],
+                [
+                    "pierce/#NBS185"
+                ]
+            ],
+            "offsetY": 73.4609375,
+            "offsetX": 44
+        },
+        {
+            "type": "change",
+            "value": "finished gathering information about this case",
+            "selectors": [
+                [
+                    "#NBS185"
+                ],
+                [
+                    "xpath///*[@id=\"NBS185\"]"
+                ],
+                [
+                    "pierce/#NBS185"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#AddButtonToggleNBS_INV_STD_UI_26 input"
+                ],
+                [
+                    "xpath///*[@id=\"AddButtonToggleNBS_INV_STD_UI_26\"]/td/input"
+                ],
+                [
+                    "pierce/#AddButtonToggleNBS_INV_STD_UI_26 input"
+                ]
+            ],
+            "offsetY": 12.4609375,
+            "offsetX": 2.84375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date the case follow-up is closed."
+                ],
+                [
+                    "#NBS196"
+                ],
+                [
+                    "xpath///*[@id=\"NBS196\"]"
+                ],
+                [
+                    "pierce/#NBS196"
+                ]
+            ],
+            "offsetY": 11.8984375,
+            "offsetX": 13
+        },
+        {
+            "type": "change",
+            "value": "04/27/2026",
+            "selectors": [
+                [
+                    "aria/The date the case follow-up is closed."
+                ],
+                [
+                    "#NBS196"
+                ],
+                [
+                    "xpath///*[@id=\"NBS196\"]"
+                ],
+                [
+                    "pierce/#NBS196"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The investigator who closed out the case follow-up."
+                ],
+                [
+                    "#NBS197Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS197Text\"]"
+                ],
+                [
+                    "pierce/#NBS197Text"
+                ]
+            ],
+            "offsetY": 13.8984375,
+            "offsetX": 19.1640625
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The investigator who closed out the case follow-up."
+                ],
+                [
+                    "#NBS197Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS197Text\"]"
+                ],
+                [
+                    "pierce/#NBS197Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS197CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS197CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS197CodeLookupButton"
+                ]
+            ],
+            "offsetY": 13.6484375,
+            "offsetX": 21.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#CaseClosure tr:nth-of-type(6) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_32\"]/tbody/tr[6]/td[2]/img"
+                ],
+                [
+                    "pierce/#CaseClosure tr:nth-of-type(6) img"
+                ]
+            ],
+            "offsetY": 11.3984375,
+            "offsetX": 7.5
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Indicate whether or not the patient was in medical care at the time of the case close date.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS444"
+                ],
+                [
+                    "xpath///*[@id=\"NBS444\"]"
+                ],
+                [
+                    "pierce/#NBS444"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/1-In Care"
+                ],
+                [
+                    "#CaseClosure option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS444\"]/option[2]"
+                ],
+                [
+                    "pierce/#CaseClosure option:nth-of-type(2)"
+                ],
+                [
+                    "text/1-In Care"
+                ]
+            ],
+            "offsetY": 8.3984375,
+            "offsetX": 88
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 19.9140625,
+            "offsetX": 13.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=editSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

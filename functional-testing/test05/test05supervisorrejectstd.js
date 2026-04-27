@@ -125,6 +125,48 @@ if (stepPause) {
   await waitForEnter('Step 07 complete. Press Enter to continue.');
 }
 
+//
+//
+// step 08: contact disposition
+await runFile(browser, page, '080.ChangeContactInvestigationDisposition.json');
+await runFile(browser, page, '082.SupervisorApprovesContactDisposition.json');
+if (stepPause) {
+  await waitForEnter('Step 08 complete. Press Enter to continue.');
+}
+
+//
+//
+// step 09: close investigation
+await runFile(browser, page, '090.CloseInvestigationSyphilis.json');
+if (stepPause) {
+  await waitForEnter('Step 09 complete. Press Enter to continue.');
+}
+
+//
+//
+// step 10: supervisor rejects investigation close
+await runFile(browser, page, '100.SupervisorRejectsCloseInvestigation.json');
+if (stepPause) {
+  await waitForEnter('Step 10 complete. Press Enter to continue.');
+}
+
+//
+//
+// step 11: update investigation and close again
+await runFile(browser, page, '110.UpdateInvestigationAndCloseSyphilis.json');
+await runFile(browser, page, '112.CreateNotificationSyphilis.json');
+if (stepPause) {
+  await waitForEnter('Step 11 complete. Press Enter to continue.');
+}
+
+//
+//
+// step 12: supervisor approves investigation close
+await runFile(browser, page, '120.SupervisorApprove.json');
+if (stepPause) {
+  await waitForEnter('Step 12 complete. Press Enter to continue.');
+}
+
 /*
 rl.close();
 await browser.close();

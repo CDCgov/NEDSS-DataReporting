@@ -1,0 +1,486 @@
+{
+    "title": "UpdateInvestigationAndCloseAgain",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Open Investigations"
+                ],
+                [
+                    "td:nth-of-type(7) > a"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/table[1]/tbody/tr/td[1]/table/tbody/tr/td[7]/a"
+                ],
+                [
+                    "pierce/td:nth-of-type(7) > a"
+                ],
+                [
+                    "text/Open Investigations"
+                ]
+            ],
+            "offsetY": 1,
+            "offsetX": 43.265625,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/LoadNavbar.do?ContextAction=GlobalInvestigations&initLoad=true",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Syphilis, secondary[role=\"link\"]"
+                ],
+                [
+                    "tr.even > td:nth-of-type(6) > a"
+                ],
+                [
+                    "xpath///*[@id=\"parent\"]/tbody/tr[2]/td[6]/a"
+                ],
+                [
+                    "pierce/tr.even > td:nth-of-type(6) > a"
+                ]
+            ],
+            "offsetY": 6.34375,
+            "offsetX": 51.671875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/MyProgramAreaInvestigations1.do?ContextAction=InvestigationID&publicHealthCaseUID=10009300&investigationFormCode=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath///*[@id=\"delete\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ]
+            ],
+            "offsetY": 22,
+            "offsetX": 14.6484375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit&invFormCd=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 15.5859375,
+            "offsetX": 49.171875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS195"
+                ],
+                [
+                    "xpath///*[@id=\"NBS195\"]"
+                ],
+                [
+                    "pierce/#NBS195"
+                ]
+            ],
+            "offsetY": 67.2265625,
+            "offsetX": 71
+        },
+        {
+            "type": "change",
+            "value": "here are some more notes",
+            "selectors": [
+                [
+                    "#NBS195"
+                ],
+                [
+                    "xpath///*[@id=\"NBS195\"]"
+                ],
+                [
+                    "pierce/#NBS195"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#AddButtonToggleNBS_INV_STD_UI_30 input"
+                ],
+                [
+                    "xpath///*[@id=\"AddButtonToggleNBS_INV_STD_UI_30\"]/td/input"
+                ],
+                [
+                    "pierce/#AddButtonToggleNBS_INV_STD_UI_30 input"
+                ]
+            ],
+            "offsetY": 13.2265625,
+            "offsetX": 3.84375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 20.5859375,
+            "offsetX": 67.8359375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(7)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head3\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(7)"
+                ]
+            ],
+            "offsetY": 25.0859375,
+            "offsetX": 38.5078125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_41 > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_41\"]/tbody/tr/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_41 > tbody img"
+                ]
+            ],
+            "offsetY": 8.7734375,
+            "offsetX": 6.5
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Were behavioral risk factors assessed for the client?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS229"
+                ],
+                [
+                    "xpath///*[@id=\"NBS229\"]"
+                ],
+                [
+                    "pierce/#NBS229"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_41 td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_41\"]/tbody/tr/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_41 td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 45.7734375,
+            "offsetX": 127
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_45 > tbody > tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_45\"]/tbody/tr[2]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_45 > tbody > tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetY": 9.2734375,
+            "offsetX": 12
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/No drug use within the past 12 months?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS233"
+                ],
+                [
+                    "xpath///*[@id=\"NBS233\"]"
+                ],
+                [
+                    "pierce/#NBS233"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_45 tr:nth-of-type(2) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_45\"]/tbody/tr[2]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_45 tr:nth-of-type(2) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 83.2734375,
+            "offsetX": 81
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitTop"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitTop\"]"
+                ],
+                [
+                    "pierce/#SubmitTop"
+                ]
+            ],
+            "offsetY": 22,
+            "offsetX": 16.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=editSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath///*[@id=\"delete\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ]
+            ],
+            "offsetY": 26,
+            "offsetX": 11.6484375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit&invFormCd=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 20.5859375,
+            "offsetX": 86.171875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date the case follow-up is closed."
+                ],
+                [
+                    "#NBS196"
+                ],
+                [
+                    "xpath///*[@id=\"NBS196\"]"
+                ],
+                [
+                    "pierce/#NBS196"
+                ]
+            ],
+            "offsetY": 9.3984375,
+            "offsetX": 20
+        },
+        {
+            "type": "change",
+            "value": "04/27/2026",
+            "selectors": [
+                [
+                    "aria/The date the case follow-up is closed."
+                ],
+                [
+                    "#NBS196"
+                ],
+                [
+                    "xpath///*[@id=\"NBS196\"]"
+                ],
+                [
+                    "pierce/#NBS196"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The investigator who closed out the case follow-up."
+                ],
+                [
+                    "#NBS197Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS197Text\"]"
+                ],
+                [
+                    "pierce/#NBS197Text"
+                ]
+            ],
+            "offsetY": 13.3984375,
+            "offsetX": 22.1640625
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The investigator who closed out the case follow-up."
+                ],
+                [
+                    "#NBS197Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS197Text\"]"
+                ],
+                [
+                    "pierce/#NBS197Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS197CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS197CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS197CodeLookupButton"
+                ]
+            ],
+            "offsetY": 16.1484375,
+            "offsetX": 24.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 21.9140625,
+            "offsetX": 12.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=editSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}
