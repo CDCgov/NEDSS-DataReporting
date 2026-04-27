@@ -682,23 +682,6 @@
             "target": "main",
             "selectors": [
                 [
-                    "#SubmitBottom"
-                ],
-                [
-                    "xpath///*[@id=\"SubmitBottom\"]"
-                ],
-                [
-                    "pierce/#SubmitBottom"
-                ]
-            ],
-            "offsetY": 24.1640625,
-            "offsetX": 12.71875
-        },
-        {
-            "type": "click",
-            "target": "main",
-            "selectors": [
-                [
                     "aria/When the disposition was determined as relates to exam or treatment situation."
                 ],
                 [

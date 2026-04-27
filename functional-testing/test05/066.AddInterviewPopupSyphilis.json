@@ -1,0 +1,448 @@
+{
+    "title": "09AddInterviewPop",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 850,
+            "height": 699,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date of the interview."
+                ],
+                [
+                    "#IXS101"
+                ],
+                [
+                    "xpath///*[@id=\"IXS101\"]"
+                ],
+                [
+                    "pierce/#IXS101"
+                ]
+            ],
+            "offsetY": 12.1640625,
+            "offsetX": 43.5
+        },
+        {
+            "type": "change",
+            "value": "04/24/2026",
+            "selectors": [
+                [
+                    "aria/The date of the interview."
+                ],
+                [
+                    "#IXS101"
+                ],
+                [
+                    "xpath///*[@id=\"IXS101\"]"
+                ],
+                [
+                    "pierce/#IXS101"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(10) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA24102\"]/tbody/tr[10]/td[2]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(10) img"
+                ]
+            ],
+            "offsetY": 10.1640625,
+            "offsetX": 8.5
+        },
+        {
+            "type": "change",
+            "value": "INITIAL",
+            "selectors": [
+                [
+                    "aria/The type of interview (e.g., initial interview)[role=\"listbox\"]"
+                ],
+                [
+                    "#IXS105"
+                ],
+                [
+                    "xpath///*[@id=\"IXS105\"]"
+                ],
+                [
+                    "pierce/#IXS105"
+                ],
+                [
+                    "text/INITIAL"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Initial/Original"
+                ],
+                [
+                    "tr:nth-of-type(10) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"IXS105\"]/option[2]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(10) option:nth-of-type(2)"
+                ],
+                [
+                    "text/Initial/Original"
+                ]
+            ],
+            "offsetY": 11.1640625,
+            "offsetX": 48.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(11) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA24102\"]/tbody/tr[11]/td[2]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(11) img"
+                ]
+            ],
+            "offsetY": 12.1640625,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "T",
+            "selectors": [
+                [
+                    "aria/The location of the interview (e.g., phone, clinic, etc.).[role=\"listbox\"]"
+                ],
+                [
+                    "#IXS106"
+                ],
+                [
+                    "xpath///*[@id=\"IXS106\"]"
+                ],
+                [
+                    "pierce/#IXS106"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Telephone"
+                ],
+                [
+                    "tr:nth-of-type(11) option:nth-of-type(6)"
+                ],
+                [
+                    "xpath///*[@id=\"IXS106\"]/option[6]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(11) option:nth-of-type(6)"
+                ],
+                [
+                    "text/Telephone"
+                ]
+            ],
+            "offsetY": 3.1640625,
+            "offsetX": 24.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(12) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA24102\"]/tbody/tr[12]/td[2]/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(12) img"
+                ]
+            ],
+            "offsetY": 9.1640625,
+            "offsetX": 9
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Indicate whether or not contacts were named during this interview.[role=\"listbox\"]"
+                ],
+                [
+                    "#STD301"
+                ],
+                [
+                    "xpath///*[@id=\"STD301\"]"
+                ],
+                [
+                    "pierce/#STD301"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "tr:nth-of-type(12) option:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"STD301\"]/option[3]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(12) option:nth-of-type(3)"
+                ],
+                [
+                    "text/Yes"
+                ]
+            ],
+            "offsetY": 5.1640625,
+            "offsetX": 16.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The interview notes that were recorded during the interview process."
+                ],
+                [
+                    "#IXS111"
+                ],
+                [
+                    "xpath///*[@id=\"IXS111\"]"
+                ],
+                [
+                    "pierce/#IXS111"
+                ]
+            ],
+            "offsetY": 30.0859375,
+            "offsetX": 59
+        },
+        {
+            "type": "change",
+            "value": "asd asd asda dasd adsas dad asda ",
+            "selectors": [
+                [
+                    "aria/The interview notes that were recorded during the interview process."
+                ],
+                [
+                    "#IXS111"
+                ],
+                [
+                    "xpath///*[@id=\"IXS111\"]"
+                ],
+                [
+                    "pierce/#IXS111"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Shift"
+        },
+        {
+            "type": "keyUp",
+            "key": "Shift",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "asd asd asda dasd adsas dad asda lots of things to say.",
+            "selectors": [
+                [
+                    "aria/The interview notes that were recorded during the interview process."
+                ],
+                [
+                    "#IXS111"
+                ],
+                [
+                    "xpath///*[@id=\"IXS111\"]"
+                ],
+                [
+                    "pierce/#IXS111"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "doubleClick",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The interview notes that were recorded during the interview process."
+                ],
+                [
+                    "#IXS111"
+                ],
+                [
+                    "xpath///*[@id=\"IXS111\"]"
+                ],
+                [
+                    "pierce/#IXS111"
+                ]
+            ],
+            "offsetY": 8.0859375,
+            "offsetX": 244
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The interview notes that were recorded during the interview process."
+                ],
+                [
+                    "#IXS111"
+                ],
+                [
+                    "xpath///*[@id=\"IXS111\"]"
+                ],
+                [
+                    "pierce/#IXS111"
+                ]
+            ],
+            "offsetY": 8.0859375,
+            "offsetX": 244
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Meta"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "c"
+        },
+        {
+            "type": "keyUp",
+            "key": "Meta",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The interview notes that were recorded during the interview process."
+                ],
+                [
+                    "#IXS111"
+                ],
+                [
+                    "xpath///*[@id=\"IXS111\"]"
+                ],
+                [
+                    "pierce/#IXS111"
+                ]
+            ],
+            "offsetY": 10.0859375,
+            "offsetX": 349
+        },
+        {
+            "type": "change",
+            "value": "asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say.",
+            "selectors": [
+                [
+                    "aria/The interview notes that were recorded during the interview process."
+                ],
+                [
+                    "#IXS111"
+                ],
+                [
+                    "xpath///*[@id=\"IXS111\"]"
+                ],
+                [
+                    "pierce/#IXS111"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Add "
+                ],
+                [
+                    "#AddButtonToggleGA25100 input"
+                ],
+                [
+                    "xpath///*[@id=\"AddButtonToggleGA25100\"]/td/input"
+                ],
+                [
+                    "pierce/#AddButtonToggleGA25100 input"
+                ]
+            ],
+            "offsetY": 9.0859375,
+            "offsetX": 53.84375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "div:nth-of-type(3) > div.popupButtonBar > input:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/div[4]/input[1]"
+                ],
+                [
+                    "pierce/div:nth-of-type(3) > div.popupButtonBar > input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 9.0859375,
+            "offsetX": 16.546875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=createGenericSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+              ["#doc3 > form > div.popupButtonBar > input[type=button]:nth-child(4)"]
+            ],
+            "offsetX": 10,
+            "offsetY": 10
+        }
+    ]
+}

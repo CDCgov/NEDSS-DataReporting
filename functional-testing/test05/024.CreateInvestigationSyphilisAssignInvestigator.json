@@ -195,6 +195,66 @@
             "offsetY": 1.7734375,
             "offsetX": 137
         },
+
+{
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 9.5859375,
+            "offsetX": 85.8359375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date the investigation was started or initiated."
+                ],
+                [
+                    "#INV147"
+                ],
+                [
+                    "xpath///*[@id=\"INV147\"]"
+                ],
+                [
+                    "pierce/#INV147"
+                ]
+            ],
+            "offsetY": 12.9296875,
+            "offsetX": 34
+        },
+        {
+            "type": "change",
+            "value": "04/24/2026",
+            "selectors": [
+                [
+                    "aria/The date the investigation was started or initiated."
+                ],
+                [
+                    "#INV147"
+                ],
+                [
+                    "xpath///*[@id=\"INV147\"]"
+                ],
+                [
+                    "pierce/#INV147"
+                ]
+            ],
+            "target": "main"
+        },
+
+
+
         {
             "type": "click",
             "target": "main",
