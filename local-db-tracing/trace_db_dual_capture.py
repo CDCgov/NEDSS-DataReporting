@@ -664,7 +664,7 @@ def main() -> int:
         )
 
         log_progress("Generating rdb-selects.sql from combined tracing artifacts")
-        rdb_selects_path, rdb_select_count = generate_rdb_selects_from_manifest(
+        rdb_selects_path, expected_json_path, rdb_select_count = generate_rdb_selects_from_manifest(
             combined_run_dir / "combined-manifest.json",
             combined_run_dir / "rdb-selects.sql",
         )
@@ -676,6 +676,7 @@ def main() -> int:
         print(f"{plan_prefix(logical_plan)} Built {len(logical_changes)} logical change events")
         print(f"Generated {rdb_select_count} RDB SELECT statements")
         print(f"RDB select scaffold: {rdb_selects_path}")
+        print(f"Expected JSON: {expected_json_path}")
         print(f"Combined output written to: {combined_run_dir}")
 
         disable_tables_after_run = prompt_cleanup_choice(args, [cdc_plan, logical_plan])

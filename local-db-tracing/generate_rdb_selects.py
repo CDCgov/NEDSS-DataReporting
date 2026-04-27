@@ -73,6 +73,11 @@ def parse_args() -> argparse.Namespace:
         "--output-file",
         help="Path to write the generated SQL scaffold; defaults to rdb-selects.sql next to combined-manifest.json",
     )
+    parser.add_argument(
+        "--all-steps",
+        action="store_true",
+        help="Also generate step-N/query.sql and step-N/expected.json under the logical run directory for each step in the manifest",
+    )
     return parser.parse_args()
 
 
@@ -1109,7 +1114,7 @@ def render_sql(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None = None,
     generated_always_columns: set[tuple[str, str, str]] | None = None,
     auto_datetime_defaults: set[tuple[str, str, str]] | None = None,
-) -> str:
+) -> tuple[str, dict[str, object]]:
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     source_summary_file = display_path(str(manifest.get("cdc_summary_file") or ""))
     logical_changes_file = display_path(str(manifest.get("logical_changes_file") or ""))
@@ -1130,6 +1135,8 @@ def render_sql(
 
     lookup_scaffold_by_table = build_lookup_scaffold_by_table(scaffolds)
     ambiguity_state: dict[tuple[str, tuple[str, ...]], int] = {}
+    expected_map: dict[str, object] = {}
+    scaffold_index = 0
 
     for scaffold in scaffolds:
         lines.append(f"-- {scaffold.schema_name}.{scaffold.table_name} | operations: {', '.join(scaffold.operation_labels)}")
@@ -1198,17 +1205,19 @@ def render_sql(
         lines.append(f"FROM [{scaffold.schema_name}].[{scaffold.table_name}]")
         lines.extend(predicate_lines)
         lines.append("FOR JSON PATH;")
-        lines.append("-- EXPECTED_ROWS_JSON:")
-        lines.append(f"-- {expected_rows_json(scaffold.expected_rows, declare_entries, json_excluded_columns, select_columns)}")
+        expected_map[str(scaffold_index)] = json.loads(
+            expected_rows_json(scaffold.expected_rows, declare_entries, json_excluded_columns, select_columns)
+        )
+        scaffold_index += 1
         lines.append("")
 
-    return "\n".join(lines).rstrip() + "\n"
+    return "\n".join(lines).rstrip() + "\n", expected_map
 
 
 def generate_rdb_selects_from_manifest(
     manifest_path: Path,
     output_path: Path | None = None,
-) -> tuple[Path, int]:
+) -> tuple[Path, Path, int]:
     manifest, summary_path, inserts_path, logical_changes_path = load_combined_inputs(manifest_path)
     inserts_text = inserts_path.read_text(encoding="utf-8")
     logical_changes_obj = load_json(logical_changes_path)
@@ -1220,7 +1229,7 @@ def generate_rdb_selects_from_manifest(
     scaffolds = build_renderable_scaffolds(logical_changes_obj, declare_entries)
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
-    output_sql = render_sql(
+    output_sql, expected_map = render_sql(
         manifest,
         declare_lines,
         declare_entries,
@@ -1247,15 +1256,104 @@ def generate_rdb_selects_from_manifest(
 
     final_output_path = output_path if output_path is not None else manifest_path.with_name("rdb-selects.sql")
     final_output_path.write_text(output_sql, encoding="utf-8")
-    return final_output_path, len(scaffolds)
+    expected_json_path = final_output_path.with_name("expected.json")
+    expected_json_path.write_text(json.dumps(expected_map, indent=2) + "\n", encoding="utf-8")
+    return final_output_path, expected_json_path, len(scaffolds)
+
+
+def generate_step_selects_from_manifest(manifest_path: Path) -> list[tuple[int, Path, Path, int]]:
+    """Generate per-step query.sql + expected.json under logical-run-dir/step-N/.
+
+    Returns a list of (step_number, sql_path, expected_json_path, scaffold_count) for each step.
+    """
+    manifest, summary_path, inserts_path, logical_changes_path = load_combined_inputs(manifest_path)
+    steps = manifest.get("steps")
+    if not isinstance(steps, list) or not steps:
+        raise SystemExit("Combined manifest has no steps; cannot generate per-step files.")
+
+    inserts_text = inserts_path.read_text(encoding="utf-8")
+    logical_changes_obj = load_json(logical_changes_path)
+    if not isinstance(logical_changes_obj, list):
+        raise SystemExit(f"Logical changes file has an invalid format: {logical_changes_path}")
+
+    declare_lines = extract_declare_block(inserts_text)
+    declare_entries = parse_declare_entries(declare_lines)
+
+    known_lookup_keys: dict[str, object] | None = None
+    known_lookup_keys_file = Path(__file__).with_name("known_lookup_keys.json")
+    if known_lookup_keys_file.exists():
+        try:
+            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8"))
+            if isinstance(known_lookup_keys_obj, dict):
+                known_lookup_keys = known_lookup_keys_obj.get("known_tables")  # type: ignore[assignment]
+        except (OSError, json.JSONDecodeError) as error:
+            print(f"Warning: Could not load {known_lookup_keys_file}: {error}", file=sys.stderr)
+
+    logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
+    columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
+
+    logical_run_dir_str = manifest.get("logical_run_dir")
+    if not isinstance(logical_run_dir_str, str) or not logical_run_dir_str:
+        raise SystemExit("Combined manifest is missing logical_run_dir; cannot determine step output directories.")
+    logical_run_dir = Path(logical_run_dir_str)
+
+    step_numbers = sorted({int(s["step"]) for s in steps if "step" in s})
+
+    results: list[tuple[int, Path, Path, int]] = []
+    for step_number in step_numbers:
+        step_changes = [
+            change for change in logical_changes_obj
+            if isinstance(change, dict) and (
+                (lambda s: s is not None and int(s) <= step_number)(
+                    change.get("metadata", {}).get("step") if isinstance(change.get("metadata"), dict) else None
+                )
+            )
+        ]
+
+        scaffolds = build_scaffolds(step_changes, declare_entries)
+        if known_lookup_keys is not None:
+            scaffolds = apply_known_lookup_keys(scaffolds, known_lookup_keys)
+        scaffolds = consolidate_fk_scaffolds(scaffolds)
+        scaffolds = [s for s in scaffolds if not s.table_name.lower().startswith("nrt_")]
+
+        output_sql, expected_map = render_sql(
+            manifest,
+            declare_lines,
+            declare_entries,
+            scaffolds,
+            columns_by_table,
+            primary_keys_by_table,
+            foreign_keys_by_source,
+            generated_always_columns,
+            auto_datetime_defaults,
+        )
+
+        step_dir = logical_run_dir / f"step-{step_number}"
+        step_dir.mkdir(parents=True, exist_ok=True)
+        sql_path = step_dir / "query.sql"
+        expected_json_path = step_dir / "expected.json"
+        sql_path.write_text(output_sql, encoding="utf-8")
+        expected_json_path.write_text(json.dumps(expected_map, indent=2) + "\n", encoding="utf-8")
+        results.append((step_number, sql_path, expected_json_path, len(scaffolds)))
+
+    return results
 
 
 def main() -> int:
     args = parse_args()
     manifest_path = resolve_manifest_path(args)
+
+    if args.all_steps:
+        step_results = generate_step_selects_from_manifest(manifest_path)
+        for step_number, sql_path, expected_json_path, scaffold_count in step_results:
+            print(f"Step {step_number}: Wrote {sql_path} ({scaffold_count} SELECT statements)")
+            print(f"Step {step_number}: Wrote {expected_json_path}")
+        return 0
+
     requested_output_path = Path(args.output_file) if args.output_file else None
-    output_path, scaffold_count = generate_rdb_selects_from_manifest(manifest_path, requested_output_path)
+    output_path, expected_json_path, scaffold_count = generate_rdb_selects_from_manifest(manifest_path, requested_output_path)
     print(f"Wrote RDB select scaffold: {output_path}")
+    print(f"Wrote expected JSON: {expected_json_path}")
     print(f"Generated SELECT statements: {scaffold_count}")
     return 0
 

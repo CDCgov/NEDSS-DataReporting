@@ -54,7 +54,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             declare_entries,
         )
 
-        sql = generate_rdb_selects.render_sql(
+        sql, expected_map = generate_rdb_selects.render_sql(
             {
                 "logical_database": "RDB_MODERN",
                 "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
@@ -72,7 +72,8 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertNotIn("GO", sql)
         self.assertIn("FOR JSON PATH;", sql)
         self.assertNotIn("ORDER BY 1;", sql)
-        self.assertIn("-- EXPECTED_ROWS_JSON:\n-- [{\"PATIENT_KEY\":9}]", sql)
+        self.assertNotIn("EXPECTED_ROWS_JSON", sql)
+        self.assertEqual(expected_map, {"0": [{"PATIENT_KEY": 9}]})
 
     def test_main_generates_output_file_from_combined_manifest(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -143,7 +144,11 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             self.assertIn("FROM [dbo].[D_PATIENT]", sql)
             self.assertIn("FOR JSON PATH;", sql)
             self.assertNotIn("ORDER BY 1;", sql)
-            self.assertIn("-- EXPECTED_ROWS_JSON:\n-- [{\"PATIENT_KEY\":9}]", sql)
+            self.assertNotIn("EXPECTED_ROWS_JSON", sql)
+            expected_json_path = output_path.with_name("expected.json")
+            self.assertTrue(expected_json_path.exists())
+            expected_map = json.loads(expected_json_path.read_text(encoding="utf-8"))
+            self.assertEqual(expected_map, {"0": [{"PATIENT_KEY": 9}]})
 
     def test_expected_rows_json_uses_resolved_declare_values(self) -> None:
         declare_entries = generate_rdb_selects.parse_declare_entries(
@@ -175,7 +180,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             declare_entries,
         )
 
-        sql = generate_rdb_selects.render_sql(
+        sql, expected_map = generate_rdb_selects.render_sql(
             {
                 "logical_database": "RDB_MODERN",
                 "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
@@ -189,7 +194,11 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             scaffolds,
         )
 
-        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"PATIENT_KEY":16,"PATIENT_UID":-2222,"PATIENT_MPR_UID":-2222,"PATIENT_LOCAL_ID":"PSN2222GA01"}]', sql)
+        self.assertNotIn("EXPECTED_ROWS_JSON", sql)
+        self.assertEqual(
+            expected_map,
+            {"0": [{"PATIENT_KEY": 16, "PATIENT_UID": -2222, "PATIENT_MPR_UID": -2222, "PATIENT_LOCAL_ID": "PSN2222GA01"}]},
+        )
 
     def test_generated_always_columns_are_excluded_from_select_and_expected_json(self) -> None:
         declare_entries = generate_rdb_selects.parse_declare_entries(
@@ -219,7 +228,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             declare_entries,
         )
 
-        sql = generate_rdb_selects.render_sql(
+        sql, expected_map = generate_rdb_selects.render_sql(
             {
                 "logical_database": "RDB_MODERN",
                 "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
@@ -240,7 +249,8 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertIn("    [local_id],", sql)
         self.assertIn("    [patient_uid]", sql)
         self.assertNotIn("[refresh_datetime]", sql)
-        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"local_id":"PSN1234GA01","patient_uid":1234}]', sql)
+        self.assertNotIn("EXPECTED_ROWS_JSON", sql)
+        self.assertEqual(expected_map, {"0": [{"local_id": "PSN1234GA01", "patient_uid": 1234}]})
         self.assertNotIn("refresh_datetime", sql)
 
     def test_auto_datetime_columns_are_excluded_from_select_and_expected_json(self) -> None:
@@ -271,7 +281,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             declare_entries,
         )
 
-        sql = generate_rdb_selects.render_sql(
+        sql, expected_map = generate_rdb_selects.render_sql(
             {
                 "logical_database": "RDB_MODERN",
                 "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
@@ -293,7 +303,8 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertIn("    [patient_uid]", sql)
         self.assertNotIn("[created_dttm]", sql)
         self.assertNotIn("[updated_dttm]", sql)
-        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"patient_uid":1234}]', sql)
+        self.assertNotIn("EXPECTED_ROWS_JSON", sql)
+        self.assertEqual(expected_map, {"0": [{"patient_uid": 1234}]})
 
     def test_known_refresh_timestamps_are_excluded_from_select_and_expected_json(self) -> None:
         declare_entries = generate_rdb_selects.parse_declare_entries(
@@ -431,7 +442,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             declare_entries,
         )
 
-        sql = generate_rdb_selects.render_sql(
+        sql, _expected_map = generate_rdb_selects.render_sql(
             {
                 "logical_database": "RDB_MODERN",
                 "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
@@ -478,7 +489,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             declare_entries,
         )
 
-        sql = generate_rdb_selects.render_sql(
+        sql, _expected_map = generate_rdb_selects.render_sql(
             {
                 "logical_database": "RDB_MODERN",
                 "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),

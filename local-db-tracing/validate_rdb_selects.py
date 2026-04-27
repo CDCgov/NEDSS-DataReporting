@@ -191,8 +191,34 @@ def parse_cases(sql_text: str) -> tuple[list[SqlStatement], list[SelectCase]]:
             )
         )
 
-    if not cases:
-        raise ValueError("No EXPECTED_ROWS_JSON markers were found in this SQL file")
+    return statements, cases
+
+
+def parse_cases_from_expected_json(sql_text: str, expected_json_path: Path) -> tuple[list[SqlStatement], list[SelectCase]]:
+    try:
+        expected_map = json.loads(expected_json_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"Could not load expected JSON from {expected_json_path}: {error}") from error
+
+    lines = sql_text.splitlines()
+    statements = split_sql_statements(sql_text)
+    select_statements = [s for s in statements if "FOR JSON PATH" in s.sql.upper()]
+    cases: list[SelectCase] = []
+
+    for index, statement in enumerate(select_statements):
+        case_index = index + 1
+        expected = expected_map.get(str(index), [])
+        label = infer_case_label(lines, statement.start_line, statement.start_line - 1, case_index)
+        cases.append(
+            SelectCase(
+                case_index=case_index,
+                label=label,
+                query_sql=statement.sql,
+                query_start_line=statement.start_line,
+                expected_json=expected,
+            )
+        )
+
     return statements, cases
 
 
@@ -650,6 +676,14 @@ def main() -> int:
 
     sql_text = input_file.read_text(encoding="utf-8")
     statements, cases = parse_cases(sql_text)
+    if not cases:
+        expected_json_path = input_file.parent / "expected.json"
+        if expected_json_path.exists():
+            statements, cases = parse_cases_from_expected_json(sql_text, expected_json_path)
+        else:
+            raise SystemExit("No EXPECTED_ROWS_JSON markers were found in this SQL file and no expected.json was found alongside it.")
+    if not cases:
+        raise SystemExit("No SELECT cases found in the SQL file.")
     inferred_database = parse_use_database(statements)
     database = args.database or inferred_database
     if not database:
