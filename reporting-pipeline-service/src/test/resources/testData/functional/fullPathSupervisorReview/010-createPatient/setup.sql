@@ -115,6 +115,40 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-22T20:44:33.037',
              N'2026-04-22T00:00:00');
 
+-- dbo.Person_name 2
+-- step: 1
+INSERT INTO [dbo].[person_name]
+            ([person_uid],
+             [person_name_seq],
+             [add_reason_cd],
+             [add_time],
+             [first_nm],
+             [first_nm_sndx],
+             [last_nm],
+             [last_nm_sndx],
+             [middle_nm],
+             [nm_use_cd],
+             [record_status_cd],
+             [record_status_time],
+             [status_cd],
+             [status_time],
+             [as_of_date])
+VALUES      (@dbo_Entity_entity_uid,
+             2,
+             N'Add',
+             N'2026-04-22T20:44:33.037',
+             N'Rich',
+             N'R263',
+             N'Wells',
+             N'W420',
+             N'D',
+             N'A',
+             N'ACTIVE',
+             N'2026-04-22T20:44:33.037',
+             N'A',
+             N'2026-04-22T20:44:33.037',
+             N'2026-04-22T00:00:00');
+
 -- dbo.Person_race
 -- step: 1
 INSERT INTO [dbo].[person_race]
