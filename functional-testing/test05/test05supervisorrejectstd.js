@@ -118,6 +118,9 @@ if (stepPause) {
 //
 // step 07: contact record added
 await runFile(browser, page, '070.AddContactSyphilis.json');
+const contactPage = await waitForPopup();
+await contactPage.bringToFront();
+await runFile(browser, contactPage, '072.AddContactPopup.json');
 if (stepPause) {
   await waitForEnter('Step 07 complete. Press Enter to continue.');
 }
