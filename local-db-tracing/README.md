@@ -235,6 +235,12 @@ Or generate from a manifest directly:
 python local-db-tracing/generate_rdb_selects.py --combined-manifest local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
 ```
 
+Generate with literal WHERE values (no DECLARE block at the top):
+
+```powershell
+python local-db-tracing/generate_rdb_selects.py --combined-manifest local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json --literal-values
+```
+
 Narrow ambiguous `WHERE ... IN (@var1, @var2, ...)` predicates before validation:
 
 ```powershell
@@ -302,6 +308,14 @@ For `regenerate_summary.py`:
 - `--output-file`: optional output path for regenerated `summary.txt`
 - `--action`: optional action note (repeatable)
 
+For `generate_rdb_selects.py`:
+
+- `--paired-run-dir`: paired run directory containing `combined-manifest.json`
+- `--combined-manifest`: explicit manifest path (overrides `--paired-run-dir`)
+- `--output-file`: custom output SQL path (defaults next to manifest)
+- `--all-steps`: also emit cumulative `logical-<database>/step-<N>/query.sql` and sibling `expected.json`
+- `--literal-values`: render WHERE predicates with literal values and omit DECLARE statements from generated SQL
+
 ## Output Structure
 
 Each run writes a timestamped directory under `local-db-tracing/output`.
@@ -325,7 +339,7 @@ Dual-capture run (example `.../20260408-111218-NBS_ODSE-to-RDB_MODERN/`):
 - `cdc-<database>/step-<N>/setup.sql`: replay SQL for individual source steps
 - `logical-<database>/`: logical artifacts for target database
 - `logical-<database>/step-<N>/query.sql`: cumulative verification SQL for each target step
-- `rdb-selects.sql`: generated target verification queries with `-- EXPECTED_ROWS_JSON` comments
+- `rdb-selects.sql`: generated target verification queries (includes DECLARE variables by default; use `--literal-values` to emit literal predicates and no DECLARE block)
 - `rdb-selects-results.json`: machine-readable validation results (when validator is run)
 - `rdb-selects-results.md`: human-readable validation report (when validator is run)
 

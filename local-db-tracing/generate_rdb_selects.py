@@ -78,6 +78,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Also generate step-N/query.sql and step-N/expected.json under the logical run directory for each step in the manifest",
     )
+    parser.add_argument(
+        "--literal-values",
+        action="store_true",
+        help="Render WHERE clauses with literal values and omit DECLARE statements in output SQL",
+    )
     return parser.parse_args()
 
 
@@ -522,6 +527,7 @@ def predicate_for_field(
     column_name: str,
     value: object,
     declare_entries: list[DeclareEntry],
+    use_literal_values: bool = False,
     ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None = None,
 ) -> tuple[str, list[str]]:
     column_sql = f"[{column_name}]"
@@ -534,6 +540,9 @@ def predicate_for_field(
         return f"{column_sql} IN ({literals})", []
 
     literal_sql = sql_literal(value)
+    if use_literal_values:
+        return f"{column_sql} = {literal_sql}", []
+
     candidates = variable_candidates_for_value(column_name, value, declare_entries)
     if len(candidates) == 1:
         return f"{column_sql} = {candidates[0]}", []
@@ -631,9 +640,13 @@ def fk_subquery_predicate_for_pk(
     primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None,
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
     lookup_scaffold_by_table: dict[tuple[str, str], SelectScaffold],
+    use_literal_values: bool = False,
     ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None = None,
 ) -> tuple[str | None, list[str]]:
     if primary_keys_by_table is None or foreign_keys_by_source is None:
+        return None, []
+
+    if use_literal_values:
         return None, []
 
     if scaffold.identity_strategy == "business_keys":
@@ -684,6 +697,7 @@ def fk_subquery_predicate_for_pk(
             target_field_name,
             target_field_value,
             declare_entries,
+            use_literal_values,
             ambiguity_state,
         )
         target_predicates.append(predicate_sql)
@@ -1080,6 +1094,7 @@ def write_step_query_files(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
     generated_always_columns: set[tuple[str, str, str]] | None,
     auto_datetime_defaults: set[tuple[str, str, str]] | None,
+    use_literal_values: bool = False,
 ) -> None:
     for step_number in step_numbers_from_manifest_or_changes(manifest, logical_changes_obj):
         step_dir = logical_output_dir / f"step-{step_number}"
@@ -1090,7 +1105,7 @@ def write_step_query_files(
             if (logical_change_step(change) or 0) <= step_number
         ]
         step_scaffolds = build_renderable_scaffolds(cumulative_changes, declare_entries)
-        step_sql = render_sql(
+        step_sql, _ = render_sql(
             manifest,
             declare_lines,
             declare_entries,
@@ -1100,6 +1115,7 @@ def write_step_query_files(
             foreign_keys_by_source,
             generated_always_columns,
             auto_datetime_defaults,
+            use_literal_values,
         )
         (step_dir / "query.sql").write_text(step_sql, encoding="utf-8")
 
@@ -1114,6 +1130,7 @@ def render_sql(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None = None,
     generated_always_columns: set[tuple[str, str, str]] | None = None,
     auto_datetime_defaults: set[tuple[str, str, str]] | None = None,
+    use_literal_values: bool = False,
 ) -> tuple[str, dict[str, object]]:
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     source_summary_file = display_path(str(manifest.get("cdc_summary_file") or ""))
@@ -1125,11 +1142,13 @@ def render_sql(
         "-- Generated from paired tracing artifacts.",
         f"-- Source summary: {source_summary_file}",
         f"-- Logical changes: {logical_changes_file}",
-        "-- Review and adjust the DECLARE values below before running these SELECT statements.",
         "",
     ]
 
-    if declare_lines:
+    if not use_literal_values:
+        lines.insert(-1, "-- Review and adjust the DECLARE values below before running these SELECT statements.")
+
+    if declare_lines and not use_literal_values:
         lines.extend(declare_lines)
         lines.append("")
 
@@ -1159,13 +1178,20 @@ def render_sql(
                 primary_keys_by_table,
                 foreign_keys_by_source,
                 lookup_scaffold_by_table,
+                use_literal_values,
                 ambiguity_state,
             )
             if fk_lookup_predicate_sql is not None:
                 predicate_sql = fk_lookup_predicate_sql
                 comments = fk_lookup_comments
             else:
-                predicate_sql, comments = predicate_for_field(column_name, value, declare_entries, ambiguity_state)
+                predicate_sql, comments = predicate_for_field(
+                    column_name,
+                    value,
+                    declare_entries,
+                    use_literal_values,
+                    ambiguity_state,
+                )
             connector = "WHERE" if index == 0 else "  AND"
             predicate_lines.append(f"{connector} {predicate_sql}")
             predicate_comments.extend(comments)
@@ -1218,6 +1244,7 @@ def render_sql(
 def generate_rdb_selects_from_manifest(
     manifest_path: Path,
     output_path: Path | None = None,
+    use_literal_values: bool = False,
 ) -> tuple[Path, Path, int]:
     manifest, summary_path, inserts_path, logical_changes_path = load_combined_inputs(manifest_path)
     inserts_text = inserts_path.read_text(encoding="utf-8")
@@ -1240,6 +1267,7 @@ def generate_rdb_selects_from_manifest(
         foreign_keys_by_source,
         generated_always_columns,
         auto_datetime_defaults,
+        use_literal_values,
     )
 
     write_step_query_files(
@@ -1253,6 +1281,7 @@ def generate_rdb_selects_from_manifest(
         foreign_keys_by_source,
         generated_always_columns,
         auto_datetime_defaults,
+        use_literal_values,
     )
 
     final_output_path = output_path if output_path is not None else manifest_path.with_name("rdb-selects.sql")
@@ -1262,7 +1291,10 @@ def generate_rdb_selects_from_manifest(
     return final_output_path, expected_json_path, len(scaffolds)
 
 
-def generate_step_selects_from_manifest(manifest_path: Path) -> list[tuple[int, Path, Path, int]]:
+def generate_step_selects_from_manifest(
+    manifest_path: Path,
+    use_literal_values: bool = False,
+) -> list[tuple[int, Path, Path, int]]:
     """Generate per-step query.sql + expected.json under logical-run-dir/step-N/.
 
     Returns a list of (step_number, sql_path, expected_json_path, scaffold_count) for each step.
@@ -1327,6 +1359,7 @@ def generate_step_selects_from_manifest(manifest_path: Path) -> list[tuple[int, 
             foreign_keys_by_source,
             generated_always_columns,
             auto_datetime_defaults,
+            use_literal_values,
         )
 
         step_dir = logical_run_dir / f"step-{step_number}"
@@ -1345,14 +1378,18 @@ def main() -> int:
     manifest_path = resolve_manifest_path(args)
 
     if args.all_steps:
-        step_results = generate_step_selects_from_manifest(manifest_path)
+        step_results = generate_step_selects_from_manifest(manifest_path, args.literal_values)
         for step_number, sql_path, expected_json_path, scaffold_count in step_results:
             print(f"Step {step_number}: Wrote {sql_path} ({scaffold_count} SELECT statements)")
             print(f"Step {step_number}: Wrote {expected_json_path}")
         return 0
 
     requested_output_path = Path(args.output_file) if args.output_file else None
-    output_path, expected_json_path, scaffold_count = generate_rdb_selects_from_manifest(manifest_path, requested_output_path)
+    output_path, expected_json_path, scaffold_count = generate_rdb_selects_from_manifest(
+        manifest_path,
+        requested_output_path,
+        args.literal_values,
+    )
     print(f"Wrote RDB select scaffold: {output_path}")
     print(f"Wrote expected JSON: {expected_json_path}")
     print(f"Generated SELECT statements: {scaffold_count}")

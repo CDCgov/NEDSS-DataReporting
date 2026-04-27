@@ -108,6 +108,32 @@ Get-Job | Wait-Job
 Get-Job | Receive-Job
 ```
 
+### Generate RDB Verification SQL
+
+Generate `rdb-selects.sql` from a paired run directory:
+
+```bash
+python generate_rdb_selects.py --paired-run-dir output/20260423-103745-NBS_ODSE-to-RDB_MODERN
+```
+
+Generate from a specific manifest path:
+
+```bash
+python generate_rdb_selects.py --combined-manifest output/20260423-103745-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
+```
+
+Generate SQL with literal WHERE values and no DECLARE block:
+
+```bash
+python generate_rdb_selects.py --combined-manifest output/20260423-103745-NBS_ODSE-to-RDB_MODERN/combined-manifest.json --literal-values
+```
+
+Generate cumulative per-step verification SQL under `logical-<database>/step-<N>/query.sql`:
+
+```bash
+python generate_rdb_selects.py --combined-manifest output/20260423-103745-NBS_ODSE-to-RDB_MODERN/combined-manifest.json --all-steps
+```
+
 ## Command-Line Options
 
 ### CDC Trace
@@ -142,6 +168,19 @@ python trace_db_logical_changes.py [OPTIONS]
 - `--start-time TIME`: ISO format start timestamp
 - `--end-time TIME`: ISO format end timestamp
 - `--deep-compare`: Enable column-level comparisons
+
+### RDB Select Generation
+
+```bash
+python generate_rdb_selects.py [OPTIONS]
+```
+
+**Options**:
+- `--paired-run-dir DIR`: Paired run directory containing `combined-manifest.json`
+- `--combined-manifest FILE`: Explicit path to `combined-manifest.json` (overrides `--paired-run-dir`)
+- `--output-file FILE`: Output path for generated SQL (default is next to manifest)
+- `--all-steps`: Also emit cumulative per-step `query.sql` and `expected.json` files
+- `--literal-values`: Use literal values in WHERE predicates and omit DECLARE statements in generated SQL
 
 ## Understanding Output
 
