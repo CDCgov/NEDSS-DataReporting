@@ -453,6 +453,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             scaffolds,
         )
 
+        self.assertIn("-- Query: 0", sql)
         self.assertIn("-- Step: 1", sql)
 
     def test_render_sql_includes_steps_comment_for_multi_step_scaffold(self) -> None:
@@ -500,6 +501,7 @@ class GenerateRdbSelectsTest(unittest.TestCase):
             scaffolds,
         )
 
+        self.assertIn("-- Query: 0", sql)
         self.assertIn("-- Steps: 1, 2", sql)
 
     def test_generate_rdb_selects_writes_cumulative_step_query_files(self) -> None:

@@ -1140,6 +1140,7 @@ def render_sql(
 
     for scaffold in scaffolds:
         lines.append(f"-- {scaffold.schema_name}.{scaffold.table_name} | operations: {', '.join(scaffold.operation_labels)}")
+        lines.append(f"-- Query: {scaffold_index}")
         if scaffold.step_numbers:
             if len(scaffold.step_numbers) == 1:
                 lines.append(f"-- Step: {scaffold.step_numbers[0]}")
