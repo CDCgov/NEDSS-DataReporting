@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable
@@ -15,6 +16,66 @@ from tracing_replay import (
     update_pair_key,
 )
 from tracing_sql import quote_identifier
+
+
+DECLARE_STATEMENT_PATTERN = re.compile(r"^DECLARE\s+(?P<name>@[A-Za-z0-9_]+)\b", re.IGNORECASE)
+
+
+def declaration_block_from_replay_sql(replay_sql_lines: list[str]) -> list[str]:
+    """Collect all unique DECLARE statements from reconstructed SQL in first-seen order."""
+
+    declarations: list[str] = []
+    seen_names: set[str] = set()
+    include_adjust_comment = False
+    first_declaration_seen = False
+
+    for line in replay_sql_lines:
+        stripped = line.strip()
+        if stripped == "-- Adjust the UID declarations below manually so they remain unique across other tests.":
+            include_adjust_comment = True
+            continue
+
+        match = DECLARE_STATEMENT_PATTERN.match(stripped)
+        if not match:
+            continue
+
+        declaration_name = match.group("name").lower()
+        if declaration_name in seen_names:
+            continue
+
+        if include_adjust_comment and first_declaration_seen:
+            declarations.append("")
+            declarations.append("-- Adjust the UID declarations below manually so they remain unique across other tests.")
+            include_adjust_comment = False
+
+        declarations.append(stripped)
+        seen_names.add(declaration_name)
+        first_declaration_seen = True
+
+    return declarations
+
+
+def strip_declarations(sql_lines: list[str]) -> list[str]:
+    """Remove DECLARE lines from SQL output while preserving statement order."""
+
+    filtered = [
+        line
+        for line in sql_lines
+        if not DECLARE_STATEMENT_PATTERN.match(line.strip())
+        and line.strip() != "-- Adjust the UID declarations below manually so they remain unique across other tests."
+    ]
+    while filtered and not filtered[0].strip():
+        filtered.pop(0)
+    return filtered
+
+
+def flatten_sql_lines(sql_lines: list[str]) -> list[str]:
+    """Split any embedded multi-line SQL fragments into individual lines."""
+
+    flattened: list[str] = []
+    for line in sql_lines:
+        flattened.extend(line.splitlines())
+    return flattened
 
 
 def step_numbers_from_changes(
@@ -63,10 +124,36 @@ def write_step_setup_files(
     superuser_id: int,
     starting_uid: int,
 ) -> None:
+    full_replay_sql = reconstruct_sql_statements(
+        replay_changes,
+        primary_keys_by_table,
+        identity_columns_by_table,
+        foreign_keys_by_source,
+        column_sql_types,
+        generated_always_columns,
+        uid_generator_entries,
+        known_associations,
+        superuser_id=superuser_id,
+        starting_uid=starting_uid,
+        nbs_steps=nbs_steps,
+    )
+    shared_declarations = declaration_block_from_replay_sql(flatten_sql_lines(full_replay_sql))
+
+    def step_number_for_change(change: dict[str, object]) -> int | None:
+        raw_step = change.get("_step")
+        try:
+            return int(raw_step)
+        except (TypeError, ValueError):
+            return None
+
     for step_number in step_numbers_from_changes(replay_changes, nbs_steps):
         step_dir = output_dir / f"step-{step_number}"
         step_dir.mkdir(parents=True, exist_ok=True)
-        step_changes = [change for change in replay_changes if change.get("_step") == step_number]
+        step_changes = [
+            change
+            for change in replay_changes
+            if (step_value := step_number_for_change(change)) is not None and step_value <= step_number
+        ]
         step_sql = reconstruct_sql_statements(
             step_changes,
             primary_keys_by_table,
@@ -79,11 +166,21 @@ def write_step_setup_files(
             superuser_id=superuser_id,
             starting_uid=starting_uid,
             nbs_steps=nbs_steps,
+            emit_only_step=step_number,
         )
-        if step_sql:
-            lines = [f"USE {quote_identifier(database)};", *step_sql]
+        step_sql_without_declares = strip_declarations(flatten_sql_lines(step_sql))
+        if step_sql_without_declares:
+            lines = [f"USE {quote_identifier(database)};", *shared_declarations]
+            if shared_declarations:
+                lines.append("")
+            lines.extend(step_sql_without_declares)
         else:
-            lines = [f"USE {quote_identifier(database)};", f"-- No replayable SQL generated for step {step_number}."]
+            lines = [
+                f"USE {quote_identifier(database)};",
+                *shared_declarations,
+                "",
+                f"-- No replayable SQL generated for step {step_number}.",
+            ]
         (step_dir / "setup.sql").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

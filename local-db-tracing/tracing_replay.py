@@ -1098,6 +1098,7 @@ def reconstruct_sql_statements(
     superuser_id: int = 10009282,
     starting_uid: int = DEFAULT_STARTING_UID,
     nbs_steps: list[dict[str, object]] | None = None,
+    emit_only_step: int | None = None,
 ) -> list[str]:
     statements: list[str] = []
     top_level_declarations: list[str] = [
@@ -1130,8 +1131,9 @@ def reconstruct_sql_statements(
 
         raw_step = record.get("_step")
         current_step: int | None = int(raw_step) if raw_step is not None else None
+        should_emit_statement = emit_only_step is None or current_step == emit_only_step
 
-        if current_step is not None and current_step != last_step_num:
+        if should_emit_statement and current_step is not None and current_step != last_step_num:
             if statements:
                 statements.append("")
             desc = step_descriptions.get(current_step, "")
@@ -1143,7 +1145,8 @@ def reconstruct_sql_statements(
             table_name = f"{record['schema_name']}.{record['table_name']}"
             comment = f"-- Skipped {record['operation']} for {table_name} at {record['start_lsn']} because row payload could not be parsed"
             tagged = f"-- step: {current_step}\n{comment}" if current_step is not None else comment
-            last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+            if should_emit_statement:
+                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
         primary_key_columns = primary_keys_by_table.get(table_key, [])
@@ -1167,7 +1170,8 @@ def reconstruct_sql_statements(
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
         if operation == "delete":
@@ -1180,7 +1184,8 @@ def reconstruct_sql_statements(
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
         if operation == "update_before":
@@ -1192,7 +1197,8 @@ def reconstruct_sql_statements(
             if before_record is None:
                 comment = f"-- Skipped update for {record['schema_name']}.{record['table_name']} at {record['start_lsn']} because the before image was missing"
                 tagged = f"-- step: {current_step}\n{comment}" if current_step is not None else comment
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
                 continue
             sql_statement = reconstruct_update_sql(
                 before_record,
@@ -1207,7 +1213,8 @@ def reconstruct_sql_statements(
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
     for orphan in pending_updates.values():
@@ -1216,7 +1223,11 @@ def reconstruct_sql_statements(
         orphan_step_int: int | None = int(orphan_step) if orphan_step is not None else None
         comment = f"-- Skipped update for {orphan['schema_name']}.{orphan['table_name']} at {orphan['start_lsn']} because the after image was missing"
         tagged = f"-- step: {orphan_step_int}\n{comment}" if orphan_step_int is not None else comment
-        last_table_key = append_sql_statement(statements, last_table_key, orphan_table_key, tagged)
+        if emit_only_step is None or orphan_step_int == emit_only_step:
+            last_table_key = append_sql_statement(statements, last_table_key, orphan_table_key, tagged)
+
+    if emit_only_step is not None and not statements:
+        return []
 
     if not top_level_declarations:
         return statements
