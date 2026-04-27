@@ -33,4 +33,14 @@ node test03skipsupervisorreview.js  # pause after each step for data collection
 node test03skipsupervisorreview.js nopause  # don't pause after each step
 ```
 
+## test 05: Create STD (Syphilis) Investigation, with Contact Tracing and Supervisor Review
+```
+cd test05
+node test05supervisorrejectstd.js  # pause after each step for data collection
+```
+
+```
+cd test05
+node test05supervisorrejectstd.js nopause  # don't pause after each step
+```
 
