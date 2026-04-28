@@ -31,8 +31,8 @@ VALUES (10009283, 1, '2026-04-24T23:15:07.563', 10009282, 'Surma', '2026-04-24T2
 
 INSERT INTO [dbo].[Act] (act_uid, class_cd, mood_cd) VALUES (10009289, 'CASE', 'EVN');
 
-INSERT INTO [dbo].[Public_health_case] (public_health_case_uid, activity_from_time, add_time, add_user_id, cd, cd_desc_txt, jurisdiction_cd, last_chg_time, last_chg_user_id, local_id, mmwr_week, mmwr_year, prog_area_cd, record_status_cd, record_status_time, status_cd, version_ctrl_nbr) 
-VALUES (10009289, '2026-04-24T00:00:00', '2026-04-24T23:15:09.197', 10009282, '11065', '2019 Novel Coronavirus', '130001', '2026-04-24T23:15:09.197', 10009282, 'CAS10001000GA01', '16', '2026', 'GCD', 'ACTIVE', '2026-04-24T23:15:09.197', 'A', 1);
+INSERT INTO [dbo].[Public_health_case] (public_health_case_uid, activity_from_time, add_time, add_user_id, cd, cd_desc_txt, jurisdiction_cd, last_chg_time, last_chg_user_id, local_id, mmwr_week, mmwr_year, prog_area_cd, record_status_cd, record_status_time, status_cd, shared_ind, case_class_cd, investigation_status_cd, version_ctrl_nbr) 
+VALUES (10009289, '2026-04-24T00:00:00', '2026-04-24T23:15:09.197', 10009282, '11065', '2019 Novel Coronavirus', '130001', '2026-04-24T23:15:09.197', 10009282, 'CAS10001000GA01', '16', '2026', 'GCD', 'ACTIVE', '2026-04-24T23:15:09.197', 'A', 'T', 'C', 'O', 1);
 
 INSERT INTO [dbo].[Participation] (subject_entity_uid, act_uid, type_cd, act_class_cd, add_time, add_user_id, last_chg_time, last_chg_user_id, record_status_cd, record_status_time, status_cd, status_time, subject_class_cd) 
 VALUES (10009283, 10009289, 'SubjOfPHC', 'CASE', '2026-04-24T23:15:07.597', 10009282, '2026-04-24T23:15:07.597', 10009282, 'ACTIVE', '2026-04-24T23:15:07.607', 'A', '2026-04-24T23:15:07.607', 'PSN');
