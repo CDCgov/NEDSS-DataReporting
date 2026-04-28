@@ -28,6 +28,13 @@ LOCAL_ID_EXPRESSION_PATTERN = re.compile(
 VAR_PLUS_OFFSET_PATTERN = re.compile(r"^(?P<left>@[A-Za-z0-9_]+)\s*\+\s*(?P<offset>-?\d+)$")
 OFFSET_PLUS_VAR_PATTERN = re.compile(r"^(?P<offset>-?\d+)\s*\+\s*(?P<right>@[A-Za-z0-9_]+)$")
 
+IGNORED_OUTPUT_COLUMNS = frozenset(
+    {
+        "RDB_LAST_REFRESH_TIME",
+        "LAB_RPT_LAST_UPDATE_DT",
+    }
+)
+
 
 @dataclass(frozen=True)
 class DeclareEntry:
@@ -871,6 +878,65 @@ def build_scaffolds(
     return sorted(finalized, key=lambda item: (item.schema_name.lower(), item.table_name.lower(), item.where_fields))
 
 
+def logical_change_step(change: dict[str, object]) -> int | None:
+    metadata = change.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    step_value = metadata.get("step")
+    try:
+        return int(step_value)
+    except (TypeError, ValueError):
+        return None
+
+
+def step_numbers_from_manifest_or_changes(
+    manifest: dict[str, object],
+    logical_changes: list[dict[str, object]],
+) -> list[int]:
+    ordered_steps: list[int] = []
+    seen: set[int] = set()
+
+    manifest_steps = manifest.get("steps")
+    if isinstance(manifest_steps, list):
+        for step in manifest_steps:
+            if not isinstance(step, dict):
+                continue
+            step_value = step.get("step")
+            try:
+                step_number = int(step_value)
+            except (TypeError, ValueError):
+                continue
+            if step_number not in seen:
+                seen.add(step_number)
+                ordered_steps.append(step_number)
+
+    for change in logical_changes:
+        step_number = logical_change_step(change)
+        if step_number is None or step_number in seen:
+            continue
+        seen.add(step_number)
+        ordered_steps.append(step_number)
+
+    return ordered_steps
+
+
+def build_renderable_scaffolds(
+    logical_changes_obj: list[dict[str, object]],
+    declare_entries: list[DeclareEntry],
+) -> list[SelectScaffold]:
+    scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
+    known_lookup_keys_file = Path(__file__).with_name("known_lookup_keys.json")
+    if known_lookup_keys_file.exists():
+        try:
+            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8"))
+            if isinstance(known_lookup_keys_obj, dict):
+                scaffolds = apply_known_lookup_keys(scaffolds, known_lookup_keys_obj.get("known_tables"))
+        except (OSError, json.JSONDecodeError) as error:
+            print(f"Warning: Could not load {known_lookup_keys_file}: {error}", file=sys.stderr)
+    scaffolds = consolidate_fk_scaffolds(scaffolds)
+    return [s for s in scaffolds if not s.table_name.lower().startswith("nrt_")]
+
+
 def apply_known_lookup_keys(
     scaffolds: list[SelectScaffold],
     known_lookup_keys: dict[str, dict[str, object]] | None,
@@ -998,6 +1064,41 @@ def display_path(path_value: str) -> str:
         return path_value.replace("\\", "/")
 
 
+def write_step_query_files(
+    logical_output_dir: Path,
+    manifest: dict[str, object],
+    logical_changes_obj: list[dict[str, object]],
+    declare_lines: list[str],
+    declare_entries: list[DeclareEntry],
+    columns_by_table: dict[tuple[str, str], list[str]] | None,
+    primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None,
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
+    generated_always_columns: set[tuple[str, str, str]] | None,
+    auto_datetime_defaults: set[tuple[str, str, str]] | None,
+) -> None:
+    for step_number in step_numbers_from_manifest_or_changes(manifest, logical_changes_obj):
+        step_dir = logical_output_dir / f"step-{step_number}"
+        step_dir.mkdir(parents=True, exist_ok=True)
+        cumulative_changes = [
+            change
+            for change in logical_changes_obj
+            if (logical_change_step(change) or 0) <= step_number
+        ]
+        step_scaffolds = build_renderable_scaffolds(cumulative_changes, declare_entries)
+        step_sql = render_sql(
+            manifest,
+            declare_lines,
+            declare_entries,
+            step_scaffolds,
+            columns_by_table,
+            primary_keys_by_table,
+            foreign_keys_by_source,
+            generated_always_columns,
+            auto_datetime_defaults,
+        )
+        (step_dir / "query.sql").write_text(step_sql, encoding="utf-8")
+
+
 def render_sql(
     manifest: dict[str, object],
     declare_lines: list[str],
@@ -1076,8 +1177,8 @@ def render_sql(
             if normalize_identifier(s) == normalize_identifier(scaffold.schema_name)
             and normalize_identifier(t) == normalize_identifier(scaffold.table_name)
         )
-        select_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table
-        json_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table
+        select_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table | IGNORED_OUTPUT_COLUMNS
+        json_excluded_columns = pk_columns | generated_excluded_for_table | auto_excluded_for_table | IGNORED_OUTPUT_COLUMNS
         select_columns: list[str] | None = None
         if columns_by_table is not None:
             all_columns = columns_by_table.get(table_key)
@@ -1116,17 +1217,7 @@ def generate_rdb_selects_from_manifest(
 
     declare_lines = extract_declare_block(inserts_text)
     declare_entries = parse_declare_entries(declare_lines)
-    scaffolds = build_scaffolds(logical_changes_obj, declare_entries)
-    known_lookup_keys_file = Path(__file__).with_name("known_lookup_keys.json")
-    if known_lookup_keys_file.exists():
-        try:
-            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8"))
-            if isinstance(known_lookup_keys_obj, dict):
-                scaffolds = apply_known_lookup_keys(scaffolds, known_lookup_keys_obj.get("known_tables"))
-        except (OSError, json.JSONDecodeError) as error:
-            print(f"Warning: Could not load {known_lookup_keys_file}: {error}", file=sys.stderr)
-    scaffolds = consolidate_fk_scaffolds(scaffolds)
-    scaffolds = [s for s in scaffolds if not s.table_name.lower().startswith("nrt_")]
+    scaffolds = build_renderable_scaffolds(logical_changes_obj, declare_entries)
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
     output_sql = render_sql(
@@ -1134,6 +1225,19 @@ def generate_rdb_selects_from_manifest(
         declare_lines,
         declare_entries,
         scaffolds,
+        columns_by_table,
+        primary_keys_by_table,
+        foreign_keys_by_source,
+        generated_always_columns,
+        auto_datetime_defaults,
+    )
+
+    write_step_query_files(
+        logical_changes_path.parent,
+        manifest,
+        logical_changes_obj,
+        declare_lines,
+        declare_entries,
         columns_by_table,
         primary_keys_by_table,
         foreign_keys_by_source,

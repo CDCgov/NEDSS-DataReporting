@@ -60,6 +60,9 @@ NEDSSDev/
 # Performance-testing
 venv/
 examples/
+
+# node libs
+node_modules/
 .local/
 output/
 

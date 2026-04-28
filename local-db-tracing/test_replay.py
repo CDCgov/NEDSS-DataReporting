@@ -386,6 +386,73 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertLess(steps_pos, database_pos)
         self.assertNotIn("Actions performed in NBS:", summary)
 
+    def test_write_summary_creates_per_step_setup_sql_files(self) -> None:
+        manifest = {
+            "database": "NBS_ODSE",
+            "start_time_utc": "2026-04-07T14:08:36+00:00",
+            "end_time_utc": "2026-04-07T14:09:47+00:00",
+            "start_lsn": "0x01",
+            "end_lsn": "0x02",
+            "initially_tracked_table_count": 20,
+            "enabled_tables": [],
+            "skipped_tables": [],
+        }
+        nbs_steps = [
+            {"step": 1, "description": "Create patient"},
+            {"step": 2, "description": "Add address"},
+        ]
+        step_changes = [
+            {
+                "schema_name": "dbo",
+                "table_name": "Entity",
+                "operation": "insert",
+                "start_lsn": "0x01",
+                "seqval": "0x02",
+                "operation_code": 2,
+                "_step": 1,
+                "row": {"entity_uid": 10009297, "class_cd": "PSN"},
+            },
+            {
+                "schema_name": "dbo",
+                "table_name": "Postal_locator",
+                "operation": "insert",
+                "start_lsn": "0x02",
+                "seqval": "0x04",
+                "operation_code": 2,
+                "_step": 2,
+                "row": {"postal_locator_uid": 10009298, "state_cd": "13"},
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            summary_path = Path(temp_dir) / "summary.txt"
+            write_summary(
+                summary_path,
+                [],
+                manifest,
+                step_changes,
+                self.primary_keys_by_table,
+                self.identity_columns_by_table,
+                self.foreign_keys_by_source,
+                self.column_sql_types,
+                self.generated_always_columns,
+                self.uid_generator_entries,
+                self.known_associations,
+                nbs_steps=nbs_steps,
+            )
+
+            step1_sql = (Path(temp_dir) / "step-1" / "setup.sql").read_text(encoding="utf-8")
+            step2_sql = (Path(temp_dir) / "step-2" / "setup.sql").read_text(encoding="utf-8")
+
+        self.assertIn("USE [NBS_ODSE];", step1_sql)
+        self.assertIn("-- STEP 1: Create patient", step1_sql)
+        self.assertIn("INSERT INTO [dbo].[Entity]", step1_sql)
+        self.assertNotIn("INSERT INTO [dbo].[Postal_locator]", step1_sql)
+        self.assertIn("USE [NBS_ODSE];", step2_sql)
+        self.assertIn("-- STEP 2: Add address", step2_sql)
+        self.assertIn("INSERT INTO [dbo].[Postal_locator]", step2_sql)
+        self.assertNotIn("INSERT INTO [dbo].[Entity]", step2_sql)
+
 
 if __name__ == "__main__":
     unittest.main()

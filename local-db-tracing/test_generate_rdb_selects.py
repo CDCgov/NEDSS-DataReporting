@@ -295,6 +295,63 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         self.assertNotIn("[updated_dttm]", sql)
         self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"patient_uid":1234}]', sql)
 
+    def test_known_refresh_timestamps_are_excluded_from_select_and_expected_json(self) -> None:
+        declare_entries = generate_rdb_selects.parse_declare_entries(
+            [
+                "DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';",
+            ]
+        )
+        scaffolds = generate_rdb_selects.build_scaffolds(
+            [
+                {
+                    "schema_name": "dbo",
+                    "table_name": "LAB_REPORT",
+                    "operation": "insert",
+                    "stable_identity": {
+                        "strategy": "business_keys",
+                        "eligible_for_comparison": True,
+                        "fields": {"PATIENT_LOCAL_ID": "PSN1234GA01"},
+                    },
+                    "primary_key_values": {},
+                    "after": {
+                        "PATIENT_LOCAL_ID": "PSN1234GA01",
+                        "RDB_LAST_REFRESH_TIME": "2026-04-23T12:34:56",
+                        "LAB_RPT_LAST_UPDATE_DT": "2026-04-23T12:35:56",
+                        "RESULT_STATUS": "FINAL",
+                    },
+                }
+            ],
+            declare_entries,
+        )
+
+        sql = generate_rdb_selects.render_sql(
+            {
+                "logical_database": "RDB_MODERN",
+                "cdc_summary_file": str(generate_rdb_selects.REPO_ROOT / "summary.txt"),
+                "logical_changes_file": str(generate_rdb_selects.REPO_ROOT / "logical-changes.json"),
+            },
+            ["DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1234GA01';"],
+            declare_entries,
+            scaffolds,
+            columns_by_table={
+                ("dbo", "LAB_REPORT"): [
+                    "PATIENT_LOCAL_ID",
+                    "RDB_LAST_REFRESH_TIME",
+                    "LAB_RPT_LAST_UPDATE_DT",
+                    "RESULT_STATUS",
+                ],
+            },
+        )
+
+        self.assertIn("SELECT", sql)
+        self.assertIn("    [PATIENT_LOCAL_ID],", sql)
+        self.assertIn("    [RESULT_STATUS]", sql)
+        self.assertNotIn("[RDB_LAST_REFRESH_TIME]", sql)
+        self.assertNotIn("[LAB_RPT_LAST_UPDATE_DT]", sql)
+        self.assertIn('-- EXPECTED_ROWS_JSON:\n-- [{"PATIENT_LOCAL_ID":"PSN1234GA01","RESULT_STATUS":"FINAL"}]', sql)
+        self.assertNotIn("RDB_LAST_REFRESH_TIME", sql)
+        self.assertNotIn("LAB_RPT_LAST_UPDATE_DT", sql)
+
     def test_expected_rows_json_maps_ambiguous_entity_uid_candidates_deterministically(self) -> None:
         declare_entries = generate_rdb_selects.parse_declare_entries(
             [
@@ -433,6 +490,94 @@ class GenerateRdbSelectsTest(unittest.TestCase):
         )
 
         self.assertIn("-- Steps: 1, 2", sql)
+
+    def test_generate_rdb_selects_writes_cumulative_step_query_files(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            paired_dir = root / "20260408-143320-NBS_ODSE-to-RDB_MODERN"
+            cdc_dir = paired_dir / "cdc-NBS_ODSE"
+            logical_dir = paired_dir / "logical-RDB_MODERN"
+            cdc_dir.mkdir(parents=True)
+            logical_dir.mkdir(parents=True)
+
+            summary_path = cdc_dir / "summary.txt"
+            summary_path.write_text(
+                """Reconstructed SQL written to: inserts.sql\nRun inserts.sql directly against the source database to replay captured writes.\n""",
+                encoding="utf-8",
+            )
+            inserts_path = cdc_dir / "inserts.sql"
+            inserts_path.write_text(
+                """USE [NBS_ODSE];\nDECLARE @dbo_Entity_entity_uid bigint = -1000;\nDECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000GA01';\n\n-- STEP 1: Create patient\n-- step: 1\nINSERT INTO [dbo].[Person] ([person_uid]) VALUES (@dbo_Entity_entity_uid);\n""",
+                encoding="utf-8",
+            )
+
+            logical_changes_path = logical_dir / "logical-changes.json"
+            logical_changes_path.write_text(
+                json.dumps(
+                    [
+                        {
+                            "schema_name": "dbo",
+                            "table_name": "D_PATIENT",
+                            "operation": "insert",
+                            "stable_identity": {
+                                "strategy": "business_keys",
+                                "eligible_for_comparison": True,
+                                "fields": {"PATIENT_LOCAL_ID": "PSN1000GA01"},
+                            },
+                            "primary_key_values": {"PATIENT_KEY": 9},
+                            "after": {"PATIENT_KEY": 9, "PATIENT_LOCAL_ID": "PSN1000GA01", "PATIENT_LAST_NAME": "Alpha"},
+                            "metadata": {"step": 1},
+                        },
+                        {
+                            "schema_name": "dbo",
+                            "table_name": "D_PATIENT",
+                            "operation": "update",
+                            "stable_identity": {
+                                "strategy": "business_keys",
+                                "eligible_for_comparison": True,
+                                "fields": {"PATIENT_LOCAL_ID": "PSN1000GA01"},
+                            },
+                            "primary_key_values": {"PATIENT_KEY": 9},
+                            "after": {"PATIENT_KEY": 9, "PATIENT_LOCAL_ID": "PSN1000GA01", "PATIENT_LAST_NAME": "Beta"},
+                            "metadata": {"step": 2},
+                        },
+                    ],
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            manifest_path = paired_dir / "combined-manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "logical_database": "TEST_DB_NO_CACHE",
+                        "cdc_summary_file": str(summary_path),
+                        "cdc_inserts_file": str(inserts_path),
+                        "logical_changes_file": str(logical_changes_path),
+                        "steps": [
+                            {"step": 1, "description": "Create patient"},
+                            {"step": 2, "description": "Update patient"},
+                        ],
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            output_path, scaffold_count = generate_rdb_selects.generate_rdb_selects_from_manifest(manifest_path)
+
+            step1_sql = (logical_dir / "step-1" / "query.sql").read_text(encoding="utf-8")
+            step2_sql = (logical_dir / "step-2" / "query.sql").read_text(encoding="utf-8")
+            final_sql = output_path.read_text(encoding="utf-8")
+
+        self.assertEqual(scaffold_count, 1)
+        self.assertIn('"PATIENT_LAST_NAME":"Alpha"', step1_sql)
+        self.assertNotIn('"PATIENT_LAST_NAME":"Beta"', step1_sql)
+        self.assertIn('"PATIENT_LAST_NAME":"Beta"', step2_sql)
+        self.assertIn('"PATIENT_LAST_NAME":"Beta"', final_sql)
 
 
 if __name__ == "__main__":
