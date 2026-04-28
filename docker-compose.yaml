@@ -150,7 +150,7 @@ services:
     environment:
       - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
-      - DB_HOST=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - DB_CONNECTION_URL=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     ports:
       - "8095:8095"
