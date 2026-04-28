@@ -8,6 +8,7 @@ BUILD_IMAGE="${BUILD_IMAGE:-false}"
 
 # Create clean backups by starting a fresh nedssdb and applying liquibase migrations
 echo "starting database and applying liquibase migrations..."
+docker compose down
 docker compose up nbs-mssql liquibase --build -d
 
 # Wait for liquibase to complete

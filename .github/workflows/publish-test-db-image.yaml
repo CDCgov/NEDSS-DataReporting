@@ -48,7 +48,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./containers/test-db/
-          load: true
+          push: true
           platforms: linux/amd64
           build-args: |
             SQLCMDPASSWORD=${{ secrets.SQLCMDPASSWORD }}

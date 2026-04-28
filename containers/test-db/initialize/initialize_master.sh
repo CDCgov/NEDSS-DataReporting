@@ -12,7 +12,7 @@ fi
 
 # Start SQL Server in the background
 echo "Starting SQL Server..."
-sqlservr -mSQLCMD & # Start sqlserver with the -m command to allow restore of master db
+sqlservr -mSQLCMD &  # Start sqlserver with the -m command to allow restore of master db
 SQL_PID=$!
 
 # 2. Wait for SQL Server to be ready
