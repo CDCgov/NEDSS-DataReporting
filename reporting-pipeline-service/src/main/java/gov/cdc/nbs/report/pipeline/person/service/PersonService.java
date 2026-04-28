@@ -107,7 +107,6 @@ public class PersonService {
   private int threadPoolSize;
 
   private ExecutorService rtrExecutor;
-  private ExecutorService prsExecutor;
 
   private static final ObjectMapper objectMapper =
       new ObjectMapper().registerModule(new JavaTimeModule());
@@ -131,8 +130,6 @@ public class PersonService {
 
     int nproc = Runtime.getRuntime().availableProcessors();
     rtrExecutor = Executors.newFixedThreadPool(nproc * 2, new CustomizableThreadFactory("rtr-"));
-    prsExecutor =
-        Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
   }
 
   @RetryableTopic(
@@ -155,16 +152,15 @@ public class PersonService {
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
       containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(
+  public void processMessage(
       String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
     if (topic.equals(personTopic)) {
-      return CompletableFuture.runAsync(() -> processPerson(message, topic), prsExecutor);
+      processPerson(message, topic);
     } else if (topic.equals(userTopic)) {
-      return CompletableFuture.runAsync(() -> processUser(message, topic), prsExecutor);
+      processUser(message, topic);
     } else {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(
-              "Received data from an unknown topic: " + topic, new NoSuchElementException()));
+      throw new DataProcessingException(
+          "Received data from an unknown topic: " + topic, new NoSuchElementException());
     }
   }
 

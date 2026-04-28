@@ -17,9 +17,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -35,7 +32,6 @@ import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
 import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.retry.annotation.Backoff;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -45,16 +41,12 @@ public class LdfDataService {
   private static final Logger logger = LoggerFactory.getLogger(LdfDataService.class);
   private static final ObjectMapper objectMapper =
       new ObjectMapper().registerModule(new JavaTimeModule());
-  private ExecutorService ldfExecutor;
 
   @Value("${spring.kafka.topics.nbs.state-defined-field-data}")
   private String ldfDataTopic;
 
   @Value("${spring.kafka.topics.nrt.ldf-data}")
   public String ldfDataTopicReporting;
-
-  @Value("${featureFlag.thread-pool-size:1}")
-  private int threadPoolSize;
 
   private final LdfDataRepository ldfDataRepository;
 
@@ -83,9 +75,6 @@ public class LdfDataService {
     msgProcessed = metrics.counter("ldf_msg_processed", tags);
     msgSuccess = metrics.counter("ldf_msg_success", tags);
     msgFailure = metrics.counter("ldf_msg_failure", tags);
-
-    ldfExecutor =
-        Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("ldf-"));
   }
 
   @RetryableTopic(
@@ -108,19 +97,15 @@ public class LdfDataService {
   @KafkaListener(
       topics = "${spring.kafka.topics.nbs.state-defined-field-data}",
       containerFactory = "ldfdataKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
+  public void processMessage(ConsumerRecord<String, String> rec) {
     String topic = rec.topic();
     String message = rec.value();
     logger.debug(topicDebugLog, message, topic);
-    return CompletableFuture.runAsync(
-        () -> {
-          if (message == null || message.isBlank()) {
-            logger.warn("Received null or empty message on topic: {}", topic);
-          } else {
-            processLdfData(message);
-          }
-        },
-        ldfExecutor);
+    if (message == null || message.isBlank()) {
+      logger.warn("Received null or empty message on topic: {}", topic);
+    } else {
+      processLdfData(message);
+    }
   }
 
   public void processLdfData(String value) {
