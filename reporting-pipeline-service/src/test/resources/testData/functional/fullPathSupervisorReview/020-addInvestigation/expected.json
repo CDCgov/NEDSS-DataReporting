@@ -45,8 +45,7 @@
   "3": [
     {
       "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
-      "ADM_RPTNG_CNTY": "Dekalb, GA",
-      "nbs_case_answer_uid": 3245
+      "ADM_RPTNG_CNTY": "Dekalb, GA"
     }
   ],
   "4": [
@@ -62,8 +61,7 @@
       "EPI_InDayCare": "Unknown",
       "EPI_MaleSexPartner": "0",
       "EPI_OutbreakAssoc": "No",
-      "EPI_RecDrugUse": "No",
-      "nbs_case_answer_uid": 3241
+      "EPI_RecDrugUse": "No"
     }
   ],
   "5": [
@@ -98,8 +96,7 @@
       "LAB_TotalAntiHDV": "Negative",
       "LAB_TotalAntiHDV_Date": "2026-04-13",
       "LAB_TotalAntiHEV": "Unknown",
-      "LAB_TotalAntiHEV_Date": "2026-04-14",
-      "nbs_case_answer_uid": 3243
+      "LAB_TotalAntiHEV_Date": "2026-04-14"
     }
   ],
   "6": [
@@ -108,21 +105,18 @@
       "MDH_Jaundiced": "No",
       "MDH_PrevAwareInfection": "Yes",
       "MDH_ProviderOfCare": "No",
-      "MDH_Symptomatic": "Yes",
-      "nbs_case_answer_uid": 3270
+      "MDH_Symptomatic": "Yes"
     }
   ],
   "7": [
     {
-      "IPO_SEXUAL_PREF": "Heterosexual",
-      "nbs_case_answer_uid": 3252
+      "IPO_SEXUAL_PREF": "Heterosexual"
     }
   ],
   "8": [
     {
       "TRV_HouseholdTravel": "No",
-      "TRV_PatientTravel": "No",
-      "nbs_case_answer_uid": 3250
+      "TRV_PatientTravel": "No"
     }
   ],
   "9": [
@@ -130,8 +124,7 @@
       "VAC_ImmuneGlobulin": "No",
       "VAC_Vacc_Rcvd": "Yes",
       "VAC_VaccineDoses": "1",
-      "VAC_YearofLastDose": "1978",
-      "nbs_case_answer_uid": 3248
+      "VAC_YearofLastDose": "1978"
     }
   ],
   "10": [
