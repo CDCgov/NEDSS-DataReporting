@@ -152,8 +152,7 @@ public class PersonService {
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
       containerFactory = "personKafkaListenerContainerFactory")
-  public void processMessage(
-      String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+  public void processMessage(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
     if (topic.equals(personTopic)) {
       processPerson(message, topic);
     } else if (topic.equals(userTopic)) {

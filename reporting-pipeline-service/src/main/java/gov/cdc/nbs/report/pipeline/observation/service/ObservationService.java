@@ -68,7 +68,6 @@ public class ObservationService {
   @Value("${spring.kafka.topics.nrt.observation}")
   private String observationTopicOutputReporting;
 
-
   private final ObservationRepository observationRepository;
 
   @Qualifier("observationKafkaTemplate")
@@ -77,7 +76,6 @@ public class ObservationService {
   private final ProcessObservationDataUtil processObservationDataUtil;
   private final ModelMapper modelMapper = new ModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
-
 
   private static String topicDebugLog = "Received Observation with id: {} from topic: {}";
   public static final ToLongFunction<ConsumerRecord<String, String>> toBatchId =
@@ -100,7 +98,6 @@ public class ObservationService {
     msgProcessed = metrics.counter("obs_msg_processed", tags);
     msgSuccess = metrics.counter("obs_msg_success", tags);
     msgFailure = metrics.counter("obs_msg_failure", tags);
-
   }
 
   @RetryableTopic(

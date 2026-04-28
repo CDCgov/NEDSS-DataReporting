@@ -22,7 +22,6 @@ import gov.cdc.nbs.report.pipeline.organization.repository.PlaceRepository;
 import gov.cdc.nbs.report.pipeline.organization.transformer.DataTransformers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -182,7 +181,9 @@ class OrganizationServiceTest {
     }
 
     DataProcessingException ex =
-      assertThrows(DataProcessingException.class, () -> organizationService.processMessage(payload, topic));
+        assertThrows(
+            DataProcessingException.class,
+            () -> organizationService.processMessage(payload, topic));
     assertEquals(expectedExceptionClass, ex.getCause().getClass());
   }
 
@@ -203,8 +204,7 @@ class OrganizationServiceTest {
     }
     NoDataException ex =
         assertThrows(
-            NoDataException.class,
-            () -> organizationService.processMessage(payload, inputTopic));
+            NoDataException.class, () -> organizationService.processMessage(payload, inputTopic));
     assertEquals(NoDataException.class, ex.getClass());
   }
 
@@ -228,7 +228,7 @@ class OrganizationServiceTest {
     String changeData = "{\"payload\": {\"after\": {\"organization_uid\": \"123456789\"}}}";
     organizationService.setPhcDatamartEnable(false);
     assertThrows(
-      NoDataException.class, () -> organizationService.processMessage(changeData, orgTopic));
+        NoDataException.class, () -> organizationService.processMessage(changeData, orgTopic));
 
     verify(orgRepository, never()).updatePhcFact(anyString(), anyString());
   }

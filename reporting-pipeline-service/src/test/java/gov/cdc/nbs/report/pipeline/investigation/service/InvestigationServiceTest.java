@@ -741,7 +741,7 @@ class InvestigationServiceTest {
   private void checkException(
       String topic, String payload, Class<? extends Exception> exceptionClass) {
     ConsumerRecord<String, String> rec = getRecord(topic, payload);
-        Exception ex = assertThrows(exceptionClass, () -> investigationService.processMessage(rec));
-        assertEquals(exceptionClass, ex.getClass());
+    Exception ex = assertThrows(exceptionClass, () -> investigationService.processMessage(rec));
+    assertEquals(exceptionClass, ex.getClass());
   }
 }

@@ -143,8 +143,7 @@ public class OrganizationService {
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.organization}", "${spring.kafka.topics.nbs.place}"},
       containerFactory = "organizationKafkaListenerContainerFactory")
-  public void processMessage(
-      String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+  public void processMessage(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
     if (topic.equals(orgTopic)) {
       processOrganization(message, topic);
     } else if (topic.equals(placeTopic)) {

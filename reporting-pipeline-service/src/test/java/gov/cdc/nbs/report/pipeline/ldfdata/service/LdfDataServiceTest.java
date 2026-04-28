@@ -16,8 +16,6 @@ import gov.cdc.nbs.report.pipeline.ldfdata.repository.LdfDataRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.awaitility.Awaitility;
@@ -128,9 +126,9 @@ class LdfDataServiceTest {
     String invalidPayload = "{\"payload\": {\"after\": }}";
     setupLdfService(ldfTopic, ldfTopicOutput);
     DataProcessingException ex =
-      assertThrows(
-        DataProcessingException.class,
-        () -> ldfDataService.processMessage(getRecord(invalidPayload, ldfTopic)));
+        assertThrows(
+            DataProcessingException.class,
+            () -> ldfDataService.processMessage(getRecord(invalidPayload, ldfTopic)));
     assertEquals(DataProcessingException.class, ex.getClass());
   }
 
@@ -182,9 +180,9 @@ class LdfDataServiceTest {
         .thenReturn(Optional.empty());
     setupLdfService(ldfTopic, ldfTopicOutput);
     NoDataException ex =
-      assertThrows(
-        NoDataException.class,
-        () -> ldfDataService.processMessage(getRecord(payload, ldfTopic)));
+        assertThrows(
+            NoDataException.class,
+            () -> ldfDataService.processMessage(getRecord(payload, ldfTopic)));
     assertEquals(NoDataException.class, ex.getClass());
   }
 
@@ -201,9 +199,9 @@ class LdfDataServiceTest {
 
     setupLdfService(ldfTopic, ldfTopicOutput);
     DataProcessingException ex =
-      assertThrows(
-        DataProcessingException.class,
-        () -> ldfDataService.processMessage(getRecord(payload, ldfTopic)));
+        assertThrows(
+            DataProcessingException.class,
+            () -> ldfDataService.processMessage(getRecord(payload, ldfTopic)));
     assertEquals(DataProcessingException.class, ex.getClass());
   }
 

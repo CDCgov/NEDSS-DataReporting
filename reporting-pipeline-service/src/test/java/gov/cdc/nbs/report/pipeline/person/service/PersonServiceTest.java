@@ -25,7 +25,6 @@ import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -220,7 +219,8 @@ class PersonServiceTest {
     String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
 
     personService.setPhcDatamartEnable(false);
-    assertThrows(NoDataException.class, () -> personService.processMessage(patientData, inputTopicPerson));
+    assertThrows(
+        NoDataException.class, () -> personService.processMessage(patientData, inputTopicPerson));
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
@@ -229,7 +229,8 @@ class PersonServiceTest {
     String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
 
     personService.setPhcDatamartEnable(false);
-    assertThrows(NoDataException.class, () -> personService.processMessage(providerData, inputTopicPerson));
+    assertThrows(
+        NoDataException.class, () -> personService.processMessage(providerData, inputTopicPerson));
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
@@ -277,7 +278,8 @@ class PersonServiceTest {
   })
   void testProcessMessageException(String payload, String inputTopic) {
     DataProcessingException ex =
-        assertThrows(DataProcessingException.class, () -> personService.processMessage(payload, inputTopic));
+        assertThrows(
+            DataProcessingException.class, () -> personService.processMessage(payload, inputTopic));
     assertEquals(NoSuchElementException.class, ex.getCause().getClass());
   }
 
@@ -299,7 +301,8 @@ class PersonServiceTest {
           .thenReturn(Optional.of(Collections.emptyList()));
     }
     NoDataException ex =
-      assertThrows(NoDataException.class, () -> personService.processMessage(payload, inputTopic));
+        assertThrows(
+            NoDataException.class, () -> personService.processMessage(payload, inputTopic));
     assertEquals(NoDataException.class, ex.getClass());
   }
 

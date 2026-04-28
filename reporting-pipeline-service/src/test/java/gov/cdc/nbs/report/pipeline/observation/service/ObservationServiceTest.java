@@ -175,7 +175,7 @@ class ObservationServiceTest {
     ConsumerRecord<String, String> rec = getRecord(payload, topic);
 
     DataProcessingException ex =
-      assertThrows(DataProcessingException.class, () -> observationService.processMessage(rec));
+        assertThrows(DataProcessingException.class, () -> observationService.processMessage(rec));
     assertEquals(NoSuchElementException.class, ex.getCause().getClass());
   }
 
@@ -189,7 +189,7 @@ class ObservationServiceTest {
     when(observationRepository.computeObservations(String.valueOf(observationUid)))
         .thenReturn(Optional.empty());
     NoDataException ex =
-      assertThrows(NoDataException.class, () -> observationService.processMessage(rec));
+        assertThrows(NoDataException.class, () -> observationService.processMessage(rec));
     assertEquals(NoDataException.class, ex.getClass());
   }
 
