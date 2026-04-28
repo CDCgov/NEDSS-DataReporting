@@ -56,5 +56,5 @@ INSERT INTO rdb_modern.dbo.D_PATIENT (patient_uid, patient_key, patient_local_id
 VALUES (10009283, 10009283, 'PSN10063000GA01', 'ACTIVE');
 
 -- Seed NRT_PAGE_CASE_ANSWER (Mandatory answers for datamart joins)
-INSERT INTO rdb_modern.dbo.nrt_page_case_answer (act_uid, nbs_case_answer_uid, nbs_question_uid, answer_txt, record_status_cd, investigation_form_cd)
-VALUES (10009289, 3241, 10004138, 'CEPUI', 'ACTIVE', 'PG_COVID-19_v1.1');
+INSERT INTO rdb_modern.dbo.nrt_page_case_answer (act_uid, nbs_case_answer_uid, nbs_ui_metadata_uid, nbs_rdb_metadata_uid, nbs_question_uid, answer_txt, record_status_cd, investigation_form_cd)
+VALUES (10009289, 3241, 10004138, 10004138, 10004138, 'CEPUI', 'ACTIVE', 'PG_COVID-19_v1.1');
