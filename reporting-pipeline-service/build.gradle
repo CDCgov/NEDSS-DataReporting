@@ -80,7 +80,7 @@ dependencies {
 
     implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     implementation 'com.microsoft.sqlserver:mssql-jdbc:12.3.0.jre17-preview'
-    implementation 'ch.qos.logback:logback-classic'
+    implementation 'ch.qos.logback:logback-classic:1.5.32'
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
     implementation 'com.google.guava:guava:33.5.0-jre'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
