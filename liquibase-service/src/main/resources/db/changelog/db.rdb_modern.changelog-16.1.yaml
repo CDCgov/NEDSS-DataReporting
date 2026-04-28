@@ -3157,3 +3157,11 @@ databaseChangeLog:
             path: 258-create_rdb_date-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: 957
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 361-ensure_ldf_group_seed_row-001.sql
+            splitStatements: false
