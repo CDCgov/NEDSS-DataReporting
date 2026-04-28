@@ -21,7 +21,7 @@ jobs:
 
       - name: Create backups
         id: backups
-        run: ./containers/test-db/build_test_db.sh
+        run: ./containers/test-db/create_bak_files.sh
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
