@@ -25,8 +25,6 @@ import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -221,7 +219,8 @@ class PersonServiceTest {
     String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
 
     personService.setPhcDatamartEnable(false);
-    personService.processMessage(patientData, inputTopicPerson);
+    assertThrows(
+        NoDataException.class, () -> personService.processMessage(patientData, inputTopicPerson));
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
@@ -230,7 +229,8 @@ class PersonServiceTest {
     String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
 
     personService.setPhcDatamartEnable(false);
-    personService.processMessage(providerData, inputTopicPerson);
+    assertThrows(
+        NoDataException.class, () -> personService.processMessage(providerData, inputTopicPerson));
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
@@ -277,9 +277,10 @@ class PersonServiceTest {
     "{\"payload\": {\"after\": {}}},User"
   })
   void testProcessMessageException(String payload, String inputTopic) {
-    CompletableFuture<Void> future = personService.processMessage(payload, inputTopic);
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoSuchElementException.class, ex.getCause().getCause().getClass());
+    DataProcessingException ex =
+        assertThrows(
+            DataProcessingException.class, () -> personService.processMessage(payload, inputTopic));
+    assertEquals(NoSuchElementException.class, ex.getCause().getClass());
   }
 
   @ParameterizedTest
@@ -299,9 +300,10 @@ class PersonServiceTest {
       when(userRepository.computeAuthUsers(String.valueOf(authUserUid)))
           .thenReturn(Optional.of(Collections.emptyList()));
     }
-    CompletableFuture<Void> future = personService.processMessage(payload, inputTopic);
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoDataException.class, ex.getCause().getClass());
+    NoDataException ex =
+        assertThrows(
+            NoDataException.class, () -> personService.processMessage(payload, inputTopic));
+    assertEquals(NoDataException.class, ex.getClass());
   }
 
   @Test
@@ -319,10 +321,12 @@ class PersonServiceTest {
   @Test
   void testProcessUnknownCode() {
     String payload = "{\"payload\": {\"after\": {\"person_uid\": \"123456789\", \"cd\": \"UNK\"}}}";
-    CompletableFuture<Void> future = personService.processMessage(payload, inputTopicPerson);
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(DataProcessingException.class, ex.getCause().getClass());
-    assertTrue(ex.getCause().getMessage().endsWith("No data to process for this entity type: UNK"));
+    DataProcessingException ex =
+        assertThrows(
+            DataProcessingException.class,
+            () -> personService.processMessage(payload, inputTopicPerson));
+    assertEquals(DataProcessingException.class, ex.getClass());
+    assertTrue(ex.getMessage().endsWith("No data to process for this entity type: UNK"));
   }
 
   private void validateDataTransformation(

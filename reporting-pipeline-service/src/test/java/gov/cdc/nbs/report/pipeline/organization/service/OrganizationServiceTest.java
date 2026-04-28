@@ -12,6 +12,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationSp;
@@ -21,8 +22,6 @@ import gov.cdc.nbs.report.pipeline.organization.repository.PlaceRepository;
 import gov.cdc.nbs.report.pipeline.organization.transformer.DataTransformers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -181,9 +180,11 @@ class OrganizationServiceTest {
       expectedExceptionClass = NullPointerException.class;
     }
 
-    CompletableFuture<Void> future = organizationService.processMessage(payload, topic);
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(expectedExceptionClass, ex.getCause().getCause().getClass());
+    DataProcessingException ex =
+        assertThrows(
+            DataProcessingException.class,
+            () -> organizationService.processMessage(payload, topic));
+    assertEquals(expectedExceptionClass, ex.getCause().getClass());
   }
 
   @ParameterizedTest
@@ -201,10 +202,10 @@ class OrganizationServiceTest {
       when(placeRepository.computeAllPlaces(String.valueOf(placeUid)))
           .thenReturn(Optional.of(Collections.emptyList()));
     }
-    CompletableFuture<Void> future = organizationService.processMessage(payload, inputTopic);
-
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoDataException.class, ex.getCause().getClass());
+    NoDataException ex =
+        assertThrows(
+            NoDataException.class, () -> organizationService.processMessage(payload, inputTopic));
+    assertEquals(NoDataException.class, ex.getClass());
   }
 
   @Test
@@ -226,7 +227,8 @@ class OrganizationServiceTest {
 
     String changeData = "{\"payload\": {\"after\": {\"organization_uid\": \"123456789\"}}}";
     organizationService.setPhcDatamartEnable(false);
-    organizationService.processMessage(changeData, orgTopic);
+    assertThrows(
+        NoDataException.class, () -> organizationService.processMessage(changeData, orgTopic));
 
     verify(orgRepository, never()).updatePhcFact(anyString(), anyString());
   }

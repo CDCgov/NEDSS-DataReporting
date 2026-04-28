@@ -99,7 +99,6 @@ public class OrganizationService {
   private int threadPoolSize;
 
   private ExecutorService rtrExecutor;
-  private ExecutorService orgExecutor;
 
   private static String topicDebugLog = "Received {} with id: {} from topic: {}";
   private static String organization = "Organization";
@@ -122,8 +121,6 @@ public class OrganizationService {
 
     int nproc = Runtime.getRuntime().availableProcessors();
     rtrExecutor = Executors.newFixedThreadPool(nproc * 2, new CustomizableThreadFactory("rtr-"));
-    orgExecutor =
-        Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
   }
 
   @RetryableTopic(
@@ -146,16 +143,14 @@ public class OrganizationService {
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.organization}", "${spring.kafka.topics.nbs.place}"},
       containerFactory = "organizationKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(
-      String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+  public void processMessage(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
     if (topic.equals(orgTopic)) {
-      return CompletableFuture.runAsync(() -> processOrganization(message, topic), orgExecutor);
+      processOrganization(message, topic);
     } else if (topic.equals(placeTopic)) {
-      return CompletableFuture.runAsync(() -> processPlace(message, topic), orgExecutor);
+      processPlace(message, topic);
     } else {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(
-              "Received data from an unknown topic: " + topic, new NoSuchElementException()));
+      throw new DataProcessingException(
+          "Received data from an unknown topic: " + topic, new NoSuchElementException());
     }
   }
 

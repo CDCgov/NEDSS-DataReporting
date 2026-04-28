@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.etldatapipeline.commonutil.DataProcessingException;
 import gov.cdc.etldatapipeline.commonutil.NoDataException;
 import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
@@ -19,7 +20,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.awaitility.Awaitility;
@@ -67,7 +67,6 @@ class ObservationServiceTest {
     observationService.setObservationTopic(inputTopicNameObservation);
     observationService.setActRelationshipTopic(inputTopicNameActRelationship);
     observationService.setObservationTopicOutputReporting(outputTopicNameObservation);
-    observationService.setThreadPoolSize(1);
     observationService.initMetrics();
 
     transformer.setCodedTopicName("ObservationCoded");
@@ -151,7 +150,7 @@ class ObservationServiceTest {
   void testProcessActRelationshipNullPayload() {
     ConsumerRecord<String, String> rec = getRecord(null, inputTopicNameActRelationship);
 
-    observationService.processMessage(rec);
+    assertThrows(DataProcessingException.class, () -> observationService.processMessage(rec));
 
     verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
   }
@@ -160,7 +159,7 @@ class ObservationServiceTest {
   void testProcessMessageUnknownTopic() {
     ConsumerRecord<String, String> rec = getRecord(null, "dummyTopicName");
 
-    observationService.processMessage(rec);
+    assertThrows(DataProcessingException.class, () -> observationService.processMessage(rec));
 
     verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
   }
@@ -175,9 +174,9 @@ class ObservationServiceTest {
 
     ConsumerRecord<String, String> rec = getRecord(payload, topic);
 
-    CompletableFuture<Void> future = observationService.processMessage(rec);
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoSuchElementException.class, ex.getCause().getCause().getClass());
+    DataProcessingException ex =
+        assertThrows(DataProcessingException.class, () -> observationService.processMessage(rec));
+    assertEquals(NoSuchElementException.class, ex.getCause().getClass());
   }
 
   @Test
@@ -189,9 +188,9 @@ class ObservationServiceTest {
 
     when(observationRepository.computeObservations(String.valueOf(observationUid)))
         .thenReturn(Optional.empty());
-    CompletableFuture<Void> future = observationService.processMessage(rec);
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoDataException.class, ex.getCause().getClass());
+    NoDataException ex =
+        assertThrows(NoDataException.class, () -> observationService.processMessage(rec));
+    assertEquals(NoDataException.class, ex.getClass());
   }
 
   private void validateData(String payload, Observation observation, String inputTopic)
