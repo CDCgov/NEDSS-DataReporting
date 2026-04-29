@@ -73,11 +73,6 @@ def parse_args() -> argparse.Namespace:
         "--output-file",
         help="Path to write the generated SQL scaffold; defaults to rdb-selects.sql next to combined-manifest.json",
     )
-    parser.add_argument(
-        "--all-steps",
-        action="store_true",
-        help="Also generate step-N/query.sql and step-N/expected.json under the logical run directory for each step in the manifest",
-    )
     return parser.parse_args()
 
 
@@ -1113,7 +1108,7 @@ def write_step_query_files(
             if (logical_change_step(change) or 0) <= step_number
         ]
         step_scaffolds = build_renderable_scaffolds(cumulative_changes, declare_entries)
-        step_sql, _ = render_sql(
+        step_sql, step_expected_map = render_sql(
             manifest,
             declare_lines,
             declare_entries,
@@ -1125,6 +1120,7 @@ def write_step_query_files(
             auto_datetime_defaults,
         )
         (step_dir / "query.sql").write_text(step_sql, encoding="utf-8")
+        (step_dir / "expected.json").write_text(json.dumps(step_expected_map, indent=2) + "\n", encoding="utf-8")
 
 
 def render_sql(
@@ -1376,13 +1372,6 @@ def generate_step_selects_from_manifest(
 def main() -> int:
     args = parse_args()
     manifest_path = resolve_manifest_path(args)
-
-    if args.all_steps:
-        step_results = generate_step_selects_from_manifest(manifest_path)
-        for step_number, sql_path, expected_json_path, scaffold_count in step_results:
-            print(f"Step {step_number}: Wrote {sql_path} ({scaffold_count} SELECT statements)")
-            print(f"Step {step_number}: Wrote {expected_json_path}")
-        return 0
 
     requested_output_path = Path(args.output_file) if args.output_file else None
     output_path, expected_json_path, scaffold_count = generate_rdb_selects_from_manifest(

@@ -307,7 +307,7 @@ For `generate_query_expected.py`:
 - `--paired-run-dir`: paired run directory containing `combined-manifest.json`
 - `--combined-manifest`: explicit manifest path (overrides `--paired-run-dir`)
 - `--output-file`: custom output SQL path (defaults next to manifest)
-- `--all-steps`: also emit cumulative `logical-<database>/step-<N>/query.sql` and sibling `expected.json`
+- Also emits cumulative `logical-<database>/step-<N>/query.sql` and sibling `expected.json` by default
 
 ## Output Structure
 
