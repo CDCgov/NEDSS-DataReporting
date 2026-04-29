@@ -78,11 +78,6 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Also generate step-N/query.sql and step-N/expected.json under the logical run directory for each step in the manifest",
     )
-    parser.add_argument(
-        "--literal-values",
-        action="store_true",
-        help="Render WHERE clauses with literal values and omit DECLARE statements in output SQL",
-    )
     return parser.parse_args()
 
 
@@ -1108,7 +1103,6 @@ def write_step_query_files(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
     generated_always_columns: set[tuple[str, str, str]] | None,
     auto_datetime_defaults: set[tuple[str, str, str]] | None,
-    use_literal_values: bool = False,
 ) -> None:
     for step_number in step_numbers_from_manifest_or_changes(manifest, logical_changes_obj):
         step_dir = logical_output_dir / f"step-{step_number}"
@@ -1129,7 +1123,6 @@ def write_step_query_files(
             foreign_keys_by_source,
             generated_always_columns,
             auto_datetime_defaults,
-            use_literal_values,
         )
         (step_dir / "query.sql").write_text(step_sql, encoding="utf-8")
 
@@ -1144,7 +1137,6 @@ def render_sql(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None = None,
     generated_always_columns: set[tuple[str, str, str]] | None = None,
     auto_datetime_defaults: set[tuple[str, str, str]] | None = None,
-    use_literal_values: bool = False,
 ) -> tuple[str, dict[str, object]]:
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     source_summary_file = display_path(str(manifest.get("cdc_summary_file") or ""))
@@ -1250,15 +1242,13 @@ def render_sql(
         lines.append("")
 
     sql_text = "\n".join(lines).rstrip() + "\n"
-    if use_literal_values:
-        sql_text = apply_literal_substitution(sql_text, declare_entries)
+    sql_text = apply_literal_substitution(sql_text, declare_entries)
     return sql_text, expected_map
 
 
 def generate_rdb_selects_from_manifest(
     manifest_path: Path,
     output_path: Path | None = None,
-    use_literal_values: bool = False,
 ) -> tuple[Path, Path, int]:
     manifest, summary_path, inserts_path, logical_changes_path = load_combined_inputs(manifest_path)
     inserts_text = inserts_path.read_text(encoding="utf-8")
@@ -1281,7 +1271,6 @@ def generate_rdb_selects_from_manifest(
         foreign_keys_by_source,
         generated_always_columns,
         auto_datetime_defaults,
-        use_literal_values,
     )
 
     write_step_query_files(
@@ -1295,7 +1284,6 @@ def generate_rdb_selects_from_manifest(
         foreign_keys_by_source,
         generated_always_columns,
         auto_datetime_defaults,
-        use_literal_values,
     )
 
     final_output_path = output_path if output_path is not None else manifest_path.with_name("rdb-selects.sql")
@@ -1307,7 +1295,6 @@ def generate_rdb_selects_from_manifest(
 
 def generate_step_selects_from_manifest(
     manifest_path: Path,
-    use_literal_values: bool = False,
 ) -> list[tuple[int, Path, Path, int]]:
     """Generate per-step query.sql + expected.json under logical-run-dir/step-N/.
 
@@ -1373,7 +1360,6 @@ def generate_step_selects_from_manifest(
             foreign_keys_by_source,
             generated_always_columns,
             auto_datetime_defaults,
-            use_literal_values,
         )
 
         step_dir = logical_run_dir / f"step-{step_number}"
@@ -1392,7 +1378,7 @@ def main() -> int:
     manifest_path = resolve_manifest_path(args)
 
     if args.all_steps:
-        step_results = generate_step_selects_from_manifest(manifest_path, args.literal_values)
+        step_results = generate_step_selects_from_manifest(manifest_path)
         for step_number, sql_path, expected_json_path, scaffold_count in step_results:
             print(f"Step {step_number}: Wrote {sql_path} ({scaffold_count} SELECT statements)")
             print(f"Step {step_number}: Wrote {expected_json_path}")
@@ -1402,7 +1388,6 @@ def main() -> int:
     output_path, expected_json_path, scaffold_count = generate_rdb_selects_from_manifest(
         manifest_path,
         requested_output_path,
-        args.literal_values,
     )
     print(f"Wrote RDB select scaffold: {output_path}")
     print(f"Wrote expected JSON: {expected_json_path}")
