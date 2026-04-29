@@ -24,6 +24,16 @@ BEGIN
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
         print @batch_id;
 
+        -- Ensure the sentinel LDF_GROUP row (key = 1) exists before processing.
+        -- This proc reassigns ldf_group_key to 1 on case datamarts (e.g. GENERIC_CASE, HEPATITIS_CASE)
+        -- when the original group is deleted. Without this row, those FK-referencing updates fail.
+        -- The guard also protects the delete step below from removing it (see: and T.ldf_group_key <> 1).
+        IF NOT EXISTS (SELECT 1 FROM dbo.LDF_GROUP WHERE LDF_GROUP_KEY = 1)
+        BEGIN
+            INSERT INTO dbo.LDF_GROUP (LDF_GROUP_KEY, BUSINESS_OBJECT_UID)
+            VALUES (1, NULL);
+        END
+
         INSERT INTO [dbo].[job_flow_log]
         (
           batch_id
@@ -243,7 +253,8 @@ BEGIN
         from dbo.ldf_group lg with (nolock)
         left join (select distinct ldf_group_key from dbo.LDF_DATA with (nolock)) nld
           on nld.ldf_group_key = lg.ldf_group_key
-        where nld.LDF_GROUP_KEY is null;
+        where nld.LDF_GROUP_KEY is null
+          and lg.ldf_group_key <> 1;
 
         if @debug = 'true' select * from #DEL_GROUP_KEY;
         /* Logging */
