@@ -458,9 +458,9 @@ def main() -> int:
             step_start_time = utc_now()
 
             print()
-            print(f"Step {step_num} â€” {plan_prefix(cdc_plan)} Start time (UTC): {step_start_time}")
-            print(f"Step {step_num} â€” {plan_prefix(cdc_plan)} Start LSN:        {step_cdc_start_lsn}")
-            print(f"Step {step_num} â€” {plan_prefix(logical_plan)} Start LSN:    {step_logical_start_lsn}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} Start time (UTC): {step_start_time}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} Start LSN:        {step_cdc_start_lsn}")
+            print(f"Step {step_num} - {plan_prefix(logical_plan)} Start LSN:    {step_logical_start_lsn}")
 
             post_processing_wait_since_utc = utc_now()
             input(f"Perform the UI action for step {step_num}, then press Enter to capture both traces... ")
@@ -476,9 +476,9 @@ def main() -> int:
             step_cdc_end_lsn = fetch_max_lsn(cdc_plan.client)
             step_logical_end_lsn = fetch_max_lsn(logical_plan.client)
             step_end_time = utc_now()
-            print(f"Step {step_num} â€” {plan_prefix(cdc_plan)} End time (UTC):   {step_end_time}")
-            print(f"Step {step_num} â€” {plan_prefix(cdc_plan)} End LSN:          {step_cdc_end_lsn}")
-            print(f"Step {step_num} â€” {plan_prefix(logical_plan)} End LSN:      {step_logical_end_lsn}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} End time (UTC):   {step_end_time}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} End LSN:          {step_cdc_end_lsn}")
+            print(f"Step {step_num} - {plan_prefix(logical_plan)} End LSN:      {step_logical_end_lsn}")
 
             step_description = input(f"Describe what you did in step {step_num}: ").strip()
 
