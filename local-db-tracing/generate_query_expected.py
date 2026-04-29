@@ -956,7 +956,7 @@ def build_renderable_scaffolds(
     known_lookup_keys_file = Path(__file__).with_name("known_lookup_keys.json")
     if known_lookup_keys_file.exists():
         try:
-            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8"))
+            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8-sig"))
             if isinstance(known_lookup_keys_obj, dict):
                 scaffolds = apply_known_lookup_keys(scaffolds, known_lookup_keys_obj.get("known_tables"))
         except (OSError, json.JSONDecodeError) as error:
@@ -1317,7 +1317,7 @@ def generate_step_selects_from_manifest(
     known_lookup_keys_file = Path(__file__).with_name("known_lookup_keys.json")
     if known_lookup_keys_file.exists():
         try:
-            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8"))
+            known_lookup_keys_obj = json.loads(known_lookup_keys_file.read_text(encoding="utf-8-sig"))
             if isinstance(known_lookup_keys_obj, dict):
                 known_lookup_keys = known_lookup_keys_obj.get("known_tables")  # type: ignore[assignment]
         except (OSError, json.JSONDecodeError) as error:
