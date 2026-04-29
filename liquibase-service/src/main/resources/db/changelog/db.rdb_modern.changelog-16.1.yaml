@@ -3157,4 +3157,3 @@ databaseChangeLog:
             path: 258-create_rdb_date-001.sql
             splitStatements: true
             endDelimiter: GO
-
