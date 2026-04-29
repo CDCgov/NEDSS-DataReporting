@@ -34,6 +34,12 @@ BEGIN
     DECLARE @inv_form_cd VARCHAR(100) = 'INV_FORM_GEN%';
     DECLARE @tgt_table_nm VARCHAR(50) = 'Generic_Case';
 
+    -- Ensure the sentinel LDF_GROUP row (key = 1) exists before processing.
+    -- This proc reads LDF_GROUP_KEY from v_nrt_inv_keys_attrs_mapping and writes it to Generic_Case.
+    -- If sp_nrt_ldf_postprocessing deletes a group and reassigns case rows to key = 1, this row must
+    -- already exist or the subsequent tgt.LDF_GROUP_KEY = src.LDF_GROUP_KEY update will fail with
+    -- a FK violation. This proc can be called independently of sp_nrt_ldf_postprocessing, so the
+    -- guard is repeated here rather than relying on execution order.
     IF NOT EXISTS (SELECT 1 FROM dbo.LDF_GROUP WHERE LDF_GROUP_KEY = 1)
     BEGIN
         INSERT INTO dbo.LDF_GROUP (LDF_GROUP_KEY, BUSINESS_OBJECT_UID)
