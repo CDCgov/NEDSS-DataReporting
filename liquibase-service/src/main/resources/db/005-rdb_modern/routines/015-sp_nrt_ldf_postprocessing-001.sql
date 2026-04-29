@@ -253,7 +253,8 @@ BEGIN
         from dbo.ldf_group lg with (nolock)
         left join (select distinct ldf_group_key from dbo.LDF_DATA with (nolock)) nld
           on nld.ldf_group_key = lg.ldf_group_key
-        where nld.LDF_GROUP_KEY is null;
+        where nld.LDF_GROUP_KEY is null
+          and lg.ldf_group_key <> 1;
 
         if @debug = 'true' select * from #DEL_GROUP_KEY;
         /* Logging */
@@ -735,8 +736,7 @@ BEGIN
         delete T from
         dbo.ldf_group T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
-        on T.ldf_group_key = dldk.ldf_group_key
-        and T.ldf_group_key <> 1;
+        on T.ldf_group_key = dldk.ldf_group_key;
 
         COMMIT TRANSACTION;
 
