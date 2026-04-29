@@ -1,0 +1,1373 @@
+{
+    "title": "060.InterviewInformationSyphilis.json",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath///*[@id=\"delete\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ]
+            ],
+            "offsetY": 23,
+            "offsetX": 16.6484375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit&invFormCd=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 8.5859375,
+            "offsetX": 38.171875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabs0tab2 tr:nth-of-type(12) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_29\"]/tbody/tr[12]/td[2]/img"
+                ],
+                [
+                    "pierce/#tabs0tab2 tr:nth-of-type(12) img"
+                ]
+            ],
+            "offsetY": 12.0546875,
+            "offsetX": 7
+        },
+        {
+            "type": "change",
+            "value": "I",
+            "selectors": [
+                [
+                    "aria/Indicate the status of interviewing the patient of this investigation.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS192"
+                ],
+                [
+                    "xpath///*[@id=\"NBS192\"]"
+                ],
+                [
+                    "pierce/#NBS192"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabs0tab2 tr:nth-of-type(12) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_29\"]/tbody/tr[12]/td[2]"
+                ],
+                [
+                    "pierce/#tabs0tab2 tr:nth-of-type(12) > td:nth-of-type(2)"
+                ],
+                [
+                    "text/A - AwaitingI"
+                ]
+            ],
+            "offsetY": 84.0546875,
+            "offsetX": 83
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 19.1640625,
+            "offsetX": 11.71875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_48 > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_48\"]/tbody/tr/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_48 > tbody img"
+                ]
+            ],
+            "offsetY": 10.5546875,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Places to Meet Partners[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS242"
+                ],
+                [
+                    "xpath///*[@id=\"NBS242\"]"
+                ],
+                [
+                    "pierce/#NBS242"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_48 td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_48\"]/tbody/tr/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_48 td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 94.5546875,
+            "offsetX": 67
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/Select the Hangout or Meetup."
+                ],
+                [
+                    "#NBS243Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS243Text\"]"
+                ],
+                [
+                    "pierce/#NBS243Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Quick Code Lookup"
+                ],
+                [
+                    "#NBS243CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS243CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS243CodeLookupButton"
+                ]
+            ],
+            "offsetY": 9.4765625,
+            "offsetX": 26.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Select the Hangout or Meetup."
+                ],
+                [
+                    "#NBS243Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS243Text\"]"
+                ],
+                [
+                    "pierce/#NBS243Text"
+                ]
+            ],
+            "offsetY": 15.7265625,
+            "offsetX": 32.1640625
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Select the Hangout or Meetup."
+                ],
+                [
+                    "#NBS243Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS243Text\"]"
+                ],
+                [
+                    "pierce/#NBS243Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Quick Code Lookup"
+                ],
+                [
+                    "#NBS243CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS243CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS243CodeLookupButton"
+                ]
+            ],
+            "offsetY": 11.4765625,
+            "offsetX": 25.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Search"
+                ],
+                [
+                    "#NBS243Icon"
+                ],
+                [
+                    "xpath///*[@id=\"NBS243Icon\"]"
+                ],
+                [
+                    "pierce/#NBS243Icon"
+                ]
+            ],
+            "offsetY": 13.4765625,
+            "offsetX": 38
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/Place.do?method=find&identifier=NBS243",
+            "selectors": [
+                [
+                    "aria/Enter a Name"
+                ],
+                [
+                    "tr:nth-of-type(2) > td:nth-of-type(4) > input"
+                ],
+                [
+                    "xpath///*[@id=\"placeSearch\"]/tbody/tr[2]/td[4]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) > td:nth-of-type(4) > input"
+                ]
+            ],
+            "offsetY": 21,
+            "offsetX": 96.078125
+        },
+        {
+            "type": "change",
+            "value": "a",
+            "selectors": [
+                [
+                    "aria/Enter a Name"
+                ],
+                [
+                    "tr:nth-of-type(2) > td:nth-of-type(4) > input"
+                ],
+                [
+                    "xpath///*[@id=\"placeSearch\"]/tbody/tr[2]/td[4]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) > td:nth-of-type(4) > input"
+                ]
+            ],
+            "target": "http://localhost:7003/nbs/Place.do?method=find&identifier=NBS243"
+        },
+        {
+            "type": "click",
+            "target": "http://localhost:7003/nbs/Place.do?method=find&identifier=NBS243",
+            "selectors": [
+                [
+                    "div:nth-of-type(3) > input:nth-of-type(1)"
+                ],
+                [
+                    "xpath//html/body/form/div[3]/input[1]"
+                ],
+                [
+                    "pierce/div:nth-of-type(3) > input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 8,
+            "offsetX": 17.21875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_48 > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_48\"]/tbody/tr/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_48 > tbody img"
+                ]
+            ],
+            "offsetY": 11.5546875,
+            "offsetX": 5
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Places to Meet Partners[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS242"
+                ],
+                [
+                    "xpath///*[@id=\"NBS242\"]"
+                ],
+                [
+                    "pierce/#NBS242"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_48 td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_48\"]/tbody/tr/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_48 td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 50.5546875,
+            "offsetX": 88
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_50 > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_50\"]/tbody/tr/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_50 > tbody img"
+                ]
+            ],
+            "offsetY": 9.0546875,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "R",
+            "selectors": [
+                [
+                    "aria/Places to Have Sex[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS244"
+                ],
+                [
+                    "xpath///*[@id=\"NBS244\"]"
+                ],
+                [
+                    "pierce/#NBS244"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_50 td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_50\"]/tbody/tr/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_50 td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 68.0546875,
+            "offsetX": 77
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_53 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_53\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_53 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 12.7265625,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Female partners claimed in the last 12 months?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS223"
+                ],
+                [
+                    "xpath///*[@id=\"NBS223\"]"
+                ],
+                [
+                    "pierce/#NBS223"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_53 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_53\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_53 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 94.7265625,
+            "offsetX": 69
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/The total number of female partners claimed in the last 12 months."
+                ],
+                [
+                    "#NBS224"
+                ],
+                [
+                    "xpath///*[@id=\"NBS224\"]"
+                ],
+                [
+                    "pierce/#NBS224"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_53 tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_53\"]/tbody/tr[3]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_53 tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 9.7265625,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Male partners claimed in the last 12 months?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS225"
+                ],
+                [
+                    "xpath///*[@id=\"NBS225\"]"
+                ],
+                [
+                    "pierce/#NBS225"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_53 tr:nth-of-type(3) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_53\"]/tbody/tr[3]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_53 tr:nth-of-type(3) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 96.7265625,
+            "offsetX": 70
+        },
+        {
+            "type": "change",
+            "value": "5",
+            "selectors": [
+                [
+                    "aria/The total number of male partners claimed in the last 12 months."
+                ],
+                [
+                    "#NBS226"
+                ],
+                [
+                    "xpath///*[@id=\"NBS226\"]"
+                ],
+                [
+                    "pierce/#NBS226"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_53 tr:nth-of-type(5) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_53\"]/tbody/tr[5]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_53 tr:nth-of-type(5) img"
+                ]
+            ],
+            "offsetY": 11.7265625,
+            "offsetX": 9
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Transgender partners claimed in the last 12 months?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS227"
+                ],
+                [
+                    "xpath///*[@id=\"NBS227\"]"
+                ],
+                [
+                    "pierce/#NBS227"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "#NBS_INV_STD_UI_53 tr:nth-of-type(5) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS227\"]/option[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_53 tr:nth-of-type(5) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 10.7265625,
+            "offsetX": 86
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_54 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_54\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_54 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 12.2265625,
+            "offsetX": 6
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Female sex/needle-sharing interview period partners claimed?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS129"
+                ],
+                [
+                    "xpath///*[@id=\"NBS129\"]"
+                ],
+                [
+                    "pierce/#NBS129"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_54 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_54\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_54 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 95.2265625,
+            "offsetX": 71
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The total number of female sex/needle-sharing interview period partners claimed."
+                ],
+                [
+                    "#NBS130"
+                ],
+                [
+                    "xpath///*[@id=\"NBS130\"]"
+                ],
+                [
+                    "pierce/#NBS130"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_54 tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_54\"]/tbody/tr[3]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_54 tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 13.2265625,
+            "offsetX": 7
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Male sex/needle-sharing interview period partners claimed?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS131"
+                ],
+                [
+                    "xpath///*[@id=\"NBS131\"]"
+                ],
+                [
+                    "pierce/#NBS131"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_54 tr:nth-of-type(3) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_54\"]/tbody/tr[3]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_54 tr:nth-of-type(3) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 98.2265625,
+            "offsetX": 67
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/The total number of male sex/needle-sharing interview period partners claimed."
+                ],
+                [
+                    "#NBS132"
+                ],
+                [
+                    "xpath///*[@id=\"NBS132\"]"
+                ],
+                [
+                    "pierce/#NBS132"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_54 tr:nth-of-type(5) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_54\"]/tbody/tr[5]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_54 tr:nth-of-type(5) img"
+                ]
+            ],
+            "offsetY": 8.2265625,
+            "offsetX": 5
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Transgender sex/needle-sharing interview period partners claimed?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS133"
+                ],
+                [
+                    "xpath///*[@id=\"NBS133\"]"
+                ],
+                [
+                    "pierce/#NBS133"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_54 tr:nth-of-type(5) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_54\"]/tbody/tr[5]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_54 tr:nth-of-type(5) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 49.2265625,
+            "offsetX": 101
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_55 > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_55\"]/tbody/tr/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_55 > tbody img"
+                ]
+            ],
+            "offsetY": 6.7265625,
+            "offsetX": 11
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Have you met sex partners through the Internet in the last 12 months?[role=\"listbox\"]"
+                ],
+                [
+                    "#STD119"
+                ],
+                [
+                    "xpath///*[@id=\"STD119\"]"
+                ],
+                [
+                    "pierce/#STD119"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_63 > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_63\"]/tbody/tr/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_63 > tbody img"
+                ]
+            ],
+            "offsetY": 10.6484375,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Does the patient have a history of ever having had an STD prior to the condition reported in this case report?[role=\"listbox\"]"
+                ],
+                [
+                    "#STD117"
+                ],
+                [
+                    "xpath///*[@id=\"STD117\"]"
+                ],
+                [
+                    "pierce/#STD117"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_63 td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_63\"]/tbody/tr/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_63 td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 52.6484375,
+            "offsetX": 66
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_66 > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_66\"]/tbody/tr/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_66 > tbody img"
+                ]
+            ],
+            "offsetY": 10.3203125,
+            "offsetX": 10.5
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Document whether the patient accepted or declined enrollment into Partner Services (i.e. did s/he accept the interview).[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS257"
+                ],
+                [
+                    "xpath///*[@id=\"NBS257\"]"
+                ],
+                [
+                    "pierce/#NBS257"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Accepted"
+                ],
+                [
+                    "#NBS_INV_STD_UI_66 option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS257\"]/option[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_66 option:nth-of-type(2)"
+                ],
+                [
+                    "text/Accepted"
+                ]
+            ],
+            "offsetY": 6.3203125,
+            "offsetX": 61
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_67 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_67\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_67 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 9.8203125,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Previously tested for 900?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS254"
+                ],
+                [
+                    "xpath///*[@id=\"NBS254\"]"
+                ],
+                [
+                    "pierce/#NBS254"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_67 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_67\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_67 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 64.8203125,
+            "offsetX": 81
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_68 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_68\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_68 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 7.3203125,
+            "offsetX": 8.5
+        },
+        {
+            "type": "change",
+            "value": "Y",
+            "selectors": [
+                [
+                    "aria/Referred for 900 test?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS260"
+                ],
+                [
+                    "xpath///*[@id=\"NBS260\"]"
+                ],
+                [
+                    "pierce/#NBS260"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_68 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_68\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_68 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 63.3203125,
+            "offsetX": 17
+        },
+        {
+            "type": "change",
+            "value": "04/24/2026",
+            "selectors": [
+                [
+                    "aria/Date referred for 900 test."
+                ],
+                [
+                    "#NBS261"
+                ],
+                [
+                    "xpath///*[@id=\"NBS261\"]"
+                ],
+                [
+                    "pierce/#NBS261"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_68 tr:nth-of-type(3) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_68\"]/tbody/tr[3]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_68 tr:nth-of-type(3) img"
+                ]
+            ],
+            "offsetY": 9.3203125,
+            "offsetX": 11
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/900 test performed at this event?[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS262"
+                ],
+                [
+                    "xpath///*[@id=\"NBS262\"]"
+                ],
+                [
+                    "pierce/#NBS262"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_68 tr:nth-of-type(3) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_68\"]/tbody/tr[3]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_68 tr:nth-of-type(3) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 66.3203125,
+            "offsetX": 68
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_69 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_69\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_69 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 11.8203125,
+            "offsetX": 6.5
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Referred to 900 medical care/evaluation/treatment.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS266"
+                ],
+                [
+                    "xpath///*[@id=\"NBS266\"]"
+                ],
+                [
+                    "pierce/#NBS266"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_69 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_69\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_69 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 46.8203125,
+            "offsetX": 16
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_75 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_75\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_75 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 3.3203125,
+            "offsetX": 10
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Indicate if the client is currently on pre-exposure prophylaxis (PrEP) medication.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS443"
+                ],
+                [
+                    "xpath///*[@id=\"NBS443\"]"
+                ],
+                [
+                    "pierce/#NBS443"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/No"
+                ],
+                [
+                    "#NBS_INV_STD_UI_75 > tbody > tr:nth-of-type(1) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS443\"]/option[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_75 > tbody > tr:nth-of-type(1) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 3.3203125,
+            "offsetX": 36
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_75 > tbody > tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_75\"]/tbody/tr[2]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_75 > tbody > tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetY": 13.3203125,
+            "offsetX": 10
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/Indicate if the client was referred to a provider for pre-exposure prophylaxis (PrEP).[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS446"
+                ],
+                [
+                    "xpath///*[@id=\"NBS446\"]"
+                ],
+                [
+                    "pierce/#NBS446"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Yes"
+                ],
+                [
+                    "#NBS_INV_STD_UI_75 option:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS446\"]/option[5]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_75 option:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 0.3203125,
+            "offsetX": 66
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 21.1640625,
+            "offsetX": 12.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=editSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,89 @@
+{
+    "title": "022.CreateInvestigationProcessingDecisionPopup",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 900,
+            "height": 599,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Choose option"
+                ],
+                [
+                    "img"
+                ],
+                [
+                    "xpath///*[@id=\"transfer\"]/img"
+                ],
+                [
+                    "pierce/img"
+                ]
+            ],
+            "offsetY": 14.109375,
+            "offsetX": 5.5078125
+        },
+        {
+            "type": "change",
+            "value": "FF",
+            "selectors": [
+                [
+                    "aria/Processing Decision[role=\"listbox\"]"
+                ],
+                [
+                    "#reviewReason"
+                ],
+                [
+                    "xpath///*[@id=\"reviewReason\"]"
+                ],
+                [
+                    "pierce/#reviewReason"
+                ],
+                [
+                    "text/FF"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Surveillance Follow-up"
+                ],
+                [
+                    "option:nth-of-type(9)"
+                ],
+                [
+                    "xpath///*[@id=\"reviewReason\"]/option[9]"
+                ],
+                [
+                    "pierce/option:nth-of-type(9)"
+                ],
+                [
+                    "text/Surveillance"
+                ]
+            ],
+            "offsetY": 3.7109375,
+            "offsetX": 66.0703125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+              ["#botProcessingDecisionId > input[type=button]:nth-child(1)"]
+            ],
+            "offsetX": 10,
+            "offsetY": 10
+          }
+
+    ]
+}

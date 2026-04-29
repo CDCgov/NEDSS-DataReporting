@@ -1,0 +1,283 @@
+{
+    "title": "024.CreateInvestigationSyphilisAssignInvestigator",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 23.0859375,
+            "offsetX": 60.171875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The investigator assigning the initial follow-up."
+                ],
+                [
+                    "#NBS139Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS139Text\"]"
+                ],
+                [
+                    "pierce/#NBS139Text"
+                ]
+            ],
+            "offsetY": 16.1015625,
+            "offsetX": 53.1640625
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/The investigator assigning the initial follow-up."
+                ],
+                [
+                    "#NBS139Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS139Text\"]"
+                ],
+                [
+                    "pierce/#NBS139Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS139CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS139CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS139CodeLookupButton"
+                ]
+            ],
+            "offsetY": 8.8515625,
+            "offsetX": 30.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The investigator assigned for surveillance follow-up."
+                ],
+                [
+                    "#NBS145Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS145Text\"]"
+                ],
+                [
+                    "pierce/#NBS145Text"
+                ]
+            ],
+            "offsetY": 10.7734375,
+            "offsetX": 47.1640625
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/The investigator assigned for surveillance follow-up."
+                ],
+                [
+                    "#NBS145Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS145Text\"]"
+                ],
+                [
+                    "pierce/#NBS145Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS145CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS145CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS145CodeLookupButton"
+                ]
+            ],
+            "offsetY": 11.5234375,
+            "offsetX": 27.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date surveillance follow-up is assigned."
+                ],
+                [
+                    "#NBS146"
+                ],
+                [
+                    "xpath///*[@id=\"NBS146\"]"
+                ],
+                [
+                    "pierce/#NBS146"
+                ]
+            ],
+            "offsetY": 7.7734375,
+            "offsetX": 39
+        },
+        {
+            "type": "change",
+            "value": "04/24/2026",
+            "selectors": [
+                [
+                    "aria/The date surveillance follow-up is assigned."
+                ],
+                [
+                    "#NBS146"
+                ],
+                [
+                    "xpath///*[@id=\"NBS146\"]"
+                ],
+                [
+                    "pierce/#NBS146"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#Surveillance tr:nth-of-type(5) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_16\"]/tbody/tr[5]/td[2]"
+                ],
+                [
+                    "pierce/#Surveillance tr:nth-of-type(5) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 1.7734375,
+            "offsetX": 137
+        },
+
+{
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 9.5859375,
+            "offsetX": 85.8359375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date the investigation was started or initiated."
+                ],
+                [
+                    "#INV147"
+                ],
+                [
+                    "xpath///*[@id=\"INV147\"]"
+                ],
+                [
+                    "pierce/#INV147"
+                ]
+            ],
+            "offsetY": 12.9296875,
+            "offsetX": 34
+        },
+        {
+            "type": "change",
+            "value": "04/24/2026",
+            "selectors": [
+                [
+                    "aria/The date the investigation was started or initiated."
+                ],
+                [
+                    "#INV147"
+                ],
+                [
+                    "xpath///*[@id=\"INV147\"]"
+                ],
+                [
+                    "pierce/#INV147"
+                ]
+            ],
+            "target": "main"
+        },
+
+
+
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitTop"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitTop\"]"
+                ],
+                [
+                    "pierce/#SubmitTop"
+                ]
+            ],
+            "offsetY": 20,
+            "offsetX": 15.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=createSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}
