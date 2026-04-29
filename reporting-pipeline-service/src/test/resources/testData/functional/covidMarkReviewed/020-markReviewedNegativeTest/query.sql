@@ -1,5 +1,3 @@
-USE [RDB_MODERN];
-
 -- Generated from paired tracing artifacts.
 -- Source summary: NEDSS-DataReporting/local-db-tracing/output/20260427-172924-NBS_ODSE-to-RDB_MODERN/cdc-NBS_ODSE/summary.txt
 -- Logical changes: NEDSS-DataReporting/local-db-tracing/output/20260427-172924-NBS_ODSE-to-RDB_MODERN/logical-RDB_MODERN/logical-changes.json
