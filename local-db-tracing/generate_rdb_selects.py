@@ -447,6 +447,29 @@ def resolve_declare_values(declare_entries: list[DeclareEntry]) -> dict[str, obj
     return resolved
 
 
+def apply_literal_substitution(sql: str, declare_entries: list[DeclareEntry]) -> str:
+    """Strip DECLARE block and substitute @parameter references with resolved literal values."""
+    # Strip DECLARE lines and associated comments before substitution
+    filtered_lines: list[str] = []
+    for line in sql.splitlines(keepends=True):
+        stripped = line.strip()
+        if re.match(r"DECLARE\s+@", stripped, re.IGNORECASE):
+            continue
+        if "-- Review and adjust the DECLARE" in line:
+            continue
+        if "-- Adjust the UID declarations below manually" in line:
+            continue
+        filtered_lines.append(line)
+    sql = "".join(filtered_lines)
+
+    resolved = resolve_declare_values(declare_entries)
+    # Substitute @param references (longest names first to avoid partial matches)
+    for var_name, value in sorted(resolved.items(), key=lambda item: len(item[0]), reverse=True):
+        literal = sql_literal(value)
+        sql = re.sub(re.escape(var_name) + r"\b", literal, sql, flags=re.IGNORECASE)
+    return sql
+
+
 def apply_expected_row_overrides(
     expected_rows: tuple[dict[str, object], ...],
     declare_entries: list[DeclareEntry],
@@ -527,7 +550,6 @@ def predicate_for_field(
     column_name: str,
     value: object,
     declare_entries: list[DeclareEntry],
-    use_literal_values: bool = False,
     ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None = None,
 ) -> tuple[str, list[str]]:
     column_sql = f"[{column_name}]"
@@ -540,9 +562,6 @@ def predicate_for_field(
         return f"{column_sql} IN ({literals})", []
 
     literal_sql = sql_literal(value)
-    if use_literal_values:
-        return f"{column_sql} = {literal_sql}", []
-
     candidates = variable_candidates_for_value(column_name, value, declare_entries)
     if len(candidates) == 1:
         return f"{column_sql} = {candidates[0]}", []
@@ -640,13 +659,9 @@ def fk_subquery_predicate_for_pk(
     primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None,
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
     lookup_scaffold_by_table: dict[tuple[str, str], SelectScaffold],
-    use_literal_values: bool = False,
     ambiguity_state: dict[tuple[str, tuple[str, ...]], int] | None = None,
 ) -> tuple[str | None, list[str]]:
     if primary_keys_by_table is None or foreign_keys_by_source is None:
-        return None, []
-
-    if use_literal_values:
         return None, []
 
     if scaffold.identity_strategy == "business_keys":
@@ -697,7 +712,6 @@ def fk_subquery_predicate_for_pk(
             target_field_name,
             target_field_value,
             declare_entries,
-            use_literal_values,
             ambiguity_state,
         )
         target_predicates.append(predicate_sql)
@@ -1145,10 +1159,9 @@ def render_sql(
         "",
     ]
 
-    if not use_literal_values:
-        lines.insert(-1, "-- Review and adjust the DECLARE values below before running these SELECT statements.")
+    lines.insert(-1, "-- Review and adjust the DECLARE values below before running these SELECT statements.")
 
-    if declare_lines and not use_literal_values:
+    if declare_lines:
         lines.extend(declare_lines)
         lines.append("")
 
@@ -1178,7 +1191,6 @@ def render_sql(
                 primary_keys_by_table,
                 foreign_keys_by_source,
                 lookup_scaffold_by_table,
-                use_literal_values,
                 ambiguity_state,
             )
             if fk_lookup_predicate_sql is not None:
@@ -1189,7 +1201,6 @@ def render_sql(
                     column_name,
                     value,
                     declare_entries,
-                    use_literal_values,
                     ambiguity_state,
                 )
             connector = "WHERE" if index == 0 else "  AND"
@@ -1238,7 +1249,10 @@ def render_sql(
         scaffold_index += 1
         lines.append("")
 
-    return "\n".join(lines).rstrip() + "\n", expected_map
+    sql_text = "\n".join(lines).rstrip() + "\n"
+    if use_literal_values:
+        sql_text = apply_literal_substitution(sql_text, declare_entries)
+    return sql_text, expected_map
 
 
 def generate_rdb_selects_from_manifest(
