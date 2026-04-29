@@ -1,0 +1,627 @@
+{
+    "title": "040.InvestigateSyphilis",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath///*[@id=\"delete\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ]
+            ],
+            "offsetY": 20,
+            "offsetX": 15.6484375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit&invFormCd=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 16.5859375,
+            "offsetX": 76.8359375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The provider that reported the case."
+                ],
+                [
+                    "#INV181Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV181Text\"]"
+                ],
+                [
+                    "pierce/#INV181Text"
+                ]
+            ],
+            "offsetY": 14.7734375,
+            "offsetX": 51.1640625
+        },
+        {
+            "type": "change",
+            "value": "5",
+            "selectors": [
+                [
+                    "aria/The provider that reported the case."
+                ],
+                [
+                    "#INV181Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV181Text\"]"
+                ],
+                [
+                    "pierce/#INV181Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#INV181CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"INV181CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#INV181CodeLookupButton"
+                ]
+            ],
+            "offsetY": 7.5234375,
+            "offsetX": 30.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_13 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_13\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_13 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 9.6953125,
+            "offsetX": 11
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Was the patient hospitalized as a result of this event?[role=\"listbox\"]"
+                ],
+                [
+                    "#INV128"
+                ],
+                [
+                    "xpath///*[@id=\"INV128\"]"
+                ],
+                [
+                    "pierce/#INV128"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_13 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_13\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_UI_13 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 52.6953125,
+            "offsetX": 42
+        },
+        {
+            "type": "change",
+            "value": "04/21/2026",
+            "selectors": [
+                [
+                    "aria/Date of diagnosis of condition being reported to public health system."
+                ],
+                [
+                    "#INV136"
+                ],
+                [
+                    "xpath///*[@id=\"INV136\"]"
+                ],
+                [
+                    "pierce/#INV136"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date of the beginning of the illness. Reported date of the onset of symptoms of the condition being reported to the public health system."
+                ],
+                [
+                    "#INV137"
+                ],
+                [
+                    "xpath///*[@id=\"INV137\"]"
+                ],
+                [
+                    "pierce/#INV137"
+                ]
+            ],
+            "offsetY": 7.4453125,
+            "offsetX": 38
+        },
+        {
+            "type": "change",
+            "value": "04/17/2026",
+            "selectors": [
+                [
+                    "aria/Date of the beginning of the illness. Reported date of the onset of symptoms of the condition being reported to the public health system."
+                ],
+                [
+                    "#INV137"
+                ],
+                [
+                    "xpath///*[@id=\"INV137\"]"
+                ],
+                [
+                    "pierce/#INV137"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date treatment initiated for the condition that is the subject of this case report."
+                ],
+                [
+                    "#STD105"
+                ],
+                [
+                    "xpath///*[@id=\"STD105\"]"
+                ],
+                [
+                    "pierce/#STD105"
+                ]
+            ],
+            "offsetY": 15.4453125,
+            "offsetX": 33
+        },
+        {
+            "type": "change",
+            "value": "04/20/2026",
+            "selectors": [
+                [
+                    "aria/Date treatment initiated for the condition that is the subject of this case report."
+                ],
+                [
+                    "#STD105"
+                ],
+                [
+                    "xpath///*[@id=\"STD105\"]"
+                ],
+                [
+                    "pierce/#STD105"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#Clinical tr:nth-of-type(11) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[11]/td[2]"
+                ],
+                [
+                    "pierce/#Clinical tr:nth-of-type(11) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 0.4453125,
+            "offsetX": 187
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_2 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_2 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 14.1484375,
+            "offsetX": 8.5
+        },
+        {
+            "type": "change",
+            "value": "S",
+            "selectors": [
+                [
+                    "aria/Code for the mechanism by which disease or condition was acquired by the subject of the investigation. Includes sexually transmitted, airborne, bloodborne, vectorborne, foodborne, zoonotic, nosocomial, mechanical, dermal, congenital, environmental exposure, indeterminate.[role=\"listbox\"]"
+                ],
+                [
+                    "#INV157"
+                ],
+                [
+                    "xpath///*[@id=\"INV157\"]"
+                ],
+                [
+                    "pierce/#INV157"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Sexually Transmitted"
+                ],
+                [
+                    "#NBS_UI_2 > tbody > tr:nth-of-type(1) option:nth-of-type(10)"
+                ],
+                [
+                    "xpath///*[@id=\"INV157\"]/option[10]"
+                ],
+                [
+                    "pierce/#NBS_UI_2 > tbody > tr:nth-of-type(1) option:nth-of-type(10)"
+                ],
+                [
+                    "text/Sexually Transmitted"
+                ]
+            ],
+            "offsetY": 3.1484375,
+            "offsetX": 84
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_2 > tbody > tr:nth-of-type(2) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[2]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_2 > tbody > tr:nth-of-type(2) img"
+                ]
+            ],
+            "offsetY": 8.1484375,
+            "offsetX": 10
+        },
+        {
+            "type": "change",
+            "value": "21",
+            "selectors": [
+                [
+                    "aria/Code for the method by which the public health department was made aware of the case. Includes provider report, patient self-referral, laboratory report, case or outbreak investigation, contact investigation, active surveillance, routine physical, prenatal testing, perinatal testing, prison entry screening, occupational disease surveillance, medical record review, etc.[role=\"listbox\"]"
+                ],
+                [
+                    "#INV159"
+                ],
+                [
+                    "xpath///*[@id=\"INV159\"]"
+                ],
+                [
+                    "pierce/#INV159"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Self Referral"
+                ],
+                [
+                    "#NBS_UI_2 > tbody > tr:nth-of-type(2) option:nth-of-type(7)"
+                ],
+                [
+                    "xpath///*[@id=\"INV159\"]/option[7]"
+                ],
+                [
+                    "pierce/#NBS_UI_2 > tbody > tr:nth-of-type(2) option:nth-of-type(7)"
+                ],
+                [
+                    "text/Self Referral"
+                ]
+            ],
+            "offsetY": 3.1484375,
+            "offsetX": 70
+        },
+        {
+            "type": "change",
+            "value": "LD",
+            "selectors": [
+                [
+                    "aria/Code for the mechanism by which the case was classified. This attribute is intended to provide information about how the case classification status was derived."
+                ],
+                [
+                    "#INV161"
+                ],
+                [
+                    "xpath///*[@id=\"INV161\"]"
+                ],
+                [
+                    "pierce/#INV161"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Laboratory confirmed"
+                ],
+                [
+                    "#NBS_UI_2 tr:nth-of-type(3) option:nth-of-type(6)"
+                ],
+                [
+                    "xpath///*[@id=\"INV161\"]/option[6]"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(3) option:nth-of-type(6)"
+                ],
+                [
+                    "text/Laboratory confirmed"
+                ]
+            ],
+            "offsetY": 8.65625,
+            "offsetX": 116.0078125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_2 tr:nth-of-type(3) > td:nth-of-type(2) > div"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[3]/td[2]/div"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(3) > td:nth-of-type(2) > div"
+                ]
+            ],
+            "offsetY": 62.8203125,
+            "offsetX": 327.671875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/If an investigation is confirmed as a case, then the confirmation date is entered."
+                ],
+                [
+                    "#INV162"
+                ],
+                [
+                    "xpath///*[@id=\"INV162\"]"
+                ],
+                [
+                    "pierce/#INV162"
+                ]
+            ],
+            "offsetY": 11.5078125,
+            "offsetX": 61
+        },
+        {
+            "type": "change",
+            "value": "04/24/2026",
+            "selectors": [
+                [
+                    "aria/If an investigation is confirmed as a case, then the confirmation date is entered."
+                ],
+                [
+                    "#INV162"
+                ],
+                [
+                    "xpath///*[@id=\"INV162\"]"
+                ],
+                [
+                    "pierce/#INV162"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_2 tr:nth-of-type(6) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[6]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(6) img"
+                ]
+            ],
+            "offsetY": 10.5078125,
+            "offsetX": 9.5
+        },
+        {
+            "type": "change",
+            "value": "720",
+            "selectors": [
+                [
+                    "aria/The disease diagnosis of the patient.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS136"
+                ],
+                [
+                    "xpath///*[@id=\"NBS136\"]"
+                ],
+                [
+                    "pierce/#NBS136"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_2 tr:nth-of-type(6) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[6]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(6) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 68.5078125,
+            "offsetX": 131
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_2 tr:nth-of-type(5) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[5]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(5) img"
+                ]
+            ],
+            "offsetY": 9.5078125,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "C",
+            "selectors": [
+                [
+                    "aria/The current status of the investigation/case.[role=\"listbox\"]"
+                ],
+                [
+                    "#INV163"
+                ],
+                [
+                    "xpath///*[@id=\"INV163\"]"
+                ],
+                [
+                    "pierce/#INV163"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Confirmed"
+                ],
+                [
+                    "#NBS_UI_2 tr:nth-of-type(5) option:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"INV163\"]/option[2]"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(5) option:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 7.5078125,
+            "offsetX": 38
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 23.8828125,
+            "offsetX": 15.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=editSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}
