@@ -647,6 +647,7 @@ def main() -> int:
             superuser_id,
             starting_uid,
             nbs_steps=nbs_steps,
+            id_map_dir=combined_run_dir,
         )
 
         log_progress(f"{plan_prefix(logical_plan)} Writing manifest.json")

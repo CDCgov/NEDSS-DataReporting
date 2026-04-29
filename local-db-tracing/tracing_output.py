@@ -365,6 +365,7 @@ def write_summary(
     superuser_id: int = 10009282,
     starting_uid: int = DEFAULT_STARTING_UID,
     nbs_steps: list[dict[str, object]] | None = None,
+    id_map_dir: Path | None = None,
 ) -> None:
     """Write the human-readable summary artifact for a tracing run.
 
@@ -460,6 +461,7 @@ def write_summary(
         ]
 
     reconstructed_sql: list[str] = []
+    id_map_entries: list[dict[str, object]] = []
     if replay_changes:
         reconstructed_sql = reconstruct_sql_statements(
             replay_changes,
@@ -473,6 +475,7 @@ def write_summary(
             superuser_id=superuser_id,
             starting_uid=starting_uid,
             nbs_steps=nbs_steps,
+            id_map_entries_out=id_map_entries,
         )
     if ignored_replay_table_names:
         lines.append("")
@@ -500,8 +503,12 @@ def write_summary(
         inserts_lines = [f"USE {quote_identifier(str(manifest['database']))};", *reconstructed_sql]
         inserts_path.write_text("\n".join(inserts_lines) + "\n", encoding="utf-8")
 
+        id_map_path = (id_map_dir if id_map_dir is not None else path.parent) / "id-map.json"
+        id_map_path.write_text(json.dumps(id_map_entries, indent=2) + "\n", encoding="utf-8")
+
         lines.append("")
         lines.append(f"Reconstructed SQL written to: {inserts_path.name}")
+        lines.append(f"ID map written to: {id_map_path.name}")
         lines.append("Run inserts.sql directly against the source database to replay captured writes.")
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -57,6 +57,13 @@ class SelectScaffold:
     expected_rows: tuple[dict[str, object], ...]
 
 
+@dataclass(frozen=True)
+class IdMapEntry:
+    original: object
+    parameter: str
+    value: object
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate rdb-selects.sql from a paired dual-capture output folder or combined-manifest.json."
@@ -150,7 +157,7 @@ def load_json(path: Path) -> object:
         raise SystemExit(f"Could not parse JSON file {path}: {error}") from error
 
 
-def load_combined_inputs(manifest_path: Path) -> tuple[dict[str, object], Path, Path, Path]:
+def load_combined_inputs(manifest_path: Path) -> tuple[dict[str, object], Path, Path, Path, Path]:
     manifest_obj = load_json(manifest_path)
     if not isinstance(manifest_obj, dict):
         raise SystemExit(f"Combined manifest has an invalid format: {manifest_path}")
@@ -171,9 +178,34 @@ def load_combined_inputs(manifest_path: Path) -> tuple[dict[str, object], Path, 
     if not inserts_path.exists():
         # Backward-compatible fallback for older artifacts where SQL was embedded in summary.txt.
         inserts_path = summary_path
+    id_map_path = manifest_path.with_name("id-map.json")
+    if not id_map_path.exists():
+        raise SystemExit(f"ID map file not found: {id_map_path}")
     if not logical_changes_path.exists():
         raise SystemExit(f"Logical changes file not found: {logical_changes_path}")
-    return manifest_obj, summary_path, inserts_path, logical_changes_path
+    return manifest_obj, summary_path, inserts_path, logical_changes_path, id_map_path
+
+
+def load_id_map_entries(path: Path) -> list[IdMapEntry]:
+    payload = load_json(path)
+    if not isinstance(payload, list):
+        raise SystemExit(f"ID map file has an invalid format: {path}")
+
+    entries: list[IdMapEntry] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        parameter = item.get("parameter")
+        if not isinstance(parameter, str) or not parameter:
+            continue
+        entries.append(
+            IdMapEntry(
+                original=item.get("original"),
+                parameter=parameter,
+                value=item.get("value"),
+            )
+        )
+    return entries
 
 
 def extract_declare_block(sql_text: str) -> list[str]:
@@ -357,6 +389,45 @@ def sql_literal(value: object) -> str:
     return sql_string_literal(str(value))
 
 
+def id_map_sort_key(entry: IdMapEntry) -> tuple[int, int]:
+    return (len(str(entry.original)), len(entry.parameter))
+
+
+def apply_id_map_to_sql(sql: str, id_map_entries: list[IdMapEntry]) -> str:
+    updated = sql
+    for entry in sorted(id_map_entries, key=id_map_sort_key, reverse=True):
+        updated = re.sub(re.escape(entry.parameter) + r"\b", sql_literal(entry.value), updated, flags=re.IGNORECASE)
+
+        original = entry.original
+        if isinstance(original, str):
+            updated = updated.replace(sql_string_literal(original), sql_literal(entry.value))
+            updated = updated.replace(original, str(entry.value))
+        elif isinstance(original, (int, float, bool)):
+            updated = re.sub(
+                rf"(?<![A-Za-z0-9_]){re.escape(str(original))}(?![A-Za-z0-9_])",
+                sql_literal(entry.value),
+                updated,
+            )
+    return updated
+
+
+def apply_id_map_to_json_value(value: object, id_map_entries: list[IdMapEntry]) -> object:
+    if isinstance(value, dict):
+        return {k: apply_id_map_to_json_value(v, id_map_entries) for k, v in value.items()}
+    if isinstance(value, list):
+        return [apply_id_map_to_json_value(v, id_map_entries) for v in value]
+
+    updated_value = value
+    for entry in sorted(id_map_entries, key=id_map_sort_key, reverse=True):
+        if updated_value == entry.original:
+            updated_value = entry.value
+            continue
+        if isinstance(updated_value, str):
+            updated_value = updated_value.replace(entry.parameter, str(entry.value))
+            updated_value = updated_value.replace(str(entry.original), str(entry.value))
+    return updated_value
+
+
 def parse_int_literal(expression: str) -> int | None:
     stripped = expression.strip()
     if stripped.startswith("+"):
@@ -435,90 +506,6 @@ def resolve_declare_values(declare_entries: list[DeclareEntry]) -> dict[str, obj
             break
 
     return resolved
-
-
-def apply_literal_substitution(sql: str, declare_entries: list[DeclareEntry]) -> str:
-    """Strip DECLARE block and substitute @parameter references with resolved literal values."""
-    # Strip DECLARE lines and associated comments before substitution
-    filtered_lines: list[str] = []
-    for line in sql.splitlines(keepends=True):
-        stripped = line.strip()
-        if re.match(r"DECLARE\s+@", stripped, re.IGNORECASE):
-            continue
-        if "-- Review and adjust the DECLARE" in line:
-            continue
-        if "-- Adjust the UID declarations below manually" in line:
-            continue
-        filtered_lines.append(line)
-    sql = "".join(filtered_lines)
-
-    resolved = resolve_declare_values(declare_entries)
-    # Substitute @param references (longest names first to avoid partial matches)
-    for var_name, value in sorted(resolved.items(), key=lambda item: len(item[0]), reverse=True):
-        literal = sql_literal(value)
-        sql = re.sub(re.escape(var_name) + r"\b", literal, sql, flags=re.IGNORECASE)
-    return sql
-
-
-def apply_expected_row_overrides(
-    expected_rows: tuple[dict[str, object], ...],
-    declare_entries: list[DeclareEntry],
-) -> tuple[dict[str, object], ...]:
-    resolved_declare_values = resolve_declare_values(declare_entries)
-    if not resolved_declare_values:
-        return expected_rows
-
-    declare_entries_by_name = {entry.name: entry for entry in declare_entries}
-    multi_candidate_group_overrides: dict[tuple[str, ...], dict[object, object]] = {}
-    compatible_ambiguous_groups = {"entity_uid"}
-
-    updated_rows: list[dict[str, object]] = []
-    for row in expected_rows:
-        updated_row = dict(row)
-        for column_name, value in row.items():
-            candidates = variable_candidates_for_value(column_name, value, declare_entries)
-            if len(candidates) == 0:
-                continue
-
-            if len(candidates) == 1:
-                replacement_value = resolved_declare_values.get(candidates[0])
-                if replacement_value is not None:
-                    updated_row[column_name] = replacement_value
-                continue
-
-            candidate_groups = {
-                declaration_group(declare_entries_by_name[candidate])
-                for candidate in candidates
-                if candidate in declare_entries_by_name
-            }
-            if len(candidate_groups) != 1:
-                continue
-            group_name = next(iter(candidate_groups))
-            if group_name not in compatible_ambiguous_groups:
-                continue
-
-            resolved_candidates = [
-                resolved_declare_values[candidate]
-                for candidate in candidates
-                if candidate in resolved_declare_values
-            ]
-            if not resolved_candidates:
-                continue
-
-            key = tuple(candidates)
-            overrides_for_key = multi_candidate_group_overrides.setdefault(key, {})
-            if value in overrides_for_key:
-                updated_row[column_name] = overrides_for_key[value]
-                continue
-
-            next_value = next((item for item in resolved_candidates if item not in overrides_for_key.values()), None)
-            if next_value is None:
-                continue
-
-            overrides_for_key[value] = next_value
-            updated_row[column_name] = next_value
-        updated_rows.append(updated_row)
-    return tuple(updated_rows)
 
 
 def resolve_ambiguous_candidate(
@@ -1048,7 +1035,7 @@ def expected_rows_json(
     excluded_columns: frozenset[str] | None = None,
     output_column_order: list[str] | None = None,
 ) -> str:
-    effective_expected_rows = apply_expected_row_overrides(expected_rows, declare_entries)
+    effective_expected_rows = expected_rows
 
     excluded_column_names = {column_name.lower() for column_name in excluded_columns} if excluded_columns else set()
 
@@ -1091,8 +1078,8 @@ def write_step_query_files(
     logical_output_dir: Path,
     manifest: dict[str, object],
     logical_changes_obj: list[dict[str, object]],
-    declare_lines: list[str],
     declare_entries: list[DeclareEntry],
+    id_map_entries: list[IdMapEntry],
     columns_by_table: dict[tuple[str, str], list[str]] | None,
     primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None,
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None,
@@ -1110,8 +1097,9 @@ def write_step_query_files(
         step_scaffolds = build_renderable_scaffolds(cumulative_changes, declare_entries)
         step_sql, step_expected_map = render_sql(
             manifest,
-            declare_lines,
+            [],
             declare_entries,
+            id_map_entries,
             step_scaffolds,
             columns_by_table,
             primary_keys_by_table,
@@ -1125,15 +1113,26 @@ def write_step_query_files(
 
 def render_sql(
     manifest: dict[str, object],
-    declare_lines: list[str],
+    declare_lines: list[str] | None,
     declare_entries: list[DeclareEntry],
-    scaffolds: list[SelectScaffold],
+    id_map_entries_or_scaffolds: list[IdMapEntry] | list[SelectScaffold],
+    scaffolds: list[SelectScaffold] | None = None,
     columns_by_table: dict[tuple[str, str], list[str]] | None = None,
     primary_keys_by_table: dict[tuple[str, str], frozenset[str]] | None = None,
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]] | None = None,
     generated_always_columns: set[tuple[str, str, str]] | None = None,
     auto_datetime_defaults: set[tuple[str, str, str]] | None = None,
 ) -> tuple[str, dict[str, object]]:
+    id_map_entries: list[IdMapEntry]
+    effective_scaffolds: list[SelectScaffold]
+    if scaffolds is None:
+        # Backward-compatible call shape: render_sql(manifest, declare_lines, declare_entries, scaffolds, ...)
+        id_map_entries = []
+        effective_scaffolds = id_map_entries_or_scaffolds  # type: ignore[assignment]
+    else:
+        id_map_entries = id_map_entries_or_scaffolds  # type: ignore[assignment]
+        effective_scaffolds = scaffolds
+
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     source_summary_file = display_path(str(manifest.get("cdc_summary_file") or ""))
     logical_changes_file = display_path(str(manifest.get("logical_changes_file") or ""))
@@ -1147,18 +1146,12 @@ def render_sql(
         "",
     ]
 
-    lines.insert(-1, "-- Review and adjust the DECLARE values below before running these SELECT statements.")
-
-    if declare_lines:
-        lines.extend(declare_lines)
-        lines.append("")
-
-    lookup_scaffold_by_table = build_lookup_scaffold_by_table(scaffolds)
+    lookup_scaffold_by_table = build_lookup_scaffold_by_table(effective_scaffolds)
     ambiguity_state: dict[tuple[str, tuple[str, ...]], int] = {}
     expected_map: dict[str, object] = {}
     scaffold_index = 0
 
-    for scaffold in scaffolds:
+    for scaffold in effective_scaffolds:
         lines.append(f"-- {scaffold.schema_name}.{scaffold.table_name} | operations: {', '.join(scaffold.operation_labels)}")
         lines.append(f"-- Query: {scaffold_index}")
         if scaffold.step_numbers:
@@ -1238,7 +1231,9 @@ def render_sql(
         lines.append("")
 
     sql_text = "\n".join(lines).rstrip() + "\n"
-    sql_text = apply_literal_substitution(sql_text, declare_entries)
+    if id_map_entries:
+        sql_text = apply_id_map_to_sql(sql_text, id_map_entries)
+        expected_map = apply_id_map_to_json_value(expected_map, id_map_entries)
     return sql_text, expected_map
 
 
@@ -1246,21 +1241,21 @@ def generate_rdb_selects_from_manifest(
     manifest_path: Path,
     output_path: Path | None = None,
 ) -> tuple[Path, Path, int]:
-    manifest, summary_path, inserts_path, logical_changes_path = load_combined_inputs(manifest_path)
-    inserts_text = inserts_path.read_text(encoding="utf-8")
+    manifest, summary_path, inserts_path, logical_changes_path, id_map_path = load_combined_inputs(manifest_path)
     logical_changes_obj = load_json(logical_changes_path)
     if not isinstance(logical_changes_obj, list):
         raise SystemExit(f"Logical changes file has an invalid format: {logical_changes_path}")
 
-    declare_lines = extract_declare_block(inserts_text)
-    declare_entries = parse_declare_entries(declare_lines)
+    id_map_entries = load_id_map_entries(id_map_path)
+    declare_entries: list[DeclareEntry] = []
     scaffolds = build_renderable_scaffolds(logical_changes_obj, declare_entries)
     logical_database = str(manifest.get("logical_database") or "RDB_MODERN")
     columns_by_table, primary_keys_by_table, foreign_keys_by_source, generated_always_columns, auto_datetime_defaults = load_rdb_column_metadata(logical_database)
     output_sql, expected_map = render_sql(
         manifest,
-        declare_lines,
+        [],
         declare_entries,
+        id_map_entries,
         scaffolds,
         columns_by_table,
         primary_keys_by_table,
@@ -1273,8 +1268,8 @@ def generate_rdb_selects_from_manifest(
         logical_changes_path.parent,
         manifest,
         logical_changes_obj,
-        declare_lines,
         declare_entries,
+        id_map_entries,
         columns_by_table,
         primary_keys_by_table,
         foreign_keys_by_source,
@@ -1296,18 +1291,17 @@ def generate_step_selects_from_manifest(
 
     Returns a list of (step_number, sql_path, expected_json_path, scaffold_count) for each step.
     """
-    manifest, summary_path, inserts_path, logical_changes_path = load_combined_inputs(manifest_path)
+    manifest, summary_path, inserts_path, logical_changes_path, id_map_path = load_combined_inputs(manifest_path)
     steps = manifest.get("steps")
     if not isinstance(steps, list) or not steps:
         raise SystemExit("Combined manifest has no steps; cannot generate per-step files.")
 
-    inserts_text = inserts_path.read_text(encoding="utf-8")
     logical_changes_obj = load_json(logical_changes_path)
     if not isinstance(logical_changes_obj, list):
         raise SystemExit(f"Logical changes file has an invalid format: {logical_changes_path}")
 
-    declare_lines = extract_declare_block(inserts_text)
-    declare_entries = parse_declare_entries(declare_lines)
+    id_map_entries = load_id_map_entries(id_map_path)
+    declare_entries: list[DeclareEntry] = []
 
     known_lookup_keys: dict[str, object] | None = None
     known_lookup_keys_file = Path(__file__).with_name("known_lookup_keys.json")
@@ -1348,8 +1342,9 @@ def generate_step_selects_from_manifest(
 
         output_sql, expected_map = render_sql(
             manifest,
-            declare_lines,
+            [],
             declare_entries,
+            id_map_entries,
             scaffolds,
             columns_by_table,
             primary_keys_by_table,
