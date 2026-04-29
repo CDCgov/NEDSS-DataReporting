@@ -167,9 +167,7 @@ if (stepPause) {
   await waitForEnter('Step 12 complete. Press Enter to continue.');
 }
 
-/*
 rl.close();
 await browser.close();
-*/
 
 
