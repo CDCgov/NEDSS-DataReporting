@@ -34,6 +34,12 @@ BEGIN
     DECLARE @inv_form_cd VARCHAR(100) = 'INV_FORM_GEN%';
     DECLARE @tgt_table_nm VARCHAR(50) = 'Generic_Case';
 
+    IF NOT EXISTS (SELECT 1 FROM dbo.LDF_GROUP WHERE LDF_GROUP_KEY = 1)
+    BEGIN
+        INSERT INTO dbo.LDF_GROUP (LDF_GROUP_KEY, BUSINESS_OBJECT_UID)
+        VALUES (1, NULL);
+    END
+
 BEGIN TRY
 
         SET @Proc_Step_Name = 'SP_Start';

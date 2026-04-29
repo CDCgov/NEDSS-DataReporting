@@ -24,6 +24,12 @@ BEGIN
         set @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
         print @batch_id;
 
+        IF NOT EXISTS (SELECT 1 FROM dbo.LDF_GROUP WHERE LDF_GROUP_KEY = 1)
+        BEGIN
+            INSERT INTO dbo.LDF_GROUP (LDF_GROUP_KEY, BUSINESS_OBJECT_UID)
+            VALUES (1, NULL);
+        END
+
         INSERT INTO [dbo].[job_flow_log]
         (
           batch_id
@@ -725,7 +731,8 @@ BEGIN
         delete T from
         dbo.ldf_group T with (nolock)
         inner join  #DEL_GROUP_KEY dldk
-        on T.ldf_group_key = dldk.ldf_group_key;
+        on T.ldf_group_key = dldk.ldf_group_key
+        and T.ldf_group_key <> 1;
 
         COMMIT TRANSACTION;
 
