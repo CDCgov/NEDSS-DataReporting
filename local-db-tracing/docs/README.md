@@ -134,10 +134,10 @@ Welcome to the local-db-tracing documentation! This comprehensive guide covers a
 3. Open terminal 2: `python trace_db_logical_changes.py`
 4. Compare outputs in `output/` directory
 
-### Task: Generate RDB verification SQL with literal values
+### Task: Generate RDB verification SQL
 
 1. Read: [Usage Guide - Generate RDB Verification SQL](./usage-guide.md#generate-rdb-verification-sql)
-2. Run: `python generate_rdb_selects.py --combined-manifest output/<paired-run>/combined-manifest.json --literal-values`
+2. Run: `python generate_query_expected.py --combined-manifest output/<paired-run>/combined-manifest.json`
 3. Review: `output/<paired-run>/rdb-selects.sql` and `output/<paired-run>/expected.json`
 
 ### Task: Troubleshoot connection issues
