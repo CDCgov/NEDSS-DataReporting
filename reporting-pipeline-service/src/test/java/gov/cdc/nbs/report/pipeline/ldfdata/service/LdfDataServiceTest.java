@@ -16,6 +16,8 @@ import gov.cdc.nbs.report.pipeline.ldfdata.repository.LdfDataRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.awaitility.Awaitility;
@@ -53,6 +55,7 @@ class LdfDataServiceTest {
     ldfDataService =
         new LdfDataService(
             ldfDataRepository, kafkaTemplate, new CustomMetrics(new SimpleMeterRegistry()));
+    ldfDataService.setThreadPoolSize(1);
     ldfDataService.initMetrics();
 
     Logger logger = (Logger) LoggerFactory.getLogger(LdfDataService.class);
@@ -125,11 +128,10 @@ class LdfDataServiceTest {
     String ldfTopicOutput = "LdfDataOutput";
     String invalidPayload = "{\"payload\": {\"after\": }}";
     setupLdfService(ldfTopic, ldfTopicOutput);
-    DataProcessingException ex =
-        assertThrows(
-            DataProcessingException.class,
-            () -> ldfDataService.processMessage(getRecord(invalidPayload, ldfTopic)));
-    assertEquals(DataProcessingException.class, ex.getClass());
+    CompletableFuture<Void> future =
+        ldfDataService.processMessage(getRecord(invalidPayload, ldfTopic));
+    CompletionException ex = assertThrows(CompletionException.class, future::join);
+    assertEquals(DataProcessingException.class, ex.getCause().getClass());
   }
 
   @Test
@@ -179,11 +181,9 @@ class LdfDataServiceTest {
             busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
         .thenReturn(Optional.empty());
     setupLdfService(ldfTopic, ldfTopicOutput);
-    NoDataException ex =
-        assertThrows(
-            NoDataException.class,
-            () -> ldfDataService.processMessage(getRecord(payload, ldfTopic)));
-    assertEquals(NoDataException.class, ex.getClass());
+    CompletableFuture<Void> future = ldfDataService.processMessage(getRecord(payload, ldfTopic));
+    CompletionException ex = assertThrows(CompletionException.class, future::join);
+    assertEquals(NoDataException.class, ex.getCause().getClass());
   }
 
   @ParameterizedTest
@@ -198,11 +198,9 @@ class LdfDataServiceTest {
     String ldfTopicOutput = "LdfDataOutput";
 
     setupLdfService(ldfTopic, ldfTopicOutput);
-    DataProcessingException ex =
-        assertThrows(
-            DataProcessingException.class,
-            () -> ldfDataService.processMessage(getRecord(payload, ldfTopic)));
-    assertEquals(DataProcessingException.class, ex.getClass());
+    CompletableFuture<Void> future = ldfDataService.processMessage(getRecord(payload, ldfTopic));
+    CompletionException ex = assertThrows(CompletionException.class, future::join);
+    assertEquals(DataProcessingException.class, ex.getCause().getClass());
   }
 
   private void validateData(

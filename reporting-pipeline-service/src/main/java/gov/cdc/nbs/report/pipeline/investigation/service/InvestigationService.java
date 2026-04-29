@@ -49,6 +49,7 @@ public class InvestigationService {
   private static final Logger logger = LoggerFactory.getLogger(InvestigationService.class);
   private ExecutorService phcExecutor =
       Executors.newFixedThreadPool(nProc * 2, new CustomizableThreadFactory("phc-"));
+  private ExecutorService invExecutor;
 
   @Value("${spring.kafka.topics.nbs.public-health-case}")
   private String investigationTopic;
@@ -79,6 +80,9 @@ public class InvestigationService {
 
   @Value("${featureFlag.phc-datamart-enable}")
   private boolean phcDatamartEnable;
+
+  @Value("${featureFlag.thread-pool-size:1}")
+  private int threadPoolSize;
 
   private final InvestigationRepository investigationRepository;
   private final NotificationRepository notificationRepository;
@@ -120,6 +124,8 @@ public class InvestigationService {
     ntfFailure = metrics.counter("ntf_msg_failure", tags);
 
     processDataUtil.setMetrics(metrics);
+    invExecutor =
+        Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("inv-"));
   }
 
   @RetryableTopic(
@@ -150,28 +156,32 @@ public class InvestigationService {
         "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "investigationKafkaListenerContainerFactory")
-  public void processMessage(ConsumerRecord<String, String> rec) {
+  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
     final String topic = rec.topic();
     final String message = rec.value();
     final long batchId = toBatchId.applyAsLong(rec);
 
     logger.debug(topicDebugLog, "message", message, topic);
 
-    if (topic.equals(investigationTopic)) {
-      processInvestigation(message, batchId);
-    } else if (topic.equals(notificationTopic)) {
-      processNotification(message);
-    } else if (topic.equals(interviewTopic)) {
-      processInterview(message, batchId);
-    } else if (topic.equals(contactTopic)) {
-      processContact(message);
-    } else if (topic.equals(vaccinationTopic)) {
-      processVaccination(message, true, "");
-    } else if (topic.equals(treatmentTopic)) {
-      processTreatment(message, true, "");
-    } else if (topic.equals(actRelationshipTopic) && message != null) {
-      processActRelationship(message);
-    }
+    return CompletableFuture.runAsync(
+        () -> {
+          if (topic.equals(investigationTopic)) {
+            processInvestigation(message, batchId);
+          } else if (topic.equals(notificationTopic)) {
+            processNotification(message);
+          } else if (topic.equals(interviewTopic)) {
+            processInterview(message, batchId);
+          } else if (topic.equals(contactTopic)) {
+            processContact(message);
+          } else if (topic.equals(vaccinationTopic)) {
+            processVaccination(message, true, "");
+          } else if (topic.equals(treatmentTopic)) {
+            processTreatment(message, true, "");
+          } else if (topic.equals(actRelationshipTopic) && message != null) {
+            processActRelationship(message);
+          }
+        },
+        invExecutor);
   }
 
   public void processInvestigation(String value, long batchId) {

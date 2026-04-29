@@ -105,6 +105,7 @@ class InvestigationServiceTest {
     investigationService.setTreatmentOutputTopicName(treatmentTopicOutput);
     investigationService.setActRelationshipTopic(actRelationshipTopic);
     investigationService.setPhcDatamartEnable(true);
+    investigationService.setThreadPoolSize(1);
     investigationService.initMetrics();
 
     transformer.setInvestigationConfirmationOutputTopicName("investigationConfirmation");
@@ -741,7 +742,8 @@ class InvestigationServiceTest {
   private void checkException(
       String topic, String payload, Class<? extends Exception> exceptionClass) {
     ConsumerRecord<String, String> rec = getRecord(topic, payload);
-    Exception ex = assertThrows(exceptionClass, () -> investigationService.processMessage(rec));
-    assertEquals(exceptionClass, ex.getClass());
+    CompletableFuture<Void> future = investigationService.processMessage(rec);
+    CompletionException ex = assertThrows(CompletionException.class, future::join);
+    assertEquals(exceptionClass, ex.getCause().getClass());
   }
 }
