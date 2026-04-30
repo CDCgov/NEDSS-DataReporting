@@ -71,6 +71,10 @@ public interface PersonExtendedProps {
 
   default void setPhoneCell(String phoneCell) {}
 
+  default void setPhoneWorkPhone(String phoneWorkPhone) {}
+
+  default void setPhoneExtWorkPhone(String phoneExtWorkPhone) {}
+
   default void setPhElpCd(String phElpCd) {}
 
   default void setPhElpUseCd(String phElpUseCd) {}
