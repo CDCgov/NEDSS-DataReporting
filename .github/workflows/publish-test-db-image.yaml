@@ -5,6 +5,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  DATABASE_CONTAINER_NAME: "nedss-datareporting-nbs-mssql-1"
+  LIQUIBASE_CONTAINER_NAME: "nedss-datareporting-liquibase-1"
   IMAGE_NAME: "nedss-datareporting-mssql"
 
 jobs:
