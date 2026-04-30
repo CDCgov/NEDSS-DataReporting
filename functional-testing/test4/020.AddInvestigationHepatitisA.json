@@ -1,0 +1,3989 @@
+{
+    "title": "Add Investigation: Hepatitis A",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1920,
+            "height": 929,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 11.5,
+            "offsetX": 56.84375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#subsect_Inv input"
+                ],
+                [
+                    "xpath///*[@id=\"subsect_Inv\"]/table/tbody/tr/td[3]/input"
+                ],
+                [
+                    "pierce/#subsect_Inv input"
+                ]
+            ],
+            "offsetY": 14.5,
+            "offsetX": 25.234375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewFile1.do?ContextAction=AddInvestigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Please select a condition:   Choose option[role=\"cell\"]",
+                    "aria/[role=\"textbox\"]"
+                ],
+                [
+                    "tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath///*[@id=\"ccd_ac_table\"]/tbody/tr[1]/td/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) input"
+                ]
+            ],
+            "offsetY": 8,
+            "offsetX": 220
+        },
+        {
+            "type": "change",
+            "value": "Hep",
+            "selectors": [
+                [
+                    "aria/ Please select a condition:   Choose option[role=\"cell\"]",
+                    "aria/[role=\"textbox\"]"
+                ],
+                [
+                    "tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath///*[@id=\"ccd_ac_table\"]/tbody/tr[1]/td/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\31  > tbody > tr > td > table > tbody > tr:nth-of-type(3) > td"
+                ],
+                [
+                    "xpath///*[@id=\"1\"]/tbody/tr/td/table/tbody/tr[3]/td"
+                ],
+                [
+                    "pierce/#\\31  > tbody > tr > td > table > tbody > tr:nth-of-type(3) > td"
+                ]
+            ],
+            "offsetY": 59,
+            "offsetX": 487
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 19.671875,
+            "offsetX": 6.265625,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/SelectCondition1.do",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 19.09375,
+            "offsetX": 69.84375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_19 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_19\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_19 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 8.4375,
+            "offsetX": 6
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The jurisdiction of the investigation.[role=\"textbox\"]"
+                ],
+                [
+                    "#NBS_UI_19 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_19\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_19 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 8.4375,
+            "offsetX": 98
+        },
+        {
+            "type": "change",
+            "value": "Dekal",
+            "selectors": [
+                [
+                    "aria/The jurisdiction of the investigation."
+                ],
+                [
+                    "#NBS_UI_19 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_19\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_19 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The State ID associated with the case."
+                ],
+                [
+                    "#INV173"
+                ],
+                [
+                    "xpath///*[@id=\"INV173\"]"
+                ],
+                [
+                    "pierce/#INV173"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/CDC uses this field to link current case notifications to case notifications submitted by a previous system. If this case has a case ID from a previous system (e.g. NETSS, STD-MIS, etc.), please enter it here."
+                ],
+                [
+                    "#INV200"
+                ],
+                [
+                    "xpath///*[@id=\"INV200\"]"
+                ],
+                [
+                    "pierce/#INV200"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date the investigation was assigned/started."
+                ],
+                [
+                    "#INV110"
+                ],
+                [
+                    "xpath///*[@id=\"INV110\"]"
+                ],
+                [
+                    "pierce/#INV110"
+                ]
+            ],
+            "offsetY": 14.4375,
+            "offsetX": 34
+        },
+        {
+            "type": "change",
+            "value": "04/20/2026",
+            "selectors": [
+                [
+                    "aria/The date the investigation was assigned/started."
+                ],
+                [
+                    "#INV110"
+                ],
+                [
+                    "xpath///*[@id=\"INV110\"]"
+                ],
+                [
+                    "pierce/#INV110"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date of report of the condition to the public health department."
+                ],
+                [
+                    "#INV111"
+                ],
+                [
+                    "xpath///*[@id=\"INV111\"]"
+                ],
+                [
+                    "pierce/#INV111"
+                ]
+            ],
+            "offsetY": 10.109375,
+            "offsetX": 14
+        },
+        {
+            "type": "change",
+            "value": "04/01/2026",
+            "selectors": [
+                [
+                    "aria/The date of report of the condition to the public health department."
+                ],
+                [
+                    "#INV111"
+                ],
+                [
+                    "xpath///*[@id=\"INV111\"]"
+                ],
+                [
+                    "pierce/#INV111"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Earliest date reported to county public health system."
+                ],
+                [
+                    "#INV120"
+                ],
+                [
+                    "xpath///*[@id=\"INV120\"]"
+                ],
+                [
+                    "pierce/#INV120"
+                ]
+            ],
+            "offsetY": 13.109375,
+            "offsetX": 16
+        },
+        {
+            "type": "change",
+            "value": "04/02/2026",
+            "selectors": [
+                [
+                    "aria/Earliest date reported to county public health system."
+                ],
+                [
+                    "#INV120"
+                ],
+                [
+                    "xpath///*[@id=\"INV120\"]"
+                ],
+                [
+                    "pierce/#INV120"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Earliest date reported to state public health system."
+                ],
+                [
+                    "#INV121"
+                ],
+                [
+                    "xpath///*[@id=\"INV121\"]"
+                ],
+                [
+                    "pierce/#INV121"
+                ]
+            ],
+            "offsetY": 10.109375,
+            "offsetX": 16
+        },
+        {
+            "type": "change",
+            "value": "04/03/2026",
+            "selectors": [
+                [
+                    "aria/Earliest date reported to state public health system."
+                ],
+                [
+                    "#INV121"
+                ],
+                [
+                    "xpath///*[@id=\"INV121\"]"
+                ],
+                [
+                    "pierce/#INV121"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Type of facility or provider associated with the source of information sent to Public Health."
+                ],
+                [
+                    "#NBS_UI_23 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_23\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_23 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 7.109375,
+            "offsetX": 166
+        },
+        {
+            "type": "change",
+            "value": "Ho",
+            "selectors": [
+                [
+                    "aria/Type of facility or provider associated with the source of information sent to Public Health."
+                ],
+                [
+                    "#NBS_UI_23 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_23\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_23 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The organization that reported the case."
+                ],
+                [
+                    "#INV183Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV183Text\"]"
+                ],
+                [
+                    "pierce/#INV183Text"
+                ]
+            ],
+            "offsetY": 6.109375,
+            "offsetX": 41.15625
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/The organization that reported the case."
+                ],
+                [
+                    "#INV183Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV183Text\"]"
+                ],
+                [
+                    "pierce/#INV183Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#INV183CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"INV183CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#INV183CodeLookupButton"
+                ]
+            ],
+            "offsetY": 5.609375,
+            "offsetX": 41.4375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The provider that reported the case."
+                ],
+                [
+                    "#INV181Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV181Text\"]"
+                ],
+                [
+                    "pierce/#INV181Text"
+                ]
+            ],
+            "offsetY": 18.109375,
+            "offsetX": 24.15625
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The provider that reported the case."
+                ],
+                [
+                    "#INV181Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV181Text\"]"
+                ],
+                [
+                    "pierce/#INV181Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Quick Code Lookup"
+                ],
+                [
+                    "#INV181CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"INV181CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#INV181CodeLookupButton"
+                ]
+            ],
+            "offsetY": 13.609375,
+            "offsetX": 48.4375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/County reporting the notification."
+                ],
+                [
+                    "#NBS_INV_HEP_UI_1 input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_1\"]/tbody/tr/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEP_UI_1 input"
+                ]
+            ],
+            "offsetY": 8.109375,
+            "offsetX": 40
+        },
+        {
+            "type": "change",
+            "value": "Dekal",
+            "selectors": [
+                [
+                    "aria/County reporting the notification."
+                ],
+                [
+                    "#NBS_INV_HEP_UI_1 input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_1\"]/tbody/tr/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEP_UI_1 input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#editCaseInfo"
+                ],
+                [
+                    "xpath///*[@id=\"editCaseInfo\"]"
+                ],
+                [
+                    "pierce/#editCaseInfo"
+                ]
+            ],
+            "offsetY": 825.09375,
+            "offsetX": 587
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indicates whether the subject of the investigation was associated with a day care facility. The association could mean that the subject attended daycare or work in a daycare facility."
+                ],
+                [
+                    "#NBS_UI_25 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_25\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_25 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 8.78125,
+            "offsetX": 25
+        },
+        {
+            "type": "change",
+            "value": "no",
+            "selectors": [
+                [
+                    "aria/Indicates whether the subject of the investigation was associated with a day care facility. The association could mean that the subject attended daycare or work in a daycare facility."
+                ],
+                [
+                    "#NBS_UI_25 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_25\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_25 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/Indicates whether the subject of the investigation was food handler."
+                ],
+                [
+                    "#NBS_UI_25 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_25\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_25 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "no",
+            "selectors": [
+                [
+                    "aria/Denotes whether the reported case was associated with an identified outbreak."
+                ],
+                [
+                    "#NBS_UI_25 tr:nth-of-type(3) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_25\"]/tbody/tr[3]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_25 tr:nth-of-type(3) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indication of where the disease/condition was likely acquired."
+                ],
+                [
+                    "#NBS_UI_1 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_1\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_1 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 11.78125,
+            "offsetX": 49
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indication of where the disease/condition was likely acquired."
+                ],
+                [
+                    "#NBS_UI_1 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_1\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_1 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 6.78125,
+            "offsetX": 388
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_1 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_1\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_1 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 6.78125,
+            "offsetX": 6
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indication of where the disease/condition was likely acquired.[role=\"textbox\"]"
+                ],
+                [
+                    "#NBS_UI_1 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_1\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_1 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 7.78125,
+            "offsetX": 246
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Where does the person usually live (defined as their residence)."
+                ],
+                [
+                    "#NBS_UI_1 tr:nth-of-type(6) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_1\"]/tbody/tr[6]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_1 tr:nth-of-type(6) input"
+                ]
+            ],
+            "offsetY": 12.78125,
+            "offsetX": 54
+        },
+        {
+            "type": "change",
+            "value": "UNITED STAt",
+            "selectors": [
+                [
+                    "aria/Where does the person usually live (defined as their residence)."
+                ],
+                [
+                    "#NBS_UI_1 tr:nth-of-type(6) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_1\"]/tbody/tr[6]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_1 tr:nth-of-type(6) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "UNITED STAt",
+            "selectors": [
+                [
+                    "aria/Indicates the country in which the disease was potentially acquired."
+                ],
+                [
+                    "#NBS_INV_HEP_UI_2 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_2\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEP_UI_2 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "G",
+            "selectors": [
+                [
+                    "aria/Indicates the state in which the disease was potentially acquired."
+                ],
+                [
+                    "#NBS_INV_HEP_UI_2 tr:nth-of-type(3) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_2\"]/tbody/tr[3]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEP_UI_2 tr:nth-of-type(3) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "A",
+            "selectors": [
+                [
+                    "aria/Indicates the city in which the disease was potentially acquired."
+                ],
+                [
+                    "#INV504"
+                ],
+                [
+                    "xpath///*[@id=\"INV504\"]"
+                ],
+                [
+                    "pierce/#INV504"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "a",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Atlanta",
+            "selectors": [
+                [
+                    "aria/Indicates the city in which the disease was potentially acquired."
+                ],
+                [
+                    "#INV504"
+                ],
+                [
+                    "xpath///*[@id=\"INV504\"]"
+                ],
+                [
+                    "pierce/#INV504"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Dekal",
+            "selectors": [
+                [
+                    "aria/Indicates the county in which the disease was potentially acquired."
+                ],
+                [
+                    "#NBS_INV_HEP_UI_2 tr:nth-of-type(5) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_2\"]/tbody/tr[5]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEP_UI_2 tr:nth-of-type(5) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ Add "
+                ],
+                [
+                    "#AddButtonToggleNBS_INV_HEP_UI_2 input"
+                ],
+                [
+                    "xpath///*[@id=\"AddButtonToggleNBS_INV_HEP_UI_2\"]/td/input"
+                ],
+                [
+                    "pierce/#AddButtonToggleNBS_INV_HEP_UI_2 input"
+                ]
+            ],
+            "offsetY": 12.453125,
+            "offsetX": 12.859375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Code for the mechanism by which disease or condition was acquired by the subject of the investigation. Includes sexually transmitted, airborne, bloodborne, vectorborne, foodborne, zoonotic, nosocomial, mechanical, dermal, congenital, environmental exposure, indeterminate."
+                ],
+                [
+                    "#NBS_UI_2 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_2 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 9.828125,
+            "offsetX": 22
+        },
+        {
+            "type": "change",
+            "value": "Blo",
+            "selectors": [
+                [
+                    "aria/Code for the mechanism by which disease or condition was acquired by the subject of the investigation. Includes sexually transmitted, airborne, bloodborne, vectorborne, foodborne, zoonotic, nosocomial, mechanical, dermal, congenital, environmental exposure, indeterminate."
+                ],
+                [
+                    "#NBS_UI_2 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_2 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Labor",
+            "selectors": [
+                [
+                    "aria/Code for the method by which the public health department was made aware of the case. Includes provider report, patient self-referral, laboratory report, case or outbreak investigation, contact investigation, active surveillance, routine physical, prenatal testing, perinatal testing, prison entry screening, occupational disease surveillance, medical record review, etc."
+                ],
+                [
+                    "#NBS_UI_2 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_2 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "LR",
+            "selectors": [
+                [
+                    "aria/Code for the mechanism by which the case was classified. This attribute is intended to provide information about how the case classification status was derived."
+                ],
+                [
+                    "#INV161"
+                ],
+                [
+                    "xpath///*[@id=\"INV161\"]"
+                ],
+                [
+                    "pierce/#INV161"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Laboratory report"
+                ],
+                [
+                    "#NBS_UI_2 tr:nth-of-type(3) option:nth-of-type(7)"
+                ],
+                [
+                    "xpath///*[@id=\"INV161\"]/option[7]"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(3) option:nth-of-type(7)"
+                ]
+            ],
+            "offsetY": 2.84375,
+            "offsetX": 67.015625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/If an investigation is confirmed as a case, then the confirmation date is entered."
+                ],
+                [
+                    "#INV162"
+                ],
+                [
+                    "xpath///*[@id=\"INV162\"]"
+                ],
+                [
+                    "pierce/#INV162"
+                ]
+            ],
+            "offsetY": 13.203125,
+            "offsetX": 19
+        },
+        {
+            "type": "change",
+            "value": "04/20/2026",
+            "selectors": [
+                [
+                    "aria/If an investigation is confirmed as a case, then the confirmation date is entered."
+                ],
+                [
+                    "#INV162"
+                ],
+                [
+                    "xpath///*[@id=\"INV162\"]"
+                ],
+                [
+                    "pierce/#INV162"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "c",
+            "selectors": [
+                [
+                    "aria/The current status of the investigation/case."
+                ],
+                [
+                    "#NBS_UI_2 tr:nth-of-type(5) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_2\"]/tbody/tr[5]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_2 tr:nth-of-type(5) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(3) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 24.21875,
+            "offsetX": 82.1875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_14 tr:nth-of-type(7) > td.fieldName"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[7]/td[1]"
+                ],
+                [
+                    "pierce/#NBS_UI_14 tr:nth-of-type(7) > td.fieldName"
+                ]
+            ],
+            "offsetY": 21.8125,
+            "offsetX": 191
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date of diagnosis of condition being reported to public health system."
+                ],
+                [
+                    "#INV136"
+                ],
+                [
+                    "xpath///*[@id=\"INV136\"]"
+                ],
+                [
+                    "pierce/#INV136"
+                ]
+            ],
+            "offsetY": 7.8125,
+            "offsetX": 25
+        },
+        {
+            "type": "change",
+            "value": "04/21/2026",
+            "selectors": [
+                [
+                    "aria/Date of diagnosis of condition being reported to public health system."
+                ],
+                [
+                    "#INV136"
+                ],
+                [
+                    "xpath///*[@id=\"INV136\"]"
+                ],
+                [
+                    "pierce/#INV136"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Yes",
+            "selectors": [
+                [
+                    "aria/Was the patient symptomatic for the illness of interest?"
+                ],
+                [
+                    "#NBS_UI_14 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_14 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/03/2026",
+            "selectors": [
+                [
+                    "aria/Date of the beginning of the illness. Reported date of the onset of symptoms of the condition being reported to the public health system."
+                ],
+                [
+                    "#INV137"
+                ],
+                [
+                    "xpath///*[@id=\"INV137\"]"
+                ],
+                [
+                    "pierce/#INV137"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/At the time of diagnosis, was the patient jaundiced?"
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(9) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[9]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(9) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/Was the patient hospitalized as a result of this event?"
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(10) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[10]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(10) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Was the patient hospitalized as a result of this event?"
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(10) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[10]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(10) input"
+                ]
+            ],
+            "offsetY": 2.8125,
+            "offsetX": 31
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#ClinicalData tr:nth-of-type(10)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[10]"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(10)"
+                ],
+                [
+                    "text/Was the patient hospitalized for this illness?:\n\n\nNo"
+                ]
+            ],
+            "offsetY": 13.8125,
+            "offsetX": 707
+        },
+        {
+            "type": "change",
+            "value": "Yes",
+            "selectors": [
+                [
+                    "aria/Was the patient hospitalized as a result of this event?"
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(10) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[10]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(10) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The hospital associated with the investigation."
+                ],
+                [
+                    "#INV184Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV184Text\"]"
+                ],
+                [
+                    "pierce/#INV184Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#INV184CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"INV184CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#INV184CodeLookupButton"
+                ]
+            ],
+            "offsetY": 4.3125,
+            "offsetX": 39.4375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Subject's admission date to the hospital for the condition covered by the investigation."
+                ],
+                [
+                    "#INV132"
+                ],
+                [
+                    "xpath///*[@id=\"INV132\"]"
+                ],
+                [
+                    "pierce/#INV132"
+                ]
+            ],
+            "offsetY": 13.8125,
+            "offsetX": 53
+        },
+        {
+            "type": "change",
+            "value": "04/01/2026",
+            "selectors": [
+                [
+                    "aria/Subject's admission date to the hospital for the condition covered by the investigation."
+                ],
+                [
+                    "#INV132"
+                ],
+                [
+                    "xpath///*[@id=\"INV132\"]"
+                ],
+                [
+                    "pierce/#INV132"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indicates if the subject dies as a result of the illness."
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(19) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[19]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(19) input"
+                ]
+            ],
+            "offsetY": 12.8125,
+            "offsetX": 40
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/Indicates if the subject dies as a result of the illness."
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(19) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[19]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(19) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Yes",
+            "selectors": [
+                [
+                    "aria/Was the patient aware s/he had hepatitis prior to lab testing?"
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(21) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[21]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(21) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/Does the subject have a provider of care for the condition? This is any healthcare provider that monitors or treats the patient for the condition."
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(22) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[22]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(22) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The physician associated with this case."
+                ],
+                [
+                    "#INV182Text"
+                ],
+                [
+                    "xpath///*[@id=\"INV182Text\"]"
+                ],
+                [
+                    "pierce/#INV182Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Quick Code Lookup"
+                ],
+                [
+                    "#INV182CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"INV182CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#INV182CodeLookupButton"
+                ]
+            ],
+            "offsetY": 14.3125,
+            "offsetX": 54.4375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#ClinicalData tr:nth-of-type(26) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[26]/td[2]/img"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(26) img"
+                ]
+            ],
+            "offsetY": 5.8125,
+            "offsetX": 4
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Indicate whether the patient has diabetes[role=\"textbox\"]"
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(26) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[26]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(26) input"
+                ]
+            ],
+            "offsetY": 16.8125,
+            "offsetX": 24
+        },
+        {
+            "type": "change",
+            "value": "no",
+            "selectors": [
+                [
+                    "aria/Indicate whether the patient has diabetes"
+                ],
+                [
+                    "#ClinicalData tr:nth-of-type(26) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_14\"]/tbody/tr[26]/td[2]/input"
+                ],
+                [
+                    "pierce/#ClinicalData tr:nth-of-type(26) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Enter the ALT/SGPT result"
+                ],
+                [
+                    "#\\31 742_6"
+                ],
+                [
+                    "xpath///*[@id=\"1742_6\"]"
+                ],
+                [
+                    "pierce/#\\31 742_6"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/15/2026",
+            "selectors": [
+                [
+                    "aria/Enter the date of specimen collection of the ALT liver enzyme lab test result."
+                ],
+                [
+                    "#INV826"
+                ],
+                [
+                    "xpath///*[@id=\"INV826\"]"
+                ],
+                [
+                    "pierce/#INV826"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/Enter the upper limit normal value (numeric) for the ALT liver enzyme test result."
+                ],
+                [
+                    "#INV827"
+                ],
+                [
+                    "xpath///*[@id=\"INV827\"]"
+                ],
+                [
+                    "pierce/#INV827"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/Enter patient's AST/SGOT result"
+                ],
+                [
+                    "#\\31 1920_8"
+                ],
+                [
+                    "xpath///*[@id=\"11920_8\"]"
+                ],
+                [
+                    "pierce/#\\31 1920_8"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/16/2026",
+            "selectors": [
+                [
+                    "aria/Enter the date of specimen collection of the AST liver enzyme lab test result."
+                ],
+                [
+                    "#INV826b"
+                ],
+                [
+                    "xpath///*[@id=\"INV826b\"]"
+                ],
+                [
+                    "pierce/#INV826b"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Enter the upper limit normal value (numeric) for the AST liver enzyme test result"
+                ],
+                [
+                    "#INV827b"
+                ],
+                [
+                    "xpath///*[@id=\"INV827b\"]"
+                ],
+                [
+                    "pierce/#INV827b"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Total antibody to Hepatitis A virus"
+                ],
+                [
+                    "#NBS_INV_HEP_UI_8 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEP_UI_8 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "offsetY": 0.171875,
+            "offsetX": 44
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Date of specimen collection for total anti-HAV test result"
+                ],
+                [
+                    "#LP38316_3_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38316_3_DT\"]"
+                ],
+                [
+                    "pierce/#LP38316_3_DT"
+                ]
+            ],
+            "offsetY": 5.171875,
+            "offsetX": 42
+        },
+        {
+            "type": "change",
+            "value": "04/04/2026",
+            "selectors": [
+                [
+                    "aria/Date of specimen collection for total anti-HAV test result"
+                ],
+                [
+                    "#LP38316_3_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38316_3_DT\"]"
+                ],
+                [
+                    "pierce/#LP38316_3_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Pos",
+            "selectors": [
+                [
+                    "aria/Total antibody to Hepatitis A virus"
+                ],
+                [
+                    "#NBS_INV_HEP_UI_8 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEP_UI_8 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/05/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date of IgM anti-HAV test result"
+                ],
+                [
+                    "#LP38318_9_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38318_9_DT\"]"
+                ],
+                [
+                    "pierce/#LP38318_9_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "n",
+            "selectors": [
+                [
+                    "aria/IgM antibody to Hepatitis A virus"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[4]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(4) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/06/2026",
+            "selectors": [
+                [
+                    "aria/Specimen Collection Date for HBsAg test"
+                ],
+                [
+                    "#LP38331_2_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38331_2_DT\"]"
+                ],
+                [
+                    "pierce/#LP38331_2_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Un",
+            "selectors": [
+                [
+                    "aria/Hepatitis B virus surface antigen result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(7) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[7]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(7) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/07/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date of total anti-HBc test result"
+                ],
+                [
+                    "#LP38323_9_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38323_9_DT\"]"
+                ],
+                [
+                    "pierce/#LP38323_9_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "po",
+            "selectors": [
+                [
+                    "aria/total antibody to Hepatitis B core antigen result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(9) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[9]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(9) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/08/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date of IgM anti-HBc test result"
+                ],
+                [
+                    "#LP38325_4_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38325_4_DT\"]"
+                ],
+                [
+                    "pierce/#LP38325_4_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "n",
+            "selectors": [
+                [
+                    "aria/IgM antibody to hepatitis B core antigen result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(11) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[11]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(11) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/09/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date of HBV DNA/NAT test"
+                ],
+                [
+                    "#LP38320_5_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38320_5_DT\"]"
+                ],
+                [
+                    "pierce/#LP38320_5_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Un",
+            "selectors": [
+                [
+                    "aria/Hepatitis B DNA-containing test (Nucleic Acid Test (NAT)) result"
+                ],
+                [
+                    "tr:nth-of-type(13) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[13]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(13) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/10/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date of HBeAg test"
+                ],
+                [
+                    "#LP38329_6_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38329_6_DT\"]"
+                ],
+                [
+                    "pierce/#LP38329_6_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "p",
+            "selectors": [
+                [
+                    "aria/Hepatitis B virus e antigen result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(15) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[15]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(15) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/11/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date of total anti-HCV"
+                ],
+                [
+                    "#LP38332_0_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38332_0_DT\"]"
+                ],
+                [
+                    "pierce/#LP38332_0_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Ne",
+            "selectors": [
+                [
+                    "aria/Hepatitis C virus Ab result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(18) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[18]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(18) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "aria/If the antibody test to Hepatitis C Virus (anti-HCV) was positive or negative, enter the signal to cut-off ratio."
+                ],
+                [
+                    "#INV841"
+                ],
+                [
+                    "xpath///*[@id=\"INV841\"]"
+                ],
+                [
+                    "pierce/#INV841"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/12/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date for supplemental anti-HCV assay"
+                ],
+                [
+                    "#\\35 199_5_DT"
+                ],
+                [
+                    "xpath///*[@id=\"5199_5_DT\"]"
+                ],
+                [
+                    "pierce/#\\35 199_5_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Unk",
+            "selectors": [
+                [
+                    "aria/supplemental anti-HCV assay (e.g. RIBA) result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(21) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[21]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(21) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/12/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date for HCV RNA test"
+                ],
+                [
+                    "#LP38335_3_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38335_3_DT\"]"
+                ],
+                [
+                    "pierce/#LP38335_3_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "po",
+            "selectors": [
+                [
+                    "aria/Hepatitis C virus RNA result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(23) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[23]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(23) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/13/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date for total anti-HDV test"
+                ],
+                [
+                    "#LP38345_2_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38345_2_DT\"]"
+                ],
+                [
+                    "pierce/#LP38345_2_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Ne",
+            "selectors": [
+                [
+                    "aria/Total Hepatitis D virus Ab result"
+                ],
+                [
+                    "#DiagnosticTests tr:nth-of-type(26) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[26]/td[2]/input"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(26) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/14/2026",
+            "selectors": [
+                [
+                    "aria/Specimen collection date for total anti-HEV test"
+                ],
+                [
+                    "#LP38350_2_DT"
+                ],
+                [
+                    "xpath///*[@id=\"LP38350_2_DT\"]"
+                ],
+                [
+                    "pierce/#LP38350_2_DT"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Unk",
+            "selectors": [
+                [
+                    "aria/Total Hepatitis E virus Ab result"
+                ],
+                [
+                    "tr:nth-of-type(28) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[28]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(28) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#DiagnosticTests tr:nth-of-type(24) > td"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEP_UI_8\"]/tbody/tr[24]/td"
+                ],
+                [
+                    "pierce/#DiagnosticTests tr:nth-of-type(24) > td"
+                ]
+            ],
+            "offsetY": 2.546875,
+            "offsetX": 302
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(3) td:nth-of-type(7)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head3\"]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) td:nth-of-type(7)"
+                ]
+            ],
+            "offsetY": 15.578125,
+            "offsetX": 40.53125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/If this case has a diagnosis of Hepatitis A that has not been serologically confirmed, is there an epidemiologic link between this pataient and a laboratory-confirmed heptatitis A case?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_3 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_3\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_3 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 5.4375,
+            "offsetX": 26
+        },
+        {
+            "type": "change",
+            "value": "no",
+            "selectors": [
+                [
+                    "aria/If this case has a diagnosis of Hepatitis A that has not been serologically confirmed, is there an epidemiologic link between this pataient and a laboratory-confirmed heptatitis A case?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_3 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_3\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_3 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Unkn",
+            "selectors": [
+                [
+                    "aria/During the 2-6 weeks prior to the onset of symptoms, was the subject a contact of a person with confirmed or suspected hepatitis A virus infection?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_3 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_3\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_3 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Unk",
+            "selectors": [
+                [
+                    "aria/During the 2-6 weeks prior to the onset of symptoms, was the patient a child or employee in daycare center, nursery, or preschool?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_6 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_6\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_6 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/During the 2-6 weeks prior to the onset of symptoms, was the patient a household contact of a child or employee in a daycare center, nursery, or preschool?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_6 tr:nth-of-type(3) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_6\"]/tbody/tr[3]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_6 tr:nth-of-type(3) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "no",
+            "selectors": [
+                [
+                    "aria/If the patient was a child or employee or a household contact of a child or employee in a child care facility, was there an identified hepatitis case in the childcare facility?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_6 tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_6\"]/tbody/tr[4]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_6 tr:nth-of-type(4) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "h"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "e"
+        },
+        {
+            "type": "keyUp",
+            "key": "h",
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "e",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "He",
+            "selectors": [
+                [
+                    "aria/Please enter the sexual preference of the patient."
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_8 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_8\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_8 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "0",
+            "selectors": [
+                [
+                    "aria/During the time period prior to the onset of symptoms, number of male sex partners the person had."
+                ],
+                [
+                    "#INV605"
+                ],
+                [
+                    "xpath///*[@id=\"INV605\"]"
+                ],
+                [
+                    "pierce/#INV605"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/During the time period prior to the onset of symptoms, number of female sex partners the person had."
+                ],
+                [
+                    "#INV606"
+                ],
+                [
+                    "xpath///*[@id=\"INV606\"]"
+                ],
+                [
+                    "pierce/#INV606"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "n"
+        },
+        {
+            "type": "keyUp",
+            "key": "n",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Shift"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "Shift",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/During the time period prior to the onset of symptoms, did the subject inject drugs?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_10 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_10\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_10 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/During the time period prior to the onset of symptoms, did the subject use street drugs but not inject?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_10 > tbody > tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_10\"]/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_10 > tbody > tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/During the 2-6 weeks prior to the onset of symptoms, did the subject travel or live outside the U.S.A. or Canada?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_11 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_11\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_11 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/During the 3 months prior to the onset of symptoms, did anyone in the subject's household travel outside the U.S.A. or Canada?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_11 tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_11\"]/tbody/tr[4]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_11 tr:nth-of-type(4) input"
+                ]
+            ],
+            "offsetY": 12.8125,
+            "offsetX": 29
+        },
+        {
+            "type": "change",
+            "value": "no",
+            "selectors": [
+                [
+                    "aria/During the 3 months prior to the onset of symptoms, did anyone in the subject's household travel outside the U.S.A. or Canada?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_11 tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_11\"]/tbody/tr[4]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_11 tr:nth-of-type(4) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/Is the subject suspected as being part of a common-source outbreak?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_12 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_12\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_12 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/During the 2 weeks prior to the onset of symptoms or while ill, was the subject employed as a food handler?"
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_12 tr:nth-of-type(7) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_12\"]/tbody/tr[7]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_12 tr:nth-of-type(7) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Yes",
+            "selectors": [
+                [
+                    "aria/Did patient ever receive a hepatitis-containing vaccine? If this is a hepatitis A investigation, answer this question regarding hepatitis A-containing vaccine. If it is a hepatitis B investigation, answer this question regarding hepatitis B-containing vaccine."
+                ],
+                [
+                    "#NBS_INV_HEPA_UI_14 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_14\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_INV_HEPA_UI_14 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/Total number of doses of vaccine the patient received for this condition (e.g. if the condition is hepatitis A, total number of doses of hepatitis A-containing vaccine)."
+                ],
+                [
+                    "#VAC132"
+                ],
+                [
+                    "xpath///*[@id=\"VAC132\"]"
+                ],
+                [
+                    "pierce/#VAC132"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "1978",
+            "selectors": [
+                [
+                    "aria/Enter the 4 digit year of when the last dose of vaccine for the condition being investigated was received."
+                ],
+                [
+                    "#VAC142b"
+                ],
+                [
+                    "xpath///*[@id=\"VAC142b\"]"
+                ],
+                [
+                    "pierce/#VAC142b"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "No",
+            "selectors": [
+                [
+                    "aria/Has the patient ever received immune globulin for this condition?"
+                ],
+                [
+                    "#VaccinationHistory tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_HEPA_UI_14\"]/tbody/tr[4]/td[2]/input"
+                ],
+                [
+                    "pierce/#VaccinationHistory tr:nth-of-type(4) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(3) td:nth-of-type(13)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head6\"]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) td:nth-of-type(13)"
+                ]
+            ],
+            "offsetY": 16.203125,
+            "offsetX": 55.5625
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(3) td:nth-of-type(9)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head4\"]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) td:nth-of-type(9)"
+                ]
+            ],
+            "offsetY": 24.5625,
+            "offsetX": 70.875
+        },
+        {
+            "type": "change",
+            "value": "Low",
+            "selectors": [
+                [
+                    "aria/The priority of the contact investigation, which should be determined based upon a number of factors, including such things as risk of transmission, exposure site type, etc."
+                ],
+                [
+                    "#NBS_UI_28 > tbody > tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_28\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_28 > tbody > tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/10/2026",
+            "selectors": [
+                [
+                    "aria/The date from which the disease or condition is/was infectious, which generally indicates the start date of the interview period."
+                ],
+                [
+                    "#NBS056"
+                ],
+                [
+                    "xpath///*[@id=\"NBS056\"]"
+                ],
+                [
+                    "pierce/#NBS056"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "04/21/2026",
+            "selectors": [
+                [
+                    "aria/The date until which the disease or condition is/was infectious, which generally indicates the end date of the interview period."
+                ],
+                [
+                    "#NBS057"
+                ],
+                [
+                    "xpath///*[@id=\"NBS057\"]"
+                ],
+                [
+                    "pierce/#NBS057"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "Open",
+            "selectors": [
+                [
+                    "aria/The status of the contact investigation."
+                ],
+                [
+                    "#NBS_UI_29 input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_29\"]/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_29 input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "T",
+            "selectors": [
+                [
+                    "aria/General comments about the contact investigation, which may include detail around how the investigation was prioritized, or comments about the status of the contact investigation."
+                ],
+                [
+                    "#NBS059"
+                ],
+                [
+                    "xpath///*[@id=\"NBS059\"]"
+                ],
+                [
+                    "pierce/#NBS059"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "t",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "This is a test comment",
+            "selectors": [
+                [
+                    "aria/General comments about the contact investigation, which may include detail around how the investigation was prioritized, or comments about the status of the contact investigation."
+                ],
+                [
+                    "#NBS059"
+                ],
+                [
+                    "xpath///*[@id=\"NBS059\"]"
+                ],
+                [
+                    "pierce/#NBS059"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitTop"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitTop\"]"
+                ],
+                [
+                    "pierce/#SubmitTop"
+                ]
+            ],
+            "offsetY": 29.5,
+            "offsetX": 12.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=createSubmit&ContextAction=Submit",
+                    "title": "NBS:Investigation: Generic"
+                }
+            ]
+        }
+    ]
+}

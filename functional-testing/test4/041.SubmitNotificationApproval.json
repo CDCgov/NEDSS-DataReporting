@@ -1,0 +1,49 @@
+{
+    "title": "SubmitNotificationApproval",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1920,
+            "height": 824,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                "aria/Approval Comments",
+                "#approveCommts",
+                "xpath///*[@id=\"approveCommts\"]",
+                "pierce/#approveCommts"
+            ],
+            "offsetX": 178.203125,
+            "offsetY": 35
+        },
+        {
+            "type": "change",
+            "target": "main",
+            "selectors": [
+                "aria/Approval Comments",
+                "#approveCommts",
+                "xpath///*[@id=\"approveCommts\"]",
+                "pierce/#approveCommts"
+            ],
+            "value": "Notification Approved 04/21/2026"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                "aria/Submit",
+                "#approve input:nth-of-type(1)",
+                "xpath///*[@id=\"approve\"]/table/tbody/tr[2]/td/input[1]",
+                "pierce/#approve input:nth-of-type(1)"
+            ],
+            "offsetX": 25.65625,
+            "offsetY": 13
+        }
+    ]
+}
