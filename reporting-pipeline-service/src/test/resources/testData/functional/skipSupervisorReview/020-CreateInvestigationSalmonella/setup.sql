@@ -203,11 +203,9 @@ INSERT INTO [dbo].[Participation] ([subject_entity_uid], [act_uid], [type_cd], [
 INSERT INTO [dbo].[Participation] ([subject_entity_uid], [act_uid], [type_cd], [act_class_cd], [record_status_cd], [status_cd], [status_time], [subject_class_cd], [type_desc_txt]) VALUES (10003010, @dbo_Act_act_uid_15, N'PhysicianOfPHC', N'CASE', N'ACTIVE', N'A', N'2026-04-23T14:30:02.177', N'PSN', N'Physician of PHC');
 -- step: 2
 INSERT INTO [dbo].[Participation] ([subject_entity_uid], [act_uid], [type_cd], [act_class_cd], [record_status_cd], [status_cd], [status_time], [subject_class_cd], [type_desc_txt]) VALUES (10003001, @dbo_Act_act_uid_15, N'OrgAsReporterOfPHC', N'CASE', N'ACTIVE', N'A', N'2026-04-23T14:30:02.177', N'ORG', N'Organization As Reporter Of PHC');
-
 -- dbo.Bus_obj_df_sf_mdata_group
 -- step: 2
-INSERT INTO [dbo].[Bus_obj_df_sf_mdata_group] ([business_object_uid], [version_ctrl_nbr], [df_sf_metadata_group_uid]) VALUES (@dbo_Bus_obj_df_sf_mdata_group_business_object_uid, 1, (select [df_sf_metadata_group_uid] from [dbo].[DF_sf_metadata_group] where [group_name]='|' and [version_ctrl_nbr]=1));
-
+INSERT INTO [dbo].[Bus_obj_df_sf_mdata_group] ([business_object_uid], [version_ctrl_nbr], [df_sf_metadata_group_uid]) VALUES (@dbo_Bus_obj_df_sf_mdata_group_business_object_uid, 1, (SELECT top(1) [df_sf_metadata_group_uid] FROM [dbo].[DF_sf_metadata_group] where [group_name]='|' order by [version_ctrl_nbr] desc));
 -- dbo.Act_relationship
 -- step: 2
 INSERT INTO [dbo].[Act_relationship] ([target_act_uid], [source_act_uid], [type_cd], [add_time], [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [source_class_cd], [status_cd], [status_time], [target_class_cd]) VALUES (@dbo_Act_act_uid_15, @dbo_Act_act_uid, N'LabReport', N'2026-04-23T14:30:02.557', N'2026-04-23T14:30:02.557', @superuser_id, N'ACTIVE', N'2026-04-23T14:30:02.557', N'OBS', N'A', N'2026-04-23T14:30:02.557', N'CASE');
