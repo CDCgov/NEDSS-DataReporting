@@ -1,0 +1,1353 @@
+Steps:
+  Step 1: CreatePatientAndLabReportSyphilis
+  Step 2: CreateInvestigationSyphilis
+  Step 3: AddTreatmentSyphilis
+  Step 4: InvestigateSyphilisInitialFollowup
+  Step 5: InvestigateSyphilisAssignFieldFollowup
+  Step 6: AddInterviewSyphilis
+  Step 7: AddContactSyphilis
+  Step 8: ChangeContactInvestigationDisposition
+  Step 9: CloseInvestigationSyphilis
+  Step 10: SupervisorRejectsCloseInvestigation
+  Step 11: CloseInvestigationAndCreateNotificationSyphilis
+  Step 12: SupervisorApprove
+
+Database:    NBS_ODSE
+Run started: 2026-04-30T19:23:16+00:00
+Run ended:   2026-04-30T20:31:45+00:00
+Start LSN:   0x00000a2d0000001001e9
+End LSN:     0x00000a30000004d80005
+
+Initially CDC-enabled tables: 20
+Tables enabled by this run:   226
+Tables skipped by this run:   0
+Total captured rows:          1676
+
+Captured rows by operation:
+- delete: 53
+- insert: 793
+- update_after: 415
+- update_before: 415
+
+Captured rows by table:
+- dbo.Act: 10
+    - insert act_uid=10009291
+    - insert act_uid=10009292
+    - insert act_uid=10009293
+    - insert act_uid=10009294
+    - insert act_uid=10009300
+    - insert act_uid=10009301
+    - insert act_uid=10009302
+    - insert act_uid=10009307
+    - insert act_uid=10009310
+    - insert act_uid=10009311
+- dbo.Act_id: 4
+    - insert act_uid=10009291; act_id_seq=0
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+- dbo.Act_id_hist: 25
+    - insert act_uid=10009291; act_id_seq=0
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+    - insert act_uid=10009300; act_id_seq=1
+    - insert act_uid=10009300; act_id_seq=2
+    - insert act_uid=10009300; act_id_seq=3
+- dbo.Act_relationship: 7
+    - insert target_act_uid=10009292; source_act_uid=10009293
+    - insert target_act_uid=10009291; source_act_uid=10009292
+    - insert target_act_uid=10009291; source_act_uid=10009294
+    - insert target_act_uid=10009300; source_act_uid=10009291
+    - insert target_act_uid=10009300; source_act_uid=10009301
+    - insert target_act_uid=10009300; source_act_uid=10009302
+    - insert target_act_uid=10009300; source_act_uid=10009311
+- dbo.Act_relationship_hist: 2
+    - insert target_act_uid=10009291; source_act_uid=10009292
+    - insert target_act_uid=10009291; source_act_uid=10009294
+- dbo.CT_contact: 3
+    - insert local_id=CON10000000GA01; ct_contact_uid=10009310; subject_entity_uid=10009296
+    - update local_id=CON10000000GA01; ct_contact_uid=10009310; subject_entity_uid=10009296 disposition_cd: "" -> "H"; disposition_date: null -> "2026-04-27T00:00:00"
+- dbo.CT_contact_answer: 3
+    - insert ct_contact_answer_uid=1051; ct_contact_uid=10009310; nbs_question_uid=10001184
+    - insert ct_contact_answer_uid=1052; ct_contact_uid=10009310; nbs_question_uid=10001182
+    - insert ct_contact_answer_uid=1053; ct_contact_uid=10009310; nbs_question_uid=10001348
+- dbo.Confirmation_method: 15
+    - insert public_health_case_uid=10009300
+    - delete public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - delete public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - delete public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - delete public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - delete public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - delete public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - delete public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+- dbo.Confirmation_method_hist: 7
+    - insert public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+    - insert public_health_case_uid=10009300
+- dbo.EDX_patient_match: 46
+    - insert EDX_patient_match_uid=791; Patient_uid=10009283
+    - insert EDX_patient_match_uid=792; Patient_uid=10009283
+    - delete EDX_patient_match_uid=792; Patient_uid=10009283
+    - delete EDX_patient_match_uid=791; Patient_uid=10009283
+    - insert EDX_patient_match_uid=793; Patient_uid=10009283
+    - insert EDX_patient_match_uid=794; Patient_uid=10009283
+    - delete EDX_patient_match_uid=794; Patient_uid=10009283
+    - delete EDX_patient_match_uid=793; Patient_uid=10009283
+    - insert EDX_patient_match_uid=795; Patient_uid=10009283
+    - insert EDX_patient_match_uid=796; Patient_uid=10009283
+    - delete EDX_patient_match_uid=796; Patient_uid=10009283
+    - delete EDX_patient_match_uid=795; Patient_uid=10009283
+    - insert EDX_patient_match_uid=797; Patient_uid=10009283
+    - insert EDX_patient_match_uid=798; Patient_uid=10009283
+    - delete EDX_patient_match_uid=798; Patient_uid=10009283
+    - delete EDX_patient_match_uid=797; Patient_uid=10009283
+    - insert EDX_patient_match_uid=799; Patient_uid=10009283
+    - insert EDX_patient_match_uid=800; Patient_uid=10009283
+    - delete EDX_patient_match_uid=800; Patient_uid=10009283
+    - delete EDX_patient_match_uid=799; Patient_uid=10009283
+    - insert EDX_patient_match_uid=801; Patient_uid=10009283
+    - insert EDX_patient_match_uid=802; Patient_uid=10009283
+    - delete EDX_patient_match_uid=802; Patient_uid=10009283
+    - delete EDX_patient_match_uid=801; Patient_uid=10009283
+    - insert EDX_patient_match_uid=803; Patient_uid=10009283
+    - insert EDX_patient_match_uid=804; Patient_uid=10009283
+    - delete EDX_patient_match_uid=804; Patient_uid=10009283
+    - delete EDX_patient_match_uid=803; Patient_uid=10009283
+    - insert EDX_patient_match_uid=805; Patient_uid=10009283
+    - insert EDX_patient_match_uid=806; Patient_uid=10009283
+    - delete EDX_patient_match_uid=806; Patient_uid=10009283
+    - delete EDX_patient_match_uid=805; Patient_uid=10009283
+    - insert EDX_patient_match_uid=807; Patient_uid=10009283
+    - insert EDX_patient_match_uid=808; Patient_uid=10009283
+    - delete EDX_patient_match_uid=808; Patient_uid=10009283
+    - delete EDX_patient_match_uid=807; Patient_uid=10009283
+    - insert EDX_patient_match_uid=809; Patient_uid=10009283
+    - insert EDX_patient_match_uid=810; Patient_uid=10009283
+    - delete EDX_patient_match_uid=810; Patient_uid=10009283
+    - delete EDX_patient_match_uid=809; Patient_uid=10009283
+    - insert EDX_patient_match_uid=811; Patient_uid=10009283
+    - insert EDX_patient_match_uid=812; Patient_uid=10009283
+    - delete EDX_patient_match_uid=812; Patient_uid=10009283
+    - delete EDX_patient_match_uid=811; Patient_uid=10009283
+    - insert EDX_patient_match_uid=813; Patient_uid=10009283
+    - insert EDX_patient_match_uid=814; Patient_uid=10009283
+- dbo.Entity: 7
+    - insert entity_uid=10009283
+    - insert entity_uid=10009287
+    - insert entity_uid=10009295
+    - insert entity_uid=10009296
+    - insert entity_uid=10009303
+    - insert entity_uid=10009305
+    - insert entity_uid=10009308
+- dbo.Entity_id: 15
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009287; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - update entity_uid=10009296; entity_id_seq=1 last_chg_time: "2026-04-30T19:32:00.520" -> "2026-04-30T19:39:22.653"
+    - update entity_uid=10009296; entity_id_seq=1 last_chg_time: "2026-04-30T19:39:22.653" -> "2026-04-30T19:44:42.850"
+    - update entity_uid=10009296; entity_id_seq=1 last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T19:50:49.253"
+    - update entity_uid=10009296; entity_id_seq=1 last_chg_time: "2026-04-30T19:50:49.253" -> "2026-04-30T20:09:14.247"
+    - update entity_uid=10009296; entity_id_seq=1 last_chg_time: "2026-04-30T20:09:14.247" -> "2026-04-30T20:22:45.907"
+    - update entity_uid=10009296; entity_id_seq=1 last_chg_time: "2026-04-30T20:22:45.907" -> "2026-04-30T20:22:47.477"
+- dbo.Entity_id_hist: 18
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+    - insert entity_uid=10009283; entity_id_seq=1
+    - insert entity_uid=10009296; entity_id_seq=1
+- dbo.Entity_loc_participation_hist: 58
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009303; locator_uid=10009304
+    - insert entity_uid=10009305; locator_uid=10009306
+    - insert entity_uid=10009303; locator_uid=10009304
+    - insert entity_uid=10009305; locator_uid=10009306
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009299
+    - insert entity_uid=10009296; locator_uid=10009298
+- dbo.Entity_locator_participation: 114
+    - insert entity_uid=10009283; locator_uid=10009284
+    - insert entity_uid=10009283; locator_uid=10009285
+    - insert entity_uid=10009283; locator_uid=10009286
+    - insert entity_uid=10009287; locator_uid=10009288
+    - insert entity_uid=10009287; locator_uid=10009289
+    - insert entity_uid=10009287; locator_uid=10009290
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; record_status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; record_status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; record_status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"
+    - insert entity_uid=10009296; locator_uid=10009297
+    - insert entity_uid=10009296; locator_uid=10009298
+    - insert entity_uid=10009296; locator_uid=10009299
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; record_status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; record_status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; record_status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; record_status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; record_status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; record_status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"
+    - update entity_uid=10009296; locator_uid=10009297 last_chg_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; record_status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"
+    - update entity_uid=10009296; locator_uid=10009299 last_chg_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; record_status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"
+    - update entity_uid=10009296; locator_uid=10009298 last_chg_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; record_status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; record_status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; record_status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; record_status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"
+    - update entity_uid=10009296; locator_uid=10009297 last_chg_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; record_status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"
+    - update entity_uid=10009296; locator_uid=10009299 last_chg_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; record_status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"
+    - update entity_uid=10009296; locator_uid=10009298 last_chg_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; record_status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; record_status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; record_status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; record_status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"
+    - update entity_uid=10009296; locator_uid=10009297 last_chg_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; record_status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"
+    - update entity_uid=10009296; locator_uid=10009299 last_chg_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; record_status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"
+    - update entity_uid=10009296; locator_uid=10009298 last_chg_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; record_status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"
+    - insert entity_uid=10009303; locator_uid=10009304
+    - insert entity_uid=10009305; locator_uid=10009306
+    - insert entity_uid=10009308; locator_uid=10009309
+    - update entity_uid=10009303; locator_uid=10009304 last_chg_time: "2026-04-30T19:57:57.537" -> "2026-04-30T20:02:59.240"; record_status_time: "2026-04-30T19:57:57.537" -> "2026-04-30T20:02:59.240"; status_time: "2026-04-30T19:57:57.537" -> "2026-04-30T20:02:59.240"
+    - update entity_uid=10009305; locator_uid=10009306 last_chg_time: "2026-04-30T19:57:57.577" -> "2026-04-30T20:02:59.247"; record_status_cd: "ACTIVE" -> "INACTIVE"; record_status_time: "2026-04-30T19:57:57.577" -> "2026-04-30T20:02:59.247"; ...
+    - update entity_uid=10009303; locator_uid=10009304 last_chg_time: "2026-04-30T20:02:59.240" -> "2026-04-30T20:03:00.863"; record_status_time: "2026-04-30T20:02:59.240" -> "2026-04-30T20:03:00.863"; status_time: "2026-04-30T20:02:59.240" -> "2026-04-30T20:03:00.863"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; record_status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; record_status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; record_status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"
+    - update entity_uid=10009296; locator_uid=10009297 last_chg_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; record_status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"
+    - update entity_uid=10009296; locator_uid=10009299 last_chg_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; record_status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"
+    - update entity_uid=10009296; locator_uid=10009298 last_chg_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; record_status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; record_status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; record_status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; record_status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; record_status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; record_status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; record_status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"
+    - update entity_uid=10009296; locator_uid=10009297 last_chg_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"; record_status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"; status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"
+    - update entity_uid=10009296; locator_uid=10009299 last_chg_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"; record_status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"; status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"
+    - update entity_uid=10009296; locator_uid=10009298 last_chg_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"; record_status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"; status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:22:45.960"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; record_status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; record_status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; record_status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"
+    - update entity_uid=10009296; locator_uid=10009297 last_chg_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; record_status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"
+    - update entity_uid=10009296; locator_uid=10009299 last_chg_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; record_status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"
+    - update entity_uid=10009296; locator_uid=10009298 last_chg_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; record_status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"
+    - update entity_uid=10009283; locator_uid=10009284 last_chg_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; record_status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"
+    - update entity_uid=10009283; locator_uid=10009286 last_chg_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; record_status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"
+    - update entity_uid=10009283; locator_uid=10009285 last_chg_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; record_status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"
+- dbo.Interview: 1
+    - insert local_id=INT10000000GA01; interview_uid=10009302
+- dbo.Local_UID_generator: 24
+    - update seqval=0x00000a2d000003d80002 seed_value_nbr: 10000192 -> 10000193
+    - update seqval=0x00000a2d000004080002 seed_value_nbr: 10009283 -> 10010283
+    - update seqval=0x00000a2d000004100002 seed_value_nbr: 10067000 -> 10068000
+    - update seqval=0x00000a2d000004f80004 seed_value_nbr: 10001000 -> 10002000
+    - update seqval=0x00000a2d000005100027 seed_value_nbr: 10000000 -> 10001000
+    - update seqval=0x00000a2d000008f0005b seed_value_nbr: 10001000 -> 10002000
+    - update seqval=0x00000a2d000009100002 seed_value_nbr: 1000 -> 2000
+    - update seqval=0x00000a2d000009180014 seed_value_nbr: 100000 -> 101000
+    - update seqval=0x00000a2d00000d000004 seed_value_nbr: 10000000 -> 10001000
+    - update seqval=0x00000a2e000007080006 seed_value_nbr: 10000000 -> 10001000
+    - update seqval=0x00000a2f0000017800ab seed_value_nbr: 10000000 -> 10001000
+    - update seqval=0x00000a2f000011180004 seed_value_nbr: 10000000 -> 10001000
+- dbo.Material: 1
+    - insert local_id=MAT10000000GA01; material_uid=10009295
+- dbo.NBS_act_entity: 285
+    - insert nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_uid=1230; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_uid=1233; act_uid=10009301; entity_uid=10003004
+    - insert nbs_act_entity_uid=1234; act_uid=10009301; entity_uid=10009283
+    - insert nbs_act_entity_uid=1235; act_uid=10009301; entity_uid=10003007
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"; record_status_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"
+    - update nbs_act_entity_uid=1230; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"; record_status_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"; record_status_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"
+    - insert nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 last_chg_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"; record_status_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"; record_status_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"
+    - insert nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - insert nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004
+    - delete nbs_act_entity_uid=1230; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 entity_version_ctrl_nbr: 1 -> 2; last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 entity_version_ctrl_nbr: 2 -> 3; last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - insert nbs_act_entity_uid=1244; act_uid=10009302; entity_uid=10003004
+    - insert nbs_act_entity_uid=1245; act_uid=10009302; entity_uid=10009296
+    - insert nbs_act_entity_uid=1246; act_uid=10009307; entity_uid=10009305
+    - insert nbs_act_entity_uid=1247; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_uid=1248; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_uid=1249; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_uid=1250; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_uid=1251; act_uid=10009310; entity_uid=10009296
+    - insert nbs_act_entity_uid=1252; act_uid=10009310; entity_uid=10003004
+    - insert nbs_act_entity_uid=1253; act_uid=10009307; entity_uid=10003004
+    - update nbs_act_entity_uid=1250; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"; record_status_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"
+    - insert nbs_act_entity_uid=1254; act_uid=10009307; entity_uid=10003013
+    - update nbs_act_entity_uid=1249; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"; record_status_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"
+    - update nbs_act_entity_uid=1248; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"; record_status_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"
+    - update nbs_act_entity_uid=1247; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"; record_status_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"
+    - update nbs_act_entity_uid=1246; act_uid=10009307; entity_uid=10009305 last_chg_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"; record_status_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"
+    - update nbs_act_entity_uid=1246; act_uid=10009307; entity_uid=10009305 last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.800"
+    - update nbs_act_entity_uid=1247; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.800"
+    - update nbs_act_entity_uid=1248; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.800"
+    - update nbs_act_entity_uid=1249; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.800"
+    - update nbs_act_entity_uid=1250; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.800"
+    - update nbs_act_entity_uid=1253; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.800"
+    - update nbs_act_entity_uid=1254; act_uid=10009307; entity_uid=10003013 last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.800"
+    - update nbs_act_entity_uid=1246; act_uid=10009307; entity_uid=10009305 last_chg_time: "2026-04-30T20:03:00.800" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"
+    - update nbs_act_entity_uid=1247; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:03:00.800" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"
+    - update nbs_act_entity_uid=1248; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:03:00.800" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"
+    - update nbs_act_entity_uid=1249; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:03:00.800" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"
+    - update nbs_act_entity_uid=1250; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:03:00.800" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"
+    - update nbs_act_entity_uid=1253; act_uid=10009307; entity_uid=10003004 last_chg_time: "2026-04-30T20:03:00.800" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"
+    - update nbs_act_entity_uid=1254; act_uid=10009307; entity_uid=10003013 last_chg_time: "2026-04-30T20:03:00.800" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"
+    - insert nbs_act_entity_uid=1255; act_uid=10009300; entity_uid=10003004
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 entity_version_ctrl_nbr: 3 -> 4; last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.683"
+    - delete nbs_act_entity_uid=1255; act_uid=10009300; entity_uid=10003004
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.683" -> "2026-04-30T20:17:00.797"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.797"
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 entity_version_ctrl_nbr: 4 -> 6; last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - insert nbs_act_entity_uid=1256; act_uid=10009300; entity_uid=10003004
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 entity_version_ctrl_nbr: 6 -> 7; last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1256; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.180"
+    - update nbs_act_entity_uid=1228; act_uid=10009300; entity_uid=10009296 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1229; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1231; act_uid=10009300; entity_uid=10003019 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1232; act_uid=10009300; entity_uid=10003010 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1236; act_uid=10009300; entity_uid=10003022 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1237; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1238; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1239; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1240; act_uid=10009300; entity_uid=10003013 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1241; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1242; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1243; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+    - update nbs_act_entity_uid=1256; act_uid=10009300; entity_uid=10003004 last_chg_time: "2026-04-30T20:27:43.180" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"
+- dbo.NBS_act_entity_hist: 96
+    - insert nbs_act_entity_hist_uid=1080; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1081; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1082; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1083; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1084; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1085; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1086; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1087; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1088; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1089; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1090; act_uid=10009300; entity_uid=10003022
+    - insert nbs_act_entity_hist_uid=1091; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1092; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1093; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1094; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1095; act_uid=10009300; entity_uid=10003022
+    - insert nbs_act_entity_hist_uid=1096; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1097; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1098; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1099; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1100; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1101; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1102; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1103; act_uid=10009307; entity_uid=10009305
+    - insert nbs_act_entity_hist_uid=1104; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1105; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1106; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1107; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1108; act_uid=10009307; entity_uid=10009305
+    - insert nbs_act_entity_hist_uid=1109; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1110; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1111; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1112; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1113; act_uid=10009307; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1114; act_uid=10009307; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1115; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1116; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1117; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1118; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1119; act_uid=10009300; entity_uid=10003022
+    - insert nbs_act_entity_hist_uid=1120; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1121; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1122; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1123; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1124; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1125; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1126; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1127; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1128; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1129; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1130; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1131; act_uid=10009300; entity_uid=10003022
+    - insert nbs_act_entity_hist_uid=1132; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1133; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1134; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1135; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1136; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1137; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1138; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1139; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1140; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1141; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1142; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1143; act_uid=10009300; entity_uid=10003022
+    - insert nbs_act_entity_hist_uid=1144; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1145; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1146; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1147; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1148; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1149; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1150; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1151; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1152; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1153; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1154; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1155; act_uid=10009300; entity_uid=10003022
+    - insert nbs_act_entity_hist_uid=1156; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1157; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1158; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1159; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1160; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1161; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1162; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1163; act_uid=10009300; entity_uid=10009296
+    - insert nbs_act_entity_hist_uid=1164; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1165; act_uid=10009300; entity_uid=10003019
+    - insert nbs_act_entity_hist_uid=1166; act_uid=10009300; entity_uid=10003010
+    - insert nbs_act_entity_hist_uid=1167; act_uid=10009300; entity_uid=10003022
+    - insert nbs_act_entity_hist_uid=1168; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1169; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1170; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1171; act_uid=10009300; entity_uid=10003013
+    - insert nbs_act_entity_hist_uid=1172; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1173; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1174; act_uid=10009300; entity_uid=10003004
+    - insert nbs_act_entity_hist_uid=1175; act_uid=10009300; entity_uid=10003004
+- dbo.NBS_case_answer: 253
+    - insert nbs_case_answer_uid=3241; act_uid=10009300; nbs_question_uid=10001013
+    - insert nbs_case_answer_uid=3242; act_uid=10009300; nbs_question_uid=10001252
+    - insert nbs_case_answer_uid=3243; act_uid=10009300; nbs_question_uid=10001192
+    - update nbs_case_answer_uid=3241; act_uid=10009300; nbs_question_uid=10001013 last_chg_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"; record_status_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"
+    - insert nbs_case_answer_uid=3244; act_uid=10009300; nbs_question_uid=10001195
+    - update nbs_case_answer_uid=3242; act_uid=10009300; nbs_question_uid=10001252 last_chg_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"; record_status_time: "2026-04-30T19:32:00.637" -> "2026-04-30T19:39:22.743"
+    - update nbs_case_answer_uid=3243; act_uid=10009300; nbs_question_uid=10001192 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_case_answer_uid=3241; act_uid=10009300; nbs_question_uid=10001013 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_case_answer_uid=3244; act_uid=10009300; nbs_question_uid=10001195 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_case_answer_uid=3242; act_uid=10009300; nbs_question_uid=10001252 last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"
+    - update nbs_case_answer_uid=3241; act_uid=10009300; nbs_question_uid=10001013 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - insert nbs_case_answer_uid=3245; act_uid=10009300; nbs_question_uid=10001326
+    - insert nbs_case_answer_uid=3246; act_uid=10009300; nbs_question_uid=10001327
+    - insert nbs_case_answer_uid=3247; act_uid=10009300; nbs_question_uid=10001325
+    - insert nbs_case_answer_uid=3248; act_uid=10009300; nbs_question_uid=10001285
+    - insert nbs_case_answer_uid=3249; act_uid=10009300; nbs_question_uid=10001331
+    - insert nbs_case_answer_uid=3250; act_uid=10009300; nbs_question_uid=10001283
+    - insert nbs_case_answer_uid=3251; act_uid=10009300; nbs_question_uid=10001289
+    - insert nbs_case_answer_uid=3252; act_uid=10009300; nbs_question_uid=10001290
+    - insert nbs_case_answer_uid=3253; act_uid=10009300; nbs_question_uid=10003231
+    - insert nbs_case_answer_uid=3254; act_uid=10009300; nbs_question_uid=10001316
+    - insert nbs_case_answer_uid=3255; act_uid=10009300; nbs_question_uid=10001287
+    - insert nbs_case_answer_uid=3256; act_uid=10009300; nbs_question_uid=10003230
+    - insert nbs_case_answer_uid=3257; act_uid=10009300; nbs_question_uid=10001288
+    - insert nbs_case_answer_uid=3258; act_uid=10009300; nbs_question_uid=10001302
+    - insert nbs_case_answer_uid=3259; act_uid=10009300; nbs_question_uid=10001295
+    - update nbs_case_answer_uid=3242; act_uid=10009300; nbs_question_uid=10001252 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - insert nbs_case_answer_uid=3260; act_uid=10009300; nbs_question_uid=10001291
+    - insert nbs_case_answer_uid=3261; act_uid=10009300; nbs_question_uid=10001296
+    - insert nbs_case_answer_uid=3262; act_uid=10009300; nbs_question_uid=10001297
+    - insert nbs_case_answer_uid=3263; act_uid=10009300; nbs_question_uid=10001293
+    - insert nbs_case_answer_uid=3264; act_uid=10009300; nbs_question_uid=10001300
+    - insert nbs_case_answer_uid=3265; act_uid=10009300; nbs_question_uid=10001322
+    - insert nbs_case_answer_uid=3266; act_uid=10009300; nbs_question_uid=10001298
+    - update nbs_case_answer_uid=3243; act_uid=10009300; nbs_question_uid=10001192 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - insert nbs_case_answer_uid=3267; act_uid=10009300; nbs_question_uid=10001299
+    - insert nbs_case_answer_uid=3268; act_uid=10009300; nbs_question_uid=10001294
+    - update nbs_case_answer_uid=3244; act_uid=10009300; nbs_question_uid=10001195 last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"
+    - insert nbs_case_answer_uid=3269; act_uid=10009300; nbs_question_uid=10001321
+    - insert nbs_case_answer_uid=3270; act_uid=10009307; nbs_question_uid=10001240
+    - insert nbs_case_answer_uid=3271; act_uid=10009307; nbs_question_uid=10001241
+    - insert nbs_case_answer_uid=3272; act_uid=10009307; nbs_question_uid=10001241
+    - update nbs_case_answer_uid=3241; act_uid=10009300; nbs_question_uid=10001013 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3245; act_uid=10009300; nbs_question_uid=10001326 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3246; act_uid=10009300; nbs_question_uid=10001327 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3247; act_uid=10009300; nbs_question_uid=10001325 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3248; act_uid=10009300; nbs_question_uid=10001285 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3249; act_uid=10009300; nbs_question_uid=10001331 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3250; act_uid=10009300; nbs_question_uid=10001283 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3251; act_uid=10009300; nbs_question_uid=10001289 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3252; act_uid=10009300; nbs_question_uid=10001290 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3253; act_uid=10009300; nbs_question_uid=10003231 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3254; act_uid=10009300; nbs_question_uid=10001316 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3255; act_uid=10009300; nbs_question_uid=10001287 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3256; act_uid=10009300; nbs_question_uid=10003230 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3257; act_uid=10009300; nbs_question_uid=10001288 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - insert nbs_case_answer_uid=3273; act_uid=10009300; nbs_question_uid=10003228
+    - update nbs_case_answer_uid=3258; act_uid=10009300; nbs_question_uid=10001302 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3259; act_uid=10009300; nbs_question_uid=10001295 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3242; act_uid=10009300; nbs_question_uid=10001252 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3260; act_uid=10009300; nbs_question_uid=10001291 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3261; act_uid=10009300; nbs_question_uid=10001296 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3262; act_uid=10009300; nbs_question_uid=10001297 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3263; act_uid=10009300; nbs_question_uid=10001293 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3264; act_uid=10009300; nbs_question_uid=10001300 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3265; act_uid=10009300; nbs_question_uid=10001322 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3266; act_uid=10009300; nbs_question_uid=10001298 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3243; act_uid=10009300; nbs_question_uid=10001192 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3267; act_uid=10009300; nbs_question_uid=10001299 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3268; act_uid=10009300; nbs_question_uid=10001294 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3244; act_uid=10009300; nbs_question_uid=10001195 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - update nbs_case_answer_uid=3269; act_uid=10009300; nbs_question_uid=10001321 last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"
+    - insert nbs_case_answer_uid=3274; act_uid=10009300; nbs_question_uid=10001240
+    - insert nbs_case_answer_uid=3275; act_uid=10009300; nbs_question_uid=10001241
+    - insert nbs_case_answer_uid=3276; act_uid=10009300; nbs_question_uid=10001241
+    - update nbs_case_answer_uid=3241; act_uid=10009300; nbs_question_uid=10001013 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3245; act_uid=10009300; nbs_question_uid=10001326 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3246; act_uid=10009300; nbs_question_uid=10001327 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3247; act_uid=10009300; nbs_question_uid=10001325 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3248; act_uid=10009300; nbs_question_uid=10001285 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3249; act_uid=10009300; nbs_question_uid=10001331 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3250; act_uid=10009300; nbs_question_uid=10001283 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3251; act_uid=10009300; nbs_question_uid=10001289 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3252; act_uid=10009300; nbs_question_uid=10001290 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3253; act_uid=10009300; nbs_question_uid=10003231 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3254; act_uid=10009300; nbs_question_uid=10001316 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3255; act_uid=10009300; nbs_question_uid=10001287 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3256; act_uid=10009300; nbs_question_uid=10003230 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3257; act_uid=10009300; nbs_question_uid=10001288 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3273; act_uid=10009300; nbs_question_uid=10003228 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3258; act_uid=10009300; nbs_question_uid=10001302 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3259; act_uid=10009300; nbs_question_uid=10001295 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - insert nbs_case_answer_uid=3277; act_uid=10009300; nbs_question_uid=10001261
+    - update nbs_case_answer_uid=3242; act_uid=10009300; nbs_question_uid=10001252 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3260; act_uid=10009300; nbs_question_uid=10001291 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3261; act_uid=10009300; nbs_question_uid=10001296 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3262; act_uid=10009300; nbs_question_uid=10001297 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3263; act_uid=10009300; nbs_question_uid=10001293 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3264; act_uid=10009300; nbs_question_uid=10001300 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3265; act_uid=10009300; nbs_question_uid=10001322 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - insert nbs_case_answer_uid=3278; act_uid=10009300; nbs_question_uid=10001274
+    - update nbs_case_answer_uid=3266; act_uid=10009300; nbs_question_uid=10001298 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3243; act_uid=10009300; nbs_question_uid=10001192 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3267; act_uid=10009300; nbs_question_uid=10001299 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3268; act_uid=10009300; nbs_question_uid=10001294 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3244; act_uid=10009300; nbs_question_uid=10001195 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3269; act_uid=10009300; nbs_question_uid=10001321 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3274; act_uid=10009300; nbs_question_uid=10001240 last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:22:45.977"
+    - update nbs_case_answer_uid=3276; act_uid=10009300; nbs_question_uid=10001241 last_chg_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"; nbs_question_version_ctrl_nbr: 1 -> 3; record_status_time: "2026-04-30T20:17:00.797" -> "2026-04-30T20:22:45.977"
+    - insert nbs_case_answer_uid=3279; act_uid=10009300; nbs_question_uid=10001248
+    - update nbs_case_answer_uid=3241; act_uid=10009300; nbs_question_uid=10001013 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3245; act_uid=10009300; nbs_question_uid=10001326 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3246; act_uid=10009300; nbs_question_uid=10001327 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3247; act_uid=10009300; nbs_question_uid=10001325 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3248; act_uid=10009300; nbs_question_uid=10001285 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3249; act_uid=10009300; nbs_question_uid=10001331 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3250; act_uid=10009300; nbs_question_uid=10001283 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3251; act_uid=10009300; nbs_question_uid=10001289 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3252; act_uid=10009300; nbs_question_uid=10001290 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3253; act_uid=10009300; nbs_question_uid=10003231 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3254; act_uid=10009300; nbs_question_uid=10001316 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3255; act_uid=10009300; nbs_question_uid=10001287 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3256; act_uid=10009300; nbs_question_uid=10003230 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3257; act_uid=10009300; nbs_question_uid=10001288 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3273; act_uid=10009300; nbs_question_uid=10003228 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3258; act_uid=10009300; nbs_question_uid=10001302 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3259; act_uid=10009300; nbs_question_uid=10001295 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3277; act_uid=10009300; nbs_question_uid=10001261 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3242; act_uid=10009300; nbs_question_uid=10001252 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3260; act_uid=10009300; nbs_question_uid=10001291 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3261; act_uid=10009300; nbs_question_uid=10001296 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3262; act_uid=10009300; nbs_question_uid=10001297 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3263; act_uid=10009300; nbs_question_uid=10001293 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3264; act_uid=10009300; nbs_question_uid=10001300 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3265; act_uid=10009300; nbs_question_uid=10001322 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3278; act_uid=10009300; nbs_question_uid=10001274 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3266; act_uid=10009300; nbs_question_uid=10001298 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3243; act_uid=10009300; nbs_question_uid=10001192 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3267; act_uid=10009300; nbs_question_uid=10001299 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3268; act_uid=10009300; nbs_question_uid=10001294 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3244; act_uid=10009300; nbs_question_uid=10001195 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3269; act_uid=10009300; nbs_question_uid=10001321 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3274; act_uid=10009300; nbs_question_uid=10001240 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3276; act_uid=10009300; nbs_question_uid=10001241 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - update nbs_case_answer_uid=3279; act_uid=10009300; nbs_question_uid=10001248 last_chg_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.977" -> "2026-04-30T20:22:47.510"
+    - insert nbs_case_answer_uid=3280; act_uid=10009300; nbs_question_uid=10001241
+    - insert nbs_case_answer_uid=3281; act_uid=10009300; nbs_question_uid=10001241
+- dbo.NBS_case_answer_hist: 179
+    - insert nbs_case_answer_hist_uid=2121; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2122; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2123; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2124; act_uid=10009300; nbs_case_answer_uid=3243
+    - insert nbs_case_answer_hist_uid=2125; act_uid=10009300; nbs_case_answer_uid=3244
+    - insert nbs_case_answer_hist_uid=2126; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2127; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2128; act_uid=10009300; nbs_case_answer_uid=3243
+    - insert nbs_case_answer_hist_uid=2129; act_uid=10009300; nbs_case_answer_uid=3244
+    - insert nbs_case_answer_hist_uid=2130; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2131; act_uid=10009307; nbs_case_answer_uid=3270
+    - insert nbs_case_answer_hist_uid=2132; act_uid=10009307; nbs_case_answer_uid=3271
+    - insert nbs_case_answer_hist_uid=2133; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2134; act_uid=10009300; nbs_case_answer_uid=3243
+    - insert nbs_case_answer_hist_uid=2135; act_uid=10009300; nbs_case_answer_uid=3244
+    - insert nbs_case_answer_hist_uid=2136; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2137; act_uid=10009300; nbs_case_answer_uid=3250
+    - insert nbs_case_answer_hist_uid=2138; act_uid=10009300; nbs_case_answer_uid=3248
+    - insert nbs_case_answer_hist_uid=2139; act_uid=10009300; nbs_case_answer_uid=3255
+    - insert nbs_case_answer_hist_uid=2140; act_uid=10009300; nbs_case_answer_uid=3257
+    - insert nbs_case_answer_hist_uid=2141; act_uid=10009300; nbs_case_answer_uid=3251
+    - insert nbs_case_answer_hist_uid=2142; act_uid=10009300; nbs_case_answer_uid=3252
+    - insert nbs_case_answer_hist_uid=2143; act_uid=10009300; nbs_case_answer_uid=3260
+    - insert nbs_case_answer_hist_uid=2144; act_uid=10009300; nbs_case_answer_uid=3263
+    - insert nbs_case_answer_hist_uid=2145; act_uid=10009300; nbs_case_answer_uid=3268
+    - insert nbs_case_answer_hist_uid=2146; act_uid=10009300; nbs_case_answer_uid=3259
+    - insert nbs_case_answer_hist_uid=2147; act_uid=10009300; nbs_case_answer_uid=3261
+    - insert nbs_case_answer_hist_uid=2148; act_uid=10009300; nbs_case_answer_uid=3262
+    - insert nbs_case_answer_hist_uid=2149; act_uid=10009300; nbs_case_answer_uid=3266
+    - insert nbs_case_answer_hist_uid=2150; act_uid=10009300; nbs_case_answer_uid=3267
+    - insert nbs_case_answer_hist_uid=2151; act_uid=10009300; nbs_case_answer_uid=3264
+    - insert nbs_case_answer_hist_uid=2152; act_uid=10009300; nbs_case_answer_uid=3258
+    - insert nbs_case_answer_hist_uid=2153; act_uid=10009300; nbs_case_answer_uid=3254
+    - insert nbs_case_answer_hist_uid=2154; act_uid=10009300; nbs_case_answer_uid=3269
+    - insert nbs_case_answer_hist_uid=2155; act_uid=10009300; nbs_case_answer_uid=3265
+    - insert nbs_case_answer_hist_uid=2156; act_uid=10009300; nbs_case_answer_uid=3247
+    - insert nbs_case_answer_hist_uid=2157; act_uid=10009300; nbs_case_answer_uid=3245
+    - insert nbs_case_answer_hist_uid=2158; act_uid=10009300; nbs_case_answer_uid=3246
+    - insert nbs_case_answer_hist_uid=2159; act_uid=10009300; nbs_case_answer_uid=3249
+    - insert nbs_case_answer_hist_uid=2160; act_uid=10009300; nbs_case_answer_uid=3256
+    - insert nbs_case_answer_hist_uid=2161; act_uid=10009300; nbs_case_answer_uid=3253
+    - insert nbs_case_answer_hist_uid=2162; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2163; act_uid=10009300; nbs_case_answer_uid=3243
+    - insert nbs_case_answer_hist_uid=2164; act_uid=10009300; nbs_case_answer_uid=3244
+    - insert nbs_case_answer_hist_uid=2165; act_uid=10009300; nbs_case_answer_uid=3274
+    - insert nbs_case_answer_hist_uid=2166; act_uid=10009300; nbs_case_answer_uid=3275
+    - insert nbs_case_answer_hist_uid=2167; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2168; act_uid=10009300; nbs_case_answer_uid=3250
+    - insert nbs_case_answer_hist_uid=2169; act_uid=10009300; nbs_case_answer_uid=3248
+    - insert nbs_case_answer_hist_uid=2170; act_uid=10009300; nbs_case_answer_uid=3255
+    - insert nbs_case_answer_hist_uid=2171; act_uid=10009300; nbs_case_answer_uid=3257
+    - insert nbs_case_answer_hist_uid=2172; act_uid=10009300; nbs_case_answer_uid=3251
+    - insert nbs_case_answer_hist_uid=2173; act_uid=10009300; nbs_case_answer_uid=3252
+    - insert nbs_case_answer_hist_uid=2174; act_uid=10009300; nbs_case_answer_uid=3260
+    - insert nbs_case_answer_hist_uid=2175; act_uid=10009300; nbs_case_answer_uid=3263
+    - insert nbs_case_answer_hist_uid=2176; act_uid=10009300; nbs_case_answer_uid=3268
+    - insert nbs_case_answer_hist_uid=2177; act_uid=10009300; nbs_case_answer_uid=3259
+    - insert nbs_case_answer_hist_uid=2178; act_uid=10009300; nbs_case_answer_uid=3261
+    - insert nbs_case_answer_hist_uid=2179; act_uid=10009300; nbs_case_answer_uid=3262
+    - insert nbs_case_answer_hist_uid=2180; act_uid=10009300; nbs_case_answer_uid=3266
+    - insert nbs_case_answer_hist_uid=2181; act_uid=10009300; nbs_case_answer_uid=3267
+    - insert nbs_case_answer_hist_uid=2182; act_uid=10009300; nbs_case_answer_uid=3264
+    - insert nbs_case_answer_hist_uid=2183; act_uid=10009300; nbs_case_answer_uid=3258
+    - insert nbs_case_answer_hist_uid=2184; act_uid=10009300; nbs_case_answer_uid=3254
+    - insert nbs_case_answer_hist_uid=2185; act_uid=10009300; nbs_case_answer_uid=3269
+    - insert nbs_case_answer_hist_uid=2186; act_uid=10009300; nbs_case_answer_uid=3265
+    - insert nbs_case_answer_hist_uid=2187; act_uid=10009300; nbs_case_answer_uid=3247
+    - insert nbs_case_answer_hist_uid=2188; act_uid=10009300; nbs_case_answer_uid=3245
+    - insert nbs_case_answer_hist_uid=2189; act_uid=10009300; nbs_case_answer_uid=3246
+    - insert nbs_case_answer_hist_uid=2190; act_uid=10009300; nbs_case_answer_uid=3249
+    - insert nbs_case_answer_hist_uid=2191; act_uid=10009300; nbs_case_answer_uid=3273
+    - insert nbs_case_answer_hist_uid=2192; act_uid=10009300; nbs_case_answer_uid=3256
+    - insert nbs_case_answer_hist_uid=2193; act_uid=10009300; nbs_case_answer_uid=3253
+    - insert nbs_case_answer_hist_uid=2194; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2195; act_uid=10009300; nbs_case_answer_uid=3243
+    - insert nbs_case_answer_hist_uid=2196; act_uid=10009300; nbs_case_answer_uid=3244
+    - insert nbs_case_answer_hist_uid=2197; act_uid=10009300; nbs_case_answer_uid=3274
+    - insert nbs_case_answer_hist_uid=2198; act_uid=10009300; nbs_case_answer_uid=3275
+    - insert nbs_case_answer_hist_uid=2199; act_uid=10009300; nbs_case_answer_uid=3276
+    - insert nbs_case_answer_hist_uid=2200; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2201; act_uid=10009300; nbs_case_answer_uid=3250
+    - insert nbs_case_answer_hist_uid=2202; act_uid=10009300; nbs_case_answer_uid=3248
+    - insert nbs_case_answer_hist_uid=2203; act_uid=10009300; nbs_case_answer_uid=3255
+    - insert nbs_case_answer_hist_uid=2204; act_uid=10009300; nbs_case_answer_uid=3257
+    - insert nbs_case_answer_hist_uid=2205; act_uid=10009300; nbs_case_answer_uid=3251
+    - insert nbs_case_answer_hist_uid=2206; act_uid=10009300; nbs_case_answer_uid=3252
+    - insert nbs_case_answer_hist_uid=2207; act_uid=10009300; nbs_case_answer_uid=3260
+    - insert nbs_case_answer_hist_uid=2208; act_uid=10009300; nbs_case_answer_uid=3263
+    - insert nbs_case_answer_hist_uid=2209; act_uid=10009300; nbs_case_answer_uid=3268
+    - insert nbs_case_answer_hist_uid=2210; act_uid=10009300; nbs_case_answer_uid=3259
+    - insert nbs_case_answer_hist_uid=2211; act_uid=10009300; nbs_case_answer_uid=3261
+    - insert nbs_case_answer_hist_uid=2212; act_uid=10009300; nbs_case_answer_uid=3262
+    - insert nbs_case_answer_hist_uid=2213; act_uid=10009300; nbs_case_answer_uid=3266
+    - insert nbs_case_answer_hist_uid=2214; act_uid=10009300; nbs_case_answer_uid=3267
+    - insert nbs_case_answer_hist_uid=2215; act_uid=10009300; nbs_case_answer_uid=3264
+    - insert nbs_case_answer_hist_uid=2216; act_uid=10009300; nbs_case_answer_uid=3258
+    - insert nbs_case_answer_hist_uid=2217; act_uid=10009300; nbs_case_answer_uid=3254
+    - insert nbs_case_answer_hist_uid=2218; act_uid=10009300; nbs_case_answer_uid=3269
+    - insert nbs_case_answer_hist_uid=2219; act_uid=10009300; nbs_case_answer_uid=3265
+    - insert nbs_case_answer_hist_uid=2220; act_uid=10009300; nbs_case_answer_uid=3247
+    - insert nbs_case_answer_hist_uid=2221; act_uid=10009300; nbs_case_answer_uid=3245
+    - insert nbs_case_answer_hist_uid=2222; act_uid=10009300; nbs_case_answer_uid=3246
+    - insert nbs_case_answer_hist_uid=2223; act_uid=10009300; nbs_case_answer_uid=3249
+    - insert nbs_case_answer_hist_uid=2224; act_uid=10009300; nbs_case_answer_uid=3273
+    - insert nbs_case_answer_hist_uid=2225; act_uid=10009300; nbs_case_answer_uid=3256
+    - insert nbs_case_answer_hist_uid=2226; act_uid=10009300; nbs_case_answer_uid=3253
+    - insert nbs_case_answer_hist_uid=2227; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2228; act_uid=10009300; nbs_case_answer_uid=3243
+    - insert nbs_case_answer_hist_uid=2229; act_uid=10009300; nbs_case_answer_uid=3244
+    - insert nbs_case_answer_hist_uid=2230; act_uid=10009300; nbs_case_answer_uid=3274
+    - insert nbs_case_answer_hist_uid=2231; act_uid=10009300; nbs_case_answer_uid=3275
+    - insert nbs_case_answer_hist_uid=2232; act_uid=10009300; nbs_case_answer_uid=3276
+    - insert nbs_case_answer_hist_uid=2233; act_uid=10009300; nbs_case_answer_uid=3279
+    - insert nbs_case_answer_hist_uid=2234; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2235; act_uid=10009300; nbs_case_answer_uid=3277
+    - insert nbs_case_answer_hist_uid=2236; act_uid=10009300; nbs_case_answer_uid=3278
+    - insert nbs_case_answer_hist_uid=2237; act_uid=10009300; nbs_case_answer_uid=3250
+    - insert nbs_case_answer_hist_uid=2238; act_uid=10009300; nbs_case_answer_uid=3248
+    - insert nbs_case_answer_hist_uid=2239; act_uid=10009300; nbs_case_answer_uid=3255
+    - insert nbs_case_answer_hist_uid=2240; act_uid=10009300; nbs_case_answer_uid=3257
+    - insert nbs_case_answer_hist_uid=2241; act_uid=10009300; nbs_case_answer_uid=3251
+    - insert nbs_case_answer_hist_uid=2242; act_uid=10009300; nbs_case_answer_uid=3252
+    - insert nbs_case_answer_hist_uid=2243; act_uid=10009300; nbs_case_answer_uid=3260
+    - insert nbs_case_answer_hist_uid=2244; act_uid=10009300; nbs_case_answer_uid=3263
+    - insert nbs_case_answer_hist_uid=2245; act_uid=10009300; nbs_case_answer_uid=3268
+    - insert nbs_case_answer_hist_uid=2246; act_uid=10009300; nbs_case_answer_uid=3259
+    - insert nbs_case_answer_hist_uid=2247; act_uid=10009300; nbs_case_answer_uid=3261
+    - insert nbs_case_answer_hist_uid=2248; act_uid=10009300; nbs_case_answer_uid=3262
+    - insert nbs_case_answer_hist_uid=2249; act_uid=10009300; nbs_case_answer_uid=3266
+    - insert nbs_case_answer_hist_uid=2250; act_uid=10009300; nbs_case_answer_uid=3267
+    - insert nbs_case_answer_hist_uid=2251; act_uid=10009300; nbs_case_answer_uid=3264
+    - insert nbs_case_answer_hist_uid=2252; act_uid=10009300; nbs_case_answer_uid=3258
+    - insert nbs_case_answer_hist_uid=2253; act_uid=10009300; nbs_case_answer_uid=3254
+    - insert nbs_case_answer_hist_uid=2254; act_uid=10009300; nbs_case_answer_uid=3269
+    - insert nbs_case_answer_hist_uid=2255; act_uid=10009300; nbs_case_answer_uid=3265
+    - insert nbs_case_answer_hist_uid=2256; act_uid=10009300; nbs_case_answer_uid=3247
+    - insert nbs_case_answer_hist_uid=2257; act_uid=10009300; nbs_case_answer_uid=3245
+    - insert nbs_case_answer_hist_uid=2258; act_uid=10009300; nbs_case_answer_uid=3246
+    - insert nbs_case_answer_hist_uid=2259; act_uid=10009300; nbs_case_answer_uid=3249
+    - insert nbs_case_answer_hist_uid=2260; act_uid=10009300; nbs_case_answer_uid=3273
+    - insert nbs_case_answer_hist_uid=2261; act_uid=10009300; nbs_case_answer_uid=3256
+    - insert nbs_case_answer_hist_uid=2262; act_uid=10009300; nbs_case_answer_uid=3253
+    - insert nbs_case_answer_hist_uid=2263; act_uid=10009300; nbs_case_answer_uid=3241
+    - insert nbs_case_answer_hist_uid=2264; act_uid=10009300; nbs_case_answer_uid=3243
+    - insert nbs_case_answer_hist_uid=2265; act_uid=10009300; nbs_case_answer_uid=3244
+    - insert nbs_case_answer_hist_uid=2266; act_uid=10009300; nbs_case_answer_uid=3274
+    - insert nbs_case_answer_hist_uid=2267; act_uid=10009300; nbs_case_answer_uid=3275
+    - insert nbs_case_answer_hist_uid=2268; act_uid=10009300; nbs_case_answer_uid=3276
+    - insert nbs_case_answer_hist_uid=2269; act_uid=10009300; nbs_case_answer_uid=3280
+    - insert nbs_case_answer_hist_uid=2270; act_uid=10009300; nbs_case_answer_uid=3279
+    - insert nbs_case_answer_hist_uid=2271; act_uid=10009300; nbs_case_answer_uid=3242
+    - insert nbs_case_answer_hist_uid=2272; act_uid=10009300; nbs_case_answer_uid=3277
+    - insert nbs_case_answer_hist_uid=2273; act_uid=10009300; nbs_case_answer_uid=3278
+    - insert nbs_case_answer_hist_uid=2274; act_uid=10009300; nbs_case_answer_uid=3250
+    - insert nbs_case_answer_hist_uid=2275; act_uid=10009300; nbs_case_answer_uid=3248
+    - insert nbs_case_answer_hist_uid=2276; act_uid=10009300; nbs_case_answer_uid=3255
+    - insert nbs_case_answer_hist_uid=2277; act_uid=10009300; nbs_case_answer_uid=3257
+    - insert nbs_case_answer_hist_uid=2278; act_uid=10009300; nbs_case_answer_uid=3251
+    - insert nbs_case_answer_hist_uid=2279; act_uid=10009300; nbs_case_answer_uid=3252
+    - insert nbs_case_answer_hist_uid=2280; act_uid=10009300; nbs_case_answer_uid=3260
+    - insert nbs_case_answer_hist_uid=2281; act_uid=10009300; nbs_case_answer_uid=3263
+    - insert nbs_case_answer_hist_uid=2282; act_uid=10009300; nbs_case_answer_uid=3268
+    - insert nbs_case_answer_hist_uid=2283; act_uid=10009300; nbs_case_answer_uid=3259
+    - insert nbs_case_answer_hist_uid=2284; act_uid=10009300; nbs_case_answer_uid=3261
+    - insert nbs_case_answer_hist_uid=2285; act_uid=10009300; nbs_case_answer_uid=3262
+    - insert nbs_case_answer_hist_uid=2286; act_uid=10009300; nbs_case_answer_uid=3266
+    - insert nbs_case_answer_hist_uid=2287; act_uid=10009300; nbs_case_answer_uid=3267
+    - insert nbs_case_answer_hist_uid=2288; act_uid=10009300; nbs_case_answer_uid=3264
+    - insert nbs_case_answer_hist_uid=2289; act_uid=10009300; nbs_case_answer_uid=3258
+    - insert nbs_case_answer_hist_uid=2290; act_uid=10009300; nbs_case_answer_uid=3254
+    - insert nbs_case_answer_hist_uid=2291; act_uid=10009300; nbs_case_answer_uid=3269
+    - insert nbs_case_answer_hist_uid=2292; act_uid=10009300; nbs_case_answer_uid=3265
+    - insert nbs_case_answer_hist_uid=2293; act_uid=10009300; nbs_case_answer_uid=3247
+    - insert nbs_case_answer_hist_uid=2294; act_uid=10009300; nbs_case_answer_uid=3245
+    - insert nbs_case_answer_hist_uid=2295; act_uid=10009300; nbs_case_answer_uid=3246
+    - insert nbs_case_answer_hist_uid=2296; act_uid=10009300; nbs_case_answer_uid=3249
+    - insert nbs_case_answer_hist_uid=2297; act_uid=10009300; nbs_case_answer_uid=3273
+    - insert nbs_case_answer_hist_uid=2298; act_uid=10009300; nbs_case_answer_uid=3256
+    - insert nbs_case_answer_hist_uid=2299; act_uid=10009300; nbs_case_answer_uid=3253
+- dbo.Notification: 3
+    - insert local_id=NOT10000000GA01; notification_uid=10009311
+    - update local_id=NOT10000000GA01; notification_uid=10009311 last_chg_time: "2026-04-30T20:22:48.217" -> "2026-04-30T20:27:43.327"; record_status_time: "2026-04-30T20:22:48.217" -> "2026-04-30T20:27:43.327"; version_ctrl_nbr: 1 -> 2
+- dbo.Notification_hist: 1
+    - insert local_id=NOT10000000GA01; notification_uid=10009311
+- dbo.Obs_value_numeric: 1
+    - insert observation_uid=10009294; obs_value_numeric_seq=0
+- dbo.Obs_value_txt: 2
+    - insert observation_uid=10009291; obs_value_txt_seq=0
+    - insert observation_uid=10009293; obs_value_txt_seq=1
+- dbo.Obs_value_txt_hist: 1
+    - insert observation_uid=10009291; obs_value_txt_seq=0
+- dbo.Observation: 6
+    - insert local_id=OBS10001000GA01; observation_uid=10009291
+    - insert local_id=OBS10001001GA01; observation_uid=10009292
+    - insert local_id=OBS10001002GA01; observation_uid=10009293
+    - insert local_id=OBS10001003GA01; observation_uid=10009294
+    - update local_id=OBS10001000GA01; observation_uid=10009291 last_chg_time: "2026-04-30T19:27:33.910" -> "2026-04-30T19:32:00.707"; record_status_cd: "UNPROCESSED" -> "PROCESSED"; record_status_time: "2026-04-30T19:27:33.910" -> "2026-04-30T19:32:00.707"; ...
+- dbo.Observation_hist: 1
+    - insert local_id=OBS10001000GA01; observation_uid=10009291
+- dbo.Participation: 114
+    - insert subject_entity_uid=10003019; act_uid=10009291
+    - insert subject_entity_uid=10009287; act_uid=10009291
+    - insert subject_entity_uid=10009295; act_uid=10009291
+    - insert subject_entity_uid=10009296; act_uid=10009300
+    - insert subject_entity_uid=10003010; act_uid=10009300
+    - insert subject_entity_uid=10003010; act_uid=10009300
+    - insert subject_entity_uid=10003019; act_uid=10009300
+    - insert subject_entity_uid=10003010; act_uid=10009300
+    - insert subject_entity_uid=10003004; act_uid=10009301
+    - insert subject_entity_uid=10009283; act_uid=10009301
+    - insert subject_entity_uid=10003007; act_uid=10009301
+    - update subject_entity_uid=10009296; act_uid=10009300 from_time: null -> "2026-04-17T00:00:00"; to_time: null -> "2026-04-30T19:39:22.757"
+    - insert subject_entity_uid=10003022; act_uid=10009300
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T19:32:00.520" -> "2026-04-30T19:39:22.947"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:32:00.520" -> "2026-04-30T19:39:22.743"; ...
+    - insert subject_entity_uid=10003004; act_uid=10009300
+    - insert subject_entity_uid=10003013; act_uid=10009300
+    - insert subject_entity_uid=10003004; act_uid=10009300
+    - insert subject_entity_uid=10003013; act_uid=10009300
+    - insert subject_entity_uid=10003004; act_uid=10009300
+    - insert subject_entity_uid=10003004; act_uid=10009300
+    - delete subject_entity_uid=10003010; act_uid=10009300
+    - insert subject_entity_uid=10003004; act_uid=10009300
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T19:39:22.947" -> "2026-04-30T19:44:43.100"; last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; ...
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T19:44:43.100" -> "2026-04-30T19:50:49.493"; last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; ...
+    - insert subject_entity_uid=10003004; act_uid=10009302
+    - insert subject_entity_uid=10009296; act_uid=10009302
+    - insert subject_entity_uid=10009305; act_uid=10009307
+    - insert subject_entity_uid=10003004; act_uid=10009307
+    - insert subject_entity_uid=10003004; act_uid=10009307
+    - insert subject_entity_uid=10003004; act_uid=10009307
+    - insert subject_entity_uid=10003004; act_uid=10009307
+    - update subject_entity_uid=10009305; act_uid=10009307 add_time: null -> "2026-04-30T20:02:59.267"; from_time: "2026-04-25T00:00:00" -> null; last_chg_time: null -> "2026-04-30T20:02:59.267"; ...
+    - insert subject_entity_uid=10003004; act_uid=10009307
+    - insert subject_entity_uid=10003013; act_uid=10009307
+    - update subject_entity_uid=10009305; act_uid=10009307 add_time: "2026-04-30T20:02:59.267" -> "2026-04-30T20:02:59.400"; last_chg_time: "2026-04-30T20:02:59.267" -> "2026-04-30T20:02:59.263"; last_chg_user_id: null -> 10009282; ...
+    - update subject_entity_uid=10003004; act_uid=10009307 add_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:03:00.900"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T20:02:59.210" -> "2026-04-30T20:03:00.873"; ...
+    - update subject_entity_uid=10003004; act_uid=10009307 add_time: null -> "2026-04-30T20:03:00.900"; last_chg_time: null -> "2026-04-30T20:03:00.873"; last_chg_user_id: null -> 10009282; ...
+    - update subject_entity_uid=10003004; act_uid=10009307 add_time: null -> "2026-04-30T20:03:00.900"; last_chg_time: null -> "2026-04-30T20:03:00.873"; last_chg_user_id: null -> 10009282; ...
+    - update subject_entity_uid=10003004; act_uid=10009307 add_time: null -> "2026-04-30T20:03:00.900"; last_chg_time: null -> "2026-04-30T20:03:00.873"; last_chg_user_id: null -> 10009282; ...
+    - update subject_entity_uid=10003004; act_uid=10009307 add_time: null -> "2026-04-30T20:03:00.900"; last_chg_time: null -> "2026-04-30T20:03:00.873"; last_chg_user_id: null -> 10009282; ...
+    - update subject_entity_uid=10003013; act_uid=10009307 add_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:03:00.900"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T20:02:59.210" -> "2026-04-30T20:03:00.873"; ...
+    - update subject_entity_uid=10009305; act_uid=10009307 add_time: "2026-04-30T20:02:59.400" -> "2026-04-30T20:03:00.900"; last_chg_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"; record_status_time: "2026-04-30T20:02:59.263" -> "2026-04-30T20:03:00.873"; ...
+    - insert subject_entity_uid=10003004; act_uid=10009300
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T19:50:49.493" -> "2026-04-30T20:09:14.587"; last_chg_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; record_status_time: "2026-04-30T19:50:49.327" -> "2026-04-30T20:09:14.380"; ...
+    - delete subject_entity_uid=10003004; act_uid=10009300
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.923"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.927"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003010; act_uid=10009300 add_time: "2026-04-30T19:32:00.520" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:32:00.520" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003010; act_uid=10009300 add_time: "2026-04-30T19:32:00.523" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:32:00.523" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003013; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003013; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:44:42.850" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003019; act_uid=10009300 add_time: "2026-04-30T19:32:00.523" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:32:00.523" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10003022; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:17:00.930"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T19:39:22.653" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T20:09:14.587" -> "2026-04-30T20:17:00.930"; last_chg_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.800"; record_status_time: "2026-04-30T20:09:14.380" -> "2026-04-30T20:17:00.800"; ...
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:22:46.167"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:22:45.980"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:22:45.980"; ...
+    - insert subject_entity_uid=10003004; act_uid=10009300
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T20:22:46.167" -> "2026-04-30T20:22:47.560"; last_chg_time: "2026-04-30T20:22:45.980" -> "2026-04-30T20:22:47.510"; record_status_time: "2026-04-30T20:22:45.980" -> "2026-04-30T20:22:47.510"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T19:32:00.637" -> "2026-04-30T20:27:43.437"; add_user_id: 10009282 -> null; last_chg_time: "2026-04-30T20:22:47.477" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T20:17:00.923" -> "2026-04-30T20:27:43.440"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T20:17:00.927" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003004; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003010; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003010; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003013; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003013; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003019; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10003022; act_uid=10009300 add_time: "2026-04-30T20:17:00.930" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:17:00.800" -> "2026-04-30T20:27:43.313"; ...
+    - update subject_entity_uid=10009296; act_uid=10009300 add_time: "2026-04-30T20:22:47.560" -> "2026-04-30T20:27:43.443"; last_chg_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"; record_status_time: "2026-04-30T20:22:47.510" -> "2026-04-30T20:27:43.313"; ...
+- dbo.Participation_hist: 1
+    - insert subject_entity_uid=10003010; act_uid=10009300
+- dbo.Person: 50
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009287; person_parent_uid=10009283
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; record_status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; status_time: "2026-04-30T19:27:29.850" -> "2026-04-30T19:27:33.867"; ...
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; record_status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; status_time: "2026-04-30T19:27:33.867" -> "2026-04-30T19:32:00.587"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; record_status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; status_time: "2026-04-30T19:32:00.587" -> "2026-04-30T19:39:22.713"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; record_status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; status_time: "2026-04-30T19:32:00.600" -> "2026-04-30T19:39:22.727"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; record_status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; status_time: "2026-04-30T19:39:22.713" -> "2026-04-30T19:44:42.890"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; record_status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; status_time: "2026-04-30T19:39:22.727" -> "2026-04-30T19:44:42.900"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; record_status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; status_time: "2026-04-30T19:44:42.890" -> "2026-04-30T19:50:49.297"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; record_status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; status_time: "2026-04-30T19:44:42.900" -> "2026-04-30T19:50:49.307"; ...
+    - insert local_id=PSN10067003GA01; person_uid=10009303; person_parent_uid=10009303
+    - insert local_id=PSN10067003GA01; person_uid=10009305; person_parent_uid=10009303
+    - insert local_id=PSN10067003GA01; person_uid=10009308; person_parent_uid=10009303
+    - update local_id=PSN10067003GA01; person_uid=10009303; person_parent_uid=10009303 last_chg_time: "2026-04-30T19:57:57.537" -> "2026-04-30T20:02:59.240"; record_status_time: "2026-04-30T19:57:57.537" -> "2026-04-30T20:02:59.240"; status_time: "2026-04-30T19:57:57.537" -> "2026-04-30T20:02:59.240"; ...
+    - update local_id=PSN10067003GA01; person_uid=10009305; person_parent_uid=10009303 last_chg_time: "2026-04-30T19:57:57.577" -> "2026-04-30T20:02:59.247"; record_status_time: "2026-04-30T19:57:57.577" -> "2026-04-30T20:02:59.247"; status_time: "2026-04-30T19:57:57.577" -> "2026-04-30T20:02:59.247"; ...
+    - update local_id=PSN10067003GA01; person_uid=10009303; person_parent_uid=10009303 last_chg_time: "2026-04-30T20:02:59.240" -> "2026-04-30T20:03:00.863"; record_status_time: "2026-04-30T20:02:59.240" -> "2026-04-30T20:03:00.863"; status_time: "2026-04-30T20:02:59.240" -> "2026-04-30T20:03:00.863"; ...
+    - update local_id=PSN10067003GA01; person_uid=10009305; person_parent_uid=10009303 last_chg_time: "2026-04-30T20:02:59.247" -> "2026-04-30T20:03:00.867"; record_status_time: "2026-04-30T20:02:59.247" -> "2026-04-30T20:03:00.867"; status_time: "2026-04-30T20:02:59.247" -> "2026-04-30T20:03:00.867"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; record_status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; status_time: "2026-04-30T19:50:49.297" -> "2026-04-30T20:09:14.347"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; record_status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; status_time: "2026-04-30T19:50:49.307" -> "2026-04-30T20:09:14.357"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; record_status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; status_time: "2026-04-30T20:09:14.347" -> "2026-04-30T20:17:00.770"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:17:00.777"; record_status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:17:00.777"; status_time: "2026-04-30T20:09:14.357" -> "2026-04-30T20:17:00.777"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; record_status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; status_time: "2026-04-30T20:17:00.770" -> "2026-04-30T20:22:45.950"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:17:00.777" -> "2026-04-30T20:22:45.960"; record_status_time: "2026-04-30T20:17:00.777" -> "2026-04-30T20:22:45.960"; status_time: "2026-04-30T20:17:00.777" -> "2026-04-30T20:22:45.960"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; record_status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; status_time: "2026-04-30T20:22:45.950" -> "2026-04-30T20:22:47.497"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; record_status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; status_time: "2026-04-30T20:22:45.960" -> "2026-04-30T20:22:47.500"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; record_status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; status_time: "2026-04-30T20:22:47.497" -> "2026-04-30T20:27:43.287"; ...
+    - update local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283 last_chg_time: "2026-04-30T20:22:47.500" -> "2026-04-30T20:27:43.297"; record_status_time: "2026-04-30T20:22:47.500" -> "2026-04-30T20:27:43.297"; status_time: "2026-04-30T20:22:47.500" -> "2026-04-30T20:27:43.297"; ...
+- dbo.Person_hist: 22
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - insert local_id=PSN10067003GA01; person_uid=10009303; person_parent_uid=10009303
+    - insert local_id=PSN10067003GA01; person_uid=10009305; person_parent_uid=10009303
+    - insert local_id=PSN10067003GA01; person_uid=10009303; person_parent_uid=10009303
+    - insert local_id=PSN10067003GA01; person_uid=10009305; person_parent_uid=10009303
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009283; person_parent_uid=10009283
+    - insert local_id=PSN10067000GA01; person_uid=10009296; person_parent_uid=10009283
+- dbo.Person_name: 20
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009287; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - update person_uid=10009296; person_name_seq=1 last_chg_time: "2026-04-30T19:32:00.493" -> "2026-04-30T19:39:22.630"
+    - update person_uid=10009296; person_name_seq=1 last_chg_time: "2026-04-30T19:39:22.630" -> "2026-04-30T19:44:42.790"
+    - update person_uid=10009296; person_name_seq=1 last_chg_time: "2026-04-30T19:44:42.790" -> "2026-04-30T19:50:49.233"
+    - insert person_uid=10009303; person_name_seq=1
+    - insert person_uid=10009305; person_name_seq=1
+    - insert person_uid=10009308; person_name_seq=1
+    - update person_uid=10009305; person_name_seq=1 last_chg_time: "2026-04-30T19:57:57.467" -> "2026-04-30T20:02:58.953"
+    - update person_uid=10009296; person_name_seq=1 last_chg_time: "2026-04-30T19:50:49.233" -> "2026-04-30T20:09:14.223"
+    - update person_uid=10009296; person_name_seq=1 last_chg_time: "2026-04-30T20:09:14.223" -> "2026-04-30T20:22:45.883"
+    - update person_uid=10009296; person_name_seq=1 last_chg_time: "2026-04-30T20:22:45.883" -> "2026-04-30T20:22:47.463"
+- dbo.Person_name_hist: 22
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - insert person_uid=10009303; person_name_seq=1
+    - insert person_uid=10009305; person_name_seq=1
+    - insert person_uid=10009303; person_name_seq=1
+    - insert person_uid=10009305; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+    - insert person_uid=10009283; person_name_seq=1
+    - insert person_uid=10009296; person_name_seq=1
+- dbo.Person_race: 6
+    - insert person_uid=10009283
+    - insert person_uid=10009287
+    - insert person_uid=10009296
+    - insert person_uid=10009303
+    - insert person_uid=10009305
+    - insert person_uid=10009308
+- dbo.Person_race_hist: 22
+    - insert person_uid=10009283
+    - insert person_uid=10009283
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+    - insert person_uid=10009303
+    - insert person_uid=10009305
+    - insert person_uid=10009303
+    - insert person_uid=10009305
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+    - insert person_uid=10009283
+    - insert person_uid=10009296
+- dbo.Postal_locator: 24
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009288
+    - update postal_locator_uid=10009284 street_addr2: "" -> null
+    - insert postal_locator_uid=10009297
+    - update postal_locator_uid=10009297 last_chg_time: null -> "2026-04-30T19:39:22.630"; last_chg_user_id: null -> 10009282; street_addr2: null -> ""
+    - update postal_locator_uid=10009297 last_chg_time: "2026-04-30T19:39:22.630" -> "2026-04-30T19:44:42.790"
+    - update postal_locator_uid=10009297 last_chg_time: "2026-04-30T19:44:42.790" -> "2026-04-30T19:50:49.233"
+    - insert postal_locator_uid=10009304
+    - insert postal_locator_uid=10009306
+    - insert postal_locator_uid=10009309
+    - update postal_locator_uid=10009304 cntry_cd: "" -> null
+    - update postal_locator_uid=10009306 cntry_cd: "" -> null
+    - update postal_locator_uid=10009297 last_chg_time: "2026-04-30T19:50:49.233" -> "2026-04-30T20:09:14.223"
+    - update postal_locator_uid=10009297 last_chg_time: "2026-04-30T20:09:14.223" -> "2026-04-30T20:22:45.883"
+    - update postal_locator_uid=10009297 last_chg_time: "2026-04-30T20:22:45.883" -> "2026-04-30T20:22:47.463"
+- dbo.Postal_locator_hist: 22
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+    - insert postal_locator_uid=10009304
+    - insert postal_locator_uid=10009306
+    - insert postal_locator_uid=10009304
+    - insert postal_locator_uid=10009306
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+    - insert postal_locator_uid=10009284
+    - insert postal_locator_uid=10009297
+- dbo.PublicHealthCaseFact: 24
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009307; person_uid=10009305; person_parent_uid=10009303
+    - delete public_health_case_uid=10009307; person_uid=10009305; person_parent_uid=10009303
+    - insert public_health_case_uid=10009307; person_uid=10009305; person_parent_uid=10009303
+    - delete public_health_case_uid=10009307; person_uid=10009305; person_parent_uid=10009303
+    - insert public_health_case_uid=10009307; person_uid=10009305; person_parent_uid=10009303
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - update public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296 lastNotificationdate: "2026-04-30T20:22:48.217" -> "2026-04-30T20:27:43.327"; notifCreatedCount: 1 -> 2
+    - delete public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+    - insert public_health_case_uid=10009300; postal_locator_uid=10009297; person_uid=10009296
+- dbo.Public_health_case: 22
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 case_class_cd: "" -> "C"; cd: "700" -> "10312"; cd_desc_txt: "Syphilis, Unknown" -> "Syphilis, secondary"; ...
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 curr_process_state_cd: "SF" -> "AI"; last_chg_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; record_status_time: "2026-04-30T19:39:22.743" -> "2026-04-30T19:44:42.917"; ...
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 curr_process_state_cd: "AI" -> "OC"; last_chg_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; record_status_time: "2026-04-30T19:44:42.917" -> "2026-04-30T19:50:49.327"; ...
+    - insert local_id=CAS10001001GA01; public_health_case_uid=10009307
+    - update local_id=CAS10001001GA01; public_health_case_uid=10009307 activity_to_time: null -> "2026-04-27T00:00:00"; investigation_status_cd: "O" -> "C"; last_chg_time: "2026-04-30T19:57:57.590" -> "2026-04-30T20:02:59.263"; ...
+    - update local_id=CAS10001001GA01; public_health_case_uid=10009307 case_class_cd: "" -> null; contact_inv_status_cd: "" -> null; contact_inv_txt: "" -> null; ...
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 activity_to_time: null -> "2026-04-27T00:00:00"; curr_process_state_cd: "OC" -> "CC"; investigation_status_cd: "O" -> "C"; ...
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 contact_inv_status_cd: "" -> null; contact_inv_txt: "" -> null; day_care_ind_cd: "" -> null; ...
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 activity_to_time: "2026-04-27T00:00:00" -> null; contact_inv_status_cd: null -> ""; contact_inv_txt: null -> ""; ...
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 activity_to_time: null -> "2026-04-27T00:00:00"; curr_process_state_cd: "OC" -> "CC"; investigation_status_cd: "O" -> "C"; ...
+    - update local_id=CAS10001000GA01; public_health_case_uid=10009300 contact_inv_status_cd: "" -> null; contact_inv_txt: "" -> null; day_care_ind_cd: "" -> null; ...
+- dbo.Public_health_case_hist: 10
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - insert local_id=CAS10001001GA01; public_health_case_uid=10009307
+    - insert local_id=CAS10001001GA01; public_health_case_uid=10009307
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+    - insert local_id=CAS10001000GA01; public_health_case_uid=10009300
+- dbo.Role: 1
+    - insert subject_entity_uid=10009295; scoping_entity_uid=10009287; role_seq=0
+- dbo.Security_log: 1
+    - insert security_log_uid=10000192
+- dbo.SubjectRaceInfo: 22
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009307
+    - delete morbReport_uid=0; public_health_case_uid=10009307
+    - insert morbReport_uid=0; public_health_case_uid=10009307
+    - delete morbReport_uid=0; public_health_case_uid=10009307
+    - insert morbReport_uid=0; public_health_case_uid=10009307
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+    - delete morbReport_uid=0; public_health_case_uid=10009300
+    - insert morbReport_uid=0; public_health_case_uid=10009300
+- dbo.Tele_locator: 30
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009289
+    - insert tele_locator_uid=10009290
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009299
+    - update tele_locator_uid=10009299 last_chg_time: null -> "2026-04-30T19:39:22.630"; last_chg_user_id: null -> 10009282
+    - update tele_locator_uid=10009298 last_chg_time: null -> "2026-04-30T19:39:22.630"; last_chg_user_id: null -> 10009282
+    - update tele_locator_uid=10009299 last_chg_time: "2026-04-30T19:39:22.630" -> "2026-04-30T19:44:42.790"
+    - update tele_locator_uid=10009298 last_chg_time: "2026-04-30T19:39:22.630" -> "2026-04-30T19:44:42.790"
+    - update tele_locator_uid=10009299 last_chg_time: "2026-04-30T19:44:42.790" -> "2026-04-30T19:50:49.233"
+    - update tele_locator_uid=10009298 last_chg_time: "2026-04-30T19:44:42.790" -> "2026-04-30T19:50:49.233"
+    - update tele_locator_uid=10009299 last_chg_time: "2026-04-30T19:50:49.233" -> "2026-04-30T20:09:14.223"
+    - update tele_locator_uid=10009298 last_chg_time: "2026-04-30T19:50:49.233" -> "2026-04-30T20:09:14.223"
+    - update tele_locator_uid=10009299 last_chg_time: "2026-04-30T20:09:14.223" -> "2026-04-30T20:22:45.883"
+    - update tele_locator_uid=10009298 last_chg_time: "2026-04-30T20:09:14.223" -> "2026-04-30T20:22:45.883"
+    - update tele_locator_uid=10009299 last_chg_time: "2026-04-30T20:22:45.883" -> "2026-04-30T20:22:47.463"
+    - update tele_locator_uid=10009298 last_chg_time: "2026-04-30T20:22:45.883" -> "2026-04-30T20:22:47.463"
+- dbo.Tele_locator_hist: 36
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+    - insert tele_locator_uid=10009286
+    - insert tele_locator_uid=10009285
+    - insert tele_locator_uid=10009299
+    - insert tele_locator_uid=10009298
+- dbo.Treatment: 1
+    - insert local_id=TRT10000000GA01; treatment_uid=10009301
+- dbo.Treatment_administered: 1
+    - insert treatment_uid=10009301; treatment_administered_seq=1
+- dbo.case_management: 18
+    - insert case_management_uid=1000; public_health_case_uid=10009300
+    - update case_management_uid=1000; public_health_case_uid=10009300 fld_foll_up_dispo: null -> "C"; fld_foll_up_dispo_date: null -> "2026-04-25T00:00:00"; fld_foll_up_notification_plan: null -> "3"; ...
+    - update case_management_uid=1000; public_health_case_uid=10009300 pat_intv_status_cd: "A" -> "I"
+    - insert case_management_uid=1001; public_health_case_uid=10009307
+    - update case_management_uid=1001; public_health_case_uid=10009307 case_review_status: null -> "Ready"; case_review_status_date: null -> "2026-04-30T20:02:58.980"; fld_foll_up_dispo: null -> "H"; ...
+    - update case_management_uid=1001; public_health_case_uid=10009307 case_review_status: "Ready" -> "Accept"
+    - update case_management_uid=1000; public_health_case_uid=10009300 case_closed_date: null -> "2026-04-27T00:00:00"; case_review_status: null -> "Ready"; case_review_status_date: null -> "2026-04-30T20:09:14.247"
+    - update case_management_uid=1000; public_health_case_uid=10009300 case_closed_date: "2026-04-27T00:00:00" -> null; case_review_status: "Ready" -> "Reject"
+    - update case_management_uid=1000; public_health_case_uid=10009300 case_closed_date: null -> "2026-04-27T00:00:00"; case_review_status: "Reject" -> "Ready"; case_review_status_date: "2026-04-30T20:09:14.247" -> "2026-04-30T20:22:47.477"
+    - update case_management_uid=1000; public_health_case_uid=10009300 case_review_status: "Ready" -> "Accept"
+- dbo.case_management_hist: 10
+    - insert case_management_hist_uid=1000; case_management_uid=1000; public_health_case_uid=10009300
+    - insert case_management_hist_uid=1001; case_management_uid=1000; public_health_case_uid=10009300
+    - insert case_management_hist_uid=1002; case_management_uid=1000; public_health_case_uid=10009300
+    - insert case_management_hist_uid=1003; case_management_uid=1001; public_health_case_uid=10009307
+    - insert case_management_hist_uid=1004; case_management_uid=1001; public_health_case_uid=10009307
+    - insert case_management_hist_uid=1005; case_management_uid=1000; public_health_case_uid=10009300
+    - insert case_management_hist_uid=1006; case_management_uid=1000; public_health_case_uid=10009300
+    - insert case_management_hist_uid=1007; case_management_uid=1000; public_health_case_uid=10009300
+    - insert case_management_hist_uid=1008; case_management_uid=1000; public_health_case_uid=10009300
+    - insert case_management_hist_uid=1009; case_management_uid=1000; public_health_case_uid=10009300
+- dbo.message_log: 7
+    - insert message_log_uid=1000; person_uid=10009296; assigned_to_uid=10003010
+    - insert message_log_uid=1001; person_uid=10009296; assigned_to_uid=10003004
+    - insert message_log_uid=1002; person_uid=10009305; assigned_to_uid=10003004
+    - insert message_log_uid=1003; person_uid=10009283; assigned_to_uid=10003004
+    - insert message_log_uid=1004; person_uid=10009296; assigned_to_uid=10003004
+    - insert message_log_uid=1005; person_uid=10009296; assigned_to_uid=10003004
+    - insert message_log_uid=1006; person_uid=10009296; assigned_to_uid=10003004
+- dbo.nbs_answer: 2
+    - insert nbs_answer_uid=1; act_uid=10009302; nbs_question_uid=10001355
+    - insert nbs_answer_uid=2; act_uid=10009302; nbs_question_uid=10001024
+
+Tables excluded from reconstructed SQL (core replay):
+- dbo.EDX_patient_match
+
+Reconstructed SQL written to: inserts.sql
+ID map written to: id-map.json
+Run inserts.sql directly against the source database to replay captured writes.

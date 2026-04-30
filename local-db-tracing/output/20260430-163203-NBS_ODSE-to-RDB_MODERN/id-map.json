@@ -1,0 +1,212 @@
+[
+  {
+    "original": 10009283,
+    "parameter": "@dbo_Entity_entity_uid",
+    "value": 3300000
+  },
+  {
+    "original": "PSN10067000GA01",
+    "parameter": "@dbo_Person_local_id",
+    "value": "PSN3300000GA01"
+  },
+  {
+    "original": 10009284,
+    "parameter": "@dbo_Postal_locator_postal_locator_uid",
+    "value": 3300001
+  },
+  {
+    "original": 10009285,
+    "parameter": "@dbo_Tele_locator_tele_locator_uid",
+    "value": 3300002
+  },
+  {
+    "original": 10009286,
+    "parameter": "@dbo_Tele_locator_tele_locator_uid_2",
+    "value": 3300003
+  },
+  {
+    "original": 10009287,
+    "parameter": "@dbo_Entity_entity_uid_2",
+    "value": 3300004
+  },
+  {
+    "original": 10009288,
+    "parameter": "@dbo_Postal_locator_postal_locator_uid_2",
+    "value": 3300005
+  },
+  {
+    "original": 10009289,
+    "parameter": "@dbo_Tele_locator_tele_locator_uid_3",
+    "value": 3300006
+  },
+  {
+    "original": 10009290,
+    "parameter": "@dbo_Tele_locator_tele_locator_uid_4",
+    "value": 3300007
+  },
+  {
+    "original": 10009291,
+    "parameter": "@dbo_Act_act_uid",
+    "value": 3300008
+  },
+  {
+    "original": "OBS10001000GA01",
+    "parameter": "@dbo_Observation_local_id",
+    "value": "OBS3300008GA01"
+  },
+  {
+    "original": 10009292,
+    "parameter": "@dbo_Act_act_uid_2",
+    "value": 3300009
+  },
+  {
+    "original": "OBS10001001GA01",
+    "parameter": "@dbo_Observation_local_id_2",
+    "value": "OBS3300009GA01"
+  },
+  {
+    "original": 10009293,
+    "parameter": "@dbo_Act_act_uid_3",
+    "value": 3300010
+  },
+  {
+    "original": "OBS10001002GA01",
+    "parameter": "@dbo_Observation_local_id_3",
+    "value": "OBS3300010GA01"
+  },
+  {
+    "original": 10009294,
+    "parameter": "@dbo_Act_act_uid_4",
+    "value": 3300011
+  },
+  {
+    "original": "OBS10001003GA01",
+    "parameter": "@dbo_Observation_local_id_4",
+    "value": "OBS3300011GA01"
+  },
+  {
+    "original": 10009295,
+    "parameter": "@dbo_Entity_entity_uid_3",
+    "value": 3300012
+  },
+  {
+    "original": "MAT10000000GA01",
+    "parameter": "@dbo_Material_local_id",
+    "value": "MAT3300012GA01"
+  },
+  {
+    "original": 10009296,
+    "parameter": "@dbo_Entity_entity_uid_4",
+    "value": 3300013
+  },
+  {
+    "original": 10009297,
+    "parameter": "@dbo_Postal_locator_postal_locator_uid_3",
+    "value": 3300014
+  },
+  {
+    "original": 10009298,
+    "parameter": "@dbo_Tele_locator_tele_locator_uid_5",
+    "value": 3300015
+  },
+  {
+    "original": 10009299,
+    "parameter": "@dbo_Tele_locator_tele_locator_uid_6",
+    "value": 3300016
+  },
+  {
+    "original": 10009300,
+    "parameter": "@dbo_Act_act_uid_5",
+    "value": 3300017
+  },
+  {
+    "original": "CAS10001000GA01",
+    "parameter": "@dbo_Public_health_case_local_id",
+    "value": "CAS3300017GA01"
+  },
+  {
+    "original": 10009301,
+    "parameter": "@dbo_Act_act_uid_6",
+    "value": 3300018
+  },
+  {
+    "original": "TRT10000000GA01",
+    "parameter": "@dbo_Treatment_local_id",
+    "value": "TRT3300018GA01"
+  },
+  {
+    "original": 10009302,
+    "parameter": "@dbo_Act_act_uid_7",
+    "value": 3300019
+  },
+  {
+    "original": "INT10000000GA01",
+    "parameter": "@dbo_Interview_local_id",
+    "value": "INT3300019GA01"
+  },
+  {
+    "original": 10009303,
+    "parameter": "@dbo_Entity_entity_uid_5",
+    "value": 3300020
+  },
+  {
+    "original": "PSN10067003GA01",
+    "parameter": "@dbo_Person_local_id_2",
+    "value": "PSN3300020GA01"
+  },
+  {
+    "original": 10009304,
+    "parameter": "@dbo_Postal_locator_postal_locator_uid_4",
+    "value": 3300021
+  },
+  {
+    "original": 10009305,
+    "parameter": "@dbo_Entity_entity_uid_6",
+    "value": 3300022
+  },
+  {
+    "original": 10009306,
+    "parameter": "@dbo_Postal_locator_postal_locator_uid_5",
+    "value": 3300023
+  },
+  {
+    "original": 10009307,
+    "parameter": "@dbo_Act_act_uid_8",
+    "value": 3300024
+  },
+  {
+    "original": "CAS10001001GA01",
+    "parameter": "@dbo_Public_health_case_local_id_2",
+    "value": "CAS3300024GA01"
+  },
+  {
+    "original": 10009308,
+    "parameter": "@dbo_Entity_entity_uid_7",
+    "value": 3300025
+  },
+  {
+    "original": 10009309,
+    "parameter": "@dbo_Postal_locator_postal_locator_uid_6",
+    "value": 3300026
+  },
+  {
+    "original": 10009310,
+    "parameter": "@dbo_Act_act_uid_9",
+    "value": 3300027
+  },
+  {
+    "original": "CON10000000GA01",
+    "parameter": "@dbo_CT_contact_local_id",
+    "value": "CON3300027GA01"
+  },
+  {
+    "original": 10009311,
+    "parameter": "@dbo_Act_act_uid_10",
+    "value": 3300028
+  },
+  {
+    "original": "NOT10000000GA01",
+    "parameter": "@dbo_Notification_local_id",
+    "value": "NOT3300028GA01"
+  }
+]

@@ -1,0 +1,4322 @@
+{
+  "server": "localhost,3433",
+  "database": "NBS_ODSE",
+  "start_time_utc": "2026-04-30T19:23:16+00:00",
+  "end_time_utc": "2026-04-30T20:31:45+00:00",
+  "start_lsn": "0x00000a2d0000001001e9",
+  "end_lsn": "0x00000a30000004d80005",
+  "steps": [
+    {
+      "step": 1,
+      "description": "CreatePatientAndLabReportSyphilis",
+      "cdc_start_lsn": "0x00000a2d0000001001e9",
+      "cdc_end_lsn": "0x00000a2d00000540002a",
+      "logical_start_lsn": "0x00006be7000004c000d4",
+      "logical_end_lsn": "0x00006bfd000003200004",
+      "start_time_utc": "2026-04-30T19:23:16+00:00",
+      "end_time_utc": "2026-04-30T19:31:14+00:00"
+    },
+    {
+      "step": 2,
+      "description": "CreateInvestigationSyphilis",
+      "cdc_start_lsn": "0x00000a2d00000540002a",
+      "cdc_end_lsn": "0x00000a2d00000ad80005",
+      "logical_start_lsn": "0x00006bfd000003200004",
+      "logical_end_lsn": "0x00006c05000006280004",
+      "start_time_utc": "2026-04-30T19:31:45+00:00",
+      "end_time_utc": "2026-04-30T19:34:46+00:00"
+    },
+    {
+      "step": 3,
+      "description": "AddTreatmentSyphilis",
+      "cdc_start_lsn": "0x00000a2d00000ad80005",
+      "cdc_end_lsn": "0x00000a2d00000d080020",
+      "logical_start_lsn": "0x00006c05000006280004",
+      "logical_end_lsn": "0x00006c06000009f00023",
+      "start_time_utc": "2026-04-30T19:35:41+00:00",
+      "end_time_utc": "2026-04-30T19:38:42+00:00"
+    },
+    {
+      "step": 4,
+      "description": "InvestigateSyphilisInitialFollowup",
+      "cdc_start_lsn": "0x00000a2d00000d080020",
+      "cdc_end_lsn": "0x00000a2e000001480005",
+      "logical_start_lsn": "0x00006c06000009f00023",
+      "logical_end_lsn": "0x00006c0b00000620000a",
+      "start_time_utc": "2026-04-30T19:39:05+00:00",
+      "end_time_utc": "2026-04-30T19:44:03+00:00"
+    },
+    {
+      "step": 5,
+      "description": "InvestigateSyphilisAssignFieldFollowup",
+      "cdc_start_lsn": "0x00000a2e000001480005",
+      "cdc_end_lsn": "0x00000a2e000004380005",
+      "logical_start_lsn": "0x00006c0b00000620000a",
+      "logical_end_lsn": "0x00006c0c000010f0000a",
+      "start_time_utc": "2026-04-30T19:44:22+00:00",
+      "end_time_utc": "2026-04-30T19:49:48+00:00"
+    },
+    {
+      "step": 6,
+      "description": "AddInterviewSyphilis",
+      "cdc_start_lsn": "0x00000a2e000006300003",
+      "cdc_end_lsn": "0x00000a2f000000b00003",
+      "logical_start_lsn": "0x00006c0c000010f0000a",
+      "logical_end_lsn": "0x00006c1100000820000a",
+      "start_time_utc": "2026-04-30T19:50:26+00:00",
+      "end_time_utc": "2026-04-30T19:57:15+00:00"
+    },
+    {
+      "step": 7,
+      "description": "AddContactSyphilis",
+      "cdc_start_lsn": "0x00000a2f000000b00003",
+      "cdc_end_lsn": "0x00000a2f000003380005",
+      "logical_start_lsn": "0x00006c1100000820000a",
+      "logical_end_lsn": "0x00006c1100001a680005",
+      "start_time_utc": "2026-04-30T19:57:35+00:00",
+      "end_time_utc": "2026-04-30T20:02:32+00:00"
+    },
+    {
+      "step": 8,
+      "description": "ChangeContactInvestigationDisposition",
+      "cdc_start_lsn": "0x00000a2f000003380005",
+      "cdc_end_lsn": "0x00000a2f000008700003",
+      "logical_start_lsn": "0x00006c1100001a680005",
+      "logical_end_lsn": "0x00006c1300001818000a",
+      "start_time_utc": "2026-04-30T20:02:46+00:00",
+      "end_time_utc": "2026-04-30T20:08:37+00:00"
+    },
+    {
+      "step": 9,
+      "description": "CloseInvestigationSyphilis",
+      "cdc_start_lsn": "0x00000a2f000008700003",
+      "cdc_end_lsn": "0x00000a2f00000bc80003",
+      "logical_start_lsn": "0x00006c1300001818000a",
+      "logical_end_lsn": "0x00006c14000018c8000a",
+      "start_time_utc": "2026-04-30T20:09:01+00:00",
+      "end_time_utc": "2026-04-30T20:16:32+00:00"
+    },
+    {
+      "step": 10,
+      "description": "SupervisorRejectsCloseInvestigation",
+      "cdc_start_lsn": "0x00000a2f00000bc80003",
+      "cdc_end_lsn": "0x00000a2f00000fc80003",
+      "logical_start_lsn": "0x00006c14000018c8000a",
+      "logical_end_lsn": "0x00006c1500001700000f",
+      "start_time_utc": "2026-04-30T20:16:51+00:00",
+      "end_time_utc": "2026-04-30T20:22:22+00:00"
+    },
+    {
+      "step": 11,
+      "description": "CloseInvestigationAndCreateNotificationSyphilis",
+      "cdc_start_lsn": "0x00000a2f00000fc80003",
+      "cdc_end_lsn": "0x00000a30000001c00009",
+      "logical_start_lsn": "0x00006c1500001700000f",
+      "logical_end_lsn": "0x00006c1600001308000c",
+      "start_time_utc": "2026-04-30T20:22:36+00:00",
+      "end_time_utc": "2026-04-30T20:27:13+00:00"
+    },
+    {
+      "step": 12,
+      "description": "SupervisorApprove",
+      "cdc_start_lsn": "0x00000a30000001c00009",
+      "cdc_end_lsn": "0x00000a30000004d80005",
+      "logical_start_lsn": "0x00006c1600001308000c",
+      "logical_end_lsn": "0x00006c1b00000158000c",
+      "start_time_utc": "2026-04-30T20:27:31+00:00",
+      "end_time_utc": "2026-04-30T20:31:45+00:00"
+    }
+  ],
+  "initially_tracked_table_count": 20,
+  "enabled_tables": [
+    {
+      "schema_name": "dbo",
+      "table_name": "Act",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_relationship_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Activity_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Email_Message",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log_Detail",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_User",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "amds_servers",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_rt",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_type",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_rt",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_type",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_perm_set",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_prog_area_admin",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_user_role",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Bus_obj_df_sf_mdata_group",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_data_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_report_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_type",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CN_transportq_out",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Consequence_indicator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_attachment",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_note",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_queues",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_subform_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_batch",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_detail",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_record",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_CodeData",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Codeset",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_source_column",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATA_SOURCE_MASTER",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Operator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOG",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOGLOCK",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Deduplication_activity_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_mdata_field_group",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_metadata_group",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Display_column",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_update_algorithm",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_detail_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_Document",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_entity_match",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_event_process",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_patient_match",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELR_activity_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELRWorkerQueue",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_loc_participation_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_locator_participation",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Error_message",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Export_receiving_facility",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_code",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_Operator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_value",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Form_Rule_Instance",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_activity_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result_Hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmapcentroid",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmaplist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmappolygon",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Intervention_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Interview_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Local_UID_generator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "LOOKUP_ANSWER",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "message_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_aggregate",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_attachment",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_BUS_OBJ_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_condition",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_error",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_mapping",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_master",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Conversion_Page_Mgmt",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_indicator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_metadata_rule",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_note",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_page_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_rdb_metadata_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Release",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_component",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_metadata_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_Activity_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Notification_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Operator_type",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Page_cond_mapping_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_merge",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Place_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Public_health_case_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "PublicHealthCaseFact",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "publicHealthCases",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter_Validation",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Section",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Sort_Column",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Instance",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Type",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Security_log",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Field",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Value",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "state_defined_field_data_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SubjectRaceInfo",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SUSPCT_MEAT_OBTND_DATA",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Field",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Value",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CNTRY_BIRTH",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CONFIRM_CONCAT",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_INIT",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_LEGACY_HOSP",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_SUB_CASE_CONF_NOTIF",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Updated_notification",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email_Alert",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "USER_PROFILE",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_Conversion_Mapping",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata_hist",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup",
+      "detail": ""
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup_hist",
+      "detail": ""
+    }
+  ],
+  "skipped_tables": [],
+  "managed_tables_before_run": [
+    {
+      "schema_name": "dbo",
+      "table_name": "Act"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_relationship_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Email_Message"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log_Detail"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_User"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_rt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_rt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_perm_set"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_prog_area_admin"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_user_role"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Bus_obj_df_sf_mdata_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_data_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CN_transportq_out"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_attachment"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_note"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_report_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Consequence_indicator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_queues"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_subform_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOG"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOGLOCK"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATA_SOURCE_MASTER"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_mdata_field_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_metadata_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_CodeData"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Codeset"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Operator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_batch"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_detail"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_record"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_source_column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Deduplication_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Display_column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_Document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_detail_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_entity_match"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_event_process"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_patient_match"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELRWorkerQueue"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELR_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_loc_participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_locator_participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Error_message"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Export_receiving_facility"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_Operator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_code"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Form_Rule_Instance"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result_Hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Intervention_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Interview_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "LOOKUP_ANSWER"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Local_UID_generator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_BUS_OBJ_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Conversion_Page_Mgmt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Release"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_aggregate"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_attachment"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_condition"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_error"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_mapping"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_master"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_indicator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_metadata_rule"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_note"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_page_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_rdb_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_component"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_Activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Notification_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Operator_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Page_cond_mapping_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_merge"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Place_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "PublicHealthCaseFact"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Public_health_case_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter_Validation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Section"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Sort_Column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Instance"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SUSPCT_MEAT_OBTND_DATA"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Security_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Field"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SubjectRaceInfo"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CNTRY_BIRTH"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CONFIRM_CONCAT"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_INIT"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_LEGACY_HOSP"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_SUB_CASE_CONF_NOTIF"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Field"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "USER_PROFILE"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Updated_notification"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email_Alert"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_Conversion_Mapping"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "amds_servers"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_update_algorithm"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmapcentroid"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmaplist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmappolygon"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "message_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "publicHealthCases"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "state_defined_field_data_hist"
+    }
+  ],
+  "managed_tables_after_run": [
+    {
+      "schema_name": "dbo",
+      "table_name": "Act"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_relationship_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Email_Message"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log_Detail"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_User"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_rt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_rt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_perm_set"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_prog_area_admin"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_user_role"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Bus_obj_df_sf_mdata_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_data_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CN_transportq_out"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_attachment"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_note"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_report_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Consequence_indicator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_queues"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_subform_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOG"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOGLOCK"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATA_SOURCE_MASTER"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_mdata_field_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_metadata_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_CodeData"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Codeset"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Operator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_batch"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_detail"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_record"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_source_column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Deduplication_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Display_column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_Document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_detail_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_entity_match"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_event_process"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_patient_match"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELRWorkerQueue"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELR_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_loc_participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_locator_participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Error_message"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Export_receiving_facility"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_Operator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_code"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Form_Rule_Instance"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result_Hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Intervention_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Interview_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "LOOKUP_ANSWER"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Local_UID_generator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_BUS_OBJ_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Conversion_Page_Mgmt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Release"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_aggregate"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_attachment"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_condition"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_error"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_mapping"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_master"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_indicator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_metadata_rule"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_note"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_page_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_rdb_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_component"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_Activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Notification_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Operator_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Page_cond_mapping_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_merge"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Place_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "PublicHealthCaseFact"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Public_health_case_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter_Validation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Section"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Sort_Column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Instance"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SUSPCT_MEAT_OBTND_DATA"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Security_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Field"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SubjectRaceInfo"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CNTRY_BIRTH"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CONFIRM_CONCAT"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_INIT"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_LEGACY_HOSP"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_SUB_CASE_CONF_NOTIF"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Field"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "USER_PROFILE"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Updated_notification"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email_Alert"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_Conversion_Mapping"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "amds_servers"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_update_algorithm"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmapcentroid"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmaplist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmappolygon"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "message_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "publicHealthCases"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "state_defined_field_data_hist"
+    }
+  ],
+  "captures_considered": [
+    {
+      "schema_name": "dbo",
+      "table_name": "Act",
+      "capture_instance": "dbo_Act"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id",
+      "capture_instance": "dbo_Act_id"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_id_hist",
+      "capture_instance": "dbo_Act_id_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation",
+      "capture_instance": "dbo_Act_locator_participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_locator_participation_hist",
+      "capture_instance": "dbo_Act_locator_participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_relationship",
+      "capture_instance": "dbo_Act_relationship"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Act_relationship_hist",
+      "capture_instance": "dbo_Act_relationship_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Activity_log",
+      "capture_instance": "dbo_Activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert",
+      "capture_instance": "dbo_Alert"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Email_Message",
+      "capture_instance": "dbo_Alert_Email_Message"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log",
+      "capture_instance": "dbo_Alert_Log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_Log_Detail",
+      "capture_instance": "dbo_Alert_Log_Detail"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Alert_User",
+      "capture_instance": "dbo_Alert_User"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "amds_servers",
+      "capture_instance": "dbo_amds_servers"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_rt",
+      "capture_instance": "dbo_Auth_bus_obj_rt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_obj_type",
+      "capture_instance": "dbo_Auth_bus_obj_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_rt",
+      "capture_instance": "dbo_Auth_bus_op_rt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_bus_op_type",
+      "capture_instance": "dbo_Auth_bus_op_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_perm_set",
+      "capture_instance": "dbo_Auth_perm_set"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_prog_area_admin",
+      "capture_instance": "dbo_Auth_prog_area_admin"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_user",
+      "capture_instance": "dbo_Auth_user"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Auth_user_role",
+      "capture_instance": "dbo_Auth_user_role"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Bus_obj_df_sf_mdata_group",
+      "capture_instance": "dbo_Bus_obj_df_sf_mdata_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management",
+      "capture_instance": "dbo_case_management"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "case_management_hist",
+      "capture_instance": "dbo_case_management_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_data_log",
+      "capture_instance": "dbo_CDF_subform_import_data_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CDF_subform_import_log",
+      "capture_instance": "dbo_CDF_subform_import_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_report_metadata",
+      "capture_instance": "dbo_Chart_report_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Chart_type",
+      "capture_instance": "dbo_Chart_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document",
+      "capture_instance": "dbo_Clinical_document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Clinical_document_hist",
+      "capture_instance": "dbo_Clinical_document_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CN_transportq_out",
+      "capture_instance": "dbo_CN_transportq_out"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method",
+      "capture_instance": "dbo_Confirmation_method"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Confirmation_method_hist",
+      "capture_instance": "dbo_Confirmation_method_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Consequence_indicator",
+      "capture_instance": "dbo_Consequence_indicator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact",
+      "capture_instance": "dbo_CT_contact"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer",
+      "capture_instance": "dbo_CT_contact_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_answer_hist",
+      "capture_instance": "dbo_CT_contact_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_attachment",
+      "capture_instance": "dbo_CT_contact_attachment"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_hist",
+      "capture_instance": "dbo_CT_contact_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "CT_contact_note",
+      "capture_instance": "dbo_CT_contact_note"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_queues",
+      "capture_instance": "dbo_Custom_queues"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Custom_subform_metadata",
+      "capture_instance": "dbo_Custom_subform_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_batch",
+      "capture_instance": "dbo_Data_migration_batch"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_detail",
+      "capture_instance": "dbo_Data_migration_detail"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_migration_record",
+      "capture_instance": "dbo_Data_migration_record"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source",
+      "capture_instance": "dbo_Data_Source"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_CodeData",
+      "capture_instance": "dbo_Data_Source_CodeData"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Codeset",
+      "capture_instance": "dbo_Data_Source_Codeset"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_source_column",
+      "capture_instance": "dbo_Data_source_column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATA_SOURCE_MASTER",
+      "capture_instance": "dbo_DATA_SOURCE_MASTER"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Data_Source_Operator",
+      "capture_instance": "dbo_Data_Source_Operator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOG",
+      "capture_instance": "dbo_DATABASECHANGELOG"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DATABASECHANGELOGLOCK",
+      "capture_instance": "dbo_DATABASECHANGELOGLOCK"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Deduplication_activity_log",
+      "capture_instance": "dbo_Deduplication_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_mdata_field_group",
+      "capture_instance": "dbo_DF_sf_mdata_field_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "DF_sf_metadata_group",
+      "capture_instance": "dbo_DF_sf_metadata_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Display_column",
+      "capture_instance": "dbo_Display_column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm",
+      "capture_instance": "dbo_dsm_algorithm"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_algorithm_hist",
+      "capture_instance": "dbo_dsm_algorithm_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "dsm_update_algorithm",
+      "capture_instance": "dbo_dsm_update_algorithm"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_detail_log",
+      "capture_instance": "dbo_EDX_activity_detail_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_activity_log",
+      "capture_instance": "dbo_EDX_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_Document",
+      "capture_instance": "dbo_EDX_Document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_entity_match",
+      "capture_instance": "dbo_EDX_entity_match"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_event_process",
+      "capture_instance": "dbo_EDX_event_process"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "EDX_patient_match",
+      "capture_instance": "dbo_EDX_patient_match"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELR_activity_log",
+      "capture_instance": "dbo_ELR_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "ELRWorkerQueue",
+      "capture_instance": "dbo_ELRWorkerQueue"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity",
+      "capture_instance": "dbo_Entity"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group",
+      "capture_instance": "dbo_Entity_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_group_hist",
+      "capture_instance": "dbo_Entity_group_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id",
+      "capture_instance": "dbo_Entity_id"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_id_hist",
+      "capture_instance": "dbo_Entity_id_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_loc_participation_hist",
+      "capture_instance": "dbo_Entity_loc_participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Entity_locator_participation",
+      "capture_instance": "dbo_Entity_locator_participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Error_message",
+      "capture_instance": "dbo_Error_message"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Export_receiving_facility",
+      "capture_instance": "dbo_Export_receiving_facility"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_code",
+      "capture_instance": "dbo_Filter_code"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_Operator",
+      "capture_instance": "dbo_Filter_Operator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Filter_value",
+      "capture_instance": "dbo_Filter_value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Form_Rule_Instance",
+      "capture_instance": "dbo_Form_Rule_Instance"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_activity_log",
+      "capture_instance": "dbo_Geocoding_activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result",
+      "capture_instance": "dbo_Geocoding_Result"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Geocoding_Result_Hist",
+      "capture_instance": "dbo_Geocoding_Result_Hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmapcentroid",
+      "capture_instance": "dbo_gmapcentroid"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmaplist",
+      "capture_instance": "dbo_gmaplist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "gmappolygon",
+      "capture_instance": "dbo_gmappolygon"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Intervention",
+      "capture_instance": "dbo_Intervention"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Intervention_hist",
+      "capture_instance": "dbo_Intervention_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Interview",
+      "capture_instance": "dbo_Interview"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Interview_hist",
+      "capture_instance": "dbo_Interview_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event",
+      "capture_instance": "dbo_lab_event"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "lab_event_hist",
+      "capture_instance": "dbo_lab_event_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Local_UID_generator",
+      "capture_instance": "dbo_Local_UID_generator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "LOOKUP_ANSWER",
+      "capture_instance": "dbo_LOOKUP_ANSWER"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "LOOKUP_QUESTION",
+      "capture_instance": "dbo_LOOKUP_QUESTION"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material",
+      "capture_instance": "dbo_Manufactured_material"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Manufactured_material_hist",
+      "capture_instance": "dbo_Manufactured_material_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material",
+      "capture_instance": "dbo_Material"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Material_hist",
+      "capture_instance": "dbo_Material_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "message_log",
+      "capture_instance": "dbo_message_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity",
+      "capture_instance": "dbo_NBS_act_entity"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_act_entity_hist",
+      "capture_instance": "dbo_NBS_act_entity_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_aggregate",
+      "capture_instance": "dbo_NBS_aggregate"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer",
+      "capture_instance": "dbo_nbs_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "nbs_answer_hist",
+      "capture_instance": "dbo_nbs_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_attachment",
+      "capture_instance": "dbo_NBS_attachment"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_BUS_OBJ_metadata",
+      "capture_instance": "dbo_NBS_BUS_OBJ_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer",
+      "capture_instance": "dbo_NBS_case_answer"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_case_answer_hist",
+      "capture_instance": "dbo_NBS_case_answer_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_configuration",
+      "capture_instance": "dbo_NBS_configuration"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_condition",
+      "capture_instance": "dbo_NBS_conversion_condition"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_error",
+      "capture_instance": "dbo_NBS_conversion_error"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_mapping",
+      "capture_instance": "dbo_NBS_conversion_mapping"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_conversion_master",
+      "capture_instance": "dbo_NBS_conversion_master"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Conversion_Page_Mgmt",
+      "capture_instance": "dbo_NBS_Conversion_Page_Mgmt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document",
+      "capture_instance": "dbo_NBS_document"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_hist",
+      "capture_instance": "dbo_NBS_document_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_document_metadata",
+      "capture_instance": "dbo_NBS_document_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_indicator",
+      "capture_instance": "dbo_NBS_indicator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_metadata_rule",
+      "capture_instance": "dbo_NBS_metadata_rule"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_note",
+      "capture_instance": "dbo_NBS_note"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_page",
+      "capture_instance": "dbo_NBS_page"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_page_hist",
+      "capture_instance": "dbo_NBS_page_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question",
+      "capture_instance": "dbo_NBS_question"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_question_hist",
+      "capture_instance": "dbo_NBS_question_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_rdb_metadata",
+      "capture_instance": "dbo_NBS_rdb_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_rdb_metadata_hist",
+      "capture_instance": "dbo_NBS_rdb_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_Release",
+      "capture_instance": "dbo_NBS_Release"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table",
+      "capture_instance": "dbo_NBS_table"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_table_metadata",
+      "capture_instance": "dbo_NBS_table_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_component",
+      "capture_instance": "dbo_NBS_ui_component"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_metadata",
+      "capture_instance": "dbo_NBS_ui_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NBS_ui_metadata_hist",
+      "capture_instance": "dbo_NBS_ui_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_Activity_log",
+      "capture_instance": "dbo_NND_Activity_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata",
+      "capture_instance": "dbo_NND_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "NND_metadata_hist",
+      "capture_instance": "dbo_NND_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject",
+      "capture_instance": "dbo_Non_Person_living_subject"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Non_Person_living_subject_hist",
+      "capture_instance": "dbo_Non_Person_living_subject_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Notification",
+      "capture_instance": "dbo_Notification"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Notification_hist",
+      "capture_instance": "dbo_Notification_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded",
+      "capture_instance": "dbo_Obs_value_coded"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_hist",
+      "capture_instance": "dbo_Obs_value_coded_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod",
+      "capture_instance": "dbo_Obs_value_coded_mod"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_coded_mod_hist",
+      "capture_instance": "dbo_Obs_value_coded_mod_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date",
+      "capture_instance": "dbo_Obs_value_date"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_date_hist",
+      "capture_instance": "dbo_Obs_value_date_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric",
+      "capture_instance": "dbo_Obs_value_numeric"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_numeric_hist",
+      "capture_instance": "dbo_Obs_value_numeric_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt",
+      "capture_instance": "dbo_Obs_value_txt"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Obs_value_txt_hist",
+      "capture_instance": "dbo_Obs_value_txt_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation",
+      "capture_instance": "dbo_Observation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_hist",
+      "capture_instance": "dbo_Observation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp",
+      "capture_instance": "dbo_Observation_interp"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_interp_hist",
+      "capture_instance": "dbo_Observation_interp_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason",
+      "capture_instance": "dbo_Observation_reason"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Observation_reason_hist",
+      "capture_instance": "dbo_Observation_reason_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Operator_type",
+      "capture_instance": "dbo_Operator_type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization",
+      "capture_instance": "dbo_Organization"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_hist",
+      "capture_instance": "dbo_Organization_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name",
+      "capture_instance": "dbo_Organization_name"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Organization_name_hist",
+      "capture_instance": "dbo_Organization_name_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Page_cond_mapping",
+      "capture_instance": "dbo_Page_cond_mapping"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Page_cond_mapping_hist",
+      "capture_instance": "dbo_Page_cond_mapping_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation",
+      "capture_instance": "dbo_Participation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Participation_hist",
+      "capture_instance": "dbo_Participation_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter",
+      "capture_instance": "dbo_Patient_encounter"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Patient_encounter_hist",
+      "capture_instance": "dbo_Patient_encounter_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person",
+      "capture_instance": "dbo_Person"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group",
+      "capture_instance": "dbo_Person_ethnic_group"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_ethnic_group_hist",
+      "capture_instance": "dbo_Person_ethnic_group_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_hist",
+      "capture_instance": "dbo_Person_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_merge",
+      "capture_instance": "dbo_Person_merge"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name",
+      "capture_instance": "dbo_Person_name"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_name_hist",
+      "capture_instance": "dbo_Person_name_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race",
+      "capture_instance": "dbo_Person_race"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Person_race_hist",
+      "capture_instance": "dbo_Person_race_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator",
+      "capture_instance": "dbo_Physical_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Physical_locator_hist",
+      "capture_instance": "dbo_Physical_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Place",
+      "capture_instance": "dbo_Place"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Place_hist",
+      "capture_instance": "dbo_Place_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator",
+      "capture_instance": "dbo_Postal_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Postal_locator_hist",
+      "capture_instance": "dbo_Postal_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1",
+      "capture_instance": "dbo_Procedure1"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Procedure1_hist",
+      "capture_instance": "dbo_Procedure1_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Public_health_case",
+      "capture_instance": "dbo_Public_health_case"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Public_health_case_hist",
+      "capture_instance": "dbo_Public_health_case_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "PublicHealthCaseFact",
+      "capture_instance": "dbo_PublicHealthCaseFact"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "publicHealthCases",
+      "capture_instance": "dbo_publicHealthCases"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral",
+      "capture_instance": "dbo_Referral"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Referral_hist",
+      "capture_instance": "dbo_Referral_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report",
+      "capture_instance": "dbo_Report"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter",
+      "capture_instance": "dbo_Report_Filter"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Filter_Validation",
+      "capture_instance": "dbo_Report_Filter_Validation"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Section",
+      "capture_instance": "dbo_Report_Section"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Report_Sort_Column",
+      "capture_instance": "dbo_Report_Sort_Column"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role",
+      "capture_instance": "dbo_Role"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Role_hist",
+      "capture_instance": "dbo_Role_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule",
+      "capture_instance": "dbo_Rule"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Instance",
+      "capture_instance": "dbo_Rule_Instance"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Rule_Type",
+      "capture_instance": "dbo_Rule_Type"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Security_log",
+      "capture_instance": "dbo_Security_log"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Field",
+      "capture_instance": "dbo_Source_Field"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Source_Value",
+      "capture_instance": "dbo_Source_Value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "state_defined_field_data",
+      "capture_instance": "dbo_state_defined_field_data"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "state_defined_field_data_hist",
+      "capture_instance": "dbo_state_defined_field_data_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "state_defined_field_metadata",
+      "capture_instance": "dbo_State_Defined_Field_Metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SubjectRaceInfo",
+      "capture_instance": "dbo_SubjectRaceInfo"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration",
+      "capture_instance": "dbo_Substance_administration"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Substance_administration_hist",
+      "capture_instance": "dbo_Substance_administration_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "SUSPCT_MEAT_OBTND_DATA",
+      "capture_instance": "dbo_SUSPCT_MEAT_OBTND_DATA"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Field",
+      "capture_instance": "dbo_Target_Field"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Target_Value",
+      "capture_instance": "dbo_Target_Value"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator",
+      "capture_instance": "dbo_Tele_locator"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Tele_locator_hist",
+      "capture_instance": "dbo_Tele_locator_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CNTRY_BIRTH",
+      "capture_instance": "dbo_TEMP_CNTRY_BIRTH"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_CONFIRM_CONCAT",
+      "capture_instance": "dbo_TEMP_CONFIRM_CONCAT"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_INIT",
+      "capture_instance": "dbo_TEMP_PHCINFO_INIT"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_PHCINFO_LEGACY_HOSP",
+      "capture_instance": "dbo_TEMP_PHCINFO_LEGACY_HOSP"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "TEMP_SUB_CASE_CONF_NOTIF",
+      "capture_instance": "dbo_TEMP_SUB_CASE_CONF_NOTIF"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment",
+      "capture_instance": "dbo_Treatment"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered",
+      "capture_instance": "dbo_Treatment_administered"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_administered_hist",
+      "capture_instance": "dbo_Treatment_administered_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_hist",
+      "capture_instance": "dbo_Treatment_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure",
+      "capture_instance": "dbo_Treatment_procedure"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Treatment_procedure_hist",
+      "capture_instance": "dbo_Treatment_procedure_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Updated_notification",
+      "capture_instance": "dbo_Updated_notification"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email",
+      "capture_instance": "dbo_User_Email"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "User_Email_Alert",
+      "capture_instance": "dbo_User_Email_Alert"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "USER_PROFILE",
+      "capture_instance": "dbo_USER_PROFILE"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_Conversion_Mapping",
+      "capture_instance": "dbo_WA_Conversion_Mapping"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata",
+      "capture_instance": "dbo_WA_NND_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_NND_metadata_hist",
+      "capture_instance": "dbo_WA_NND_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question",
+      "capture_instance": "dbo_WA_question"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_question_hist",
+      "capture_instance": "dbo_WA_question_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata",
+      "capture_instance": "dbo_WA_RDB_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_RDB_metadata_hist",
+      "capture_instance": "dbo_WA_RDB_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata",
+      "capture_instance": "dbo_WA_rule_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_rule_metadata_hist",
+      "capture_instance": "dbo_WA_rule_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template",
+      "capture_instance": "dbo_WA_template"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_template_hist",
+      "capture_instance": "dbo_WA_template_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata",
+      "capture_instance": "dbo_WA_UI_metadata"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "WA_UI_metadata_hist",
+      "capture_instance": "dbo_WA_UI_metadata_hist"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup",
+      "capture_instance": "dbo_Workup"
+    },
+    {
+      "schema_name": "dbo",
+      "table_name": "Workup_hist",
+      "capture_instance": "dbo_Workup_hist"
+    }
+  ],
+  "action_descriptions": [
+    "CreatePatientAndLabReportSyphilis",
+    "CreateInvestigationSyphilis",
+    "AddTreatmentSyphilis",
+    "InvestigateSyphilisInitialFollowup",
+    "InvestigateSyphilisAssignFieldFollowup",
+    "AddInterviewSyphilis",
+    "AddContactSyphilis",
+    "ChangeContactInvestigationDisposition",
+    "CloseInvestigationSyphilis",
+    "SupervisorRejectsCloseInvestigation",
+    "CloseInvestigationAndCreateNotificationSyphilis",
+    "SupervisorApprove"
+  ]
+}
