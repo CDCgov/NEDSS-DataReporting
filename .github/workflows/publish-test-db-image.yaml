@@ -1,10 +1,12 @@
-name: Publish Docker Image to GHCR.io
+name: Publish Test Database Image
 
 on:
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
+  DATABASE_CONTAINER_NAME: "nedss-datareporting-nbs-mssql-1"
+  LIQUIBASE_CONTAINER_NAME: "nedss-datareporting-liquibase-1"
   IMAGE_NAME: "nedss-datareporting-mssql"
 
 jobs:

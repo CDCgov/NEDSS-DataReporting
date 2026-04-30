@@ -1,7 +1,7 @@
 #! /bin/bash
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DATABASE_CONTAINER_NAME=$(docker ps -a --format "{{.Names}}" | grep nbs-mssql)
-LIQUIBASE_CONTAINER_NAME=$(docker ps -a --format "{{.Names}}" | grep liquibase)
+DATABASE_CONTAINER_NAME="${DATABASE_CONTAINER_NAME:-rtr-nbs-mssql-1}"
+LIQUIBASE_CONTAINER_NAME="${LIQUIBASE_CONTAINER_NAME:-rtr-liquibase-1}"
 SQLCMDUSER="${SQLCMDUSER:-sa}"
 SQLCMDPASSWORD="${SQLCMDPASSWORD:-PizzaIsGood33!}"
 IMAGE_NAME="${IMAGE_NAME:-ghcr.io/cdcgov/nedss-datareporting-mssql:6.0.18.1}"
