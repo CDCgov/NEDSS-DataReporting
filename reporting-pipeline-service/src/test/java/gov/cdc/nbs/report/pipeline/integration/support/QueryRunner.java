@@ -31,7 +31,11 @@ public class QueryRunner {
     for (String query : queries) {
       Optional<List<Map<String, Object>>> result =
           Await.waitFor(() -> QueryRunner.select(query, client));
-      assertThat(result).isPresent();
+      String debugInfo =
+          String.format("Query executed: [%s]. Client info: [%s]", query, client.toString());
+      assertThat(result)
+          .withFailMessage("Expected result container to exist. Context: %s", debugInfo)
+          .isPresent();
       results.put(String.valueOf(queryIndex), result.get());
       queryIndex++;
     }
