@@ -11,7 +11,7 @@ The local-db-tracing utility uses comprehensive automated testing to ensure reli
 | Test File | Purpose |
 |-----------|---------|
 | `test_connection_defaults.py` | Database connection configuration and validation |
-| `test_generate_rdb_selects.py` | SELECT query generation for RDB_MODERN |
+| `test_generate_query_expected.py` | SELECT query generation for RDB_MODERN |
 | `test_logical_changes.py` | Logical change computation and diffing |
 | `test_logical_compare.py` | Cross-database comparison logic |
 | `test_logical_markdown.py` | Report generation and formatting |

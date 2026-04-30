@@ -329,8 +329,8 @@ def main() -> int:
             step_start_lsn = fetch_max_lsn(client)
             step_start_time = utc_now()
             print()
-            print(f"Step {step_num} — Start time (UTC): {step_start_time}")
-            print(f"Step {step_num} — Start LSN:        {step_start_lsn}")
+            print(f"Step {step_num} - Start time (UTC): {step_start_time}")
+            print(f"Step {step_num} - Start LSN:        {step_start_lsn}")
             post_processing_wait_since_utc = utc_now()
             input(f"Perform the UI action for step {step_num}, then press Enter to capture changes... ")
             if not args.skip_post_processing_wait:
@@ -343,8 +343,8 @@ def main() -> int:
                 )
             step_end_lsn = fetch_max_lsn(client)
             step_end_time = utc_now()
-            print(f"Step {step_num} — End time (UTC):   {step_end_time}")
-            print(f"Step {step_num} — End LSN:          {step_end_lsn}")
+            print(f"Step {step_num} - End time (UTC):   {step_end_time}")
+            print(f"Step {step_num} - End LSN:          {step_end_lsn}")
 
             step_description = input(f"Describe what you did in step {step_num}: ").strip()
 

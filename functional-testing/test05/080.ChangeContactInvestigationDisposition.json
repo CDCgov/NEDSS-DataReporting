@@ -1,0 +1,360 @@
+{
+    "title": "disposeofcontact",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/CAS10001021GA01[role=\"link\"]"
+                ],
+                [
+                    "td:nth-of-type(6) > a"
+                ],
+                [
+                    "xpath///*[@id=\"contactNamedByPatListID\"]/tbody/tr[1]/td[6]/a"
+                ],
+                [
+                    "pierce/td:nth-of-type(6) > a"
+                ],
+                [
+                    "text/CAS10001021GA01"
+                ]
+            ],
+            "offsetY": 3.2734375,
+            "offsetX": 26.6015625,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=ContactCase&publicHealthCaseUID=10009667",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath///*[@id=\"delete\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(2) td:nth-of-type(1) > input"
+                ]
+            ],
+            "offsetY": 22,
+            "offsetX": 10.6484375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=Edit&invFormCd=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 13.5859375,
+            "offsetX": 57.171875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_24 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_24\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_24 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 10.5390625,
+            "offsetX": 7
+        },
+        {
+            "type": "change",
+            "value": "H",
+            "selectors": [
+                [
+                    "aria/The disposition of the field follow-up activities.[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS173"
+                ],
+                [
+                    "xpath///*[@id=\"NBS173\"]"
+                ],
+                [
+                    "pierce/#NBS173"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_INV_STD_UI_24 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_INV_STD_UI_24\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_INV_STD_UI_24 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 69.5390625,
+            "offsetX": 112
+        },
+        {
+            "type": "change",
+            "value": "04/27/2026",
+            "selectors": [
+                [
+                    "aria/When the disposition was determined as relates to exam or treatment situation."
+                ],
+                [
+                    "#NBS174"
+                ],
+                [
+                    "xpath///*[@id=\"NBS174\"]"
+                ],
+                [
+                    "pierce/#NBS174"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The person who brought the field record/activities to final disposition."
+                ],
+                [
+                    "#NBS175Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS175Text\"]"
+                ],
+                [
+                    "pierce/#NBS175Text"
+                ]
+            ],
+            "offsetY": 7.5390625,
+            "offsetX": 20.1640625
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The person who brought the field record/activities to final disposition."
+                ],
+                [
+                    "#NBS175Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS175Text\"]"
+                ],
+                [
+                    "pierce/#NBS175Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS175CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS175CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS175CodeLookupButton"
+                ]
+            ],
+            "offsetY": 12.2890625,
+            "offsetX": 20.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The supervisor who should review the field record disposition."
+                ],
+                [
+                    "#NBS176Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS176Text\"]"
+                ],
+                [
+                    "pierce/#NBS176Text"
+                ]
+            ],
+            "offsetY": 8.0390625,
+            "offsetX": 46.1640625
+        },
+        {
+            "type": "change",
+            "value": "3",
+            "selectors": [
+                [
+                    "aria/The supervisor who should review the field record disposition."
+                ],
+                [
+                    "#NBS176Text"
+                ],
+                [
+                    "xpath///*[@id=\"NBS176Text\"]"
+                ],
+                [
+                    "pierce/#NBS176Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS176CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"NBS176CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#NBS176CodeLookupButton"
+                ]
+            ],
+            "offsetY": 7.7890625,
+            "offsetX": 29.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS185"
+                ],
+                [
+                    "xpath///*[@id=\"NBS185\"]"
+                ],
+                [
+                    "pierce/#NBS185"
+                ]
+            ],
+            "offsetY": 53.7109375,
+            "offsetX": 99
+        },
+        {
+            "type": "change",
+            "value": "he wasn't in the park anymore. we don't know where he is.",
+            "selectors": [
+                [
+                    "#NBS185"
+                ],
+                [
+                    "xpath///*[@id=\"NBS185\"]"
+                ],
+                [
+                    "pierce/#NBS185"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 18.1640625,
+            "offsetX": 15.71875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#AddButtonToggleNBS_INV_STD_UI_26 input"
+                ],
+                [
+                    "xpath///*[@id=\"AddButtonToggleNBS_INV_STD_UI_26\"]/td/input"
+                ],
+                [
+                    "pierce/#AddButtonToggleNBS_INV_STD_UI_26 input"
+                ]
+            ],
+            "offsetY": 18.1328125,
+            "offsetX": 17.84375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#SubmitBottom"
+                ],
+                [
+                    "xpath///*[@id=\"SubmitBottom\"]"
+                ],
+                [
+                    "pierce/#SubmitBottom"
+                ]
+            ],
+            "offsetY": 21.0859375,
+            "offsetX": 14.71875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PageAction.do?method=editSubmit&ContextAction=Submit",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

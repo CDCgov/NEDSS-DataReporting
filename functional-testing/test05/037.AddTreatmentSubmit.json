@@ -1,0 +1,31 @@
+{
+    "title": "037.AddTreatmentSubmit.json",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#Submit"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/#Submit"
+                ]
+            ],
+            "offsetY": 20,
+            "offsetX": 15.71875
+        }
+    ]
+}
