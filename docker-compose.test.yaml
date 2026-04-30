@@ -1,0 +1,24 @@
+services:
+  nbs-mssql: !override
+    image: ghcr.io/cdcgov/nedss-datareporting-mssql:6.0.18.1
+    platform: linux/amd64
+    environment:
+      - DATABASE_VERSION=6.0.18.1
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
+    ports:
+      - 3433:1433
+    mem_limit: 2.5G
+
+  kafka-connect:
+    depends_on: !override
+      kafka:
+        condition: service_healthy
+      nbs-mssql:
+        condition: service_healthy
+
+  debezium:
+    depends_on: !override
+      kafka:
+        condition: service_healthy
+      nbs-mssql:
+        condition: service_healthy
