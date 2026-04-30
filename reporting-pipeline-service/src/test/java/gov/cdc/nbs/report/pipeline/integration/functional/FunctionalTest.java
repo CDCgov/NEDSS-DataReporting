@@ -23,20 +23,17 @@ public abstract class FunctionalTest {
   private static boolean started = false;
 
   private static final File base = new File("../docker-compose.yaml");
-  private static final File override = new File("../docker-compose.override.yaml");
+  private static final File override = new File("../docker-compose.test.yaml");
 
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
-      (override.exists()
-              ? new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base, override)
-              : new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base))
+      new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base, override)
           // List specific services to prevent launching wildfly container
-          .withServices("nbs-mssql", "liquibase", "kafka", "debezium", "kafka-connect")
+          .withServices("nbs-mssql", "kafka", "debezium", "kafka-connect")
           .waitingFor("debezium", Wait.forHealthcheck())
           .waitingFor("kafka-connect", Wait.forHealthcheck())
           // Pull logs from the containers for better debugging
           .withLogConsumer("nbs-mssql", consumer)
-          .withLogConsumer("liquibase", consumer)
           .withLogConsumer("kafka", consumer)
           .withLogConsumer("debezium", consumer)
           .withLogConsumer("kafka-connect", consumer)
