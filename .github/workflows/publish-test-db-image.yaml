@@ -1,6 +1,12 @@
 name: Publish Test Database Image
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'containers/db/**'
+      - 'liquibase-service/**'
   workflow_dispatch:
 
 env:
