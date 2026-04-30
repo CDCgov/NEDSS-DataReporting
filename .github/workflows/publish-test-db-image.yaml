@@ -1,4 +1,4 @@
-name: Publish Docker Image to GHCR.io
+name: Publish Test Database Image to GHCR.io
 
 on:
   workflow_dispatch:
