@@ -1,6 +1,5 @@
 package gov.cdc.nbs.report.pipeline.integration.support;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,14 +28,36 @@ public class QueryRunner {
     int queryIndex = 0;
 
     for (String query : queries) {
-      Optional<List<Map<String, Object>>> result =
-          Await.waitFor(() -> QueryRunner.select(query, client));
-      String debugInfo =
-          String.format("Query executed: [%s]. Client info: [%s]", query, client.toString());
-      assertThat(result)
-          .withFailMessage("Expected result container to exist. Context: %s", debugInfo)
-          .isPresent();
-      results.put(String.valueOf(queryIndex), result.get());
+      String trimmedQuery = query.trim();
+      if (trimmedQuery.isEmpty()) continue;
+
+      try {
+        // Log exactly what is being sent to the sandbox
+        System.out.println("DEBUG: Executing Batch Query [" + queryIndex + "]: " + trimmedQuery);
+
+        Optional<List<Map<String, Object>>> result =
+            Await.waitFor(() -> QueryRunner.select(trimmedQuery, client));
+
+        if (result.isEmpty()) {
+          // This is where your failure happens.
+          // We throw a detailed exception here to stop the test and show the context.
+          throw new AssertionError(
+              String.format(
+                  "Query [%d] failed to return a result container.\n"
+                      + "SQL: %s\n"
+                      + "Possible causes: SP has no SELECT statement, connection lost, or timeout"
+                      + " in Await.waitFor.",
+                  queryIndex, trimmedQuery));
+        }
+
+        results.put(String.valueOf(queryIndex), result.get());
+        System.out.println(
+            "DEBUG: Query [" + queryIndex + "] returned " + result.get().size() + " rows.");
+
+      } catch (Exception e) {
+        throw new AssertionError(
+            "Exception during execution of query [" + queryIndex + "]: " + trimmedQuery, e);
+      }
       queryIndex++;
     }
 
