@@ -102,22 +102,6 @@ BEGIN
                                            FOR json path, INCLUDE_NULL_VALUES) AS address) AS address,
                                   -- person phone
                                   (SELECT (
-                                        SELECT ph_tl_uid, ph_elp_cd, ph_elp_use_cd, telephoneNbr, extensionTxt, phone_comments
-                                        FROM (SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
-                                              elp.cd              AS                               [ph_elp_cd],
-                                              elp.use_cd          AS                               [ph_elp_use_cd],
-                                              REPLACE(tl.phone_nbr_txt, ' ', '') 				   telephoneNbr,
-                                              tl.extension_txt                                     extensionTxt,
-                                              elp.locator_desc_txt                                 phone_comments
-                                        FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
-                                        JOIN nbs_odse.dbo.Tele_locator tl WITH (NOLOCK)
-                                            ON elp.locator_uid = tl.tele_locator_uid
-                                        WHERE elp.entity_uid = p.person_uid
-                                             AND elp.CLASS_CD = 'TELE'
-                                             AND elp.CD IN ('O')
-                                             AND elp.RECORD_STATUS_CD = 'ACTIVE'
-                                             AND tl.phone_nbr_txt IS NOT NULL
-                                        UNION ALL
                                         SELECT tl.tele_locator_uid AS                               [ph_tl_uid],
                                               elp.cd              AS                               [ph_elp_cd],
                                               elp.use_cd          AS                               [ph_elp_use_cd],
@@ -129,8 +113,15 @@ BEGIN
                                             ON elp.locator_uid = tl.tele_locator_uid
                                         WHERE elp.entity_uid = p.person_uid
                                              AND elp.CLASS_CD = 'TELE'
-                                             AND elp.CD IN ('CP')
-                                             AND tl.phone_nbr_txt IS NOT NULL ) t
+                                             AND tl.phone_nbr_txt IS NOT NULL
+                                             AND (
+                                                (elp.USE_CD = 'WP' AND elp.CD = 'O' AND elp.RECORD_STATUS_CD = 'ACTIVE') -- provider office phone
+                                                OR
+                                                (elp.USE_CD = 'WP' AND elp.CD = 'PH' AND elp.STATUS_CD = 'A') -- provider workplace phone
+                                                OR
+                                                (elp.CD = 'CP') -- provider cell phone
+                                                -- todo: should we really be including deleted cell numbers?
+                                             )
                                         FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone,
                                   -- person email
                                   (SELECT (SELECT tl.tele_locator_uid AS                  [email_tl_uid],
