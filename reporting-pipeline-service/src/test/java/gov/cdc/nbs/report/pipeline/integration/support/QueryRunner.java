@@ -1,6 +1,5 @@
 package gov.cdc.nbs.report.pipeline.integration.support;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
