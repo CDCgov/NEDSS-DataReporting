@@ -5,7 +5,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  CONTAINER_NAME: "rtr-nbs-mssql-1"
+  CONTAINER_NAME: "nedss-datareporting-nbs-mssql-1"
   IMAGE_NAME: "nedss-datareporting-mssql"
 
 jobs:
