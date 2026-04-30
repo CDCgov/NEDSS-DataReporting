@@ -21,11 +21,11 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class UnitTest {
   private static boolean started = false;
   private static final File base = new File("../docker-compose.yaml");
-  private static final File override = new File("../docker-compose.test.yaml");
+  private static final File testCompose = new File("../docker-compose.test.yaml");
 
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
-      new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base, override)
+      new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base, testCompose)
           .withServices("nbs-mssql")
           .withStartupTimeout(Duration.ofMinutes(5))
           // Set the maximum startup timeout all the waits set are bounded to
